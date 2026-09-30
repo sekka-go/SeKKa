@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import MapPicker, { type MapPickMode, type MapPoint } from "./MapPicker";
+import BrandLogo from "./components/BrandLogo";
+import { categoryName, errorText, formatDate, money, statusLabel } from "./lib/formatters";
+import { hasPushSubscription, subscribeToPush, unsubscribeFromPush } from "./lib/push";
 import {
   api, ApiError, clearSession, getStoredSession, storeSession,
   type CaptainOffer, type CaptainProfile, type Category, type GroupView,
@@ -50,26 +53,6 @@ function defaultDates(type: "daily" | "weekly" | "monthly") {
   while (!isServiceDay(date)) date = shiftDate(date, 1);
   return [date];
 }
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("ar-EG", { weekday: "short", day: "numeric", month: "short" }).format(new Date(`${value}T12:00:00Z`));
-}
-function money(value: number | null | undefined) {
-  return typeof value === "number" ? `${new Intl.NumberFormat("ar-EG", { maximumFractionDigits: 2 }).format(value)} ج.م` : "يظهر بعد اكتمال المجموعة";
-}
-function categoryName(category?: Category | null) {
-  if (!category) return "فئة المشوار";
-  return `${category.speed_tier === "faster" ? "Faster" : "Saver"} · ${category.has_ac ? "مكيّف" : "بدون تكييف"}`;
-}
-function statusLabel(status: string) {
-  const labels: Record<string, string> = {
-    waiting: "بانتظار ركاب", minimum_met: "اكتمل الحد الأدنى", active: "نشطة", price_review: "موافقة على السعر",
-    needs_captain: "بانتظار كابتن", cancelled: "ملغاة", completed: "مكتملة", scheduled: "مجدولة",
-    assigned: "أُسندت إليك", in_progress: "جارية", needs_captain_profile: "أكمل بياناتك",
-    pending: "قيد المراجعة", approved: "موثّق", rejected: "مرفوض",
-  };
-  return labels[status] ?? status;
-}
-function errorText(error: unknown) { return error instanceof Error ? error.message : "حصل خطأ غير متوقع."; }
 function readDates(value: string) { try { return JSON.parse(value) as string[]; } catch { return []; } }
 function pointLabel(point: MapPoint | null) { return point ? `${point.lat.toFixed(5)}, ${point.lng.toFixed(5)}` : "اضغط على الخريطة لتحديد الموقع"; }
 
@@ -141,8 +124,8 @@ function AuthScreen({ onSignedIn, notify }: { onSignedIn: (session: Session) => 
 
   return <main className="auth-layout">
     <section className="auth-story">
-      <div className="brand-lockup"><span className="brand-mark">س</span><div><strong>سِكّة</strong><small>مشوارك، على طريقك</small></div></div>
-      <div className="auth-story-copy"><span className="eyebrow">تنقّل يومي أذكى</span><h1>طريق واحد.<br /><em>مشوار أهدأ.</em></h1><p>شارك الطريق مع ناس رايحة في نفس اتجاهك. خطط لأيامك، اختار مقعدك، وسيب الباقي علينا.</p>
+      <BrandLogo variant="light" />
+      <div className="auth-story-copy"><span className="eyebrow">تنقّل يومي أذكى</span><h1>لو نفس السِكَّة..<br /><em>سيبها على سِكّة.</em></h1><p>شارك الطريق مع ناس رايحة في نفس اتجاهك. خطط لأيامك، اختار مقعدك، وسيب الباقي على سِكّة.</p>
         <div className="story-stats"><div><strong>4</strong><span>فئات تناسبك</span></div><i /><div><strong>5</strong><span>أيام خدمة أسبوعيًا</span></div></div>
       </div>
       <div className="story-route"><span className="route-point route-point-start" /><span className="route-dashes" /><span className="route-point route-point-end" /><span>القاهرة · طريقك اليومي</span></div>
@@ -151,11 +134,11 @@ function AuthScreen({ onSignedIn, notify }: { onSignedIn: (session: Session) => 
     <section className="auth-panel">
       <div className="auth-card">
         <div className="auth-tabs"><button className={mode === "login" ? "active" : ""} onClick={() => { setMode("login"); setError(""); }}>تسجيل الدخول</button><button className={mode === "register" ? "active" : ""} onClick={() => { setMode("register"); setError(""); }}>حساب جديد</button></div>
-        <div className="auth-heading"><span className="eyebrow">{mode === "login" ? "سعيدين برجوعك" : "ابدأ رحلتك"}</span><h2>{mode === "login" ? "أهلًا بيك تاني" : "انضم لسِكّة"}</h2><p>{mode === "login" ? "سجّل دخولك وكمل من حيث توقفت." : "اختار نوع حسابك وأنشئ حسابك في دقيقة."}</p></div>
+        <div className="auth-heading"><span className="eyebrow">{mode === "login" ? "سعيدين برجوعك" : "ابدأ رحلتك"}</span><h2>{mode === "login" ? "أهلًا بيك تاني" : "انضم لسِكّة"}</h2><p>{mode === "login" ? "سجّل دخولك وكمّل من حيث توقفت." : "اختار نوع حسابك وأنشئ حسابك في دقيقة."}</p></div>
         <form onSubmit={submit} className="form-stack">
           {mode === "register" && <>
             <label>الاسم بالكامل<input autoComplete="name" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="مثال: ياسمين أحمد" required /></label>
-            <fieldset className="role-picker"><legend>هتستخدم سِكّة بصفتك</legend><button type="button" className={role === "rider" ? "selected" : ""} onClick={() => setRole("rider")}><span>♙</span><strong>راكب</strong><small>أدور على مشوار مشترك</small></button><button type="button" className={role === "captain" ? "selected" : ""} onClick={() => setRole("captain")}><span>⌖</span><strong>كابتن</strong><small>أوصل الركاب لوجهتهم</small></button></fieldset>
+            <fieldset className="role-picker"><legend>هتستخدم سِكّة بصفتك؟</legend><button type="button" className={role === "rider" ? "selected" : ""} onClick={() => setRole("rider")}><span>♙</span><strong>راكب</strong><small>أدور على مشوار مشترك</small></button><button type="button" className={role === "captain" ? "selected" : ""} onClick={() => setRole("captain")}><span>⌖</span><strong>كابتن</strong><small>أوصل الركاب لوجهتهم</small></button></fieldset>
           </>}
           <label>رقم الهاتف<input autoComplete="tel" type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="01xxxxxxxxx" required /></label>
           <label>كلمة السر<input autoComplete={mode === "login" ? "current-password" : "new-password"} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={mode === "register" ? "8 أحرف على الأقل" : "••••••••"} minLength={mode === "register" ? 8 : 1} required /></label>
@@ -193,7 +176,7 @@ function Workspace({ session, onSignOut, notify }: { session: Session; onSignOut
       : [{ key: "admin", label: "نظرة عامة", icon: "▦" }, { key: "notifications", label: "الإشعارات", icon: "◌" }, { key: "account", label: "حسابي", icon: "♙" }];
 
   const titles: Record<NavKey, [string, string]> = {
-    home: ["صباح الخير", "طريقك اليوم يبدأ من هنا"], booking: ["خطط لمشوارك", "اختار أيامك ونقاطك، وإحنا نرتب الباقي"],
+    home: ["صباح الخير", "طريقك اليوم يبدأ من هنا"], booking: ["خطط لمشوارك", "اختار أيامك ونقاطك، وإحنا نرتّب الباقي"],
     trips: ["رحلاتي", "كل مشاويرك ومجموعاتك في مكان واحد"], notifications: ["الإشعارات", "آخر التحديثات الخاصة بمشاويرك"],
     account: ["حسابي", "بياناتك وإعدادات الأمان"], offers: ["المسارات المتاحة", "اختار المسار المناسب لسيارتك ومواعيدك"],
     captainTrips: ["رحلاتي", "المسارات المقبولة وخطوات تنفيذها"], admin: ["لوحة الإدارة", "متابعة المنصة وتوثيق الكباتن"],
@@ -203,11 +186,11 @@ function Workspace({ session, onSignOut, notify }: { session: Session; onSignOut
 
   return <div className="workspace">
     <aside className={`sidebar ${navOpen ? "sidebar-open" : ""}`}>
-      <div className="sidebar-brand"><span className="brand-mark">س</span><div><strong>سِكّة</strong><small>التنقل المشترك</small></div><button className="sidebar-close" onClick={() => setNavOpen(false)} aria-label="إغلاق القائمة">×</button></div>
+      <div className="sidebar-brand"><BrandLogo variant="dark" /><button className="sidebar-close" onClick={() => setNavOpen(false)} aria-label="إغلاق القائمة">×</button></div>
       <div className="sidebar-label">القائمة الرئيسية</div>
       <nav>{nav.map((item) => <button key={item.key} className={`nav-item ${section === item.key ? "nav-active" : ""}`} onClick={() => { setSection(item.key); setNavOpen(false); }}><span className="nav-icon">{item.icon}</span>{item.label}{item.key === "notifications" && unread > 0 && <b className="nav-count">{unread}</b>}</button>)}</nav>
       <div className="sidebar-spacer" />
-      <div className="help-card"><span>✦</span><strong>محتاج مساعدة؟</strong><p>فريق سِكّة معاك في كل خطوة.</p><button onClick={() => notify("قنوات الدعم ستتوفر قريبًا.", "info")}>تواصل مع الدعم <span>←</span></button></div>
+      <div className="help-card"><span>✦</span><strong>محتاج مساعدة؟</strong><p>فريق سِكّة معاك في كل خطوة.</p><button onClick={() => notify("قنوات الدعم هتتوفر قريبًا.", "info")}>تواصل مع الدعم <span>←</span></button></div>
       <button className="sidebar-profile" onClick={() => setSection("account")}><span className="avatar">{session.user.full_name.slice(0, 1)}</span><span className="profile-copy"><strong>{session.user.full_name}</strong><small>{session.user.role === "rider" ? "راكب" : session.user.role === "captain" ? "كابتن" : "مدير النظام"}</small></span><span className="profile-more">···</span></button>
     </aside>
     {navOpen && <button className="sidebar-scrim" onClick={() => setNavOpen(false)} aria-label="إغلاق القائمة" />}
@@ -310,7 +293,7 @@ function RiderWorkspace({ session, section, setSection, notifications, refreshNo
   const dateOptions = useMemo(() => packageType === "weekly" ? serviceWeek() : packageType === "monthly" ? serviceMonth() : dates, [packageType, dates]);
   const expectedDays = packageType === "daily" ? 1 : packageType === "weekly" ? 5 : 22;
 
-  if (loading) return <LoadingCard text="بنجهز مساحة مشاويرك…" />;
+  if (loading) return <LoadingCard text="بنجهّز مساحة مشاويرك…" />;
 
   if (section === "account") return <AccountPanel session={session} notify={notify} />;
   if (section === "notifications") return <NotificationsPanel items={notifications} token={session.token} onRefresh={refreshNotifications} notify={notify} />;
@@ -334,7 +317,7 @@ function RiderWorkspace({ session, section, setSection, notifications, refreshNo
         <p className="map-instruction">اضغط على الخريطة لتحديد <b>{pickMode === "pickup" ? "نقطة الركوب" : "نقطة النزول"}</b></p>
         <MapPicker pickup={pickup} dropoff={dropoff} mode={pickMode} onPick={(type, point) => type === "pickup" ? setPickup(point) : setDropoff(point)} />
         <button className="button button-primary button-wide" disabled={submitting}>{submitting ? "جاري الحفظ…" : bookingMode === "new" ? "تأكيد المشوار" : "الانضمام للمجموعة"}<span>←</span></button>
-        {bookingMode === "new" && <p className="form-footnote">مفيش دفع دلوقتي. المبلغ يظهر بعد اكتمال الحد الأدنى وتأكيد المسار.</p>}
+        {bookingMode === "new" && <p className="form-footnote">مفيش دفع دلوقتي؛ المبلغ هيظهر بعد اكتمال الحد الأدنى وتأكيد المسار.</p>}
       </form>
     </section>
     <aside className="booking-aside"><div className="surface soft-surface"><span className="aside-icon">✦</span><h3>مشوار مشترك، بسعر أعدل</h3><p>Faster يبدأ براكبين، وSaver بثلاثة. سعر الفرد يتحسب على عدد مقاعد الفئة بالكامل.</p><ul><li>ذهاب وعودة كل يوم خدمة</li><li>إلغاء اليوم مجانًا قبل ١٢ ساعة</li><li>خصم حتى ١٠٪ على الباقات</li></ul></div><div className="surface compact-note"><span>ⓘ</span><p>الموقع اللي بتختاره بيُستخدم لحساب الطريق ومشاركة تفاصيل المشوار مع مجموعتك.</p></div></aside>
@@ -427,12 +410,36 @@ function NotificationRow({ item }: { item: Notification }) {
 }
 
 function NotificationsPanel({ items, token, onRefresh, notify }: { items: Notification[]; token: string; onRefresh: () => Promise<void>; notify: (text: string, tone?: Toast["tone"]) => void }) {
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
+  useEffect(() => {
+    let active = true;
+    void hasPushSubscription().then((enabled) => { if (active) setPushEnabled(enabled); }).catch(() => undefined);
+    return () => { active = false; };
+  }, []);
+
+  const togglePush = async () => {
+    setPushBusy(true);
+    try {
+      if (pushEnabled) {
+        await unsubscribeFromPush(token);
+        setPushEnabled(false);
+        notify("تم إيقاف إشعارات سِكّة على هذا الجهاز.", "success");
+      } else {
+        await subscribeToPush(token);
+        setPushEnabled(true);
+        notify("تم تفعيل إشعارات سِكّة على هذا الجهاز.", "success");
+      }
+    } catch (error) { notify(errorText(error), "error"); }
+    finally { setPushBusy(false); }
+  };
+
   const markRead = async (item: Notification) => {
     if (item.read_at) return;
     try { await api(`/pool/notifications/${item.id}/read`, { method: "POST", token }); await onRefresh(); }
     catch (error) { notify(errorText(error), "error"); }
   };
-  return <section className="surface notifications-panel"><div className="section-title-row"><div><h2>كل الإشعارات</h2><p>الإشعارات محفوظة داخل حسابك</p></div><button className="text-action" onClick={() => void onRefresh()}>تحديث ↻</button></div>{items.length ? items.map((item) => <button className="notification-button-row" key={item.id} onClick={() => void markRead(item)}><NotificationRow item={item} /><span className="notification-open">{item.read_at ? "" : "تعليم كمقروء"}</span></button>) : <EmptyState icon="◌" title="مفيش إشعارات لسه" text="هنبلغك بأي تحديث على رحلاتك ومجموعاتك." />}</section>;
+  return <section className="surface notifications-panel"><div className="section-title-row"><div><h2>كل الإشعارات</h2><p>الإشعارات محفوظة داخل حسابك</p></div><div className="notification-controls"><button className="button button-outline button-small" onClick={() => void togglePush()} disabled={pushBusy || !import.meta.env.PROD}>{pushBusy ? "جاري التحديث…" : pushEnabled ? "إيقاف إشعارات الجهاز" : import.meta.env.PROD ? "تفعيل إشعارات الجهاز" : "تفعيل الإشعارات بعد النشر"}</button><button className="text-action" onClick={() => void onRefresh()}>تحديث ↻</button></div></div>{items.length ? items.map((item) => <button className="notification-button-row" key={item.id} onClick={() => void markRead(item)}><NotificationRow item={item} /><span className="notification-open">{item.read_at ? "" : "تعليم كمقروء"}</span></button>) : <EmptyState icon="◌" title="مفيش إشعارات لسه" text="هنبلغك بأي تحديث على رحلاتك ومجموعاتك." />}</section>;
 }
 
 function AccountPanel({ session, notify }: { session: Session; notify: (text: string, tone?: Toast["tone"]) => void }) {

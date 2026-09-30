@@ -15,7 +15,7 @@ export function createApp(db: DatabaseSync): Express {
     res.status(200).json({
       status: "ok",
       service: "sekka-server",
-      phase: 11,
+      phase: 14,
       time: new Date().toISOString(),
     });
   });

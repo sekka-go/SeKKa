@@ -5,6 +5,9 @@ import { requireRole } from "../middleware/require-role.js";
 import { calculatePerSeatFare, calculatePoolRouteFare, findPoolCategory } from "../pricing/pool-fare.js";
 import { isWithinGroupPath, isWithinRouteLine, planDiscount, routeStops, serviceDates, roundMoney, distanceKm, type PoolRouteMember } from "../pool/geometry.js";
 import { getRoadRoute } from "../pool/osrm.js";
+import { calculatePoolSettlement } from "../finance/settlement.js";
+import { calculateCaptainEscrowReserve, calculateCaptainEscrowTransfer } from "../finance/captain-escrow.js";
+import { getWebPushPublicKey, sendWebPushToUser } from "../notifications/web-push.js";
 
 type Group = { id: number; created_by_user_id: number; category_id: string; package_type: string; service_dates: string; morning_departure: string; return_departure: string; status: string; route_distance_km: number | null; route_duration_min: number | null; seat_day_fare: number | null; route_geometry: string | null; route_version: number; fixed_captain_user_id: number | null };
 type Member = PoolRouteMember & { group_id: number; rider_user_id: number; status: string; price_decision: string; seats_reserved: number };
@@ -58,11 +61,17 @@ function getMembers(db: DatabaseSync, groupId: number, activeOnly = true): Membe
   return db.prepare(sql).all(groupId) as unknown as Member[];
 }
 function notify(db: DatabaseSync, userId: number, groupId: number | null, key: string, payload: object = {}) {
-  db.prepare("INSERT OR IGNORE INTO pool_notifications(user_id,group_id,event_key,payload) VALUES(?,?,?,?)")
+  const inserted = db.prepare("INSERT OR IGNORE INTO pool_notifications(user_id,group_id,event_key,payload) VALUES(?,?,?,?)")
     .run(userId, groupId, key, JSON.stringify(payload));
+  if (Number(inserted.changes) > 0) queueMicrotask(() => sendWebPushToUser(db, userId, key));
 }
 function notifyGroup(db: DatabaseSync, groupId: number, key: string, payload: object = {}) {
   for (const member of getMembers(db, groupId)) notify(db, member.rider_user_id, groupId, key, payload);
+}
+function releaseCaptainEscrow(db: DatabaseSync, groupId: number) {
+  db.prepare(`UPDATE pool_captain_escrows
+    SET released_amount=MAX(0,reserved_amount-used_amount),status='released',closed_at=strftime('%Y-%m-%dT%H:%M:%fZ','now')
+    WHERE group_id=? AND status='reserved'`).run(groupId);
 }
 function rebuildTripStops(db: DatabaseSync, groupId: number, onlyFuture = true) {
   const members = getMembers(db, groupId);
@@ -190,6 +199,76 @@ function readRouteOrder(db: DatabaseSync, groupId: number, memberIds: unknown): 
   return ids.map((id, index) => ({ ...byId.get(id)!, pickup_order: index }));
 }
 
+async function tryAutoJoinWaitingGroup(db: DatabaseSync, input: {
+  riderId: number; categoryId: string; packageType: string; serviceDates: string[];
+  morningDeparture: string; returnDeparture: string; pickupLat: number; pickupLng: number;
+  dropoffLat: number; dropoffLng: number;
+}): Promise<number | null> {
+  const candidates = db.prepare(`SELECT * FROM pool_groups
+    WHERE status='waiting' AND category_id=? AND package_type=? AND service_dates=?
+      AND morning_departure=? AND return_departure=? AND created_by_user_id<>?
+      AND NOT EXISTS (SELECT 1 FROM pool_members m WHERE m.group_id=pool_groups.id AND m.rider_user_id=? AND m.status='active')
+      AND NOT EXISTS (SELECT 1 FROM pool_members invited WHERE invited.group_id=pool_groups.id AND invited.status='awaiting_confirmation')
+    ORDER BY created_at,id`).all(
+    input.categoryId, input.packageType, JSON.stringify(input.serviceDates),
+    input.morningDeparture, input.returnDeparture, input.riderId, input.riderId,
+  ) as unknown as Group[];
+
+  for (const candidate of candidates) {
+    const category = findPoolCategory(db, candidate.category_id);
+    const current = getMembers(db, candidate.id);
+    const usedSeats = current.reduce((total, member) => total + member.seats_reserved, 0);
+    if (!category || usedSeats + 1 > category.seats || !candidate.route_geometry) continue;
+
+    let geometry: { outbound?: { coordinates?: unknown } };
+    try { geometry = JSON.parse(candidate.route_geometry) as typeof geometry; }
+    catch { continue; }
+    const nearRoute = (lat: number, lng: number) => isWithinRouteLine({ lat, lng }, geometry.outbound?.coordinates);
+    if (!nearRoute(input.pickupLat, input.pickupLng) || !nearRoute(input.dropoffLat, input.dropoffLng)) continue;
+
+    let comparisonFare = candidate.seat_day_fare;
+    if (comparisonFare === null) comparisonFare = (await routeFare(category, current)).seatDayFare;
+    const proposed = await routeFare(category, [...current, {
+      id: -1, pickup_order: current.length,
+      pickup_lat: input.pickupLat, pickup_lng: input.pickupLng,
+      dropoff_lat: input.dropoffLat, dropoff_lng: input.dropoffLng,
+    }]);
+
+    db.exec("BEGIN IMMEDIATE");
+    try {
+      const latest = getGroup(db, candidate.id);
+      const latestMembers = getMembers(db, candidate.id);
+      const sameMembers = latestMembers.map((member) => member.id).join(",") === current.map((member) => member.id).join(",");
+      const latestSeats = latestMembers.reduce((total, member) => total + member.seats_reserved, 0);
+      if (!latest || latest.status !== "waiting" || !sameMembers || latestSeats + 1 > category.seats || ownsActiveMember(db, candidate.id, input.riderId)) {
+        db.exec("ROLLBACK");
+        continue;
+      }
+
+      db.prepare(`INSERT INTO pool_members(group_id,rider_user_id,pickup_lat,pickup_lng,dropoff_lat,dropoff_lng,pickup_order)
+        VALUES(?,?,?,?,?,?,?)`).run(candidate.id, input.riderId, input.pickupLat, input.pickupLng, input.dropoffLat, input.dropoffLng, latestMembers.length);
+      const joinedMembers = getMembers(db, candidate.id);
+      const result = await recalculate(db, latest, joinedMembers, proposed);
+      if (result && comparisonFare !== null && result.estimate.seatDayFare > comparisonFare * 1.15) {
+        db.prepare("UPDATE pool_groups SET status='price_review' WHERE id=?").run(candidate.id);
+        db.prepare("UPDATE pool_members SET price_decision='pending' WHERE group_id=? AND status='active'").run(candidate.id);
+        const version = getGroup(db, candidate.id)!.route_version;
+        notifyGroup(db, candidate.id, `pool-price-review:${candidate.id}:${version}`, {
+          new_seat_day_fare: result.estimate.seatDayFare, route_version: version,
+        });
+      }
+      db.exec("COMMIT");
+      notify(db, input.riderId, candidate.id, `pool-auto-match:${candidate.id}:${input.riderId}`, { automatically_matched: true });
+      notifyGroup(db, candidate.id, `pool-auto-match-group:${candidate.id}:${input.riderId}`, { automatically_matched: true });
+      return candidate.id;
+    } catch (error) {
+      db.exec("ROLLBACK");
+      throw error;
+    }
+  }
+  return null;
+}
+
 /** Notify riders once when a group has remained below the minimum for 72 hours. */
 export function processPoolDeadlines(db: DatabaseSync) {
   const rows = db.prepare(`SELECT id,service_dates FROM pool_groups WHERE status='waiting' AND julianday('now')-julianday(waiting_since)>=3`).all() as unknown as { id: number; service_dates: string }[];
@@ -231,6 +310,7 @@ export function processPoolDeadlines(db: DatabaseSync) {
     const open = db.prepare("SELECT COUNT(*) AS n FROM pool_trips WHERE group_id=? AND status IN ('scheduled','assigned','needs_captain','in_progress')").get(trip.group_id) as { n: number };
     const nextStatus = open.n === 0 ? "cancelled" : group.fixed_captain_user_id ? "active" : "needs_captain";
     db.prepare("UPDATE pool_groups SET status=? WHERE id=?").run(nextStatus, trip.group_id);
+    if (nextStatus === "cancelled") releaseCaptainEscrow(db, trip.group_id);
     notifyGroup(db, trip.group_id, `pool-no-replacement:${trip.group_id}:${trip.service_date}`, { service_date: trip.service_date, charge: 0, refund: "service_day" });
   }
 }
@@ -239,6 +319,36 @@ export function createPoolRouter(db: DatabaseSync) {
   const router = Router();
   const rider = [requireAuth(db), requireRole(db, "rider")];
   const captain = [requireAuth(db), requireRole(db, "captain")];
+
+  router.get("/pool/push/vapid-public-key", (_req, res) => {
+    const publicKey = getWebPushPublicKey();
+    if (!publicKey) { res.status(503).json({ error: "إشعارات الجهاز غير مهيأة على الخادم." }); return; }
+    res.json({ public_key: publicKey });
+  });
+
+  router.put("/pool/push/subscriptions", requireAuth(db), (req, res) => {
+    const body = (req.body ?? {}) as { endpoint?: unknown; keys?: { p256dh?: unknown; auth?: unknown } };
+    if (typeof body.endpoint !== "string" || body.endpoint.length > 4096 || typeof body.keys?.p256dh !== "string" ||
+        typeof body.keys.auth !== "string" || !/^[A-Za-z0-9_-]{16,256}$/.test(body.keys.p256dh) ||
+        !/^[A-Za-z0-9_-]{8,128}$/.test(body.keys.auth)) {
+      res.status(400).json({ error: "بيانات اشتراك الإشعارات غير صالحة." }); return;
+    }
+    let secureEndpoint = false;
+    try { secureEndpoint = new URL(body.endpoint).protocol === "https:"; } catch { /* invalid endpoint */ }
+    if (!secureEndpoint) { res.status(400).json({ error: "يجب أن يكون عنوان خدمة الإشعارات آمنًا." }); return; }
+    db.prepare(`INSERT INTO push_subscriptions(user_id,endpoint,p256dh,auth)
+      VALUES(?,?,?,?) ON CONFLICT(endpoint) DO UPDATE SET user_id=excluded.user_id,p256dh=excluded.p256dh,
+      auth=excluded.auth,updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now')`)
+      .run(req.auth!.userId, body.endpoint, body.keys.p256dh, body.keys.auth);
+    res.status(201).json({ subscribed: true });
+  });
+
+  router.delete("/pool/push/subscriptions", requireAuth(db), (req, res) => {
+    const endpoint = (req.body as { endpoint?: unknown } | undefined)?.endpoint;
+    if (typeof endpoint !== "string") { res.status(400).json({ error: "عنوان الاشتراك مطلوب." }); return; }
+    db.prepare("DELETE FROM push_subscriptions WHERE user_id=? AND endpoint=?").run(req.auth!.userId, endpoint);
+    res.json({ unsubscribed: true });
+  });
 
   router.get("/pool/categories", (_req, res) => {
     const categories = db.prepare("SELECT id,speed_tier,has_ac,seats,base_fee,rate_per_km,rate_per_min FROM pool_categories ORDER BY speed_tier,has_ac").all();
@@ -259,6 +369,20 @@ export function createPoolRouter(db: DatabaseSync) {
       initialRoute = await routeFare(category, [{ id: 0, pickup_order: 0, pickup_lat: body.pickup_lat, pickup_lng: body.pickup_lng, dropoff_lat: body.dropoff_lat, dropoff_lng: body.dropoff_lng }]);
     } catch {
       res.status(503).json({ error: "خدمة الخرائط المحلية غير متاحة الآن. شغّل OSRM ثم أعد المحاولة." }); return;
+    }
+    let autoMatchedGroupId: number | null;
+    try {
+      autoMatchedGroupId = await tryAutoJoinWaitingGroup(db, {
+        riderId: req.auth!.userId, categoryId, packageType: String(packageType), serviceDates: dates,
+        morningDeparture: String(body.morning_departure), returnDeparture: String(body.return_departure),
+        pickupLat: body.pickup_lat, pickupLng: body.pickup_lng, dropoffLat: body.dropoff_lat, dropoffLng: body.dropoff_lng,
+      });
+    } catch {
+      res.status(503).json({ error: "تعذر استكمال مجموعة قريبة الآن بسبب خدمة التوجيه. لم يتم إنشاء حجز منفصل." }); return;
+    }
+    if (autoMatchedGroupId) {
+      res.status(200).json({ ...responseGroup(db, autoMatchedGroupId, req.auth!.userId), auto_matched: true });
+      return;
     }
     let groupId = 0;
     db.exec("BEGIN IMMEDIATE");
@@ -299,7 +423,9 @@ export function createPoolRouter(db: DatabaseSync) {
     if (!nearRoute({ lat: body.pickup_lat, lng: body.pickup_lng }) ||
         !nearRoute({ lat: body.dropoff_lat, lng: body.dropoff_lng })) { res.status(400).json({ error: "نقاطك أبعد من 3 كم عن خط مسار المجموعة." }); return; }
     let proposedRoute: PoolRouteQuote;
+    let comparisonFare = group.seat_day_fare;
     try {
+      if (comparisonFare === null) comparisonFare = (await routeFare(category, current)).seatDayFare;
       proposedRoute = await routeFare(category, [...current, { id: -1, pickup_order: current.length, pickup_lat: body.pickup_lat, pickup_lng: body.pickup_lng, dropoff_lat: body.dropoff_lat, dropoff_lng: body.dropoff_lng }]);
     } catch {
       res.status(503).json({ error: "خدمة الخرائط المحلية غير متاحة الآن. تعذر تحديث سعر ومسار المجموعة." }); return;
@@ -313,7 +439,7 @@ export function createPoolRouter(db: DatabaseSync) {
       const nextMembers = getMembers(db, groupId);
       const result = await recalculate(db, group, nextMembers, proposedRoute);
       const latest = getGroup(db, groupId);
-      if (result && latest?.status !== "cancelled" && group.seat_day_fare !== null && result.estimate.seatDayFare > group.seat_day_fare * 1.15) {
+      if (result && latest?.status !== "cancelled" && comparisonFare !== null && result.estimate.seatDayFare > comparisonFare * 1.15) {
         db.prepare("UPDATE pool_groups SET status='price_review' WHERE id=?").run(groupId);
         db.prepare("UPDATE pool_members SET price_decision='pending' WHERE group_id=? AND status='active'").run(groupId);
         notifyGroup(db, groupId, `pool-price-review:${groupId}:${getGroup(db, groupId)!.route_version}`, { new_seat_day_fare: result.estimate.seatDayFare, route_version: getGroup(db, groupId)!.route_version });
@@ -443,6 +569,7 @@ export function createPoolRouter(db: DatabaseSync) {
       if (active.length < (MIN_SEATS[category.speed_tier] ?? category.seats) && !active.some((m) => m.seats_reserved >= category.seats)) {
         db.prepare("UPDATE pool_groups SET status='cancelled' WHERE id=?").run(groupId);
         db.prepare("UPDATE pool_trips SET status='cancelled',captain_user_id=NULL WHERE group_id=? AND status IN ('scheduled','assigned','needs_captain')").run(groupId);
+        releaseCaptainEscrow(db, groupId);
         db.prepare(`UPDATE pool_subscriptions SET refund_amount=refund_amount+amount_due,amount_due=0
           WHERE group_id=? AND member_id IN (SELECT id FROM pool_members WHERE status='active')`).run(groupId);
         notifyGroup(db, groupId, `pool-below-minimum:${groupId}`, { refund: "full" });
@@ -490,9 +617,10 @@ export function createPoolRouter(db: DatabaseSync) {
     const active = getMembers(db, groupId);
     const category = findPoolCategory(db, group.category_id)!;
     const belowMinimum = active.length < (MIN_SEATS[category.speed_tier] ?? category.seats) && !active.some((m) => m.seats_reserved >= category.seats);
-    if (group.status === "waiting" && active.length === 0) {
+    if (active.length === 0) {
       db.prepare("UPDATE pool_groups SET status='cancelled' WHERE id=?").run(groupId);
       db.prepare("UPDATE pool_trips SET status='cancelled',captain_user_id=NULL WHERE group_id=? AND status IN ('scheduled','assigned','needs_captain')").run(groupId);
+      releaseCaptainEscrow(db, groupId);
     } else if (group.package_type === "daily" && belowMinimum) {
       db.prepare("UPDATE pool_groups SET status='waiting',fixed_captain_user_id=NULL,waiting_since=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id=?").run(groupId);
       db.prepare("UPDATE pool_trips SET status='scheduled',captain_user_id=NULL WHERE group_id=? AND status IN ('scheduled','assigned','needs_captain')").run(groupId);
@@ -652,7 +780,7 @@ export function createPoolRouter(db: DatabaseSync) {
 
   router.post("/captain/pool/trips/:id/accept", ...captain, (req, res) => {
     const tripId = Number(req.params.id);
-    const trip = db.prepare("SELECT t.*,g.package_type,g.status AS group_status,g.fixed_captain_user_id FROM pool_trips t JOIN pool_groups g ON g.id=t.group_id WHERE t.id=?").get(tripId) as { id: number; group_id: number; departure_at: string; status: string; package_type: string; group_status: string; fixed_captain_user_id: number | null } | undefined;
+    const trip = db.prepare("SELECT t.*,g.package_type,g.service_dates,g.seat_day_fare,g.status AS group_status,g.fixed_captain_user_id FROM pool_trips t JOIN pool_groups g ON g.id=t.group_id WHERE t.id=?").get(tripId) as { id: number; group_id: number; service_date: string; departure_at: string; status: string; package_type: string; service_dates: string; seat_day_fare: number | null; group_status: string; fixed_captain_user_id: number | null } | undefined;
     if (!trip) { res.status(404).json({ error: "الرحلة غير موجودة." }); return; }
     if (!["minimum_met", "active", "needs_captain"].includes(trip.group_status) || !["scheduled", "needs_captain"].includes(trip.status)) { res.status(409).json({ error: "المسار غير متاح للقبول الآن." }); return; }
     if (trip.fixed_captain_user_id && trip.fixed_captain_user_id !== req.auth!.userId && trip.package_type !== "daily" && trip.status !== "needs_captain") { res.status(409).json({ error: "هذه الباقة لها كابتن ثابت." }); return; }
@@ -664,18 +792,37 @@ export function createPoolRouter(db: DatabaseSync) {
     const preference = db.prepare("SELECT search_radius_km,absences FROM pool_captain_stats WHERE captain_user_id=?").get(req.auth!.userId) as { search_radius_km: number; absences: number } | undefined;
     const effectiveRadius = Math.max(4, (preference?.search_radius_km ?? 4) - Math.min(3, preference?.absences ?? 0));
     if (!first || distanceKm({ lat: profile.current_lat, lng: profile.current_lng }, { lat: first.pickup_lat, lng: first.pickup_lng }) > effectiveRadius) { res.status(409).json({ error: `المسار خارج نطاقك الحالي (${effectiveRadius} كم).` }); return; }
-    const updates = trip.package_type === "daily" || trip.fixed_captain_user_id
-      ? [tripId]
-      : (db.prepare("SELECT id FROM pool_trips WHERE group_id=? AND status IN ('scheduled','needs_captain')").all(trip.group_id) as unknown as { id: number }[]).map((r) => r.id);
+    const isFixedCaptainReplacement = trip.package_type !== "daily" && trip.fixed_captain_user_id !== null &&
+      trip.fixed_captain_user_id !== req.auth!.userId && trip.status === "needs_captain";
+    const updates = trip.package_type === "daily" ? [tripId]
+      : isFixedCaptainReplacement
+        ? (db.prepare("SELECT id FROM pool_trips WHERE group_id=? AND service_date=? AND status='needs_captain'").all(trip.group_id, trip.service_date) as unknown as { id: number }[]).map((r) => r.id)
+        : trip.fixed_captain_user_id
+          ? [tripId]
+          : (db.prepare("SELECT id FROM pool_trips WHERE group_id=? AND status IN ('scheduled','needs_captain')").all(trip.group_id) as unknown as { id: number }[]).map((r) => r.id);
     if (captainHasScheduleConflict(db, req.auth!.userId, updates)) { res.status(409).json({ error: "يوجد تعارض في الوقت أو المسافة مع رحلة أخرى مسندة إليك." }); return; }
     db.exec("BEGIN IMMEDIATE");
     for (const id of updates) {
       const result = db.prepare("UPDATE pool_trips SET captain_user_id=?,status='assigned' WHERE id=? AND captain_user_id IS NULL AND status IN ('scheduled','needs_captain')").run(req.auth!.userId, id);
       if (!Number(result.changes)) { db.exec("ROLLBACK"); res.status(409).json({ error: "قبل كابتن آخر هذا المشوار للتو." }); return; }
     }
+    if (trip.package_type !== "daily" && !trip.fixed_captain_user_id) {
+      db.prepare("UPDATE pool_groups SET fixed_captain_user_id=?,status='active' WHERE id=?").run(req.auth!.userId, trip.group_id);
+      const seats = getMembers(db, trip.group_id).reduce((total, member) => total + member.seats_reserved, 0);
+      const serviceDays = (JSON.parse(trip.service_dates) as string[]).length;
+      const reserve = calculateCaptainEscrowReserve((trip.seat_day_fare ?? 0) * seats, serviceDays);
+      db.prepare(`INSERT OR IGNORE INTO pool_captain_escrows(
+        group_id,original_captain_user_id,package_type,service_days,daily_captain_share_amount,reserved_amount
+      ) VALUES(?,?,?,?,?,?)`).run(
+        trip.group_id, req.auth!.userId, trip.package_type, serviceDays,
+        reserve.dailyCaptainShareAmount, reserve.reservedAmount,
+      );
+    } else if (isFixedCaptainReplacement) {
+      db.prepare("UPDATE pool_groups SET status='active' WHERE id=?").run(trip.group_id);
+    } else {
+      db.prepare("UPDATE pool_groups SET status='active' WHERE id=? AND status<>'needs_captain'").run(trip.group_id);
+    }
     db.exec("COMMIT");
-    if (trip.package_type !== "daily" && !trip.fixed_captain_user_id) db.prepare("UPDATE pool_groups SET fixed_captain_user_id=?,status='active' WHERE id=?").run(req.auth!.userId, trip.group_id);
-    else db.prepare("UPDATE pool_groups SET status='active' WHERE id=? AND status<>'needs_captain'").run(trip.group_id);
     notifyGroup(db, trip.group_id, `pool-captain:${trip.group_id}:${req.auth!.userId}`, { captain_assigned: true });
     res.json({ accepted: true, trips: updates.map((id) => db.prepare("SELECT * FROM pool_trips WHERE id=?").get(id)) });
   });
@@ -694,27 +841,22 @@ export function createPoolRouter(db: DatabaseSync) {
     catch { res.status(503).json({ error: "خدمة الخرائط المحلية غير متاحة الآن. لم يتغير ترتيب الوقفات." }); return; }
     ordered.forEach((m, index) => db.prepare("UPDATE pool_members SET pickup_order=? WHERE id=?").run(index, m.id));
     rebuildTripStops(db, groupId);
-    db.prepare("UPDATE pool_groups SET route_duration_min=?,route_geometry=? WHERE id=?").run(revised.durationMin, revised.routeGeometry, groupId);
+    // ترتيب الكابتن قد يطوّل المسار؛ السعر المتفق عليه يظل ثابتًا والزيادة على الكابتن.
+    db.prepare("UPDATE pool_groups SET route_distance_km=?,route_duration_min=?,route_geometry=? WHERE id=?")
+      .run(revised.distanceKm, revised.durationMin, revised.routeGeometry, groupId);
     const futureTrips = db.prepare("SELECT id,departure_at FROM pool_trips WHERE group_id=? AND status IN ('scheduled','needs_captain','assigned')").all(groupId) as unknown as { id: number; departure_at: string }[];
     const newTimes = futureTrips.map((trip) => {
       const arrival = new Date(Date.parse(trip.departure_at) + revised.durationMin * 60_000).toISOString();
       db.prepare("UPDATE pool_trips SET estimated_arrival_at=? WHERE id=?").run(arrival, trip.id);
       return { trip_id: trip.id, estimated_arrival_at: arrival };
     });
-    if (group.route_distance_km !== null && revised.distanceKm > group.route_distance_km * 1.15) {
-      db.prepare("UPDATE pool_groups SET route_distance_km=?,route_duration_min=?,seat_day_fare=?,route_geometry=?,route_version=route_version+1,status='price_review' WHERE id=?")
-        .run(revised.distanceKm, revised.durationMin, revised.seatDayFare, revised.routeGeometry, groupId);
-      db.prepare("UPDATE pool_members SET price_decision='pending' WHERE group_id=? AND status='active'").run(groupId);
-      const version = getGroup(db, groupId)!.route_version;
-      notifyGroup(db, groupId, `pool-price-review:${groupId}:${version}`, { new_seat_day_fare: revised.seatDayFare, route_version: version });
-    }
     notifyGroup(db, groupId, `pool-stop-order:${groupId}:${Date.now()}`, { member_ids: ordered.map((m) => m.id), updated_times: newTimes });
     res.json({ group: responseGroup(db, groupId) });
   });
 
   router.post("/captain/pool/trips/:id/complete", ...captain, (req, res) => {
     const tripId = Number(req.params.id);
-    const trip = db.prepare("SELECT t.*,g.seat_day_fare,g.package_type,g.status AS group_status FROM pool_trips t JOIN pool_groups g ON g.id=t.group_id WHERE t.id=?").get(tripId) as { id: number; group_id: number; captain_user_id: number | null; status: string; seat_day_fare: number | null; package_type: string; group_status: string } | undefined;
+    const trip = db.prepare("SELECT t.*,g.seat_day_fare,g.package_type,g.status AS group_status,g.fixed_captain_user_id FROM pool_trips t JOIN pool_groups g ON g.id=t.group_id WHERE t.id=?").get(tripId) as { id: number; group_id: number; captain_user_id: number | null; status: string; seat_day_fare: number | null; package_type: string; group_status: string; fixed_captain_user_id: number | null } | undefined;
     if (!trip) { res.status(404).json({ error: "الرحلة غير موجودة." }); return; }
     if (trip.captain_user_id !== req.auth!.userId || !["assigned", "in_progress"].includes(trip.status)) { res.status(409).json({ error: "هذه الرحلة غير مسندة إليك أو غير قابلة للإقفال." }); return; }
     if (trip.group_status === "price_review") { res.status(409).json({ error: "انتظر موافقة الركاب على السعر الجديد." }); return; }
@@ -725,15 +867,45 @@ export function createPoolRouter(db: DatabaseSync) {
       db.prepare("UPDATE pool_trips SET status='completed',completed_at=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id=?").run(tripId);
       const members = getMembers(db, trip.group_id);
       const listAmount = (trip.seat_day_fare ?? 0) / 2;
-      const discount = planDiscount(trip.package_type);
-      const riderAmount = roundMoney(listAmount * (1 - discount));
       for (const member of members) {
         if (db.prepare("SELECT 1 FROM pool_trip_cancellations WHERE trip_id=? AND member_id=?").get(tripId, member.id)) continue;
-        db.prepare("INSERT OR IGNORE INTO pool_ledger(trip_id,member_id,list_amount,rider_amount) VALUES(?,?,?,?)")
-          .run(tripId, member.id, listAmount * member.seats_reserved, riderAmount * member.seats_reserved);
+        const settlement = calculatePoolSettlement(listAmount, trip.package_type as "daily" | "weekly" | "monthly");
+        db.prepare(`INSERT OR IGNORE INTO pool_ledger(
+          trip_id,member_id,list_amount,rider_amount,discount_amount,
+          company_share_amount,captain_share_amount,company_commission_rate,settlement_status
+        ) VALUES(?,?,?,?,?,?,?,?,?)`)
+          .run(
+            tripId,
+            member.id,
+            roundMoney(settlement.listAmount * member.seats_reserved),
+            roundMoney(settlement.riderAmount * member.seats_reserved),
+            roundMoney(settlement.discountAmount * member.seats_reserved),
+            roundMoney(settlement.companyShareAmount * member.seats_reserved),
+            roundMoney(settlement.captainShareAmount * member.seats_reserved),
+            settlement.companyCommissionRate,
+            settlement.settlementStatus,
+          );
+      }
+      if (trip.package_type !== "daily" && trip.fixed_captain_user_id !== null && trip.captain_user_id !== trip.fixed_captain_user_id) {
+        const escrow = db.prepare("SELECT id,reserved_amount,used_amount FROM pool_captain_escrows WHERE group_id=? AND status='reserved'").get(trip.group_id) as { id: number; reserved_amount: number; used_amount: number } | undefined;
+        if (escrow) {
+          const due = db.prepare("SELECT COALESCE(SUM(captain_share_amount),0) AS amount FROM pool_ledger WHERE trip_id=?").get(tripId) as { amount: number };
+          const transfer = calculateCaptainEscrowTransfer(due.amount, escrow.reserved_amount - escrow.used_amount);
+          db.prepare(`INSERT OR IGNORE INTO pool_captain_escrow_transfers(
+            escrow_id,trip_id,original_captain_user_id,replacement_captain_user_id,
+            amount_due,escrow_funded_amount,unfunded_amount
+          ) VALUES(?,?,?,?,?,?,?)`).run(
+            escrow.id, tripId, trip.fixed_captain_user_id, trip.captain_user_id,
+            transfer.amountDue, transfer.escrowFundedAmount, transfer.unfundedAmount,
+          );
+          db.prepare("UPDATE pool_captain_escrows SET used_amount=used_amount+? WHERE id=?").run(transfer.escrowFundedAmount, escrow.id);
+        }
       }
       const remaining = db.prepare("SELECT COUNT(*) AS n FROM pool_trips WHERE group_id=? AND status NOT IN ('completed','cancelled')").get(trip.group_id) as { n: number };
-      if (remaining.n === 0) db.prepare("UPDATE pool_groups SET status='completed' WHERE id=?").run(trip.group_id);
+      if (remaining.n === 0) {
+        db.prepare("UPDATE pool_groups SET status='completed' WHERE id=?").run(trip.group_id);
+        releaseCaptainEscrow(db, trip.group_id);
+      }
       db.exec("COMMIT");
     } catch { db.exec("ROLLBACK"); res.status(409).json({ error: "تعذر تسجيل إقفال الرحلة." }); return; }
     res.json({ trip: db.prepare("SELECT * FROM pool_trips WHERE id=?").get(tripId), ledger: db.prepare("SELECT * FROM pool_ledger WHERE trip_id=?").all(tripId) });
@@ -741,9 +913,19 @@ export function createPoolRouter(db: DatabaseSync) {
 
   router.post("/captain/pool/trips/:id/report-absence", ...captain, (req, res) => {
     const tripId = Number(req.params.id);
-    const trip = db.prepare("SELECT group_id,captain_user_id,status FROM pool_trips WHERE id=?").get(tripId) as { group_id: number; captain_user_id: number | null; status: string } | undefined;
+    const trip = db.prepare(`SELECT t.group_id,t.service_date,t.captain_user_id,t.status,g.package_type,g.fixed_captain_user_id
+      FROM pool_trips t JOIN pool_groups g ON g.id=t.group_id WHERE t.id=?`).get(tripId) as {
+      group_id: number; service_date: string; captain_user_id: number | null; status: string;
+      package_type: string; fixed_captain_user_id: number | null;
+    } | undefined;
     if (!trip || trip.captain_user_id !== req.auth!.userId || !["assigned", "scheduled"].includes(trip.status)) { res.status(409).json({ error: "لا يمكن تسجيل الغياب لهذه الرحلة." }); return; }
-    db.prepare("UPDATE pool_trips SET captain_user_id=NULL,status='needs_captain' WHERE id=?").run(tripId);
+    if (trip.package_type !== "daily" && trip.fixed_captain_user_id === req.auth!.userId) {
+      db.prepare(`UPDATE pool_trips SET captain_user_id=NULL,status='needs_captain'
+        WHERE group_id=? AND service_date=? AND status IN ('scheduled','assigned','needs_captain')`)
+        .run(trip.group_id, trip.service_date);
+    } else {
+      db.prepare("UPDATE pool_trips SET captain_user_id=NULL,status='needs_captain' WHERE id=?").run(tripId);
+    }
     db.prepare("UPDATE pool_groups SET status='needs_captain' WHERE id=?").run(trip.group_id);
     db.prepare("INSERT INTO pool_captain_stats(captain_user_id,absences) VALUES(?,1) ON CONFLICT(captain_user_id) DO UPDATE SET absences=absences+1").run(req.auth!.userId);
     notifyGroup(db, trip.group_id, `pool-captain-absent:${trip.group_id}:${tripId}`, { replacement_search: true, charge: 0 });

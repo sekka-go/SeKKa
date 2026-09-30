@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { createApp } from "./app.js";
 import { DEFAULT_DB_PATH, openDatabase } from "./db/connection.js";
 import { runMigrations } from "./db/migrate.js";
@@ -38,5 +39,5 @@ poolDeadlineTimer.unref();
 
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console
-  console.log(`[sekka-server] Phase 11 listening on http://localhost:${PORT}`);
+  console.log(`[sekka-server] Phase 14 listening on http://localhost:${PORT}`);
 });

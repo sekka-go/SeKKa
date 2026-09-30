@@ -4,7 +4,7 @@ import { openDatabase } from "../src/db/connection.js";
 import { runMigrations } from "../src/db/migrate.js";
 
 describe("runMigrations", () => {
-  it("يطبّق كل ملفات الـ migrations (001_init.sql إلى 010_pool_domain.sql) ويسجّلهم في schema_migrations", () => {
+  it("يطبّق كل ملفات الـ migrations (001_init.sql إلى 013_push_subscriptions.sql) ويسجّلهم في schema_migrations", () => {
     const db = openDatabase(":memory:");
     const applied = runMigrations(db);
 
@@ -19,6 +19,9 @@ describe("runMigrations", () => {
       "008_password_change.sql",
       "009_pool_categories.sql",
       "010_pool_domain.sql",
+      "011_pool_settlement.sql",
+      "012_pool_captain_escrow.sql",
+      "013_push_subscriptions.sql",
     ]);
 
     for (const filename of [
@@ -32,6 +35,9 @@ describe("runMigrations", () => {
       "008_password_change.sql",
       "009_pool_categories.sql",
       "010_pool_domain.sql",
+      "011_pool_settlement.sql",
+      "012_pool_captain_escrow.sql",
+      "013_push_subscriptions.sql",
     ]) {
       const row = db
         .prepare("SELECT filename FROM schema_migrations WHERE filename = ?")
@@ -50,10 +56,10 @@ describe("runMigrations", () => {
     const count = db.prepare("SELECT COUNT(*) as c FROM schema_migrations").get() as {
       c: number;
     };
-    assert.equal(count.c, 10);
+    assert.equal(count.c, 13);
   });
 
-  it("بيبني الجداول المطلوبة فقط (Phase 6 + 7 + 8 + 10 + 11)", () => {
+  it("بيبني جداول الـ Pool والتسوية والاحتياطي واشتراكات Push للمراحل 10–14", () => {
     const db = openDatabase(":memory:");
     runMigrations(db);
 
@@ -75,6 +81,8 @@ describe("runMigrations", () => {
       "payment_status_events",
       "payments",
       "pool_captain_capabilities",
+      "pool_captain_escrow_transfers",
+      "pool_captain_escrows",
       "pool_captain_stats",
       "pool_categories",
       "pool_groups",
@@ -86,6 +94,7 @@ describe("runMigrations", () => {
       "pool_trip_stops",
       "pool_trips",
       "pricing_config",
+      "push_subscriptions",
       "schema_migrations",
       "service_categories",
       "sessions",

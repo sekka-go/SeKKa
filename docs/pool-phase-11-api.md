@@ -5,7 +5,7 @@ All routes are under `/api`. Requests and responses use JSON. Authenticated rout
 ## The rider flow
 
 1. Read the four available categories from `GET /pool/categories`.
-2. Start a group with `POST /rider/pool/groups`, then share its group ID. Other riders join with `POST /rider/pool/groups/:id/join`.
+2. Start with `POST /rider/pool/groups`. The server first tries to add the rider to the oldest waiting group with the exact same category, package, dates, and times, provided both points are within 3 km of its road route and a seat remains. If none qualifies, it creates a group and returns HTTP 201; an automatic join returns HTTP 200 with `auto_matched: true`. Existing groups can still be joined by ID with `POST /rider/pool/groups/:id/join`.
 3. For an existing group, a captain can instead create invitations with `POST /captain/pool/groups`. Each invited rider reviews the category and price, then accepts or declines with `POST /rider/pool/groups/:id/confirm`.
 4. Faster routes start with two riders; Saver routes start with three. One rider can reserve all remaining seats using `POST /rider/pool/groups/:id/complete-seats`. The price is still divided by the category's full capacity.
 5. When the minimum is met, the server snapshots the price and creates one outbound and one return trip for every selected service date. The group appears in nearby captains' offers.
@@ -44,6 +44,9 @@ Prices are EGP. A group request body contains `category_id`, `package_type` (`da
 | `POST /rider/pool/groups/:id/cancel` | Cancel the subscription. Weekly/monthly refunds cover unused days less the 10% fee. A daily subscription follows the same 12-hour rule as a service-day cancellation. |
 | `GET /pool/notifications` | Read the authenticated user's in-app notification inbox. |
 | `POST /pool/notifications/:id/read` | Mark one notification as read. |
+| `GET /pool/push/vapid-public-key` | Public; returns the VAPID public key when Web Push is configured. |
+| `PUT /pool/push/subscriptions` | Authenticated; register or update this device's browser subscription. |
+| `DELETE /pool/push/subscriptions` | Authenticated; remove this user's subscription for the supplied endpoint. |
 
 If a price increase is more than 15%, every active rider must accept the new amount. A rider who declines is removed without a cancellation fee. If that leaves fewer than the minimum riders (and no rider has booked the whole car), the route is cancelled and the full amount due is recorded as refundable. No payment or refund is executed in this phase.
 
@@ -68,17 +71,22 @@ The backend rejects a captain whose current location is more than the saved effe
 
 - The daily seat fare is the two-way route fare divided by full category capacity. Weekly pricing applies 5% off five service days; monthly pricing applies 10% off 22 days.
 - Subscription amounts and cancellation refund entitlements are calculated and recorded on `pool_subscriptions`; neither payment capture nor refund execution is implemented.
-- The commission split is deferred. Completion records the gross list and rider prices only; there are no company/captain allocation fields or payout actions, and package offers do not depend on payment state.
+- Completion records the gross list and rider prices plus deferred settlement fields: the captain share is 80% of list price, and the company share is 20% minus any package discount absorbed by the company. Each ledger row is marked `pending`; no payment capture or payout action is performed.
+- New individual requests can automatically join one compatible `waiting` group. The group must match category/package/service dates/departure times exactly; both new points must be within 3 km of its saved outbound road route. Matching skips groups with unconfirmed captain invitations, respects remaining capacity under an immediate transaction, and activates the route if the Faster/Saver minimum is met. Route expansion is compared with the current OSRM fare estimate; increases over 15% put the quote into `price_review` for all active riders. Manual joins use the same baseline rule.
+- Captain stop reordering updates route geometry, distance, duration, and estimated arrival times, but never changes the confirmed seat fare or opens a price review. Any added route distance from a captain-selected order is absorbed by the captain.
+- A fixed captain's absence opens both legs for the same weekly/monthly service date. The first qualified replacement captain who accepts is assigned both legs for that date; the package's fixed captain remains unchanged for other dates.
+- When a weekly/monthly fixed captain is first assigned, migration `012_pool_captain_escrow.sql` records a reserve estimate covering up to four service days from the captain's 80% share. If a replacement completes a trip, `pool_captain_escrow_transfers` records the amount due, reserve-funded amount, and any uncovered balance. Unused reserve is released in the accounting record when the package ends. These are calculation records only; no funds are held or transferred.
 - The 72-hour waiting notification is created by a one-minute server timer and appears in the inbox with `wait`, `book_remaining_seats`, and `cancel_free` options. Waiting is the default if the rider takes no action.
 - If all selected dates pass while the group is still waiting, it is cancelled free and riders are asked to create a group with future dates. If a confirmed route activates after some dates have passed, only remaining future dates are scheduled and billed.
 - If no replacement captain accepts by the scheduled departure, the service date's two legs are cancelled and the date amount is removed from the amount due; later dates in a weekly/monthly package remain scheduled.
-- The API persists notifications in the database; push/SMS delivery is not configured in this project.
+- The API persists notifications in the database. When `SEKKA_VAPID_PUBLIC_KEY`, `SEKKA_VAPID_PRIVATE_KEY`, and `SEKKA_VAPID_SUBJECT` are configured, new pool notifications also send generic Web Push messages to subscribed devices. Push delivery is best-effort; in-app inbox remains the source of truth. Expired endpoints (HTTP 404/410) are removed. SMS is not configured.
 
 ## Implementation boundaries
 
-- Phase 11 data lives in its own tables from migration `010_pool_domain.sql`; the existing `matches`, `trips`, and `trip_stops` model is unchanged.
+- Phase 11 data lives in its own tables from migration `010_pool_domain.sql`; deferred settlement fields are added by migration `011_pool_settlement.sql`, and fixed-captain reserve records by `012_pool_captain_escrow.sql`. The existing `matches`, `trips`, and `trip_stops` model is unchanged.
 - Routing uses an OSRM-compatible server-side service. The default is local `http://127.0.0.1:5000`; set `SEKKA_ROUTING_URL` to an operator-managed OSRM endpoint if needed. Outbound and reverse waypoint routes are requested separately, and both road distance and duration are used in pricing. The server never accepts client-supplied route totals. If routing is unavailable, new group creation fails with HTTP 503 rather than silently pricing straight-line distances.
 - OSRM can run locally for free with OpenStreetMap road data. The public OSRM demo and public OSM tile servers are community resources without a production availability guarantee; rider coordinates are not sent to the public demo by this implementation. No geocoder or tile service is configured, and clients must provide coordinates.
-- Payment gateway, refunds, and the 20/80 company/captain commission split are deferred as requested. `amount_due` and `refund_amount` are calculation fields only; `pool_ledger` stores gross completed-ride amounts without settlement or share allocation.
+- Payment gateway and refund execution remain deferred as requested. `amount_due` and `refund_amount` are calculation fields only. `pool_ledger` also stores `discount_amount`, `company_share_amount`, `captain_share_amount`, `company_commission_rate`, and `settlement_status` so a later payment integration can settle without recomputing historical fares.
 - Grok is not integrated: routing, fare calculations, cancellation rules, and eligibility checks are deterministic backend rules and do not benefit from an LLM call.
+- Generate VAPID keys with `npx web-push generate-vapid-keys`, copy them to `server/.env` using `server/.env.example` as a template, and keep the private key out of Git. Push subscriptions require HTTPS and browser permission; local development does not register the production service worker.
 - The return route reverses the outbound stop list and swaps each rider's pickup/drop-off role. OSRM computes the road geometry for each direction independently. The default outbound sequence is pickup order followed by drop-off order; captains can reorder the pickup sequence.

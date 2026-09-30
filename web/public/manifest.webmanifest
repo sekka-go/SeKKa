@@ -1,0 +1,28 @@
+{
+  "name": "أسهل سكة | SeKKa",
+  "short_name": "أسهل سكة",
+  "description": "تنقّل يومي أذكى في القاهرة والجيزة",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#171309",
+  "background_color": "#171309",
+  "categories": ["travel", "transportation"],
+  "icons": [
+    {
+      "src": "/brand/sekka-icon-dark.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/brand/sekka-icon-dark.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
