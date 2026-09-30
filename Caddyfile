@@ -1,0 +1,4 @@
+{$SEKKA_DOMAIN} {
+  encode zstd gzip
+  reverse_proxy sekka:3001
+}

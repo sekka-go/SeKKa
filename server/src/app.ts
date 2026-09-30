@@ -1,4 +1,6 @@
 import express, { type Express } from "express";
+import { existsSync } from "node:fs";
+import path from "node:path";
 import type { DatabaseSync } from "node:sqlite";
 import { createConfigRouter } from "./routes/config.js";
 import { createAuthRouter } from "./routes/auth.js";
@@ -30,6 +32,16 @@ export function createApp(db: DatabaseSync): Express {
   app.use("/api", (_req, res) => {
     res.status(404).json({ error: "الصفحة اللي بتدور عليها مش موجودة." });
   });
+
+  const webDist = process.env.SEKKA_WEB_DIST ?? path.resolve(process.cwd(), "../web/dist");
+  const webIndex = path.join(webDist, "index.html");
+  if (existsSync(webIndex)) {
+    app.use(express.static(webDist));
+    app.use((req, res, next) => {
+      if (req.method !== "GET" || path.extname(req.path)) { next(); return; }
+      res.sendFile(webIndex, (error) => { if (error) next(error); });
+    });
+  }
 
   return app;
 }

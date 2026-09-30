@@ -1,0 +1,43 @@
+services:
+  sekka:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - ./server/.env
+    environment:
+      PORT: "3001"
+      SEKKA_DB_PATH: /data/sekka.db
+      SEKKA_WEB_DIST: /app/web-dist
+      SEKKA_ROUTING_URL: ${SEKKA_ROUTING_URL:?Set SEKKA_ROUTING_URL in the root .env file}
+    volumes:
+      - sekka-data:/data
+    expose:
+      - "3001"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      SEKKA_DOMAIN: ${SEKKA_DOMAIN:?Set SEKKA_DOMAIN in the root .env file}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      sekka:
+        condition: service_healthy
+
+volumes:
+  sekka-data:
+  caddy-data:
+  caddy-config:
