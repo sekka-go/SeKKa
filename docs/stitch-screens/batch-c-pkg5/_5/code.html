@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>SeKKa - Route Details</title>
+<!-- Google Fonts: Tajawal -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              yellow: '#FDC51A',
+              yellowHover: '#e5b214',
+              dark: '#111317',
+              card: '#1F2228',
+              cardBorder: '#2B2F38',
+              subtext: '#9FA5B2',
+            }
+          },
+          fontFamily: {
+            tajawal: ['Tajawal', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="custom-styling">
+    body {
+      font-family: 'Tajawal', sans-serif;
+      background-color: #121418;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* Custom glow effects */
+    .glow-yellow {
+      box-shadow: 0 0 25px rgba(253, 197, 26, 0.4);
+    }
+    /* Hide scrollbars for app-like aesthetic */
+    ::-webkit-scrollbar {
+      display: none;
+    }
+    * {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-[#121418] text-white flex justify-center min-h-screen selection:bg-[#FDC51A] selection:text-black">
+<!-- Mobile Frame Container (iOS Form Factor) -->
+<div class="w-full max-w-[420px] min-h-screen flex flex-col justify-between relative overflow-hidden pb-6">
+<!-- BEGIN: TopAppBar -->
+<header class="w-full px-4 pt-4 pb-2 flex items-center justify-between z-20" data-purpose="app-header">
+<!-- Left side: App Logo & More Options -->
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center bg-black/40">
+<img alt="SeKKa Logo Icon" class="w-7 h-7 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBHzbTvv2n6HJ4DcXJvu8nJ6wUUuhr90LbDx_GlbQI32g-jbHC1wUCxjzJXtcjA6C5lUpwx5Xwh02ZprFw7xY0Nc_QAtELdFToexM_7YYoHqjivlK_UZb3rYkg_-ONxuHMpyUWyKWV6WGlysCqIxBUPDO_eHerf2B7whQt7BI1wp-KLHZWpUrjt5X4f_TgisDKtQeYw7xqooCXbInW_DTeufIEheu-MpSFqc1hBVr5mQhKVl3szGbXtBoymT8iV143OKUA"/>
+</div>
+<button aria-label="Menu" class="text-gray-400 hover:text-white p-1" type="button">
+<svg class="w-5 h-5 fill-current" viewbox="0 0 24 24">
+<circle cx="12" cy="5" r="2"></circle>
+<circle cx="12" cy="12" r="2"></circle>
+<circle cx="12" cy="19" r="2"></circle>
+</svg>
+</button>
+</div>
+<!-- Right side: Title & Back Chevron -->
+<div class="flex items-center gap-1.5 cursor-pointer">
+<span class="text-base font-bold text-white tracking-wide">Route Details</span>
+<svg class="w-5 h-5 text-gray-300 stroke-[2.5]" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+</header>
+<!-- END: TopAppBar -->
+<!-- BEGIN: HeroGraphicSection -->
+<section class="relative px-4 pt-1 pb-3" data-purpose="route-visualizer">
+<div class="relative w-full h-[190px] rounded-2xl overflow-hidden shadow-2xl border border-white/5 bg-[#171A21]">
+<!-- High-speed traffic & city transit background -->
+<img alt="Night Transit Highway" class="w-full h-full object-cover brightness-[0.52] contrast-[1.15]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9xmMLQqSwtbdaGr92KVM2dyMQC3LHl91baFi68pvWy95uCUJT3AcJW0UmK2s_yEWrvhVWfls8-U7wo_uVG5nOvNLFRLKF4RYvAFZmTj8Dhm-fTjoZiq8-Fg8qht7_lmCcFsZXxi6oSqRPy_oS51FhQLKXjr4TmVuj0PyvGKEd4zl3jhha31EqyT4gUDln9GZXJCyODnKg2QfM3Dyr8lGpCS2GsQrOIAWFR58Xz6faFJEikNCoOaEI9w"/>
+<!-- Dark Gradient Overlay -->
+<div class="absolute inset-0 bg-gradient-to-t from-[#121418] via-[#121418]/40 to-black/60 pointer-events-none"></div>
+<!-- Top Badges inside Hero -->
+<div class="absolute top-3 inset-x-3 flex items-center justify-between text-[11px] font-medium z-10">
+<!-- Active Line Status Badge -->
+<div class="flex items-center gap-1.5 bg-[#20242D]/90 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 shadow-sm text-gray-200">
+<span class="w-2 h-2 rounded-full bg-[#FDC51A] animate-pulse"></span>
+<span>خطوط نشطة ومباشرة</span>
+</div>
+<!-- Region Coverage Info -->
+<div class="flex items-center gap-1 text-gray-300 font-normal">
+<svg class="w-3.5 h-3.5 text-[#FDC51A] fill-[#FDC51A]" viewbox="0 0 24 24">
+<path d="M13 2L3 14h7v8l10-12h-7z"></path>
+</svg>
+<span class="text-[10.5px]">القاهرة • الجيزة • العاصمة</span>
+</div>
+</div>
+<!-- Bottom Route Line & Endpoints -->
+<div class="absolute bottom-3 inset-x-3 z-10 flex flex-col gap-1.5">
+<div class="flex items-center justify-between text-xs font-bold text-white px-0.5">
+<!-- Source Station Tag -->
+<div class="flex items-center gap-1 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 text-[11px]">
+<svg class="w-3.5 h-3.5 text-[#FDC51A]" fill="currentColor" viewbox="0 0 20 20">
+<path clip-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" fill-rule="evenodd"></path>
+</svg>
+<span>القرية الذكية</span>
+</div>
+<!-- Animated Route Connector Bar -->
+<div class="flex-1 mx-2 flex items-center relative">
+<div class="w-full h-0.5 bg-gray-500/60 rounded"></div>
+<div class="absolute left-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-[#FDC51A] ring-4 ring-[#FDC51A]/20"></div>
+</div>
+<!-- Destination Station Tag -->
+<div class="flex items-center gap-1 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 text-[11px]">
+<svg class="w-3.5 h-3.5 text-[#FDC51A]" fill="currentColor" viewbox="0 0 24 24">
+<path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"></path>
+</svg>
+<span>التجمع الخامس</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- END: HeroGraphicSection -->
+<!-- BEGIN: BrandIdentity -->
+<section class="flex flex-col items-center text-center px-5 pt-1 pb-2" data-purpose="brand-header">
+<!-- Yellow Badge with Bus Icon & Typography -->
+<div class="flex items-center gap-3.5 mb-2">
+<div class="text-right flex flex-col justify-center">
+<div class="flex items-baseline gap-1.5 justify-end">
+<span class="text-xs font-extrabold tracking-wider text-[#FDC51A]">SEKKA</span>
+<span class="text-2xl font-black tracking-tight text-white leading-none">سِكَّة</span>
+</div>
+<span class="text-[10px] text-gray-400 font-medium">منظومة النقل الترددي اليومي</span>
+</div>
+<div class="w-12 h-12 rounded-2xl bg-[#FDC51A] flex items-center justify-center shadow-lg shadow-[#FDC51A]/20">
+<svg class="w-7 h-7 text-[#121418]" fill="currentColor" viewbox="0 0 24 24">
+<path d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-6H6V6h12v5z"></path>
+</svg>
+</div>
+</div>
+<!-- Main Headline -->
+<h1 class="text-xl sm:text-2xl font-black text-white tracking-tight mb-1.5">
+        مشوارك اليومي يبدأ من هنا
+      </h1>
+<!-- Subtitle Description -->
+<p class="text-xs text-gray-400 font-normal leading-relaxed max-w-[320px]">
+        نظّم مشوارك اليومي مع كباتن محترفين وتجربة تنقّل ذكية مخصصة لرحلات العمل والجامعات.
+      </p>
+</section>
+<!-- END: BrandIdentity -->
+<!-- BEGIN: ValuePropositionCards -->
+<main class="px-4 py-2 flex flex-col gap-2.5" data-purpose="features-list">
+<!-- Feature 1: Punctual Schedules -->
+<article class="bg-[#1C2027] border border-[#2B303C]/70 rounded-2xl p-3 flex items-center justify-between transition-all hover:border-[#FDC51A]/40">
+<div class="text-right pr-1 flex-1">
+<h2 class="text-[13px] font-bold text-white mb-0.5">مواعيد ثابتة ومضمونة</h2>
+<p class="text-[11px] text-gray-400 font-normal">تتبّع مباشر وتوقيت وصول دقيق دون انتظار</p>
+</div>
+<div class="w-10 h-10 rounded-xl bg-[#242A35] flex items-center justify-center flex-shrink-0 text-[#FDC51A]">
+<svg class="w-5 h-5 stroke-[2.2]" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="9"></circle>
+<polyline points="12 7 12 12 15 15"></polyline>
+</svg>
+</div>
+</article>
+<!-- Feature 2: Verified Captains & Comfort -->
+<article class="bg-[#1C2027] border border-[#2B303C]/70 rounded-2xl p-3 flex items-center justify-between transition-all hover:border-[#FDC51A]/40">
+<div class="text-right pr-1 flex-1">
+<h2 class="text-[13px] font-bold text-white mb-0.5">كباتن معتمدون وسيارات مريحة</h2>
+<p class="text-[11px] text-gray-400 font-normal">فحص أمني دوري وحافلات مكيفة مجهزة بالكامل</p>
+</div>
+<div class="w-10 h-10 rounded-xl bg-[#242A35] flex items-center justify-center flex-shrink-0 text-[#FDC51A]">
+<svg class="w-5 h-5 stroke-[2.2]" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+</article>
+<!-- Feature 3: Monthly & Daily Pass -->
+<article class="bg-[#1C2027] border border-[#2B303C]/70 rounded-2xl p-3 flex items-center justify-between transition-all hover:border-[#FDC51A]/40">
+<div class="text-right pr-1 flex-1">
+<h2 class="text-[13px] font-bold text-white mb-0.5">اشتراك يومي وشهري منظّم</h2>
+<p class="text-[11px] text-gray-400 font-normal">باقات مرنة ومقعد محجوز باسمك طوال فترة العمل</p>
+</div>
+<div class="w-10 h-10 rounded-xl bg-[#242A35] flex items-center justify-center flex-shrink-0 text-[#FDC51A]">
+<svg class="w-5 h-5 stroke-[2.2]" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<rect height="12" rx="2" width="18" x="3" y="6"></rect>
+<line x1="8" x2="8" y1="12" y2="12.01"></line>
+<line x1="16" x2="16" y1="12" y2="12.01"></line>
+<path d="M12 9v6"></path>
+</svg>
+</div>
+</article>
+</main>
+<!-- END: ValuePropositionCards -->
+<!-- BEGIN: LiveActivityPill -->
+<div class="px-4 py-1.5 flex items-center justify-between text-xs" data-purpose="live-route-indicator">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-[#FDC51A]"></span>
+<span class="text-gray-300 font-medium text-[11px]">الخط الأكثر نشاطاً هذا الصباح:</span>
+</div>
+<div class="bg-[#1C2027] border border-white/10 px-2.5 py-0.5 rounded-full text-gray-300 font-semibold text-[10.5px]">
+        زايد ⇄ المعادي
+      </div>
+</div>
+<!-- END: LiveActivityPill -->
+<!-- BEGIN: ActionsArea -->
+<footer class="px-4 pt-2 flex flex-col gap-2.5" data-purpose="action-buttons">
+<!-- Primary Yellow Action Button -->
+<button class="w-full h-12 bg-[#FDC51A] hover:bg-[#e6b113] active:scale-[0.99] text-black font-extrabold text-base rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-[#FDC51A]/20 transition-all duration-200" type="button">
+<span>ابدأ الآن</span>
+<!-- Leftward arrow for RTL direction -->
+<svg class="w-5 h-5 stroke-[2.5]" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<line x1="19" x2="5" y1="12" y2="12"></line>
+<polyline points="12 19 5 12 12 5"></polyline>
+</svg>
+</button>
+<!-- Secondary Login Link Button -->
+<button class="w-full h-11 text-gray-300 hover:text-white font-bold text-sm rounded-xl flex items-center justify-center bg-transparent active:bg-white/5 transition-all" type="button">
+        تسجيل الدخول
+      </button>
+</footer>
+<!-- END: ActionsArea -->
+</div>
+</body></html>

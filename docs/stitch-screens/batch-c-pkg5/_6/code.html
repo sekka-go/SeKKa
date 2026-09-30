@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>تقييم مشوار اليوم - سِكَّة</title>
+<!-- Tailwind CSS v3 -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts: Tajawal -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            tajawal: ['Tajawal', 'sans-serif'],
+          },
+          colors: {
+            sekka: {
+              yellow: '#FFD21F',
+              yellowHover: '#e6be19',
+              yellowBg: 'rgba(255, 210, 31, 0.12)',
+              bg: '#121417',
+              card: '#1B1E22',
+              cardInner: '#24282E',
+              border: '#2A3037',
+              subtext: '#98A2B3',
+            }
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="custom-scroll-and-fonts">
+    * {
+      font-family: 'Tajawal', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #0f1115;
+      color: #FFFFFF;
+    }
+    /* Hide scrollbars */
+    ::-webkit-scrollbar {
+      display: none;
+    }
+    * {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-[#101216] text-white flex justify-center min-h-screen">
+<!-- Mobile Container (Max 430px for accurate iOS representation) -->
+<div class="w-full max-w-[420px] bg-[#121417] flex flex-col min-h-screen relative shadow-2xl pb-32">
+<!-- BEGIN: TopBar -->
+<header class="sticky top-0 z-30 bg-[#121417]/95 backdrop-blur-md px-4 py-3 border-b border-[#22262d] flex items-center justify-between">
+<!-- Back button -->
+<button aria-label="الرجوع" class="w-9 h-9 rounded-full bg-[#1e2228] flex items-center justify-center text-gray-300 hover:text-white border border-[#2d323b] transition-colors">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+<!-- Center Title -->
+<span class="text-sm font-semibold text-gray-200">تقييم المشوار اليومي</span>
+<!-- Brand Logo & Name -->
+<div class="flex items-center gap-1.5 bg-[#1b1e24] px-2.5 py-1 rounded-full border border-[#2c323b]">
+<img alt="سِكَّة" class="w-5 h-5 object-contain rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmcdi4K2LeeCn10gKL0VQg45I7pGARDrUOez7Ve5BVxvwJefer3J4wCCA2lkLCik1CdozYlalzm8Yr4WmhXlMg1Wieiaj_TPct6A5ODO0-fsfnkjCIL_zwo7BcpSJ2WEhK4O51uP9lDkgb13YmHmKL6Xh9hSmlU5n95RCCx-nmf4xT0w6CK7LLUtfn4fKaaHp88avJ5TmnLYuUNKs9ziUrzLXXE3ZMmcvCzjECsrkwaaXlt-bW_kcJjP_rii_6notLcSM"/>
+<span class="text-xs font-bold text-white tracking-wide">سِكَّة</span>
+</div>
+</header>
+<!-- END: TopBar -->
+<!-- Main Content Area -->
+<main class="px-4 pt-3 flex flex-col gap-4">
+<!-- BEGIN: StatusBadges -->
+<section class="flex items-center justify-between gap-2 text-[11px] font-medium" data-purpose="status-badges">
+<!-- Successful Trip Badge -->
+<div class="flex items-center gap-1.5 bg-[#1a2118] text-[#4ade80] border border-[#243f22] px-2.5 py-1 rounded-full">
+<span class="w-1.5 h-1.5 rounded-full bg-[#4ade80] animate-pulse"></span>
+<span>مشوار مكتمل بنجاح</span>
+</div>
+<!-- Verified Trip Badge -->
+<div class="flex items-center gap-1 bg-[#1c222b] text-gray-300 border border-[#2c3543] px-2.5 py-1 rounded-full">
+<span>رحلة موثقة عبر سِكَّة</span>
+<svg class="w-3.5 h-3.5 text-[#FFD21F]" fill="currentColor" viewbox="0 0 24 24">
+<path clip-rule="evenodd" d="M12.516 2.17a.75.75 0 00-1.032 0 11.209 11.209 0 01-7.877 3.08.75.75 0 00-.722.515A12.74 12.74 0 002.5 9.75c0 5.942 4.064 10.933 9.563 12.348a.749.749 0 00.374 0c5.499-1.415 9.563-6.406 9.563-12.348 0-1.39-.223-2.73-.635-3.985a.75.75 0 00-.722-.516l-.143.001c-2.996 0-5.717-1.17-7.734-3.08zm3.094 8.016a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" fill-rule="evenodd"></path>
+</svg>
+</div>
+</section>
+<!-- END: StatusBadges -->
+<!-- BEGIN: TripHeader -->
+<section class="text-right mt-1" data-purpose="trip-header-info">
+<h1 class="text-xl font-extrabold text-white tracking-tight">تقييم مشوار اليوم</h1>
+<div class="flex items-center gap-1.5 text-xs text-gray-400 mt-1">
+<svg class="w-3.5 h-3.5 text-[#FFD21F] shrink-0" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="font-medium">مشوار الصباح • المعادي إلى القرية الذكية (مبنى B12)</span>
+</div>
+</section>
+<!-- END: TripHeader -->
+<!-- BEGIN: OnTimeBanner -->
+<section class="bg-[#191e24] border border-[#2a323c] rounded-2xl p-3 flex items-center justify-between" data-purpose="punctuality-card">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-xl bg-[#232932] flex items-center justify-center text-[#FFD21F] border border-[#313945]">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<div class="text-right">
+<div class="text-xs font-bold text-gray-200">وصلت في الميعاد: <span class="text-white">08:20 ص</span></div>
+<div class="text-[11px] text-gray-400 mt-0.5">الوصول قبل موعد العمل بـ 10 دقائق</div>
+</div>
+</div>
+<span class="bg-[#ffd21f]/15 text-[#ffd21f] text-[11px] font-bold px-2 py-0.5 rounded-md border border-[#ffd21f]/30">
+          دقة 100%
+        </span>
+</section>
+<!-- END: OnTimeBanner -->
+<!-- BEGIN: CaptainCard -->
+<section class="bg-[#181b20] border border-[#272e38] rounded-2xl p-3.5 relative overflow-hidden" data-purpose="captain-info-card">
+<div class="flex items-center gap-3.5">
+<!-- Captain Avatar -->
+<div class="relative shrink-0">
+<div class="w-14 h-14 rounded-2xl overflow-hidden border-2 border-[#39424e] bg-[#2a2f38] flex items-center justify-center">
+<!-- Replicating captain portrait representation -->
+<svg class="w-10 h-10 text-gray-400 mt-2" fill="currentColor" viewbox="0 0 24 24">
+<path clip-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" fill-rule="evenodd"></path>
+</svg>
+</div>
+<!-- Verified Star Badge -->
+<div class="absolute -bottom-1 -left-1 bg-[#FFD21F] rounded-full p-0.5 text-black border-2 border-[#181b20]">
+<svg class="w-3 h-3 fill-black" viewbox="0 0 20 20">
+<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+</svg>
+</div>
+</div>
+<!-- Captain Details -->
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-2">
+<span class="text-base font-bold text-white tracking-wide">كابتن أحمد منصور</span>
+<span class="bg-[#FFD21F] text-black text-[10px] font-extrabold px-1.5 py-0.5 rounded">سائق نخبوي</span>
+</div>
+<div class="text-[11px] text-gray-300 mt-1 truncate">
+              تويوتا هاي إس VIP مكيفة • لوحة: أ ص ق 9182
+            </div>
+<div class="flex items-center gap-2.5 text-[11px] text-gray-400 mt-1">
+<span class="text-[#FFD21F] font-semibold flex items-center gap-0.5">
+                ★ 4.95
+                <span class="text-gray-400 font-normal">(840 مشوار)</span>
+</span>
+<span>•</span>
+<span class="flex items-center gap-1 text-gray-300">
+<svg class="w-3 h-3 text-[#FFD21F]" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+                مقعدك: 04A (نافذة)
+              </span>
+</div>
+</div>
+</div>
+</section>
+<!-- END: CaptainCard -->
+<!-- BEGIN: StarRatingSection -->
+<section class="bg-[#181b20] border border-[#272e38] rounded-2xl p-4 text-center flex flex-col items-center" data-purpose="rating-stars-container">
+<h3 class="text-xs font-semibold text-gray-300">ما هو تقييمك العام للمشوار؟</h3>
+<!-- 5 Star Icons -->
+<div class="flex items-center justify-center gap-2.5 my-3.5" dir="ltr">
+<button class="transition-transform active:scale-90 text-[#FFD21F] hover:opacity-90">
+<svg class="w-9 h-9 fill-[#FFD21F] drop-shadow-[0_2px_8px_rgba(255,210,31,0.35)]" viewbox="0 0 24 24">
+<path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path>
+</svg>
+</button>
+<button class="transition-transform active:scale-90 text-[#FFD21F] hover:opacity-90">
+<svg class="w-9 h-9 fill-[#FFD21F] drop-shadow-[0_2px_8px_rgba(255,210,31,0.35)]" viewbox="0 0 24 24">
+<path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path>
+</svg>
+</button>
+<button class="transition-transform active:scale-90 text-[#FFD21F] hover:opacity-90">
+<svg class="w-9 h-9 fill-[#FFD21F] drop-shadow-[0_2px_8px_rgba(255,210,31,0.35)]" viewbox="0 0 24 24">
+<path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path>
+</svg>
+</button>
+<button class="transition-transform active:scale-90 text-[#FFD21F] hover:opacity-90">
+<svg class="w-9 h-9 fill-[#FFD21F] drop-shadow-[0_2px_8px_rgba(255,210,31,0.35)]" viewbox="0 0 24 24">
+<path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path>
+</svg>
+</button>
+<button class="transition-transform active:scale-90 text-[#FFD21F] hover:opacity-90">
+<svg class="w-9 h-9 fill-[#FFD21F] drop-shadow-[0_2px_8px_rgba(255,210,31,0.35)]" viewbox="0 0 24 24">
+<path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path>
+</svg>
+</button>
+</div>
+<!-- Rating Feedback Text Pill -->
+<div class="inline-flex items-center gap-1.5 bg-[#23272e] border border-[#323943] text-[#FFD21F] text-xs font-bold px-3.5 py-1.5 rounded-full">
+<span>★</span>
+<span>مشوار ممتاز والتزام تام بالمواعيد!</span>
+</div>
+</section>
+<!-- END: StarRatingSection -->
+<!-- BEGIN: HighlightChips -->
+<section class="space-y-2.5" data-purpose="trip-highlights-selection">
+<div class="flex items-center justify-between">
+<h2 class="text-xs font-bold text-white">نقاط تميز المشوار</h2>
+<span class="text-[11px] text-gray-400">اختر ما لاحظته اليوم</span>
+</div>
+<div class="flex flex-wrap gap-2">
+<!-- Selected Chip 1 -->
+<button class="bg-[#FFD21F] text-black font-semibold text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+<span>دقة المواعيد بالمحطة</span>
+<span class="text-sm">⏱</span>
+</button>
+<!-- Selected Chip 2 -->
+<button class="bg-[#FFD21F] text-black font-semibold text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+<span>قيادة هادئة وآمنة</span>
+<span class="text-sm">🛡</span>
+</button>
+<!-- Selected Chip 3 -->
+<button class="bg-[#FFD21F] text-black font-semibold text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+<span>تكييف ممتاز ونظافة</span>
+<span class="text-sm">❄</span>
+</button>
+<!-- Selected Chip 4 -->
+<button class="bg-[#FFD21F] text-black font-semibold text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+<span>مشوار هادئ بدون إزعاج</span>
+<span class="text-sm">🎧</span>
+</button>
+<!-- Unselected Chip 5 -->
+<button class="bg-[#1a1e24] text-gray-300 border border-[#2b333e] hover:border-gray-500 font-medium text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5">
+<span>احترام نقطة التجمع</span>
+<span class="text-sm">📍</span>
+</button>
+<!-- Unselected Chip 6 -->
+<button class="bg-[#1a1e24] text-gray-300 border border-[#2b333e] hover:border-gray-500 font-medium text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5">
+<span>كابتن مهذب ومحترف</span>
+<span class="text-sm">👔</span>
+</button>
+</div>
+</section>
+<!-- END: HighlightChips -->
+<!-- BEGIN: FeedbackNotes -->
+<section class="bg-[#181b20] border border-[#272e38] rounded-2xl p-3.5 space-y-3" data-purpose="additional-feedback-card">
+<div class="flex items-center justify-between">
+<h3 class="text-xs font-bold text-white">رسالة أو ملاحظة إضافية</h3>
+<span class="text-[11px] text-gray-400">اختياري</span>
+</div>
+<textarea class="w-full bg-[#13161a] border border-[#29303a] rounded-xl text-xs text-gray-200 placeholder-gray-500 p-2.5 focus:border-[#FFD21F] focus:ring-1 focus:ring-[#FFD21F] outline-none resize-none leading-relaxed" placeholder="أضف كلمة شكر أو أي ملاحظة خاصة تساعدنا في تحسين مشوارك الترددي اليومي..." rows="3"></textarea>
+<!-- Toggle Switch Row -->
+<div class="flex items-center justify-between pt-1">
+<div class="text-right">
+<span class="text-xs font-semibold text-gray-200 block">إشادة علنية للكابتن</span>
+<span class="text-[10px] text-gray-400 block mt-0.5">مشاركة تقييمك كشهادة تقدير في الملف الشخصي للكابتن</span>
+</div>
+<!-- Switch Toggle Button -->
+<label class="relative inline-flex items-center cursor-pointer shrink-0 ml-1">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-[#2a303a] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FFD21F]"></div>
+</label>
+</div>
+</section>
+<!-- END: FeedbackNotes -->
+<!-- BEGIN: TippingSection -->
+<section class="bg-[#181b20] border border-[#272e38] rounded-2xl p-3.5 space-y-3" data-purpose="driver-tipping">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<svg class="w-4 h-4 text-[#FFD21F]" fill="currentColor" viewbox="0 0 24 24">
+<path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
+</svg>
+<h3 class="text-xs font-bold text-white">تقدير إضافي للكابتن (إكرامية)</h3>
+</div>
+<span class="text-[11px] text-gray-400">اختياري 100%</span>
+</div>
+<p class="text-[11px] text-gray-400 leading-normal">
+          100% من المبلغ يذهب مباشرة إلى محفظة الكابتن دون أي استقطاعات.
+        </p>
+<!-- Tip Options Pills -->
+<div class="grid grid-cols-4 gap-2 pt-1 text-center font-bold text-xs">
+<!-- 10 EGP -->
+<button class="bg-[#1f242c] text-gray-200 border border-[#2d3542] rounded-xl py-2.5 hover:border-[#FFD21F] transition-all">
+            10 ج.م
+          </button>
+<!-- 20 EGP (Selected / Most Popular) -->
+<div class="relative">
+<div class="absolute -top-2 left-1/2 -translate-x-1/2 bg-[#FFD21F] text-black text-[9px] font-black px-1.5 rounded-full tracking-tighter whitespace-nowrap shadow-sm">
+              الأكثر اختياراً
+            </div>
+<button class="w-full bg-[#FFD21F] text-black border-2 border-[#FFD21F] rounded-xl py-2.5 font-extrabold shadow-md">
+              20 ج.م
+            </button>
+</div>
+<!-- 30 EGP -->
+<button class="bg-[#1f242c] text-gray-200 border border-[#2d3542] rounded-xl py-2.5 hover:border-[#FFD21F] transition-all">
+            30 ج.م
+          </button>
+<!-- Custom Amount -->
+<button class="bg-[#1f242c] text-gray-400 border border-[#2d3542] rounded-xl py-2.5 hover:border-[#FFD21F] text-[11px] transition-all">
+            مبلغ آخر
+          </button>
+</div>
+<!-- Wallet Deduct & Skip Tip -->
+<div class="flex items-center justify-between pt-1 text-[11px]">
+<div class="flex items-center gap-1.5 text-gray-300">
+<svg class="w-3.5 h-3.5 text-[#FFD21F]" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span>تخصم من رصيد محفظة سِكَّة</span>
+</div>
+<button class="text-gray-400 underline hover:text-white transition-colors">
+            المتابعة بدون إكرامية
+          </button>
+</div>
+</section>
+<!-- END: TippingSection -->
+</main>
+<!-- BEGIN: StickyFooterAction -->
+<footer class="fixed bottom-0 max-w-[420px] w-full bg-[#121417]/95 backdrop-blur-md border-t border-[#23272e] p-4 z-40 space-y-2.5">
+<!-- Main CTA Button -->
+<button class="w-full bg-[#FFD21F] hover:bg-[#ffdb43] active:scale-[0.99] text-black font-extrabold text-sm py-3.5 px-4 rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all">
+<span>إرسال التقييم وتأكيد المشوار القادم</span>
+<svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" stroke-width="2.5" viewbox="0 0 24 24">
+<path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+<!-- Trust & Commitment Footer Note -->
+<div class="flex items-start justify-center gap-1.5 px-2 text-[10px] text-gray-400 text-center leading-normal">
+<svg class="w-3.5 h-3.5 text-[#FFD21F] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span>تقييمك بيساعدنا في ضمان جودة الكباتن وتثبيت أفضل المقاعد لك طوال فترة اشتراكك الشهري.</span>
+</div>
+</footer>
+<!-- END: StickyFooterAction -->
+</div>
+</body></html>

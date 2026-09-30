@@ -1,0 +1,84 @@
+# Commute Pool — Phase 11 API
+
+All routes are under `/api`. Requests and responses use JSON. Authenticated routes require `Authorization: Bearer <session-token>`; rider, captain, and admin access is checked against the user role stored in the database.
+
+## The rider flow
+
+1. Read the four available categories from `GET /pool/categories`.
+2. Start a group with `POST /rider/pool/groups`, then share its group ID. Other riders join with `POST /rider/pool/groups/:id/join`.
+3. For an existing group, a captain can instead create invitations with `POST /captain/pool/groups`. Each invited rider reviews the category and price, then accepts or declines with `POST /rider/pool/groups/:id/confirm`.
+4. Faster routes start with two riders; Saver routes start with three. One rider can reserve all remaining seats using `POST /rider/pool/groups/:id/complete-seats`. The price is still divided by the category's full capacity.
+5. When the minimum is met, the server snapshots the price and creates one outbound and one return trip for every selected service date. The group appears in nearby captains' offers.
+6. Riders can review their groups with `GET /rider/pool/groups`, cancel one service day or a whole package, and respond to route price changes.
+
+## Categories and service dates
+
+`GET /pool/categories` is public and returns category pricing, capacity, and minimum rider count.
+
+| Category | Seats | Minimum riders | Base | Per km | Per minute |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Faster – Non-AC | 3 | 2 | 10 | 7.3 | 0.50 |
+| Faster – AC | 3 | 2 | 12 | 8.2 | 0.60 |
+| Saver – Non-AC | 4 | 3 | 15 | 7.3 | 0.75 |
+| Saver – AC | 4 | 3 | 17 | 8.2 | 0.85 |
+
+Prices are EGP. A group request body contains `category_id`, `package_type` (`daily`, `weekly`, or `monthly`), `service_dates`, `morning_departure`, `return_departure`, and the rider's `pickup_lat`, `pickup_lng`, `dropoff_lat`, and `dropoff_lng`.
+
+- A daily package has one selected date, a weekly package has five dates in the same Sunday–Thursday service week, and a monthly package has 22 dates in one calendar month.
+- Riders choose the dates; every date must fall Sunday through Thursday. Departure times use `HH:mm`; return time must be later than morning departure.
+- Requested `HH:mm` times are interpreted in `Africa/Cairo`; generated trip timestamps are returned as ISO UTC values.
+- A group ID can be shared with other riders. Their pickup and drop-off must each be within 3 km of the current OSRM road route.
+- Group responses include `route_geometry`, an object with outbound and return GeoJSON `LineString`s. Coordinates use GeoJSON `[longitude, latitude]` order. This is route data for clients; this backend phase does not serve map tiles or add a UI.
+
+## Rider endpoints
+
+| Method and path | Purpose |
+| --- | --- |
+| `POST /rider/pool/groups` | Create a group with the authenticated rider as its first member. |
+| `GET /rider/pool/groups` | List the rider's invitations, groups, trips, stops, and own subscription summary. |
+| `POST /rider/pool/groups/:id/join` | Join a group with personal pickup/drop-off coordinates. |
+| `POST /rider/pool/groups/:id/confirm` | Accept or decline a captain-created invitation; body: `{"action":"accept"}` or `{"action":"decline"}`. |
+| `POST /rider/pool/groups/:id/complete-seats` | Reserve all remaining seats for the rider's group. Returns the updated quote; payment is deferred. |
+| `POST /rider/pool/groups/:id/price-decision` | Accept or decline a revised quote; body: `{"action":"accept"}` or `{"action":"decline"}`. A decline removes that rider without a fee. |
+| `POST /rider/pool/groups/:id/days/:date/cancel` | Cancel both legs for one service date. At least 12 hours before morning departure is free; later cancellation charges that service day. |
+| `POST /rider/pool/groups/:id/cancel` | Cancel the subscription. Weekly/monthly refunds cover unused days less the 10% fee. A daily subscription follows the same 12-hour rule as a service-day cancellation. |
+| `GET /pool/notifications` | Read the authenticated user's in-app notification inbox. |
+| `POST /pool/notifications/:id/read` | Mark one notification as read. |
+
+If a price increase is more than 15%, every active rider must accept the new amount. A rider who declines is removed without a cancellation fee. If that leaves fewer than the minimum riders (and no rider has booked the whole car), the route is cancelled and the full amount due is recorded as refundable. No payment or refund is executed in this phase.
+
+## Captain endpoints
+
+| Method and path | Purpose |
+| --- | --- |
+| `POST /captain/pool/groups` | Create a pre-formed group invitation. Body includes category/package/date/time fields and `riders: [{rider_user_id,pickup_lat,pickup_lng,dropoff_lat,dropoff_lng}]`. Riders must confirm before activation. |
+| `PUT /captain/pool/capabilities` | Register the vehicle's AC status and supported tiers; body: `{"has_ac":true,"service_tiers":["faster","saver"]}`. Offers require a matching vehicle capability. |
+| `PATCH /captain/pool/search-radius` | Set the offer search radius; body: `{"radius_km":4}` through `{"radius_km":10}`. Default is 4 km. |
+| `GET /captain/pool/offers` | List eligible nearby route offers. The response omits the captain's empty-drive distance. |
+| `GET /captain/pool/trips/:id` | Review the stop sequence for an eligible offer or assigned trip. |
+| `POST /captain/pool/trips/:id/accept` | Accept a route. The first successful acceptance wins. Weekly/monthly acceptance assigns the captain to the package; a one-day replacement applies only to that date. |
+| `POST /captain/pool/groups/:id/reorder` | Change future stop order; body: `{"member_ids":[3,1,2]}`. Return stops are generated as the reverse of outbound stops. Riders receive a route-change notification. |
+| `POST /captain/pool/trips/:id/stops/:stopId/reached` | Confirm arrival at the next stop in sequence. |
+| `POST /captain/pool/trips/:id/complete` | Confirm the leg is complete and write a separate ledger row per rider. All stops must have been reached. |
+| `POST /captain/pool/trips/:id/report-absence` | Mark a captain absence and make that date available to replacement captains. The fixed captain remains assigned to other package dates. |
+
+The backend rejects a captain whose current location is more than the saved effective radius from the first pickup. It also checks overlapping trips and estimated deadhead travel between areas. Each absence reduces the captain's effective radius by 1 km, down to the 4 km default floor.
+
+## Fare, cancellation, and accounting
+
+- The daily seat fare is the two-way route fare divided by full category capacity. Weekly pricing applies 5% off five service days; monthly pricing applies 10% off 22 days.
+- Subscription amounts and cancellation refund entitlements are calculated and recorded on `pool_subscriptions`; neither payment capture nor refund execution is implemented.
+- The commission split is deferred. Completion records the gross list and rider prices only; there are no company/captain allocation fields or payout actions, and package offers do not depend on payment state.
+- The 72-hour waiting notification is created by a one-minute server timer and appears in the inbox with `wait`, `book_remaining_seats`, and `cancel_free` options. Waiting is the default if the rider takes no action.
+- If all selected dates pass while the group is still waiting, it is cancelled free and riders are asked to create a group with future dates. If a confirmed route activates after some dates have passed, only remaining future dates are scheduled and billed.
+- If no replacement captain accepts by the scheduled departure, the service date's two legs are cancelled and the date amount is removed from the amount due; later dates in a weekly/monthly package remain scheduled.
+- The API persists notifications in the database; push/SMS delivery is not configured in this project.
+
+## Implementation boundaries
+
+- Phase 11 data lives in its own tables from migration `010_pool_domain.sql`; the existing `matches`, `trips`, and `trip_stops` model is unchanged.
+- Routing uses an OSRM-compatible server-side service. The default is local `http://127.0.0.1:5000`; set `SEKKA_ROUTING_URL` to an operator-managed OSRM endpoint if needed. Outbound and reverse waypoint routes are requested separately, and both road distance and duration are used in pricing. The server never accepts client-supplied route totals. If routing is unavailable, new group creation fails with HTTP 503 rather than silently pricing straight-line distances.
+- OSRM can run locally for free with OpenStreetMap road data. The public OSRM demo and public OSM tile servers are community resources without a production availability guarantee; rider coordinates are not sent to the public demo by this implementation. No geocoder or tile service is configured, and clients must provide coordinates.
+- Payment gateway, refunds, and the 20/80 company/captain commission split are deferred as requested. `amount_due` and `refund_amount` are calculation fields only; `pool_ledger` stores gross completed-ride amounts without settlement or share allocation.
+- Grok is not integrated: routing, fare calculations, cancellation rules, and eligibility checks are deterministic backend rules and do not benefit from an LLM call.
+- The return route reverses the outbound stop list and swaps each rider's pickup/drop-off role. OSRM computes the road geometry for each direction independently. The default outbound sequence is pickup order followed by drop-off order; captains can reorder the pickup sequence.
