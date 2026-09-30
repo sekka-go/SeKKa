@@ -8,6 +8,14 @@ function decodeApplicationServerKey(value: string): ArrayBuffer {
   return bytes.buffer;
 }
 
+function sameApplicationServerKey(subscription: PushSubscription, expected: ArrayBuffer) {
+  const current = subscription.options.applicationServerKey;
+  if (!current) return false;
+  const currentBytes = new Uint8Array(current);
+  const expectedBytes = new Uint8Array(expected);
+  return currentBytes.length === expectedBytes.length && currentBytes.every((byte, index) => byte === expectedBytes[index]);
+}
+
 export async function subscribeToPush(token: string) {
   if (!import.meta.env.PROD) throw new Error("إشعارات الجهاز تتاح بعد نشر التطبيق عبر HTTPS.");
   if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
@@ -20,11 +28,16 @@ export async function subscribeToPush(token: string) {
 
   const { public_key: publicKey } = await api<{ public_key: string }>("/pool/push/vapid-public-key");
   const registration = await navigator.serviceWorker.ready;
+  const applicationServerKey = decodeApplicationServerKey(publicKey);
   let subscription = await registration.pushManager.getSubscription();
+  if (subscription && !sameApplicationServerKey(subscription, applicationServerKey)) {
+    await subscription.unsubscribe();
+    subscription = null;
+  }
   if (!subscription) {
     subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: decodeApplicationServerKey(publicKey),
+      applicationServerKey,
     });
   }
 
