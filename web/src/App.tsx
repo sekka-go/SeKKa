@@ -461,6 +461,11 @@ function CaptainWorkspace({ session, section, notifications, refreshNotification
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(Boolean(session.user.verified_at));
   const [otp, setOtp] = useState("");
+  const [otpEnabled, setOtpEnabled] = useState(false);
+  const [otpProviderReady, setOtpProviderReady] = useState(false);
+  const [otpStatusLoaded, setOtpStatusLoaded] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpSending, setOtpSending] = useState(false);
   const [vehicle, setVehicle] = useState("private_car");
   const [license, setLicense] = useState("");
   const [plate, setPlate] = useState("");
@@ -484,6 +489,12 @@ function CaptainWorkspace({ session, section, notifications, refreshNotification
     } finally { setProfileLoaded(true); }
   }, [session.token, notify]);
   useEffect(() => { void loadProfile(); }, [loadProfile]);
+  useEffect(() => {
+    void api<{ enabled: boolean; provider_ready: boolean }>("/captain/verify/status", { token: session.token })
+      .then((status) => { setOtpEnabled(status.enabled); setOtpProviderReady(status.provider_ready); })
+      .catch((error) => notify(errorText(error), "error"))
+      .finally(() => setOtpStatusLoaded(true));
+  }, [session.token, notify]);
 
   const refreshTrips = useCallback(async () => {
     // Pool trip ownership is exposed through the accepted offers already cached in the active dashboard.
@@ -502,11 +513,16 @@ function CaptainWorkspace({ session, section, notifications, refreshNotification
     finally { setBusy(false); }
   };
   const requestOtp = async () => {
-    try { await api("/captain/verify/request", { method: "POST", token: session.token }); notify("تم إنشاء كود التحقق. راجع نافذة الخادم المحلية وأدخله هنا.", "info"); }
-    catch (error) { notify(errorText(error), "error"); }
+    setOtpSending(true);
+    try {
+      await api("/captain/verify/request", { method: "POST", token: session.token });
+      setOtpSent(true);
+      notify("أرسلنا كود التحقق إلى رقم هاتفك. صلاحيته ١٠ دقائق.", "success");
+    } catch (error) { notify(errorText(error), "error"); }
+    finally { setOtpSending(false); }
   };
   const confirmOtp = async () => {
-    try { await api("/captain/verify/confirm", { method: "POST", token: session.token, body: { otp } }); setPhoneVerified(true); setOtp(""); notify("تم توثيق رقم الهاتف.", "success"); }
+    try { await api("/captain/verify/confirm", { method: "POST", token: session.token, body: { otp } }); setPhoneVerified(true); setOtp(""); setOtpSent(false); notify("تم توثيق رقم الهاتف.", "success"); }
     catch (error) { notify(errorText(error), "error"); }
   };
   const saveCapabilities = async () => {
@@ -537,7 +553,7 @@ function CaptainWorkspace({ session, section, notifications, refreshNotification
   if (section === "account") return <div className="captain-account"><section className="surface onboarding-card"><div className="surface-heading"><div><span className="eyebrow">ملف الكابتن</span><h2>{profile ? "بيانات المركبة" : "ابدأ التوثيق"}</h2><p>أكمل بياناتك عشان تقدر تستقبل مسارات.</p></div><span className="surface-icon">⌖</span></div>
     {!profile ? <form className="form-stack" onSubmit={saveProfile}><label>نوع المركبة<select value={vehicle} onChange={(e) => setVehicle(e.target.value)}><option value="private_car">سيارة خاصة</option><option value="hiace">ميكروباص / Hiace</option></select></label><label>رقم الرخصة<input value={license} onChange={(e) => setLicense(e.target.value)} required /></label><label>رقم اللوحة<input value={plate} onChange={(e) => setPlate(e.target.value)} required /></label><button className="button button-primary button-small" disabled={busy}>{busy ? "جاري الحفظ…" : "حفظ البيانات"}</button></form>
       : <><div className="captain-status-box"><span className={`status-chip status-${profile.verification_status}`}>{statusLabel(profile.verification_status)}</span><p>{profile.verification_status === "approved" ? "حسابك موثّق. حدّث موقعك وتفضيلات سيارتك عشان توصلك المسارات." : profile.verification_status === "pending" ? "بياناتك وصلت للإدارة. تقدر تجهز تفضيلاتك، والمسارات هتظهر بعد الموافقة." : "تم رفض الملف. تواصل مع الدعم لتحديث بيانات المركبة."}</p></div><div className="profile-data-grid"><div><small>المركبة</small><strong>{profile.vehicle_type_id === "hiace" ? "Hiace" : "سيارة خاصة"}</strong></div><div><small>رقم اللوحة</small><strong>{profile.vehicle_plate}</strong></div><div><small>رقم الرخصة</small><strong>{profile.license_number}</strong></div></div></>}
-    <div className="onboarding-divider" /><div className="surface-heading"><div><span className="eyebrow">تأكيد ملكية الحساب</span><h3>توثيق رقم الهاتف</h3></div><span className="verified-mark">{phoneVerified ? "✓" : "•"}</span></div>{phoneVerified ? <div className="success-note">تم توثيق رقم هاتفك.</div> : <div className="otp-row"><button className="button button-outline button-small" onClick={() => void requestOtp()}>إرسال كود تحقق</button><input inputMode="numeric" value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="الكود من ٦ أرقام" /><button className="button button-secondary button-small" onClick={() => void confirmOtp()} disabled={otp.length < 4}>تأكيد</button><small>كود التطوير يظهر في سجل الخادم، لا تُرسل SMS حقيقية.</small></div>}
+    <div className="onboarding-divider" /><div className="surface-heading"><div><span className="eyebrow">تأكيد ملكية الحساب</span><h3>توثيق رقم الهاتف</h3></div><span className="verified-mark">{phoneVerified ? "✓" : "•"}</span></div>{phoneVerified ? <div className="success-note">تم توثيق رقم هاتفك.</div> : !otpStatusLoaded ? <div className="muted-text">جارٍ التحقق من إعداد توثيق الهاتف…</div> : !otpEnabled ? <div className="success-note">توثيق الهاتف متوقف مؤقتًا. يمكن للإدارة تشغيله عند تجهيز خدمة الرسائل.</div> : !otpProviderReady ? <div className="inline-error">الإدارة فعّلت التوثيق، لكن خدمة SMS تحتاج إلى إعداد.</div> : <div className="otp-row"><button className="button button-outline button-small" onClick={() => void requestOtp()} disabled={otpSending}>{otpSending ? "جاري الإرسال…" : otpSent ? "إعادة إرسال الكود" : "إرسال كود تحقق"}</button>{otpSent && <><input inputMode="numeric" autoComplete="one-time-code" maxLength={10} value={otp} onChange={(e) => setOtp(e.target.value.replace(/\\D/g, ""))} placeholder="أدخل كود SMS" /><button className="button button-secondary button-small" onClick={() => void confirmOtp()} disabled={otp.length < 4}>تأكيد</button></>}<small>الكود صالح لمدة ١٠ دقائق، ولا نعرضه أو نخزنه في التطبيق.</small></div>}
     <div className="onboarding-divider" /><div className="surface-heading"><div><span className="eyebrow">استقبال المسارات</span><h3>موقعك وفئات الخدمة</h3></div></div><p className="muted-text">النطاق {radius} كم · الكابتن يحدد موقعه عند بداية الدوام.</p><button className="button button-outline button-small" onClick={() => void updateLocation()}>⌖ تحديث موقعي الحالي</button><div className="capability-list"><label className="toggle-row"><input type="checkbox" checked={hasAc} onChange={(e) => setHasAc(e.target.checked)} /><span>سيارتي مكيفة</span></label><label className="toggle-row"><input type="checkbox" checked={tiers.includes("faster")} onChange={() => setTiers((items) => items.includes("faster") ? items.filter((x) => x !== "faster") : [...items, "faster"])} /><span>أقبل Faster</span></label><label className="toggle-row"><input type="checkbox" checked={tiers.includes("saver")} onChange={() => setTiers((items) => items.includes("saver") ? items.filter((x) => x !== "saver") : [...items, "saver"])} /><span>أقبل Saver</span></label></div><label className="range-label">نطاق البحث <strong>{radius} كم</strong><input type="range" min={4} max={10} value={radius} onChange={(e) => setRadius(Number(e.target.value))} /><small>من ٤ إلى ١٠ كم، بدون تأثير على السعر.</small></label><button className="button button-primary button-small" onClick={() => void saveCapabilities()}>حفظ التفضيلات</button>
     </section><AccountPanel session={session} notify={notify} /></div>;
   if (section === "notifications") return <NotificationsPanel items={notifications} token={session.token} onRefresh={refreshNotifications} notify={notify} />;
@@ -556,16 +572,28 @@ function AdminWorkspace({ session, section, notifications, refreshNotifications,
   const [overview, setOverview] = useState<Record<string, number> | null>(null);
   const [captains, setCaptains] = useState<Record<string, unknown>[]>([]);
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [otpSettings, setOtpSettings] = useState<{ enabled: boolean; provider: string; provider_ready: boolean } | null>(null);
+  const [otpBusy, setOtpBusy] = useState(false);
   const refresh = useCallback(async () => {
-    const [stats, pending] = await Promise.all([
+    const [stats, pending, otp] = await Promise.all([
       api<{ overview: Record<string, number> }>("/admin/analytics/overview", { token: session.token }),
       api<{ captains: Record<string, unknown>[] }>("/admin/captains?status=pending", { token: session.token }),
+      api<{ otp: { enabled: boolean; provider: string; provider_ready: boolean } }>("/admin/settings/otp", { token: session.token }),
     ]);
-    setOverview(stats.overview); setCaptains(pending.captains);
+    setOverview(stats.overview); setCaptains(pending.captains); setOtpSettings(otp.otp);
   }, [session.token]);
   useEffect(() => { void refresh().catch((error) => notify(errorText(error), "error")); }, [refresh, notify]);
   if (section === "account") return <AccountPanel session={session} notify={notify} />;
   if (section === "notifications") return <NotificationsPanel items={notifications} token={session.token} onRefresh={refreshNotifications} notify={notify} />;
+  const updateOtpSetting = async (enabled: boolean) => {
+    setOtpBusy(true);
+    try {
+      const result = await api<{ otp: { enabled: boolean; provider: string; provider_ready: boolean } }>("/admin/settings/otp", { method: "PATCH", token: session.token, body: { enabled } });
+      setOtpSettings(result.otp);
+      notify(enabled ? "تم تشغيل توثيق الهاتف عبر SMS." : "تم إيقاف توثيق الهاتف مؤقتًا.", "success");
+    } catch (error) { notify(errorText(error), "error"); }
+    finally { setOtpBusy(false); }
+  };
   const decide = async (captainId: number, status: "approved" | "rejected") => {
     setBusyId(captainId);
     try { await api(`/admin/captains/${captainId}/verification`, { method: "POST", token: session.token, body: { status } }); await refresh(); notify(status === "approved" ? "تم توثيق الكابتن." : "تم رفض طلب التوثيق.", "success"); }
@@ -574,5 +602,5 @@ function AdminWorkspace({ session, section, notifications, refreshNotifications,
   };
   return <div className="admin-dashboard"><div className="admin-stats-grid">{[
     ["إجمالي المستخدمين", overview?.total_users], ["الركاب", overview?.total_riders], ["الكباتن", overview?.total_captains], ["كباتن بانتظار التوثيق", overview?.captains_pending_verification],
-  ].map(([label, value]) => <div className="surface admin-stat" key={String(label)}><small>{label}</small><strong>{value ?? "—"}</strong></div>)}</div><section className="surface admin-review"><div className="section-title-row"><div><span className="eyebrow">مراجعة الحسابات</span><h2>كباتن بانتظار التوثيق</h2><p>راجع بيانات المركبة قبل تفعيل استقبال المسارات.</p></div><button className="button button-outline button-small" onClick={() => void refresh()}>تحديث ↻</button></div>{captains.length ? captains.map((captain) => <div className="admin-captain-row" key={String(captain.user_id)}><span className="avatar">{String(captain.full_name).slice(0, 1)}</span><div className="admin-captain-info"><strong>{String(captain.full_name)}</strong><small>{String(captain.phone_number)} · {String(captain.vehicle_type_id)} · لوحة {String(captain.vehicle_plate)}</small><small>رخصة {String(captain.license_number)}</small></div><div className="admin-review-actions"><button className="button button-primary button-small" disabled={busyId === Number(captain.user_id)} onClick={() => void decide(Number(captain.user_id), "approved")}>موافقة</button><button className="button button-quiet button-small" disabled={busyId === Number(captain.user_id)} onClick={() => void decide(Number(captain.user_id), "rejected")}>رفض</button></div></div>) : <EmptyState icon="✓" title="مفيش طلبات معلقة" text="هتظهر هنا طلبات الكباتن الجديدة." />}</section><section className="surface admin-summary"><div className="section-title-row"><div><span className="eyebrow">صحة المنصة</span><h2>نظرة عامة</h2></div><span className="online-pill"><i /> مباشر</span></div><div className="admin-summary-grid"><div><small>كباتن موثقون</small><strong>{overview?.captains_approved ?? "—"}</strong></div><div><small>رحلات جارية</small><strong>{overview?.total_trips_in_progress ?? "—"}</strong></div><div><small>رحلات مكتملة</small><strong>{overview?.total_trips_completed ?? "—"}</strong></div><div><small>اعتراضات مفتوحة</small><strong>{overview?.disputes_awaiting_admin ?? "—"}</strong></div></div><p className="muted-text">تسوية بوابة الدفع وعمولة الرحلات المشتركة مؤجلتان.</p></section></div>;
+  ].map(([label, value]) => <div className="surface admin-stat" key={String(label)}><small>{label}</small><strong>{value ?? "—"}</strong></div>)}</div><section className="surface admin-review"><div className="section-title-row"><div><span className="eyebrow">إعدادات الحساب</span><h2>توثيق رقم الهاتف</h2><p>التشغيل متوقف افتراضيًا. يلزم إعداد بيانات مزوّد SMS في أسرار Supabase قبل تفعيله.</p></div><span className={otpSettings?.enabled ? "status-chip status-active" : "status-chip"}>{otpSettings?.enabled ? "مُفعّل" : "متوقف"}</span></div><label className="toggle-row"><input type="checkbox" checked={otpSettings?.enabled ?? false} disabled={otpBusy || !otpSettings || (!otpSettings.provider_ready && !otpSettings.enabled)} onChange={(event) => void updateOtpSetting(event.target.checked)} /><span>{otpBusy ? "جاري حفظ الإعداد…" : "تشغيل OTP للكباتن"}</span></label><p className="muted-text">{otpSettings?.provider_ready ? "مزود Twilio Verify جاهز." : "مزوّد SMS غير مهيأ؛ يمكنك إيقاف الميزة، ولن يسمح الخادم بتشغيلها قبل إعداد الأسرار."}</p></section><section className="surface admin-review"><div className="section-title-row"><div><span className="eyebrow">مراجعة الحسابات</span><h2>كباتن بانتظار التوثيق</h2><p>راجع بيانات المركبة قبل تفعيل استقبال المسارات.</p></div><button className="button button-outline button-small" onClick={() => void refresh()}>تحديث ↻</button></div>{captains.length ? captains.map((captain) => <div className="admin-captain-row" key={String(captain.user_id)}><span className="avatar">{String(captain.full_name).slice(0, 1)}</span><div className="admin-captain-info"><strong>{String(captain.full_name)}</strong><small>{String(captain.phone_number)} · {String(captain.vehicle_type_id)} · لوحة {String(captain.vehicle_plate)}</small><small>رخصة {String(captain.license_number)}</small></div><div className="admin-review-actions"><button className="button button-primary button-small" disabled={busyId === Number(captain.user_id)} onClick={() => void decide(Number(captain.user_id), "approved")}>موافقة</button><button className="button button-quiet button-small" disabled={busyId === Number(captain.user_id)} onClick={() => void decide(Number(captain.user_id), "rejected")}>رفض</button></div></div>) : <EmptyState icon="✓" title="مفيش طلبات معلقة" text="هتظهر هنا طلبات الكباتن الجديدة." />}</section><section className="surface admin-summary"><div className="section-title-row"><div><span className="eyebrow">صحة المنصة</span><h2>نظرة عامة</h2></div><span className="online-pill"><i /> مباشر</span></div><div className="admin-summary-grid"><div><small>كباتن موثقون</small><strong>{overview?.captains_approved ?? "—"}</strong></div><div><small>رحلات جارية</small><strong>{overview?.total_trips_in_progress ?? "—"}</strong></div><div><small>رحلات مكتملة</small><strong>{overview?.total_trips_completed ?? "—"}</strong></div><div><small>اعتراضات مفتوحة</small><strong>{overview?.disputes_awaiting_admin ?? "—"}</strong></div></div><p className="muted-text">تسوية بوابة الدفع وعمولة الرحلات المشتركة مؤجلتان.</p></section></div>;
 }
