@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
+    "check:pwa": "node scripts/check-pwa.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
