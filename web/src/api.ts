@@ -29,7 +29,7 @@ export interface CaptainOffer { group_id: number; category_id: string; package_t
 
 const TOKEN_KEY = "sekka.session.token";
 const USER_KEY = "sekka.session.user";
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/+$/, "");
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.DEV ? "" : "https://uorxfakceqnhxqnaawdy.supabase.co/functions/v1/sekka-api")).replace(/\\/+$/, "");
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
   ?? "sb_publishable__gh8lr-A5tr5Q9CMi7YIuw_yrRFwgJl";
 
