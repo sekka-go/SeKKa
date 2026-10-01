@@ -27,7 +27,7 @@ async function hashPassword(password: string) {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const key = await crypto.subtle.importKey("raw", encoder.encode(password), "PBKDF2", false, ["deriveBits"]);
   const derived = new Uint8Array(await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt, iterations: 310_000 }, key, 256));
-  return \`pbkdf2$310000$\${hex(salt)}$\${hex(derived)}\`;
+  return `pbkdf2$310000$${hex(salt)}$${hex(derived)}`;
 }
 async function verifyPassword(password: string, stored: string) {
   const [kind, rounds, saltText, expected] = stored.split("$");
@@ -111,8 +111,8 @@ async function roadRoute(points: { lat: number; lng: number }[]) {
   const base = (Deno.env.get("SEKKA_ROUTING_URL") ?? "http://127.0.0.1:5000").replace(/\/+$/, "");
   const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), 8_000);
   try {
-    const coords = points.map((p) => \`\${p.lng},\${p.lat}\`).join(";");
-    const response = await fetch(\`\${base}/route/v1/driving/\${coords}?overview=full&geometries=geojson&steps=false\`, { signal: controller.signal });
+    const coords = points.map((p) => `${p.lng},${p.lat}`).join(";");
+    const response = await fetch(`${base}/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=false`, { signal: controller.signal });
     if (!response.ok) throw new Error("تعذر الوصول لخدمة حساب المسار.");
     const data = await response.json();
     const route = data.routes?.[0];
@@ -181,7 +181,7 @@ async function activateGroup(group: Json, members: Json[], category: Json, quote
     }
   }
   await db!.from("pool_groups").update({ status: "active", seat_day_fare: quoteData.seatDayFare, route_geometry: quoteData.geometry, route_distance_km: quoteData.out.distanceKm, route_duration_min: quoteData.out.durationMin, updated_at: new Date().toISOString() }).eq("id", group.id);
-  for (const m of members) await notifyUser(m.rider_user_id, Number(group.id), \`group-active-\${group.id}\`, { message: "اكتمل الحد الأدنى وبدأ تفعيل مسارك." });
+  for (const m of members) await notifyUser(m.rider_user_id, Number(group.id), `group-active-${group.id}`, { message: "اكتمل الحد الأدنى وبدأ تفعيل مسارك." });
 }
 async function groupView(group: Json) {
   const [members, trips, subs] = await Promise.all([
@@ -235,7 +235,7 @@ Deno.serve(async (req: Request) => {
     if (req.method === "POST" && path === "/auth/login") {
       const phone = typeof body.phone_number === "string" ? body.phone_number.trim() : "";
       const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
-      if (!await takeLimit(\`login:\${ip}:\${phone}\`, 5, 900)) return error("محاولات كتير في وقت قصير. حاول تاني بعد شوية.", 429, origin);
+      if (!await takeLimit(`login:${ip}:${phone}`, 5, 900)) return error("محاولات كتير في وقت قصير. حاول تاني بعد شوية.", 429, origin);
       const { data: record } = await db.from("users").select("id,full_name,phone_number,password_hash,role,verified_at,created_at").eq("phone_number", phone).maybeSingle();
       const valid = record ? await verifyPassword(String(body.password ?? ""), record.password_hash) : await verifyPassword(String(body.password ?? ""), "pbkdf2$310000$00000000000000000000000000000000$0000000000000000000000000000000000000000000000000000000000000000");
       if (!record || !valid) return error("رقم الهاتف أو كلمة السر غلط.", 401, origin);
@@ -255,7 +255,7 @@ Deno.serve(async (req: Request) => {
       }
       if (req.method === "POST" && path === "/auth/change-password") {
         if (!clean(body.current_password) || !clean(body.new_password) || String(body.new_password).length < 8) return error("بيانات كلمة السر غير صحيحة أو أقصر من ٨ أحرف.", 400, origin);
-        if (!await takeLimit(\`password:\${user.id}\`, 5, 900)) return error("محاولات كتير في وقت قصير. حاول تاني بعد شوية.", 429, origin);
+        if (!await takeLimit(`password:${user.id}`, 5, 900)) return error("محاولات كتير في وقت قصير. حاول تاني بعد شوية.", 429, origin);
         const { data: row } = await db.from("users").select("password_hash").eq("id", user.id).single();
         if (!await verifyPassword(String(body.current_password), row.password_hash)) return error("كلمة السر الحالية غير صحيحة.", 401, origin);
         const { error: pe } = await db.from("users").update({ password_hash: await hashPassword(String(body.new_password)), password_changed_at: new Date().toISOString() }).eq("id", user.id);
@@ -314,7 +314,7 @@ Deno.serve(async (req: Request) => {
       await db.from("pool_groups").update({ route_distance_km: q.out.distanceKm, route_duration_min: q.out.durationMin, route_geometry: q.geometry, seat_day_fare: q.seatDayFare, status: changed ? "price_review" : "waiting", updated_at: new Date().toISOString() }).eq("id", group.id);
       if (changed) {
         await db.from("pool_members").update({ price_decision: "pending" }).eq("group_id", group.id).eq("status", "active");
-        for (const m of all) await notifyUser(m.rider_user_id, Number(group.id), \`price-review-\${group.id}-\${Date.now()}\`, { message: "تغير السعر بأكثر من ١٥٪. راجع السعر الجديد ووافق أو ارفض." });
+        for (const m of all) await notifyUser(m.rider_user_id, Number(group.id), `price-review-${group.id}-${Date.now()}`, { message: "تغير السعر بأكثر من ١٥٪. راجع السعر الجديد ووافق أو ارفض." });
       } else await activateGroup(group, all, category, q);
       const refreshed = await getGroup(Number(group.id));
       return reply({ group: refreshed, member, price_review: changed }, 200, origin);
