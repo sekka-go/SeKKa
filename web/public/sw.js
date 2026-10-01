@@ -1,33 +1,42 @@
-const CACHE_NAME = "sekka-shell-v1";
+const CACHE_PREFIX = "sekka-shell-";
+const CACHE_NAME = "sekka-shell-v2";
 const APP_SHELL = [
-  "/",
+  "/offline.html",
   "/manifest.webmanifest",
-  "/brand/sekka-icon-dark.png",
-  "/brand/sekka-icon-light.png",
+  "/brand/pwa-icon-192.png",
+  "/brand/pwa-icon-512.png",
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
-  self.skipWaiting();
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    await cache.addAll(APP_SHELL);
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) => Promise.all(
-      keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)),
-    )),
-  );
-  self.clients.claim();
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys
+      .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
+      .map((key) => caches.delete(key)));
+    await self.clients.claim();
+  })());
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SKIP_WAITING") self.skipWaiting();
 });
 
 self.addEventListener("push", (event) => {
   let message = {};
-  try { message = event.data?.json() ?? {}; } catch { /* عرض إشعار عام عند وصول payload غير صالح */ }
+  try { message = event.data?.json() ?? {}; } catch { /* استخدم نصًا افتراضيًا عند وصول إشعار غير صالح */ }
   const title = typeof message.title === "string" ? message.title : "تحديث جديد على سِكّة";
   const options = {
     body: typeof message.body === "string" ? message.body : "افتح التطبيق لمراجعة آخر تحديث.",
-    icon: "/brand/sekka-icon-dark.png",
-    badge: "/brand/sekka-icon-dark.png",
+    icon: "/brand/pwa-icon-192.png",
+    badge: "/brand/pwa-icon-192.png",
     data: { url: typeof message.url === "string" ? message.url : "/" },
     dir: "rtl",
     lang: "ar",
@@ -37,31 +46,45 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const target = new URL(event.notification.data?.url ?? "/", self.location.origin).href;
-  event.waitUntil(clients.matchAll({ type: "window", includeUncontrolled: true }).then((windows) => {
+  let target = new URL(event.notification.data?.url ?? "/", self.location.origin);
+  if (target.origin !== self.location.origin) target = new URL("/", self.location.origin);
+  event.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(async (windows) => {
     const existing = windows.find((client) => client.url.startsWith(self.location.origin));
-    if (existing) return existing.focus();
-    return clients.openWindow(target);
+    if (existing) {
+      if ("navigate" in existing) await existing.navigate(target.href);
+      return existing.focus();
+    }
+    return self.clients.openWindow(target.href);
   }));
 });
+
+async function cacheFirst(request) {
+  const cache = await caches.open(CACHE_NAME);
+  const cached = await cache.match(request);
+  if (cached) return cached;
+  const response = await fetch(request);
+  if (response.ok) await cache.put(request, response.clone());
+  return response;
+}
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   const url = new URL(request.url);
-  if (request.method !== "GET" || url.pathname.startsWith("/api") || url.hostname.includes("openstreetmap.org")) return;
+  if (request.method !== "GET" || url.origin !== self.location.origin) return;
+  if (url.pathname === "/api" || url.pathname.startsWith("/api/")) return;
 
   if (request.mode === "navigate") {
-    event.respondWith(fetch(request).catch(() => caches.match("/")));
+    event.respondWith(fetch(request).catch(async () => {
+      const cache = await caches.open(CACHE_NAME);
+      return (await cache.match("/offline.html")) ?? Response.error();
+    }));
     return;
   }
 
-  event.respondWith(
-    caches.match(request).then((cached) => cached ?? fetch(request).then((response) => {
-      if (response.ok && url.origin === self.location.origin) {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-      }
-      return response;
-    })),
-  );
+  const isStaticAsset = url.pathname.startsWith("/assets/")
+    || url.pathname.startsWith("/brand/")
+    || url.pathname === "/manifest.webmanifest"
+    || url.pathname === "/offline.html"
+    || url.pathname === "/favicon.ico";
+  if (isStaticAsset) event.respondWith(cacheFirst(request));
 });
