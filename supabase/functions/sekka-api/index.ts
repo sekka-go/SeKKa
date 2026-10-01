@@ -644,6 +644,64 @@ Deno.serve(async (req: Request) => {
       if (e) throw e; if (!data) return error("الكابتن غير موجود أو حالته لم تتغير.", 404, origin);
       return reply({ captain_profile: data }, 200, origin);
     }
+
+    const priceUpdate = path.match(/^\/admin\/pricing\/([^/]+)$/);
+    if (req.method === "PATCH" && priceUpdate) {
+      const values = [body.base_fee, body.rate_per_km, body.rate_per_min];
+      if (!values.every(value => number(value) && value >= 0)) return error("قيم التسعير المطلوبة ناقصة أو غير صحيحة.", 400, origin);
+      const { data, error: pe } = await db.from("pricing_config").update({ base_fee: values[0], rate_per_km: values[1], rate_per_min: values[2], updated_at: new Date().toISOString() }).eq("vehicle_type_id", priceUpdate[1]).select().maybeSingle();
+      if (pe) throw pe; if (!data) return error("نوع المركبة ده مش موجود في إعدادات التسعير.", 404, origin);
+      return reply({ pricing_config: data }, 200, origin);
+    }
+    const paymentView = path.match(/^\/admin\/payments\/(\d+)$/);
+    if (req.method === "GET" && paymentView) {
+      const { data: payment, error: pe } = await db.from("payments").select("*").eq("id", paymentView[1]).maybeSingle();
+      if (pe) throw pe; if (!payment) return error("الدفعة دي مش موجودة.", 404, origin);
+      const { data: events, error: ee } = await db.from("payment_status_events").select("*").eq("payment_id", payment.id).order("created_at", { ascending: false });
+      if (ee) throw ee;
+      return reply({ payment, status: events?.[0]?.to_status ?? "confirmed", events: events ?? [] }, 200, origin);
+    }
+    const paymentAction = path.match(/^\/admin\/payments\/(\d+)\/(resolve|adjust|void)$/);
+    if (req.method === "POST" && paymentAction) {
+      const paymentId = Number(paymentAction[1]), action = paymentAction[2];
+      const { data: payment, error: pe } = await db.from("payments").select("id").eq("id", paymentId).maybeSingle();
+      if (pe) throw pe; if (!payment) return error("الدفعة دي مش موجودة.", 404, origin);
+      const { data: events, error: ee } = await db.from("payment_status_events").select("to_status").eq("payment_id", paymentId).order("created_at", { ascending: false }).limit(1);
+      if (ee) throw ee;
+      if ((events?.[0]?.to_status ?? "confirmed") !== "disputed") return error("لا يمكن اتخاذ إجراء إلا على دفعة معترض عليها.", 409, origin);
+      const target = action === "resolve" ? "resolved" : action === "adjust" ? "adjusted" : "voided";
+      if (action === "adjust" && (!number(body.adjusted_amount) || body.adjusted_amount < 0)) return error("المبلغ المعدل غير صالح.", 400, origin);
+      const { data: event, error: insertError } = await db.from("payment_status_events").insert({ payment_id: paymentId, from_status: "disputed", to_status: target, actor_user_id: user!.id, reason: typeof body.reason === "string" ? body.reason.trim().slice(0, 1000) : null, adjusted_amount: action === "adjust" ? body.adjusted_amount : null }).select().single();
+      if (insertError) throw insertError;
+      return reply({ event }, 200, origin);
+    }
+    if (req.method === "GET" && path === "/admin/analytics/overview") {
+      const names = ["users", "captain_profiles", "daily_commute_requests", "trips", "payments", "pool_groups", "pool_members", "pool_trips"];
+      const counts = await Promise.all(names.map(name => db!.from(name).select("id", { count: "exact", head: true })));
+      const amounts = await db.from("payments").select("amount");
+      if (counts.some(x => x.error) || amounts.error) throw new Error("analytics query failed");
+      const overview: Record<string, number> = Object.fromEntries(names.map((name, i) => [name, counts[i].count ?? 0]));
+      overview.confirmed_payment_amount = (amounts.data ?? []).reduce((sum, item) => sum + Number(item.amount), 0);
+      return reply({ overview }, 200, origin);
+    }
+    if (req.method === "GET" && path === "/admin/pool/overview") {
+      const [groups, ledgers, trips] = await Promise.all([
+        db.from("pool_groups").select("id,status,package_type,category_id,created_at,waiting_since,route_distance_km,seat_day_fare"),
+        db.from("pool_ledger").select("list_amount,rider_amount,company_share_amount,captain_share_amount,settlement_status"),
+        db.from("pool_trips").select("id,status"),
+      ]);
+      if (groups.error || ledgers.error || trips.error) throw new Error("pool overview query failed");
+      return reply({ groups: groups.data ?? [], trips: trips.data ?? [], totals: { list_amount: (ledgers.data ?? []).reduce((sum, x) => sum + Number(x.list_amount), 0), rider_amount: (ledgers.data ?? []).reduce((sum, x) => sum + Number(x.rider_amount), 0), company_share_amount: (ledgers.data ?? []).reduce((sum, x) => sum + Number(x.company_share_amount), 0), captain_share_amount: (ledgers.data ?? []).reduce((sum, x) => sum + Number(x.captain_share_amount), 0), pending_settlements: (ledgers.data ?? []).filter(x => x.settlement_status === "pending").length } }, 200, origin);
+    }
+    if (req.method === "GET" && path === "/captain/pool/preferences") {
+      const gate = await requireRole(user, ["captain"], origin); if (gate) return gate;
+      const [stats, capabilities] = await Promise.all([
+        db.from("pool_captain_stats").select("*").eq("captain_user_id", user.id).maybeSingle(),
+        db.from("pool_captain_capabilities").select("*").eq("captain_user_id", user.id).maybeSingle(),
+      ]);
+      if (stats.error || capabilities.error) throw new Error("captain preferences query failed");
+      return reply({ radius_km: stats.data?.search_radius_km ?? 4, effective_radius_km: Math.max(4, Number(stats.data?.search_radius_km ?? 4) - Math.min(3, Number(stats.data?.absences ?? 0))), absences: stats.data?.absences ?? 0, capabilities: capabilities.data ?? null }, 200, origin);
+    }
     return error("المسار غير موجود.", 404, origin);
   } catch (err) {
     console.error("[sekka-api] request failed:", err instanceof Error ? err.name : "UnknownError");
