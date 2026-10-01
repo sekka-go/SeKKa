@@ -10,7 +10,7 @@ const corsHeaders = {
 };
 
 function reply(data: unknown, status = 200, origin = "") {
-  const corsOrigin = origin === "http://localhost:5173" || origin.endsWith(".sekka-go.pages.dev") ? origin : "null";
+  const corsOrigin = origin === "http://localhost:5173" || origin === "https://sekka-go.pages.dev" || origin.endsWith(".sekka-go.pages.dev") ? origin : "null";
   return new Response(status === 204 ? null : JSON.stringify(data), {
     status,
     headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "access-control-allow-origin": corsOrigin, "vary": "Origin", ...corsHeaders },
