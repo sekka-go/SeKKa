@@ -12,8 +12,9 @@ The repository's `server/migrations/001–013` are SQLite scripts. They were rev
 - `20261001000003_pool_deadline_processor.sql`: PostgreSQL deadline processor, with a `pg_cron` job scheduled every minute.
 - `20261001000004_deadline_scheduled_trips.sql`: covers unstaffed trips that remain `scheduled` as well as `needs_captain` after departure.
 - `20261001000005_captain_otp_feature_flag.sql`: adds an RLS-protected, service-role-only OTP switch, defaulting to disabled.
+- `20261001000006_app_feature_flags_security.sql`: adds an explicit service-role policy and index for the feature flag audit actor.
 
-All six migrations were applied successfully and verified in the Supabase migration history. OTP is disabled by default. A review found that the first deadline query skipped trips still marked `scheduled`; the additive fourth migration corrected this without changing or deleting data. A first attempt at the baseline failed before applying; the project remained empty, the quoting defect was corrected in GitHub, and the corrected migration applied successfully.
+All seven migrations were applied successfully and verified in the Supabase migration history. OTP is disabled by default. A review found that the first deadline query skipped trips still marked `scheduled`; the additive fourth migration corrected this without changing or deleting data. A first attempt at the baseline failed before applying; the project remained empty, the quoting defect was corrected in GitHub, and the corrected migration applied successfully.
 
 The old predictable development admin password was deliberately not copied. Create an admin account through a controlled operator process; never use the previous default password in a live environment.
 
