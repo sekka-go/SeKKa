@@ -159,8 +159,8 @@ async function quote(members: Json[], category: Json) {
 }
 async function activateGroup(group: Json, members: Json[], category: Json, quoteData: Json) {
   const min = category.speed_tier === "faster" ? 2 : 3;
-  const memberCount = members.reduce((sum, m) => sum + Number(m.seats_reserved), 0);
-  if (memberCount < min && memberCount < Number(category.seats)) return;
+  const occupiedSeats = members.reduce((sum, m) => sum + Number(m.seats_reserved), 0);
+  if (members.length < min && occupiedSeats < Number(category.seats)) return;
   if (members.some((m) => m.price_decision !== "accepted")) return;
   const dates = Array.isArray(group.service_dates) ? group.service_dates as string[] : JSON.parse(String(group.service_dates));
   const type = String(group.package_type), discount = discountRate(type);
@@ -435,6 +435,37 @@ Deno.serve(async (req: Request) => {
       const refreshed = await getGroup(Number(group.id));
       return reply({ group: refreshed, member, price_review: changed }, 200, origin);
     }
+
+    const confirmInvite = path.match(/^\/rider\/pool\/groups\/(\d+)\/confirm$/);
+    if (req.method === "POST" && confirmInvite) {
+      const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      if (!["accept", "decline"].includes(String(body.action))) return error("الاختيار غير صحيح.", 400, origin);
+      const group = await getGroup(Number(confirmInvite[1]));
+      const { data: member, error: memberError } = await db.from("pool_members").select("*").eq("group_id", confirmInvite[1]).eq("rider_user_id", user!.id).eq("status", "awaiting_confirmation").maybeSingle();
+      if (memberError) throw memberError;
+      if (!group || !member || group.status !== "waiting") return error("الدعوة غير متاحة أو انتهت.", 409, origin);
+      const accepted = body.action === "accept";
+      const { error: updateError } = await db.from("pool_members").update({ status: accepted ? "active" : "cancelled", price_decision: accepted ? "accepted" : "pending", cancelled_at: accepted ? null : new Date().toISOString() }).eq("id", member.id).eq("status", "awaiting_confirmation");
+      if (updateError) throw updateError;
+      const active = await getMembers(Number(group.id));
+      if (!active.length) {
+        await db.from("pool_groups").update({ status: "cancelled", updated_at: new Date().toISOString() }).eq("id", group.id);
+        return reply({ success: true, group: await groupView({ ...group, current_rider_id: user!.id }) }, 200, origin);
+      }
+      const { data: category, error: categoryError } = await db.from("pool_categories").select("*").eq("id", group.category_id).single();
+      if (categoryError) throw categoryError;
+      const q = await quote(active, category);
+      const baseline = Number(group.seat_day_fare ?? 0);
+      const changed = accepted && baseline > 0 && (q.seatDayFare - baseline) / baseline > 0.15;
+      await db.from("pool_groups").update({ route_distance_km: q.out.distanceKm, route_duration_min: q.out.durationMin, route_geometry: q.geometry, seat_day_fare: q.seatDayFare, status: changed ? "price_review" : "waiting", updated_at: new Date().toISOString() }).eq("id", group.id);
+      if (changed) {
+        await db.from("pool_members").update({ price_decision: "pending" }).eq("group_id", group.id).eq("status", "active");
+        for (const m of active) await notifyUser(Number(m.rider_user_id), Number(group.id), `price-review-invite-${group.id}-${Date.now()}-${m.id}`, { message: "تغير السعر بأكثر من ١٥٪ بعد تأكيد الدعوات. راجع السعر ووافق أو ارفض." });
+      } else await activateGroup(group, active, category, q);
+      const refreshed = await getGroup(Number(group.id));
+      return reply({ success: true, group: await groupView({ ...refreshed, current_rider_id: user!.id }) }, 200, origin);
+    }
+
     const priceAction = path.match(/^\/rider\/pool\/groups\/(\d+)\/price-decision$/);
     if (req.method === "POST" && priceAction) {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
@@ -448,7 +479,7 @@ Deno.serve(async (req: Request) => {
         const { data: category } = await db.from("pool_categories").select("*").eq("id", group.category_id).single();
         const minimum = category.speed_tier === "faster" ? 2 : 3;
         const seats = remaining.reduce((s, m) => s + Number(m.seats_reserved), 0);
-        if (seats < minimum && seats < Number(category.seats)) {
+        if (remaining.length < minimum && seats < Number(category.seats)) {
           await db.from("pool_groups").update({ status: "cancelled" }).eq("id", group.id);
         } else if (remaining.every((m) => m.price_decision === "accepted")) {
           const q = await quote(remaining, category);
@@ -549,6 +580,48 @@ Deno.serve(async (req: Request) => {
       await activateGroup(refreshed, updated, category, q);
       return reply({ group: await groupView({ ...refreshed, current_rider_id: user!.id }), reserved_seats: remaining, payment: "deferred" }, 200, origin);
     }
+
+    const waitingDecision = path.match(/^\/rider\/pool\/groups\/(\d+)\/waiting-decision$/);
+    if (req.method === "POST" && waitingDecision) {
+      const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      if (!["wait", "book_remaining_seats", "cancel_free"].includes(String(body.action))) return error("الاختيار غير صحيح.", 400, origin);
+      const group = await getGroup(Number(waitingDecision[1]));
+      const { data: member, error: memberError } = await db.from("pool_members").select("*").eq("group_id", waitingDecision[1]).eq("rider_user_id", user!.id).eq("status", "active").maybeSingle();
+      if (memberError) throw memberError;
+      if (!group || !member || group.status !== "waiting") return error("المجموعة لم تعد في حالة انتظار.", 409, origin);
+      if (body.action === "wait") {
+        await db.from("pool_notifications").update({ read_at: new Date().toISOString() }).eq("user_id", user!.id).eq("group_id", group.id).eq("event_key", `pool-wait-72h:${group.id}`);
+        return reply({ success: true, status: "waiting" }, 200, origin);
+      }
+      if (body.action === "cancel_free") {
+        const { error: cancelError } = await db.from("pool_members").update({ status: "cancelled", cancelled_at: new Date().toISOString() }).eq("id", member.id).eq("status", "active");
+        if (cancelError) throw cancelError;
+        const remaining = await getMembers(Number(group.id));
+        if (!remaining.length) await db.from("pool_groups").update({ status: "cancelled", updated_at: new Date().toISOString() }).eq("id", group.id);
+        else {
+          const { data: category } = await db.from("pool_categories").select("*").eq("id", group.category_id).single();
+          const quoteData = await quote(remaining, category);
+          await db.from("pool_groups").update({ seat_day_fare: quoteData.seatDayFare, route_distance_km: quoteData.out.distanceKm, route_duration_min: quoteData.out.durationMin, route_geometry: quoteData.geometry, updated_at: new Date().toISOString() }).eq("id", group.id);
+        }
+        return reply({ success: true, cancelled_free: true }, 200, origin);
+      }
+      const { data: category, error: categoryError } = await db.from("pool_categories").select("*").eq("id", group.category_id).single();
+      if (categoryError) throw categoryError;
+      const members = await getMembers(Number(group.id));
+      const used = members.reduce((sum, m) => sum + Number(m.seats_reserved), 0), remainingSeats = Number(category.seats) - used;
+      if (remainingSeats <= 0) return error("لا توجد مقاعد متبقية لحجزها.", 409, origin);
+      const proposedMember = { ...member, seats_reserved: Number(member.seats_reserved) + remainingSeats, price_decision: "accepted" };
+      const proposed = members.map(m => Number(m.id) === Number(member.id) ? proposedMember : m);
+      const q = await quote(proposed, category);
+      const { data: updatedMember, error: seatError } = await db.from("pool_members").update({ seats_reserved: proposedMember.seats_reserved, price_decision: "accepted" }).eq("id", member.id).eq("status", "active").select().single();
+      if (seatError) throw seatError;
+      const finalMembers = members.map(m => Number(m.id) === Number(member.id) ? updatedMember : m);
+      const { error: groupError } = await db.from("pool_groups").update({ seat_day_fare: q.seatDayFare, route_distance_km: q.out.distanceKm, route_duration_min: q.out.durationMin, route_geometry: q.geometry }).eq("id", group.id);
+      if (groupError) throw groupError;
+      await activateGroup(group, finalMembers, category, q);
+      return reply({ success: true, reserved_seats: remainingSeats, payment: "deferred" }, 200, origin);
+    }
+
     const cancelDay = path.match(/^\/rider\/pool\/groups\/(\d+)\/days\/(\d{4}-\d{2}-\d{2})\/cancel$/);
     const cancelPackage = path.match(/^\/rider\/pool\/groups\/(\d+)\/cancel$/);
     if (req.method === "POST" && (cancelDay || cancelPackage)) {
@@ -606,6 +679,33 @@ Deno.serve(async (req: Request) => {
       }
       return reply({ success: true, days_processed: processed, charged_amount: roundMoney(chargeTotal), refund_amount: roundMoney(refundTotal), admin_fee: cancelPackage ? roundMoney(refundTotal / 9) : 0, payment: "deferred" }, 200, origin);
     }
+
+    if (req.method === "GET" && path === "/pool/push/vapid-public-key") {
+      const publicKey = Deno.env.get("SEKKA_VAPID_PUBLIC_KEY") ?? "";
+      if (!publicKey) return error("إشعارات الجهاز غير مهيأة على الخادم.", 503, origin);
+      return reply({ public_key: publicKey }, 200, origin);
+    }
+    if (req.method === "PUT" && path === "/pool/push/subscriptions") {
+      if (!user) return error("سجّل الدخول أولًا.", 401, origin);
+      const endpoint = typeof body.endpoint === "string" ? body.endpoint : "";
+      const keys = body.keys && typeof body.keys === "object" ? body.keys as Json : {};
+      const p256dh = typeof keys.p256dh === "string" ? keys.p256dh : "";
+      const authKey = typeof keys.auth === "string" ? keys.auth : "";
+      let secureEndpoint = false;
+      try { secureEndpoint = new URL(endpoint).protocol === "https:"; } catch { /* invalid endpoint */ }
+      if (endpoint.length < 12 || endpoint.length > 4096 || !secureEndpoint || !/^[A-Za-z0-9_-]{16,256}$/.test(p256dh) || !/^[A-Za-z0-9_-]{8,128}$/.test(authKey)) return error("بيانات اشتراك الإشعارات غير صالحة.", 400, origin);
+      const { data, error: pushError } = await db.from("push_subscriptions").upsert({ user_id: user.id, endpoint, p256dh, auth: authKey, updated_at: new Date().toISOString() }, { onConflict: "endpoint" }).select("id,endpoint").single();
+      if (pushError) throw pushError;
+      return reply({ subscription: data }, 200, origin);
+    }
+    if (req.method === "DELETE" && path === "/pool/push/subscriptions") {
+      if (!user) return error("سجّل الدخول أولًا.", 401, origin);
+      if (!clean(body.endpoint)) return error("عنوان الاشتراك مطلوب.", 400, origin);
+      const { error: deleteError } = await db.from("push_subscriptions").delete().eq("user_id", user.id).eq("endpoint", body.endpoint);
+      if (deleteError) throw deleteError;
+      return reply({ success: true }, 200, origin);
+    }
+
     if (req.method === "GET" && path === "/pool/notifications") {
       if (!user) return error("سجّل الدخول أولًا.", 401, origin);
       const { data, error: e } = await db.from("pool_notifications").select("*").eq("user_id", user.id).order("id", { ascending: false }).limit(100);
@@ -638,6 +738,35 @@ Deno.serve(async (req: Request) => {
         const { data, error: e } = await db.from("captain_profiles").update({ current_lat: body.current_lat, current_lng: body.current_lng }).eq("user_id", user!.id).select().single();
         if (e) throw e; return reply({ profile: data }, 200, origin);
       }
+
+      if (req.method === "POST" && path === "/captain/pool/groups") {
+        const profileResult = await db.from("captain_profiles").select("verification_status").eq("user_id", user!.id).maybeSingle();
+        if (profileResult.error) throw profileResult.error;
+        if (!profileResult.data || profileResult.data.verification_status !== "approved" || !user!.verified_at) return error("يلزم توثيق الكابتن والمركبة قبل إنشاء دعوة.", 403, origin);
+        const { category_id, package_type, service_dates, morning_departure, return_departure, riders } = body;
+        const dates = validDates(service_dates, String(package_type));
+        if (!clean(category_id) || !dates || !/^\d{2}:\d{2}$/.test(String(morning_departure)) || !/^\d{2}:\d{2}$/.test(String(return_departure)) || String(return_departure) <= String(morning_departure) || !Array.isArray(riders) || riders.length < 1) return error("راجع الفئة والأيام والمواعيد وقائمة الركاب.", 400, origin);
+        const { data: category, error: categoryError } = await db.from("pool_categories").select("*").eq("id", category_id).maybeSingle();
+        if (categoryError) throw categoryError;
+        if (!category) return error("فئة الرحلة غير موجودة.", 404, origin);
+        if (riders.length > Number(category.seats)) return error("عدد الركاب يتجاوز سعة الفئة.", 400, origin);
+        const ids = riders.map((r: Json) => Number(r.rider_user_id));
+        if (ids.some((id: number) => !Number.isInteger(id) || id <= 0) || new Set(ids).size !== ids.length) return error("قائمة الركاب غير صالحة أو بها تكرار.", 400, origin);
+        const { data: riderUsers, error: usersError } = await db.from("users").select("id").eq("role", "rider").in("id", ids);
+        if (usersError) throw usersError;
+        if ((riderUsers ?? []).length !== ids.length) return error("تأكد أن كل المدعوين لديهم حساب راكب.", 400, origin);
+        const candidates = riders.map((r: Json, i: number) => ({ id: -(i + 1), rider_user_id: ids[i], pickup_lat: r.pickup_lat, pickup_lng: r.pickup_lng, dropoff_lat: r.dropoff_lat, dropoff_lng: r.dropoff_lng, seats_reserved: 1, status: "awaiting_confirmation", price_decision: "pending", pickup_order: i }));
+        if (candidates.some(m => !validPoint(m.pickup_lat, m.pickup_lng) || !validPoint(m.dropoff_lat, m.dropoff_lng))) return error("إحداثيات أحد الركاب غير صحيحة.", 400, origin);
+        let q; try { q = await quote(candidates, category); } catch { return error("خدمة حساب المسار غير متاحة حاليًا.", 503, origin); }
+        const { data: group, error: groupError } = await db.from("pool_groups").insert({ created_by_user_id: user!.id, category_id, package_type, service_dates: dates, morning_departure: String(morning_departure) + ":00", return_departure: String(return_departure) + ":00", route_distance_km: q.out.distanceKm, route_duration_min: q.out.durationMin, seat_day_fare: q.seatDayFare, route_geometry: q.geometry, status: "waiting" }).select().single();
+        if (groupError) throw groupError;
+        const memberRows = candidates.map(m => ({ group_id: group.id, rider_user_id: m.rider_user_id, pickup_lat: m.pickup_lat, pickup_lng: m.pickup_lng, dropoff_lat: m.dropoff_lat, dropoff_lng: m.dropoff_lng, seats_reserved: 1, status: "awaiting_confirmation", price_decision: "pending", pickup_order: m.pickup_order }));
+        const { error: inviteError } = await db.from("pool_members").insert(memberRows);
+        if (inviteError) { await db.from("pool_groups").update({ status: "cancelled" }).eq("id", group.id); throw inviteError; }
+        for (const member of memberRows) await notifyUser(member.rider_user_id, Number(group.id), `pool-invite-${group.id}-${member.rider_user_id}`, { message: "الكابتن دعاك للانضمام إلى مجموعة مشوار.", group_id: group.id });
+        return reply({ ...(await groupView(group)), invitations_sent: memberRows.length }, 201, origin);
+      }
+
       if (req.method === "PUT" && path === "/captain/pool/capabilities") {
         if (typeof body.has_ac !== "boolean" || !Array.isArray(body.service_tiers) || !body.service_tiers.length || body.service_tiers.some((v) => !["faster", "saver"].includes(String(v)))) return error("تفضيلات المركبة غير صحيحة.", 400, origin);
         const { error: e } = await db.from("pool_captain_capabilities").upsert({ captain_user_id: user!.id, has_ac: Number(body.has_ac), accepts_faster: Number(body.service_tiers.includes("faster")), accepts_saver: Number(body.service_tiers.includes("saver")) }, { onConflict: "captain_user_id" });
@@ -669,6 +798,36 @@ Deno.serve(async (req: Request) => {
         }
         return reply({ offers }, 200, origin);
       }
+
+      const poolTripDetail = path.match(/^\/captain\/pool\/trips\/(\d+)$/);
+      if (req.method === "GET" && poolTripDetail) {
+        const { data: trip, error: tripError } = await db.from("pool_trips").select("*").eq("id", poolTripDetail[1]).maybeSingle();
+        if (tripError) throw tripError;
+        if (!trip) return error("الرحلة غير موجودة.", 404, origin);
+        const { data: group, error: groupError } = await db.from("pool_groups").select("*").eq("id", trip.group_id).maybeSingle();
+        if (groupError) throw groupError;
+        if (!group) return error("المجموعة غير موجودة.", 404, origin);
+        let allowed = Number(trip.captain_user_id) === user!.id;
+        if (!allowed && !trip.captain_user_id && ["scheduled", "needs_captain"].includes(trip.status) && ["minimum_met", "active", "needs_captain"].includes(group.status)) {
+          const [{ data: profile }, { data: capability }, { data: stats }, { data: category }, members] = await Promise.all([
+            db.from("captain_profiles").select("*").eq("user_id", user!.id).eq("verification_status", "approved").maybeSingle(),
+            db.from("pool_captain_capabilities").select("*").eq("captain_user_id", user!.id).maybeSingle(),
+            db.from("pool_captain_stats").select("*").eq("captain_user_id", user!.id).maybeSingle(),
+            db.from("pool_categories").select("*").eq("id", group.category_id).maybeSingle(),
+            getMembers(Number(group.id)),
+          ]);
+          const first = members[0];
+          allowed = !!profile && !!capability && !!category && profile.current_lat != null && profile.current_lng != null && !!first &&
+            Number(category.has_ac) === Number(capability.has_ac) &&
+            (category.speed_tier === "faster" ? capability.accepts_faster === 1 : capability.accepts_saver === 1) &&
+            distanceKm({ lat: Number(profile.current_lat), lng: Number(profile.current_lng) }, { lat: Number(first.pickup_lat), lng: Number(first.pickup_lng) }) <= Math.max(4, Number(stats?.search_radius_km ?? 4) - Math.min(3, Number(stats?.absences ?? 0)));
+        }
+        if (!allowed) return error("الرحلة غير متاحة ضمن نطاقك أو ليست مسندة إليك.", 404, origin);
+        const { data: stops, error: stopsError } = await db.from("pool_trip_stops").select("*").eq("trip_id", trip.id).order("sequence");
+        if (stopsError) throw stopsError;
+        return reply({ trip: { ...trip, route_geometry: group.route_geometry, category_id: group.category_id, package_type: group.package_type }, stops: stops ?? [] }, 200, origin);
+      }
+
       if (req.method === "GET" && path === "/captain/pool/trips") {
         const { data: trips } = await db.from("pool_trips").select("*").eq("captain_user_id", user!.id).in("status", ["assigned", "in_progress"]).order("departure_at");
         const out = [];
@@ -679,6 +838,42 @@ Deno.serve(async (req: Request) => {
         }
         return reply({ trips: out }, 200, origin);
       }
+
+      const reorder = path.match(/^\/captain\/pool\/groups\/(\d+)\/reorder$/);
+      if (req.method === "POST" && reorder) {
+        const group = await getGroup(Number(reorder[1]));
+        if (!group) return error("المجموعة غير موجودة.", 404, origin);
+        const { data: assigned, error: assignedError } = await db.from("pool_trips").select("id").eq("group_id", group.id).eq("captain_user_id", user!.id).limit(1);
+        if (assignedError) throw assignedError;
+        if (!assigned?.length) return error("يمكن للكابتن المكلّف فقط تعديل ترتيب الوقفات.", 403, origin);
+        const members = await getMembers(Number(group.id));
+        if (!Array.isArray(body.member_ids) || body.member_ids.length !== members.length) return error("أرسل كل أعضاء المجموعة مرة واحدة وبالترتيب المطلوب.", 400, origin);
+        const memberIds = body.member_ids as number[];
+        if (memberIds.some(id => !Number.isInteger(id)) || new Set(memberIds).size !== members.length || members.some(m => !memberIds.includes(Number(m.id)))) return error("أرسل كل أعضاء المجموعة مرة واحدة وبالترتيب المطلوب.", 400, origin);
+        const ordered = memberIds.map((id, i) => ({ ...members.find(m => Number(m.id) === Number(id))!, pickup_order: i }));
+        const { data: category, error: categoryError } = await db.from("pool_categories").select("*").eq("id", group.category_id).single();
+        if (categoryError) throw categoryError;
+        let q; try { q = await quote(ordered, category); } catch { return error("خدمة الخرائط المحلية غير متاحة الآن. لم يتغير ترتيب الوقفات.", 503, origin); }
+        for (const member of ordered) {
+          const { error: orderError } = await db.from("pool_members").update({ pickup_order: member.pickup_order }).eq("id", member.id);
+          if (orderError) throw orderError;
+        }
+        const { data: futureTrips, error: tripsError } = await db.from("pool_trips").select("*").eq("group_id", group.id).in("status", ["scheduled", "needs_captain", "assigned"]);
+        if (tripsError) throw tripsError;
+        for (const trip of futureTrips ?? []) {
+          await db.from("pool_trip_stops").delete().eq("trip_id", trip.id);
+          const rows = routePoints(ordered, trip.direction).map((stop, i) => ({ trip_id: trip.id, member_id: stop.member_id, stop_type: stop.stop_type, sequence: i + 1, lat: stop.lat, lng: stop.lng }));
+          if (rows.length) { const { error: stopError } = await db.from("pool_trip_stops").insert(rows); if (stopError) throw stopError; }
+          const departure = Date.parse(trip.departure_at);
+          const { error: updateError } = await db.from("pool_trips").update({ estimated_arrival_at: new Date(departure + q.out.durationMin * 60_000).toISOString() }).eq("id", trip.id);
+          if (updateError) throw updateError;
+        }
+        const { error: groupError } = await db.from("pool_groups").update({ route_distance_km: q.out.distanceKm, route_duration_min: q.out.durationMin, route_geometry: q.geometry, updated_at: new Date().toISOString() }).eq("id", group.id);
+        if (groupError) throw groupError;
+        for (const member of members) await notifyUser(Number(member.rider_user_id), Number(group.id), `pool-stop-order-${group.id}-${Date.now()}-${member.id}`, { message: "حدّث الكابتن ترتيب نقاط الرحلة.", route_version: group.route_version });
+        return reply({ group: await groupView(await getGroup(Number(group.id))) }, 200, origin);
+      }
+
       const accept = path.match(/^\/captain\/pool\/trips\/(\d+)\/accept$/);
       if (req.method === "POST" && accept) {
         const { data, error: e } = await db.from("pool_trips").update({ captain_user_id: user!.id, status: "assigned" }).eq("id", accept[1]).is("captain_user_id", null).in("status", ["scheduled", "needs_captain"]).select().maybeSingle();
