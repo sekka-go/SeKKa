@@ -11,7 +11,7 @@ const corsHeaders = {
 
 function reply(data: unknown, status = 200, origin = "") {
   const corsOrigin = origin === "http://localhost:5173" || origin.endsWith(".sekka-go.pages.dev") ? origin : "null";
-  return new Response(JSON.stringify(data), {
+  return new Response(status === 204 ? null : JSON.stringify(data), {
     status,
     headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "access-control-allow-origin": corsOrigin, "vary": "Origin", ...corsHeaders },
   });
@@ -184,6 +184,7 @@ async function activateGroup(group: Json, members: Json[], category: Json, quote
   for (const m of members) await notifyUser(m.rider_user_id, Number(group.id), `group-active-${group.id}`, { message: "اكتمل الحد الأدنى وبدأ تفعيل مسارك." });
 }
 async function groupView(group: Json) {
+  const { current_rider_id: _currentRiderId, ...publicGroup } = group;
   const [members, trips, subs] = await Promise.all([
     getMembers(Number(group.id), false),
     db!.from("pool_trips").select("*").eq("group_id", group.id).order("service_date").order("direction"),
@@ -193,9 +194,9 @@ async function groupView(group: Json) {
   let subscription;
   if (memberIds.length) {
     const { data } = await db!.from("pool_subscriptions").select("amount_due,refund_amount,service_days,discount_rate").in("member_id", memberIds);
-    subscription = data?.find((s) => members.some((m: Json) => m.rider_user_id === Number((group as Json).current_rider_id) && memberIds.includes(m.id)));
+    subscription = data?.find((s) => members.some((m: Json) => m.rider_user_id === Number(_currentRiderId) && memberIds.includes(m.id)));
   }
-  return { group: { ...group, service_dates: JSON.stringify(group.service_dates), route_geometry: group.route_geometry }, members, trips: trips.data ?? [], ...(subscription ? { subscription } : {}) };
+  return { group: { ...publicGroup, service_dates: JSON.stringify(group.service_dates), route_geometry: group.route_geometry }, members, trips: trips.data ?? [], ...(subscription ? { subscription } : {}) };
 }
 
 Deno.serve(async (req: Request) => {
@@ -210,7 +211,11 @@ Deno.serve(async (req: Request) => {
     try { body = await readBody(req); } catch { return error("بيانات الطلب غير صالحة.", 400, origin); }
   }
   try {
-    if (req.method === "GET" && (path === "/health" || path === "/")) return reply({ status: "ok", service: "sekka-supabase-api", phase: 14, time: new Date().toISOString() }, 200, origin);
+    if (req.method === "GET" && (path === "/health" || path === "/")) {
+      const { error: healthError } = await db.from("pool_categories").select("id").limit(1);
+      if (healthError) return error("قاعدة البيانات غير متاحة مؤقتًا.", 503, origin);
+      return reply({ status: "ok", service: "sekka-supabase-api", phase: 14, time: new Date().toISOString() }, 200, origin);
+    }
     if (req.method === "GET" && path === "/config") {
       const [vehicles, categories] = await Promise.all([db.from("vehicle_types").select("*").order("id"), db.from("service_categories").select("*").order("id")]);
       if (vehicles.error || categories.error) return error("حصل خطأ ونحن بنجيب الإعدادات، جرّب تاني بعد شوية.", 500, origin);
