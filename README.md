@@ -22,7 +22,7 @@ npm run dev
 
 ## النسخة المستضافة
 
-- واجهة الويب تُنشر على Cloudflare Pages.
+- واجهة الويب تُنشر على Cloudflare Pages وتدعم التثبيت كتطبيق PWA؛ تفاصيل التثبيت والعمل دون اتصال في [دليل PWA](docs/pwa.md).
 - الواجهة الخلفية وقاعدة البيانات المستضافتان هما Supabase للمشروع `uorxfakceqnhxqnaawdy`.
 - الواجهة تستخدم رابط Edge Function المعتمد تلقائيًا في بناء الإنتاج. لا تضف مفتاح service-role إلى Cloudflare أو المتصفح.
 - مصدر وظيفة Supabase هو `supabase/functions/sekka-api/index.ts`، ومساراتها موثقة في [توثيق API للمرحلة 11](docs/pool-phase-11-api.md).
