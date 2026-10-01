@@ -199,6 +199,34 @@ async function groupView(group: Json) {
   return { group: { ...publicGroup, service_dates: JSON.stringify(group.service_dates), route_geometry: group.route_geometry }, members, trips: trips.data ?? [], ...(subscription ? { subscription } : {}) };
 }
 
+
+async function automaticMatch(request: Json, riderId: number) {
+  const requestId = Number(request.id);
+  if (request.status === "matched") {
+    const { data: existing } = await db!.from("matches").select("*").eq("daily_commute_request_id", requestId).maybeSingle();
+    return { request, match: existing, already_matched: true };
+  }
+  if (request.status !== "open") return { request, match: null, not_open: true };
+  const { data: category, error: categoryError } = await db!.from("service_categories").select("vehicle_type_id").eq("id", request.service_category_id).maybeSingle();
+  if (categoryError) throw categoryError;
+  if (!category) return { request, match: null };
+  const { data: verifiedUsers, error: usersError } = await db!.from("users").select("id,verified_at").eq("role", "captain").not("verified_at", "is", null);
+  if (usersError) throw usersError;
+  const ids = (verifiedUsers ?? []).map(x => x.id);
+  if (!ids.length) return { request, match: null };
+  const { data: profiles, error: profilesError } = await db!.from("captain_profiles").select("user_id,vehicle_type_id,current_lat,current_lng,created_at").eq("verification_status", "approved").eq("vehicle_type_id", category.vehicle_type_id).not("current_lat", "is", null).not("current_lng", "is", null).in("user_id", ids);
+  if (profilesError) throw profilesError;
+  const ranked = (profiles ?? []).map(p => ({ ...p, distance_km: distanceKm({ lat: Number(request.pickup_lat), lng: Number(request.pickup_lng) }, { lat: Number(p.current_lat), lng: Number(p.current_lng) }) })).sort((a,b) => a.distance_km-b.distance_km || String(a.created_at).localeCompare(String(b.created_at)) || Number(a.user_id)-Number(b.user_id));
+  for (const candidate of ranked) {
+    const { data: match, error: matchError } = await db!.from("matches").insert({ daily_commute_request_id: requestId, captain_user_id: candidate.user_id, distance_km: candidate.distance_km }).select().maybeSingle();
+    if (!matchError && match) return { request: { ...request, status: "matched" }, match };
+    const { data: existing } = await db!.from("matches").select("*").eq("daily_commute_request_id", requestId).maybeSingle();
+    if (existing) return { request: { ...request, status: "matched" }, match: existing };
+    if (matchError?.code !== "23505") throw matchError;
+  }
+  return { request, match: null };
+}
+
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin") ?? "";
   if (req.method === "OPTIONS") return reply({}, 204, origin);
@@ -269,6 +297,89 @@ Deno.serve(async (req: Request) => {
         return reply({ success: true, revoked_other_sessions: 1 }, 200, origin);
       }
     }
+
+    if (path === "/rider/requests") {
+      const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      if (req.method === "POST") {
+        if (!clean(body.service_category_id) || !validPoint(body.pickup_lat, body.pickup_lng) || !validPoint(body.dropoff_lat, body.dropoff_lng)) return error("فئة الخدمة أو إحداثيات الرحلة غير صحيحة.", 400, origin);
+        const { data: request, error: insertError } = await db.from("daily_commute_requests").insert({ rider_user_id: user!.id, service_category_id: body.service_category_id, pickup_lat: body.pickup_lat, pickup_lng: body.pickup_lng, dropoff_lat: body.dropoff_lat, dropoff_lng: body.dropoff_lng }).select().single();
+        if (insertError) throw insertError;
+        const result = await automaticMatch(request, user!.id);
+        return reply({ request: result.request, match: result.match }, 201, origin);
+      }
+      if (req.method === "GET") {
+        const { data: requests, error: queryError } = await db.from("daily_commute_requests").select("*").eq("rider_user_id", user!.id).order("requested_at", { ascending: false });
+        if (queryError) throw queryError;
+        const rows = [];
+        for (const request of requests ?? []) {
+          const { data: match } = await db.from("matches").select("*").eq("daily_commute_request_id", request.id).maybeSingle();
+          rows.push({ ...request, match: match ?? null });
+        }
+        return reply({ requests: rows }, 200, origin);
+      }
+    }
+    const dailyMatch = path.match(/^\/rider\/requests\/(\d+)\/match$/);
+    if (req.method === "POST" && dailyMatch) {
+      const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      const { data: request, error: queryError } = await db.from("daily_commute_requests").select("*").eq("id", dailyMatch[1]).maybeSingle();
+      if (queryError) throw queryError;
+      if (!request) return error("الطلب ده مش موجود.", 404, origin);
+      if (Number(request.rider_user_id) !== user!.id) return error("الطلب ده مش بتاعك.", 403, origin);
+      const result = await automaticMatch(request, user!.id);
+      if (result.not_open) return error("الطلب ده لم يعد مفتوحًا للمطابقة.", 409, origin);
+      return reply({ request: result.request, match: result.match }, 200, origin);
+    }
+    const dailyCancel = path.match(/^\/rider\/requests\/(\d+)\/cancel$/);
+    if (req.method === "POST" && dailyCancel) {
+      const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      const { data: request, error: queryError } = await db.from("daily_commute_requests").select("*").eq("id", dailyCancel[1]).maybeSingle();
+      if (queryError) throw queryError;
+      if (!request) return error("الطلب ده مش موجود.", 404, origin);
+      if (Number(request.rider_user_id) !== user!.id) return error("الطلب ده مش بتاعك.", 403, origin);
+      if (request.status !== "open") return error("الطلب ده مش قابل للإلغاء دلوقتي.", 409, origin);
+      const { data: cancelled, error: updateError } = await db.from("daily_commute_requests").update({ status: "cancelled" }).eq("id", request.id).eq("status", "open").select().maybeSingle();
+      if (updateError) throw updateError;
+      if (!cancelled) return error("الطلب ده مش قابل للإلغاء دلوقتي.", 409, origin);
+      return reply({ request: cancelled }, 200, origin);
+    }
+    if (req.method === "GET" && path === "/rider/trips") {
+      const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      const { data: requests, error: requestsError } = await db.from("daily_commute_requests").select("id").eq("rider_user_id", user!.id);
+      if (requestsError) throw requestsError;
+      const requestIds = (requests ?? []).map(r => r.id);
+      if (!requestIds.length) return reply({ trips: [] }, 200, origin);
+      const { data: matches, error: matchesError } = await db.from("matches").select("id,daily_commute_request_id,captain_user_id").in("daily_commute_request_id", requestIds);
+      if (matchesError) throw matchesError;
+      const trips = [];
+      for (const match of matches ?? []) {
+        const { data: trip } = await db.from("trips").select("*").eq("match_id", match.id).maybeSingle();
+        if (!trip || trip.status !== "completed") continue;
+        const [{ data: stops }, { data: payment }] = await Promise.all([db.from("trip_stops").select("*").eq("trip_id", trip.id).order("sequence"), db.from("payments").select("*").eq("trip_id", trip.id).maybeSingle()]);
+        let paymentStatus: string | null = null;
+        if (payment) { const { data: events } = await db.from("payment_status_events").select("to_status").eq("payment_id", payment.id).order("created_at", { ascending: false }).limit(1); paymentStatus = events?.[0]?.to_status ?? "confirmed"; }
+        trips.push({ trip, stops: stops ?? [], payment: payment ?? null, payment_status: paymentStatus });
+      }
+      return reply({ trips }, 200, origin);
+    }
+    const dispute = path.match(/^\/rider\/trips\/(\d+)\/dispute$/);
+    if (req.method === "POST" && dispute) {
+      const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      const tripId = Number(dispute[1]);
+      const { data: trip } = await db.from("trips").select("id,match_id").eq("id", tripId).maybeSingle();
+      if (!trip) return error("الرحلة دي مش موجودة.", 404, origin);
+      const { data: match } = await db.from("matches").select("daily_commute_request_id").eq("id", trip.match_id).maybeSingle();
+      const { data: request } = match ? await db.from("daily_commute_requests").select("rider_user_id").eq("id", match.daily_commute_request_id).maybeSingle() : { data: null };
+      if (!request || Number(request.rider_user_id) !== user!.id) return error("الرحلة دي مش بتاعتك.", 403, origin);
+      const { data: payment } = await db.from("payments").select("id").eq("trip_id", tripId).maybeSingle();
+      if (!payment) return error("لسه مفيش مبلغ متسجّل لهذه الرحلة.", 409, origin);
+      const { data: events } = await db.from("payment_status_events").select("to_status").eq("payment_id", payment.id).order("created_at", { ascending: false }).limit(1);
+      if ((events?.[0]?.to_status ?? "confirmed") !== "confirmed") return error("الاعتراض متاح بس على مبلغ مؤكد لسه ماعترضش عليه.", 409, origin);
+      if (!clean(body.reason)) return error("لازم تكتب سبب الاعتراض.", 400, origin);
+      const { data: event, error: eventError } = await db.from("payment_status_events").insert({ payment_id: payment.id, from_status: "confirmed", to_status: "disputed", actor_user_id: user!.id, reason: body.reason.trim().slice(0, 1000) }).select().single();
+      if (eventError) throw eventError;
+      return reply({ event }, 201, origin);
+    }
+
     if (req.method === "GET" && path === "/rider/pool/groups") {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
       const { data: memberships, error: me } = await db.from("pool_members").select("group_id").eq("rider_user_id", user!.id).in("status", ["active", "awaiting_confirmation"]);
