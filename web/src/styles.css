@@ -179,3 +179,15 @@ button { line-height: 1.45; }
   .map-picker .map-hint { max-width: 100%; }
   .map-error { flex-direction: column; align-items: stretch; }
 }
+
+.help-center { display: grid; gap: 1rem; max-width: 920px; margin-inline: auto; }
+.help-center-intro { padding: clamp(1.2rem, 3vw, 2rem); }
+.help-center-intro h2 { margin: .35rem 0; }
+.help-center-intro p { max-width: 62ch; color: var(--muted); line-height: 1.75; }
+.help-center-list { padding: .4rem 1.2rem; }
+.help-topic { border-bottom: 1px solid var(--line); }
+.help-topic:last-child { border-bottom: 0; }
+.help-topic summary { cursor: pointer; padding: 1rem .2rem; color: var(--ink); font-weight: 700; }
+.help-topic summary::marker { color: var(--yellow); }
+.help-topic summary:focus-visible { outline: 3px solid var(--cyan); outline-offset: 4px; border-radius: 6px; }
+.help-topic p { margin: 0; padding: 0 .2rem 1rem; max-width: 75ch; color: var(--muted); line-height: 1.8; }
