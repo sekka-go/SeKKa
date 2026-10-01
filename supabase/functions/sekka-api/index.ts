@@ -733,6 +733,83 @@ Deno.serve(async (req: Request) => {
         await db.from("pool_captain_stats").upsert({ captain_user_id: user!.id, absences: Number(stats?.absences ?? 0) + 1 }, { onConflict: "captain_user_id" });
         return reply({ success: true, replacement_search: "open" }, 200, origin);
       }
+
+      const dailyTripView = path.match(/^\/captain\/trips\/(\d+)$/);
+      if (req.method === "GET" && dailyTripView) {
+        const { data: trip, error: tripError } = await db.from("trips").select("*,matches!inner(captain_user_id,daily_commute_request_id)").eq("id", dailyTripView[1]).maybeSingle();
+        if (tripError) throw tripError;
+        if (!trip || Number(trip.matches.captain_user_id) !== user!.id) return error("الرحلة دي مش بتاعتك.", 404, origin);
+        const { data: stops, error: stopsError } = await db.from("trip_stops").select("*").eq("trip_id", trip.id).order("sequence");
+        if (stopsError) throw stopsError;
+        const { matches: _matches, ...publicTrip } = trip;
+        return reply({ trip: publicTrip, stops: stops ?? [] }, 200, origin);
+      }
+      const dailyArrive = path.match(/^\/captain\/trips\/(\d+)\/stops\/(\d+)\/arrive$/);
+      if (req.method === "POST" && dailyArrive) {
+        const tripId = Number(dailyArrive[1]), stopId = Number(dailyArrive[2]);
+        const { data: trip, error: tripError } = await db.from("trips").select("*,matches!inner(captain_user_id)").eq("id", tripId).maybeSingle();
+        if (tripError) throw tripError;
+        if (!trip || Number(trip.matches.captain_user_id) !== user!.id) return error("الرحلة دي مش بتاعتك.", 404, origin);
+        if (trip.status !== "in_progress") return error("الرحلة دي مش شغّالة دلوقتي.", 409, origin);
+        const { data: stops, error: stopsError } = await db.from("trip_stops").select("*").eq("trip_id", tripId).order("sequence");
+        if (stopsError) throw stopsError;
+        const stop = stops?.find(s => Number(s.id) === stopId);
+        if (!stop) return error("الرحلة أو النقطة دي مش موجودة.", 404, origin);
+        if (stop.reached_at) return error("الوصول اتسجّل لهذه النقطة قبل كده.", 409, origin);
+        const next = stops?.find(s => !s.reached_at);
+        if (!next || Number(next.id) !== stopId) return error("لازم توصل للنقطة السابقة الأول.", 409, origin);
+        const previous = stops?.filter(s => Number(s.sequence) < Number(stop.sequence)).sort((a,b) => Number(a.sequence)-Number(b.sequence)) ?? [];
+        const totalDistance = previous.reduce((sum, item, i) => {
+          const nextPoint = i === previous.length - 1 ? stop : previous[i + 1];
+          return sum + distanceKm({ lat: Number(item.lat), lng: Number(item.lng) }, { lat: Number(nextPoint.lat), lng: Number(nextPoint.lng) });
+        }, 0);
+        const profile = await db.from("captain_profiles").select("vehicle_type_id").eq("user_id", user!.id).maybeSingle();
+        const pricing = profile.data ? await db.from("pricing_config").select("*").eq("vehicle_type_id", profile.data.vehicle_type_id).maybeSingle() : { data: null, error: null };
+        if (profile.error || pricing.error) throw profile.error ?? pricing.error;
+        if (!pricing.data) return error("إعدادات التسعير غير متاحة.", 503, origin);
+        const duration = Math.max(0, (Date.now() - Date.parse(trip.started_at)) / 60000);
+        const fare = roundMoney(Number(pricing.data.base_fee) + totalDistance * Number(pricing.data.rate_per_km) + duration * Number(pricing.data.rate_per_min));
+        const { data: reached, error: updateError } = await db.from("trip_stops").update({ reached_at: new Date().toISOString(), fare_at_stop: fare }).eq("id", stopId).eq("trip_id", tripId).is("reached_at", null).select().maybeSingle();
+        if (updateError) throw updateError;
+        if (!reached) return error("الوصول اتسجّل لهذه النقطة قبل كده.", 409, origin);
+        return reply({ stop: reached }, 200, origin);
+      }
+      const dailyComplete = path.match(/^\/captain\/trips\/(\d+)\/complete$/);
+      if (req.method === "POST" && dailyComplete) {
+        const tripId = Number(dailyComplete[1]);
+        const { data: trip, error: tripError } = await db.from("trips").select("*,matches!inner(captain_user_id)").eq("id", tripId).maybeSingle();
+        if (tripError) throw tripError;
+        if (!trip || Number(trip.matches.captain_user_id) !== user!.id) return error("الرحلة دي مش بتاعتك.", 404, origin);
+        if (trip.status !== "in_progress") return error("الرحلة دي مقفولة بالفعل.", 409, origin);
+        const { data: stops, error: stopsError } = await db.from("trip_stops").select("*").eq("trip_id", tripId).order("sequence");
+        if (stopsError) throw stopsError;
+        if (!stops?.length || stops.some(s => !s.reached_at)) return error("لازم توصل كل نقط الرحلة قبل ما تقفلها.", 409, origin);
+        const totalDistance = stops.slice(1).reduce((sum, stop, i) => sum + distanceKm({ lat: Number(stops[i].lat), lng: Number(stops[i].lng) }, { lat: Number(stop.lat), lng: Number(stop.lng) }), 0);
+        const totalAmount = Number(stops[stops.length - 1].fare_at_stop ?? 0);
+        const { data: completed, error: completeError } = await db.from("trips").update({ status: "completed", completed_at: new Date().toISOString(), total_distance_km: roundMoney(totalDistance), total_amount: roundMoney(totalAmount) }).eq("id", tripId).eq("status", "in_progress").select().maybeSingle();
+        if (completeError) throw completeError;
+        if (!completed) return error("الرحلة اتقفلت بالفعل.", 409, origin);
+        const { data: existingPayment } = await db.from("payments").select("*").eq("trip_id", tripId).maybeSingle();
+        if (existingPayment) return reply({ trip: completed, payment: existingPayment }, 200, origin);
+        const { data: payment, error: paymentError } = await db.from("payments").insert({ trip_id: tripId, amount: totalAmount, reported_by_user_id: user!.id }).select().single();
+        if (paymentError) throw paymentError;
+        return reply({ trip: completed, payment }, 200, origin);
+      }
+      if (req.method === "GET" && path === "/captain/earnings") {
+        const { data: matches, error: matchesError } = await db.from("matches").select("id").eq("captain_user_id", user!.id);
+        if (matchesError) throw matchesError;
+        const matchIds = (matches ?? []).map(m => m.id);
+        if (!matchIds.length) return reply({ earnings: [], total_amount: 0 }, 200, origin);
+        const { data: trips, error: tripsError } = await db.from("trips").select("*").eq("status", "completed").in("match_id", matchIds).order("completed_at", { ascending: false });
+        if (tripsError) throw tripsError;
+        const earnings = [];
+        for (const trip of trips ?? []) {
+          const [{ data: stops }, { data: payment }] = await Promise.all([db.from("trip_stops").select("*").eq("trip_id", trip.id).order("sequence"), db.from("payments").select("*").eq("trip_id", trip.id).maybeSingle()]);
+          earnings.push({ trip, stops: stops ?? [], payment: payment ?? null });
+        }
+        return reply({ earnings, total_amount: earnings.reduce((sum, item) => sum + Number(item.payment?.amount ?? 0), 0) }, 200, origin);
+      }
+
       return error("المسار غير موجود في واجهة Supabase بعد.", 501, origin);
     }
     const adminGate = path.startsWith("/admin/") ? await requireRole(user, ["admin"], origin) : null;
