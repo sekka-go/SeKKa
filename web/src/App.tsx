@@ -152,7 +152,7 @@ function AuthScreen({ onSignedIn, notify }: { onSignedIn: (session: Session) => 
   </main>;
 }
 
-type NavKey = "home" | "booking" | "trips" | "notifications" | "account" | "offers" | "captainTrips" | "admin";
+type NavKey = "home" | "booking" | "trips" | "notifications" | "account" | "offers" | "captainTrips" | "admin" | "help";
 
 function Workspace({ session, onSignOut, notify }: { session: Session; onSignOut: () => void; notify: (text: string, tone?: Toast["tone"]) => void }) {
   const [section, setSection] = useState<NavKey>(session.user.role === "captain" ? "offers" : session.user.role === "admin" ? "admin" : "home");
@@ -170,16 +170,16 @@ function Workspace({ session, onSignOut, notify }: { session: Session; onSignOut
   useEffect(() => { void refreshNotifications(); }, [refreshNotifications]);
 
   const nav: { key: NavKey; label: string; icon: string }[] = session.user.role === "rider"
-    ? [{ key: "home", label: "الرئيسية", icon: "⌂" }, { key: "booking", label: "مشوار جديد", icon: "＋" }, { key: "trips", label: "رحلاتي", icon: "↗" }, { key: "notifications", label: "الإشعارات", icon: "◌" }, { key: "account", label: "حسابي", icon: "♙" }]
+    ? [{ key: "home", label: "الرئيسية", icon: "⌂" }, { key: "booking", label: "مشوار جديد", icon: "＋" }, { key: "trips", label: "رحلاتي", icon: "↗" }, { key: "notifications", label: "الإشعارات", icon: "◌" }, { key: "account", label: "حسابي", icon: "♙" }, { key: "help", label: "المساعدة", icon: "؟" }]
     : session.user.role === "captain"
-      ? [{ key: "offers", label: "المسارات المتاحة", icon: "⌖" }, { key: "captainTrips", label: "رحلاتي", icon: "↗" }, { key: "notifications", label: "الإشعارات", icon: "◌" }, { key: "account", label: "حسابي", icon: "♙" }]
-      : [{ key: "admin", label: "نظرة عامة", icon: "▦" }, { key: "notifications", label: "الإشعارات", icon: "◌" }, { key: "account", label: "حسابي", icon: "♙" }];
+      ? [{ key: "offers", label: "المسارات المتاحة", icon: "⌖" }, { key: "captainTrips", label: "رحلاتي", icon: "↗" }, { key: "notifications", label: "الإشعارات", icon: "◌" }, { key: "account", label: "حسابي", icon: "♙" }, { key: "help", label: "المساعدة", icon: "؟" }]
+      : [{ key: "admin", label: "نظرة عامة", icon: "▦" }, { key: "notifications", label: "الإشعارات", icon: "◌" }, { key: "account", label: "حسابي", icon: "♙" }, { key: "help", label: "المساعدة", icon: "؟" }];
 
   const titles: Record<NavKey, [string, string]> = {
     home: ["صباح الخير", "طريقك اليوم يبدأ من هنا"], booking: ["خطط لمشوارك", "اختار أيامك ونقاطك، وإحنا نرتّب الباقي"],
     trips: ["رحلاتي", "كل مشاويرك ومجموعاتك في مكان واحد"], notifications: ["الإشعارات", "آخر التحديثات الخاصة بمشاويرك"],
     account: ["حسابي", "بياناتك وإعدادات الأمان"], offers: ["المسارات المتاحة", "اختار المسار المناسب لسيارتك ومواعيدك"],
-    captainTrips: ["رحلاتي", "المسارات المقبولة وخطوات تنفيذها"], admin: ["لوحة الإدارة", "متابعة المنصة وتوثيق الكباتن"],
+    captainTrips: ["رحلاتي", "المسارات المقبولة وخطوات تنفيذها"], admin: ["لوحة الإدارة", "متابعة المنصة وتوثيق الكباتن"], help: ["مركز المساعدة", "إجابات واضحة عن الحجز والرحلات والباقات"],
   };
   const [title, subtitle] = titles[section];
   const unread = notifications.filter((item) => !item.read_at).length;
@@ -190,19 +190,50 @@ function Workspace({ session, onSignOut, notify }: { session: Session; onSignOut
       <div className="sidebar-label">القائمة الرئيسية</div>
       <nav>{nav.map((item) => <button key={item.key} className={`nav-item ${section === item.key ? "nav-active" : ""}`} onClick={() => { setSection(item.key); setNavOpen(false); }}><span className="nav-icon">{item.icon}</span>{item.label}{item.key === "notifications" && unread > 0 && <b className="nav-count">{unread}</b>}</button>)}</nav>
       <div className="sidebar-spacer" />
-      <div className="help-card"><span>✦</span><strong>محتاج مساعدة؟</strong><p>فريق سِكّة معاك في كل خطوة.</p><button onClick={() => notify("قنوات الدعم هتتوفر قريبًا.", "info")}>تواصل مع الدعم <span>←</span></button></div>
+      <div className="help-card"><span>✦</span><strong>محتاج مساعدة؟</strong><p>إجابات سريعة عن استخدام سِكّة.</p><button onClick={() => { setSection("help"); setNavOpen(false); }}>افتح مركز المساعدة <span>←</span></button></div>
       <button className="sidebar-profile" onClick={() => setSection("account")}><span className="avatar">{session.user.full_name.slice(0, 1)}</span><span className="profile-copy"><strong>{session.user.full_name}</strong><small>{session.user.role === "rider" ? "راكب" : session.user.role === "captain" ? "كابتن" : "مدير النظام"}</small></span><span className="profile-more">···</span></button>
     </aside>
     {navOpen && <button className="sidebar-scrim" onClick={() => setNavOpen(false)} aria-label="إغلاق القائمة" />}
     <main className="main-area">
       <header className="topbar"><button className="mobile-menu" onClick={() => setNavOpen(true)} aria-label="فتح القائمة">☰</button><div className="breadcrumbs"><span>سِكّة</span><b>/</b><strong>{title}</strong></div><div className="topbar-actions"><button className="icon-button notification-button" onClick={() => setSection("notifications")} aria-label="الإشعارات">♧{unread > 0 && <i />}</button><span className="topbar-divider" /><span className="topbar-user">{session.user.full_name}</span><span className="avatar avatar-small">{session.user.full_name.slice(0, 1)}</span><button className="text-action sign-out-action" onClick={onSignOut}>خروج</button></div></header>
       <div className="page-content"><div className="page-heading"><div><span className="eyebrow">{new Intl.DateTimeFormat("ar-EG", { weekday: "long", day: "numeric", month: "long" }).format(new Date())}</span><h1>{title}، {session.user.full_name.split(" ")[0]}</h1><p>{subtitle}</p></div><div className="heading-mark">{section === "booking" ? "✦" : section === "offers" ? "⌖" : "س"}</div></div>
-        {session.user.role === "rider" && <RiderWorkspace session={session} section={section} setSection={setSection} notifications={notifications} refreshNotifications={refreshNotifications} notify={notify} />}
-        {session.user.role === "captain" && <CaptainWorkspace session={session} section={section} notifications={notifications} refreshNotifications={refreshNotifications} notify={notify} />}
-        {session.user.role === "admin" && <AdminWorkspace session={session} section={section} notifications={notifications} refreshNotifications={refreshNotifications} notify={notify} />}
+        {section === "help" ? <HelpPanel /> : <>
+          {session.user.role === "rider" && <RiderWorkspace session={session} section={section} setSection={setSection} notifications={notifications} refreshNotifications={refreshNotifications} notify={notify} />}
+          {session.user.role === "captain" && <CaptainWorkspace session={session} section={section} notifications={notifications} refreshNotifications={refreshNotifications} notify={notify} />}
+          {session.user.role === "admin" && <AdminWorkspace session={session} section={section} notifications={notifications} refreshNotifications={refreshNotifications} notify={notify} />}
+        </>}
       </div>
     </main>
   </div>;
+}
+
+function HelpPanel() {
+  const topics = [
+    { title: "كيف أطلب رحلة؟", text: "من «مشوار جديد» حدّد نقطة الركوب والنزول، اختَر Faster أو Saver، ثم الأيام والمواعيد وأرسل الطلب. تحتاج الرحلة إلى راكبين على الأقل في Faster أو 3 ركاب في Saver." },
+    { title: "متى يبدأ السعر؟", text: "السعر يُقسّم على سعة الفئة كاملة: 3 مقاعد في Faster و4 في Saver. تظهر أي زيادة تتجاوز 15% للموافقة؛ يمكنك الرفض دون غرامة." },
+    { title: "ما قواعد الإلغاء؟", text: "الإلغاء قبل موعد الرحلة بـ12 ساعة أو أكثر مجاني. إذا بقي أقل من 12 ساعة تُخصم أجرة يوم. إلغاء الباقة الأسبوعية أو الشهرية يخصم 10% رسومًا إدارية من قيمة الأيام المتبقية." },
+    { title: "ماذا يحدث بعد 72 ساعة؟", text: "إذا لم يكتمل الحد الأدنى، يمكنك الانتظار أو حجز المقاعد الباقية أو الإلغاء مجانًا. إذا لم تختر، يستمر الانتظار." },
+    { title: "هل يتم الدفع داخل التطبيق؟", text: "بوابة الدفع والتحصيل والاسترداد الفعلي مؤجلة. التطبيق يعرض الاستحقاقات المسجلة ولا يطلب بيانات بطاقة." },
+    { title: "كيف أفعّل توثيق هاتف الكابتن؟", text: "ميزة OTP متوقفة افتراضيًا. يضيف المدير أسرار Twilio إلى Supabase ثم يفعّلها من لوحة الإدارة؛ لن تُرسل رسالة قبل ذلك." },
+    { title: "لماذا لا أستطيع إنشاء مجموعة؟", text: "إنشاء المجموعات يحتاج اتصالًا بالإنترنت وخدمة توجيه طرق خاصة متاحة للخادم. إذا ظهرت رسالة خطأ، جرّب لاحقًا أو أعد المحاولة." },
+  ];
+  return (
+    <div className="help-center">
+      <section className="surface help-center-intro">
+        <span className="eyebrow">دليل سِكّة</span>
+        <h2>إجابات سريعة قبل ما تبدأ</h2>
+        <p>اختر السؤال لمعرفة طريقة الاستخدام وقواعد الرحلات. للحجز ومتابعة الحالة يلزم اتصال بالإنترنت.</p>
+      </section>
+      <section className="surface help-center-list" aria-label="الأسئلة الشائعة">
+        {topics.map((topic) => (
+          <details className="help-topic" key={topic.title}>
+            <summary>{topic.title}</summary>
+            <p>{topic.text}</p>
+          </details>
+        ))}
+      </section>
+    </div>
+  );
 }
 
 function RiderWorkspace({ session, section, setSection, notifications, refreshNotifications, notify }: {
