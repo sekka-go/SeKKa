@@ -29,6 +29,9 @@ export interface CaptainOffer { group_id: number; category_id: string; package_t
 
 const TOKEN_KEY = "sekka.session.token";
 const USER_KEY = "sekka.session.user";
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/+$/, "");
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+  ?? "sb_publishable__gh8lr-A5tr5Q9CMi7YIuw_yrRFwgJl";
 
 export function getStoredSession(): { token: string; user: User } | null {
   try {
@@ -57,9 +60,11 @@ export async function api<T>(path: string, options: { method?: string; body?: un
   const headers: Record<string, string> = { Accept: "application/json" };
   if (options.body !== undefined) headers["Content-Type"] = "application/json";
   if (options.token) headers.Authorization = `Bearer ${options.token}`;
+  if (API_BASE_URL) headers.apikey = SUPABASE_PUBLISHABLE_KEY;
+
   let response: Response;
   try {
-    response = await fetch(`/api${path}`, {
+    response = await fetch(`${API_BASE_URL}/api${path}`, {
       method: options.method ?? "GET", headers,
       ...(options.body !== undefined ? { body: JSON.stringify(options.body) } : {}),
     });
