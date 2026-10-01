@@ -167,3 +167,15 @@ button { line-height: 1.45; }
 @media (prefers-reduced-motion: reduce) {
   .pwa-notice, .pwa-notice * { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
 }
+
+.map-picker-actions { position: absolute; z-index: 500; inset-inline: .7rem; top: .7rem; display: flex; align-items: flex-start; justify-content: space-between; gap: .6rem; pointer-events: none; }
+.map-picker-actions > * { pointer-events: auto; }
+.map-location-button, .map-error button { border: 1px solid rgba(23,19,9,.18); border-radius: 10px; padding: .5rem .75rem; background: #ffd21f; color: #171309; font-weight: 800; box-shadow: 0 2px 10px rgba(0,0,0,.2); }
+.map-picker .map-hint { position: static; max-width: min(65%, 26rem); padding: .5rem .7rem; border-radius: 10px; background: rgba(23,19,9,.9); color: #f3ecd9; }
+.map-error { position: absolute; z-index: 600; inset-inline: .7rem; bottom: .7rem; display: flex; justify-content: space-between; align-items: center; gap: .6rem; padding: .65rem .75rem; border: 1px solid rgba(255,180,171,.45); border-radius: 12px; background: rgba(36,32,20,.96); color: #f3ecd9; font-size: .9rem; }
+.map-error button { flex: 0 0 auto; }
+@media (max-width: 560px) {
+  .map-picker-actions { flex-direction: column; align-items: stretch; }
+  .map-picker .map-hint { max-width: 100%; }
+  .map-error { flex-direction: column; align-items: stretch; }
+}
