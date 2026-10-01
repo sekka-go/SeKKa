@@ -77,6 +77,40 @@ async function notifyUser(userId: number, groupId: number | null, eventKey: stri
 }
 function packageDays(type: string) { return type === "weekly" ? 5 : type === "monthly" ? 22 : type === "daily" ? 1 : 0; }
 function discountRate(type: string) { return type === "weekly" ? 0.05 : type === "monthly" ? 0.10 : 0; }
+function otpProviderReady() {
+  return ["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_VERIFY_SERVICE_SID"].every((name) => clean(Deno.env.get(name)));
+}
+async function captainOtpEnabled() {
+  const { data, error: queryError } = await db!.from("app_feature_flags").select("enabled").eq("flag_name", "captain_phone_otp").maybeSingle();
+  if (queryError) throw queryError;
+  return data?.enabled === true;
+}
+function phoneE164(value: string) {
+  const trimmed = value.trim();
+  if (/^\+[1-9]\d{7,14}$/.test(trimmed)) return trimmed;
+  const digits = trimmed.replace(/\D/g, "");
+  if (digits.startsWith("00") && /^[1-9]\d{7,14}$/.test(digits.slice(2))) return `+${digits.slice(2)}`;
+  if (/^20\d{9,10}$/.test(digits)) return `+${digits}`;
+  if (/^01[0125]\d{8}$/.test(digits)) return `+20${digits.slice(1)}`;
+  if (/^1[0125]\d{8}$/.test(digits)) return `+20${digits}`;
+  return null;
+}
+async function callTwilioVerify(path: "Verifications" | "VerificationCheck", params: URLSearchParams) {
+  const sid = Deno.env.get("TWILIO_ACCOUNT_SID")!;
+  const token = Deno.env.get("TWILIO_AUTH_TOKEN")!;
+  const service = Deno.env.get("TWILIO_VERIFY_SERVICE_SID")!;
+  const response = await fetch(`https://verify.twilio.com/v2/Services/${service}/${path}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${btoa(`${sid}:${token}`)}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: params,
+    signal: AbortSignal.timeout(8_000),
+  });
+  const result = await response.json().catch(() => ({})) as Json;
+  return { response, result };
+}
 function roundMoney(value: number) { return Math.round((value + Number.EPSILON) * 100) / 100; }
 function validDates(value: unknown, type: string): string[] | null {
   const count = packageDays(type);
@@ -659,8 +693,59 @@ Deno.serve(async (req: Request) => {
       await db.from("pool_notifications").update({ read_at: new Date().toISOString() }).eq("id", readNotice[1]).eq("user_id", user.id);
       return reply({ success: true }, 200, origin);
     }
-    if (req.method === "POST" && path === "/captain/verify/request") return error("إرسال رمز SMS غير مهيأ بعد. أضف مزود OTP آمنًا قبل تفعيل توثيق الهاتف.", 503, origin);
-    if (req.method === "POST" && path === "/captain/verify/confirm") return error("توثيق الهاتف غير متاح قبل إعداد مزود OTP.", 503, origin);
+    if (req.method === "GET" && path === "/captain/verify/status") {
+      const gate = await requireRole(user, ["captain"], origin); if (gate) return gate;
+      return reply({ enabled: await captainOtpEnabled(), provider_ready: otpProviderReady() }, 200, origin);
+    }
+    if (req.method === "POST" && path === "/captain/verify/request") {
+      const gate = await requireRole(user, ["captain"], origin); if (gate) return gate;
+      if (!await captainOtpEnabled()) return error("توثيق الهاتف متوقف مؤقتًا من الإدارة.", 409, origin);
+      if (!otpProviderReady()) return error("خدمة SMS غير مهيأة بعد. تواصل مع الإدارة لإعداد المزوّد.", 503, origin);
+      if (user!.verified_at) return reply({ success: true, already_verified: true }, 200, origin);
+      const phone = phoneE164(user!.phone_number);
+      if (!phone) return error("رقم الهاتف غير صالح لرسائل SMS. حدّثه بصيغة مصرية صحيحة.", 400, origin);
+      if (!await takeLimit(`otp-send-minute:${user!.id}`, 1, 60) || !await takeLimit(`otp-send-hour:${user!.id}`, 5, 3600)) {
+        return error("تم إرسال أكواد كثيرة مؤخرًا. حاول بعد قليل.", 429, origin);
+      }
+      try {
+        const params = new URLSearchParams({ To: phone, Channel: "sms" });
+        const { response } = await callTwilioVerify("Verifications", params);
+        if (!response.ok) {
+          console.error("[sekka-api] SMS provider rejected OTP request:", response.status);
+          return error(response.status === 429 ? "تم إرسال أكواد كثيرة مؤخرًا. حاول بعد قليل." : "تعذر إرسال رسالة التحقق الآن.", response.status === 429 ? 429 : 502, origin);
+        }
+        return reply({ success: true, expires_in_seconds: 600 }, 200, origin);
+      } catch {
+        return error("تعذر الاتصال بخدمة SMS الآن. حاول لاحقًا.", 502, origin);
+      }
+    }
+    if (req.method === "POST" && path === "/captain/verify/confirm") {
+      const gate = await requireRole(user, ["captain"], origin); if (gate) return gate;
+      if (!await captainOtpEnabled()) return error("توثيق الهاتف متوقف مؤقتًا من الإدارة.", 409, origin);
+      if (!otpProviderReady()) return error("خدمة SMS غير مهيأة بعد. تواصل مع الإدارة لإعداد المزوّد.", 503, origin);
+      if (user!.verified_at) return reply({ success: true, already_verified: true }, 200, origin);
+      const code = typeof body.otp === "string" ? body.otp.trim() : "";
+      if (!/^\d{4,10}$/.test(code)) return error("الكود غير صحيح أو انتهت صلاحيته. حاول مرة أخرى.", 400, origin);
+      if (!await takeLimit(`otp-check:${user!.id}`, 5, 600)) return error("محاولات تحقق كثيرة. حاول بعد 10 دقائق.", 429, origin);
+      const phone = phoneE164(user!.phone_number);
+      if (!phone) return error("رقم الهاتف غير صالح لرسائل SMS. حدّثه بصيغة مصرية صحيحة.", 400, origin);
+      try {
+        const params = new URLSearchParams({ To: phone, Code: code });
+        const { response, result } = await callTwilioVerify("VerificationCheck", params);
+        if (!response.ok || result.status !== "approved") return error("الكود غير صحيح أو انتهت صلاحيته. حاول مرة أخرى.", 401, origin);
+        const { data: updated, error: updateError } = await db!.from("users").update({ verified_at: new Date().toISOString() }).eq("id", user!.id).is("verified_at", null).select("id").maybeSingle();
+        if (updateError) throw updateError;
+        if (!updated) {
+          const { data: latest, error: readError } = await db!.from("users").select("verified_at").eq("id", user!.id).maybeSingle();
+          if (readError) throw readError;
+          if (!latest?.verified_at) return error("تعذر حفظ حالة التوثيق. حاول مرة أخرى.", 500, origin);
+        }
+        return reply({ success: true }, 200, origin);
+      } catch {
+        return error("تعذر التحقق من الكود الآن. حاول مرة أخرى.", 502, origin);
+      }
+    }
+
     if (path.startsWith("/captain/")) {
       const gate = await requireRole(user, ["captain"], origin); if (gate) return gate;
       if (req.method === "GET" && path === "/captain/profile") {
@@ -952,6 +1037,19 @@ Deno.serve(async (req: Request) => {
     }
     const adminGate = path.startsWith("/admin/") ? await requireRole(user, ["admin"], origin) : null;
     if (adminGate) return adminGate;
+    if (req.method === "GET" && path === "/admin/settings/otp") {
+      const { data, error: settingsError } = await db.from("app_feature_flags").select("enabled").eq("flag_name", "captain_phone_otp").maybeSingle();
+      if (settingsError) throw settingsError;
+      return reply({ otp: { enabled: data?.enabled === true, provider: "twilio_verify", provider_ready: otpProviderReady() } }, 200, origin);
+    }
+    if (req.method === "PATCH" && path === "/admin/settings/otp") {
+      if (typeof body.enabled !== "boolean") return error("حالة تشغيل OTP المطلوبة غير صحيحة.", 400, origin);
+      if (body.enabled && !otpProviderReady()) return error("أضف أسرار Twilio إلى Supabase أولًا قبل تشغيل OTP.", 409, origin);
+      const { data, error: settingsError } = await db.from("app_feature_flags").update({ enabled: body.enabled, updated_by_user_id: user!.id, updated_at: new Date().toISOString() }).eq("flag_name", "captain_phone_otp").select("enabled").maybeSingle();
+      if (settingsError) throw settingsError;
+      if (!data) return error("إعداد توثيق الهاتف غير موجود.", 500, origin);
+      return reply({ otp: { enabled: data.enabled === true, provider: "twilio_verify", provider_ready: otpProviderReady() } }, 200, origin);
+    }
     if (req.method === "GET" && path === "/admin/captains") {
       const status = url.searchParams.get("status") ?? "pending";
       if (!["pending", "approved", "rejected"].includes(status)) return error("حالة التوثيق المطلوبة مش صحيحة.", 400, origin);
