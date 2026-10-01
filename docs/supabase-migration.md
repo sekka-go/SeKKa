@@ -28,12 +28,11 @@ The deadline processor runs in PostgreSQL through the named `pg_cron` job `sekka
 
 ## Web client connection
 
-The web API client keeps the local development default at `/api`. For a hosted build, configure these public Vite build variables:
+The web API client keeps local development on the same-origin `/api` proxy. Hosted builds default to the confirmed SeKKa Edge Function URL:
 
-- `VITE_API_BASE_URL=https://uorxfakceqnhxqnaawdy.supabase.co/functions/v1/sekka-api`
-- `VITE_SUPABASE_PUBLISHABLE_KEY`: optional override for the project's public `sb_publishable_...` key. The currently provisioned publishable key is a non-secret fallback in the web client; never put the service-role key in frontend variables.
+`https://uorxfakceqnhxqnaawdy.supabase.co/functions/v1/sekka-api`
 
-The client sends the Supabase publishable key in the `apikey` header only when the API base URL is configured. With no base URL, it continues to call the local `/api` proxy. Set the variables in the hosting provider's build settings and trigger a new frontend build; this repository update does not change Cloudflare configuration or deploy the site.
+Set `VITE_API_BASE_URL` only when overriding that endpoint. `VITE_SUPABASE_PUBLISHABLE_KEY` is also optional because the project's public `sb_publishable_...` key is a non-secret fallback in the client. Never put a Supabase service-role key in frontend variables. The Cloudflare build does not need a manual API URL setting for the confirmed SeKKa project.
 
 ## Remaining migration work
 
