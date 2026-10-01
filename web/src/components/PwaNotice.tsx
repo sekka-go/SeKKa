@@ -74,7 +74,7 @@ export default function PwaNotice() {
     <aside className="pwa-notice-wrap" aria-live="polite" aria-atomic="true">
       {!online ? (
         <div className="pwa-notice" role="status">
-          <span><strong>الاتصال غير متاح</strong><small>يمكنك فتح صفحة المساعدة، لكن الحجز ومتابعة الرحلات يحتاجان إلى الإنترنت.</small></span>
+          <span><strong>الاتصال غير متاح</strong><small>يمكنك استخدام الصفحة المحفوظة، لكن الحجز ومتابعة الرحلات يحتاجان إلى الإنترنت.</small></span>
           <button type="button" onClick={() => window.location.reload()}>إعادة المحاولة</button>
         </div>
       ) : updateAvailable ? (
