@@ -1,0 +1,30 @@
+name: Web quality
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    name: Lint and production build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+        working-directory: web
+      - name: Lint
+        run: npm run lint
+        working-directory: web
+      - name: Build
+        run: npm run build
+        working-directory: web
