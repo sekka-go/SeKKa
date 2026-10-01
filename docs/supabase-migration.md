@@ -34,12 +34,18 @@ The web API client keeps local development on the same-origin `/api` proxy. Host
 
 Set `VITE_API_BASE_URL` only when overriding that endpoint. `VITE_SUPABASE_PUBLISHABLE_KEY` is also optional because the project's public `sb_publishable_...` key is a non-secret fallback in the client. Never put a Supabase service-role key in frontend variables. The Cloudflare build does not need a manual API URL setting for the confirmed SeKKa project.
 
-## Remaining migration work
+## Operator setup still required
 
-This remains an in-progress port pending route-by-route integration verification and frontend API-base configuration. Web Push endpoints can return the public VAPID key and save/remove browser subscriptions, but this Edge Function does not send push messages yet. Captain OTP is off by default. The admin-only setting endpoint controls it; enablement is rejected until Twilio Verify secrets are present. OSRM-compatible routing must be configured as a private service before group creation; the default loopback URL is not reachable from hosted Edge Functions. No public router is configured because rider coordinates must not be sent to it without approval. The project currently has no user data and the old predictable development admin password was not migrated; provision an admin account through a controlled process.
+The reviewed migrations and backend deployment are complete. The latest hosted frontend build succeeded and defaults to the confirmed SeKKa Edge Function URL. These runtime integrations still need operator configuration:
 
-Pool route creation requires an operator-managed OSRM-compatible endpoint. The Edge Function reads `SEKKA_ROUTING_URL`; it defaults to loopback and returns a clear 503 when no remote private routing service is configured. Do not point it at a public router without the owner's privacy approval because rider coordinates would leave the project. Set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_VERIFY_SERVICE_SID` as Supabase Function secrets before an admin enables OTP. Phone numbers must be international E.164 or Egyptian mobile format; rates are limited to one send per minute and five per hour, and five confirmation attempts per ten minutes.
+- **Private routing:** deploy an OSRM-compatible service reachable from Supabase Edge Functions and set `SEKKA_ROUTING_URL` as an Edge Function secret. The loopback default is for local development only and cannot be reached from hosted Supabase. Do not use a public router unless the owner explicitly approves sending rider coordinates there.
+- **OTP:** the Twilio Verify integration is implemented and the database flag is disabled. Configure `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_VERIFY_SERVICE_SID` as Supabase secrets, then enable OTP through the admin panel when desired.
+- **Web Push delivery:** public-key lookup and subscription registration/removal work; the Edge Function does not send push messages yet. In-app notifications remain available.
+- **Admin access:** no predictable admin password was seeded into this project. Provision an administrator through a controlled process and do not reuse development credentials.
+- **Payments:** collection, settlement and real refunds remain deferred; the API records calculations and pending ledger entries only.
 
+The Cloudflare preview confirms that the latest frontend commit builds. It does not replace live route-by-route testing after private routing and operator credentials are configured.
+ 
 ## Rollback
 
 Supabase applies each migration transactionally; a failed migration leaves no partial DDL. The first failed attempt was checked and left no tables. The manual rollback at `supabase/rollback/20261001000000_postgres_baseline_001_013.sql` refuses to run if any user or operational rows exist. It drops only this SeKKa schema, not Supabase Auth/Storage or unrelated project objects. Supabase's migration history is append-only; rollback must be coordinated with a database snapshot and migration-history repair by the operator.
