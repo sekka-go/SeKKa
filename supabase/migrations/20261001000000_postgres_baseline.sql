@@ -370,7 +370,7 @@ CREATE TRIGGER trg_vehicle_capacity_update BEFORE UPDATE OF capacity_max ON publ
 FOR EACH ROW EXECUTE FUNCTION public.sekka_validate_vehicle_capacity();
 
 CREATE OR REPLACE FUNCTION public.sekka_match_guard() RETURNS trigger
-LANGUAGE plpgsql SET search_path = pg_catalog, public AS $
+LANGUAGE plpgsql SET search_path = pg_catalog, public AS $fn$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM public.users u WHERE u.id=NEW.captain_user_id AND u.role='captain') THEN
     RAISE EXCEPTION 'match captain must have captain role' USING ERRCODE='23514';
@@ -379,7 +379,7 @@ BEGIN
     RAISE EXCEPTION 'only open requests can be matched' USING ERRCODE='23514';
   END IF;
   RETURN NEW;
-END $;
+END $fn$;
 CREATE TRIGGER trg_match_guard BEFORE INSERT ON public.matches
 FOR EACH ROW EXECUTE FUNCTION public.sekka_match_guard();
 
