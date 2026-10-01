@@ -24,6 +24,15 @@ The active `sekka-api` Edge Function is version 8. It implements health/config/c
 
 The deadline processor runs in PostgreSQL through the named `pg_cron` job `sekka-process-pool-deadlines`, once per minute. It notifies groups at 72 hours and records cancellations/refund entitlements when unstaffed service dates pass. Payment capture and actual refund execution remain disabled.
 
+## Web client connection
+
+The web API client keeps the local development default at `/api`. For a hosted build, configure these public Vite build variables:
+
+- `VITE_API_BASE_URL=https://uorxfakceqnhxqnaawdy.supabase.co/functions/v1/sekka-api`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`: optional override for the project's public `sb_publishable_...` key. The currently provisioned publishable key is a non-secret fallback in the web client; never put the service-role key in frontend variables.
+
+The client sends the Supabase publishable key in the `apikey` header only when the API base URL is configured. With no base URL, it continues to call the local `/api` proxy. Set the variables in the hosting provider's build settings and trigger a new frontend build; this repository update does not change Cloudflare configuration or deploy the site.
+
 ## Remaining migration work
 
 This remains an in-progress port pending route-by-route integration verification and frontend API-base configuration. Web Push endpoints can return the public VAPID key and save/remove browser subscriptions, but this Edge Function does not send push messages yet. Captain OTP endpoints return 503 until an SMS provider is configured. OSRM-compatible routing must be configured as a private service before group creation; the default loopback URL is not reachable from hosted Edge Functions. No public router is configured because rider coordinates must not be sent to it without approval. The project currently has no user data and the old predictable development admin password was not migrated; provision an admin account through a controlled process.
