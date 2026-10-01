@@ -9,8 +9,10 @@ The repository's `server/migrations/001–013` are SQLite scripts. They were rev
 - `20261001000000_postgres_baseline.sql`: auth/session, captain, booking/matching, trip/payment ledgers, pool categories/groups/members/subscriptions/trips/stops/cancellations, escrow, notifications, and push-subscription tables; catalog seeds; database role guards; append-only ledger guards; RLS enabled with no grants for browser roles.
 - `20261001000001_backend_security_indexes.sql`: indexes for foreign keys and a service-role-only policy on each backend table.
 - `20261001000002_auth_rate_limit.sql`: atomic login/password rate-limit storage and RPC.
+- `20261001000003_pool_deadline_processor.sql`: PostgreSQL deadline processor, with a `pg_cron` job scheduled every minute.
+- `20261001000004_deadline_scheduled_trips.sql`: covers unstaffed trips that remain `scheduled` as well as `needs_captain` after departure.
 
-All three migrations were applied successfully and verified in the Supabase migration history. A first attempt at the baseline failed before applying; the project remained empty, the quoting defect was corrected in GitHub, and the corrected migration applied successfully.
+All five migrations were applied successfully and verified in the Supabase migration history. A review found that the first deadline query skipped trips still marked `scheduled`; the additive fourth migration corrected this without changing or deleting data. A first attempt at the baseline failed before applying; the project remained empty, the quoting defect was corrected in GitHub, and the corrected migration applied successfully.
 
 The old predictable development admin password was deliberately not copied. Create an admin account through a controlled operator process; never use the previous default password in a live environment.
 
@@ -18,11 +20,13 @@ The old predictable development admin password was deliberately not copied. Crea
 
 `supabase/functions/sekka-api/index.ts` is deployed as the active `sekka-api` Edge Function. Gateway JWT verification is disabled because the handler validates the application's opaque session token against `public.sessions` on every protected request. Database tables are accessible only through server-side credentials; no secret key is present in the repository or browser bundle.
 
-The function currently implements health/config/catalog, registration/login/logout/session/password change, rider pool create/join/list and price decisions, notifications, captain profile/location/capabilities/offers/trips and completion, and admin captain verification.
+The active `sekka-api` Edge Function is version 8. It implements health/config/catalog; account registration, login/logout, session and password changes; daily rider requests, matching, cancellation, trip history and disputes; pool groups, invitations, price decisions, seat completion, day/package cancellation, waiting decisions, notifications and push-subscription registration; captain profiles, pool preferences/offers, trip acceptance, stop order/arrival/completion/absence and legacy trip lifecycle; and admin captain review, pricing, payment dispute resolution, and analytics.
+
+The deadline processor runs in PostgreSQL through the named `pg_cron` job `sekka-process-pool-deadlines`, once per minute. It notifies groups at 72 hours and records cancellations/refund entitlements when unstaffed service dates pass. Payment capture and actual refund execution remain disabled.
 
 ## Remaining migration work
 
-This is an in-progress port; it does not yet replace every Express route. Before calling the application fully migrated, port and verify package/day cancellation, remaining-seat reservations, captain-created invitations and stop reordering, legacy rider/captain trip and payment dispute routes, admin pricing/payment/analytics, Web Push, and the 72-hour deadline processor/action flow.
+This remains an in-progress port pending route-by-route integration verification and frontend API-base configuration. Web Push endpoints can return the public VAPID key and save/remove browser subscriptions, but this Edge Function does not send push messages yet. Captain OTP endpoints return 503 until an SMS provider is configured. OSRM-compatible routing must be configured as a private service before group creation; the default loopback URL is not reachable from hosted Edge Functions. No public router is configured because rider coordinates must not be sent to it without approval. The project currently has no user data and the old predictable development admin password was not migrated; provision an admin account through a controlled process.
 
 Pool route creation requires an operator-managed OSRM-compatible endpoint. The Edge Function reads `SEKKA_ROUTING_URL`; it defaults to loopback and returns a clear 503 when no remote private routing service is configured. Do not point it at a public router without the owner's privacy approval because rider coordinates would leave the project. Captain OTP also remains disabled until a real SMS/OTP provider is configured; the Edge Function does not expose OTP codes in responses or logs.
 
