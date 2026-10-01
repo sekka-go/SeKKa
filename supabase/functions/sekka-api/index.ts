@@ -414,7 +414,7 @@ Deno.serve(async (req: Request) => {
       }
       return reply({ success: true, notices, expired_groups: expired, missed_service_days: missed }, 200, origin);
     }
-    const completeSeats = path.match(/^\\/rider\\/pool\\/groups\\/(\\d+)\\/complete-seats$/);
+    const completeSeats = path.match(/^\/rider\/pool\/groups\/(\d+)\/complete-seats$/);
     if (req.method === "POST" && completeSeats) {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
       const group = await getGroup(Number(completeSeats[1]));
@@ -438,8 +438,8 @@ Deno.serve(async (req: Request) => {
       await activateGroup(refreshed, updated, category, q);
       return reply({ group: await groupView({ ...refreshed, current_rider_id: user!.id }), reserved_seats: remaining, payment: "deferred" }, 200, origin);
     }
-    const cancelDay = path.match(/^\\/rider\\/pool\\/groups\\/(\\d+)\\/days\\/(\\d{4}-\\d{2}-\\d{2})\\/cancel$/);
-    const cancelPackage = path.match(/^\\/rider\\/pool\\/groups\\/(\\d+)\\/cancel$/);
+    const cancelDay = path.match(/^\/rider\/pool\/groups\/(\d+)\/days\/(\d{4}-\d{2}-\d{2})\/cancel$/);
+    const cancelPackage = path.match(/^\/rider\/pool\/groups\/(\d+)\/cancel$/);
     if (req.method === "POST" && (cancelDay || cancelPackage)) {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
       const groupId = Number((cancelDay ?? cancelPackage)![1]);
