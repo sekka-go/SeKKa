@@ -125,7 +125,7 @@ function AuthScreen({ onSignedIn, notify }: { onSignedIn: (session: Session) => 
   return <main className="auth-layout">
     <section className="auth-story">
       <BrandLogo variant="light" />
-      <div className="auth-story-copy"><span className="eyebrow">تنقّل يومي أذكى</span><h1>لو نفس السِكَّة..<br /><em>سيبها على سِكّة.</em></h1><p>شارك الطريق مع ناس رايحة في نفس اتجاهك. خطط لأيامك، اختار مقعدك، وسيب الباقي على سِكّة.</p>
+      <div className="auth-story-copy"><span className="eyebrow">معاك في السكة</span><h1>لو نفس السِكَّة..<br /><em>سيبها على سِكّة.</em></h1><p>شارك الطريق مع ناس رايحة في نفس اتجاهك. خطط لأيامك، اختار مقعدك، وسيب الباقي على سِكّة.</p>
         <div className="story-stats"><div><strong>4</strong><span>فئات تناسبك</span></div><i /><div><strong>5</strong><span>أيام خدمة أسبوعيًا</span></div></div>
       </div>
       <div className="story-route"><span className="route-point route-point-start" /><span className="route-dashes" /><span className="route-point route-point-end" /><span>القاهرة · طريقك اليومي</span></div>
