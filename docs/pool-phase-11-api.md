@@ -94,7 +94,7 @@ Configure `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_VERIFY_SERVICE_
 - The 72-hour waiting notification is created by a one-minute server timer and appears in the inbox with `wait`, `book_remaining_seats`, and `cancel_free` options. Waiting is the default if the rider takes no action.
 - If all selected dates pass while the group is still waiting, it is cancelled free and riders are asked to create a group with future dates. If a confirmed route activates after some dates have passed, only remaining future dates are scheduled and billed.
 - If no replacement captain accepts by the scheduled departure, the service date's two legs are cancelled and the date amount is removed from the amount due; later dates in a weekly/monthly package remain scheduled.
-- The API persists notifications in the database. When `SEKKA_VAPID_PUBLIC_KEY`, `SEKKA_VAPID_PRIVATE_KEY`, and `SEKKA_VAPID_SUBJECT` are configured, new pool notifications also send generic Web Push messages to subscribed devices. Push delivery is best-effort; in-app inbox remains the source of truth. Expired endpoints (HTTP 404/410) are removed. SMS is not configured.
+- The API persists in-app notifications and accepts browser push-subscription registration/removal. This Supabase Edge Function does not send Web Push messages yet; the inbox remains available. Captain SMS OTP is implemented through Twilio Verify, but stays disabled until an admin turns it on after provider secrets are configured.
 
 ## Implementation boundaries
 
