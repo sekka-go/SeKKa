@@ -168,6 +168,10 @@ function Workspace({ session, onSignOut, notify }: { session: Session; onSignOut
     catch { /* session banner handles expiry */ }
   }, [session.token]);
   useEffect(() => { void refreshNotifications(); }, [refreshNotifications]);
+  useEffect(() => {
+    const timer = window.setInterval(() => { void refreshNotifications(); }, 30_000);
+    return () => window.clearInterval(timer);
+  }, [refreshNotifications]);
 
   const nav: { key: NavKey; label: string; icon: string }[] = session.user.role === "rider"
     ? [{ key: "home", label: "الرئيسية", icon: "⌂" }, { key: "booking", label: "مشوار جديد", icon: "＋" }, { key: "trips", label: "رحلاتي", icon: "↗" }, { key: "notifications", label: "الإشعارات", icon: "◌" }, { key: "account", label: "حسابي", icon: "♙" }]
@@ -190,7 +194,7 @@ function Workspace({ session, onSignOut, notify }: { session: Session; onSignOut
       <div className="sidebar-label">القائمة الرئيسية</div>
       <nav>{nav.map((item) => <button key={item.key} className={`nav-item ${section === item.key ? "nav-active" : ""}`} onClick={() => { setSection(item.key); setNavOpen(false); }}><span className="nav-icon">{item.icon}</span>{item.label}{item.key === "notifications" && unread > 0 && <b className="nav-count">{unread}</b>}</button>)}</nav>
       <div className="sidebar-spacer" />
-      <div className="help-card"><span>✦</span><strong>محتاج مساعدة؟</strong><p>فريق سِكّة معاك في كل خطوة.</p><button onClick={() => notify("قنوات الدعم هتتوفر قريبًا.", "info")}>تواصل مع الدعم <span>←</span></button></div>
+      <div className="help-card"><span>✦</span><strong>محتاج مساعدة؟</strong><p>لو ظهر خطأ، ستجد تفاصيله في الرسالة أعلى الصفحة. يمكنك تحديث البيانات أو المحاولة مرة أخرى.</p></div>
       <button className="sidebar-profile" onClick={() => setSection("account")}><span className="avatar">{session.user.full_name.slice(0, 1)}</span><span className="profile-copy"><strong>{session.user.full_name}</strong><small>{session.user.role === "rider" ? "راكب" : session.user.role === "captain" ? "كابتن" : "مدير النظام"}</small></span><span className="profile-more">···</span></button>
     </aside>
     {navOpen && <button className="sidebar-scrim" onClick={() => setNavOpen(false)} aria-label="إغلاق القائمة" />}
@@ -249,6 +253,11 @@ function RiderWorkspace({ session, section, setSection, notifications, refreshNo
     catch (error) { notify(errorText(error), "error"); }
   };
 
+  useEffect(() => {
+    const timer = window.setInterval(() => { void refresh(); }, 30_000);
+    return () => window.clearInterval(timer);
+  }, [refresh]);
+
   const createGroup = async (event: FormEvent) => {
     event.preventDefault();
     if (!pickup || !dropoff) { notify("حدد نقطة الركوب ونقطة النزول على الخريطة.", "error"); return; }
@@ -296,7 +305,7 @@ function RiderWorkspace({ session, section, setSection, notifications, refreshNo
   if (loading) return <LoadingCard text="بنجهّز مساحة مشاويرك…" />;
 
   if (section === "account") return <AccountPanel session={session} notify={notify} />;
-  if (section === "notifications") return <NotificationsPanel items={notifications} token={session.token} onRefresh={refreshNotifications} notify={notify} />;
+  if (section === "notifications") return <NotificationsPanel items={notifications} token={session.token} onRefresh={refreshNotifications} onPoolChanged={refresh} allowWaitActions notify={notify} />;
 
   if (section === "booking") return <div className="booking-layout">
     <section className="surface booking-form-surface">
@@ -409,7 +418,7 @@ function NotificationRow({ item }: { item: Notification }) {
   return <div className={`notification-row ${item.read_at ? "read" : ""}`}><span className="notification-mark">{item.event_key.includes("price") ? "٪" : item.event_key.includes("captain") ? "⌖" : "↗"}</span><div><strong>{title}</strong><small>{item.group_id ? `مجموعة #${item.group_id} · ` : ""}{date}</small></div>{!item.read_at && <i />}</div>;
 }
 
-function NotificationsPanel({ items, token, onRefresh, notify }: { items: Notification[]; token: string; onRefresh: () => Promise<void>; notify: (text: string, tone?: Toast["tone"]) => void }) {
+function NotificationsPanel({ items, token, onRefresh, onPoolChanged, allowWaitActions = false, notify }: { items: Notification[]; token: string; onRefresh: () => Promise<void>; onPoolChanged?: () => Promise<void>; allowWaitActions?: boolean; notify: (text: string, tone?: Toast["tone"]) => void }) {
   const [pushEnabled, setPushEnabled] = useState(false);
   const [pushBusy, setPushBusy] = useState(false);
   useEffect(() => {
@@ -439,7 +448,20 @@ function NotificationsPanel({ items, token, onRefresh, notify }: { items: Notifi
     try { await api(`/pool/notifications/${item.id}/read`, { method: "POST", token }); await onRefresh(); }
     catch (error) { notify(errorText(error), "error"); }
   };
-  return <section className="surface notifications-panel"><div className="section-title-row"><div><h2>كل الإشعارات</h2><p>الإشعارات محفوظة داخل حسابك</p></div><div className="notification-controls"><button className="button button-outline button-small" onClick={() => void togglePush()} disabled={pushBusy || !import.meta.env.PROD}>{pushBusy ? "جاري التحديث…" : pushEnabled ? "إيقاف إشعارات الجهاز" : import.meta.env.PROD ? "تفعيل إشعارات الجهاز" : "تفعيل الإشعارات بعد النشر"}</button><button className="text-action" onClick={() => void onRefresh()}>تحديث ↻</button></div></div>{items.length ? items.map((item) => <button className="notification-button-row" key={item.id} onClick={() => void markRead(item)}><NotificationRow item={item} /><span className="notification-open">{item.read_at ? "" : "تعليم كمقروء"}</span></button>) : <EmptyState icon="◌" title="مفيش إشعارات لسه" text="هنبلغك بأي تحديث على رحلاتك ومجموعاتك." />}</section>;
+  const waitAction = async (item: Notification, action: "complete-seats" | "cancel") => {
+    if (!item.group_id || !onPoolChanged) return;
+    if (action === "cancel" && !window.confirm("إلغاء المجموعة الآن؟ لن يتم تحصيل أي مبلغ، وسيُسجل الاسترداد المستحق.")) return;
+    try {
+      await api(`/rider/pool/groups/${item.group_id}/${action}`, { method: "POST", token, body: {} });
+      await onPoolChanged();
+      notify(action === "cancel" ? "تم إلغاء المجموعة مجانًا." : "تم حجز المقاعد المتبقية للمجموعة.", "success");
+    } catch (error) { notify(errorText(error), "error"); }
+  };
+  return <section className="surface notifications-panel"><div className="section-title-row"><div><h2>كل الإشعارات</h2><p>الإشعارات محفوظة داخل حسابك</p></div><div className="notification-controls"><button className="button button-outline button-small" onClick={() => void togglePush()} disabled={pushBusy || !import.meta.env.PROD}>{pushBusy ? "جاري التحديث…" : pushEnabled ? "إيقاف إشعارات الجهاز" : import.meta.env.PROD ? "تفعيل إشعارات الجهاز" : "تفعيل الإشعارات بعد النشر"}</button><button className="text-action" onClick={() => void onRefresh()}>تحديث ↻</button></div></div>{items.length ? items.map((item) => {
+    const options = Array.isArray(item.payload.options) ? item.payload.options : [];
+    const isWaitNotice = allowWaitActions && item.event_key.includes("wait-72h") && Boolean(item.group_id);
+    return <article className="notification-button-row" key={item.id}><button className="notification-main-action" onClick={() => void markRead(item)}><NotificationRow item={item} /><span className="notification-open">{item.read_at ? "" : "تعليم كمقروء"}</span></button>{isWaitNotice && options.length > 0 && <div className="notification-choice-actions"><span>اختار ما يناسبك:</span>{options.includes("wait") && <button className="button button-outline button-small" onClick={() => void markRead(item)}>الانتظار</button>}{options.includes("book_remaining_seats") && <button className="button button-secondary button-small" onClick={() => void waitAction(item, "complete-seats")}>حجز باقي المقاعد</button>}{options.includes("cancel_free") && <button className="button button-quiet button-small" onClick={() => void waitAction(item, "cancel")}>إلغاء مجاني</button>}</div>}</article>;
+  }) : <EmptyState icon="◌" title="مفيش إشعارات لسه" text="هنبلغك بأي تحديث على رحلاتك ومجموعاتك." />}</section>;
 }
 
 function AccountPanel({ session, notify }: { session: Session; notify: (text: string, tone?: Toast["tone"]) => void }) {
@@ -475,9 +497,14 @@ function CaptainWorkspace({ session, section, notifications, refreshNotification
 
   const loadProfile = useCallback(async () => {
     try {
+      const preferences = await api<{ radius_km: number; has_ac: boolean; service_tiers: string[] }>("/captain/pool/preferences", { token: session.token });
+      setRadius(preferences.radius_km);
+      setHasAc(preferences.has_ac);
+      setTiers(preferences.service_tiers);
+    } catch (error) { notify(errorText(error), "error"); }
+    try {
       const result = await api<{ profile: CaptainProfile }>("/captain/profile", { token: session.token });
       setProfile(result.profile); setVehicle(result.profile.vehicle_type_id); setLicense(result.profile.license_number); setPlate(result.profile.vehicle_plate);
-      setRadius(4);
     } catch (error) {
       if (!(error instanceof ApiError && error.status === 404)) notify(errorText(error), "error");
       setProfile(null);
@@ -493,6 +520,11 @@ function CaptainWorkspace({ session, section, notifications, refreshNotification
   useEffect(() => {
     if (!profileLoaded || !profile || profile.verification_status !== "approved" || section !== "offers") return;
     void refreshTrips().catch((error) => setOfferError(errorText(error)));
+  }, [profileLoaded, profile?.verification_status, section, refreshTrips]);
+  useEffect(() => {
+    if (!profileLoaded || !profile || profile.verification_status !== "approved" || section !== "offers") return;
+    const timer = window.setInterval(() => { void refreshTrips().catch((error) => setOfferError(errorText(error))); }, 30_000);
+    return () => window.clearInterval(timer);
   }, [profileLoaded, profile?.verification_status, section, refreshTrips]);
 
   const saveProfile = async (event: FormEvent) => {
@@ -531,6 +563,11 @@ function CaptainWorkspace({ session, section, notifications, refreshNotification
     setMyTrips(result.trips.map((item) => ({ trip: item.trip, stops: item.stops, route: item.trip.route_geometry })));
   }, [session.token]);
   useEffect(() => { if (section === "captainTrips") void loadAssignedTrips().catch((error) => notify(errorText(error), "error")); }, [section, loadAssignedTrips, notify]);
+  useEffect(() => {
+    if (section !== "captainTrips") return;
+    const timer = window.setInterval(() => { void loadAssignedTrips().catch((error) => notify(errorText(error), "error")); }, 30_000);
+    return () => window.clearInterval(timer);
+  }, [section, loadAssignedTrips, notify]);
   const selected = myTrips.find((item) => item.trip.id === selectedTrip) ?? null;
 
   if (!profileLoaded) return <LoadingCard text="بنجهز ملف الكابتن…" />;
@@ -542,7 +579,7 @@ function CaptainWorkspace({ session, section, notifications, refreshNotification
     </section><AccountPanel session={session} notify={notify} /></div>;
   if (section === "notifications") return <NotificationsPanel items={notifications} token={session.token} onRefresh={refreshNotifications} notify={notify} />;
 
-  if (section === "captainTrips") return <div className="trips-page"><div className="section-toolbar"><div><h2>المسارات المسندة إليك</h2><p>تابع نقاط التوقف بالترتيب وسجّل الوصول</p></div><button className="button button-outline button-small" onClick={() => void loadAssignedTrips()}>تحديث ↻</button></div>{selected ? <section className="surface captain-trip-detail"><div className="detail-hero-top"><span className="status-chip status-assigned">{statusLabel(selected.trip.status)}</span><strong>مجموعة #{selected.trip.group_id} · {formatDate(selected.trip.service_date)}</strong><span>{selected.trip.direction === "outbound" ? "ذهاب" : "عودة"}</span></div><MapPicker pickup={null} dropoff={null} mode="pickup" route={selected.route} onPick={() => undefined} /><div className="stop-list">{selected.stops.map((stop) => <div className="stop-row" key={stop.id}><span className={stop.stop_type === "pickup" ? "point-dot pickup-dot" : "point-dot dropoff-dot"} /><div><strong>{stop.stop_type === "pickup" ? "ركوب راكب" : "نزول راكب"} · محطة {stop.sequence}</strong><small>{stop.lat.toFixed(4)}, {stop.lng.toFixed(4)}</small></div>{stop.reached_at ? <span className="stop-done">✓ تم</span> : <button className="button button-outline button-small" onClick={async () => { try { await api(`/captain/pool/trips/${selected.trip.id}/stops/${stop.id}/reached`, { method: "POST", token: session.token }); await loadAssignedTrips(); notify("تم تسجيل الوصول.", "success"); } catch (error) { notify(errorText(error), "error"); } }}>وصلت</button>}</div>)}</div><div className="trip-actions"><button className="button button-primary button-small" onClick={async () => { try { await api(`/captain/pool/trips/${selected.trip.id}/complete`, { method: "POST", token: session.token }); notify("تم إغلاق الرحلة.", "success"); setSelectedTrip(null); await loadAssignedTrips(); } catch (error) { notify(errorText(error), "error"); } }}>إنهاء الرحلة</button><button className="button button-quiet button-small" onClick={async () => { try { await api(`/captain/pool/trips/${selected.trip.id}/report-absence`, { method: "POST", token: session.token }); notify("بدأ البحث عن كابتن بديل لهذا اليوم.", "info"); setSelectedTrip(null); await loadAssignedTrips(); } catch (error) { notify(errorText(error), "error"); } }}>إبلاغ عن عدم التمكن</button></div></section>
+  if (section === "captainTrips") return <div className="trips-page"><div className="section-toolbar"><div><h2>المسارات المسندة إليك</h2><p>تابع نقاط التوقف بالترتيب وسجّل الوصول</p></div><button className="button button-outline button-small" onClick={() => void loadAssignedTrips()}>تحديث ↻</button></div>{selected ? <section className="surface captain-trip-detail"><div className="detail-hero-top"><span className="status-chip status-assigned">{statusLabel(selected.trip.status)}</span><strong>مجموعة #{selected.trip.group_id} · {formatDate(selected.trip.service_date)}</strong><span>{selected.trip.direction === "outbound" ? "ذهاب" : "عودة"}</span></div><MapPicker pickup={null} dropoff={null} mode="pickup" direction={selected.trip.direction === "return" ? "return" : "outbound"} route={selected.route} onPick={() => undefined} /><div className="stop-list">{selected.stops.map((stop) => <div className="stop-row" key={stop.id}><span className={stop.stop_type === "pickup" ? "point-dot pickup-dot" : "point-dot dropoff-dot"} /><div><strong>{stop.stop_type === "pickup" ? "ركوب راكب" : "نزول راكب"} · محطة {stop.sequence}</strong><small>{stop.lat.toFixed(4)}, {stop.lng.toFixed(4)}</small></div>{stop.reached_at ? <span className="stop-done">✓ تم</span> : <button className="button button-outline button-small" onClick={async () => { try { await api(`/captain/pool/trips/${selected.trip.id}/stops/${stop.id}/reached`, { method: "POST", token: session.token }); await loadAssignedTrips(); notify("تم تسجيل الوصول.", "success"); } catch (error) { notify(errorText(error), "error"); } }}>وصلت</button>}</div>)}</div><div className="trip-actions"><button className="button button-primary button-small" onClick={async () => { try { await api(`/captain/pool/trips/${selected.trip.id}/complete`, { method: "POST", token: session.token }); notify("تم إغلاق الرحلة.", "success"); setSelectedTrip(null); await loadAssignedTrips(); } catch (error) { notify(errorText(error), "error"); } }}>إنهاء الرحلة</button><button className="button button-quiet button-small" onClick={async () => { try { await api(`/captain/pool/trips/${selected.trip.id}/report-absence`, { method: "POST", token: session.token }); notify("بدأ البحث عن كابتن بديل لهذا اليوم.", "info"); setSelectedTrip(null); await loadAssignedTrips(); } catch (error) { notify(errorText(error), "error"); } }}>إبلاغ عن عدم التمكن</button></div></section>
         : myTrips.length ? <div className="offer-grid">{myTrips.map(({ trip }) => <button className="surface offer-card" key={trip.id} onClick={() => setSelectedTrip(trip.id)}><span className="status-chip status-assigned">{statusLabel(trip.status)}</span><h3>مجموعة #{trip.group_id}</h3><p>{formatDate(trip.service_date)} · {trip.direction === "outbound" ? "ذهاب" : "عودة"} · {trip.departure_at.slice(11, 16)}</p><span className="text-action">عرض نقاط التوقف ←</span></button>)}</div> : <EmptyState icon="↗" title="لسه مفيش مسارات مسندة" text="اقبل مسارًا من قائمة المسارات المتاحة وسيظهر هنا." />}</div>;
 
   if (!profile || profile.verification_status !== "approved") return <div className="approval-state surface"><span className="approval-icon">⌖</span><span className="eyebrow">خطوة قبل استقبال المشاوير</span><h2>{profile ? "ملفك قيد التوثيق" : "أكمل ملف الكابتن"}</h2><p>{profile ? "بمجرد مراجعة بيانات السيارة من الإدارة، هتقدر تحدد موقعك وتستقبل المسارات القريبة." : "أضف بيانات مركبتك من صفحة حسابي ثم تابع حالة التوثيق."}</p><button className="button button-primary button-small" onClick={() => { window.dispatchEvent(new CustomEvent("sekka:navigate", { detail: "account" })); }}>فتح حسابي ←</button></div>;
@@ -554,16 +591,23 @@ function AdminWorkspace({ session, section, notifications, refreshNotifications,
   session: Session; section: NavKey; notifications: Notification[]; refreshNotifications: () => Promise<void>; notify: (text: string, tone?: Toast["tone"]) => void;
 }) {
   const [overview, setOverview] = useState<Record<string, number> | null>(null);
+  const [poolOverview, setPoolOverview] = useState<Record<string, number | boolean | string> | null>(null);
   const [captains, setCaptains] = useState<Record<string, unknown>[]>([]);
   const [busyId, setBusyId] = useState<number | null>(null);
   const refresh = useCallback(async () => {
-    const [stats, pending] = await Promise.all([
+    const [stats, pending, pool] = await Promise.all([
       api<{ overview: Record<string, number> }>("/admin/analytics/overview", { token: session.token }),
       api<{ captains: Record<string, unknown>[] }>("/admin/captains?status=pending", { token: session.token }),
+      api<{ overview: Record<string, number | boolean | string> }>("/admin/pool/overview", { token: session.token }),
     ]);
-    setOverview(stats.overview); setCaptains(pending.captains);
+    setOverview(stats.overview); setCaptains(pending.captains); setPoolOverview(pool.overview);
   }, [session.token]);
   useEffect(() => { void refresh().catch((error) => notify(errorText(error), "error")); }, [refresh, notify]);
+  useEffect(() => {
+    if (section !== "admin") return;
+    const timer = window.setInterval(() => { void refresh().catch((error) => notify(errorText(error), "error")); }, 30_000);
+    return () => window.clearInterval(timer);
+  }, [section, refresh, notify]);
   if (section === "account") return <AccountPanel session={session} notify={notify} />;
   if (section === "notifications") return <NotificationsPanel items={notifications} token={session.token} onRefresh={refreshNotifications} notify={notify} />;
   const decide = async (captainId: number, status: "approved" | "rejected") => {
@@ -574,5 +618,5 @@ function AdminWorkspace({ session, section, notifications, refreshNotifications,
   };
   return <div className="admin-dashboard"><div className="admin-stats-grid">{[
     ["إجمالي المستخدمين", overview?.total_users], ["الركاب", overview?.total_riders], ["الكباتن", overview?.total_captains], ["كباتن بانتظار التوثيق", overview?.captains_pending_verification],
-  ].map(([label, value]) => <div className="surface admin-stat" key={String(label)}><small>{label}</small><strong>{value ?? "—"}</strong></div>)}</div><section className="surface admin-review"><div className="section-title-row"><div><span className="eyebrow">مراجعة الحسابات</span><h2>كباتن بانتظار التوثيق</h2><p>راجع بيانات المركبة قبل تفعيل استقبال المسارات.</p></div><button className="button button-outline button-small" onClick={() => void refresh()}>تحديث ↻</button></div>{captains.length ? captains.map((captain) => <div className="admin-captain-row" key={String(captain.user_id)}><span className="avatar">{String(captain.full_name).slice(0, 1)}</span><div className="admin-captain-info"><strong>{String(captain.full_name)}</strong><small>{String(captain.phone_number)} · {String(captain.vehicle_type_id)} · لوحة {String(captain.vehicle_plate)}</small><small>رخصة {String(captain.license_number)}</small></div><div className="admin-review-actions"><button className="button button-primary button-small" disabled={busyId === Number(captain.user_id)} onClick={() => void decide(Number(captain.user_id), "approved")}>موافقة</button><button className="button button-quiet button-small" disabled={busyId === Number(captain.user_id)} onClick={() => void decide(Number(captain.user_id), "rejected")}>رفض</button></div></div>) : <EmptyState icon="✓" title="مفيش طلبات معلقة" text="هتظهر هنا طلبات الكباتن الجديدة." />}</section><section className="surface admin-summary"><div className="section-title-row"><div><span className="eyebrow">صحة المنصة</span><h2>نظرة عامة</h2></div><span className="online-pill"><i /> مباشر</span></div><div className="admin-summary-grid"><div><small>كباتن موثقون</small><strong>{overview?.captains_approved ?? "—"}</strong></div><div><small>رحلات جارية</small><strong>{overview?.total_trips_in_progress ?? "—"}</strong></div><div><small>رحلات مكتملة</small><strong>{overview?.total_trips_completed ?? "—"}</strong></div><div><small>اعتراضات مفتوحة</small><strong>{overview?.disputes_awaiting_admin ?? "—"}</strong></div></div><p className="muted-text">تسوية بوابة الدفع وعمولة الرحلات المشتركة مؤجلتان.</p></section></div>;
+  ].map(([label, value]) => <div className="surface admin-stat" key={String(label)}><small>{label}</small><strong>{value ?? "—"}</strong></div>)}</div><section className="surface admin-review"><div className="section-title-row"><div><span className="eyebrow">مراجعة الحسابات</span><h2>كباتن بانتظار التوثيق</h2><p>راجع بيانات المركبة قبل تفعيل استقبال المسارات.</p></div><button className="button button-outline button-small" onClick={() => void refresh()}>تحديث ↻</button></div>{captains.length ? captains.map((captain) => <div className="admin-captain-row" key={String(captain.user_id)}><span className="avatar">{String(captain.full_name).slice(0, 1)}</span><div className="admin-captain-info"><strong>{String(captain.full_name)}</strong><small>{String(captain.phone_number)} · {String(captain.vehicle_type_id)} · لوحة {String(captain.vehicle_plate)}</small><small>رخصة {String(captain.license_number)}</small></div><div className="admin-review-actions"><button className="button button-primary button-small" disabled={busyId === Number(captain.user_id)} onClick={() => void decide(Number(captain.user_id), "approved")}>موافقة</button><button className="button button-quiet button-small" disabled={busyId === Number(captain.user_id)} onClick={() => void decide(Number(captain.user_id), "rejected")}>رفض</button></div></div>) : <EmptyState icon="✓" title="مفيش طلبات معلقة" text="هتظهر هنا طلبات الكباتن الجديدة." />}</section><section className="surface admin-summary"><div className="section-title-row"><div><span className="eyebrow">مجموعات سِكّة</span><h2>تشغيل الرحلات والدفتر المؤجل</h2></div><button className="button button-outline button-small" onClick={() => void refresh()}>تحديث ↻</button></div><div className="admin-summary-grid"><div><small>مجموعات الانتظار</small><strong>{poolOverview?.waiting_groups ?? "—"}</strong></div><div><small>بانتظار موافقة السعر</small><strong>{poolOverview?.price_review_groups ?? "—"}</strong></div><div><small>بانتظار كابتن</small><strong>{poolOverview?.needs_captain_groups ?? "—"}</strong></div><div><small>مجموعات نشطة</small><strong>{poolOverview?.active_groups ?? "—"}</strong></div><div><small>مستحقات الشركة الدفترية</small><strong>{money(Number(poolOverview?.company_due ?? 0))}</strong></div><div><small>مستحقات الكباتن الدفترية</small><strong>{money(Number(poolOverview?.captains_due ?? 0))}</strong></div></div><p className="muted-text">هذه قيود حسابية معلقة فقط؛ لا يتم تحصيل أو تحويل أي أموال.</p></section><section className="surface admin-summary"><div className="section-title-row"><div><span className="eyebrow">صحة المنصة</span><h2>نظرة عامة</h2></div><span className="online-pill"><i /> مباشر</span></div><div className="admin-summary-grid"><div><small>كباتن موثقون</small><strong>{overview?.captains_approved ?? "—"}</strong></div><div><small>رحلات جارية</small><strong>{overview?.total_trips_in_progress ?? "—"}</strong></div><div><small>رحلات مكتملة</small><strong>{overview?.total_trips_completed ?? "—"}</strong></div><div><small>اعتراضات مفتوحة</small><strong>{overview?.disputes_awaiting_admin ?? "—"}</strong></div></div><p className="muted-text">تسوية بوابة الدفع وعمولة الرحلات المشتركة مؤجلتان.</p></section></div>;
 }

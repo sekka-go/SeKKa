@@ -122,3 +122,8 @@ button { line-height: 1.45; }
 	.topbar-user { display: none; }
 	.button-wide { width: 100%; }
 }
+.map-hint.map-error { bottom: 2.7rem; color: #6f1d1b; background: rgba(255,235,229,.96); }
+.notification-button-row { padding: .8rem 0; border-bottom: 1px solid var(--line); }
+.notification-main-action { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; text-align: right; color: inherit; background: transparent; border: 0; }
+.notification-choice-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; padding: .5rem 0 0 3rem; }
+.notification-choice-actions > span { color: var(--muted); font-size: .8rem; }

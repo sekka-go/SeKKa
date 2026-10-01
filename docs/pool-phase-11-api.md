@@ -64,6 +64,15 @@ If a price increase is more than 15%, every active rider must accept the new amo
 | `POST /captain/pool/trips/:id/stops/:stopId/reached` | Confirm arrival at the next stop in sequence. |
 | `POST /captain/pool/trips/:id/complete` | Confirm the leg is complete and write a separate ledger row per rider. All stops must have been reached. |
 | `POST /captain/pool/trips/:id/report-absence` | Mark a captain absence and make that date available to replacement captains. The fixed captain remains assigned to other package dates. |
+| `GET /captain/pool/preferences` | Return the signed-in captain's saved search radius and vehicle capabilities so the account form restores its actual settings. |
+
+## Admin operations
+
+| Method and path | Purpose |
+| --- | --- |
+| `GET /admin/pool/overview` | Admin-only, read-only totals for waiting, price-review, needs-captain, and active groups plus pending company/captain ledger amounts. `payment_enabled` remains `false`; these totals are not captured or paid. |
+
+The admin dashboard combines this pool overview with the existing captain verification queue and platform analytics. It does not expose member coordinates or add payment controls.
 
 The backend rejects a captain whose current location is more than the saved effective radius from the first pickup. It also checks overlapping trips and estimated deadhead travel between areas. Each absence reduces the captain's effective radius by 1 km, down to the 4 km default floor.
 
@@ -77,6 +86,7 @@ The backend rejects a captain whose current location is more than the saved effe
 - A fixed captain's absence opens both legs for the same weekly/monthly service date. The first qualified replacement captain who accepts is assigned both legs for that date; the package's fixed captain remains unchanged for other dates.
 - When a weekly/monthly fixed captain is first assigned, migration `012_pool_captain_escrow.sql` records a reserve estimate covering up to four service days from the captain's 80% share. If a replacement completes a trip, `pool_captain_escrow_transfers` records the amount due, reserve-funded amount, and any uncovered balance. Unused reserve is released in the accounting record when the package ends. These are calculation records only; no funds are held or transferred.
 - The 72-hour waiting notification is created by a one-minute server timer and appears in the inbox with `wait`, `book_remaining_seats`, and `cancel_free` options. Waiting is the default if the rider takes no action.
+- Rider web clients refresh groups and notifications periodically. The 72-hour notification exposes the two actionable choices directly: reserve the remaining seats or cancel free; choosing wait leaves the group waiting.
 - If all selected dates pass while the group is still waiting, it is cancelled free and riders are asked to create a group with future dates. If a confirmed route activates after some dates have passed, only remaining future dates are scheduled and billed.
 - If no replacement captain accepts by the scheduled departure, the service date's two legs are cancelled and the date amount is removed from the amount due; later dates in a weekly/monthly package remain scheduled.
 - The API persists notifications in the database. When `SEKKA_VAPID_PUBLIC_KEY`, `SEKKA_VAPID_PRIVATE_KEY`, and `SEKKA_VAPID_SUBJECT` are configured, new pool notifications also send generic Web Push messages to subscribed devices. Push delivery is best-effort; in-app inbox remains the source of truth. Expired endpoints (HTTP 404/410) are removed. SMS is not configured.
