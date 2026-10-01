@@ -356,6 +356,145 @@ Deno.serve(async (req: Request) => {
       }
       return reply({ success: true }, 200, origin);
     }
+
+    if (req.method === "POST" && path === "/internal/pool/process-deadlines") {
+      const configured = Deno.env.get("SEKKA_CRON_TOKEN") ?? "";
+      const supplied = req.headers.get("x-sekka-cron-token") ?? "";
+      if (!configured || !supplied || !await crypto.subtle.digest("SHA-256", encoder.encode(configured)).then(async a => {
+        const b = new Uint8Array(await crypto.subtle.digest("SHA-256", encoder.encode(supplied)));
+        return new Uint8Array(a).every((value, index) => value === b[index]);
+      })) return error("غير مصرح.", 401, origin);
+      const now = new Date();
+      const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Cairo" }).format(now);
+      const { data: waiting, error: waitingError } = await db.from("pool_groups").select("*").eq("status", "waiting").lte("waiting_since", new Date(now.getTime() - 72 * 3600_000).toISOString());
+      if (waitingError) throw waitingError;
+      let notices = 0, expired = 0, missed = 0;
+      for (const group of waiting ?? []) {
+        const dates = Array.isArray(group.service_dates) ? group.service_dates as string[] : JSON.parse(String(group.service_dates));
+        if (dates.some((date: string) => date >= today)) {
+          const members = await getMembers(Number(group.id));
+          for (const member of members) await notifyUser(Number(member.rider_user_id), Number(group.id), `pool-wait-72h:${group.id}`, { options: ["wait", "book_remaining_seats", "cancel_free"] });
+          notices += members.length;
+        } else {
+          await db.from("pool_groups").update({ status: "cancelled", updated_at: now.toISOString() }).eq("id", group.id).eq("status", "waiting");
+          const members = await getMembers(Number(group.id));
+          for (const member of members) await notifyUser(Number(member.rider_user_id), Number(group.id), `pool-dates-expired:${group.id}`, { cancelled_free: true, create_new_group: true });
+          expired++;
+        }
+      }
+      const { data: missedTrips, error: missedError } = await db.from("pool_trips").select("*").eq("status", "needs_captain").is("captain_user_id", null).lte("departure_at", now.toISOString());
+      if (missedError) throw missedError;
+      const handled = new Set<string>();
+      for (const trip of missedTrips ?? []) {
+        const key = `${trip.group_id}:${trip.service_date}`;
+        if (handled.has(key)) continue;
+        handled.add(key);
+        const { data: group } = await db.from("pool_groups").select("*").eq("id", trip.group_id).maybeSingle();
+        if (!group) continue;
+        const { data: dayTrips } = await db.from("pool_trips").select("*").eq("group_id", trip.group_id).eq("service_date", trip.service_date).in("status", ["needs_captain", "scheduled", "assigned"]);
+        const members = await getMembers(Number(group.id));
+        const discount = discountRate(String(group.package_type));
+        const dayPrice = Number(group.seat_day_fare ?? 0) * Number(members.reduce((sum, m) => sum + Number(m.seats_reserved), 0)) * (1 - discount);
+        for (const dayTrip of dayTrips ?? []) {
+          const half = roundMoney(dayPrice / Math.max(1, (dayTrips?.length ?? 2)));
+          await db.from("pool_trips").update({ status: "cancelled", captain_user_id: null }).eq("id", dayTrip.id).in("status", ["needs_captain", "scheduled", "assigned"]);
+          for (const member of members) await db.from("pool_trip_cancellations").upsert({ trip_id: dayTrip.id, member_id: member.id, charge_amount: 0, refund_amount: roundMoney(Number(group.seat_day_fare ?? 0) * Number(member.seats_reserved) * (1 - discount) / Math.max(1, (dayTrips?.length ?? 2))) }, { onConflict: "trip_id,member_id", ignoreDuplicates: true });
+        }
+        const { data: subscriptions } = await db.from("pool_subscriptions").select("*").in("member_id", members.map(m => m.id));
+        for (const sub of subscriptions ?? []) {
+          const member = members.find(m => Number(m.id) === Number(sub.member_id));
+          const refund = roundMoney(Number(group.seat_day_fare ?? 0) * Number(member?.seats_reserved ?? 1) * (1 - discount));
+          await db.from("pool_subscriptions").update({ amount_due: Math.max(0, Number(sub.amount_due) - refund), refund_amount: Number(sub.refund_amount) + refund, service_days: Math.max(0, Number(sub.service_days) - 1) }).eq("id", sub.id);
+        }
+        const { data: remaining } = await db.from("pool_trips").select("id").eq("group_id", group.id).in("status", ["scheduled", "assigned", "needs_captain", "in_progress"]);
+        const nextStatus = remaining?.length ? (group.fixed_captain_user_id ? "active" : "needs_captain") : "cancelled";
+        await db.from("pool_groups").update({ status: nextStatus }).eq("id", group.id);
+        for (const member of members) await notifyUser(Number(member.rider_user_id), Number(group.id), `pool-no-replacement:${group.id}:${trip.service_date}`, { service_date: trip.service_date, charge: 0, refund: "service_day" });
+        missed++;
+      }
+      return reply({ success: true, notices, expired_groups: expired, missed_service_days: missed }, 200, origin);
+    }
+    const completeSeats = path.match(/^\\/rider\\/pool\\/groups\\/(\\d+)\\/complete-seats$/);
+    if (req.method === "POST" && completeSeats) {
+      const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      const group = await getGroup(Number(completeSeats[1]));
+      if (!group || group.status !== "waiting") return error("المجموعة لم تعد تنتظر مقاعد.", 409, origin);
+      const members = await getMembers(Number(group.id));
+      const member = members.find(m => Number(m.rider_user_id) === user!.id);
+      if (!member) return error("أنت لست عضوًا في المجموعة.", 404, origin);
+      const { data: category, error: categoryError } = await db.from("pool_categories").select("*").eq("id", group.category_id).single();
+      if (categoryError || !category) throw categoryError ?? new Error("missing category");
+      const used = members.reduce((sum, m) => sum + Number(m.seats_reserved), 0);
+      const remaining = Number(category.seats) - used;
+      if (remaining <= 0) return error("لا توجد مقاعد متبقية.", 409, origin);
+      const proposedMember = { ...member, seats_reserved: Number(member.seats_reserved) + remaining, price_decision: "accepted" };
+      const proposed = members.map(m => Number(m.id) === Number(member.id) ? proposedMember : m);
+      const q = await quote(proposed, category);
+      const { data: updatedMember, error: memberError } = await db.from("pool_members").update({ seats_reserved: proposedMember.seats_reserved, price_decision: "accepted" }).eq("id", member.id).eq("status", "active").select().single();
+      if (memberError) throw memberError;
+      const updated = members.map(m => Number(m.id) === Number(member.id) ? updatedMember : m);
+      await db.from("pool_groups").update({ route_distance_km: q.out.distanceKm, route_duration_min: q.out.durationMin, route_geometry: q.geometry, seat_day_fare: q.seatDayFare, updated_at: new Date().toISOString() }).eq("id", group.id);
+      const refreshed = await getGroup(Number(group.id));
+      await activateGroup(refreshed, updated, category, q);
+      return reply({ group: await groupView({ ...refreshed, current_rider_id: user!.id }), reserved_seats: remaining, payment: "deferred" }, 200, origin);
+    }
+    const cancelDay = path.match(/^\\/rider\\/pool\\/groups\\/(\\d+)\\/days\\/(\\d{4}-\\d{2}-\\d{2})\\/cancel$/);
+    const cancelPackage = path.match(/^\\/rider\\/pool\\/groups\\/(\\d+)\\/cancel$/);
+    if (req.method === "POST" && (cancelDay || cancelPackage)) {
+      const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      const groupId = Number((cancelDay ?? cancelPackage)![1]);
+      const group = await getGroup(groupId);
+      const { data: member, error: memberError } = await db.from("pool_members").select("*").eq("group_id", groupId).eq("rider_user_id", user!.id).eq("status", "active").maybeSingle();
+      if (memberError) throw memberError;
+      if (!group || !member) return error("الحجز النشط غير موجود.", 404, origin);
+      const { data: subscription } = await db.from("pool_subscriptions").select("*").eq("member_id", member.id).maybeSingle();
+      if (cancelPackage && group.package_type === "daily") return error("استخدم إلغاء يوم الخدمة للحجز اليومي.", 400, origin);
+      const dates = Array.isArray(group.service_dates) ? group.service_dates as string[] : JSON.parse(String(group.service_dates));
+      const dateToCancel = cancelDay?.[2];
+      if (dateToCancel && !dates.includes(dateToCancel)) return error("التاريخ غير موجود ضمن أيام الحجز.", 404, origin);
+      const targetDates = dateToCancel ? [dateToCancel] : dates;
+      let refundTotal = 0, chargeTotal = 0, processed = 0;
+      const discount = discountRate(String(group.package_type));
+      for (const date of targetDates) {
+        const { data: legs, error: legsError } = await db.from("pool_trips").select("*").eq("group_id", groupId).eq("service_date", date);
+        if (legsError) throw legsError;
+        if (!legs?.length) continue;
+        const departure = cairoIso(date, String(group.morning_departure).slice(0, 5));
+        if (legs.some(t => ["completed", "in_progress"].includes(t.status))) return error("لا يمكن إلغاء يوم بدأت رحلته بالفعل.", 409, origin);
+        const free = Date.parse(departure) - Date.now() >= 12 * 3600_000;
+        const dayValue = roundMoney(Number(subscription?.seat_day_fare ?? group.seat_day_fare ?? 0) * Number(member.seats_reserved) * (1 - discount));
+        const prior = await db.from("pool_trip_cancellations").select("trip_id").in("trip_id", legs.map(t => t.id)).eq("member_id", member.id);
+        if (prior.error) throw prior.error;
+        if (prior.data?.length) continue;
+        for (const trip of legs) {
+          const split = roundMoney(dayValue / legs.length);
+          const { error: ce } = await db.from("pool_trip_cancellations").insert({ trip_id: trip.id, member_id: member.id, charge_amount: free ? 0 : split, refund_amount: free ? split : 0 });
+          if (ce) throw ce;
+        }
+        if (free) refundTotal += dayValue; else chargeTotal += dayValue;
+        processed++;
+      }
+      if (cancelPackage || (cancelDay && group.package_type === "daily")) {
+        if (cancelPackage) {
+          const adminFee = roundMoney(refundTotal * 0.10);
+          refundTotal = roundMoney(refundTotal - adminFee);
+        }
+        await db.from("pool_members").update({ status: "cancelled", cancelled_at: new Date().toISOString() }).eq("id", member.id).eq("status", "active");
+      }
+      if (subscription && processed > 0) {
+        const { error: se } = await db.from("pool_subscriptions").update({
+          amount_due: Math.max(0, Number(subscription.amount_due) - (cancelPackage ? roundMoney(refundTotal / 0.9) : refundTotal)),
+          refund_amount: roundMoney(Number(subscription.refund_amount) + refundTotal),
+          cancelled_at: cancelPackage ? new Date().toISOString() : null,
+        }).eq("id", subscription.id);
+        if (se) throw se;
+      }
+      if (!cancelDay) {
+        const { data: active } = await db.from("pool_members").select("id").eq("group_id", groupId).eq("status", "active");
+        if (!active?.length) await db.from("pool_groups").update({ status: "cancelled" }).eq("id", groupId);
+      }
+      return reply({ success: true, days_processed: processed, charged_amount: roundMoney(chargeTotal), refund_amount: roundMoney(refundTotal), admin_fee: cancelPackage ? roundMoney(refundTotal / 9) : 0, payment: "deferred" }, 200, origin);
+    }
     if (req.method === "GET" && path === "/pool/notifications") {
       if (!user) return error("سجّل الدخول أولًا.", 401, origin);
       const { data, error: e } = await db.from("pool_notifications").select("*").eq("user_id", user.id).order("id", { ascending: false }).limit(100);
