@@ -31,7 +31,7 @@ function hasCoordinates(point: MapPoint | null | undefined): point is MapPoint &
     typeof point.lng === "number" && Number.isFinite(point.lng);
 }
 
-function validLine(line: RouteGeometry["outbound"] | undefined) {
+function validLine(line: RouteGeometry["outbound"] | undefined): line is NonNullable<RouteGeometry["outbound"]> {
   return line?.type === "LineString" && Array.isArray(line.coordinates) &&
     line.coordinates.length > 1 && line.coordinates.every(([lng, lat]) =>
       Number.isFinite(lng) && lng >= -180 && lng <= 180 &&
