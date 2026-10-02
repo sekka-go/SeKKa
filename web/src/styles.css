@@ -527,3 +527,23 @@ button { line-height: 1.45; }
     padding-block: .5rem;
   }
 }
+
+
+/* Keep the existing home-linked brand visible above mobile auth forms. */
+@media (max-width: 560px) {
+  .auth-page { display: flex; flex-direction: column; }
+  .auth-page-header {
+    display: flex;
+    flex: 0 0 auto;
+    justify-content: flex-start;
+    width: 100%;
+    max-width: none;
+    padding-block: .45rem;
+    border-bottom: 0;
+  }
+  .auth-page-content {
+    flex: 1 0 auto;
+    min-height: 0;
+    padding-block: .5rem;
+  }
+}
