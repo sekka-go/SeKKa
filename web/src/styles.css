@@ -474,3 +474,44 @@ button { line-height: 1.45; }
 @media (max-width: 560px) {
   .landing-hero { padding-top: .5rem; }
 }
+
+
+/* Keep the mobile homepage within the viewport and tighten auth forms without clipping fields. */
+@media (max-width: 560px) {
+  .landing-page { min-height: 100svh; }
+  .landing-header { flex: 0 0 auto; }
+  .landing-hero { flex: 1 1 auto; min-height: 0; align-content: center; }
+  .auth-page { min-height: 100svh; padding-bottom: max(.5rem, env(safe-area-inset-bottom)); }
+  .auth-page-card { padding: .7rem .9rem 1rem; }
+  .auth-page-card .auth-tabs { margin-bottom: 1.15rem; }
+  .auth-page-card .auth-tabs a { padding: .65rem .5rem .75rem; }
+  .auth-page-card .auth-heading h1 { margin-block: .3rem; font-size: 1.55rem; }
+  .auth-page-card .auth-heading p { margin-block: .35rem; font-size: .92rem; line-height: 1.55; }
+  .auth-page-card .form-stack { gap: .6rem; margin-top: .9rem; }
+  .auth-page-card .form-stack label { gap: .35rem; font-size: .9rem; }
+  .auth-page-card .form-stack input { min-height: 2.7rem; padding: .6rem .85rem; }
+  .auth-page-card .role-picker button { min-height: 4.5rem; padding: .5rem .45rem; }
+  .auth-page-card .auth-legal { margin-top: .75rem; font-size: .8rem; line-height: 1.55; }
+  .auth-page-card .auth-switch { margin-top: .8rem; font-size: .9rem; }
+}
+
+@media (max-width: 560px) and (max-height: 760px) {
+  .landing-page { height: 100svh; overflow: hidden; }
+  .landing-header { padding-block: .45rem; }
+  .landing-header .brand-logo img { width: 2.15rem; height: 2.15rem; }
+  .landing-header .brand-logo-copy strong { font-size: .92rem; }
+  .landing-header .brand-logo-copy small { font-size: .62rem; }
+  .landing-hero { gap: .45rem; padding: .4rem 1rem .7rem; }
+  .landing-hero h1 { margin: .35rem 0; font-size: clamp(1.95rem, 8vw, 2.55rem); line-height: 1.15; }
+  .landing-hero-copy > p { margin: .3rem 0; font-size: .84rem; line-height: 1.4; }
+  .landing-hero-actions { margin-top: .4rem; }
+  .landing-primary-cta { min-height: 2.55rem; padding-block: .45rem; }
+  .landing-trust { margin-top: .4rem; font-size: .72rem; }
+  .landing-route-card { width: min(28vw, 8rem); max-width: 8rem; }
+  .auth-page-card { padding-block: .55rem .75rem; }
+  .auth-page-card .auth-tabs { margin-bottom: .8rem; }
+  .auth-page-card .auth-tabs a { padding-block: .5rem .6rem; }
+  .auth-page-card .auth-heading h1 { font-size: 1.45rem; }
+  .auth-page-card .form-stack { gap: .45rem; margin-top: .7rem; }
+  .auth-page-card .role-picker button { min-height: 4rem; }
+}
