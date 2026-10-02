@@ -69,6 +69,7 @@ export default function App() {
   const [session, setSession] = useState<Session | null>(() => getStoredSession());
   const [health, setHealth] = useState(false);
   const [healthError, setHealthError] = useState("");
+  const [serverMapsReady, setServerMapsReady] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
   const notify = useCallback((text: string, tone: Toast["tone"] = "info") => {
     setToast({ text, tone });
@@ -78,6 +79,9 @@ export default function App() {
   useEffect(() => {
     api<{ status: string; phase: number }>("/health").then(() => { setHealth(true); setHealthError(""); })
       .catch((error) => { setHealth(false); setHealthError(errorText(error)); });
+    api<{ maps?: { address_search_enabled?: boolean } }>("/config")
+      .then(({ maps }) => setServerMapsReady(maps?.address_search_enabled === true))
+      .catch(() => setServerMapsReady(false));
   }, []);
 
   useEffect(() => {
@@ -105,7 +109,7 @@ export default function App() {
   return <div className="app-shell" dir="rtl">
     {toast && <div className={`toast toast-${toast.tone}`} role="status">{toast.text}<button onClick={() => setToast(null)} aria-label="إغلاق">×</button></div>}
     {!health && <div className="connection-banner"><span className="connection-dot" />{healthError || "جاري الاتصال بالخادم…"}</div>}
-    {session ? <Workspace session={session} onSignOut={signOut} notify={notify} /> : <AuthScreen onSignedIn={onSignedIn} notify={notify} />}
+    {session ? <Workspace session={session} serverMapsReady={serverMapsReady} onSignOut={signOut} notify={notify} /> : <AuthScreen onSignedIn={onSignedIn} notify={notify} />}
   </div>;
 }
 
@@ -154,7 +158,7 @@ function AuthScreen({ onSignedIn, notify }: { onSignedIn: (session: Session) => 
           {error && <div className="inline-error">{error}</div>}
           <button className="button button-primary button-wide" disabled={busy}>{busy ? "لحظة واحدة…" : mode === "login" ? "دخول إلى حسابي" : "إنشاء الحساب"}<span>←</span></button>
         </form>
-        <p className="auth-legal">بالمتابعة، أنت توافق على شروط الاستخدام وسياسة الخصوصية.</p>
+        <p className="auth-legal">بالمتابعة، أنت توافق على <a href="/terms.html">شروط الاستخدام</a> و<a href="/privacy.html">سياسة الخصوصية</a>.</p>
       </div>
       <span className="auth-panel-note">آمن · بسيط · على الطريق</span>
     </section>
@@ -163,7 +167,7 @@ function AuthScreen({ onSignedIn, notify }: { onSignedIn: (session: Session) => 
 
 type NavKey = "home" | "booking" | "trips" | "notifications" | "account" | "offers" | "captainTrips" | "admin";
 
-function Workspace({ session, onSignOut, notify }: { session: Session; onSignOut: () => void; notify: (text: string, tone?: Toast["tone"]) => void }) {
+function Workspace({ session, serverMapsReady, onSignOut, notify }: { session: Session; serverMapsReady: boolean; onSignOut: () => void; notify: (text: string, tone?: Toast["tone"]) => void }) {
   const [section, setSection] = useState<NavKey>(session.user.role === "captain" ? "offers" : session.user.role === "admin" ? "admin" : "home");
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [navOpen, setNavOpen] = useState(false);
@@ -206,7 +210,7 @@ function Workspace({ session, onSignOut, notify }: { session: Session; onSignOut
     <main className="main-area">
       <header className="topbar"><button className="mobile-menu" onClick={() => setNavOpen(true)} aria-label="فتح القائمة">☰</button><div className="breadcrumbs"><span>سِكّة</span><b>/</b><strong>{title}</strong></div><div className="topbar-actions"><button className="icon-button notification-button" onClick={() => setSection("notifications")} aria-label="الإشعارات">♧{unread > 0 && <i />}</button><span className="topbar-divider" /><span className="topbar-user">{session.user.full_name}</span><span className="avatar avatar-small">{session.user.full_name.slice(0, 1)}</span><button className="text-action sign-out-action" onClick={onSignOut}>خروج</button></div></header>
       <div className="page-content"><div className="page-heading"><div><span className="eyebrow">{new Intl.DateTimeFormat("ar-EG", { weekday: "long", day: "numeric", month: "long" }).format(new Date())}</span><h1>{title}، {session.user.full_name.split(" ")[0]}</h1><p>{subtitle}</p></div><div className="heading-mark">{section === "booking" ? "✦" : section === "offers" ? "⌖" : "س"}</div></div>
-        {session.user.role === "rider" && <RiderWorkspace session={session} section={section} setSection={setSection} notifications={notifications} refreshNotifications={refreshNotifications} notify={notify} />}
+        {session.user.role === "rider" && <RiderWorkspace session={session} serverMapsReady={serverMapsReady} section={section} setSection={setSection} notifications={notifications} refreshNotifications={refreshNotifications} notify={notify} />}
         {session.user.role === "captain" && <CaptainWorkspace session={session} section={section} notifications={notifications} refreshNotifications={refreshNotifications} notify={notify} />}
         {session.user.role === "admin" && <AdminWorkspace session={session} section={section} notifications={notifications} refreshNotifications={refreshNotifications} notify={notify} />}
       </div>
@@ -214,8 +218,8 @@ function Workspace({ session, onSignOut, notify }: { session: Session; onSignOut
   </div>;
 }
 
-function RiderWorkspace({ session, section, setSection, notifications, refreshNotifications, notify }: {
-  session: Session; section: NavKey; setSection: (section: NavKey) => void; notifications: Notification[];
+function RiderWorkspace({ session, serverMapsReady, section, setSection, notifications, refreshNotifications, notify }: {
+  session: Session; serverMapsReady: boolean; section: NavKey; setSection: (section: NavKey) => void; notifications: Notification[];
   refreshNotifications: () => Promise<void>; notify: (text: string, tone?: Toast["tone"]) => void;
 }) {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -235,6 +239,7 @@ function RiderWorkspace({ session, section, setSection, notifications, refreshNo
   const [inviteCode, setInviteCode] = useState("");
   const selectedCategory = categories.find((item) => item.id === categoryId) ?? null;
   const selected = groups.find((view) => view.group.id === selectedGroup) ?? null;
+  const mapSearchConfigured = serverMapsReady && Boolean(import.meta.env.VITE_GOOGLE_MAPS_EMBED_KEY);
 
   const refreshGroups = useCallback(async () => {
     const result = await api<{ groups: GroupView[] }>("/rider/pool/groups", { token: session.token });
@@ -324,8 +329,9 @@ function RiderWorkspace({ session, section, setSection, notifications, refreshNo
           <div className="time-row"><label>وقت الذهاب<input type="time" value={morning} onChange={(e) => setMorning(e.target.value)} required /></label><label>وقت العودة<input type="time" value={returnTime} onChange={(e) => setReturnTime(e.target.value)} required /></label></div>
         </> : <><label>رقم المجموعة<input type="number" min="1" value={inviteCode} onChange={(e) => setInviteCode(e.target.value)} placeholder="مثال: 124" required /></label><div className="info-note">لازم نقط الركوب والنزول تكون في حدود ٣ كم من مسار المجموعة.</div></>}
         <div className="map-points-readout"><div><i className="point-dot pickup-dot" /><span><strong>نقطة الركوب</strong><small>{pointLabel(pickup)}</small></span><button type="button" className={pickMode === "pickup" ? "text-action active" : "text-action"} onClick={() => setPickMode("pickup")}>حدد</button></div><div><i className="point-dot dropoff-dot" /><span><strong>نقطة النزول</strong><small>{pointLabel(dropoff)}</small></span><button type="button" className={pickMode === "dropoff" ? "text-action active" : "text-action"} onClick={() => setPickMode("dropoff")}>حدد</button></div></div>
-        <p className="map-instruction">{import.meta.env.VITE_GOOGLE_MAPS_EMBED_KEY ? "اكتب العنوان في البحث ثم اختر النتيجة:" : "اضغط على الخريطة لتحديد:"} <b>{pickMode === "pickup" ? "نقطة الركوب" : "نقطة النزول"}</b></p>
-        <MapPicker pickup={pickup} dropoff={dropoff} mode={pickMode} token={session.token} onPick={(type, point) => type === "pickup" ? setPickup(point) : setDropoff(point)} />
+        <p className="map-instruction">{mapSearchConfigured ? "اكتب العنوان في البحث ثم اختر النتيجة:" : "اضغط على الخريطة لتحديد:"} <b>{pickMode === "pickup" ? "نقطة الركوب" : "نقطة النزول"}</b></p>
+        {!mapSearchConfigured && <p className="info-note">بحث العناوين غير متاح حاليًا؛ اختر الموقع بالضغط على الخريطة.</p>}
+        <MapPicker pickup={pickup} dropoff={dropoff} mode={pickMode} token={session.token} addressSearchEnabled={mapSearchConfigured} onPick={(type, point) => type === "pickup" ? setPickup(point) : setDropoff(point)} />
         <button className="button button-primary button-wide" disabled={submitting}>{submitting ? "جاري الحفظ…" : bookingMode === "new" ? "تأكيد المشوار" : "الانضمام للمجموعة"}<span>←</span></button>
         {bookingMode === "new" && <p className="form-footnote">مفيش دفع دلوقتي؛ المبلغ هيظهر بعد اكتمال الحد الأدنى وتأكيد المسار.</p>}
       </form>
