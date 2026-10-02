@@ -255,3 +255,36 @@ button { line-height: 1.45; }
   .auth-home-link { padding-top: .35rem; font-size: .78rem; }
   .auth-page-content { align-content: start; padding-top: 1.5rem; }
 }
+
+
+/* Keep the public homepage focused on one action. */
+.landing-page { display: flex; flex-direction: column; min-height: 100vh; min-height: 100svh; }
+.landing-header { width: 100%; justify-content: flex-start; max-width: 78rem; padding-block: 1.5rem; border-bottom: 0; }
+.landing-hero { flex: 1; width: 100%; max-width: 78rem; min-height: 0; padding-top: 2rem; padding-bottom: 4rem; }
+.landing-hero-copy { max-width: 37rem; }
+.landing-hero h1 { font-size: clamp(3.2rem, 5.5vw, 5.4rem); }
+.landing-hero-copy > p { max-width: 30rem; }
+.landing-hero-actions { margin-top: 1.5rem; }
+.landing-primary-cta { min-height: 3.4rem; padding-inline: 1.5rem; }
+.landing-trust { margin-top: 1.4rem; }
+.landing-route-card { display: grid; place-items: center; width: min(100%, 23rem); aspect-ratio: 1; height: auto; padding: 1rem; overflow: hidden; border-radius: 50%; background: radial-gradient(circle, rgba(255,210,31,.13), rgba(36,32,20,.78) 58%, rgba(23,19,9,.8)); }
+.landing-route-orbit { position: absolute; inset: 12%; border: 1px solid rgba(255,210,31,.17); border-radius: 50%; transform: rotate(-28deg) scaleY(.65); }
+.landing-route-map { position: absolute; inset: 15%; width: auto; height: auto; margin: 0; }
+.landing-route-line { top: 50%; right: 15%; left: 15%; border-color: rgba(243,236,217,.45); transform: rotate(-38deg); }
+.landing-route-point { position: absolute; width: 2.8rem; height: 2.8rem; border-width: .35rem; }
+.landing-route-start { top: 19%; right: 16%; }
+.landing-route-end { bottom: 18%; left: 16%; }
+.landing-route-spark { position: absolute; color: var(--yellow); }
+.landing-route-spark-one { top: 24%; left: 24%; font-size: 1.2rem; }
+.landing-route-spark-two { right: 22%; bottom: 22%; font-size: .8rem; opacity: .7; }
+.landing-footer { width: 100%; justify-content: center; margin-top: auto; }
+@media (max-width: 800px) {
+  .landing-header { padding-block: 1rem; }
+  .landing-hero { gap: 2rem; padding-top: 2.5rem; padding-bottom: 2rem; }
+  .landing-route-card { justify-self: center; width: min(72vw, 18rem); max-width: 18rem; }
+}
+@media (max-width: 560px) {
+  .landing-hero h1 { font-size: clamp(2.7rem, 11vw, 3.5rem); }
+  .landing-route-card { width: min(64vw, 14rem); max-width: 14rem; }
+  .landing-footer { padding-block: 1rem; }
+}
