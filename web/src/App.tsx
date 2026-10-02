@@ -42,9 +42,11 @@ export default function App() {
     clearSession(); setSession(null); notify("تم تسجيل الخروج.", "success");
   };
 
+  const isAuthPage = window.location.pathname === "/login" || window.location.pathname === "/register";
+
   return <div className="app-shell" dir="rtl">
     {toast && <div className={`toast toast-${toast.tone}`} role="status">{toast.text}<button onClick={() => setToast(null)} aria-label="إغلاق">×</button></div>}
-    {!health && <div className="connection-banner"><span className="connection-dot" />{healthError || "جاري الاتصال بالخادم…"}</div>}
+    {!health && (session || isAuthPage) && <div className="connection-banner"><span className="connection-dot" />{healthError || "جاري الاتصال بالخادم…"}</div>}
     {session ? <Workspace session={session} onSignOut={signOut} notify={notify} /> : window.location.pathname === "/login" || window.location.pathname === "/register" ? <AuthScreen onSignedIn={onSignedIn} notify={notify} /> : <LandingScreen />}
   </div>;
 }
