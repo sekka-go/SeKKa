@@ -48,10 +48,10 @@ Deno.test("OSRM uses longitude-first coordinates and road legs", async () => {
       { lat: 30.2, lng: 31.3 },
     ],
     {
-      fetcher: async (input, init) => {
+      fetcher: (input, init) => {
         requestedUrl = String(input);
         requestedHeaders = new Headers(init?.headers);
-        return response;
+        return Promise.resolve(response);
       },
     },
   );
@@ -98,7 +98,7 @@ Deno.test("identical neighboring stops keep their sequence", async () => {
       { lat: 30.1, lng: 31.1 },
     ],
     {
-      fetcher: async () => response,
+      fetcher: () => Promise.resolve(response),
     },
   );
 
@@ -127,9 +127,9 @@ Deno.test("invalid coordinates fail before an upstream request", async () => {
         { lat: 30, lng: 32 },
       ],
       {
-        fetcher: async () => {
+        fetcher: () => {
           requested = true;
-          return jsonResponse({});
+          return Promise.resolve(jsonResponse({}));
         },
       },
     );
@@ -158,7 +158,7 @@ Deno.test("bad route geometry does not draw a line", async () => {
         { lat: 30.1, lng: 31.1 },
       ],
       {
-        fetcher: async () => response,
+        fetcher: () => Promise.resolve(response),
       },
     );
   await assertRejects(
