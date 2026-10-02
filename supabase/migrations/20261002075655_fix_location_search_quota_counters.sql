@@ -71,4 +71,4 @@ BEGIN
 END;
 $$;
 REVOKE ALL ON FUNCTION public.sekka_begin_location_search(integer, text) FROM PUBLIC, anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.sekka_begin_location_search(integer, text) TO service_role;;
+GRANT EXECUTE ON FUNCTION public.sekka_begin_location_search(integer, text) TO service_role;
