@@ -5,15 +5,16 @@ export interface Category {
   base_fee: number; rate_per_km: number; rate_per_min: number;
 }
 export interface RouteLine { type: "LineString"; coordinates: [number, number][] }
-export interface RouteGeometry { outbound?: RouteLine; return?: RouteLine }
+export interface RouteGeometry { outbound?: RouteLine; return?: RouteLine; provider?: "google" | "openstreetmap" }
 export interface PoolTrip {
   id: number; service_date: string; direction: "outbound" | "return"; departure_at: string;
   estimated_arrival_at: string | null; captain_user_id: number | null; status: string; group_id?: number;
   stops?: PoolStop[];
 }
-export interface PoolStop { id: number; member_id: number; stop_type: "pickup" | "dropoff"; sequence: number; lat: number; lng: number; reached_at: string | null }
+export interface PoolStop { id: number; member_id: number; stop_type: "pickup" | "dropoff"; sequence: number; lat: number | null; lng: number | null; place_id?: string | null; reached_at: string | null }
 export interface PoolMember {
-  id: number; pickup_lat: number; pickup_lng: number; dropoff_lat: number; dropoff_lng: number;
+  id: number; pickup_lat: number | null; pickup_lng: number | null; dropoff_lat: number | null; dropoff_lng: number | null;
+  pickup_place_id: string | null; dropoff_place_id: string | null;
   seats_reserved: number; status: string; price_decision: string; pickup_order: number;
 }
 export interface PoolGroup {
