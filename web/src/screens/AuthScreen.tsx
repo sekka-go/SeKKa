@@ -33,8 +33,7 @@ export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (sessio
     <section className="auth-page-content">
       <div className="auth-card auth-page-card">
         <div className="auth-tabs">
-          <a className={mode === "login" ? "active" : ""} aria-current={mode === "login" ? "page" : undefined} href="/login">تسجيل الدخول</a>
-          {mode === "register" && <a className="active" aria-current="page" href="/register">حساب جديد</a>}
+          <span className="active" aria-current="page">{mode === "login" ? "تسجيل الدخول" : "حساب جديد"}</span>
         </div>
         <div className="auth-heading">
           <span className="eyebrow">{mode === "login" ? "سعيدين برجوعك" : "ابدأ رحلتك"}</span>
@@ -52,7 +51,9 @@ export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (sessio
           <button className="button button-primary button-wide" disabled={busy}>{busy ? "لحظة واحدة…" : mode === "login" ? "دخول إلى حسابي" : "إنشاء الحساب"}<span aria-hidden="true">←</span></button>
         </form>
         <p className="auth-legal">بالمتابعة، أنت توافق على شروط الاستخدام وسياسة الخصوصية.</p>
-        {mode === "login" && <p className="auth-switch">لسه جديد في سِكّة؟ <a href="/register">أنشئ حسابك</a></p>}
+        {mode === "login"
+          ? <p className="auth-switch">لسه جديد في سِكّة؟ <a href="/register">أنشئ حسابك</a></p>
+          : <p className="auth-switch">عندك حساب بالفعل؟ <a href="/login">سجّل الدخول</a></p>}
       </div>
     </section>
   </main>;
