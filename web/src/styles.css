@@ -255,8 +255,8 @@ button { line-height: 1.45; }
 .auth-page-content { display: grid; justify-items: center; align-content: center; min-height: calc(100vh - 6rem); padding: 2rem 0; }
 .auth-page-card { width: min(100%, 31rem); padding: clamp(1.25rem, 5vw, 2.5rem); }
 .auth-page-card .auth-tabs { margin-bottom: 2rem; }
-.auth-page-card .auth-tabs a { flex: 1; padding: .9rem; color: var(--muted); border-bottom: 2px solid transparent; text-align: center; text-decoration: none; }
-.auth-page-card .auth-tabs a.active { color: var(--ink); border-color: var(--yellow); }
+.auth-page-card .auth-tabs span { flex: 1; padding: .9rem; color: var(--muted); border-bottom: 2px solid transparent; text-align: center; }
+.auth-page-card .auth-tabs span.active { color: var(--ink); border-color: var(--yellow); }
 .auth-page-card .auth-heading h1 { margin: .5rem 0; font-size: 2rem; line-height: 1.35; }
 .auth-page-card .form-stack { margin-top: 1.5rem; }
 .auth-page-card .auth-legal { margin: 1rem 0 0; font-size: .76rem; text-align: center; }
@@ -424,7 +424,7 @@ button { line-height: 1.45; }
   .auth-page-header { padding-block: .85rem; }
   .auth-page-content { min-height: calc(100svh - 5rem); padding-block: 1rem; }
   .auth-page-card { padding: 1rem; }
-  .auth-page-card .auth-tabs a { padding: .7rem .45rem; font-size: .84rem; }
+  .auth-page-card .auth-tabs span { padding: .7rem .45rem; font-size: .84rem; }
   .auth-page-card .auth-heading h1 { font-size: 1.65rem; }
   .auth-page-card .form-stack { gap: .7rem; margin-top: 1rem; }
   .auth-page-card .role-picker button { padding: .6rem .45rem; }
@@ -491,7 +491,7 @@ button { line-height: 1.45; }
     box-shadow: none;
   }
   .auth-page-card .auth-tabs { margin-bottom: 2rem; }
-  .auth-page-card .auth-tabs a { padding: .9rem .5rem 1rem; font-size: 1rem; }
+  .auth-page-card .auth-tabs span { padding: .9rem .5rem 1rem; font-size: 1rem; }
   .auth-page-card .auth-heading h1 { font-size: 1.65rem; }
   .auth-page-card .auth-heading p { font-size: 1rem; line-height: 1.8; }
   .auth-page-card .form-stack { gap: .85rem; margin-top: 1.35rem; }
@@ -505,7 +505,7 @@ button { line-height: 1.45; }
 @media (max-width: 380px) {
   .auth-page { padding-inline: .6rem; }
   .auth-page-card { padding-inline: .8rem; }
-  .auth-page-card .auth-tabs a { font-size: .92rem; }
+  .auth-page-card .auth-tabs span { font-size: .92rem; }
 }
 
 
@@ -529,7 +529,7 @@ button { line-height: 1.45; }
   .auth-page { min-height: 100svh; padding-bottom: max(.5rem, env(safe-area-inset-bottom)); }
   .auth-page-card { padding: .7rem .9rem 1rem; }
   .auth-page-card .auth-tabs { margin-bottom: 1.15rem; }
-  .auth-page-card .auth-tabs a { padding: .65rem .5rem .75rem; }
+  .auth-page-card .auth-tabs span { padding: .65rem .5rem .75rem; }
   .auth-page-card .auth-heading h1 { margin-block: .3rem; font-size: 1.55rem; }
   .auth-page-card .auth-heading p { margin-block: .35rem; font-size: .92rem; line-height: 1.55; }
   .auth-page-card .form-stack { gap: .6rem; margin-top: .9rem; }
@@ -555,7 +555,7 @@ button { line-height: 1.45; }
   .landing-route-card { width: min(28vw, 8rem); max-width: 8rem; }
   .auth-page-card { padding-block: .55rem .75rem; }
   .auth-page-card .auth-tabs { margin-bottom: .8rem; }
-  .auth-page-card .auth-tabs a { padding-block: .5rem .6rem; }
+  .auth-page-card .auth-tabs span { padding-block: .5rem .6rem; }
   .auth-page-card .auth-heading h1 { font-size: 1.45rem; }
   .auth-page-card .form-stack { gap: .45rem; margin-top: .7rem; }
   .auth-page-card .role-picker button { min-height: 4rem; }
