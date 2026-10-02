@@ -12,4 +12,3 @@ export default function BrandLogo({ variant = "dark", compact = false, className
     </span>
   );
 }
-
