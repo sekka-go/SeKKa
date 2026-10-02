@@ -42,4 +42,9 @@ export function defaultDates(type: "daily" | "weekly" | "monthly") {
   return [date];
 }
 export function readDates(value: string) { try { return JSON.parse(value) as string[]; } catch { return []; } }
-export function pointLabel(point: MapPoint | null) { return point ? `${point.lat.toFixed(5)}, ${point.lng.toFixed(5)}` : "اضغط على الخريطة لتحديد الموقع"; }
+export function pointLabel(point: MapPoint | null) {
+  if (!point) return "اضغط على الخريطة لتحديد الموقع";
+  if (point.label) return point.label;
+  if (typeof point.lat !== "number" || typeof point.lng !== "number") return "الموقع غير متاح";
+  return `${point.lat.toFixed(5)}, ${point.lng.toFixed(5)}`;
+}

@@ -1,0 +1,79 @@
+name: Supabase routing checks
+
+on:
+  pull_request:
+    paths:
+      - "supabase/functions/sekka-api/**"
+      - "supabase/migrations/**"
+      - "server/**"
+      - "deno.json"
+      - "deno.lock"
+      - ".github/workflows/sekka-routing.yml"
+      - "web/**"
+  push:
+    branches:
+      - main
+      - feature/google-maps-address-search
+    paths:
+      - "supabase/functions/sekka-api/**"
+      - "supabase/migrations/**"
+      - "server/**"
+      - "deno.json"
+      - "deno.lock"
+      - ".github/workflows/sekka-routing.yml"
+      - "web/**"
+
+permissions:
+  contents: read
+
+jobs:
+  routing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Format routing module and tests
+        run: deno fmt --check supabase/functions/sekka-api/routing.ts supabase/functions/sekka-api/routing_test.ts
+      - name: Lint routing module and tests
+        run: deno lint supabase/functions/sekka-api/routing.ts supabase/functions/sekka-api/routing_test.ts
+      - name: Test routing validation and summaries
+        run: deno test supabase/functions/sekka-api/routing_test.ts
+      - name: Type-check the Supabase Edge Function
+        run: deno check supabase/functions/sekka-api/index.ts
+
+  web-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - name: Type-check and build the web app
+        run: npm run build
+
+  server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+      - name: Build the local API server
+        run: npm run build
+      - name: Run the local API server tests
+        run: npm test
+

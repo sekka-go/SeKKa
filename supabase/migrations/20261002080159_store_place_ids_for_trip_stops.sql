@@ -1,0 +1,3 @@
+ALTER TABLE public.pool_trip_stops ADD COLUMN place_id text;
+COMMENT ON TABLE public.user_location_searches IS 'Per-user Google Places searches; normalized queries and Place IDs are retained to enforce duplicate prevention, while Google result labels and coordinates are purged after 30 days.';
+COMMENT ON TABLE public.google_maps_api_usage IS 'Anonymous service counters enforcing the application-wide 10,000 Google Places and Routes request cap per UTC month.';
