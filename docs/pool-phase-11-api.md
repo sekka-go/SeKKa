@@ -56,6 +56,12 @@ If a price increase is more than 15%, every active rider must accept the new amo
 
 | Method and path | Purpose |
 | --- | --- |
+| `GET /captain/verify/status` | Authenticated captain; reports whether phone verification is enabled by an administrator and whether the SMS provider is configured. |
+| `POST /captain/verify/request` | Authenticated captain; sends an SMS OTP to the phone number on the account, only while enabled. Limited to one send per minute and five per hour. |
+| `POST /captain/verify/confirm` | Authenticated captain; body: `{"otp":"123456"}`. The provider validates the code and the server marks the phone verified. Codes are not returned, stored, or logged. |
+
+| Method and path | Purpose |
+| --- | --- |
 | `POST /captain/pool/groups` | Create a pre-formed group invitation. Body includes category/package/date/time fields and `riders: [{rider_user_id,pickup_lat,pickup_lng,dropoff_lat,dropoff_lng}]`. Riders must confirm before activation. |
 | `PUT /captain/pool/capabilities` | Register the vehicle's AC status and supported tiers; body: `{"has_ac":true,"service_tiers":["faster","saver"]}`. Offers require a matching vehicle capability. |
 | `PATCH /captain/pool/search-radius` | Set the offer search radius; body: `{"radius_km":4}` through `{"radius_km":10}`. Default is 4 km. |
@@ -78,6 +84,15 @@ The admin dashboard combines this pool overview with the existing captain verifi
 
 The backend rejects a captain whose current location is more than the saved effective radius from the first pickup. It also checks overlapping trips and estimated deadhead travel between areas. Each absence reduces the captain's effective radius by 1 km, down to the 4 km default floor.
 
+## Admin OTP controls
+
+| Method and path | Purpose |
+| --- | --- |
+| `GET /admin/settings/otp` | Admin-only; returns OTP enabled state, provider name, and whether the server-side provider credentials are ready. |
+| `PATCH /admin/settings/otp` | Admin-only; body: `{"enabled":true}` or `{"enabled":false}`. Defaults to disabled and refuses enablement until all Twilio secrets are configured. |
+
+Configure `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_VERIFY_SERVICE_SID` as Supabase Edge Function secrets, never in GitHub or Cloudflare frontend variables. The admin toggle can then enable or disable OTP without a redeploy. SMS charges are controlled by the Twilio account and begin only when requests are sent.
+
 ## Fare, cancellation, and accounting
 
 - The daily seat fare is the two-way route fare divided by full category capacity. Weekly pricing applies 5% off five service days; monthly pricing applies 10% off 22 days.
@@ -91,7 +106,7 @@ The backend rejects a captain whose current location is more than the saved effe
 - Rider web clients refresh groups and notifications periodically. The 72-hour notification exposes the two actionable choices directly: reserve the remaining seats or cancel free; choosing wait leaves the group waiting.
 - If all selected dates pass while the group is still waiting, it is cancelled free and riders are asked to create a group with future dates. If a confirmed route activates after some dates have passed, only remaining future dates are scheduled and billed.
 - If no replacement captain accepts by the scheduled departure, the service date's two legs are cancelled and the date amount is removed from the amount due; later dates in a weekly/monthly package remain scheduled.
-- The API persists notifications in the database. When `SEKKA_VAPID_PUBLIC_KEY`, `SEKKA_VAPID_PRIVATE_KEY`, and `SEKKA_VAPID_SUBJECT` are configured, new pool notifications also send generic Web Push messages to subscribed devices. Push delivery is best-effort; in-app inbox remains the source of truth. Expired endpoints (HTTP 404/410) are removed. SMS is not configured.
+- The API persists in-app notifications and accepts browser push-subscription registration/removal. This Supabase Edge Function does not send Web Push messages yet; the inbox remains available. Captain SMS OTP is implemented through Twilio Verify, but stays disabled until an admin turns it on after provider secrets are configured.
 
 ## Implementation boundaries
 
@@ -100,5 +115,5 @@ The backend rejects a captain whose current location is more than the saved effe
 - The React app uses Leaflet with the exact OpenStreetMap tile URL and visible attribution. Location selection is by map click only; there is no text geocoder or Google API call. The browser requests map tiles directly, while route coordinates are sent from the Supabase Edge Function to the configured OSRM host. The public OSRM demo and OSM tile service are community resources with no production availability guarantee. The service worker excludes OSM hosts and does not cache or prefetch map tiles.
 - Payment gateway and refund execution remain deferred as requested. `amount_due` and `refund_amount` are calculation fields only. `pool_ledger` also stores `discount_amount`, `company_share_amount`, `captain_share_amount`, `company_commission_rate`, and `settlement_status` so a later payment integration can settle without recomputing historical fares.
 - Grok is not integrated: routing, fare calculations, cancellation rules, and eligibility checks are deterministic backend rules and do not benefit from an LLM call.
-- Generate VAPID keys with `npx web-push generate-vapid-keys`, copy them to `server/.env` using `server/.env.example` as a template, and keep the private key out of Git. Push subscriptions require HTTPS and browser permission; local development does not register the production service worker.
+- Keep VAPID private keys in Supabase Edge Function secrets, not GitHub or browser build variables. Push subscriptions require HTTPS and browser permission; local development does not register the production service worker.
 - The return route reverses the outbound stop list and swaps each rider's pickup/drop-off role. OSRM computes the road geometry for each direction independently. The default outbound sequence is pickup order followed by drop-off order; captains can reorder the pickup sequence.

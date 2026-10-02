@@ -1194,4 +1194,3 @@ Deno.serve(async (req: Request) => {
     return error("حصل خطأ غير متوقع. حاول مرة أخرى.", 500, origin);
   }
 });
-

@@ -9,4 +9,3 @@ server/dist/
 *.db-wal
 *.tsbuildinfo
 /supabase/.temp/
-

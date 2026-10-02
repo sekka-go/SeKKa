@@ -76,4 +76,3 @@ jobs:
         run: npm run build
       - name: Run the local API server tests
         run: npm test
-
