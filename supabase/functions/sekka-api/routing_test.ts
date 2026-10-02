@@ -167,4 +167,3 @@ Deno.test("bad route geometry does not draw a line", async () => {
     "بيانات غير مكتملة",
   );
 });
-
