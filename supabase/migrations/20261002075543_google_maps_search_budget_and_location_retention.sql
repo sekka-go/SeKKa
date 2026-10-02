@@ -370,4 +370,4 @@ BEGIN
     );
   END IF;
 END;
-$$;;
+$$;
