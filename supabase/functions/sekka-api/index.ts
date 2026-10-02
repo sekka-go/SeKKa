@@ -317,6 +317,11 @@ Deno.serve(async (req: Request) => {
     }
     if (req.method === "POST" && path === "/auth/register") {
       const { full_name, phone_number, password, role } = body;
+      const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
+      const phone = typeof phone_number === "string" ? phone_number.trim().slice(0, 100) : "";
+      if (!await takeLimit(`register:ip:${ip}`, 10, 3600) || !await takeLimit(`register:phone:${phone}`, 5, 3600)) {
+        return error("تم إنشاء حسابات كثيرة مؤخرًا من هذا الجهاز أو الرقم. حاول بعد ساعة.", 429, origin);
+      }
       if (!clean(full_name) || !clean(phone_number) || !clean(password)) return error("لازم تكتب الاسم ورقم الهاتف وكلمة السر.", 400, origin);
       if (!["rider", "captain"].includes(String(role))) return error("نوع الحساب المطلوب مش متاح.", 400, origin);
       if (String(password).length < 8) return error("كلمة السر لازم تكون ٨ أحرف على الأقل.", 400, origin);
@@ -1189,3 +1194,4 @@ Deno.serve(async (req: Request) => {
     return error("حصل خطأ غير متوقع. حاول مرة أخرى.", 500, origin);
   }
 });
+

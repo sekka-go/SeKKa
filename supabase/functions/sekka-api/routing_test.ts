@@ -1,4 +1,4 @@
-import { assertEquals, assertRejects } from "jsr:@std/assert@1";
+import { assertEquals, assertRejects } from "@std/assert";
 import { routeWithOsrm, RoutingError } from "./routing.ts";
 
 type OsrmLeg = {
@@ -167,3 +167,4 @@ Deno.test("bad route geometry does not draw a line", async () => {
     "بيانات غير مكتملة",
   );
 });
+
