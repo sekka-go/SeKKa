@@ -288,3 +288,42 @@ button { line-height: 1.45; }
   .landing-route-card { width: min(64vw, 14rem); max-width: 14rem; }
   .landing-footer { padding-block: 1rem; }
 }
+
+
+/* Reduce unnecessary vertical scrolling inside signed-in workspaces only. */
+@media (max-width: 800px) {
+  .workspace .page-content { padding-block: 1rem; }
+  .workspace .page-heading { margin-bottom: 1.25rem; }
+  .workspace .page-heading h1 { margin-block: .25rem; }
+  .workspace .page-heading p { line-height: 1.45; }
+  .workspace .metric-grid { margin-bottom: 1.25rem; }
+  .workspace .form-stack { gap: .75rem; margin-top: 1rem; }
+  .workspace .map-canvas, .workspace .map-canvas .leaflet-map { height: 14rem; }
+  .workspace .offer-card .map-canvas, .workspace .offer-card .map-canvas .leaflet-map { height: 10rem; }
+  .workspace .captain-trip-detail .map-canvas, .workspace .captain-trip-detail .map-canvas .leaflet-map { height: 12rem; }
+  .workspace .map-picker { margin-top: .65rem; }
+  .workspace .map-instruction { margin-top: .45rem; }
+  .workspace .admin-review, .workspace .admin-summary { margin-top: .75rem; }
+  .workspace .admin-captain-row { padding-block: .75rem; }
+}
+@media (max-width: 560px) {
+  .workspace .page-content { padding: .9rem; }
+  .workspace .page-heading { margin-bottom: 1rem; }
+  .workspace .page-heading .heading-mark { font-size: 1.7rem; }
+  .workspace .surface { padding: .85rem; }
+  .workspace .form-stack { gap: .65rem; margin-top: .85rem; }
+  .workspace .form-stack label { gap: .3rem; }
+  .workspace .form-stack input, .workspace .form-stack select { padding: .65rem .75rem; }
+  .workspace .package-options { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .35rem; }
+  .workspace .package-option { min-height: 0; padding: .5rem .25rem; text-align: center; }
+  .workspace .package-option strong { font-size: .82rem; }
+  .workspace .package-option small { font-size: .64rem; line-height: 1.35; }
+  .workspace .time-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
+  .workspace .date-chips { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .35rem; }
+  .workspace .date-chip { min-width: 0; padding: .42rem .15rem; font-size: .7rem; white-space: nowrap; }
+  .workspace .admin-stats-grid, .workspace .admin-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
+  .workspace .admin-stat { gap: .25rem; padding: .7rem; }
+  .workspace .admin-stat strong, .workspace .admin-summary-grid strong { font-size: 1.35rem; overflow-wrap: anywhere; }
+  .workspace .admin-review, .workspace .admin-summary { margin-top: .65rem; }
+  .workspace .notification-button-row { padding-block: .55rem; }
+}
