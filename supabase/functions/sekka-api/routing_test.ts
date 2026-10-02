@@ -1,7 +1,10 @@
 import { assertEquals, assertRejects } from "jsr:@std/assert@1";
 import { routeWithOsrm, RoutingError } from "./routing.ts";
 
-type OsrmLeg = { distance: number; duration: number };
+type OsrmLeg = {
+  distance: number;
+  duration: number;
+};
 
 function jsonResponse(payload: unknown) {
   return new Response(JSON.stringify(payload), {
@@ -30,6 +33,15 @@ function routeResponse(
 Deno.test("OSRM uses longitude-first coordinates and road legs", async () => {
   let requestedUrl = "";
   let requestedHeaders: Headers | undefined;
+  const response = jsonResponse(routeResponse(
+    12_000,
+    1_200,
+    [
+      [31.2, 30.1],
+      [31.3, 30.2],
+    ],
+    [{ distance: 12_000, duration: 1_200 }],
+  ));
   const result = await routeWithOsrm(
     [
       { lat: 30.1, lng: 31.2 },
@@ -39,15 +51,7 @@ Deno.test("OSRM uses longitude-first coordinates and road legs", async () => {
       fetcher: async (input, init) => {
         requestedUrl = String(input);
         requestedHeaders = new Headers(init?.headers);
-        return jsonResponse(routeResponse(
-          12_000,
-          1_200,
-          [
-            [31.2, 30.1],
-            [31.3, 30.2],
-          ],
-          [{ distance: 12_000, duration: 1_200 }],
-        ));
+        return response;
       },
     },
   );
@@ -78,6 +82,15 @@ Deno.test("OSRM uses longitude-first coordinates and road legs", async () => {
 });
 
 Deno.test("identical neighboring stops keep their sequence", async () => {
+  const response = jsonResponse(routeResponse(
+    2_000,
+    600,
+    [
+      [31, 30],
+      [31.1, 30.1],
+    ],
+    [{ distance: 2_000, duration: 600 }],
+  ));
   const result = await routeWithOsrm(
     [
       { lat: 30, lng: 31 },
@@ -85,15 +98,7 @@ Deno.test("identical neighboring stops keep their sequence", async () => {
       { lat: 30.1, lng: 31.1 },
     ],
     {
-      fetcher: async () => jsonResponse(routeResponse(
-        2_000,
-        600,
-        [
-          [31, 30],
-          [31.1, 30.1],
-        ],
-        [{ distance: 2_000, duration: 600 }],
-      )),
+      fetcher: async () => response,
     },
   );
 
@@ -115,8 +120,8 @@ Deno.test("identical neighboring stops keep their sequence", async () => {
 
 Deno.test("invalid coordinates fail before an upstream request", async () => {
   let requested = false;
-  await assertRejects(
-    () => routeWithOsrm(
+  const request = () =>
+    routeWithOsrm(
       [
         { lat: 91, lng: 31 },
         { lat: 30, lng: 32 },
@@ -127,7 +132,9 @@ Deno.test("invalid coordinates fail before an upstream request", async () => {
           return jsonResponse({});
         },
       },
-    ),
+    );
+  await assertRejects(
+    request,
     RoutingError,
     "اختر نقطتين صحيحتين",
   );
@@ -135,25 +142,27 @@ Deno.test("invalid coordinates fail before an upstream request", async () => {
 });
 
 Deno.test("bad route geometry does not draw a line", async () => {
-  await assertRejects(
-    () => routeWithOsrm(
+  const response = jsonResponse(routeResponse(
+    1_000,
+    300,
+    [
+      [31, 30],
+      [31.1, 30.1],
+    ],
+    [],
+  ));
+  const request = () =>
+    routeWithOsrm(
       [
         { lat: 30, lng: 31 },
         { lat: 30.1, lng: 31.1 },
       ],
       {
-        fetcher: async () =>
-          jsonResponse(routeResponse(
-            1_000,
-            300,
-            [
-              [31, 30],
-              [31.1, 30.1],
-            ],
-            [],
-          )),
+        fetcher: async () => response,
       },
-    ),
+    );
+  await assertRejects(
+    request,
     RoutingError,
     "بيانات غير مكتملة",
   );
