@@ -4,13 +4,20 @@ on:
   pull_request:
     paths:
       - "supabase/functions/sekka-api/**"
+      - "server/**"
+      - "deno.json"
+      - "deno.lock"
       - ".github/workflows/sekka-routing.yml"
       - "web/**"
   push:
     branches:
+      - main
       - feature/google-maps-address-search
     paths:
       - "supabase/functions/sekka-api/**"
+      - "server/**"
+      - "deno.json"
+      - "deno.lock"
       - ".github/workflows/sekka-routing.yml"
       - "web/**"
 
@@ -49,3 +56,22 @@ jobs:
       - run: npm ci
       - name: Type-check and build the web app
         run: npm run build
+
+  server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+      - name: Build the local API server
+        run: npm run build
+      - name: Run the local API server tests
+        run: npm test
+
