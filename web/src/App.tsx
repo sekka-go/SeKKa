@@ -1,23 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { ApiError, api, clearSession, getStoredSession, storeSession, type User } from "./api";
-import { errorText } from "./lib/formatters";
 import AuthScreen from "./screens/AuthScreen";
 import LandingScreen from "./screens/LandingScreen";
 import Workspace from "./screens/Workspace";
 import type { Session, Toast } from "./types";
 export default function App() {
   const [session, setSession] = useState<Session | null>(() => getStoredSession());
-  const [health, setHealth] = useState(false);
-  const [healthError, setHealthError] = useState("");
   const [toast, setToast] = useState<Toast | null>(null);
   const notify = useCallback((text: string, tone: Toast["tone"] = "info") => {
     setToast({ text, tone });
     window.setTimeout(() => setToast(null), 4200);
-  }, []);
-
-  useEffect(() => {
-    api<{ status: string; phase: number }>("/health").then(() => { setHealth(true); setHealthError(""); })
-      .catch((error) => { setHealth(false); setHealthError(errorText(error)); });
   }, []);
 
   useEffect(() => {
@@ -42,11 +34,8 @@ export default function App() {
     clearSession(); setSession(null); notify("تم تسجيل الخروج.", "success");
   };
 
-  const isAuthPage = window.location.pathname === "/login" || window.location.pathname === "/register";
-
   return <div className="app-shell" dir="rtl">
     {toast && <div className={`toast toast-${toast.tone}`} role="status">{toast.text}<button onClick={() => setToast(null)} aria-label="إغلاق">×</button></div>}
-    {!health && (session || isAuthPage) && <div className="connection-banner"><span className="connection-dot" />{healthError || "جاري الاتصال بالخادم…"}</div>}
     {session ? <Workspace session={session} onSignOut={signOut} notify={notify} /> : window.location.pathname === "/login" || window.location.pathname === "/register" ? <AuthScreen onSignedIn={onSignedIn} notify={notify} /> : <LandingScreen />}
   </div>;
 }
