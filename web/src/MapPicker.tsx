@@ -1,121 +1,224 @@
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
-import type { RouteGeometry } from "./api";
+import type { RouteGeometry, RouteSegment } from "./api";
 
-export type MapPoint = { lat: number; lng: number };
+export type MapPoint = {
+  lat: number | null;
+  lng: number | null;
+  kind?: "pickup" | "dropoff";
+  sequence?: number;
+  label?: string;
+};
 export type MapPickMode = "pickup" | "dropoff";
+type RouteDirection = "outbound" | "return";
 
 type MapPickerProps = {
   pickup: MapPoint | null;
   dropoff: MapPoint | null;
   mode: MapPickMode;
   route?: RouteGeometry | null;
+  routePlaces?: MapPoint[];
+  direction?: RouteDirection;
+  readOnly?: boolean;
   onPick: (mode: MapPickMode, point: MapPoint) => void;
 };
 
 const CAIRO: L.LatLngExpression = [30.0444, 31.2357];
-const TILE_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+const TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 
-export default function MapPicker({ pickup, dropoff, mode, route, onPick }: MapPickerProps) {
+function hasCoordinates(point: MapPoint | null | undefined): point is MapPoint & { lat: number; lng: number } {
+  return typeof point?.lat === "number" && Number.isFinite(point.lat) &&
+    typeof point.lng === "number" && Number.isFinite(point.lng);
+}
+
+function validLine(line: RouteGeometry["outbound"] | undefined): line is NonNullable<RouteGeometry["outbound"]> {
+  return line?.type === "LineString" && Array.isArray(line.coordinates) &&
+    line.coordinates.length > 1 && line.coordinates.every(([lng, lat]) =>
+      Number.isFinite(lng) && lng >= -180 && lng <= 180 &&
+      Number.isFinite(lat) && lat >= -90 && lat <= 90
+    );
+}
+
+function selectedSegments(route: RouteGeometry | null | undefined, direction?: RouteDirection) {
+  const selected: Array<{ direction: RouteDirection; label: string; segments?: RouteSegment[] }> = [];
+  if (!direction || direction === "outbound") {
+    selected.push({ direction: "outbound", label: "الذهاب", segments: route?.outbound_segments });
+  }
+  if (!direction || direction === "return") {
+    selected.push({ direction: "return", label: "العودة", segments: route?.return_segments });
+  }
+  return selected;
+}
+
+export default function MapPicker({
+  pickup,
+  dropoff,
+  mode,
+  route,
+  routePlaces = [],
+  direction,
+  readOnly = false,
+  onPick,
+}: MapPickerProps) {
   const elementRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const layersRef = useRef<L.LayerGroup | null>(null);
-  const tileLayerRef = useRef<L.TileLayer | null>(null);
-  const pickRef = useRef(onPick);
+  const onPickRef = useRef(onPick);
   const modeRef = useRef(mode);
-  const [tilesUnavailable, setTilesUnavailable] = useState(false);
-  const [locationMessage, setLocationMessage] = useState("");
+  const [tilesLoaded, setTilesLoaded] = useState(false);
+  const [tileError, setTileError] = useState(false);
+
+  useEffect(() => { onPickRef.current = onPick; }, [onPick]);
+  useEffect(() => { modeRef.current = mode; }, [mode]);
 
   useEffect(() => {
-    pickRef.current = onPick;
-    modeRef.current = mode;
-  }, [mode, onPick]);
+    if (!elementRef.current || mapRef.current) return;
 
-  useEffect(() => {
-    if (!elementRef.current) return;
-    const map = L.map(elementRef.current, { zoomControl: false, attributionControl: true }).setView(CAIRO, 11);
+    const map = L.map(elementRef.current, { zoomControl: false, attributionControl: true })
+      .setView(CAIRO, 11);
     L.control.zoom({ position: "bottomright" }).addTo(map);
+
+    let failedTiles = 0;
+    const tileTimeout = window.setTimeout(() => setTileError(true), 12_000);
     const tiles = L.tileLayer(TILE_URL, {
-      attribution: "&copy; OpenStreetMap contributors",
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>',
       maxZoom: 19,
     });
-    tiles.on("tileerror", () => setTilesUnavailable(true));
-    tiles.on("tileload", () => setTilesUnavailable(false));
+    tiles.on("loading", () => setTilesLoaded(false));
+    tiles.on("load", () => {
+      window.clearTimeout(tileTimeout);
+      setTilesLoaded(true);
+      setTileError(failedTiles > 0);
+    });
+    tiles.on("tileerror", () => {
+      failedTiles += 1;
+      setTileError(true);
+    });
+    tiles.on("tileload", () => {
+      failedTiles = Math.max(0, failedTiles - 1);
+      if (failedTiles === 0) setTileError(false);
+    });
     tiles.addTo(map);
-    map.on("click", (event) => pickRef.current(modeRef.current, { lat: event.latlng.lat, lng: event.latlng.lng }));
-    mapRef.current = map;
-    tileLayerRef.current = tiles;
-    layersRef.current = L.layerGroup().addTo(map);
 
+    map.on("click", (event) => {
+      if (!readOnly) {
+        onPickRef.current(modeRef.current, {
+          lat: event.latlng.lat,
+          lng: event.latlng.lng,
+          kind: modeRef.current,
+        });
+      }
+    });
+
+    mapRef.current = map;
+    layersRef.current = L.layerGroup().addTo(map);
     const resize = () => map.invalidateSize();
-    window.addEventListener("resize", resize);
-    const observer = typeof ResizeObserver === "undefined"
-      ? null
-      : new ResizeObserver(resize);
-    if (elementRef.current) observer?.observe(elementRef.current);
     window.setTimeout(resize, 0);
+    window.addEventListener("resize", resize);
 
     return () => {
-      observer?.disconnect();
+      window.clearTimeout(tileTimeout);
       window.removeEventListener("resize", resize);
       map.remove();
       mapRef.current = null;
-      tileLayerRef.current = null;
       layersRef.current = null;
     };
-  }, []);
+  }, [readOnly]);
 
   useEffect(() => {
     const map = mapRef.current;
     const layers = layersRef.current;
     if (!map || !layers) return;
+
     layers.clearLayers();
-    const points: L.LatLngExpression[] = [];
-    const marker = (point: MapPoint, label: string, className: string) => {
-      const icon = L.divIcon({ className: "sekka-map-marker", html: `<span class="${className}">${label}</span>`, iconSize: [32, 32], iconAnchor: [16, 16] });
-      L.marker([point.lat, point.lng], { icon }).addTo(layers);
-      points.push([point.lat, point.lng]);
-    };
-    if (pickup) marker(pickup, "أ", "marker-pickup");
-    if (dropoff) marker(dropoff, "و", "marker-dropoff");
-    const line = route?.outbound?.coordinates;
-    if (line?.length) {
-      const latLngs = line.map(([lng, lat]) => [lat, lng] as L.LatLngExpression);
-      L.polyline(latLngs, { color: "#d9a900", weight: 5, opacity: 0.9 }).addTo(layers);
-      points.push(...latLngs);
-    }
-    if (points.length > 1) map.fitBounds(L.latLngBounds(points), { padding: [20, 20], maxZoom: 14 });
-    else if (points.length === 1) map.setView(points[0], 14);
-  }, [pickup, dropoff, route]);
+    const fitPoints: L.LatLngExpression[] = [];
+    const orderedStops = routePlaces.length
+      ? routePlaces
+      : [pickup, dropoff].filter((point): point is MapPoint => point !== null);
 
-  function useCurrentLocation() {
-    setLocationMessage("");
-    if (!("geolocation" in navigator)) {
-      setLocationMessage("تحديد الموقع غير مدعوم في هذا المتصفح.");
-      return;
-    }
-    navigator.geolocation.getCurrentPosition((position) => {
-      const point = { lat: position.coords.latitude, lng: position.coords.longitude };
-      pickRef.current(modeRef.current, point);
-      mapRef.current?.setView([point.lat, point.lng], 15);
-    }, () => {
-      setLocationMessage("تعذر تحديد موقعك. اسمح بالوصول للموقع أو اختر النقطة على الخريطة.");
-    }, { enableHighAccuracy: false, maximumAge: 60_000, timeout: 12_000 });
-  }
+    orderedStops.forEach((point, index) => {
+      if (!hasCoordinates(point)) return;
+      const sequence = Number.isInteger(point.sequence) && Number(point.sequence) > 0
+        ? Number(point.sequence)
+        : index + 1;
+      const kind = point.kind ?? (index === 0 ? "pickup" : "dropoff");
+      const markerHtml = `<span class="map-stop-badge map-stop-${kind}">${sequence}</span>`;
+      const icon = L.divIcon({
+        className: "sekka-map-marker",
+        html: markerHtml,
+        iconSize: [36, 42],
+        iconAnchor: [18, 38],
+      });
+      L.marker([point.lat, point.lng], { icon, keyboard: true })
+        .bindTooltip(point.label ?? (kind === "pickup" ? `ركوب · محطة ${sequence}` : `نزول · محطة ${sequence}`))
+        .addTo(layers);
+      fitPoints.push([point.lat, point.lng]);
+    });
 
-  return (
-    <div className="map-picker">
-      <div ref={elementRef} className="map-canvas" />
-      <div className="map-picker-actions">
-        <button type="button" className="map-location-button" onClick={useCurrentLocation}>استخدم موقعي</button>
-        <div className="map-hint">اضغط على الخريطة لتحديد {mode === "pickup" ? "نقطة الركوب" : "نقطة النزول"}</div>
-      </div>
-      {(tilesUnavailable || locationMessage) && (
-        <div className="map-error" role="status">
-          <span>{locationMessage || "تعذر تحميل بعض بلاطات الخريطة. تحقق من الاتصال."}</span>
-          {tilesUnavailable && <button type="button" onClick={() => { setTilesUnavailable(false); tileLayerRef.current?.redraw(); }}>إعادة تحميل الخريطة</button>}
-        </div>
-      )}
-    </div>
+    for (const item of selectedSegments(route, direction)) {
+      if (route?.provider === "google") continue;
+      const line = route?.[item.direction];
+      if (!validLine(line)) continue;
+      const latLngs = line.coordinates.map(([lng, lat]) => [lat, lng] as L.LatLngExpression);
+      L.polyline(latLngs, {
+        color: item.direction === "outbound" ? "#d9a900" : "#138e94",
+        weight: 5,
+        opacity: 0.88,
+      }).addTo(layers);
+      fitPoints.push(...latLngs);
+    }
+
+    if (fitPoints.length > 1) {
+      map.fitBounds(L.latLngBounds(fitPoints), { padding: [28, 28], maxZoom: 14 });
+    } else if (fitPoints.length === 1) {
+      map.setView(fitPoints[0], 14);
+    }
+  }, [pickup, dropoff, route, routePlaces, direction]);
+
+  const visibleStops = routePlaces.length
+    ? routePlaces
+    : [pickup, dropoff].filter((point): point is MapPoint => point !== null);
+  const segmentRoutes = selectedSegments(route, direction);
+  const hasRouteGeometry = route?.provider !== "google" && segmentRoutes.some(({ direction: routeDirection }) =>
+    validLine(route?.[routeDirection])
   );
+  const hasVisibleStops = visibleStops.some(hasCoordinates);
+
+  return <div className={`map-picker${readOnly ? " map-picker-readonly" : ""}`}>
+    <div className="map-canvas">
+      <div ref={elementRef} className="leaflet-map" role="application" aria-label="خريطة اختيار وعرض مسار الرحلة" />
+      {!tilesLoaded && !tileError && <div className="map-state" role="status">جاري تحميل الخريطة…</div>}
+      {tileError && <div className="map-state map-state-warning" role="status">تعذر تحميل بعض بلاطات الخريطة. يمكنك الاستمرار في اختيار الموقع.</div>}
+      {!hasVisibleStops && !hasRouteGeometry && readOnly && <div className="map-state map-state-warning" role="status">لا توجد بيانات موقع كافية لعرض هذا المسار.</div>}
+      {hasVisibleStops && !hasRouteGeometry && readOnly && <div className="map-state map-state-warning" role="status">تعذر تحميل الطريق الفعلي؛ لن نعرض خطًا تقريبيًا بدلًا منه.</div>}
+      {!readOnly && <div className="map-hint">اضغط على الخريطة لتحديد {mode === "pickup" ? "نقطة الركوب" : "نقطة النزول"}</div>}
+      {readOnly && <div className="map-hint">خريطة OpenStreetMap · الطريق الفعلي</div>}
+    </div>
+
+    {visibleStops.length > 0 && <ol className="map-stop-list" aria-label="ترتيب محطات الرحلة">
+      {visibleStops.map((point, index) => {
+        const sequence = Number.isInteger(point.sequence) && Number(point.sequence) > 0
+          ? Number(point.sequence)
+          : index + 1;
+        const kind = point.kind ?? (index === 0 ? "pickup" : "dropoff");
+        const label = point.label ?? `${kind === "pickup" ? "ركوب" : "نزول"} · محطة ${sequence}`;
+        return <li key={`${kind}-${sequence}-${index}`}>
+          <span className={`map-stop-list-number map-stop-${kind}`}>{sequence}</span>
+          <span>{label}</span>
+          {!hasCoordinates(point) && <small>الموقع غير متاح</small>}
+        </li>;
+      })}
+    </ol>}
+
+    {segmentRoutes.some((item) => item.segments?.length) && <div className="map-segments">
+      {segmentRoutes.map((item) => item.segments?.map((segment) =>
+        <div className="map-segment-row" key={`${item.direction}-${segment.from_stop_sequence}-${segment.to_stop_sequence}`}>
+          <strong>{item.label} · من محطة {segment.from_stop_sequence} إلى {segment.to_stop_sequence}</strong>
+          <span>{segment.distance_km.toFixed(1)} كم</span>
+          <span>حوالي {Math.round(segment.duration_min)} د</span>
+        </div>
+      ))}
+    </div>}
+    <p className="map-data-caption">أوقات الطريق تقديرية ولا تشمل حركة المرور الحية.</p>
+  </div>;
 }

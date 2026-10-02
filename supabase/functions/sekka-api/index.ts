@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { routeWithOsrm, RoutingError } from "./routing.ts";
 
 type Json = Record<string, unknown>;
 type User = { id: number; full_name: string; phone_number: string; role: "rider" | "captain" | "admin"; verified_at: string | null; created_at: string };
@@ -17,6 +18,15 @@ function reply(data: unknown, status = 200, origin = "") {
   });
 }
 function error(message: string, status = 400, origin = "") { return reply({ error: message }, status, origin); }
+class ApiFailure extends Error { constructor(message: string, readonly status: number) { super(message); } }
+function selectLocation(body: Json, prefix: "pickup" | "dropoff"): { lat: number; lng: number; place_id: null; label: string } {
+  if (clean(body[`${prefix}_place_id`]) || clean(body[`${prefix}_search_id`])) {
+    throw new ApiFailure("البحث النصي عن العناوين غير متاح؛ اختر الموقع بالنقر على الخريطة.", 410);
+  }
+  const lat = body[`${prefix}_lat`], lng = body[`${prefix}_lng`];
+  if (!validPoint(lat, lng)) throw new ApiFailure("اختر نقطة صحيحة للركوب والنزول بالنقر على الخريطة.", 400);
+  return { lat: Number(lat), lng: Number(lng), place_id: null, label: "" };
+}
 function clean(value: unknown): value is string { return typeof value === "string" && value.trim().length > 0; }
 function number(value: unknown): value is number { return typeof value === "number" && Number.isFinite(value); }
 function validPoint(lat: unknown, lng: unknown) { return number(lat) && lat >= -90 && lat <= 90 && number(lng) && lng >= -180 && lng <= 180; }
@@ -141,18 +151,31 @@ function distanceKm(a: { lat: number; lng: number }, b: { lat: number; lng: numb
   const x = rad(b.lng - a.lng) * Math.cos(rad((a.lat + b.lat) / 2)), y = rad(b.lat - a.lat);
   return Math.hypot(x, y) * 6371.0088;
 }
-async function roadRoute(points: { lat: number; lng: number }[]) {
-  const base = (Deno.env.get("SEKKA_ROUTING_URL") ?? "http://127.0.0.1:5000").replace(/\/+$/, "");
-  const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), 8_000);
+async function roadRoute(points: Json[]) {
+  if (points.length < 2) throw new ApiFailure("المسار يحتاج نقطتين على الأقل.", 400);
+  if (!points.every((point) => validPoint(point.lat, point.lng))) {
+    throw new ApiFailure("إحدى محطات المسار لا تحتوي إحداثيات صالحة؛ أعد اختيارها على الخريطة.", 400);
+  }
   try {
-    const coords = points.map((p) => `${p.lng},${p.lat}`).join(";");
-    const response = await fetch(`${base}/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=false`, { signal: controller.signal });
-    if (!response.ok) throw new Error("تعذر الوصول لخدمة حساب المسار.");
-    const data = await response.json();
-    const route = data.routes?.[0];
-    if (data.code !== "Ok" || !number(route?.distance) || !number(route?.duration) || !Array.isArray(route?.geometry?.coordinates)) throw new Error("خدمة حساب المسار أعادت بيانات غير صحيحة.");
-    return { distanceKm: roundMoney(route.distance / 1000), durationMin: roundMoney(route.duration / 60), geometry: route.geometry };
-  } finally { clearTimeout(timer); }
+    const result = await routeWithOsrm(
+      points.map((point) => ({ lat: Number(point.lat), lng: Number(point.lng) })),
+      { baseUrl: Deno.env.get("SEKKA_ROUTING_URL") ?? "https://router.project-osrm.org" },
+    );
+    return {
+      distanceKm: roundMoney(result.distance_km),
+      durationMin: roundMoney(result.duration_min),
+      provider: result.provider,
+      geometry: result.geometry,
+      segments: result.segments.map((segment) => ({
+        ...segment,
+        distance_km: roundMoney(segment.distance_km),
+        duration_min: roundMoney(segment.duration_min),
+      })),
+    };
+  } catch (err) {
+    if (err instanceof RoutingError) throw new ApiFailure(err.message, err.status);
+    throw new ApiFailure("خدمة حساب الطريق غير متاحة حاليًا. لم يتغير الحجز.", 503);
+  }
 }
 function lineDistanceKm(point: { lat: number; lng: number }, coordinates: unknown) {
   if (!Array.isArray(coordinates) || coordinates.length < 2) return Infinity;
@@ -179,8 +202,8 @@ async function getMembers(id: number, active = true) {
 }
 function routePoints(members: Json[], direction: "outbound" | "return") {
   const forward = [
-    ...members.map((m) => ({ lat: Number(m.pickup_lat), lng: Number(m.pickup_lng), member_id: m.id, stop_type: "pickup" })),
-    ...members.map((m) => ({ lat: Number(m.dropoff_lat), lng: Number(m.dropoff_lng), member_id: m.id, stop_type: "dropoff" })),
+    ...members.map((m) => ({ lat: validPoint(m.pickup_lat, m.pickup_lng) ? Number(m.pickup_lat) : null, lng: validPoint(m.pickup_lat, m.pickup_lng) ? Number(m.pickup_lng) : null, place_id: null, member_id: m.id, stop_type: "pickup" })),
+    ...members.map((m) => ({ lat: validPoint(m.dropoff_lat, m.dropoff_lng) ? Number(m.dropoff_lat) : null, lng: validPoint(m.dropoff_lat, m.dropoff_lng) ? Number(m.dropoff_lng) : null, place_id: null, member_id: m.id, stop_type: "dropoff" })),
   ];
   return direction === "outbound" ? forward : [...forward].reverse().map((s) => ({ ...s, stop_type: s.stop_type === "pickup" ? "dropoff" : "pickup" }));
 }
@@ -189,9 +212,9 @@ async function quote(members: Json[], category: Json) {
   const [out, back] = await Promise.all([roadRoute(outPoints), roadRoute(returnPoints)]);
   const outFare = Number(category.base_fee) + out.distanceKm * Number(category.rate_per_km) + out.durationMin * Number(category.rate_per_min);
   const backFare = Number(category.base_fee) + back.distanceKm * Number(category.rate_per_km) + back.durationMin * Number(category.rate_per_min);
-  return { out, back, total: roundMoney(outFare + backFare), seatDayFare: roundMoney((outFare + backFare) / Number(category.seats)), geometry: { outbound: out.geometry, return: back.geometry } };
+  return { out, back, total: roundMoney(outFare + backFare), seatDayFare: roundMoney((outFare + backFare) / Number(category.seats)), geometry: { outbound: out.geometry, outbound_segments: out.segments, return: back.geometry, return_segments: back.segments, provider: out.provider } };
 }
-async function activateGroup(group: Json, members: Json[], category: Json, quoteData: Json) {
+async function activateGroup(group: Json, members: Json[], category: Json, quoteData: Awaited<ReturnType<typeof quote>>) {
   const min = category.speed_tier === "faster" ? 2 : 3;
   const occupiedSeats = members.reduce((sum, m) => sum + Number(m.seats_reserved), 0);
   if (members.length < min && occupiedSeats < Number(category.seats)) return;
@@ -209,13 +232,13 @@ async function activateGroup(group: Json, members: Json[], category: Json, quote
       if (te) throw te;
       const stops = routePoints(members, direction);
       await db!.from("pool_trip_stops").delete().eq("trip_id", trip.id);
-      const rows = stops.map((s, index) => ({ trip_id: trip.id, member_id: s.member_id, stop_type: s.stop_type, sequence: index + 1, lat: s.lat, lng: s.lng }));
+      const rows = stops.map((s, index) => ({ trip_id: trip.id, member_id: s.member_id, stop_type: s.stop_type, sequence: index + 1, lat: s.lat, lng: s.lng, place_id: s.place_id }));
       const { error: se } = await db!.from("pool_trip_stops").insert(rows);
       if (se) throw se;
     }
   }
   await db!.from("pool_groups").update({ status: "active", seat_day_fare: quoteData.seatDayFare, route_geometry: quoteData.geometry, route_distance_km: quoteData.out.distanceKm, route_duration_min: quoteData.out.durationMin, updated_at: new Date().toISOString() }).eq("id", group.id);
-  for (const m of members) await notifyUser(m.rider_user_id, Number(group.id), `group-active-${group.id}`, { message: "اكتمل الحد الأدنى وبدأ تفعيل مسارك." });
+  for (const m of members) { const riderUserId = Number(m.rider_user_id); if (!Number.isSafeInteger(riderUserId)) throw new Error("invalid rider user ID"); await notifyUser(riderUserId, Number(group.id), `group-active-${group.id}`, { message: "اكتمل الحد الأدنى وبدأ تفعيل مسارك." }); }
 }
 async function groupView(group: Json) {
   const { current_rider_id: _currentRiderId, ...publicGroup } = group;
@@ -266,7 +289,7 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return reply({}, 204, origin);
   if (!db) return error("إعدادات ربط Supabase غير مكتملة.", 503, origin);
   const url = new URL(req.url);
-  const suffix = url.pathname.replace(/^\/functions\/v1\/sekka-api/, "");
+  const suffix = url.pathname.replace(/^\/(?:functions\/v1\/)?sekka-api(?=\/|$)/, "") || "/";
   const path = suffix.startsWith("/api/") ? suffix.slice(4) : suffix === "/api" ? "/" : suffix;
   let body: Json = {};
   if (!["GET", "HEAD"].includes(req.method)) {
@@ -281,15 +304,24 @@ Deno.serve(async (req: Request) => {
     if (req.method === "GET" && path === "/config") {
       const [vehicles, categories] = await Promise.all([db.from("vehicle_types").select("*").order("id"), db.from("service_categories").select("*").order("id")]);
       if (vehicles.error || categories.error) return error("حصل خطأ ونحن بنجيب الإعدادات، جرّب تاني بعد شوية.", 500, origin);
-      return reply({ vehicle_types: vehicles.data, service_categories: categories.data }, 200, origin);
+      return reply({ vehicle_types: vehicles.data, service_categories: categories.data, maps: { address_search_enabled: false, provider: "openstreetmap", routing_provider: "osrm" } }, 200, origin);
     }
     if (req.method === "GET" && path === "/pool/categories") {
       const { data, error: e } = await db.from("pool_categories").select("id,speed_tier,has_ac,seats,base_fee,rate_per_km,rate_per_min").order("id");
       if (e) throw e; return reply({ categories: data }, 200, origin);
     }
     const user = await authenticate(req);
+    if (req.method === "POST" && (path === "/locations/search" || path === "/locations/resolve")) {
+      const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      return error("بحث العناوين النصي غير متاح في النسخة المجانية؛ اختر الموقع بالنقر على الخريطة.", 410, origin);
+    }
     if (req.method === "POST" && path === "/auth/register") {
       const { full_name, phone_number, password, role } = body;
+      const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
+      const phone = typeof phone_number === "string" ? phone_number.trim().slice(0, 100) : "";
+      if (!await takeLimit(`register:ip:${ip}`, 10, 3600) || !await takeLimit(`register:phone:${phone}`, 5, 3600)) {
+        return error("تم إنشاء حسابات كثيرة مؤخرًا من هذا الجهاز أو الرقم. حاول بعد ساعة.", 429, origin);
+      }
       if (!clean(full_name) || !clean(phone_number) || !clean(password)) return error("لازم تكتب الاسم ورقم الهاتف وكلمة السر.", 400, origin);
       if (!["rider", "captain"].includes(String(role))) return error("نوع الحساب المطلوب مش متاح.", 400, origin);
       if (String(password).length < 8) return error("كلمة السر لازم تكون ٨ أحرف على الأقل.", 400, origin);
@@ -324,7 +356,7 @@ Deno.serve(async (req: Request) => {
         if (!clean(body.current_password) || !clean(body.new_password) || String(body.new_password).length < 8) return error("بيانات كلمة السر غير صحيحة أو أقصر من ٨ أحرف.", 400, origin);
         if (!await takeLimit(`password:${user.id}`, 5, 900)) return error("محاولات كتير في وقت قصير. حاول تاني بعد شوية.", 429, origin);
         const { data: row } = await db.from("users").select("password_hash").eq("id", user.id).single();
-        if (!await verifyPassword(String(body.current_password), row.password_hash)) return error("كلمة السر الحالية غير صحيحة.", 401, origin);
+        if (!row || typeof row.password_hash !== "string" || !await verifyPassword(String(body.current_password), row.password_hash)) return error("كلمة السر الحالية غير صحيحة.", 401, origin);
         const { error: pe } = await db.from("users").update({ password_hash: await hashPassword(String(body.new_password)), password_changed_at: new Date().toISOString() }).eq("id", user.id);
         if (pe) throw pe;
         await db.from("sessions").update({ revoked_at: new Date().toISOString() }).eq("user_id", user.id).neq("token_hash", await digest(req.headers.get("authorization")!.replace(/^Bearer\s+/i, "")));
@@ -431,21 +463,23 @@ Deno.serve(async (req: Request) => {
       const { category_id, package_type, service_dates, morning_departure, return_departure } = body;
       const dates = validDates(service_dates, String(package_type));
       if (!clean(category_id) || !dates || !/^\d{2}:\d{2}$/.test(String(morning_departure)) || !/^\d{2}:\d{2}$/.test(String(return_departure)) || String(return_departure) <= String(morning_departure)) return error("راجع الفئة والأيام ومواعيد الذهاب والعودة.", 400, origin);
-      if (!validPoint(body.pickup_lat, body.pickup_lng) || !validPoint(body.dropoff_lat, body.dropoff_lng)) return error("إحداثيات الركوب أو النزول غير صحيحة.", 400, origin);
+      let pickup, dropoff;
+      try { pickup = await selectLocation(body, "pickup"); dropoff = await selectLocation(body, "dropoff"); }
+      catch (err) { if (err instanceof ApiFailure) return error(err.message, err.status, origin); throw err; }
       const { data: category } = await db.from("pool_categories").select("*").eq("id", category_id).maybeSingle();
       if (!category) return error("فئة الرحلة غير موجودة.", 404, origin);
-      let q; try { q = await quote([{ id: 0, pickup_lat: body.pickup_lat, pickup_lng: body.pickup_lng, dropoff_lat: body.dropoff_lat, dropoff_lng: body.dropoff_lng, pickup_order: 0 }], category); }
-      catch { return error("خدمة حساب المسار غير متاحة. يلزم إعداد SEKKA_ROUTING_URL لخادم OSRM خاص قبل إنشاء المجموعات.", 503, origin); }
+      const initialMember = { id: 0, pickup_lat: pickup.lat, pickup_lng: pickup.lng, pickup_place_id: pickup.place_id, dropoff_lat: dropoff.lat, dropoff_lng: dropoff.lng, dropoff_place_id: dropoff.place_id, pickup_order: 0 };
+      let q; try { q = await quote([initialMember], category); }
+      catch (err) { if (err instanceof ApiFailure) return error(err.message, err.status, origin); return error("خدمة حساب المسار غير متاحة حاليًا.", 503, origin); }
       const { data: group, error: ge } = await db.from("pool_groups").insert({ created_by_user_id: user!.id, category_id, package_type, service_dates: dates, morning_departure: morning_departure + ":00", return_departure: return_departure + ":00", route_distance_km: q.out.distanceKm, route_duration_min: q.out.durationMin, seat_day_fare: q.seatDayFare, route_geometry: q.geometry, status: "waiting" }).select().single();
       if (ge) throw ge;
-      const { error: memberError } = await db.from("pool_members").insert({ group_id: group.id, rider_user_id: user!.id, pickup_lat: body.pickup_lat, pickup_lng: body.pickup_lng, dropoff_lat: body.dropoff_lat, dropoff_lng: body.dropoff_lng, seats_reserved: 1, status: "active", price_decision: "accepted", pickup_order: 0 });
+      const { error: memberError } = await db.from("pool_members").insert({ group_id: group.id, rider_user_id: user!.id, pickup_lat: pickup.lat, pickup_lng: pickup.lng, pickup_place_id: pickup.place_id, dropoff_lat: dropoff.lat, dropoff_lng: dropoff.lng, dropoff_place_id: dropoff.place_id, seats_reserved: 1, status: "active", price_decision: "accepted", pickup_order: 0 });
       if (memberError) throw memberError;
       return reply({ ...(await groupView(group)), auto_matched: false }, 201, origin);
     }
     const joinMatch = path.match(/^\/rider\/pool\/groups\/(\d+)\/join$/);
     if (req.method === "POST" && joinMatch) {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
-      if (!validPoint(body.pickup_lat, body.pickup_lng) || !validPoint(body.dropoff_lat, body.dropoff_lng)) return error("إحداثيات الركوب أو النزول غير صحيحة.", 400, origin);
       const group = await getGroup(Number(joinMatch[1]));
       if (!group || group.status !== "waiting") return error("المجموعة غير متاحة للانضمام.", 409, origin);
       const members = await getMembers(Number(group.id));
@@ -453,10 +487,25 @@ Deno.serve(async (req: Request) => {
       const { data: category } = await db.from("pool_categories").select("*").eq("id", group.category_id).single();
       const capacityUsed = members.reduce((sum, m) => sum + Number(m.seats_reserved), 0);
       if (capacityUsed >= Number(category.seats)) return error("المقاعد المتاحة اكتملت.", 409, origin);
-      const line = (group.route_geometry as Json | null)?.outbound as Json | undefined;
-      if (lineDistanceKm({ lat: Number(body.pickup_lat), lng: Number(body.pickup_lng) }, line?.coordinates) > 3 || lineDistanceKm({ lat: Number(body.dropoff_lat), lng: Number(body.dropoff_lng) }, line?.coordinates) > 3) return error("نقطتا الركوب والنزول لازم تكونا في حدود ٣ كم من خط المجموعة.", 400, origin);
-      const candidate = { id: 0, group_id: group.id, rider_user_id: user!.id, pickup_lat: body.pickup_lat, pickup_lng: body.pickup_lng, dropoff_lat: body.dropoff_lat, dropoff_lng: body.dropoff_lng, seats_reserved: 1, status: "active", price_decision: "accepted", pickup_order: members.length };
-      let q; try { q = await quote([...members, candidate], category); } catch { return error("خدمة حساب المسار غير متاحة حاليًا.", 503, origin); }
+      let pickup: { lat: number | null; lng: number | null; place_id: string | null; label: string };
+      let dropoff: { lat: number | null; lng: number | null; place_id: string | null; label: string };
+      try {
+        pickup = await selectLocation(body, "pickup");
+        dropoff = await selectLocation(body, "dropoff");
+      } catch (err) {
+        if (err instanceof ApiFailure) return error(err.message, err.status, origin);
+        throw err;
+      }
+      if (!validPoint(pickup.lat, pickup.lng) || !validPoint(dropoff.lat, dropoff.lng)) return error("تعذر تحديد العنوان. اختر نتيجة بحث صحيحة.", 400, origin);
+      let groupGeometry = group.route_geometry as Json | null;
+      let line = groupGeometry?.outbound as Json | undefined;
+      if (!Array.isArray(line?.coordinates) || line.coordinates.length < 2) {
+        try { groupGeometry = (await quote(members, category)).geometry as Json; line = groupGeometry.outbound as Json; }
+        catch (err) { if (err instanceof ApiFailure) return error(err.message, err.status, origin); return error("تعذر تحديث خط المجموعة.", 503, origin); }
+      }
+      if (lineDistanceKm({ lat: Number(pickup.lat), lng: Number(pickup.lng) }, line?.coordinates) > 3 || lineDistanceKm({ lat: Number(dropoff.lat), lng: Number(dropoff.lng) }, line?.coordinates) > 3) return error("نقطتا الركوب والنزول لازم تكونا في حدود ٣ كم من خط المجموعة.", 400, origin);
+      const candidate = { id: 0, group_id: group.id, rider_user_id: user!.id, pickup_lat: Number(pickup.lat), pickup_lng: Number(pickup.lng), pickup_place_id: pickup.place_id, dropoff_lat: Number(dropoff.lat), dropoff_lng: Number(dropoff.lng), dropoff_place_id: dropoff.place_id, seats_reserved: 1, status: "active", price_decision: "accepted", pickup_order: members.length };
+      let q; try { q = await quote([...members, candidate], category); } catch (err) { if (err instanceof ApiFailure) return error(err.message, err.status, origin); return error("خدمة حساب المسار غير متاحة حاليًا.", 503, origin); }
       const { data: member, error: ie } = await db.from("pool_members").insert({ ...candidate, group_id: group.id }).select().single();
       if (ie) throw ie;
       const all = [...members, member];
@@ -822,7 +871,17 @@ Deno.serve(async (req: Request) => {
           if ((category.speed_tier === "faster" && !capability.accepts_faster) || (category.speed_tier === "saver" && !capability.accepts_saver) || Number(category.has_ac) !== Number(capability.has_ac)) continue;
           const effective = Math.max(4, Number(stats?.search_radius_km ?? 4) - Number(stats?.absences ?? 0));
           if (distanceKm({ lat: profile.current_lat, lng: profile.current_lng }, { lat: first.pickup_lat, lng: first.pickup_lng }) > effective) continue;
-          offers.push({ group_id: group.id, category_id: group.category_id, package_type: group.package_type, route_distance_km: group.route_distance_km, seat_day_fare: group.seat_day_fare, route_geometry: group.route_geometry, trip });
+          const stops = routePoints(members, trip.direction).map((stop, index) => ({
+            id: index + 1,
+            member_id: Number(stop.member_id),
+            stop_type: stop.stop_type,
+            sequence: index + 1,
+            lat: stop.lat,
+            lng: stop.lng,
+            place_id: null,
+            reached_at: null,
+          }));
+          offers.push({ group_id: group.id, category_id: group.category_id, package_type: group.package_type, route_distance_km: group.route_distance_km, seat_day_fare: group.seat_day_fare, route_geometry: group.route_geometry, trip: { ...trip, stops } });
         }
         return reply({ offers }, 200, origin);
       }
@@ -881,7 +940,7 @@ Deno.serve(async (req: Request) => {
         const ordered = memberIds.map((id, i) => ({ ...members.find(m => Number(m.id) === Number(id))!, pickup_order: i }));
         const { data: category, error: categoryError } = await db.from("pool_categories").select("*").eq("id", group.category_id).single();
         if (categoryError) throw categoryError;
-        let q; try { q = await quote(ordered, category); } catch { return error("خدمة الخرائط المحلية غير متاحة الآن. لم يتغير ترتيب الوقفات.", 503, origin); }
+        let q; try { q = await quote(ordered, category); } catch { return error("خدمة حساب الطريق غير متاحة الآن. لم يتغير ترتيب الوقفات.", 503, origin); }
         for (const member of ordered) {
           const { error: orderError } = await db.from("pool_members").update({ pickup_order: member.pickup_order }).eq("id", member.id);
           if (orderError) throw orderError;
@@ -935,6 +994,7 @@ Deno.serve(async (req: Request) => {
         if (!trip) return error("الرحلة غير مسندة إليك.", 403, origin);
         if (stops?.some((s) => !s.reached_at)) return error("لا يمكن إنهاء الرحلة قبل تسجيل الوصول لكل النقاط.", 409, origin);
         const { data: group } = await db.from("pool_groups").select("package_type,seat_day_fare").eq("id", trip.group_id).single();
+        if (!group) return error("بيانات المجموعة المرتبطة بالرحلة غير متاحة.", 500, origin);
         const { data: members } = await db.from("pool_members").select("*").eq("group_id", trip.group_id).eq("status", "active");
         for (const m of members ?? []) {
           const listAmount = roundMoney(Number(group.seat_day_fare) * Number(m.seats_reserved));
@@ -1119,6 +1179,7 @@ Deno.serve(async (req: Request) => {
     }
     if (req.method === "GET" && path === "/captain/pool/preferences") {
       const gate = await requireRole(user, ["captain"], origin); if (gate) return gate;
+      if (!user) return error("سجّل الدخول أولًا.", 401, origin);
       const [stats, capabilities] = await Promise.all([
         db.from("pool_captain_stats").select("*").eq("captain_user_id", user.id).maybeSingle(),
         db.from("pool_captain_capabilities").select("*").eq("captain_user_id", user.id).maybeSingle(),
@@ -1128,6 +1189,7 @@ Deno.serve(async (req: Request) => {
     }
     return error("المسار غير موجود.", 404, origin);
   } catch (err) {
+    if (err instanceof ApiFailure) return error(err.message, err.status, origin);
     console.error("[sekka-api] request failed:", err instanceof Error ? err.name : "UnknownError");
     return error("حصل خطأ غير متوقع. حاول مرة أخرى.", 500, origin);
   }

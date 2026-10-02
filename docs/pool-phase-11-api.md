@@ -28,9 +28,11 @@ Prices are EGP. A group request body contains `category_id`, `package_type` (`da
 - Riders choose the dates; every date must fall Sunday through Thursday. Departure times use `HH:mm`; return time must be later than morning departure.
 - Requested `HH:mm` times are interpreted in `Africa/Cairo`; generated trip timestamps are returned as ISO UTC values.
 - A group ID can be shared with other riders. Their pickup and drop-off must each be within 3 km of the current OSRM road route.
-- Group responses include `route_geometry`, an object with outbound and return GeoJSON `LineString`s. Coordinates use GeoJSON `[longitude, latitude]` order. This is route data for clients; this backend phase does not serve map tiles or add a UI.
+- Group responses include `route_geometry` with outbound and return GeoJSON `LineString`s. Coordinates use GeoJSON `[longitude, latitude]` order. When available, `outbound_segments` and `return_segments` contain ordered leg summaries (`from_stop_sequence`, `to_stop_sequence`, `distance_km`, `duration_min`). The React client displays these routes on OpenStreetMap tiles.
 
 ## Rider endpoints
+
+Location selection is coordinate-only: the rider clicks the map and sends `pickup_lat`, `pickup_lng`, `dropoff_lat`, and `dropoff_lng`. There is no text geocoder; legacy `POST /locations/search` and `POST /locations/resolve` requests return HTTP 410 with a click-to-select explanation.
 
 | Method and path | Purpose |
 | --- | --- |
@@ -70,6 +72,15 @@ If a price increase is more than 15%, every active rider must accept the new amo
 | `POST /captain/pool/trips/:id/stops/:stopId/reached` | Confirm arrival at the next stop in sequence. |
 | `POST /captain/pool/trips/:id/complete` | Confirm the leg is complete and write a separate ledger row per rider. All stops must have been reached. |
 | `POST /captain/pool/trips/:id/report-absence` | Mark a captain absence and make that date available to replacement captains. The fixed captain remains assigned to other package dates. |
+| `GET /captain/pool/preferences` | Return the signed-in captain's saved search radius and vehicle capabilities so the account form restores its actual settings. |
+
+## Admin operations
+
+| Method and path | Purpose |
+| --- | --- |
+| `GET /admin/pool/overview` | Admin-only, read-only totals for waiting, price-review, needs-captain, and active groups plus pending company/captain ledger amounts. `payment_enabled` remains `false`; these totals are not captured or paid. |
+
+The admin dashboard combines this pool overview with the existing captain verification queue and platform analytics. It does not expose member coordinates or add payment controls.
 
 The backend rejects a captain whose current location is more than the saved effective radius from the first pickup. It also checks overlapping trips and estimated deadhead travel between areas. Each absence reduces the captain's effective radius by 1 km, down to the 4 km default floor.
 
@@ -92,6 +103,7 @@ Configure `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_VERIFY_SERVICE_
 - A fixed captain's absence opens both legs for the same weekly/monthly service date. The first qualified replacement captain who accepts is assigned both legs for that date; the package's fixed captain remains unchanged for other dates.
 - When a weekly/monthly fixed captain is first assigned, migration `012_pool_captain_escrow.sql` records a reserve estimate covering up to four service days from the captain's 80% share. If a replacement completes a trip, `pool_captain_escrow_transfers` records the amount due, reserve-funded amount, and any uncovered balance. Unused reserve is released in the accounting record when the package ends. These are calculation records only; no funds are held or transferred.
 - The 72-hour waiting notification is created by a one-minute server timer and appears in the inbox with `wait`, `book_remaining_seats`, and `cancel_free` options. Waiting is the default if the rider takes no action.
+- Rider web clients refresh groups and notifications periodically. The 72-hour notification exposes the two actionable choices directly: reserve the remaining seats or cancel free; choosing wait leaves the group waiting.
 - If all selected dates pass while the group is still waiting, it is cancelled free and riders are asked to create a group with future dates. If a confirmed route activates after some dates have passed, only remaining future dates are scheduled and billed.
 - If no replacement captain accepts by the scheduled departure, the service date's two legs are cancelled and the date amount is removed from the amount due; later dates in a weekly/monthly package remain scheduled.
 - The API persists in-app notifications and accepts browser push-subscription registration/removal. This Supabase Edge Function does not send Web Push messages yet; the inbox remains available. Captain SMS OTP is implemented through Twilio Verify, but stays disabled until an admin turns it on after provider secrets are configured.
@@ -99,8 +111,8 @@ Configure `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_VERIFY_SERVICE_
 ## Implementation boundaries
 
 - Phase 11 data lives in its own tables from migration `010_pool_domain.sql`; deferred settlement fields are added by migration `011_pool_settlement.sql`, and fixed-captain reserve records by `012_pool_captain_escrow.sql`. The existing `matches`, `trips`, and `trip_stops` model is unchanged.
-- Routing uses an OSRM-compatible server-side service. The default is local `http://127.0.0.1:5000`; set `SEKKA_ROUTING_URL` to an operator-managed OSRM endpoint if needed. Outbound and reverse waypoint routes are requested separately, and both road distance and duration are used in pricing. The server never accepts client-supplied route totals. If routing is unavailable, new group creation fails with HTTP 503 rather than silently pricing straight-line distances.
-- OSRM can run locally for free with OpenStreetMap road data. The public OSRM demo and public OSM tile servers are community resources without a production availability guarantee; rider coordinates are not sent to the public demo by this implementation. No geocoder or tile service is configured, and clients must provide coordinates.
+- Routing uses the OSRM-compatible service configured in `SEKKA_ROUTING_URL`; the default is `https://router.project-osrm.org`. The server requests outbound and reverse waypoint routes separately, validates real GeoJSON road geometry and per-leg distance/duration, and calculates price from server-returned totals only. If OSRM is unavailable or returns incomplete data, the API returns an error and does not price or draw a straight-line substitute.
+- The React app uses Leaflet with the exact OpenStreetMap tile URL and visible attribution. Location selection is by map click only; there is no text geocoder or Google API call. The browser requests map tiles directly, while route coordinates are sent from the Supabase Edge Function to the configured OSRM host. The public OSRM demo and OSM tile service are community resources with no production availability guarantee. The service worker excludes OSM hosts and does not cache or prefetch map tiles.
 - Payment gateway and refund execution remain deferred as requested. `amount_due` and `refund_amount` are calculation fields only. `pool_ledger` also stores `discount_amount`, `company_share_amount`, `captain_share_amount`, `company_commission_rate`, and `settlement_status` so a later payment integration can settle without recomputing historical fares.
 - Grok is not integrated: routing, fare calculations, cancellation rules, and eligibility checks are deterministic backend rules and do not benefit from an LLM call.
 - Keep VAPID private keys in Supabase Edge Function secrets, not GitHub or browser build variables. Push subscriptions require HTTPS and browser permission; local development does not register the production service worker.

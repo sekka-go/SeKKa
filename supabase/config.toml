@@ -1,0 +1,4 @@
+project_id = "uorxfakceqnhxqnaawdy"
+
+[functions.sekka-api]
+verify_jwt = false

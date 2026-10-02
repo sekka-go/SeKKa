@@ -8,3 +8,4 @@ server/dist/
 *.db-shm
 *.db-wal
 *.tsbuildinfo
+/supabase/.temp/

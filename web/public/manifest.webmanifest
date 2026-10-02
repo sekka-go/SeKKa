@@ -1,23 +1,18 @@
 {
   "id": "/",
-  "name": "أسهل سكة | SeKKa",
+  "name": "سِكّة",
   "short_name": "سِكّة",
-  "description": "تنقّل يومي أذكى ومشاركة الرحلات في القاهرة والجيزة",
+  "description": "معاك في السكة",
   "lang": "ar",
   "dir": "rtl",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
-  "display_override": [
-    "standalone",
-    "minimal-ui"
-  ],
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
   "theme_color": "#171309",
   "background_color": "#171309",
-  "categories": [
-    "travel",
-    "transportation"
-  ],
+  "categories": ["travel", "transportation"],
   "prefer_related_applications": false,
   "icons": [
     {

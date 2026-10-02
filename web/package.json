@@ -4,11 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev": "vite --configLoader native",
+    "build": "tsc -b && vite build --configLoader native",
     "lint": "oxlint",
     "check:pwa": "node scripts/check-pwa.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview --configLoader native"
   },
   "dependencies": {
     "leaflet": "^1.9.4",
