@@ -29,7 +29,6 @@ export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (sessio
   return <main className="auth-page">
     <header className="auth-page-header">
       <a href="/" aria-label="سِكّة، الرئيسية"><BrandLogo variant="light" /></a>
-      <a className="auth-home-link" href="/">العودة للرئيسية <span aria-hidden="true">←</span></a>
     </header>
     <section className="auth-page-content">
       <div className="auth-card auth-page-card">
@@ -53,9 +52,8 @@ export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (sessio
           <button className="button button-primary button-wide" disabled={busy}>{busy ? "لحظة واحدة…" : mode === "login" ? "دخول إلى حسابي" : "إنشاء الحساب"}<span aria-hidden="true">←</span></button>
         </form>
         <p className="auth-legal">بالمتابعة، أنت توافق على شروط الاستخدام وسياسة الخصوصية.</p>
-        <p className="auth-switch">{mode === "login" ? "لسه جديد في سِكّة؟" : "عندك حساب بالفعل؟"} <a href={mode === "login" ? "/register" : "/login"}>{mode === "login" ? "أنشئ حسابك" : "سجّل الدخول"}</a></p>
+        {mode === "login" && <p className="auth-switch">لسه جديد في سِكّة؟ <a href="/register">أنشئ حسابك</a></p>}
       </div>
-      <p className="auth-page-note">خطوتك الجاية تبدأ من هنا.</p>
     </section>
   </main>;
 }
