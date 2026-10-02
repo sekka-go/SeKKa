@@ -20,6 +20,7 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .brand-logo { display: inline-flex; align-items: center; gap: .7rem; min-width: 0; }
 .brand-logo img { width: 3rem; height: 3rem; object-fit: cover; border-radius: .85rem; box-shadow: 0 .4rem 1rem #0004; }
 .brand-logo-copy { display: grid; gap: .1rem; text-align: right; }
+.brand-logo-copy small { color: var(--muted); font-size: .75rem; line-height: 1.25; white-space: nowrap; }
 .brand-logo-copy strong { color: var(--ink); font-size: 1.15rem; white-space: nowrap; }
 .brand-logo-compact img { width: 2.2rem; height: 2.2rem; }
 .sidebar-brand .brand-logo { flex: 1; }
