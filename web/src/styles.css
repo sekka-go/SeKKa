@@ -547,3 +547,16 @@ button { line-height: 1.45; }
     padding-block: .5rem;
   }
 }
+
+
+/* Remove empty vertical space around mobile auth forms; keep the logo above the card. */
+@media (max-width: 560px) {
+  .auth-page { min-height: 0; padding-bottom: .5rem; }
+  .auth-page-content {
+    flex: 0 0 auto;
+    justify-items: center;
+    align-content: start;
+    min-height: 0;
+    padding-block: .35rem 0;
+  }
+}
