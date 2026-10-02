@@ -28,6 +28,7 @@ type MapPickerProps = {
   routePlaces?: MapPoint[];
   token?: string;
   googleMapsEmbedKey?: string;
+  addressSearchEnabled?: boolean;
   readOnly?: boolean;
   onPick: (mode: MapPickMode, point: MapPoint) => void;
 };
@@ -62,7 +63,7 @@ function googleMapUrl(key: string, pickup: MapPoint | null, dropoff: MapPoint | 
 }
 
 export default function MapPicker({
-  pickup, dropoff, mode, route, routePlaces = [], token, googleMapsEmbedKey = import.meta.env.VITE_GOOGLE_MAPS_EMBED_KEY ?? "", readOnly = false, onPick,
+  pickup, dropoff, mode, route, routePlaces = [], token, googleMapsEmbedKey = import.meta.env.VITE_GOOGLE_MAPS_EMBED_KEY ?? "", addressSearchEnabled = false, readOnly = false, onPick,
 }: MapPickerProps) {
   const elementRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -74,14 +75,16 @@ export default function MapPicker({
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState("");
   const googleEnabled = Boolean(googleMapsEmbedKey);
+  const addressSearchAvailable = googleEnabled && addressSearchEnabled && Boolean(token) && !readOnly;
   const googleRequired = route?.provider === "google" || [pickup, dropoff, ...routePlaces].some((point) => Boolean(point?.placeId));
+  const showGoogleMap = googleEnabled && (readOnly || googleRequired || addressSearchAvailable);
   const activePoint = mode === "pickup" ? pickup : dropoff;
 
   useEffect(() => { onPickRef.current = onPick; }, [onPick]);
   useEffect(() => { modeRef.current = mode; }, [mode]);
 
   useEffect(() => {
-    if (googleEnabled || googleRequired || !elementRef.current || mapRef.current) return;
+    if (showGoogleMap || googleRequired || !elementRef.current || mapRef.current) return;
     const map = L.map(elementRef.current, { zoomControl: false, attributionControl: true }).setView(CAIRO, 11);
     L.control.zoom({ position: "bottomright" }).addTo(map);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -102,7 +105,7 @@ export default function MapPicker({
       mapRef.current = null;
       layersRef.current = null;
     };
-  }, [googleEnabled, googleRequired, readOnly]);
+  }, [showGoogleMap, googleRequired, readOnly]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -157,7 +160,7 @@ export default function MapPicker({
   };
 
   return <div className="map-picker">
-    {googleEnabled && !readOnly && token && <div className="map-search">
+    {addressSearchAvailable && <div className="map-search">
       <form className="map-search-form" onSubmit={(event) => void submitSearch(event)}>
         <input
           type="search"
@@ -180,14 +183,14 @@ export default function MapPicker({
       {!searchError && activePoint?.label && <p className="map-selected-label">الموقع المحدد: {activePoint.label}</p>}
     </div>}
     <div className="map-canvas">
-      {googleEnabled
+      {showGoogleMap
         ? <iframe title="خريطة Google Maps للموقع أو المسار" src={googleMapUrl(googleMapsEmbedKey, pickup, dropoff, routePlaces)} loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen />
         : googleRequired
           ? <div className="map-unavailable">إعداد مفتاح Google Maps للعرض مطلوب لهذا المسار.</div>
           : <div ref={elementRef} className="leaflet-map" />}
     </div>
-    {!googleEnabled && !googleRequired
+    {!showGoogleMap && !googleRequired
       ? <div className="map-hint">{readOnly ? "الخريطة من OpenStreetMap" : `اضغط على الخريطة لتحديد ${mode === "pickup" ? "نقطة الركوب" : "نقطة النزول"}`}</div>
-      : googleEnabled ? <div className="google-map-caption" translate="no">Google Maps</div> : null}
+      : showGoogleMap ? <div className="google-map-caption" translate="no">Google Maps</div> : null}
   </div>;
 }
