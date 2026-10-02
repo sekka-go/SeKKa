@@ -468,3 +468,9 @@ button { line-height: 1.45; }
 @media (min-width: 561px) and (max-width: 800px) {
   .landing-hero { padding-top: .5rem; }
 }
+
+
+/* Keep the compact homepage header-to-copy spacing on phones too. */
+@media (max-width: 560px) {
+  .landing-hero { padding-top: .5rem; }
+}
