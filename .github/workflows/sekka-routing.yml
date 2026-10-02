@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "supabase/functions/sekka-api/**"
+      - "supabase/migrations/**"
       - "server/**"
       - "deno.json"
       - "deno.lock"
@@ -15,6 +16,7 @@ on:
       - feature/google-maps-address-search
     paths:
       - "supabase/functions/sekka-api/**"
+      - "supabase/migrations/**"
       - "server/**"
       - "deno.json"
       - "deno.lock"
