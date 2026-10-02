@@ -289,7 +289,7 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return reply({}, 204, origin);
   if (!db) return error("إعدادات ربط Supabase غير مكتملة.", 503, origin);
   const url = new URL(req.url);
-  const suffix = url.pathname.replace(/^\/functions\/v1\/sekka-api/, "");
+  const suffix = url.pathname.replace(/^\/(?:functions\/v1\/)?sekka-api(?=\/|$)/, "") || "/";
   const path = suffix.startsWith("/api/") ? suffix.slice(4) : suffix === "/api" ? "/" : suffix;
   let body: Json = {};
   if (!["GET", "HEAD"].includes(req.method)) {
