@@ -30,6 +30,9 @@ export default function LandingScreen() {
         </div>
       </section>
 
+      <footer className="landing-footer">
+        <span>© سِكّة للتنقل المشترك</span>
+      </footer>
     </main>
   );
 }
