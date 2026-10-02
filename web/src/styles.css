@@ -462,3 +462,9 @@ button { line-height: 1.45; }
   .auth-page-card { padding-inline: .8rem; }
   .auth-page-card .auth-tabs a { font-size: .92rem; }
 }
+
+
+/* Bring the homepage copy closer to the header on compact tablet widths. */
+@media (min-width: 561px) and (max-width: 800px) {
+  .landing-hero { padding-top: 1rem; }
+}
