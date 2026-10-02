@@ -466,5 +466,5 @@ button { line-height: 1.45; }
 
 /* Bring the homepage copy closer to the header on compact tablet widths. */
 @media (min-width: 561px) and (max-width: 800px) {
-  .landing-hero { padding-top: 1rem; }
+  .landing-hero { padding-top: .5rem; }
 }
