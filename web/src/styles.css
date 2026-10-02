@@ -408,20 +408,21 @@ button { line-height: 1.45; }
     align-content: start;
     gap: 2rem;
     padding-top: 3rem;
-    padding-bottom: 2rem;
+    padding-bottom: 3.5rem;
   }
   .landing-hero h1 {
     margin-block: 1rem;
-    font-size: clamp(2.5rem, 10.8vw, 3rem);
+    font-size: clamp(2.55rem, 11.8vw, 3rem);
     line-height: 1.25;
   }
   .landing-hero-copy > p {
+    max-width: 20.5rem;
     margin-block: 1.5rem 2rem;
     font-size: 1rem;
     line-height: 1.9;
   }
   .landing-primary-cta {
-    min-width: 10rem;
+    min-width: 10.5rem;
     min-height: 3.8rem;
     justify-content: center;
   }
