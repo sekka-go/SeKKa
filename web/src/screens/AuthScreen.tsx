@@ -34,7 +34,7 @@ export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (sessio
       <div className="auth-card auth-page-card">
         <div className="auth-tabs">
           <a className={mode === "login" ? "active" : ""} aria-current={mode === "login" ? "page" : undefined} href="/login">تسجيل الدخول</a>
-          <a className={mode === "register" ? "active" : ""} aria-current={mode === "register" ? "page" : undefined} href="/register">حساب جديد</a>
+          {mode === "register" && <a className="active" aria-current="page" href="/register">حساب جديد</a>}
         </div>
         <div className="auth-heading">
           <span className="eyebrow">{mode === "login" ? "سعيدين برجوعك" : "ابدأ رحلتك"}</span>
