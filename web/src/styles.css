@@ -515,3 +515,15 @@ button { line-height: 1.45; }
   .auth-page-card .form-stack { gap: .45rem; margin-top: .7rem; }
   .auth-page-card .role-picker button { min-height: 4rem; }
 }
+
+
+/* Center short mobile auth cards in the viewport, while keeping tall forms reachable. */
+@media (max-width: 560px) {
+  .auth-page-content {
+    display: grid;
+    place-items: center;
+    align-content: safe center;
+    min-height: calc(100svh - 1.25rem);
+    padding-block: .5rem;
+  }
+}
