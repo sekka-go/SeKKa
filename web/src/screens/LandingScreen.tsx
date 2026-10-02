@@ -22,7 +22,6 @@ export default function LandingScreen() {
           <a href="#how-it-works">طريقة الاستخدام</a>
         </nav>
         <div className="landing-actions">
-          <a className="landing-login" href="/login">تسجيل الدخول</a>
           <a className="button landing-header-cta" href="/register">ابدأ رحلتك</a>
         </div>
       </header>
@@ -88,7 +87,6 @@ export default function LandingScreen() {
       <footer className="landing-footer">
         <BrandLogo variant="light" />
         <span>© سِكّة للتنقل المشترك</span>
-        <a href="/login">تسجيل الدخول</a>
       </footer>
     </main>
   );
