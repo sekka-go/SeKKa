@@ -214,7 +214,7 @@ async function quote(members: Json[], category: Json) {
   const backFare = Number(category.base_fee) + back.distanceKm * Number(category.rate_per_km) + back.durationMin * Number(category.rate_per_min);
   return { out, back, total: roundMoney(outFare + backFare), seatDayFare: roundMoney((outFare + backFare) / Number(category.seats)), geometry: { outbound: out.geometry, outbound_segments: out.segments, return: back.geometry, return_segments: back.segments, provider: out.provider } };
 }
-async function activateGroup(group: Json, members: Json[], category: Json, quoteData: Json) {
+async function activateGroup(group: Json, members: Json[], category: Json, quoteData: Awaited<ReturnType<typeof quote>>) {
   const min = category.speed_tier === "faster" ? 2 : 3;
   const occupiedSeats = members.reduce((sum, m) => sum + Number(m.seats_reserved), 0);
   if (members.length < min && occupiedSeats < Number(category.seats)) return;
@@ -238,7 +238,7 @@ async function activateGroup(group: Json, members: Json[], category: Json, quote
     }
   }
   await db!.from("pool_groups").update({ status: "active", seat_day_fare: quoteData.seatDayFare, route_geometry: quoteData.geometry, route_distance_km: quoteData.out.distanceKm, route_duration_min: quoteData.out.durationMin, updated_at: new Date().toISOString() }).eq("id", group.id);
-  for (const m of members) await notifyUser(m.rider_user_id, Number(group.id), `group-active-${group.id}`, { message: "اكتمل الحد الأدنى وبدأ تفعيل مسارك." });
+  for (const m of members) { const riderUserId = Number(m.rider_user_id); if (!Number.isSafeInteger(riderUserId)) throw new Error("invalid rider user ID"); await notifyUser(riderUserId, Number(group.id), `group-active-${group.id}`, { message: "اكتمل الحد الأدنى وبدأ تفعيل مسارك." }); }
 }
 async function groupView(group: Json) {
   const { current_rider_id: _currentRiderId, ...publicGroup } = group;
@@ -351,7 +351,7 @@ Deno.serve(async (req: Request) => {
         if (!clean(body.current_password) || !clean(body.new_password) || String(body.new_password).length < 8) return error("بيانات كلمة السر غير صحيحة أو أقصر من ٨ أحرف.", 400, origin);
         if (!await takeLimit(`password:${user.id}`, 5, 900)) return error("محاولات كتير في وقت قصير. حاول تاني بعد شوية.", 429, origin);
         const { data: row } = await db.from("users").select("password_hash").eq("id", user.id).single();
-        if (!await verifyPassword(String(body.current_password), row.password_hash)) return error("كلمة السر الحالية غير صحيحة.", 401, origin);
+        if (!row || typeof row.password_hash !== "string" || !await verifyPassword(String(body.current_password), row.password_hash)) return error("كلمة السر الحالية غير صحيحة.", 401, origin);
         const { error: pe } = await db.from("users").update({ password_hash: await hashPassword(String(body.new_password)), password_changed_at: new Date().toISOString() }).eq("id", user.id);
         if (pe) throw pe;
         await db.from("sessions").update({ revoked_at: new Date().toISOString() }).eq("user_id", user.id).neq("token_hash", await digest(req.headers.get("authorization")!.replace(/^Bearer\s+/i, "")));
@@ -989,6 +989,7 @@ Deno.serve(async (req: Request) => {
         if (!trip) return error("الرحلة غير مسندة إليك.", 403, origin);
         if (stops?.some((s) => !s.reached_at)) return error("لا يمكن إنهاء الرحلة قبل تسجيل الوصول لكل النقاط.", 409, origin);
         const { data: group } = await db.from("pool_groups").select("package_type,seat_day_fare").eq("id", trip.group_id).single();
+        if (!group) return error("بيانات المجموعة المرتبطة بالرحلة غير متاحة.", 500, origin);
         const { data: members } = await db.from("pool_members").select("*").eq("group_id", trip.group_id).eq("status", "active");
         for (const m of members ?? []) {
           const listAmount = roundMoney(Number(group.seat_day_fare) * Number(m.seats_reserved));
@@ -1173,6 +1174,7 @@ Deno.serve(async (req: Request) => {
     }
     if (req.method === "GET" && path === "/captain/pool/preferences") {
       const gate = await requireRole(user, ["captain"], origin); if (gate) return gate;
+      if (!user) return error("سجّل الدخول أولًا.", 401, origin);
       const [stats, capabilities] = await Promise.all([
         db.from("pool_captain_stats").select("*").eq("captain_user_id", user.id).maybeSingle(),
         db.from("pool_captain_capabilities").select("*").eq("captain_user_id", user.id).maybeSingle(),
