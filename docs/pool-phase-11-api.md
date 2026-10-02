@@ -28,9 +28,11 @@ Prices are EGP. A group request body contains `category_id`, `package_type` (`da
 - Riders choose the dates; every date must fall Sunday through Thursday. Departure times use `HH:mm`; return time must be later than morning departure.
 - Requested `HH:mm` times are interpreted in `Africa/Cairo`; generated trip timestamps are returned as ISO UTC values.
 - A group ID can be shared with other riders. Their pickup and drop-off must each be within 3 km of the current OSRM road route.
-- Group responses include `route_geometry`, an object with outbound and return GeoJSON `LineString`s. Coordinates use GeoJSON `[longitude, latitude]` order. This is route data for clients; this backend phase does not serve map tiles or add a UI.
+- Group responses include `route_geometry` with outbound and return GeoJSON `LineString`s. Coordinates use GeoJSON `[longitude, latitude]` order. When available, `outbound_segments` and `return_segments` contain ordered leg summaries (`from_stop_sequence`, `to_stop_sequence`, `distance_km`, `duration_min`). The React client displays these routes on OpenStreetMap tiles.
 
 ## Rider endpoints
+
+Location selection is coordinate-only: the rider clicks the map and sends `pickup_lat`, `pickup_lng`, `dropoff_lat`, and `dropoff_lng`. There is no text geocoder; legacy `POST /locations/search` and `POST /locations/resolve` requests return HTTP 410 with a click-to-select explanation.
 
 | Method and path | Purpose |
 | --- | --- |
@@ -84,8 +86,8 @@ The backend rejects a captain whose current location is more than the saved effe
 ## Implementation boundaries
 
 - Phase 11 data lives in its own tables from migration `010_pool_domain.sql`; deferred settlement fields are added by migration `011_pool_settlement.sql`, and fixed-captain reserve records by `012_pool_captain_escrow.sql`. The existing `matches`, `trips`, and `trip_stops` model is unchanged.
-- Routing uses an OSRM-compatible server-side service. The default is local `http://127.0.0.1:5000`; set `SEKKA_ROUTING_URL` to an operator-managed OSRM endpoint if needed. Outbound and reverse waypoint routes are requested separately, and both road distance and duration are used in pricing. The server never accepts client-supplied route totals. If routing is unavailable, new group creation fails with HTTP 503 rather than silently pricing straight-line distances.
-- OSRM can run locally for free with OpenStreetMap road data. The public OSRM demo and public OSM tile servers are community resources without a production availability guarantee; rider coordinates are not sent to the public demo by this implementation. No geocoder or tile service is configured, and clients must provide coordinates.
+- Routing uses the OSRM-compatible service configured in `SEKKA_ROUTING_URL`; the default is `https://router.project-osrm.org`. The server requests outbound and reverse waypoint routes separately, validates real GeoJSON road geometry and per-leg distance/duration, and calculates price from server-returned totals only. If OSRM is unavailable or returns incomplete data, the API returns an error and does not price or draw a straight-line substitute.
+- The React app uses Leaflet with the exact OpenStreetMap tile URL and visible attribution. Location selection is by map click only; there is no text geocoder or Google API call. The browser requests map tiles directly, while route coordinates are sent from the Supabase Edge Function to the configured OSRM host. The public OSRM demo and OSM tile service are community resources with no production availability guarantee. The service worker excludes OSM hosts and does not cache or prefetch map tiles.
 - Payment gateway and refund execution remain deferred as requested. `amount_due` and `refund_amount` are calculation fields only. `pool_ledger` also stores `discount_amount`, `company_share_amount`, `captain_share_amount`, `company_commission_rate`, and `settlement_status` so a later payment integration can settle without recomputing historical fares.
 - Grok is not integrated: routing, fare calculations, cancellation rules, and eligibility checks are deterministic backend rules and do not benefit from an LLM call.
 - Generate VAPID keys with `npx web-push generate-vapid-keys`, copy them to `server/.env` using `server/.env.example` as a template, and keep the private key out of Git. Push subscriptions require HTTPS and browser permission; local development does not register the production service worker.
