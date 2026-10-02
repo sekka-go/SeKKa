@@ -290,6 +290,23 @@ button { line-height: 1.45; }
 }
 
 
+/* Tighter spacing on signed-in screens at every viewport size. */
+.workspace .page-content { padding-block: 2rem; }
+.workspace .page-heading { margin-bottom: 1.5rem; }
+.workspace .page-heading h1 { margin-block: .3rem; }
+.workspace .page-heading p { line-height: 1.55; }
+.workspace .topbar { padding-block: 1rem; }
+.workspace .surface { padding: 1rem; }
+.workspace .form-stack { gap: .8rem; margin-top: 1.25rem; }
+.workspace .metric-grid { gap: .65rem; margin: .75rem 0 1.5rem; }
+.workspace .booking-layout, .workspace .dashboard-grid { gap: 1rem; }
+.workspace .booking-aside, .workspace .dashboard-side { gap: .75rem; }
+.workspace .offer-card { gap: .75rem; }
+.workspace .soft-surface ul { gap: .4rem; margin-top: .75rem; }
+.workspace .admin-review, .workspace .admin-summary { margin-top: .75rem; }
+.workspace .admin-captain-row { padding-block: .75rem; }
+.workspace .notification-row { padding-block: .55rem; }
+
 /* Reduce unnecessary vertical scrolling inside signed-in workspaces only. */
 @media (max-width: 800px) {
   .workspace .page-content { padding-block: 1rem; }
