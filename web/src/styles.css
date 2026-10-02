@@ -560,3 +560,25 @@ button { line-height: 1.45; }
     padding-block: .35rem 0;
   }
 }
+
+
+/* Use the full mobile auth viewport and remove the unused region below the card. */
+@media (max-width: 560px) {
+  .auth-page {
+    min-height: 100svh;
+    padding-bottom: 0;
+  }
+  .auth-page-content {
+    flex: 1 0 auto;
+    min-height: calc(100svh - 3.75rem);
+    align-content: stretch;
+    place-items: stretch;
+    padding-block: .35rem 0;
+  }
+  .auth-page-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+  }
+}
