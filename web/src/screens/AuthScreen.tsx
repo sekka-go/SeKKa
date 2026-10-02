@@ -56,6 +56,7 @@ export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (sessio
         <p className="auth-switch">{mode === "login" ? "لسه جديد في سِكّة؟" : "عندك حساب بالفعل؟"} <a href={mode === "login" ? "/register" : "/login"}>{mode === "login" ? "أنشئ حسابك" : "سجّل الدخول"}</a></p>
       </div>
       <p className="auth-page-note">خطوتك الجاية تبدأ من هنا.</p>
+      <footer className="auth-page-footer">© سِكّة للتنقل المشترك</footer>
     </section>
   </main>;
 }
