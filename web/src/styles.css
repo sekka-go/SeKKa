@@ -412,7 +412,7 @@ button { line-height: 1.45; }
   }
   .landing-hero h1 {
     margin-block: 1rem;
-    font-size: clamp(2.55rem, 11.8vw, 3rem);
+    font-size: clamp(2.7rem, 11vw, 3rem);
     line-height: 1.25;
   }
   .landing-hero-copy > p {
