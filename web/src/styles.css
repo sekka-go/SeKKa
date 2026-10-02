@@ -191,6 +191,38 @@ button { line-height: 1.45; }
 .notification-button-row { padding: .8rem 0; border-bottom: 1px solid var(--line); }
 .notification-main-action { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; text-align: right; color: inherit; background: transparent; border: 0; }
 .notification-choice-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; padding: .5rem 0 0 3rem; }
+
+/* Keep public mobile pages aligned with Android's live viewport without disabling form scrolling. */
+@media (max-width: 800px) {
+  html:has(.landing-page),
+  html:has(.auth-page) {
+    overscroll-behavior-y: none;
+  }
+
+  .app-shell:has(.landing-page),
+  .app-shell:has(.auth-page),
+  .landing-page,
+  .auth-page {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+}
+
+@media (max-width: 560px) {
+  .auth-page {
+    padding-block-start: env(safe-area-inset-top, 0px);
+  }
+
+  .auth-page-content {
+    min-height: max(
+      0px,
+      calc(
+        100dvh - 3.75rem - env(safe-area-inset-top, 0px) -
+          max(.5rem, env(safe-area-inset-bottom, 0px))
+      )
+    );
+  }
+}
 .notification-choice-actions > span { color: var(--muted); font-size: .8rem; }
 
 
@@ -620,3 +652,4 @@ button { line-height: 1.45; }
     height: 100%;
   }
 }
+
