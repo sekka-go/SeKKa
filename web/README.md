@@ -1,32 +1,31 @@
-# React + TypeScript + Vite
+# SeKKa Web
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+واجهة SeKKa مبنية بـ React وTypeScript وVite. هذا المجلد يحتوي تطبيق الويب فقط؛ الـAPI والخدمات وقاعدة البيانات موجودة في `../server`.
 
-Currently, two official plugins are available:
+## تنظيم المصدر
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- `src/App.tsx`: حالة الجلسة، اتصال الخادم، ورسائل التنبيه العامة.
+- `src/screens/`: شاشات المصادقة، مساحة العمل، الراكب، الكابتن، والإدارة.
+- `src/components/`: عناصر الهوية ومكونات مساحة العمل المشتركة.
+- `src/lib/`: أدوات مستقلة للتواريخ، تنسيق القيم، وإشعارات Push.
+- `src/api.ts`: أنواع بيانات الواجهة، تخزين الجلسة، وعميل طلبات API.
+- `src/MapPicker.tsx`: اختيار المواقع وعرض المسارات على الخريطة.
 
-## React Compiler
+## التطوير والبناء
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+من مجلد المشروع:
 
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```powershell
+cd web
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+لإنشاء نسخة الإنتاج أو فحص أنواع TypeScript:
+
+```powershell
+npm run build
+npx tsc -b
+```
+
+تستخدم الواجهة مسارات API النسبية `/api`. يمررها Vite إلى الخادم المحلي حسب إعداد `vite.config.ts`.

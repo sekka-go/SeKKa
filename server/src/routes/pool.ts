@@ -319,6 +319,7 @@ export function createPoolRouter(db: DatabaseSync) {
   const router = Router();
   const rider = [requireAuth(db), requireRole(db, "rider")];
   const captain = [requireAuth(db), requireRole(db, "captain")];
+  const admin = [requireAuth(db), requireRole(db, "admin")];
 
   router.get("/pool/push/vapid-public-key", (_req, res) => {
     const publicKey = getWebPushPublicKey();
@@ -353,6 +354,45 @@ export function createPoolRouter(db: DatabaseSync) {
   router.get("/pool/categories", (_req, res) => {
     const categories = db.prepare("SELECT id,speed_tier,has_ac,seats,base_fee,rate_per_km,rate_per_min FROM pool_categories ORDER BY speed_tier,has_ac").all();
     res.json({ categories, minimum_seats: MIN_SEATS });
+  });
+
+  router.get("/admin/pool/overview", ...admin, (_req, res) => {
+    const groups = db.prepare("SELECT status,COUNT(*) AS count FROM pool_groups GROUP BY status")
+      .all() as unknown as { status: string; count: number }[];
+    const settlements = db.prepare(`SELECT COUNT(*) AS entries,
+      COALESCE(SUM(company_share_amount),0) AS company_due,
+      COALESCE(SUM(captain_share_amount),0) AS captains_due
+      FROM pool_ledger WHERE settlement_status='pending'`).get() as
+      { entries: number; company_due: number; captains_due: number };
+    const statusCounts = Object.fromEntries(groups.map((row) => [row.status, row.count]));
+    res.json({ overview: {
+      total_groups: groups.reduce((total, row) => total + row.count, 0),
+      waiting_groups: statusCounts.waiting ?? 0,
+      price_review_groups: statusCounts.price_review ?? 0,
+      needs_captain_groups: statusCounts.needs_captain ?? 0,
+      active_groups: statusCounts.active ?? 0,
+      pending_settlement_entries: settlements.entries,
+      company_due: Math.round(settlements.company_due * 100) / 100,
+      captains_due: Math.round(settlements.captains_due * 100) / 100,
+      settlement_status: "pending",
+      payment_enabled: false,
+    } });
+  });
+
+  router.get("/captain/pool/preferences", ...captain, (req, res) => {
+    const stats = db.prepare("SELECT search_radius_km,absences FROM pool_captain_stats WHERE captain_user_id=?")
+      .get(req.auth!.userId) as { search_radius_km: number; absences: number } | undefined;
+    const capabilities = db.prepare("SELECT has_ac,accepts_faster,accepts_saver FROM pool_captain_capabilities WHERE captain_user_id=?")
+      .get(req.auth!.userId) as { has_ac: number; accepts_faster: number; accepts_saver: number } | undefined;
+    res.json({
+      radius_km: stats?.search_radius_km ?? 4,
+      absences: stats?.absences ?? 0,
+      has_capabilities: Boolean(capabilities),
+      has_ac: capabilities ? Boolean(capabilities.has_ac) : true,
+      service_tiers: capabilities
+        ? [capabilities.accepts_faster ? "faster" : null, capabilities.accepts_saver ? "saver" : null].filter(Boolean)
+        : ["faster", "saver"],
+    });
   });
 
   router.post("/rider/pool/groups", ...rider, async (req, res) => {

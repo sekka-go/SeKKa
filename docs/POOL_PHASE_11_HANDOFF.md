@@ -44,5 +44,5 @@
 
 ## Remaining work
 
-- Automatic joining selects one compatible waiting group with an exact schedule match per incoming rider. Cross-schedule group merging and proactive background matching without a new rider request remain open.
+- Owner decision: matching runs when a new rider request arrives and only joins a waiting group with the same category, package, service dates, and departure times. Different schedules are not merged; no periodic group-to-group matching is required.
 - Push requires the operator to configure VAPID keys in `server/.env` or deployment secrets. SMS and actual escrow/payment transfers require separate providers and remain deferred.
