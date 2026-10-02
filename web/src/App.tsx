@@ -57,19 +57,18 @@ function readDates(value: string) { try { return JSON.parse(value) as string[]; 
 function pointLabel(point: MapPoint | null) {
   if (!point) return "لم يتم تحديد الموقع";
   if (point.label) return point.label;
-  if (point.placeId) return "عنوان محفوظ على Google Maps";
   return typeof point.lat === "number" && typeof point.lng === "number" ? `${point.lat.toFixed(5)}, ${point.lng.toFixed(5)}` : "لم يتم تحديد الموقع";
 }
-function memberPoint(lat: number | null, lng: number | null, placeId: string | null): MapPoint | null {
-  if (placeId) return { lat, lng, placeId };
-  return typeof lat === "number" && typeof lng === "number" ? { lat, lng } : null;
+function memberPoint(lat: number | null, lng: number | null): MapPoint | null {
+  return typeof lat === "number" && Number.isFinite(lat) && typeof lng === "number" && Number.isFinite(lng)
+    ? { lat, lng }
+    : null;
 }
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(() => getStoredSession());
   const [health, setHealth] = useState(false);
   const [healthError, setHealthError] = useState("");
-  const [serverMapsReady, setServerMapsReady] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
   const notify = useCallback((text: string, tone: Toast["tone"] = "info") => {
     setToast({ text, tone });
@@ -79,9 +78,6 @@ export default function App() {
   useEffect(() => {
     api<{ status: string; phase: number }>("/health").then(() => { setHealth(true); setHealthError(""); })
       .catch((error) => { setHealth(false); setHealthError(errorText(error)); });
-    api<{ maps?: { address_search_enabled?: boolean } }>("/config")
-      .then(({ maps }) => setServerMapsReady(maps?.address_search_enabled === true))
-      .catch(() => setServerMapsReady(false));
   }, []);
 
   useEffect(() => {
@@ -109,7 +105,7 @@ export default function App() {
   return <div className="app-shell" dir="rtl">
     {toast && <div className={`toast toast-${toast.tone}`} role="status">{toast.text}<button onClick={() => setToast(null)} aria-label="إغلاق">×</button></div>}
     {!health && <div className="connection-banner"><span className="connection-dot" />{healthError || "جاري الاتصال بالخادم…"}</div>}
-    {session ? <Workspace session={session} serverMapsReady={serverMapsReady} onSignOut={signOut} notify={notify} /> : <AuthScreen onSignedIn={onSignedIn} notify={notify} />}
+    {session ? <Workspace session={session} onSignOut={signOut} notify={notify} /> : <AuthScreen onSignedIn={onSignedIn} notify={notify} />}
   </div>;
 }
 
@@ -167,7 +163,7 @@ function AuthScreen({ onSignedIn, notify }: { onSignedIn: (session: Session) => 
 
 type NavKey = "home" | "booking" | "trips" | "notifications" | "account" | "offers" | "captainTrips" | "admin";
 
-function Workspace({ session, serverMapsReady, onSignOut, notify }: { session: Session; serverMapsReady: boolean; onSignOut: () => void; notify: (text: string, tone?: Toast["tone"]) => void }) {
+function Workspace({ session, onSignOut, notify }: { session: Session; onSignOut: () => void; notify: (text: string, tone?: Toast["tone"]) => void }) {
   const [section, setSection] = useState<NavKey>(session.user.role === "captain" ? "offers" : session.user.role === "admin" ? "admin" : "home");
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [navOpen, setNavOpen] = useState(false);
@@ -210,7 +206,7 @@ function Workspace({ session, serverMapsReady, onSignOut, notify }: { session: S
     <main className="main-area">
       <header className="topbar"><button className="mobile-menu" onClick={() => setNavOpen(true)} aria-label="فتح القائمة">☰</button><div className="breadcrumbs"><span>سِكّة</span><b>/</b><strong>{title}</strong></div><div className="topbar-actions"><button className="icon-button notification-button" onClick={() => setSection("notifications")} aria-label="الإشعارات">♧{unread > 0 && <i />}</button><span className="topbar-divider" /><span className="topbar-user">{session.user.full_name}</span><span className="avatar avatar-small">{session.user.full_name.slice(0, 1)}</span><button className="text-action sign-out-action" onClick={onSignOut}>خروج</button></div></header>
       <div className="page-content"><div className="page-heading"><div><span className="eyebrow">{new Intl.DateTimeFormat("ar-EG", { weekday: "long", day: "numeric", month: "long" }).format(new Date())}</span><h1>{title}، {session.user.full_name.split(" ")[0]}</h1><p>{subtitle}</p></div><div className="heading-mark">{section === "booking" ? "✦" : section === "offers" ? "⌖" : "س"}</div></div>
-        {session.user.role === "rider" && <RiderWorkspace session={session} serverMapsReady={serverMapsReady} section={section} setSection={setSection} notifications={notifications} refreshNotifications={refreshNotifications} notify={notify} />}
+        {session.user.role === "rider" && <RiderWorkspace session={session} section={section} setSection={setSection} notifications={notifications} refreshNotifications={refreshNotifications} notify={notify} />}
         {session.user.role === "captain" && <CaptainWorkspace session={session} section={section} notifications={notifications} refreshNotifications={refreshNotifications} notify={notify} />}
         {session.user.role === "admin" && <AdminWorkspace session={session} section={section} notifications={notifications} refreshNotifications={refreshNotifications} notify={notify} />}
       </div>
@@ -218,8 +214,8 @@ function Workspace({ session, serverMapsReady, onSignOut, notify }: { session: S
   </div>;
 }
 
-function RiderWorkspace({ session, serverMapsReady, section, setSection, notifications, refreshNotifications, notify }: {
-  session: Session; serverMapsReady: boolean; section: NavKey; setSection: (section: NavKey) => void; notifications: Notification[];
+function RiderWorkspace({ session, section, setSection, notifications, refreshNotifications, notify }: {
+  session: Session; section: NavKey; setSection: (section: NavKey) => void; notifications: Notification[];
   refreshNotifications: () => Promise<void>; notify: (text: string, tone?: Toast["tone"]) => void;
 }) {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -239,7 +235,6 @@ function RiderWorkspace({ session, serverMapsReady, section, setSection, notific
   const [inviteCode, setInviteCode] = useState("");
   const selectedCategory = categories.find((item) => item.id === categoryId) ?? null;
   const selected = groups.find((view) => view.group.id === selectedGroup) ?? null;
-  const mapSearchConfigured = serverMapsReady && Boolean(import.meta.env.VITE_GOOGLE_MAPS_EMBED_KEY);
 
   const refreshGroups = useCallback(async () => {
     const result = await api<{ groups: GroupView[] }>("/rider/pool/groups", { token: session.token });
@@ -265,7 +260,7 @@ function RiderWorkspace({ session, serverMapsReady, section, setSection, notific
 
   const createGroup = async (event: FormEvent) => {
     event.preventDefault();
-    if (!pickup || !dropoff) { notify("حدد عنوان الركوب وعنوان النزول من الخريطة أو البحث.", "error"); return; }
+    if (!pickup || !dropoff || pickup.lat === null || pickup.lng === null || dropoff.lat === null || dropoff.lng === null) { notify("حدد نقطتي الركوب والنزول بالنقر على الخريطة أولًا.", "error"); return; }
     const expected = packageType === "daily" ? 1 : packageType === "weekly" ? 5 : 22;
     if (dates.length !== expected) { notify(`اختار ${expected} ${packageType === "daily" ? "يوم" : "يوم خدمة"} بالضبط.`, "error"); return; }
     setSubmitting(true);
@@ -273,8 +268,8 @@ function RiderWorkspace({ session, serverMapsReady, section, setSection, notific
       await api("/rider/pool/groups", { method: "POST", token: session.token, body: {
         category_id: categoryId, package_type: packageType, service_dates: dates,
         morning_departure: morning, return_departure: returnTime,
-        pickup_lat: pickup.lat, pickup_lng: pickup.lng, pickup_place_id: pickup.placeId ?? null, pickup_search_id: pickup.searchId ?? null, pickup_label: pickup.label ?? "",
-        dropoff_lat: dropoff.lat, dropoff_lng: dropoff.lng, dropoff_place_id: dropoff.placeId ?? null, dropoff_search_id: dropoff.searchId ?? null, dropoff_label: dropoff.label ?? "",
+        pickup_lat: pickup.lat, pickup_lng: pickup.lng,
+        dropoff_lat: dropoff.lat, dropoff_lng: dropoff.lng,
       } });
       await refreshGroups(); await refreshNotifications();
       setBookingMode("new"); setSection("trips"); setPickup(null); setDropoff(null);
@@ -285,11 +280,11 @@ function RiderWorkspace({ session, serverMapsReady, section, setSection, notific
 
   const joinGroup = async (event: FormEvent) => {
     event.preventDefault();
-    if (!pickup || !dropoff) { notify("حدد عنوان الركوب وعنوان النزول من الخريطة أو البحث.", "error"); return; }
+    if (!pickup || !dropoff || pickup.lat === null || pickup.lng === null || dropoff.lat === null || dropoff.lng === null) { notify("حدد نقطتي الركوب والنزول بالنقر على الخريطة أولًا.", "error"); return; }
     setSubmitting(true);
     try {
       const result = await api<{ group: { id: number } }>(`/rider/pool/groups/${Number(inviteCode)}/join`, { method: "POST", token: session.token,
-        body: { pickup_lat: pickup.lat, pickup_lng: pickup.lng, pickup_place_id: pickup.placeId ?? null, pickup_search_id: pickup.searchId ?? null, pickup_label: pickup.label ?? "", dropoff_lat: dropoff.lat, dropoff_lng: dropoff.lng, dropoff_place_id: dropoff.placeId ?? null, dropoff_search_id: dropoff.searchId ?? null, dropoff_label: dropoff.label ?? "" } });
+        body: { pickup_lat: pickup.lat, pickup_lng: pickup.lng, dropoff_lat: dropoff.lat, dropoff_lng: dropoff.lng } });
       await refreshGroups(); setSelectedGroup(result.group.id); setSection("trips"); setPickup(null); setDropoff(null); setInviteCode("");
       notify("انضممت للمجموعة بنجاح.", "success");
     } catch (error) { notify(errorText(error), "error"); }
@@ -329,9 +324,9 @@ function RiderWorkspace({ session, serverMapsReady, section, setSection, notific
           <div className="time-row"><label>وقت الذهاب<input type="time" value={morning} onChange={(e) => setMorning(e.target.value)} required /></label><label>وقت العودة<input type="time" value={returnTime} onChange={(e) => setReturnTime(e.target.value)} required /></label></div>
         </> : <><label>رقم المجموعة<input type="number" min="1" value={inviteCode} onChange={(e) => setInviteCode(e.target.value)} placeholder="مثال: 124" required /></label><div className="info-note">لازم نقط الركوب والنزول تكون في حدود ٣ كم من مسار المجموعة.</div></>}
         <div className="map-points-readout"><div><i className="point-dot pickup-dot" /><span><strong>نقطة الركوب</strong><small>{pointLabel(pickup)}</small></span><button type="button" className={pickMode === "pickup" ? "text-action active" : "text-action"} onClick={() => setPickMode("pickup")}>حدد</button></div><div><i className="point-dot dropoff-dot" /><span><strong>نقطة النزول</strong><small>{pointLabel(dropoff)}</small></span><button type="button" className={pickMode === "dropoff" ? "text-action active" : "text-action"} onClick={() => setPickMode("dropoff")}>حدد</button></div></div>
-        <p className="map-instruction">{mapSearchConfigured ? "اكتب العنوان في البحث ثم اختر النتيجة:" : "اضغط على الخريطة لتحديد:"} <b>{pickMode === "pickup" ? "نقطة الركوب" : "نقطة النزول"}</b></p>
-        {!mapSearchConfigured && <p className="info-note">بحث العناوين غير متاح حاليًا؛ اختر الموقع بالضغط على الخريطة.</p>}
-        <MapPicker pickup={pickup} dropoff={dropoff} mode={pickMode} token={session.token} addressSearchEnabled={mapSearchConfigured} onPick={(type, point) => type === "pickup" ? setPickup(point) : setDropoff(point)} />
+        <p className="map-instruction">اضغط على الخريطة لاختيار الموقع، ثم حدد نوع النقطة: <b>{pickMode === "pickup" ? "ركوب" : "نزول"}</b></p>
+        <p className="info-note">اختيار الموقع بالنقر على خريطة OpenStreetMap؛ لا يوجد بحث عناوين مدفوع.</p>
+        <MapPicker pickup={pickup} dropoff={dropoff} mode={pickMode} onPick={(type, point) => type === "pickup" ? setPickup(point) : setDropoff(point)} />
         <button className="button button-primary button-wide" disabled={submitting}>{submitting ? "جاري الحفظ…" : bookingMode === "new" ? "تأكيد المشوار" : "الانضمام للمجموعة"}<span>←</span></button>
         {bookingMode === "new" && <p className="form-footnote">مفيش دفع دلوقتي؛ المبلغ هيظهر بعد اكتمال الحد الأدنى وتأكيد المسار.</p>}
       </form>
@@ -390,8 +385,8 @@ function GroupDetail({ view, categories, busy, action, notify, onNew }: {
   const firstFutureDate = trips.find((trip) => trip.service_date >= todayInCairo() && trip.status !== "completed")?.service_date;
   const routeMembers = activeMembers.length ? activeMembers : members;
   const routePlaces: MapPoint[] = [
-    ...routeMembers.map((member) => memberPoint(member.pickup_lat, member.pickup_lng, member.pickup_place_id)).filter((point): point is MapPoint => point !== null),
-    ...routeMembers.map((member) => memberPoint(member.dropoff_lat, member.dropoff_lng, member.dropoff_place_id)).filter((point): point is MapPoint => point !== null),
+    ...routeMembers.map((member, index) => ({ lat: member.pickup_lat, lng: member.pickup_lng, kind: "pickup" as const, sequence: index + 1, label: `ركوب · محطة ${index + 1}` })),
+    ...routeMembers.map((member, index) => ({ lat: member.dropoff_lat, lng: member.dropoff_lng, kind: "dropoff" as const, sequence: routeMembers.length + index + 1, label: `نزول · محطة ${index + 1}` })),
   ];
 
   return <div className="group-detail-layout"><div className="group-detail-main">
@@ -399,7 +394,7 @@ function GroupDetail({ view, categories, busy, action, notify, onNew }: {
       {group.status === "price_review" && <div className="warning-panel"><span>!</span><div><strong>في تعديل على السعر</strong><p>راجع السعر الجديد واختار تكمل أو تخرج من المجموعة بدون غرامة.</p></div><div className="warning-actions"><button className="button button-primary button-small" disabled={busy} onClick={() => action(group.id, "price-decision", { action: "accept" })}>موافق</button><button className="button button-quiet button-small" disabled={busy} onClick={() => action(group.id, "price-decision", { action: "decline" })}>رفض</button></div></div>}
       {group.status === "waiting" && <div className="info-note"><strong>المجموعة لسه بتكتمل.</strong> Faster يحتاج راكبين وSaver يحتاج ٣ ركاب. بعد ٧٢ ساعة هيوصلك إشعار بالاختيارات المتاحة.</div>}
       {group.status === "needs_captain" && <div className="info-note"><strong>اكتمل عدد الركاب.</strong> بندور على كابتن قريب للمسار، وهيوصلك تحديث أول ما يتحدد.</div>}
-      <div className="detail-route-map"><div className="section-title-row"><div><h3>خط السير</h3><p>ذهاب وعودة · الخريطة تعرض الطريق الفعلي</p></div><span className="map-distance">{group.route_duration_min ?? "—"} د</span></div><MapPicker pickup={members[0] ? memberPoint(members[0].pickup_lat, members[0].pickup_lng, members[0].pickup_place_id) : null} dropoff={members[0] ? memberPoint(members[0].dropoff_lat, members[0].dropoff_lng, members[0].dropoff_place_id) : null} mode="pickup" route={group.route_geometry} routePlaces={routePlaces} readOnly onPick={() => undefined} /></div>
+      <div className="detail-route-map"><div className="section-title-row"><div><h3>خط السير</h3><p>ذهاب وعودة · الخريطة تعرض الطريق الفعلي</p></div><span className="map-distance">{group.route_duration_min ?? "—"} د</span></div><MapPicker pickup={members[0] ? memberPoint(members[0].pickup_lat, members[0].pickup_lng) : null} dropoff={members[0] ? memberPoint(members[0].dropoff_lat, members[0].dropoff_lng) : null} mode="pickup" route={group.route_geometry} routePlaces={routePlaces} readOnly onPick={() => undefined} /></div>
     </section>
     <section className="surface detail-section"><div className="section-title-row"><div><h3>الركاب والمقاعد</h3><p>{seats} مقاعد من {category?.seats ?? "—"} محجوزة</p></div><span className="section-count">{activeMembers.length}</span></div><div className="rider-list">{members.map((member, index) => <div key={member.id} className={`rider-row ${member.status !== "active" ? "rider-muted" : ""}`}><span className="rider-sequence">{String(index + 1).padStart(2, "0")}</span><div><strong>{index === 0 ? "أنت" : `راكب ${index + 1}`}</strong><small>{member.seats_reserved} مقعد · {member.status === "active" ? "مؤكد" : member.status === "awaiting_confirmation" ? "بانتظار التأكيد" : "غادر المجموعة"}</small></div><span className="rider-state">{member.price_decision === "pending" && group.status === "price_review" ? "مطلوب ردك" : "●"}</span></div>)}</div></section>
     <section className="surface detail-section"><div className="section-title-row"><div><h3>أيام الخدمة</h3><p>الوقت المحلي للقاهرة</p></div><span className="section-count">{dates.length}</span></div><div className="service-date-list">{dates.map((date) => <div key={date} className="service-date-row"><span className="calendar-badge">{new Date(`${date}T12:00:00Z`).getUTCDate()}</span><div><strong>{formatDate(date)}</strong><small>{group.morning_departure} ذهاب · {group.return_departure} عودة</small></div><span className="date-price">{money(group.seat_day_fare)}</span></div>)}</div></section>
@@ -563,12 +558,12 @@ function CaptainWorkspace({ session, section, notifications, refreshNotification
     </section><AccountPanel session={session} notify={notify} /></div>;
   if (section === "notifications") return <NotificationsPanel items={notifications} token={session.token} onRefresh={refreshNotifications} notify={notify} />;
 
-  if (section === "captainTrips") return <div className="trips-page"><div className="section-toolbar"><div><h2>المسارات المسندة إليك</h2><p>تابع نقاط التوقف بالترتيب وسجّل الوصول</p></div><button className="button button-outline button-small" onClick={() => void loadAssignedTrips()}>تحديث ↻</button></div>{selected ? <section className="surface captain-trip-detail"><div className="detail-hero-top"><span className="status-chip status-assigned">{statusLabel(selected.trip.status)}</span><strong>مجموعة #{selected.trip.group_id} · {formatDate(selected.trip.service_date)}</strong><span>{selected.trip.direction === "outbound" ? "ذهاب" : "عودة"}</span></div><MapPicker pickup={null} dropoff={null} mode="pickup" route={selected.route} routePlaces={selected.stops.map((stop) => ({ lat: stop.lat, lng: stop.lng, placeId: stop.place_id ?? undefined }))} readOnly onPick={() => undefined} /><div className="stop-list">{selected.stops.map((stop) => <div className="stop-row" key={stop.id}><span className={stop.stop_type === "pickup" ? "point-dot pickup-dot" : "point-dot dropoff-dot"} /><div><strong>{stop.stop_type === "pickup" ? "ركوب راكب" : "نزول راكب"} · محطة {stop.sequence}</strong><small>الموقع ظاهر على خريطة الرحلة بالأعلى</small></div>{stop.reached_at ? <span className="stop-done">✓ تم</span> : <button className="button button-outline button-small" onClick={async () => { try { await api(`/captain/pool/trips/${selected.trip.id}/stops/${stop.id}/reached`, { method: "POST", token: session.token }); await loadAssignedTrips(); notify("تم تسجيل الوصول.", "success"); } catch (error) { notify(errorText(error), "error"); } }}>وصلت</button>}</div>)}</div><div className="trip-actions"><button className="button button-primary button-small" onClick={async () => { try { await api(`/captain/pool/trips/${selected.trip.id}/complete`, { method: "POST", token: session.token }); notify("تم إغلاق الرحلة.", "success"); setSelectedTrip(null); await loadAssignedTrips(); } catch (error) { notify(errorText(error), "error"); } }}>إنهاء الرحلة</button><button className="button button-quiet button-small" onClick={async () => { try { await api(`/captain/pool/trips/${selected.trip.id}/report-absence`, { method: "POST", token: session.token }); notify("بدأ البحث عن كابتن بديل لهذا اليوم.", "info"); setSelectedTrip(null); await loadAssignedTrips(); } catch (error) { notify(errorText(error), "error"); } }}>إبلاغ عن عدم التمكن</button></div></section>
+  if (section === "captainTrips") return <div className="trips-page"><div className="section-toolbar"><div><h2>المسارات المسندة إليك</h2><p>تابع نقاط التوقف بالترتيب وسجّل الوصول</p></div><button className="button button-outline button-small" onClick={() => void loadAssignedTrips()}>تحديث ↻</button></div>{selected ? <section className="surface captain-trip-detail"><div className="detail-hero-top"><span className="status-chip status-assigned">{statusLabel(selected.trip.status)}</span><strong>مجموعة #{selected.trip.group_id} · {formatDate(selected.trip.service_date)}</strong><span>{selected.trip.direction === "outbound" ? "ذهاب" : "عودة"}</span></div><MapPicker pickup={null} dropoff={null} mode="pickup" route={selected.route} routePlaces={selected.stops.map((stop) => ({ lat: stop.lat, lng: stop.lng, kind: stop.stop_type, sequence: stop.sequence, label: `${stop.stop_type === "pickup" ? "ركوب" : "نزول"} · محطة ${stop.sequence}` }))} direction={selected.trip.direction} readOnly onPick={() => undefined} /><div className="stop-list">{selected.stops.map((stop) => <div className="stop-row" key={stop.id}><span className={stop.stop_type === "pickup" ? "point-dot pickup-dot" : "point-dot dropoff-dot"} /><div><strong>{stop.stop_type === "pickup" ? "ركوب راكب" : "نزول راكب"} · محطة {stop.sequence}</strong><small>الموقع ظاهر على خريطة الرحلة بالأعلى</small></div>{stop.reached_at ? <span className="stop-done">✓ تم</span> : <button className="button button-outline button-small" onClick={async () => { try { await api(`/captain/pool/trips/${selected.trip.id}/stops/${stop.id}/reached`, { method: "POST", token: session.token }); await loadAssignedTrips(); notify("تم تسجيل الوصول.", "success"); } catch (error) { notify(errorText(error), "error"); } }}>وصلت</button>}</div>)}</div><div className="trip-actions"><button className="button button-primary button-small" onClick={async () => { try { await api(`/captain/pool/trips/${selected.trip.id}/complete`, { method: "POST", token: session.token }); notify("تم إغلاق الرحلة.", "success"); setSelectedTrip(null); await loadAssignedTrips(); } catch (error) { notify(errorText(error), "error"); } }}>إنهاء الرحلة</button><button className="button button-quiet button-small" onClick={async () => { try { await api(`/captain/pool/trips/${selected.trip.id}/report-absence`, { method: "POST", token: session.token }); notify("بدأ البحث عن كابتن بديل لهذا اليوم.", "info"); setSelectedTrip(null); await loadAssignedTrips(); } catch (error) { notify(errorText(error), "error"); } }}>إبلاغ عن عدم التمكن</button></div></section>
         : myTrips.length ? <div className="offer-grid">{myTrips.map(({ trip }) => <button className="surface offer-card" key={trip.id} onClick={() => setSelectedTrip(trip.id)}><span className="status-chip status-assigned">{statusLabel(trip.status)}</span><h3>مجموعة #{trip.group_id}</h3><p>{formatDate(trip.service_date)} · {trip.direction === "outbound" ? "ذهاب" : "عودة"} · {trip.departure_at.slice(11, 16)}</p><span className="text-action">عرض نقاط التوقف ←</span></button>)}</div> : <EmptyState icon="↗" title="لسه مفيش مسارات مسندة" text="اقبل مسارًا من قائمة المسارات المتاحة وسيظهر هنا." />}</div>;
 
   if (!profile || profile.verification_status !== "approved") return <div className="approval-state surface"><span className="approval-icon">⌖</span><span className="eyebrow">خطوة قبل استقبال المشاوير</span><h2>{profile ? "ملفك قيد التوثيق" : "أكمل ملف الكابتن"}</h2><p>{profile ? "بمجرد مراجعة بيانات السيارة من الإدارة، هتقدر تحدد موقعك وتستقبل المسارات القريبة." : "أضف بيانات مركبتك من صفحة حسابي ثم تابع حالة التوثيق."}</p><button className="button button-primary button-small" onClick={() => { window.dispatchEvent(new CustomEvent("sekka:navigate", { detail: "account" })); }}>فتح حسابي ←</button></div>;
   const loadOffers = async () => { setOfferError(""); try { const result = await api<{ offers: CaptainOffer[] }>("/captain/pool/offers", { token: session.token }); setOffers(result.offers); } catch (error) { setOfferError(errorText(error)); } };
-  return <div className="captain-offers-page"><div className="offer-toolbar"><div><div className="online-pill"><i /> جاهز لاستقبال المسارات</div><p>موقعك الحالي يحدد المسارات القريبة منك.</p></div><div className="offer-actions"><button className="button button-outline button-small" onClick={() => void updateLocation()}>⌖ تحديث الموقع</button><button className="button button-primary button-small" onClick={() => void loadOffers()}>تحديث المسارات ↻</button></div></div>{offerError && <div className="inline-error">{offerError}</div>}{offers.length ? <div className="offer-grid">{offers.map((offer) => <article className="surface offer-card" key={offer.trip.id}><div className="offer-card-top"><span className="status-chip status-needs_captain">مسار متاح</span><span>{formatDate(offer.trip.service_date)}</span></div><h3>{categoryName({ id: offer.category_id, speed_tier: offer.category_id.includes("saver") ? "saver" : "faster", has_ac: offer.category_id.includes("ac") ? 1 : 0, seats: offer.category_id.includes("saver") ? 4 : 3, base_fee: 0, rate_per_km: 0, rate_per_min: 0 })}</h3><div className="offer-meta"><span>↔ {offer.route_distance_km ?? "—"} كم</span><span>◷ {offer.trip.departure_at.slice(11, 16)}</span><span>سعر المقعد {money(offer.seat_day_fare)}</span></div><MapPicker pickup={null} dropoff={null} mode="pickup" route={offer.route_geometry} onPick={() => undefined} /><button className="button button-primary button-wide" disabled={busy} onClick={() => void acceptOffer(offer)}>{busy ? "جاري القبول…" : "قبول المسار"}<span>←</span></button></article>)}</div> : <EmptyState icon="⌖" title="مفيش مسارات قريبة دلوقتي" text="حدّث موقعك ونطاق البحث، وهنعرض المسارات المطابقة لسيارتك هنا." action="تحديث المسارات" onAction={() => void loadOffers()} />}</div>;
+  return <div className="captain-offers-page"><div className="offer-toolbar"><div><div className="online-pill"><i /> جاهز لاستقبال المسارات</div><p>موقعك الحالي يحدد المسارات القريبة منك.</p></div><div className="offer-actions"><button className="button button-outline button-small" onClick={() => void updateLocation()}>⌖ تحديث الموقع</button><button className="button button-primary button-small" onClick={() => void loadOffers()}>تحديث المسارات ↻</button></div></div>{offerError && <div className="inline-error">{offerError}</div>}{offers.length ? <div className="offer-grid">{offers.map((offer) => <article className="surface offer-card" key={offer.trip.id}><div className="offer-card-top"><span className="status-chip status-needs_captain">مسار متاح</span><span>{formatDate(offer.trip.service_date)}</span></div><h3>{categoryName({ id: offer.category_id, speed_tier: offer.category_id.includes("saver") ? "saver" : "faster", has_ac: offer.category_id.includes("ac") ? 1 : 0, seats: offer.category_id.includes("saver") ? 4 : 3, base_fee: 0, rate_per_km: 0, rate_per_min: 0 })}</h3><div className="offer-meta"><span>↔ {offer.route_distance_km ?? "—"} كم</span><span>◷ {offer.trip.departure_at.slice(11, 16)}</span><span>سعر المقعد {money(offer.seat_day_fare)}</span></div><MapPicker pickup={null} dropoff={null} mode="pickup" route={offer.route_geometry} routePlaces={(offer.trip.stops ?? []).map((stop) => ({ lat: stop.lat, lng: stop.lng, kind: stop.stop_type, sequence: stop.sequence, label: `${stop.stop_type === "pickup" ? "ركوب" : "نزول"} · محطة ${stop.sequence}` }))} direction={offer.trip.direction} onPick={() => undefined} /><button className="button button-primary button-wide" disabled={busy} onClick={() => void acceptOffer(offer)}>{busy ? "جاري القبول…" : "قبول المسار"}<span>←</span></button></article>)}</div> : <EmptyState icon="⌖" title="مفيش مسارات قريبة دلوقتي" text="حدّث موقعك ونطاق البحث، وهنعرض المسارات المطابقة لسيارتك هنا." action="تحديث المسارات" onAction={() => void loadOffers()} />}</div>;
 }
 
 function AdminWorkspace({ session, section, notifications, refreshNotifications, notify }: {

@@ -1,0 +1,33 @@
+name: Supabase routing checks
+
+on:
+  pull_request:
+    paths:
+      - "supabase/functions/sekka-api/**"
+      - ".github/workflows/sekka-routing.yml"
+  push:
+    branches:
+      - feature/google-maps-address-search
+    paths:
+      - "supabase/functions/sekka-api/**"
+      - ".github/workflows/sekka-routing.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  routing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Format routing module and tests
+        run: deno fmt --check supabase/functions/sekka-api/routing.ts supabase/functions/sekka-api/routing_test.ts
+      - name: Lint routing module and tests
+        run: deno lint supabase/functions/sekka-api/routing.ts supabase/functions/sekka-api/routing_test.ts
+      - name: Test routing validation and summaries
+        run: deno test supabase/functions/sekka-api/routing_test.ts
+      - name: Type-check the Supabase Edge Function
+        run: deno check supabase/functions/sekka-api/index.ts

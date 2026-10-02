@@ -5,7 +5,19 @@ export interface Category {
   base_fee: number; rate_per_km: number; rate_per_min: number;
 }
 export interface RouteLine { type: "LineString"; coordinates: [number, number][] }
-export interface RouteGeometry { outbound?: RouteLine; return?: RouteLine; provider?: "google" | "openstreetmap" }
+export interface RouteSegment {
+  from_stop_sequence: number;
+  to_stop_sequence: number;
+  distance_km: number;
+  duration_min: number;
+}
+export interface RouteGeometry {
+  outbound?: RouteLine;
+  return?: RouteLine;
+  outbound_segments?: RouteSegment[];
+  return_segments?: RouteSegment[];
+  provider?: "osrm" | "osrm_demo" | "openstreetmap" | "google";
+}
 export interface PoolTrip {
   id: number; service_date: string; direction: "outbound" | "return"; departure_at: string;
   estimated_arrival_at: string | null; captain_user_id: number | null; status: string; group_id?: number;
