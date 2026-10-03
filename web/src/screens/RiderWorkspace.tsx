@@ -63,7 +63,7 @@ export default function RiderWorkspace({ session, section, setSection, notificat
 
   const createGroup = async (event: FormEvent) => {
     event.preventDefault();
-    if (!pickup || !dropoff) { notify("حدد نقطة الركوب ونقطة النزول على الخريطة.", "error"); return; }
+    if (!pickup || !dropoff) { notify("اختار نقطة الركوب والنزول بالدبوس أو البحث أو الخريطة.", "error"); return; }
     if (!isInsideGreaterCairo(pickup.lat!, pickup.lng!) || !isInsideGreaterCairo(dropoff.lat!, dropoff.lng!)) { notify("المشاوير متاحة داخل القاهرة الكبرى فقط.", "error"); return; }
     const expected = packageType === "daily" ? 1 : packageType === "weekly" ? 5 : 22;
     if (dates.length !== expected) { notify(`اختار ${expected} ${packageType === "daily" ? "يوم" : "يوم خدمة"} بالضبط.`, "error"); return; }
@@ -83,7 +83,7 @@ export default function RiderWorkspace({ session, section, setSection, notificat
 
   const joinGroup = async (event: FormEvent) => {
     event.preventDefault();
-    if (!pickup || !dropoff) { notify("حدد نقطتي الركوب والنزول على الخريطة.", "error"); return; }
+    if (!pickup || !dropoff) { notify("اختار نقطتي الركوب والنزول بالدبوس أو البحث أو الخريطة.", "error"); return; }
     if (!isInsideGreaterCairo(pickup.lat!, pickup.lng!) || !isInsideGreaterCairo(dropoff.lat!, dropoff.lng!)) { notify("المشاوير متاحة داخل القاهرة الكبرى فقط.", "error"); return; }
     setSubmitting(true);
     try {
