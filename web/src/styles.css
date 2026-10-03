@@ -1303,3 +1303,90 @@ button { line-height: 1.45; }
   .workspace .category-select-option b { font-size: .74rem; }
   .workspace .saved-place-tools { padding: .65rem; }
 }
+
+
+/* Rider booking is a short two-step flow: route first, then schedule and price. */
+.workspace .booking-stepper {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  padding: .75rem .85rem;
+  background: rgba(255, 210, 31, .035);
+  border: 1px solid var(--line);
+  border-radius: .8rem;
+}
+.workspace .booking-stepper > i {
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+.workspace .booking-stepper > i.complete { background: var(--yellow); }
+.workspace .booking-step {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  color: var(--muted);
+  font-size: .78rem;
+  white-space: nowrap;
+}
+.workspace .booking-step > span {
+  display: grid;
+  flex: 0 0 1.55rem;
+  place-items: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  color: var(--muted);
+  background: rgba(0, 0, 0, .15);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  font-size: .72rem;
+}
+.workspace .booking-step.active { color: var(--ink); }
+.workspace .booking-step.active > span,
+.workspace .booking-step.complete > span {
+  color: #201b09;
+  background: var(--yellow);
+  border-color: var(--yellow);
+  font-weight: 800;
+}
+.workspace .booking-step.complete { color: var(--yellow); }
+.workspace .booking-step-actions {
+  display: grid;
+  grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+  gap: .6rem;
+}
+.workspace .booking-step-actions .button { min-height: 3.1rem; }
+.workspace .category-heading-actions { display: flex; align-items: center; gap: .5rem; }
+.workspace .price-info-trigger {
+  display: grid;
+  flex: 0 0 1.7rem;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  padding: 0;
+  color: var(--cyan);
+  background: rgba(158, 232, 230, .08);
+  border: 1px solid rgba(158, 232, 230, .45);
+  border-radius: 50%;
+  font-size: .82rem;
+  font-weight: 800;
+}
+.workspace .price-info-trigger:hover,
+.workspace .price-info-trigger[aria-expanded="true"] {
+  color: #201b09;
+  background: var(--cyan);
+}
+.workspace .price-info-popover {
+  padding: .7rem .8rem;
+  color: var(--muted);
+  background: rgba(158, 232, 230, .07);
+  border-right: 3px solid var(--cyan);
+  border-radius: .4rem;
+  font-size: .82rem;
+  line-height: 1.65;
+}
+@media (max-width: 400px) {
+  .workspace .booking-stepper { gap: .45rem; padding: .65rem; }
+  .workspace .booking-step { gap: .3rem; font-size: .7rem; }
+  .workspace .booking-step-actions { grid-template-columns: 1fr; }
+}
