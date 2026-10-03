@@ -345,15 +345,41 @@ button { line-height: 1.45; }
 .landing-primary-cta { min-height: 3.4rem; padding-inline: 1.5rem; }
 .landing-trust { margin-top: 1.4rem; }
 .landing-route-card { display: grid; place-items: center; width: min(100%, 23rem); aspect-ratio: 1; height: auto; padding: 1rem; overflow: hidden; border-radius: 50%; background: radial-gradient(circle, rgba(255,210,31,.13), rgba(36,32,20,.78) 58%, rgba(23,19,9,.8)); }
-.landing-route-orbit { position: absolute; inset: 12%; border: 1px solid rgba(255,210,31,.17); border-radius: 50%; transform: rotate(-28deg) scaleY(.65); }
-.landing-route-map { position: absolute; inset: 15%; width: auto; height: auto; margin: 0; }
-.landing-route-line { top: 50%; right: 15%; left: 15%; border-color: rgba(243,236,217,.45); transform: rotate(-38deg); }
+.landing-route-orbit { position: absolute; inset: 12%; border: 1px solid rgba(255,210,31,.17); border-radius: 50%; transform: rotate(-28deg) scaleY(.65); animation: landing-orbit-turn 36s linear infinite; }
+.landing-route-map { position: absolute; inset: 15%; width: auto; height: auto; margin: 0; animation: landing-route-drift 4.8s ease-in-out infinite; }
+.landing-route-line { top: 50%; right: 15%; left: 15%; height: 2px; border: 0; background: repeating-linear-gradient(90deg, rgba(243,236,217,.5) 0 7px, transparent 7px 12px); transform: rotate(-38deg); animation: landing-route-flow 1.4s linear infinite; }
 .landing-route-point { position: absolute; width: 2.8rem; height: 2.8rem; border-width: .35rem; }
-.landing-route-start { top: 19%; right: 16%; }
-.landing-route-end { bottom: 18%; left: 16%; }
-.landing-route-spark { position: absolute; color: var(--yellow); }
+.landing-route-start { top: 19%; right: 16%; animation: landing-point-pulse 2.8s ease-in-out infinite; }
+.landing-route-end { bottom: 18%; left: 16%; animation: landing-point-pulse 2.8s 1.4s ease-in-out infinite; }
+.landing-route-spark { position: absolute; color: var(--yellow); animation: landing-spark-twinkle 2.4s ease-in-out infinite; }
 .landing-route-spark-one { top: 24%; left: 24%; font-size: 1.2rem; }
-.landing-route-spark-two { right: 22%; bottom: 22%; font-size: .8rem; opacity: .7; }
+.landing-route-spark-two { right: 22%; bottom: 22%; font-size: .8rem; opacity: .7; animation-delay: 1.2s; }
+@keyframes landing-orbit-turn {
+  from { transform: rotate(-28deg) scaleY(.65); }
+  to { transform: rotate(332deg) scaleY(.65); }
+}
+@keyframes landing-route-drift {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+@keyframes landing-route-flow {
+  to { background-position: 12px 0; }
+}
+@keyframes landing-point-pulse {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.1); filter: brightness(1.18); }
+}
+@keyframes landing-spark-twinkle {
+  0%, 100% { transform: rotate(-8deg) scale(.85); opacity: .65; }
+  50% { transform: rotate(8deg) scale(1.2); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-route-orbit,
+  .landing-route-map,
+  .landing-route-line,
+  .landing-route-point,
+  .landing-route-spark { animation: none; }
+}
 .landing-footer { width: 100%; justify-content: center; margin-top: auto; }
 @media (max-width: 800px) {
   .landing-header { padding-block: 1rem; }
@@ -652,4 +678,5 @@ button { line-height: 1.45; }
     height: 100%;
   }
 }
+
 
