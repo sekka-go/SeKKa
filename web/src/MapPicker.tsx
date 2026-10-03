@@ -168,9 +168,24 @@ export default function MapPicker({
         iconSize: [36, 42],
         iconAnchor: [18, 38],
       });
-      L.marker([point.lat, point.lng], { icon, keyboard: true })
-        .bindTooltip(point.label ?? (kind === "pickup" ? `ركوب · محطة ${sequence}` : `نزول · محطة ${sequence}`))
-        .addTo(layers);
+      const marker = L.marker([point.lat, point.lng], {
+        icon,
+        keyboard: true,
+        draggable: !readOnly && routePlaces.length === 0,
+      });
+      marker.bindTooltip(point.label ?? (kind === "pickup" ? `ركوب · محطة ${sequence}` : `نزول · محطة ${sequence}`));
+      if (!readOnly && routePlaces.length === 0) {
+        marker.on("dragend", () => {
+          const moved = marker.getLatLng();
+          if (restrictToGreaterCairo && !isInsideGreaterCairo(moved.lat, moved.lng)) {
+            marker.setLatLng([point.lat, point.lng]);
+            onOutsidePickRef.current?.();
+            return;
+          }
+          onPickRef.current(kind, { lat: moved.lat, lng: moved.lng, kind, label: point.label });
+        });
+      }
+      marker.addTo(layers);
       fitPoints.push([point.lat, point.lng]);
     });
 
