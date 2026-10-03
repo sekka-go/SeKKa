@@ -43,13 +43,19 @@ export function isWithinGroupPath(point: Point, members: PoolRouteMember[], limi
 }
 
 /** Proximity check against an OSRM GeoJSON LineString ([longitude, latitude]). */
-export function isWithinRouteLine(point: Point, coordinates: unknown, limitKm = 3): boolean {
-  if (!Array.isArray(coordinates) || coordinates.length < 2) return false;
+export function routeLineDistanceKm(point: Point, coordinates: unknown): number {
+  if (!Array.isArray(coordinates) || coordinates.length < 2) return Number.POSITIVE_INFINITY;
   const line = coordinates.filter((value): value is [number, number] => Array.isArray(value) && value.length === 2 &&
     typeof value[0] === "number" && Number.isFinite(value[0]) && typeof value[1] === "number" && Number.isFinite(value[1]))
     .map(([lng, lat]) => ({ lat, lng }));
-  for (let i = 1; i < line.length; i++) if (pointSegmentDistanceKm(point, line[i - 1]!, line[i]!) <= limitKm) return true;
-  return false;
+  if (line.length < 2) return Number.POSITIVE_INFINITY;
+  let nearest = Number.POSITIVE_INFINITY;
+  for (let i = 1; i < line.length; i++) nearest = Math.min(nearest, pointSegmentDistanceKm(point, line[i - 1]!, line[i]!));
+  return nearest;
+}
+
+export function isWithinRouteLine(point: Point, coordinates: unknown, limitKm = 3): boolean {
+  return routeLineDistanceKm(point, coordinates) <= limitKm;
 }
 
 export function serviceDates(value: unknown, packageType: string): string[] | null {

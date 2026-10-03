@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import MapPicker, { type MapPickMode, type MapPoint } from "../MapPicker";
+import RiderRouteDiscovery from "../components/RiderRouteDiscovery";
 import LocationSearchField from "../components/LocationSearchField";
 import { categoryName, errorText, money, statusLabel } from "../lib/formatters";
 import { isInsideGreaterCairo } from "../lib/greater-cairo";
@@ -55,10 +56,15 @@ export default function RiderWorkspace({ session, section, setSection, notificat
     return priceLoading ? "جارٍ حساب الأسعار…" : priceError ? "تعذر حساب السعر" : "السعر بعد تحديد الفئة";
   };
 
-  const openBooking = (mode: "new" | "join") => {
+  const openBooking = (mode: "new" | "join", prefill?: { groupId: number; pickup: MapPoint; dropoff: MapPoint }) => {
     setBookingMode(mode);
     setEditingGroupId(null);
     if (mode === "new") { setCategoryId(""); setPackageType("daily"); setDates(defaultDates("daily")); }
+    if (mode === "join") {
+      setInviteCode(prefill ? String(prefill.groupId) : "");
+      setPickup(prefill?.pickup ?? null); setDropoff(prefill?.dropoff ?? null);
+      setPickupSearch(prefill?.pickup.label ?? ""); setDropoffSearch(prefill?.dropoff.label ?? "");
+    }
     setBookingStep("route");
     setPriceInfoOpen(false);
     setSection("booking");
@@ -386,7 +392,7 @@ export default function RiderWorkspace({ session, section, setSection, notificat
     <section className="dashboard-main">
       <div className="welcome-banner"><div className="welcome-copy"><span className="eyebrow">سِكّة أقرب لك</span><h2>طريقك أسهل<br /><em>مع سِكّة.</em></h2><div className="welcome-actions"><button className="button button-dark" onClick={() => openBooking("new")}>إنشاء مشوار جديد <span>←</span></button>{groups.length > 0 && <button className="button button-secondary" onClick={() => openBooking("join")}>انضم لمجموعة <span>←</span></button>}</div></div><div className="welcome-illustration"><div className="sun-orbit" /><div className="route-art"><span /><i /><i /><i /><b /></div><div className="mini-car">▰</div></div></div>
       <div className="section-title-row rider-trips-heading"><h2>مشاويرك الحالية</h2><button className="text-action" onClick={() => setSection("trips")}>عرض الكل <span>←</span></button></div>
-      {groups.length ? <div className="group-list">{groups.slice(0, 1).map((view) => <GroupSummary key={view.group.id} view={view} categories={categories} onClick={() => { setSelectedGroup(view.group.id); setSection("trips"); }} />)}</div> : <section className="surface rider-join-card"><div className="rider-join-heading"><span className="empty-icon" aria-hidden="true">⌖</span><h3>معاك رقم مجموعة؟</h3></div><p>اكتب رقمها وانضم لمشوار موجود.</p><button className="button button-primary button-small" onClick={() => openBooking("join")}>انضم لمجموعة <span>←</span></button></section>}
+      {groups.length ? <div className="group-list">{groups.slice(0, 1).map((view) => <GroupSummary key={view.group.id} view={view} categories={categories} onClick={() => { setSelectedGroup(view.group.id); setSection("trips"); }} />)}</div> : <RiderRouteDiscovery token={session.token} savedPlaces={savedPlaces} categories={categories} onJoin={(match, routePickup, routeDropoff) => openBooking("join", { groupId: match.group.id, pickup: routePickup, dropoff: routeDropoff })} onJoinByCode={() => openBooking("join")} />}
     </section>
   </div>;
 }
