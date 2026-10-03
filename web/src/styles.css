@@ -1728,3 +1728,9 @@ button { line-height: 1.45; }
 .workspace .admin-broadcast-form input:focus, .workspace .admin-broadcast-form textarea:focus { outline: 2px solid var(--cyan); outline-offset: 1px; }
 .workspace .admin-broadcast-footer { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
 .workspace .admin-broadcast-footer small { color: var(--muted); }
+
+.workspace .rider-join-card { display: grid; justify-items: start; gap: .5rem; padding: .85rem 1rem; border-radius: .9rem; }
+.workspace .rider-join-heading { display: flex; align-items: center; gap: .5rem; }
+.workspace .rider-join-heading .empty-icon { font-size: 1.3rem; line-height: 1; }
+.workspace .rider-join-heading h3, .workspace .rider-join-card p { margin: 0; }
+.workspace .rider-join-card p { color: var(--muted); line-height: 1.5; }
