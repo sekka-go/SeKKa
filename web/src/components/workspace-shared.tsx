@@ -60,12 +60,6 @@ export function GroupDetail({ view, categories, busy, action, notify, onNew, onE
           <div className="brand-modal-actions"><button className="button button-quiet" disabled={busy || canceling} onClick={() => setConfirmCancellation(null)}>رجوع</button><button className="button button-cancel-trip" disabled={busy || canceling} onClick={() => void cancel()}>{canceling ? "جارٍ الإلغاء…" : "تأكيد الإلغاء"}</button></div>
         </section>
       </div>}
-      {confirmCancellation && <div className="brand-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setConfirmCancellation(null); }}>
-        <section className="brand-confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="cancel-dialog-title" aria-describedby="cancel-dialog-message">
-          <span className="brand-confirm-icon" aria-hidden="true">!</span><h2 id="cancel-dialog-title">{confirmCancellation.title}</h2><p id="cancel-dialog-message">{confirmCancellation.message}</p>
-          <div className="brand-modal-actions"><button className="button button-quiet" disabled={busy || canceling} onClick={() => setConfirmCancellation(null)}>رجوع</button><button className="button button-cancel-trip" disabled={busy || canceling} onClick={() => void cancel()}>{canceling ? "جارٍ الإلغاء…" : "تأكيد الإلغاء"}</button></div>
-        </section>
-      </div>}
       <details className="surface upcoming-card"><summary>الرحلات القادمة · {trips.length}</summary>{trips.slice(0, 6).map((trip) => <div className="upcoming-row" key={trip.id}><span className={`trip-arrow ${trip.direction}`}>{trip.direction === "outbound" ? "↗" : "↙"}</span><div><strong>{formatDate(trip.service_date)}</strong><small>{trip.direction === "outbound" ? "ذهاب" : "عودة"} · {trip.departure_at.slice(11, 16)}</small></div><span className={`tiny-status status-${trip.status}`}>{statusLabel(trip.status)}</span></div>)}</details>
       <button className="button button-primary button-wide" onClick={onNew}>＋ ابدأ مجموعة جديدة</button>
     </aside></div>;
