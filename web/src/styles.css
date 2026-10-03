@@ -1390,3 +1390,55 @@ button { line-height: 1.45; }
   .workspace .booking-step { gap: .3rem; font-size: .7rem; }
   .workspace .booking-step-actions { grid-template-columns: 1fr; }
 }
+
+
+/* Keep booking steps visually unified and compact on narrow mobile screens. */
+.workspace .booking-form-surface > .surface-heading { margin-bottom: .85rem; }
+.workspace .booking-form-surface > .surface-heading h2 { margin: .25rem 0 .45rem; }
+.workspace .booking-form-surface > .surface-heading p { max-width: 42ch; margin: 0; line-height: 1.6; }
+.workspace .booking-form-surface,
+.workspace .booking-form-surface .form-stack,
+.workspace .booking-layout { min-width: 0; }
+.workspace .saved-place-tools {
+  gap: .55rem;
+  padding: .7rem .8rem;
+  background: rgba(0, 0, 0, .12);
+}
+.workspace .saved-place-tools > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .65rem;
+  min-width: 0;
+  margin: 0;
+  color: var(--ink);
+  list-style: none;
+  font-size: .88rem;
+}
+.workspace .saved-place-tools > summary::-webkit-details-marker { display: none; }
+.workspace .saved-place-tools > summary::after {
+  flex: 0 0 auto;
+  color: var(--yellow);
+  content: "＋";
+  font-size: 1rem;
+}
+.workspace .saved-place-tools[open] > summary::after { content: "−"; }
+.workspace .saved-place-tools > summary small {
+  margin-inline-start: auto;
+  color: var(--cyan);
+  font-size: .72rem;
+  font-weight: 500;
+}
+.workspace .saved-place-tools-content { display: grid; gap: .6rem; min-width: 0; }
+.workspace .saved-place-tools-heading { flex-wrap: wrap; }
+.workspace .saved-place-tools-heading > strong { color: var(--muted); font-size: .76rem; }
+.workspace .saved-place-target { max-width: 100%; }
+.workspace .location-search-heading { min-width: 0; }
+.workspace .location-search-attribution { margin: -.3rem .2rem .1rem; }
+.workspace .category-picker { gap: .6rem; }
+.workspace .category-picker .tier-helper { display: none; }
+.workspace .booking-step-actions { margin-top: .1rem; }
+@media (max-width: 400px) {
+  .workspace .saved-place-tools > summary { gap: .4rem; font-size: .82rem; }
+  .workspace .saved-place-tools > summary small { font-size: .68rem; }
+}
