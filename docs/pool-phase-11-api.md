@@ -11,7 +11,7 @@ All routes are under `/api`. Requests and responses use JSON. Authenticated rout
 5. When the minimum is met, the server snapshots the price and creates one outbound and one return trip for every selected service date. The group appears in nearby captains' offers.
 6. Riders can review their groups with `GET /rider/pool/groups`, cancel one service day or a whole package, and respond to route price changes.
 
-## Categories and service dates
+A group can be edited only while `waiting`, by its creator, while it has exactly one active member and no generated trips or subscription.\n\n## Categories and service dates
 
 `GET /pool/categories` is public and returns category pricing, capacity, and minimum rider count.
 
@@ -37,6 +37,7 @@ Location selection is coordinate-only: the rider clicks the map and sends `picku
 | Method and path | Purpose |
 | --- | --- |
 | `POST /rider/pool/groups` | Create a group with the authenticated rider as its first member. |
+| `PUT /rider/pool/groups/:id` | Update the owner’s waiting group before other riders join or a trip is activated; updates route, category, package, service dates, and departure times. |
 | `GET /rider/pool/groups` | List the rider's invitations, groups, trips, stops, and own subscription summary. |
 | `POST /rider/pool/groups/:id/join` | Join a group with personal pickup/drop-off coordinates. |
 | `POST /rider/pool/groups/:id/confirm` | Accept or decline a captain-created invitation; body: `{"action":"accept"}` or `{"action":"decline"}`. |
