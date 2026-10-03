@@ -28,7 +28,7 @@ export function GroupDetail({ view, categories, busy, action, notify, onNew }: {
   const dates = readDates(group.service_dates);
   const [canceling, setCanceling] = useState(false);
   const cancel = async () => {
-    if (!window.confirm("متأكد إنك عايز تلغي الباقة؟ هتشوف قيمة الاسترداد قبل أي تحصيل مستقبلي.")) return;
+    if (!window.confirm(group.package_type === "daily" ? "متأكد إنك عايز تلغي المشوار؟" : "متأكد إنك عايز تلغي الباقة؟ هتشوف قيمة الاسترداد قبل أي تحصيل مستقبلي.")) return;
     setCanceling(true); await action(group.id, "cancel"); setCanceling(false);
   };
   const firstFutureDate = trips.find((trip) => trip.service_date >= todayInCairo() && trip.status !== "completed")?.service_date;
@@ -45,7 +45,7 @@ export function GroupDetail({ view, categories, busy, action, notify, onNew }: {
   </div><aside className="group-detail-side"><section className="surface action-card"><h3>إدارة المشوار</h3><p>شارك المجموعة مع أصحابك أو حدّث حجزك.</p><button className="button button-outline button-wide" onClick={() => { void navigator.clipboard?.writeText(String(group.id)); notify("اتنسخ رقم المجموعة.", "success"); }}>⧉ نسخ رقم المجموعة</button>
       {group.status === "waiting" && category && seats < category.seats && activeMembers.length < category.seats && <button className="button button-secondary button-wide" disabled={busy} onClick={() => action(group.id, "complete-seats")}>احجز باقي المقاعد</button>}
       {firstFutureDate && ["active", "minimum_met", "needs_captain"].includes(group.status) && <button className="button button-quiet button-wide" disabled={busy} onClick={() => { if (window.confirm(`إلغاء يوم ${formatDate(firstFutureDate)}؟`)) action(group.id, `days/${firstFutureDate}/cancel`); }}>إلغاء يوم الخدمة</button>}
-      {!(["cancelled", "completed"].includes(group.status)) && <button className="text-danger" disabled={busy || canceling} onClick={() => void cancel()}>{canceling ? "جاري الإلغاء…" : "إلغاء الباقة"}</button>}
+      {!(["cancelled", "completed"].includes(group.status)) && <button className="text-danger" disabled={busy || canceling} onClick={() => void cancel()}>{canceling ? "جاري الإلغاء…" : group.package_type === "daily" ? "إلغاء المشوار" : "إلغاء الباقة"}</button>}
       <div className="payment-note"><span>◌</span><p>الدفع الإلكتروني مؤجل. هذه الأسعار تقديرية مسجلة وليست عملية تحصيل.</p></div></section>
       <section className="surface upcoming-card"><div className="section-title-row"><div><h3>الرحلات القادمة</h3><p>جدول الذهاب والعودة</p></div></div>{trips.slice(0, 6).map((trip) => <div className="upcoming-row" key={trip.id}><span className={`trip-arrow ${trip.direction}`}>{trip.direction === "outbound" ? "↗" : "↙"}</span><div><strong>{formatDate(trip.service_date)}</strong><small>{trip.direction === "outbound" ? "ذهاب" : "عودة"} · {trip.departure_at.slice(11, 16)}</small></div><span className={`tiny-status status-${trip.status}`}>{statusLabel(trip.status)}</span></div>)}</section>
       <button className="button button-primary button-wide" onClick={onNew}>＋ ابدأ مجموعة جديدة</button>
