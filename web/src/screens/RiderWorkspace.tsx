@@ -210,7 +210,7 @@ export default function RiderWorkspace({ session, section, setSection, notificat
 
   if (section === "booking") return <div className="booking-layout">
     <section className="surface booking-form-surface">
-      <div className="surface-heading"><div><span className="eyebrow">{bookingMode === "new" ? (bookingStep === "route" ? "الخطوة الأولى · تحديد المشوار" : "الخطوة الثانية · تفاصيل الرحلة") : "الانضمام لمجموعة"}</span><h2>{bookingMode === "new" ? (bookingStep === "route" ? "حدد نقطتي مشوارك" : "اختار موعدك وفئتك") : "انضم لمجموعة موجودة"}</h2><p>{bookingMode === "new" ? (bookingStep === "route" ? "ابحث عن نقطة الركوب والنزول أو حددهما بالدبوس." : "حدد التاريخ والوقت، ثم قارن أسعار الباقات والفئات.") : "حدد رقم المجموعة ونقطتي الركوب والنزول."}</p></div><span className="surface-icon">{bookingMode === "new" ? (bookingStep === "route" ? "⌖" : "◷") : "＋"}</span></div>
+      <div className="surface-heading"><div><span className="eyebrow">{bookingMode === "new" ? (bookingStep === "route" ? "الخطوة الأولى · تحديد المشوار" : "الخطوة الثانية · تفاصيل الرحلة") : "الانضمام لمجموعة"}</span><h2>{bookingMode === "new" ? (bookingStep === "route" ? "حدد نقطتي مشوارك" : "اختار موعدك وفئتك") : "انضم لمجموعة موجودة"}</h2><p>{bookingMode === "new" ? (bookingStep === "route" ? "ابحث عن نقطة الركوب والنزول أو حددهما بالدبوس." : "حدد التاريخ والوقت، ثم قارن أسعار الباقات والفئات.") : "حدد رقم المجموعة ونقطتي الركوب والنزول."}</p></div>{bookingMode === "new" && bookingStep === "schedule" ? <button type="button" className="booking-step-back" onClick={returnToRoute}><span aria-hidden="true">→</span> العودة للنقط</button> : <span className="surface-icon">{bookingMode === "new" ? "⌖" : "＋"}</span>}</div>
       {bookingMode === "new" && <div className="booking-stepper" aria-label="خطوات إنشاء المشوار">
         <div className={bookingStep === "route" ? "booking-step active" : "booking-step complete"}><span>١</span><strong>النقط</strong></div>
         <i className={bookingStep === "schedule" ? "complete" : ""} />
@@ -301,10 +301,7 @@ export default function RiderWorkspace({ session, section, setSection, notificat
             
           </section>
         </>}
-        {bookingMode === "new" ? bookingStep === "route" ? <button type="button" className="button button-primary button-wide" onClick={continueToSchedule} disabled={!pickup || !dropoff}>التالي · التاريخ والأسعار <span>←</span></button> : <div className="booking-step-actions">
-          <button type="button" className="button button-outline" onClick={returnToRoute}>الرجوع للنقط</button>
-          <button type="submit" className="button button-primary" disabled={submitting || Boolean(pickup && dropoff) && (!priceQuotes || priceLoading)}>{submitting ? "جاري الحفظ…" : "تأكيد المشوار"} <span>←</span></button>
-        </div> : <button type="submit" className="button button-primary button-wide" disabled={submitting}>{submitting ? "جاري الحفظ…" : "الانضمام للمجموعة"} <span>←</span></button>}
+        {bookingMode === "new" ? bookingStep === "route" ? <button type="button" className="button button-primary button-wide" onClick={continueToSchedule}>التالي · التاريخ والأسعار <span>←</span></button> : <button type="submit" className="button button-primary button-wide" disabled={submitting || Boolean(pickup && dropoff) && (!priceQuotes || priceLoading)}>{submitting ? "جاري الحفظ…" : "تأكيد المشوار"} <span>←</span></button> : <button type="submit" className="button button-primary button-wide" disabled={submitting}>{submitting ? "جاري الحفظ…" : "الانضمام للمجموعة"} <span>←</span></button>}
       </form>
     </section>
     
