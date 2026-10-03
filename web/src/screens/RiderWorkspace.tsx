@@ -52,12 +52,7 @@ export default function RiderWorkspace({ session, section, setSection, notificat
   const priceLabel = (type: "daily" | "weekly" | "monthly", selectedCategoryId = categoryId) => {
     const selectedQuote = selectedCategoryId ? priceQuotes?.[selectedCategoryId] : null;
     if (selectedQuote) return money(selectedQuote[type]);
-    const fares = Object.values(priceQuotes ?? {}).map((quote) => quote[type]).filter((fare) => Number.isFinite(fare));
-    if (fares.length) {
-      const minimum = Math.min(...fares), maximum = Math.max(...fares);
-      return minimum === maximum ? money(minimum) : `من ${money(minimum)} إلى ${money(maximum)}`;
-    }
-    return priceLoading ? "جارٍ حساب الأسعار…" : priceError ? "تعذر حساب السعر" : "جارٍ تجهيز الأسعار";
+    return priceLoading ? "جارٍ حساب الأسعار…" : priceError ? "تعذر حساب السعر" : "السعر بعد تحديد الفئة";
   };
 
   const openBooking = (mode: "new" | "join") => {
