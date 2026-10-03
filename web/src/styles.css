@@ -1532,3 +1532,25 @@ button { line-height: 1.45; }
 
 .workspace .all-trips-section { display: grid; gap: .8rem; margin-block-start: 1rem; }
 .workspace .all-trips-section > .section-title-row { margin-block-end: 0; }
+
+
+/* Compact mobile workspace rhythm and remove repeated trip-detail counts. */
+@media (max-width: 560px) {
+  .workspace .page-content { padding: .9rem; }
+  .workspace .page-heading { margin-bottom: .65rem; }
+  .workspace .surface { padding: .85rem; }
+  .workspace .trips-page { display: grid; gap: .65rem; }
+  .workspace .detail-hero > h2 { margin: .4rem 0 0; }
+  .workspace .detail-hero-top { gap: .5rem; }
+  .workspace details[open] > summary { margin-bottom: .5rem; }
+  .workspace .trip-extra-details { padding: .7rem; }
+  .workspace .trip-extra-details > .detail-route-map { margin: .5rem 0; }
+  .workspace .trip-extra-details > .detail-section { margin-top: .5rem; padding: .7rem; }
+  .workspace .detail-section .section-title-row { margin-bottom: .4rem; }
+  .workspace .detail-section .section-title-row p { margin-top: .1rem; line-height: 1.45; }
+  .workspace .rider-list, .workspace .service-date-list { gap: .35rem; }
+  .workspace .rider-row, .workspace .service-date-row { padding: .45rem 0; }
+  .workspace .map-picker { margin-top: .5rem; }
+  .workspace .map-stop-list { gap: .3rem; padding: .5rem; }
+  .workspace .map-segments { padding: .55rem; }
+}
