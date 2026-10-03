@@ -129,7 +129,7 @@ export default function RiderWorkspace({ session, section, setSection, notificat
   useEffect(() => {
     const handleBookingMode = (event: Event) => {
       const mode = (event as CustomEvent<"new" | "join">).detail;
-      if (mode === "new" || mode === "join") { setBookingMode(mode); setEditingGroupId(null); if (mode === "new") setCategoryId(""); setBookingStep("route"); }
+      if (mode === "new" || mode === "join") { setBookingMode(mode); setEditingGroupId(null); if (mode === "new") { setCategoryId(""); setPackageType("daily"); setDates(defaultDates("daily")); } setBookingStep("route"); }
     };
     window.addEventListener("sekka:booking-mode", handleBookingMode);
     return () => window.removeEventListener("sekka:booking-mode", handleBookingMode);
@@ -338,7 +338,7 @@ export default function RiderWorkspace({ session, section, setSection, notificat
             <div className="category-select-label" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setCategoryMenuOpen(false); }} onKeyDown={(event) => { if (event.key === "Escape") setCategoryMenuOpen(false); }}>
               <span>اختار الفئة</span>
               <button type="button" className="category-select-trigger" aria-haspopup="listbox" aria-expanded={categoryMenuOpen} aria-controls="category-options" disabled={categories.length === 0} onClick={() => setCategoryMenuOpen((open) => !open)}>
-                <span>{selectedCategory ? `${categoryName(selectedCategory)} · ${selectedCategory.seats} مقاعد` : "جاري تحميل الفئات"}</span>
+                <span>{selectedCategory ? `${categoryName(selectedCategory)} · ${selectedCategory.seats} مقاعد` : categories.length > 0 ? "اختر الفئة للمتابعة" : "لا توجد فئات متاحة"}</span>
                 <strong>{selectedCategory && priceQuotes?.[selectedCategory.id] ? money(priceQuotes[selectedCategory.id]![packageType]) : priceLoading ? "جارٍ حساب السعر…" : "السعر بعد تحديد النقط"}</strong>
                 <span className="category-select-chevron" aria-hidden="true">{categoryMenuOpen ? "⌃" : "⌄"}</span>
               </button>
@@ -357,7 +357,7 @@ export default function RiderWorkspace({ session, section, setSection, notificat
             
           </section>
         </>}
-        {bookingMode !== "join" ? bookingStep === "route" ? <button type="button" className="button button-primary button-wide" onClick={continueToSchedule}>التالي · التاريخ والأسعار <span>←</span></button> : <button type="submit" data-confirm-trip="true" className="button button-primary button-wide" disabled={submitting || !categoryId || dates.length !== (packageType === "daily" ? 1 : packageType === "weekly" ? 5 : 22) || Boolean(pickup && dropoff) && (!priceQuotes || priceLoading)}>{submitting ? "جاري الحفظ…" : bookingMode === "edit" ? "حفظ التعديلات" : "تأكيد المشوار"} <span>←</span></button> : <button type="submit" className="button button-primary button-wide" disabled={submitting}>{submitting ? "جاري الحفظ…" : "الانضمام للمجموعة"} <span>←</span></button>}
+        {bookingMode !== "join" ? bookingStep === "route" ? <button type="button" className="button button-primary button-wide" onClick={continueToSchedule}>التالي · الموعد والأسعار <span>←</span></button> : <button type="submit" data-confirm-trip="true" className="button button-primary button-wide" disabled={submitting || !categoryId || dates.length !== (packageType === "daily" ? 1 : packageType === "weekly" ? 5 : 22) || Boolean(pickup && dropoff) && (!priceQuotes || priceLoading)}>{submitting ? "جاري الحفظ…" : bookingMode === "edit" ? "حفظ التعديلات" : "تأكيد المشوار"} <span>←</span></button> : <button type="submit" className="button button-primary button-wide" disabled={submitting}>{submitting ? "جاري الحفظ…" : "الانضمام للمجموعة"} <span>←</span></button>}
       </form>
     </section>
     
