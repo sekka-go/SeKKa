@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from "react";
 import BrandLogo from "../components/BrandLogo";
+import RiderRoutePreferences from "../components/RiderRoutePreferences";
 import { errorText } from "../lib/formatters";
-import { api, type User } from "../api";
+import { api, type SavedPlace, type User } from "../api";
 import type { Session, Toast } from "../types";
 
 export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (session: Session) => void; notify: (text: string, tone?: Toast["tone"]) => void }) {
@@ -12,19 +13,38 @@ export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (sessio
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [pendingRouteSetup, setPendingRouteSetup] = useState<Session | null>(null);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setBusy(true); setError("");
     try {
-      if (mode === "register") {
+      const registering = mode === "register";
+      if (registering) {
         await api("/auth/register", { method: "POST", body: { full_name: fullName.trim(), phone_number: phone.trim(), password, role } });
       }
       const result = await api<{ token: string; user: User }>("/auth/login", { method: "POST", body: { phone_number: phone.trim(), password } });
-      onSignedIn({ token: result.token, user: result.user });
+      const session = { token: result.token, user: result.user };
+      if (session.user.role === "rider") {
+        let places: SavedPlace[] = [];
+        try { places = (await api<{ places: SavedPlace[] }>("/rider/saved-places", { token: session.token })).places ?? []; }
+        catch { if (registering) { setPendingRouteSetup(session); return; } }
+        if (registering || !places.some((place) => place.place_type === "home") || !places.some((place) => place.place_type === "work")) {
+          setPendingRouteSetup(session);
+          return;
+        }
+      }
+      onSignedIn(session);
       notify(mode === "register" ? "أهلًا بك في سِكّة. حسابك جاهز." : "تم تسجيل الدخول.", "success");
     } catch (cause) { setError(errorText(cause)); }
     finally { setBusy(false); }
   };
+
+  if (pendingRouteSetup) return <main className="auth-page">
+    <header className="auth-page-header"><a href="/" aria-label="سِكّة، الرئيسية"><BrandLogo /></a></header>
+    <section className="auth-page-content route-onboarding-content">
+      <RiderRoutePreferences token={pendingRouteSetup.token} notify={notify} onboarding onComplete={() => { onSignedIn(pendingRouteSetup); setPendingRouteSetup(null); notify("أهلًا بك في سِكّة. حسابك ونقطك المفضلة جاهزين.", "success"); }} />
+    </section>
+  </main>;
 
   return <main className="auth-page">
     <header className="auth-page-header">

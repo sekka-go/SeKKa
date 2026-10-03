@@ -389,6 +389,50 @@ Deno.serve(async (req: Request) => {
       if (placesError) throw placesError;
       return reply({ places: data ?? [] }, 200, origin);
     }
+    if ((req.method === "GET" || req.method === "PUT") && path === "/rider/commuter-preferences") {
+      const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      if (req.method === "GET") {
+        const { data, error: preferencesError } = await db.from("rider_commuter_preferences").select("usual_days,usual_departure_time,usual_return_time,frequent_places").eq("user_id", user!.id).maybeSingle();
+        if (preferencesError) throw preferencesError;
+        return reply({ preferences: data ?? { usual_days: [0,1,2,3,4], usual_departure_time: "07:30:00", usual_return_time: "17:00:00", frequent_places: [] } }, 200, origin);
+      }
+      const days = Array.isArray(body.usual_days) ? body.usual_days : [];
+      const departure = typeof body.usual_departure_time === "string" ? body.usual_departure_time : "";
+      const returning = typeof body.usual_return_time === "string" ? body.usual_return_time : "";
+      const places = Array.isArray(body.frequent_places) ? body.frequent_places : [];
+      if (!days.length || days.length > 7 || days.some(day => !Number.isInteger(day) || Number(day) < 0 || Number(day) > 6) || new Set(days).size !== days.length || !/^\d{2}:\d{2}$/.test(departure) || !/^\d{2}:\d{2}$/.test(returning) || returning <= departure || places.length > 5 || places.some(place => !place || typeof place !== "object" || typeof place.label !== "string" || !place.label.trim() || place.label.length > 240 || !validPoint(place.lat, place.lng) || !isGreaterCairoPoint(Number(place.lat), Number(place.lng)))) {
+        return error("راجع أيام المشوار ومواعيده والأماكن المتكررة داخل القاهرة الكبرى.", 400, origin);
+      }
+      const frequentPlaces = places.map(place => ({ label: String(place.label).trim(), lat: Number(place.lat), lng: Number(place.lng) }));
+      const { data, error: saveError } = await db.from("rider_commuter_preferences").upsert({ user_id: user!.id, usual_days: days, usual_departure_time: departure, usual_return_time: returning, frequent_places: frequentPlaces, updated_at: new Date().toISOString() }, { onConflict: "user_id" }).select("usual_days,usual_departure_time,usual_return_time,frequent_places").single();
+      if (saveError) throw saveError;
+      return reply({ preferences: data }, 200, origin);
+    }
+    if (req.method === "GET" && path === "/rider/commuter-board-cards") {
+      const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      const now = Date.now();
+      const [{ data: campaigns, error: campaignError }, { data: savedPlaces, error: savedError }, { data: preferences }] = await Promise.all([
+        db.from("commuter_board_campaigns").select("id,type,title,description,icon,cta_text,cta_action,priority,targeting_rules,start_date,end_date,active,display_duration").eq("active", true).order("priority", { ascending: false }).limit(50),
+        db.from("rider_saved_places").select("place_type,label").eq("user_id", user!.id),
+        db.from("rider_commuter_preferences").select("usual_days,usual_departure_time,usual_return_time").eq("user_id", user!.id).maybeSingle(),
+      ]);
+      if (campaignError || savedError) throw new Error("commuter board campaigns query failed");
+      const homeLabels = new Set((savedPlaces ?? []).filter(place => place.place_type === "home").map(place => String(place.label).toLocaleLowerCase("ar")));
+      const workLabels = new Set((savedPlaces ?? []).filter(place => place.place_type === "work").map(place => String(place.label).toLocaleLowerCase("ar")));
+      const days = new Set((preferences?.usual_days ?? [0,1,2,3,4]).map(Number));
+      const cards = (campaigns ?? []).filter(card => {
+        const starts = card.start_date ? Date.parse(String(card.start_date)) : Number.NEGATIVE_INFINITY;
+        const ends = card.end_date ? Date.parse(String(card.end_date)) : Number.POSITIVE_INFINITY;
+        if (starts > now || ends <= now) return false;
+        const rules = card.targeting_rules && typeof card.targeting_rules === "object" ? card.targeting_rules as Record<string, unknown> : {};
+        const from = Array.isArray(rules.from_labels) ? rules.from_labels.map(value => String(value).toLocaleLowerCase("ar")) : [];
+        const to = Array.isArray(rules.to_labels) ? rules.to_labels.map(value => String(value).toLocaleLowerCase("ar")) : [];
+        const commuteDays = Array.isArray(rules.commute_days) ? rules.commute_days.map(Number) : [];
+        const departure = String(preferences?.usual_departure_time ?? "07:30").slice(0, 5);
+        return (!from.length || from.some(value => homeLabels.has(value))) && (!to.length || to.some(value => workLabels.has(value))) && (!commuteDays.length || commuteDays.some(value => days.has(value))) && (!rules.departure_after || departure >= String(rules.departure_after)) && (!rules.departure_before || departure <= String(rules.departure_before));
+      }).map(card => ({ id: String(card.id), type: card.type, title: card.title, description: card.description, icon: card.icon, cta_text: card.cta_text, cta_action: card.cta_action, priority: Number(card.priority), targeting_rules: card.targeting_rules ?? {}, start_date: card.start_date, end_date: card.end_date, active: card.active, display_duration: Number(card.display_duration) }));
+      return reply({ cards }, 200, origin);
+    }
     const savedPlaceAction = path.match(/^\/rider\/saved-places\/(home|work)$/);
     if (savedPlaceAction && (req.method === "PUT" || req.method === "DELETE")) {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
@@ -1293,6 +1337,50 @@ Deno.serve(async (req: Request) => {
     }
     const adminGate = path.startsWith("/admin/") ? await requireRole(user, ["admin"], origin) : null;
     if (adminGate) return adminGate;
+    if (req.method === "GET" && path === "/admin/commuter-board-campaigns") {
+      const { data, error: campaignError } = await db.from("commuter_board_campaigns").select("*").order("priority", { ascending: false }).order("created_at", { ascending: false });
+      if (campaignError) throw campaignError;
+      return reply({ cards: data ?? [] }, 200, origin);
+    }
+    if (req.method === "POST" && path === "/admin/commuter-board-campaigns") {
+      const allowedTypes = ["weekly_reminder", "monthly_reminder", "invite_friends", "campaign"];
+      const allowedActions = ["open-booking", "open-trips", "invite-friends", "manage-preferences"];
+      const title = clean(body.title) ? body.title.trim() : "", description = clean(body.description) ? body.description.trim() : "", ctaText = clean(body.cta_text) ? body.cta_text.trim() : "";
+      if (!title || title.length > 120 || !description || description.length > 500 || !ctaText || ctaText.length > 60 || !allowedTypes.includes(String(body.type)) || !allowedActions.includes(String(body.cta_action)) || typeof body.active !== "boolean" || !Number.isInteger(body.priority) || Number(body.priority) < 0 || Number(body.priority) > 100 || !Number.isInteger(body.display_duration) || Number(body.display_duration) < 5 || Number(body.display_duration) > 30 || (body.targeting_rules !== undefined && (!body.targeting_rules || typeof body.targeting_rules !== "object" || Array.isArray(body.targeting_rules)))) return error("راجع محتوى البطاقة ونوعها وأولوية العرض ومدة ظهورها.", 400, origin);
+      const starts = body.start_date === null || body.start_date === undefined || body.start_date === "" ? null : String(body.start_date);
+      const ends = body.end_date === null || body.end_date === undefined || body.end_date === "" ? null : String(body.end_date);
+      if ((starts && !Number.isFinite(Date.parse(starts))) || (ends && !Number.isFinite(Date.parse(ends))) || (starts && ends && Date.parse(ends) <= Date.parse(starts))) return error("راجع تاريخ بداية البطاقة ونهايتها.", 400, origin);
+      const { data, error: insertError } = await db.from("commuter_board_campaigns").insert({ type: body.type, title, description, icon: typeof body.icon === "string" ? body.icon.slice(0, 16) : "⌖", cta_text: ctaText, cta_action: body.cta_action, priority: body.priority, targeting_rules: body.targeting_rules ?? {}, start_date: starts, end_date: ends, active: body.active, display_duration: body.display_duration, created_by_admin: user!.id }).select().single();
+      if (insertError) throw insertError;
+      return reply({ card: data }, 201, origin);
+    }
+    const campaignAction = path.match(/^\/admin\/commuter-board-campaigns\/([0-9a-f-]{36})$/i);
+    if (campaignAction && req.method === "PATCH") {
+      const patch: Record<string, unknown> = {};
+      for (const field of ["type", "title", "description", "icon", "cta_text", "cta_action", "priority", "targeting_rules", "start_date", "end_date", "active", "display_duration"] as const) if (field in body) patch[field] = body[field];
+      if (!Object.keys(patch).length) return error("مافيش تغييرات لحفظها.", 400, origin);
+      if (patch.title !== undefined && (typeof patch.title !== "string" || !patch.title.trim() || patch.title.length > 120) || patch.description !== undefined && (typeof patch.description !== "string" || !patch.description.trim() || patch.description.length > 500) || patch.cta_text !== undefined && (typeof patch.cta_text !== "string" || !patch.cta_text.trim() || patch.cta_text.length > 60) || patch.icon !== undefined && (typeof patch.icon !== "string" || patch.icon.length > 16) || patch.type !== undefined && !["weekly_reminder", "monthly_reminder", "invite_friends", "campaign"].includes(String(patch.type)) || patch.cta_action !== undefined && !["open-booking", "open-trips", "invite-friends", "manage-preferences"].includes(String(patch.cta_action)) || patch.priority !== undefined && (!Number.isInteger(patch.priority) || Number(patch.priority) < 0 || Number(patch.priority) > 100) || patch.display_duration !== undefined && (!Number.isInteger(patch.display_duration) || Number(patch.display_duration) < 5 || Number(patch.display_duration) > 30) || patch.active !== undefined && typeof patch.active !== "boolean" || patch.targeting_rules !== undefined && (!patch.targeting_rules || typeof patch.targeting_rules !== "object" || Array.isArray(patch.targeting_rules))) return error("راجع بيانات البطاقة قبل الحفظ.", 400, origin);
+      if (patch.start_date === "") patch.start_date = null;
+      if (patch.end_date === "") patch.end_date = null;
+      for (const field of ["start_date", "end_date"] as const) if (patch[field] !== undefined && patch[field] !== null && !Number.isFinite(Date.parse(String(patch[field])))) return error("تاريخ الحملة غير صحيح.", 400, origin);
+      const { data: existingCampaign, error: campaignLookupError } = await db.from("commuter_board_campaigns").select("start_date,end_date").eq("id", campaignAction[1]).maybeSingle();
+      if (campaignLookupError) throw campaignLookupError;
+      if (!existingCampaign) return error("بطاقة الحملة غير موجودة.", 404, origin);
+      const nextStart = patch.start_date === undefined ? existingCampaign.start_date : patch.start_date;
+      const nextEnd = patch.end_date === undefined ? existingCampaign.end_date : patch.end_date;
+      if (nextStart && nextEnd && Date.parse(String(nextEnd)) <= Date.parse(String(nextStart))) return error("تاريخ نهاية الحملة يجب أن يأتي بعد تاريخ بدايتها.", 400, origin);
+      patch.updated_at = new Date().toISOString();
+      const { data, error: updateError } = await db.from("commuter_board_campaigns").update(patch).eq("id", campaignAction[1]).select().maybeSingle();
+      if (updateError) throw updateError;
+      if (!data) return error("بطاقة الحملة غير موجودة.", 404, origin);
+      return reply({ card: data }, 200, origin);
+    }
+    if (campaignAction && req.method === "DELETE") {
+      const { data, error: deleteError } = await db.from("commuter_board_campaigns").delete().eq("id", campaignAction[1]).select("id").maybeSingle();
+      if (deleteError) throw deleteError;
+      if (!data) return error("بطاقة الحملة غير موجودة.", 404, origin);
+      return reply({ success: true }, 200, origin);
+    }
     if (req.method === "POST" && path === "/admin/notifications/broadcast") {
       const title = clean(body.title) ? body.title.trim() : "";
       const message = clean(body.message) ? body.message.trim() : "";

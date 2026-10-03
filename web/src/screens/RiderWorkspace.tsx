@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import MapPicker, { type MapPickMode, type MapPoint } from "../MapPicker";
-import RiderRouteDiscovery from "../components/RiderRouteDiscovery";
+import RiderCommuterBoard from "../components/RiderCommuterBoard";
 import LocationSearchField from "../components/LocationSearchField";
-import { categoryName, errorText, money, statusLabel } from "../lib/formatters";
+import { categoryName, errorText, formatDate, money, statusLabel } from "../lib/formatters";
 import { isInsideGreaterCairo } from "../lib/greater-cairo";
-import { api, type Category, type GroupView, type Notification, type SavedPlace } from "../api";
+import { api, type Category, type GroupView, type Notification, type RiderCommuterPreferences, type SavedPlace } from "../api";
 import { defaultDates, isServiceDay, serviceDatesFromStart } from "../lib/booking-dates";
 import type { NavKey, Session, Toast } from "../types";
 import {
@@ -27,12 +27,10 @@ export default function RiderWorkspace({ session, section, setSection, notificat
   const [submitting, setSubmitting] = useState(false);
   const [bookingMode, setBookingMode] = useState<"new" | "join" | "edit">("new");
   const [editingGroupId, setEditingGroupId] = useState<number | null>(null);
-  const [bookingStep, setBookingStep] = useState<"route" | "schedule">("route");
+  const [bookingStep, setBookingStep] = useState<"route" | "schedule" | "review">("route");
   const [priceInfoOpen, setPriceInfoOpen] = useState(false);
   const [categoryId, setCategoryId] = useState("");
   const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
-  const [savedPlaceTarget, setSavedPlaceTarget] = useState<"pickup" | "dropoff">("pickup");
-  const [savedPlaceMenuOpen, setSavedPlaceMenuOpen] = useState(false);
   const [packageType, setPackageType] = useState<"daily" | "weekly" | "monthly">("daily");
   const [dates, setDates] = useState<string[]>(() => defaultDates("daily"));
   const [morning, setMorning] = useState("07:30");
@@ -48,7 +46,6 @@ export default function RiderWorkspace({ session, section, setSection, notificat
   const [priceLoading, setPriceLoading] = useState(false);
   const [priceError, setPriceError] = useState("");
   const selectedCategory = categories.find((item) => item.id === categoryId) ?? null;
-  const selectedPointForSavedPlace = savedPlaceTarget === "pickup" ? pickup : dropoff;
   const selected = groups.find((view) => view.group.id === selectedGroup) ?? null;
   const priceLabel = (type: "daily" | "weekly" | "monthly", selectedCategoryId = categoryId) => {
     const selectedQuote = selectedCategoryId ? priceQuotes?.[selectedCategoryId] : null;
@@ -102,7 +99,6 @@ export default function RiderWorkspace({ session, section, setSection, notificat
     ].filter((kind): kind is "pickup" | "dropoff" => kind !== null);
     if (missing.length > 0) {
       const firstMissing = missing[0]!;
-      setSavedPlaceTarget(firstMissing);
       const field = document.querySelector<HTMLElement>(`.location-search-${firstMissing}`);
       field?.scrollIntoView({ behavior: "smooth", block: "center" });
       field?.querySelector<HTMLInputElement>("input")?.focus({ preventScroll: true });
@@ -110,6 +106,28 @@ export default function RiderWorkspace({ session, section, setSection, notificat
       return;
     }
     if (!isInsideGreaterCairo(pickup!.lat!, pickup!.lng!) || !isInsideGreaterCairo(dropoff!.lat!, dropoff!.lng!)) { notify("المشاوير متاحة داخل القاهرة الكبرى فقط.", "error"); return; }
+    setBookingStep("schedule");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const continueToReview = () => {
+    if (bookingMode === "join") {
+      const groupId = Number(inviteCode);
+      if (!Number.isInteger(groupId) || groupId < 1) { notify("اكتب رقم مجموعة صحيحًا قبل المتابعة.", "error"); return; }
+      if (!hasSelectedPoint(pickup) || !hasSelectedPoint(dropoff)) { notify("اختار نقطة الركوب والوصول من نتائج البحث أو الخريطة.", "error"); return; }
+      if (!isInsideGreaterCairo(pickup!.lat!, pickup!.lng!) || !isInsideGreaterCairo(dropoff!.lat!, dropoff!.lng!)) { notify("المشاوير متاحة داخل القاهرة الكبرى فقط.", "error"); return; }
+    } else {
+      if (!categoryId) { notify("اختار الفئة قبل مراجعة المشوار.", "error"); return; }
+      const expectedDates = packageType === "daily" ? 1 : packageType === "weekly" ? 5 : 22;
+      if (dates.length !== expectedDates) { notify("راجع أيام الخدمة للباقة قبل المتابعة.", "error"); return; }
+      if (!morning || !returnTime) { notify("حدد وقت الذهاب والعودة قبل المتابعة.", "error"); return; }
+      if (!priceQuotes?.[categoryId] || priceLoading) { notify("انتظر اكتمال حساب السعر قبل مراجعة المشوار.", "info"); return; }
+    }
+    setBookingStep("review");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const returnToSchedule = () => {
     setBookingStep("schedule");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -135,6 +153,25 @@ export default function RiderWorkspace({ session, section, setSection, notificat
     }).catch((error) => notify(errorText(error), "error")).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [session.token, notify]);
+
+  useEffect(() => {
+    let active = true;
+    void api<{ preferences: RiderCommuterPreferences }>("/rider/commuter-preferences", { token: session.token }).then(({ preferences }) => {
+      if (active) setSavedPlaces((current) => [...current.filter((place) => place.place_type !== "frequent"), ...(preferences.frequent_places ?? []).map((place) => ({ ...place, place_type: "frequent" as const }))]);
+    }).catch(() => undefined);
+    return () => { active = false; };
+  }, [session.token]);
+
+  useEffect(() => {
+    const syncPreferences = (event: Event) => setSavedPlaces((event as CustomEvent<SavedPlace[]>).detail ?? []);
+    const syncCommuterPreferences = (event: Event) => {
+      const preferences = (event as CustomEvent<RiderCommuterPreferences>).detail;
+      setSavedPlaces((current) => [...current.filter((place) => place.place_type !== "frequent"), ...(preferences.frequent_places ?? []).map((place) => ({ ...place, place_type: "frequent" as const }))]);
+    };
+    window.addEventListener("sekka:rider-preferences", syncPreferences);
+    window.addEventListener("sekka:rider-commuter-preferences", syncCommuterPreferences);
+    return () => { window.removeEventListener("sekka:rider-preferences", syncPreferences); window.removeEventListener("sekka:rider-commuter-preferences", syncCommuterPreferences); };
+  }, []);
 
   // A trip detail should only open after the rider chooses a group. Leaving
   // the trips section clears that transient selection so Back never reopens
@@ -184,8 +221,8 @@ export default function RiderWorkspace({ session, section, setSection, notificat
 
   const createGroup = async (event: FormEvent) => {
     event.preventDefault();
-    if (bookingStep !== "schedule") {
-      notify("أكمل اختيار التاريخ والوقت والباقات والفئة أولًا.", "error");
+    if (bookingStep !== "review") {
+      notify("راجع تفاصيل المشوار قبل تأكيد الإنشاء.", "error");
       return;
     }
     if (!pickup || !dropoff) { notify("اختار نقطة الركوب والنزول بالدبوس أو البحث أو الخريطة.", "error"); return; }
@@ -209,6 +246,7 @@ export default function RiderWorkspace({ session, section, setSection, notificat
 
   const joinGroup = async (event: FormEvent) => {
     event.preventDefault();
+    if (bookingStep !== "review") { notify("راجع رقم المجموعة ونقطتي الركوب والوصول قبل الانضمام.", "error"); return; }
     if (!pickup || !dropoff) { notify("اختار نقطتي الركوب والنزول بالدبوس أو البحث أو الخريطة.", "error"); return; }
     if (!isInsideGreaterCairo(pickup.lat!, pickup.lng!) || !isInsideGreaterCairo(dropoff.lat!, dropoff.lng!)) { notify("المشاوير متاحة داخل القاهرة الكبرى فقط.", "error"); return; }
     setSubmitting(true);
@@ -219,30 +257,6 @@ export default function RiderWorkspace({ session, section, setSection, notificat
       notify("انضممت للمجموعة بنجاح.", "success");
     } catch (error) { notify(errorText(error), "error"); }
     finally { setSubmitting(false); }
-  };
-
-  const savePlace = async (placeType: SavedPlace["place_type"], point: MapPoint) => {
-    if (typeof point.lat !== "number" || typeof point.lng !== "number") return;
-    try {
-      const result = await api<{ place: SavedPlace }>(`/rider/saved-places/${placeType}`, {
-        method: "PUT", token: session.token, body: { label: point.label ?? `موقع ${placeType === "home" ? "المنزل" : "العمل"}`, lat: point.lat, lng: point.lng },
-      });
-      setSavedPlaces((current) => [...current.filter((place) => place.place_type !== placeType), result.place]);
-      notify(`تم حفظ مكان ${placeType === "home" ? "المنزل" : "العمل"}.`, "success");
-    } catch (error) { notify(errorText(error), "error"); }
-  };
-  const removeSavedPlace = async (placeType: SavedPlace["place_type"]) => {
-    try {
-      await api(`/rider/saved-places/${placeType}`, { method: "DELETE", token: session.token });
-      setSavedPlaces((current) => current.filter((place) => place.place_type !== placeType));
-      notify(`تم حذف مكان ${placeType === "home" ? "المنزل" : "العمل"}.`, "success");
-    } catch (error) { notify(errorText(error), "error"); }
-  };
-
-  const selectSavedPlace = (place: SavedPlace) => {
-    const point = { lat: place.lat, lng: place.lng, kind: savedPlaceTarget, label: place.label };
-    if (savedPlaceTarget === "pickup") { setPickup(point); setPickupSearch(place.label); }
-    else { setDropoff(point); setDropoffSearch(place.label); }
   };
 
   const groupAction = async (groupId: number, action: string, body?: unknown) => {
@@ -277,63 +291,31 @@ export default function RiderWorkspace({ session, section, setSection, notificat
 
   if (section === "booking") return <div className="booking-layout">
     <section className="surface booking-form-surface">
-      <div className="surface-heading"><div><span className="eyebrow">{bookingMode !== "join" ? (bookingStep === "route" ? "الخطوة الأولى · تحديد المشوار" : "الخطوة الثانية · تفاصيل الرحلة") : "الانضمام لمجموعة"}</span><h2>{bookingMode !== "join" ? (bookingStep === "route" ? "حدد نقطتي مشوارك" : "اختار موعدك وفئتك") : "انضم لمجموعة موجودة"}</h2><p>{bookingMode !== "join" ? (bookingStep === "route" ? "ابحث عن نقطة الركوب والنزول أو حددهما بالدبوس." : "حدد الوقت، ثم قارن أسعار الباقات والفئات.") : "حدد رقم المجموعة ونقطتي الركوب والنزول."}</p></div><span className="surface-icon">{bookingMode !== "join" ? "⌖" : "＋"}</span></div>
-      {bookingMode !== "join" && <div className="booking-stepper" aria-label="خطوات إنشاء المشوار">
-        <button type="button" className={bookingStep === "route" ? "booking-step active" : "booking-step complete"} aria-label="العودة لتعديل النقط" onClick={returnToRoute}><span>١</span><strong>النقط</strong></button>
-        <i className={bookingStep === "schedule" ? "complete" : ""} />
-        <div className={bookingStep === "schedule" ? "booking-step active" : "booking-step"}><span>٢</span><strong>الموعد والفئة</strong></div>
-      </div>}
+      <div className="surface-heading"><div><span className="eyebrow">{bookingMode === "join" ? "الانضمام لمجموعة" : `الخطوة ${bookingStep === "route" ? "الأولى · تحديد المسار" : bookingStep === "schedule" ? "الثانية · الموعد والفئة" : "الثالثة · المراجعة"}`}</span><h2>{bookingMode === "join" ? (bookingStep === "review" ? "راجع طلب الانضمام" : "انضم لمجموعة موجودة") : bookingStep === "route" ? "حدد نقطتي مشوارك" : bookingStep === "schedule" ? "اختار موعدك وفئتك" : "راجع تفاصيل مشوارك"}</h2><p>{bookingMode === "join" ? (bookingStep === "review" ? "تأكد من رقم المجموعة ونقطتي الركوب والوصول قبل إرسال الطلب." : "أدخل رقم المجموعة وحدد نقطتي الركوب والوصول.") : bookingStep === "route" ? "ابحث عن نقطة الركوب والوصول أو حددهما بالدبوس." : bookingStep === "schedule" ? "حدد التاريخ والوقت والباقات والفئة." : "راجع التفاصيل مرة واحدة، ويمكنك الرجوع لتعديل أي اختيار قبل الإنشاء."}</p></div><span className="surface-icon">{bookingMode !== "join" ? "⌖" : "＋"}</span></div>
+      <div className="booking-stepper" aria-label={bookingMode === "join" ? "خطوات الانضمام للمجموعة" : "خطوات إنشاء المشوار"}>
+        {bookingMode === "join" ? <>
+          <button type="button" className={bookingStep === "route" ? "booking-step active" : "booking-step complete"} aria-current={bookingStep === "route" ? "step" : undefined} onClick={returnToRoute}><span>١</span><strong>البيانات</strong></button>
+          <i className={bookingStep === "review" ? "complete" : ""} />
+          <div className={bookingStep === "review" ? "booking-step active" : "booking-step"} aria-current={bookingStep === "review" ? "step" : undefined}><span>٢</span><strong>المراجعة</strong></div>
+        </> : <>
+          <button type="button" className={bookingStep === "route" ? "booking-step active" : "booking-step complete"} aria-current={bookingStep === "route" ? "step" : undefined} onClick={returnToRoute}><span>١</span><strong>النقط</strong></button>
+          <i className={bookingStep === "schedule" || bookingStep === "review" ? "complete" : ""} />
+          <button type="button" className={bookingStep === "schedule" ? "booking-step active" : bookingStep === "review" ? "booking-step complete" : "booking-step"} aria-current={bookingStep === "schedule" ? "step" : undefined} disabled={bookingStep === "route"} onClick={returnToSchedule}><span>٢</span><strong>الموعد والفئة</strong></button>
+          <i className={bookingStep === "review" ? "complete" : ""} />
+          <div className={bookingStep === "review" ? "booking-step active" : "booking-step"} aria-current={bookingStep === "review" ? "step" : undefined}><span>٣</span><strong>المراجعة</strong></div>
+        </>}
+      </div>
       <form className="form-stack" onSubmit={(event) => {
         event.preventDefault();
-        if (bookingMode !== "join") {
-          const submitter = (event.nativeEvent as SubmitEvent).submitter as HTMLElement | null;
-          if (bookingStep !== "schedule" || submitter?.dataset.confirmTrip !== "true") {
-            notify(bookingStep === "route" ? "اختار التاريخ والوقت والباقات والفئة قبل تأكيد المشوار." : "اضغط تأكيد المشوار لإتمام الحفظ.", "info");
-            return;
-          }
-          void createGroup(event);
-          return;
-        }
-        void joinGroup(event);
+        if (bookingStep !== "review") { notify("راجع البيانات أولًا قبل تأكيد العملية.", "info"); return; }
+        if (bookingMode === "join") void joinGroup(event);
+        else void createGroup(event);
       }}>
-        {(bookingMode === "join" || bookingStep === "route") && <>
+        {bookingStep === "route" && <>
         {bookingMode === "join" && <><label>رقم المجموعة<input type="number" min="1" value={inviteCode} onChange={(e) => setInviteCode(e.target.value)} placeholder="مثال: 124" required /></label><div className="info-note">لازم نقط الركوب والنزول تكون في حدود ٣ كم من مسار المجموعة.</div></>}
-        <details className="saved-place-tools">
-          <summary><span>الأماكن المحفوظة</span><small>{savedPlaces.length ? `${savedPlaces.length} مكان محفوظ` : "إظهار خيارات الحفظ"}</small></summary>
-          <div className="saved-place-tools-content">
-          <div className="saved-place-tools-heading">
-            <strong>اختر نقطة الاستخدام</strong>
-            <div className="saved-place-target" aria-label="المكان الذي سيُستخدم">
-              <button type="button" className={savedPlaceTarget === "pickup" ? "active" : ""} aria-pressed={savedPlaceTarget === "pickup"} onClick={() => { setSavedPlaceTarget("pickup"); setSavedPlaceMenuOpen(false); }}>للركوب</button>
-              <button type="button" className={savedPlaceTarget === "dropoff" ? "active" : ""} aria-pressed={savedPlaceTarget === "dropoff"} onClick={() => { setSavedPlaceTarget("dropoff"); setSavedPlaceMenuOpen(false); }}>للنزول</button>
-            </div>
-          </div>
-          {savedPlaces.length > 0 ? <div className="saved-place-chips">
-            {savedPlaces.map((place) => <div className="saved-place-chip" key={place.place_type}>
-              <button type="button" onClick={() => selectSavedPlace(place)} aria-label={`استخدم ${place.place_type === "home" ? "المنزل" : "العمل"} لنقطة ${savedPlaceTarget === "pickup" ? "الركوب" : "النزول"}`}>
-                <strong>{place.place_type === "home" ? "⌂ المنزل" : "▣ العمل"}</strong><span>{place.label}</span>
-              </button>
-              <button type="button" className="saved-place-remove" onClick={() => void removeSavedPlace(place.place_type)} aria-label={`حذف ${place.place_type === "home" ? "المنزل" : "العمل"} المحفوظ`}>×</button>
-            </div>)}
-          </div> : <p className="saved-place-empty">احفظ نقطة الركوب أو النزول لاستخدامها بسرعة في المرات القادمة.</p>}
-          {selectedPointForSavedPlace && typeof selectedPointForSavedPlace.lat === "number" && typeof selectedPointForSavedPlace.lng === "number" && <div className="saved-place-save">
-            <button type="button" className="saved-place-save-trigger" aria-expanded={savedPlaceMenuOpen} onClick={() => setSavedPlaceMenuOpen((open) => !open)}>
-              {savedPlaceMenuOpen ? "إغلاق خيارات الحفظ" : `حفظ نقطة ${savedPlaceTarget === "pickup" ? "الركوب" : "النزول"}`} <span aria-hidden="true">{savedPlaceMenuOpen ? "⌃" : "⌄"}</span>
-            </button>
-            {savedPlaceMenuOpen && <div className="saved-place-save-options">
-              {(["home", "work"] as const).map((placeType) => {
-                const exists = savedPlaces.some((place) => place.place_type === placeType);
-                return <button type="button" key={placeType} onClick={() => { void savePlace(placeType, selectedPointForSavedPlace); setSavedPlaceMenuOpen(false); }}>
-                  <span>{placeType === "home" ? "⌂ المنزل" : "▣ العمل"}</span><small>{exists ? "تحديث المكان" : "حفظ لأول مرة"}</small>
-                </button>;
-              })}
-            </div>}
-          </div>}
-          </div>
-        </details>
         <div className="location-search-stack">
-          <LocationSearchField kind="pickup" title="نقطة الركوب" value={pickupSearch} token={session.token} onChange={(value) => { setPickupSearch(value); setPickup(null); }} onSelect={(point) => { setSavedPlaceTarget("pickup"); setPickup(point); setPickupSearch(point.label ?? ""); }} onChooseMap={() => { setSavedPlaceTarget("pickup"); chooseMap("pickup"); }} onFocus={() => setSavedPlaceTarget("pickup")} pointSelected={hasSelectedPoint(pickup)} />
-          <LocationSearchField kind="dropoff" title="نقطة النزول" value={dropoffSearch} token={session.token} onChange={(value) => { setDropoffSearch(value); setDropoff(null); }} onSelect={(point) => { setSavedPlaceTarget("dropoff"); setDropoff(point); setDropoffSearch(point.label ?? ""); }} onChooseMap={() => { setSavedPlaceTarget("dropoff"); chooseMap("dropoff"); }} onFocus={() => setSavedPlaceTarget("dropoff")} pointSelected={hasSelectedPoint(dropoff)} />
+          <LocationSearchField kind="pickup" title="نقطة الركوب" value={pickupSearch} token={session.token} savedPlaces={savedPlaces} onChange={(value) => { setPickupSearch(value); setPickup(null); }} onSelect={(point) => { setPickup(point); setPickupSearch(point.label ?? ""); }} onChooseMap={() => chooseMap("pickup")} onFocus={() => undefined} pointSelected={hasSelectedPoint(pickup)} />
+          <LocationSearchField kind="dropoff" title="نقطة النزول" value={dropoffSearch} token={session.token} savedPlaces={savedPlaces} onChange={(value) => { setDropoffSearch(value); setDropoff(null); }} onSelect={(point) => { setDropoff(point); setDropoffSearch(point.label ?? ""); }} onChooseMap={() => chooseMap("dropoff")} onFocus={() => undefined} pointSelected={hasSelectedPoint(dropoff)} />
         </div>
         <small className="location-search-attribution">نتائج الأماكن من OpenStreetMap</small>
         {mapOpen && <section className="booking-map-panel" aria-label="اختيار الموقع من الخريطة">
@@ -374,7 +356,32 @@ export default function RiderWorkspace({ session, section, setSection, notificat
             
           </section>
         </>}
-        {bookingMode !== "join" ? bookingStep === "route" ? <button type="button" className="button button-primary button-wide" onClick={continueToSchedule}>التالي · الموعد والأسعار <span>←</span></button> : <button type="submit" data-confirm-trip="true" className="button button-primary button-wide" disabled={submitting || !categoryId || dates.length !== (packageType === "daily" ? 1 : packageType === "weekly" ? 5 : 22) || Boolean(pickup && dropoff) && (!priceQuotes || priceLoading)}>{submitting ? "جاري الحفظ…" : !categoryId ? "اختار الفئة لإكمال الحجز" : bookingMode === "edit" ? "حفظ التعديلات" : "تأكيد المشوار"} <span>←</span></button> : <button type="submit" className="button button-primary button-wide" disabled={submitting}>{submitting ? "جاري الحفظ…" : "الانضمام للمجموعة"} <span>←</span></button>}
+        {bookingStep === "review" && <section className="booking-review" aria-labelledby="booking-review-title">
+          <div className="booking-review-heading"><div><span className="eyebrow">ملخص قبل التأكيد</span><h3 id="booking-review-title">تأكد من بيانات المشوار</h3></div><span className="status-chip status-waiting">مراجعة</span></div>
+          {bookingMode === "join" ? <>
+            <div className="booking-review-row"><span>رقم المجموعة</span><strong>#{inviteCode}</strong></div>
+            <div className="booking-review-row"><span>نقطة الركوب</span><strong>{pickup?.label || "لم يتم تحديدها"}</strong><button type="button" className="text-action" onClick={returnToRoute}>تعديل</button></div>
+            <div className="booking-review-row"><span>نقطة الوصول</span><strong>{dropoff?.label || "لم يتم تحديدها"}</strong><button type="button" className="text-action" onClick={returnToRoute}>تعديل</button></div>
+            <p className="booking-review-note">سيُرسل طلب الانضمام للمجموعة بعد تأكيدك.</p>
+          </> : <>
+            <div className="booking-review-section"><div className="booking-review-section-title"><strong>المسار</strong><button type="button" className="text-action" onClick={returnToRoute}>تعديل</button></div>
+              <div className="booking-review-row"><span>نقطة الركوب</span><strong>{pickup?.label || "لم يتم تحديدها"}</strong></div>
+              <div className="booking-review-row"><span>نقطة الوصول</span><strong>{dropoff?.label || "لم يتم تحديدها"}</strong></div>
+            </div>
+            <div className="booking-review-section"><div className="booking-review-section-title"><strong>الموعد والفئة</strong><button type="button" className="text-action" onClick={returnToSchedule}>تعديل</button></div>
+              <div className="booking-review-row"><span>الباقة</span><strong>{packageType === "daily" ? "يومية" : packageType === "weekly" ? "أسبوعية" : "شهرية"} · {dates.length} {dates.length === 1 ? "يوم خدمة" : "أيام خدمة"}</strong></div>
+              <div className="booking-review-row"><span>أول موعد خدمة</span><strong>{dates[0] ? formatDate(dates[0]) : "—"}</strong></div>
+              <div className="booking-review-row"><span>وقت الذهاب والعودة</span><strong>{morning} · {returnTime}</strong></div>
+              <div className="booking-review-row"><span>الفئة</span><strong>{selectedCategory ? `${categoryName(selectedCategory)} · ${selectedCategory.seats} مقاعد` : "لم يتم تحديدها"}</strong></div>
+              <div className="booking-review-total"><span>السعر التقديري للفرد / يوم</span><strong>{priceLabel(packageType)}</strong></div>
+            </div>
+            <p className="booking-review-note">لن يتم إنشاء المجموعة إلا بعد الضغط على زر التأكيد أدناه.</p>
+          </>}
+        </section>}
+        {bookingStep === "route" && bookingMode !== "join" && <button type="button" className="button button-primary button-wide" onClick={continueToSchedule}>التالي · الموعد والفئة <span>←</span></button>}
+        {bookingStep === "route" && bookingMode === "join" && <button type="button" className="button button-primary button-wide" onClick={continueToReview}>مراجعة طلب الانضمام <span>←</span></button>}
+        {bookingStep === "schedule" && <button type="button" className="button button-primary button-wide" disabled={submitting} onClick={continueToReview}>مراجعة المشوار <span>←</span></button>}
+        {bookingStep === "review" && <div className="booking-review-actions"><button type="button" className="button button-outline" onClick={bookingMode === "join" ? returnToRoute : returnToSchedule} disabled={submitting}>رجوع للتعديل</button><button type="submit" className="button button-primary" disabled={submitting}>{submitting ? bookingMode === "join" ? "جارٍ إرسال الطلب…" : "جارٍ إنشاء المجموعة…" : bookingMode === "join" ? "تأكيد الانضمام للمجموعة" : bookingMode === "edit" ? "حفظ التعديلات" : "تأكيد إنشاء المجموعة"} <span>←</span></button></div>}
       </form>
     </section>
     
@@ -392,7 +399,13 @@ export default function RiderWorkspace({ session, section, setSection, notificat
     <section className="dashboard-main">
       <div className="welcome-banner"><div className="welcome-copy"><span className="eyebrow">سِكّة أقرب لك</span><h2>طريقك أسهل<br /><em>مع سِكّة.</em></h2><div className="welcome-actions"><button className="button button-dark" onClick={() => openBooking("new")}>إنشاء مشوار جديد <span>←</span></button>{groups.length > 0 && <button className="button button-secondary" onClick={() => openBooking("join")}>انضم لمجموعة <span>←</span></button>}</div></div><div className="welcome-illustration"><div className="sun-orbit" /><div className="route-art"><span /><i /><i /><i /><b /></div><div className="mini-car">▰</div></div></div>
       <div className="section-title-row rider-trips-heading"><h2>مشاويرك الحالية</h2><button className="text-action" onClick={() => setSection("trips")}>عرض الكل <span>←</span></button></div>
-      {groups.length ? <div className="group-list">{groups.slice(0, 1).map((view) => <GroupSummary key={view.group.id} view={view} categories={categories} onClick={() => { setSelectedGroup(view.group.id); setSection("trips"); }} />)}</div> : <RiderRouteDiscovery token={session.token} savedPlaces={savedPlaces} categories={categories} onJoin={(match, routePickup, routeDropoff) => openBooking("join", { groupId: match.group.id, pickup: routePickup, dropoff: routeDropoff })} onJoinByCode={() => openBooking("join")} />}
+      {groups.length > 0 && <div className="group-list">{groups.slice(0, 1).map((view) => <GroupSummary key={view.group.id} view={view} categories={categories} onClick={() => { setSelectedGroup(view.group.id); setSection("trips"); }} />)}</div>}
+      <RiderCommuterBoard token={session.token} places={savedPlaces} groups={groups} categories={categories}
+        onCreateTrip={(type) => { openBooking("new"); if (type) { setPackageType(type); setDates(defaultDates(type)); } }}
+        onOpenTrips={() => setSection("trips")}
+        onJoin={(match, routePickup, routeDropoff) => openBooking("join", { groupId: match.group.id, pickup: routePickup, dropoff: routeDropoff })}
+        onManagePreferences={() => setSection("account")}
+        onInviteFriends={() => window.dispatchEvent(new CustomEvent("sekka:invite-friends"))} />
     </section>
   </div>;
 }

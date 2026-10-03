@@ -821,11 +821,46 @@ button { line-height: 1.45; }
 .workspace .location-search-dropoff .location-search-results button:hover { border-color: var(--cyan); }
 .workspace .location-search-results button span { flex: 0 0 auto; color: var(--yellow); font-size: .75rem; }
 .workspace .location-search-dropoff .location-search-results button span { color: var(--cyan); }
+.workspace .location-search-results .location-search-saved-heading { padding: .35rem .55rem .1rem; color: var(--yellow); font-size: .72rem; font-weight: 700; }
+.workspace .location-search-results .location-search-saved-option { display: grid; grid-template-columns: 1.7rem minmax(0, 1fr) auto; align-items: center; text-align: right; }
+.workspace .location-search-saved-option > span:nth-child(2) { display: grid; min-width: 0; gap: .12rem; }
+.workspace .location-search-saved-option > span:nth-child(2) strong { color: var(--ink); font-size: .82rem; }
+.workspace .location-search-saved-option > span:nth-child(2) small { overflow: hidden; color: var(--muted); text-overflow: ellipsis; white-space: nowrap; }
+.workspace .location-search-saved-option .location-search-saved-mark { display: grid; place-items: center; width: 1.55rem; height: 1.55rem; color: var(--yellow); background: rgba(255,210,31,.1); border-radius: 50%; }
 .workspace .booking-map { scroll-margin-block: 1rem; }
 @media (max-width: 560px) {
   .workspace .location-search-field { padding: .65rem; }
   .workspace .location-search-form input { font-size: .88rem; }
   .workspace .location-search-results button { align-items: flex-start; flex-direction: column; }
+}
+
+.route-preferences-card { display: grid; gap: .85rem; width: 100%; border-radius: 1.1rem; }
+.route-preferences-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+.route-preference-field { min-width: 0; }
+.route-preferences-card .location-search-field { min-width: 0; padding: .8rem; background: rgba(0,0,0,.12); border: 1px solid var(--line); border-radius: .85rem; }
+.route-preferences-card .location-search-heading { display: flex; align-items: center; gap: .5rem; margin-bottom: .55rem; }
+.route-preferences-card .location-search-heading strong { flex: 1; color: var(--ink); font-size: .88rem; }
+.route-preferences-card .location-device-pin,
+.route-preferences-card .location-map-pin { display: grid; flex: 0 0 2.25rem; place-items: center; width: 2.25rem; height: 2.25rem; color: #201b09; background: var(--yellow); border: 0; border-radius: .65rem; font-size: 1.1rem; }
+.route-preferences-card .location-map-pin { color: var(--cyan); background: rgba(158,232,230,.12); border: 1px solid rgba(158,232,230,.25); }
+.route-preferences-card .location-search-dropoff .location-device-pin { color: #15302d; background: var(--cyan); }
+.route-preferences-card .location-search-dropoff .location-map-pin { color: var(--cyan); background: rgba(158,232,230,.12); }
+.route-preferences-card .location-search-form input { width: 100%; min-width: 0; min-height: 2.65rem; padding: .55rem .7rem; }
+.route-preferences-card .location-search-results { display: grid; gap: .35rem; padding: 0; margin: .55rem 0 0; list-style: none; }
+.route-preferences-card .location-search-results li { min-width: 0; }
+.route-preferences-card .location-search-results .location-search-saved-heading { padding: .35rem .55rem .1rem; color: var(--yellow); font-size: .72rem; font-weight: 700; }
+.route-preferences-card .location-search-results button { display: flex; align-items: center; justify-content: space-between; gap: .6rem; width: 100%; padding: .65rem .7rem; color: var(--ink); text-align: right; background: rgba(0,0,0,.16); border: 1px solid var(--line); border-radius: .65rem; }
+.route-preferences-card .location-search-results button:hover { border-color: var(--yellow); }
+.route-preferences-card .location-search-results button span { flex: 0 0 auto; color: var(--yellow); font-size: .75rem; }
+.route-preferences-card .location-search-message { margin: .5rem .1rem 0; color: var(--muted); font-size: .8rem; }
+.route-preferences-footer { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding-top: .7rem; border-top: 1px solid var(--line); }
+.route-preferences-footer small { color: var(--muted); line-height: 1.55; }
+.route-onboarding-content > .route-preferences-card { max-width: 54rem; }
+.workspace .account-grid > .route-preferences-card { grid-column: 1 / -1; }
+@media (max-width: 680px) {
+  .route-preferences-fields { grid-template-columns: minmax(0, 1fr); }
+  .route-preferences-footer { align-items: stretch; flex-direction: column; }
+  .workspace .location-search-results .location-search-saved-option { align-items: center; flex-direction: row; }
 }
 
 
@@ -1298,7 +1333,7 @@ button { line-height: 1.45; }
 }
 
 
-/* Rider booking is a short two-step flow: route first, then schedule and price. */
+/* Rider booking uses a stable route, schedule, then review progression. */
 .workspace .booking-stepper {
   display: flex;
   align-items: center;
@@ -1724,51 +1759,67 @@ button { line-height: 1.45; }
 .workspace .rider-join-heading h3, .workspace .rider-join-card p { margin: 0; }
 .workspace .rider-join-card p { color: var(--muted); line-height: 1.5; }
 
-/* Route based ride discovery on the rider dashboard. */
-.workspace .rider-discovery-card { display: grid; gap: .85rem; padding: clamp(.9rem, 2vw, 1.25rem); margin-top: .8rem; border-color: rgba(255,210,31,.2); }
-.workspace .rider-discovery-header { display: flex; align-items: flex-start; justify-content: space-between; gap: .8rem; }
-.workspace .rider-discovery-header > div { min-width: 0; }
-.workspace .rider-discovery-header h3 { margin: .15rem 0; font-size: 1.2rem; }
-.workspace .rider-discovery-header p { margin: .2rem 0 0; color: var(--muted); font-size: .88rem; line-height: 1.55; }
-.workspace .rider-discovery-mark { display: grid; flex: 0 0 2.4rem; width: 2.4rem; height: 2.4rem; place-items: center; color: var(--yellow); background: rgba(255,210,31,.08); border: 1px solid rgba(255,210,31,.24); border-radius: 50%; font-size: 1.65rem; line-height: 1; }
-.workspace .rider-discovery-presets { display: flex; align-items: center; flex-wrap: wrap; gap: .45rem; padding: .55rem .65rem; background: rgba(158,232,230,.045); border: 1px solid rgba(158,232,230,.14); border-radius: .8rem; }
-.workspace .rider-discovery-presets > span { margin-inline-end: auto; color: var(--muted); font-size: .78rem; }
-.workspace .rider-discovery-presets button { padding: .45rem .6rem; color: var(--ink); background: #171309; border: 1px solid var(--line); border-radius: .6rem; font-size: .8rem; }
-.workspace .rider-discovery-presets button:hover { border-color: var(--cyan); }
-.workspace .rider-discovery-presets i { color: var(--yellow); font-style: normal; }
-.workspace .rider-discovery-locations { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; }
-.workspace .rider-discovery-locations .location-search-field { align-content: start; min-width: 0; padding: .7rem; background: rgba(0,0,0,.12); border: 1px solid var(--line); border-radius: .8rem; }
-.workspace .rider-discovery-locations .location-search-heading { gap: .4rem; }
-.workspace .rider-discovery-locations .location-search-heading strong { font-size: .85rem; }
-.workspace .rider-discovery-locations .location-search-form input { min-height: 2.7rem; }
-.workspace .rider-discovery-actions { display: flex; align-items: center; justify-content: space-between; gap: .65rem; }
-.workspace .rider-discovery-actions small, .workspace .rider-discovery-attribution { color: var(--muted); font-size: .74rem; line-height: 1.5; }
-.workspace .rider-discovery-actions .button { flex: 0 0 auto; }
-.workspace .rider-discovery-map { margin: 0; padding: .65rem; background: #171309; border: 1px solid var(--line); border-radius: .9rem; }
-.workspace .rider-discovery-map .booking-map { height: min(48vh, 22rem); min-height: 14rem; border-radius: .7rem; overflow: hidden; }
-.workspace .rider-discovery-error { margin: 0; padding: .6rem .75rem; color: #ffb4ab; background: rgba(255,116,104,.08); border: 1px solid rgba(255,116,104,.2); border-radius: .65rem; font-size: .82rem; }
-.workspace .rider-discovery-status { margin: 0; padding: .7rem; color: var(--cyan); text-align: center; background: rgba(158,232,230,.06); border-radius: .7rem; }
-.workspace .rider-discovery-empty { display: grid; justify-items: start; gap: .3rem; padding: .85rem; background: rgba(255,210,31,.045); border: 1px dashed rgba(255,210,31,.25); border-radius: .75rem; }
-.workspace .rider-discovery-empty strong { color: var(--ink); font-size: .9rem; }
-.workspace .rider-discovery-empty > span { color: var(--muted); font-size: .8rem; line-height: 1.5; }
-.workspace .rider-discovery-empty .text-action { margin-top: .2rem; color: var(--yellow); }
-.workspace .rider-discovery-results { display: grid; gap: .55rem; }
-.workspace .rider-discovery-results-heading { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
-.workspace .rider-discovery-results-heading span { color: var(--muted); font-size: .78rem; }
-.workspace .rider-discovery-result { display: grid; gap: .5rem; min-width: 0; padding: .75rem; background: linear-gradient(135deg, rgba(255,210,31,.055), rgba(158,232,230,.035)); border: 1px solid var(--line); border-radius: .8rem; }
-.workspace .rider-discovery-result-top, .workspace .rider-discovery-result-main { display: flex; align-items: center; justify-content: space-between; gap: .6rem; min-width: 0; }
-.workspace .rider-discovery-result-top { color: var(--muted); font-size: .78rem; }
-.workspace .rider-discovery-result-top .status-chip { padding: .2rem .45rem; border-radius: 999px; }
-.workspace .rider-discovery-result-main > * { min-width: 0; }
-.workspace .rider-discovery-result-main b { color: var(--yellow); font-size: .87rem; text-align: left; }
-.workspace .rider-discovery-result-meta { display: flex; flex-wrap: wrap; gap: .3rem .8rem; color: var(--muted); font-size: .76rem; }
-.workspace .rider-discovery-result > .button { justify-self: end; }
-.workspace .rider-discovery-attribution { justify-self: end; }
-@media (max-width: 560px) {
-  .workspace .rider-discovery-locations { grid-template-columns: minmax(0, 1fr); }
-  .workspace .rider-discovery-actions { align-items: stretch; flex-direction: column; }
-  .workspace .rider-discovery-actions .button { width: 100%; }
-  .workspace .rider-discovery-presets > span { flex-basis: 100%; }
-  .workspace .rider-discovery-result-main { align-items: flex-start; flex-direction: column; gap: .15rem; }
-  .workspace .rider-discovery-result > .button { justify-self: stretch; }
-}
+/* Review states create one clear checkpoint before rider and captain actions. */
+.workspace .booking-review { display: grid; gap: .7rem; min-width: 0; padding: .9rem; background: rgba(255, 210, 31, .035); border: 1px solid var(--line); border-radius: .85rem; }
+.workspace .booking-review-heading,
+.workspace .booking-review-section-title,
+.workspace .captain-offer-review-heading { display: flex; align-items: center; justify-content: space-between; gap: .65rem; }
+.workspace .booking-review-heading h3,
+.workspace .captain-offer-review-heading h2 { margin: .15rem 0 0; font-size: 1.05rem; }
+.workspace .booking-review-section { display: grid; gap: .4rem; padding-top: .6rem; border-top: 1px solid var(--line); }
+.workspace .booking-review-section-title { margin-bottom: .1rem; }
+.workspace .booking-review-section-title > strong { color: var(--yellow); }
+.workspace .booking-review-row { display: grid; grid-template-columns: minmax(7rem, .65fr) minmax(0, 1.35fr) auto; align-items: start; gap: .45rem .7rem; padding: .45rem 0; border-bottom: 1px solid rgba(243, 236, 217, .08); }
+.workspace .booking-review-row > span,
+.workspace .booking-review-total > span,
+.workspace .captain-offer-review-grid small { color: var(--muted); }
+.workspace .booking-review-row > strong { min-width: 0; color: var(--ink); overflow-wrap: anywhere; }
+.workspace .booking-review-total { display: flex; justify-content: space-between; gap: .7rem; padding-top: .5rem; }
+.workspace .booking-review-total > strong { color: var(--yellow); }
+.workspace .booking-review-note { margin: 0; color: var(--muted); font-size: .82rem; line-height: 1.55; }
+.workspace .booking-review-actions,
+.workspace .captain-offer-review-actions { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: .6rem; }
+.workspace .booking-review-actions > *,
+.workspace .captain-offer-review-actions > * { min-width: 0; }
+.workspace .captain-offer-review { display: grid; gap: .8rem; margin-bottom: .9rem; border-color: rgba(255, 210, 31, .28); }
+.workspace .captain-offer-review-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .55rem; }
+.workspace .captain-offer-review-grid > div { display: grid; align-content: start; gap: .2rem; min-width: 0; padding: .65rem; background: rgba(0, 0, 0, .12); border: 1px solid var(--line); border-radius: .65rem; }
+.workspace .captain-offer-review-grid strong { overflow-wrap: anywhere; }
+
+
+
+
+/* Personalized commuter board and optional commute preferences. */
+.workspace .commuter-board { display: grid; gap: .7rem; margin-top: .8rem; padding: clamp(.9rem, 2vw, 1.2rem); border-color: rgba(255,210,31,.24); overflow: hidden; }
+.workspace .commuter-board-viewport { min-width: 0; touch-action: pan-y; }
+.workspace .commuter-board-card { min-height: 14rem; display: grid; align-items: center; padding: clamp(.4rem, 1vw, .8rem); animation: commuter-card-in .22s ease-out both; }
+.workspace .commuter-board-copy { position: relative; display: grid; justify-items: start; gap: .45rem; max-width: 42rem; padding-inline-start: clamp(0rem, 8vw, 4.5rem); }
+.workspace .commuter-board-icon { position: absolute; inset-inline-start: 0; top: .1rem; display: grid; width: 2.9rem; height: 2.9rem; place-items: center; color: var(--yellow); background: rgba(255,210,31,.09); border: 1px solid rgba(255,210,31,.24); border-radius: 50%; font-size: 1.5rem; }
+.workspace .commuter-board-copy h2, .workspace .commuter-board-copy p { margin: 0; }
+.workspace .commuter-board-copy h2 { color: var(--ink); font-size: clamp(1.25rem, 4vw, 1.65rem); line-height: 1.35; }
+.workspace .commuter-board-copy p { color: var(--muted); font-size: .95rem; line-height: 1.7; white-space: normal; }
+.workspace .commuter-board-meta { color: var(--yellow); font-size: .82rem; line-height: 1.5; }
+.workspace .commuter-board-cta { min-width: min(100%, 14rem); margin-top: .35rem; }
+.workspace .commuter-board-controls { display: flex; align-items: center; justify-content: center; gap: .75rem; }
+.workspace .commuter-board-arrow { display: grid; width: 2rem; height: 2rem; place-items: center; color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 50%; font-size: 1.2rem; }
+.workspace .commuter-board-indicators { display: flex; align-items: center; justify-content: center; gap: .45rem; }
+.workspace .commuter-board-indicators button { width: .5rem; height: .5rem; padding: 0; background: var(--line); border: 0; border-radius: 999px; transition: width .18s ease, background .18s ease; }
+.workspace .commuter-board-indicators button.active { width: 1.4rem; background: var(--yellow); }
+.workspace .commuter-preferences-schedule { display: grid; gap: .8rem; min-width: 0; margin: .85rem 0 0; padding: .85rem; border: 1px solid var(--line); border-radius: .85rem; }
+.workspace .commuter-preferences-schedule legend { padding-inline: .4rem; color: var(--ink); font-weight: 700; }
+.workspace .commuter-preferences-schedule legend small, .workspace .commuter-preferences-frequent > div small { display: block; margin-top: .18rem; color: var(--muted); font-size: .78rem; font-weight: 400; }
+.workspace .commuter-preferences-days { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: .35rem; }
+.workspace .commuter-preferences-days label { display: grid; justify-items: center; gap: .3rem; padding: .45rem .15rem; color: var(--muted); border: 1px solid var(--line); border-radius: .6rem; font-size: .72rem; cursor: pointer; }
+.workspace .commuter-preferences-days label.selected { color: var(--yellow); border-color: rgba(255,210,31,.6); background: rgba(255,210,31,.06); }
+.workspace .commuter-preferences-days input { accent-color: var(--yellow); }
+.workspace .commuter-preferences-times { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .7rem; }
+.workspace .commuter-preferences-times label { display: grid; gap: .35rem; color: var(--muted); font-size: .82rem; }
+.workspace .commuter-preferences-times input { min-width: 0; padding: .65rem; color: var(--ink); color-scheme: dark; background: #171309; border: 1px solid var(--line); border-radius: .6rem; font: inherit; }
+.workspace .commuter-preferences-frequent { display: grid; gap: .55rem; margin-top: .8rem; }
+.workspace .commuter-preferences-frequent .location-search-field { padding: .65rem; background: rgba(0,0,0,.12); border: 1px solid var(--line); border-radius: .8rem; }
+.workspace .commuter-preferences-place-list { display: flex; flex-wrap: wrap; gap: .4rem; }
+.workspace .commuter-preferences-place-list > span { display: inline-flex; align-items: center; gap: .35rem; max-width: 100%; padding: .35rem .55rem; color: var(--ink); background: rgba(158,232,230,.07); border: 1px solid rgba(158,232,230,.22); border-radius: 999px; font-size: .78rem; }
+.workspace .commuter-preferences-place-list button { color: var(--muted); background: transparent; border: 0; font-size: 1rem; }
+@keyframes commuter-card-in { from { opacity: .35; transform: translateY(.25rem); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .workspace .commuter-board-card { animation: none; } .workspace .commuter-board-indicators button { transition: none; } }
+@media (max-width: 560px) { .workspace .commuter-board-card { min-height: 13rem; } .workspace .commuter-board-copy { padding-inline-start: 0; padding-top: 3.25rem; } .workspace .commuter-board-icon { inset-inline-start: auto; inset-inline-end: 0; top: 0; } .workspace .commuter-preferences-days { grid-template-columns: repeat(4, minmax(0,1fr)); } .workspace .commuter-preferences-times { grid-template-columns: 1fr; } }

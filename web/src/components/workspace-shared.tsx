@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import MapPicker from "../MapPicker";
+import RiderRoutePreferences from "./RiderRoutePreferences";
 import { categoryName, errorText, formatDate, money, statusLabel } from "../lib/formatters";
 import { getConfiguredPushPublicKey, hasPushSubscription, subscribeToPush, unsubscribeFromPush } from "../lib/push";
 import { api, type Category, type GroupView, type Notification } from "../api";
@@ -137,5 +138,6 @@ export function AccountPanel({ session, notify }: { session: Session; notify: (t
     finally { setBusy(false); }
   };
   return <div className="account-grid"><section className="surface account-card"><span className="account-avatar">{session.user.full_name.slice(0, 1)}</span><span className="eyebrow">بيانات الحساب</span><h2>{session.user.full_name}</h2><p>{session.user.phone_number}</p><span className="status-chip status-active">{session.user.role === "rider" ? "راكب" : session.user.role === "captain" ? "كابتن" : "مدير النظام"}</span><div className="account-meta"><span>عضو منذ</span><strong>{new Intl.DateTimeFormat("ar-EG", { day: "numeric", month: "long", year: "numeric" }).format(new Date(session.user.created_at ?? Date.now()))}</strong></div></section>
+    {session.user.role === "rider" && <RiderRoutePreferences token={session.token} notify={notify} />}
     <section className="surface password-card"><div className="surface-heading"><div><span className="eyebrow">الأمان والخصوصية</span><h2>تغيير كلمة السر</h2><p>اختار كلمة سر قوية ومختلفة عن الحالية.</p></div><span className="surface-icon">⌑</span></div><form className="form-stack" onSubmit={submit}><label>كلمة السر الحالية<input type="password" value={current} onChange={(e) => setCurrent(e.target.value)} autoComplete="current-password" required /></label><label>كلمة السر الجديدة<input type="password" value={next} onChange={(e) => setNext(e.target.value)} autoComplete="new-password" minLength={8} required /></label><button className="button button-primary button-small" disabled={busy}>{busy ? "جاري التحديث…" : "حفظ كلمة السر"}</button></form></section></div>;
 }

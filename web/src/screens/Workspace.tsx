@@ -97,7 +97,7 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
       window.removeEventListener("offline", updateConnection);
     };
   }, []);
-  const inviteFriends = async () => {
+  const inviteFriends = useCallback(async () => {
     const invite = { title: "أطلب سِكّة", text: "شارك الطريق مع ناس رايحة في نفس اتجاهك.", url: window.location.origin };
     try {
       if (navigator.share) await navigator.share(invite);
@@ -105,7 +105,12 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
       else notify("شارك رابط التطبيق مع أصدقائك.", "info");
     } catch { /* تجاهل إغلاق نافذة المشاركة من المستخدم */ }
     setNavOpen(false);
-  };
+  }, [notify]);
+  useEffect(() => {
+    const invite = () => { void inviteFriends(); };
+    window.addEventListener("sekka:invite-friends", invite);
+    return () => window.removeEventListener("sekka:invite-friends", invite);
+  }, [inviteFriends]);
 
   const nav: { key: NavKey; label: string; icon: string }[] = session.user.role === "rider"
     ? [{ key: "home", label: "الرئيسية", icon: "⌂" }, { key: "booking", label: "مشوار جديد", icon: "＋" }, { key: "trips", label: "رحلاتي", icon: "↗" }, { key: "notifications", label: "الرسائل", icon: "✉" }, { key: "account", label: "الإعدادات", icon: "⚙" }]

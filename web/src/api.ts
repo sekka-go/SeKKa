@@ -4,7 +4,21 @@ export interface Category {
   id: string; speed_tier: "faster" | "saver"; has_ac: number; seats: number;
   base_fee: number; rate_per_km: number; rate_per_min: number;
 }
-export interface SavedPlace { place_type: "home" | "work"; label: string; lat: number; lng: number; }
+export interface SavedPlace { place_type: "home" | "work" | "frequent"; label: string; lat: number; lng: number; }
+export interface RiderCommuterPreferences {
+  usual_days: number[];
+  usual_departure_time: string;
+  usual_return_time: string;
+  frequent_places: Array<{ label: string; lat: number; lng: number }>;
+}
+export type CommuterCardType = "commute_match" | "recurring_commute" | "weekly_reminder" | "monthly_reminder" | "invite_friends" | "new_match" | "empty" | "campaign";
+export type CommuterCardAction = "open-booking" | "open-trips" | "invite-friends" | "manage-preferences" | "join-group";
+export interface CommuterBoardCard {
+  id: string; type: CommuterCardType; title: string; description: string; icon: string;
+  cta_text: string; cta_action: CommuterCardAction; priority: number;
+  targeting_rules: Record<string, unknown>; start_date: string | null; end_date: string | null;
+  active: boolean; display_duration: number; group_id?: number;
+}
 
 export interface RouteLine { type: "LineString"; coordinates: [number, number][] }
 export interface RouteSegment {
