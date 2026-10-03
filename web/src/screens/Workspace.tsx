@@ -105,7 +105,7 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
 
   return <div className="workspace">
     <aside className={`sidebar ${navOpen ? "sidebar-open" : ""}`}>
-      <div className="sidebar-brand"><BrandLogo variant="dark" /><button className="sidebar-close" onClick={() => setNavOpen(false)} aria-label="إغلاق القائمة">×</button></div>
+      <div className="sidebar-brand"><BrandLogo /><button className="sidebar-close" onClick={() => setNavOpen(false)} aria-label="إغلاق القائمة">×</button></div>
       <div className="sidebar-label">{session.user.role === "rider" ? "مساحة الراكب" : session.user.role === "captain" ? "مساحة الكابتن" : "إدارة سِكّة"}</div>
       <nav aria-label="التنقل الرئيسي">{nav.map((item) => <button key={item.key} aria-current={section === item.key ? "page" : undefined} className={`nav-item ${section === item.key ? "nav-active" : ""}`} onClick={() => { if (item.key === "booking") window.dispatchEvent(new CustomEvent("sekka:booking-mode", { detail: "new" })); setSection(item.key); setNavOpen(false); }}><span className="nav-icon">{item.icon}</span>{item.label}{item.key === "notifications" && unread > 0 && <b className="nav-count">{unread}</b>}</button>)}</nav>
       <div className="sidebar-spacer" />

@@ -28,7 +28,7 @@ export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (sessio
 
   return <main className="auth-page">
     <header className="auth-page-header">
-      <a href="/" aria-label="سِكّة، الرئيسية"><BrandLogo variant="light" /></a>
+      <a href="/" aria-label="سِكّة، الرئيسية"><BrandLogo /></a>
     </header>
     <section className="auth-page-content">
       <div className="auth-card auth-page-card">

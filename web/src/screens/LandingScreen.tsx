@@ -4,7 +4,7 @@ export default function LandingScreen() {
   return (
     <main className="landing-page">
       <header className="landing-header">
-        <a className="landing-brand" href="/" aria-label="سِكّة، الرئيسية"><BrandLogo variant="light" /></a>
+        <a className="landing-brand" href="/" aria-label="سِكّة، الرئيسية"><BrandLogo /></a>
       </header>
 
       <section className="landing-hero">
