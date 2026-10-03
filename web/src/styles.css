@@ -1090,3 +1090,23 @@ button { line-height: 1.45; }
 @media (max-width: 800px) {
   .workspace .workspace-back { margin-inline-end: -.35rem; }
 }
+
+.workspace .category-select-label {
+  display: grid;
+  gap: .45rem;
+  color: var(--muted);
+  font-size: .85rem;
+}
+.workspace .category-select {
+  width: 100%;
+  min-height: 3rem;
+  padding: .7rem .85rem;
+  color: var(--ink);
+  direction: rtl;
+  text-align: right;
+  background: #171309;
+  border: 1px solid var(--line);
+  border-radius: .7rem;
+}
+.workspace .category-select:focus { border-color: var(--yellow); }
+.workspace .category-select option { color: var(--ink); background: #171309; }

@@ -13,7 +13,7 @@ export default function LandingScreen() {
           <h1>مشوارك اليومي،<br /><em>على سِكّة أسهل.</em></h1>
           <p>شارك الطريق مع ناس رايحة في نفس اتجاهك، وخلي تنقّلك أبسط.</p>
           <div className="landing-hero-actions">
-            <a className="button landing-primary-cta" href="/register">ابدأ رحلتك <span aria-hidden="true">←</span></a>
+            <a className="button landing-primary-cta" href="/login">ابدأ رحلتك <span aria-hidden="true">←</span></a>
           </div>
           <div className="landing-trust"><span className="landing-trust-dot" />متاحة في القاهرة والجيزة</div>
         </div>
