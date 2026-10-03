@@ -3,7 +3,7 @@ import type { DatabaseSync } from "node:sqlite";
 import { requireAuth } from "../middleware/require-auth.js";
 import { requireRole } from "../middleware/require-role.js";
 import { calculatePerSeatFare, calculatePoolRouteFare, findPoolCategory } from "../pricing/pool-fare.js";
-import { isWithinGroupPath, isWithinRouteLine, planDiscount, routeStops, serviceDates, roundMoney, distanceKm, type PoolRouteMember } from "../pool/geometry.js";
+import { isWithinGroupPath, isWithinRouteLine, routeLineDistanceKm, planDiscount, routeStops, serviceDates, roundMoney, distanceKm, type PoolRouteMember } from "../pool/geometry.js";
 import { getRoadRoute } from "../pool/osrm.js";
 import { calculatePoolSettlement } from "../finance/settlement.js";
 import { calculateCaptainEscrowReserve, calculateCaptainEscrowTransfer } from "../finance/captain-escrow.js";
@@ -13,6 +13,8 @@ type Group = { id: number; created_by_user_id: number; category_id: string; pack
 type Member = PoolRouteMember & { group_id: number; rider_user_id: number; status: string; price_decision: string; seats_reserved: number };
 const MIN_SEATS: Record<string, number> = { faster: 2, saver: 3 };
 const MAX_CAPTAIN_RANGE_KM = 10;
+const GREATER_CAIRO = { south: 29.65, west: 30.55, north: 30.45, east: 31.85 };
+function insideGreaterCairo(lat: number, lng: number) { return lat >= GREATER_CAIRO.south && lat <= GREATER_CAIRO.north && lng >= GREATER_CAIRO.west && lng <= GREATER_CAIRO.east; }
 async function routeFare(category: NonNullable<ReturnType<typeof findPoolCategory>>, members: PoolRouteMember[]) {
   const outbound = routeStops(members, "outbound");
   const returning = routeStops(members, "return");
@@ -443,6 +445,40 @@ export function createPoolRouter(db: DatabaseSync) {
     processPoolDeadlines(db);
     const ids = db.prepare("SELECT DISTINCT group_id FROM pool_members WHERE rider_user_id=? ORDER BY group_id DESC").all(req.auth!.userId) as unknown as { group_id: number }[];
     res.json({ groups: ids.map(({ group_id }) => responseGroup(db, group_id, req.auth!.userId)) });
+  });
+
+  router.post("/rider/pool/discover", ...rider, (req, res) => {
+    processPoolDeadlines(db);
+    const body = (req.body ?? {}) as Record<string, unknown>;
+    if (!coords(body) || !insideGreaterCairo(body.pickup_lat, body.pickup_lng) || !insideGreaterCairo(body.dropoff_lat, body.dropoff_lng)) {
+      res.status(400).json({ error: "حدد نقطتي ركوب ووصول داخل القاهرة الكبرى." }); return;
+    }
+    const existing = new Set((db.prepare("SELECT group_id FROM pool_members WHERE rider_user_id=? AND status IN ('active','awaiting_confirmation')").all(req.auth!.userId) as { group_id: number }[]).map((row) => row.group_id));
+    const groups = db.prepare("SELECT * FROM pool_groups WHERE status='waiting' ORDER BY created_at DESC LIMIT 100").all() as unknown as Group[];
+    const matches = [] as { group: Record<string, unknown>; seats_available: number; pickup_distance_km: number; dropoff_distance_km: number; score: number }[];
+    for (const group of groups) {
+      if (existing.has(group.id)) continue;
+      const category = findPoolCategory(db, group.category_id);
+      if (!category) continue;
+      const members = getMembers(db, group.id);
+      const seatsUsed = members.reduce((total, member) => total + member.seats_reserved, 0);
+      const seatsAvailable = category.seats - seatsUsed;
+      if (seatsAvailable <= 0) continue;
+      let geometry: { outbound?: { coordinates?: unknown } } | null = null;
+      try { geometry = group.route_geometry ? JSON.parse(group.route_geometry) as { outbound?: { coordinates?: unknown } } : null; } catch { geometry = null; }
+      const coordinates = geometry?.outbound?.coordinates;
+      const pickup = { lat: body.pickup_lat, lng: body.pickup_lng }, dropoff = { lat: body.dropoff_lat, lng: body.dropoff_lng };
+      const publicGroup = { id: group.id, category_id: group.category_id, package_type: group.package_type, service_dates: group.service_dates, morning_departure: group.morning_departure, return_departure: group.return_departure, status: group.status, route_distance_km: group.route_distance_km, route_duration_min: group.route_duration_min, seat_day_fare: group.seat_day_fare, route_version: group.route_version, fixed_captain_user_id: null, route_geometry: null };
+      if (Array.isArray(coordinates)) {
+        const pickupDistance = routeLineDistanceKm(pickup, coordinates), dropoffDistance = routeLineDistanceKm(dropoff, coordinates);
+        if (pickupDistance > 3 || dropoffDistance > 3) continue;
+        matches.push({ group: publicGroup, seats_available: seatsAvailable, pickup_distance_km: pickupDistance, dropoff_distance_km: dropoffDistance, score: pickupDistance + dropoffDistance });
+      } else if (members.length && isWithinGroupPath(pickup, members) && isWithinGroupPath(dropoff, members)) {
+        matches.push({ group: publicGroup, seats_available: seatsAvailable, pickup_distance_km: 0, dropoff_distance_km: 0, score: 0 });
+      }
+    }
+    matches.sort((a, b) => a.score - b.score || Number(a.group.id) - Number(b.group.id));
+    res.json({ matches: matches.slice(0, 10).map(({ score: _score, ...match }) => match) });
   });
 
   router.post("/rider/pool/groups/:id/join", ...rider, async (req, res) => {
