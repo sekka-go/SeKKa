@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "sekka-shell-";
-const CACHE_NAME = "sekka-shell-v3";
+const CACHE_NAME = "sekka-shell-v4";
 const APP_SHELL = [
   "/offline.html",
   "/manifest.webmanifest",
