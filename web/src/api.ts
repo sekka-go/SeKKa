@@ -27,12 +27,12 @@ export interface PoolTrip {
 }
 export interface PoolStop { id: number; member_id: number; stop_type: "pickup" | "dropoff"; sequence: number; lat: number | null; lng: number | null; place_id?: string | null; reached_at: string | null }
 export interface PoolMember {
-  id: number; pickup_lat: number | null; pickup_lng: number | null; dropoff_lat: number | null; dropoff_lng: number | null;
+  id: number; rider_user_id?: number; pickup_lat: number | null; pickup_lng: number | null; dropoff_lat: number | null; dropoff_lng: number | null;
   pickup_place_id: string | null; dropoff_place_id: string | null;
   seats_reserved: number; status: string; price_decision: string; pickup_order: number;
 }
 export interface PoolGroup {
-  id: number; category_id: string; package_type: "daily" | "weekly" | "monthly"; service_dates: string;
+  id: number; created_by_user_id?: number; category_id: string; package_type: "daily" | "weekly" | "monthly"; service_dates: string;
   morning_departure: string; return_departure: string; status: string; route_distance_km: number | null;
   route_duration_min: number | null; seat_day_fare: number | null; route_geometry: RouteGeometry | null;
   route_version: number; fixed_captain_user_id: number | null;
