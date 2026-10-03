@@ -806,6 +806,15 @@ button { line-height: 1.45; }
 .workspace .location-search-attribution { display: block; margin-top: .45rem; color: #8e8774; font-size: .68rem; }
 .workspace .location-search-results { display: grid; gap: .35rem; padding: 0; margin: .55rem 0 0; list-style: none; }
 .workspace .location-search-results li { min-width: 0; }
+.workspace .location-saved-places { display: grid; gap: .4rem; margin-top: .55rem; }
+.workspace .location-saved-place { display: flex; align-items: stretch; min-width: 0; background: rgba(0, 0, 0, .12); border: 1px solid var(--line); }
+.workspace .location-saved-place-select { display: flex; flex: 1; align-items: center; justify-content: space-between; gap: .65rem; min-width: 0; padding: .6rem .7rem; color: var(--ink); text-align: right; background: transparent; border: 0; }
+.workspace .location-saved-place-select strong { flex: 0 0 auto; color: var(--yellow); }
+.workspace .location-saved-place-select span { overflow: hidden; color: var(--muted); text-overflow: ellipsis; white-space: nowrap; }
+.workspace .location-saved-place-remove { flex: 0 0 2.5rem; color: var(--muted); background: transparent; border: 0; border-right: 1px solid var(--line); font-size: 1.15rem; }
+.workspace .location-save-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin-top: .55rem; }
+.workspace .location-save-actions small { flex: 1 0 100%; color: var(--muted); }
+.workspace .location-save-actions button { padding: .45rem .65rem; color: var(--yellow); background: rgba(255,210,31,.06); border: 1px solid rgba(255,210,31,.25); }
 .workspace .location-search-results button { display: flex; align-items: center; justify-content: space-between; gap: .6rem; width: 100%; padding: .65rem .7rem; color: var(--ink); text-align: right; background: rgba(0, 0, 0, .16); border: 1px solid var(--line); border-radius: .65rem; }
 .workspace .location-search-results button:hover { border-color: var(--yellow); }
 .workspace .location-search-dropoff .location-search-results button:hover { border-color: var(--cyan); }

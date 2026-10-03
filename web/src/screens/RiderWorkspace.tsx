@@ -3,7 +3,7 @@ import MapPicker, { type MapPickMode, type MapPoint } from "../MapPicker";
 import LocationSearchField from "../components/LocationSearchField";
 import { categoryName, errorText, formatDate, money, statusLabel } from "../lib/formatters";
 import { isInsideGreaterCairo } from "../lib/greater-cairo";
-import { api, type Category, type GroupView, type Notification } from "../api";
+import { api, type Category, type GroupView, type Notification, type SavedPlace } from "../api";
 import { defaultDates, isServiceDay, serviceDatesFromStart, todayInCairo } from "../lib/booking-dates";
 import type { NavKey, Session, Toast } from "../types";
 import {
@@ -15,6 +15,7 @@ export default function RiderWorkspace({ session, section, setSection, notificat
   refreshNotifications: () => Promise<void>; notify: (text: string, tone?: Toast["tone"]) => void;
 }) {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [savedPlaces, setSavedPlaces] = useState<SavedPlace[]>([]);
   const [groups, setGroups] = useState<GroupView[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedGroup, setSelectedGroup] = useState<number | null>(null);
@@ -47,9 +48,10 @@ export default function RiderWorkspace({ session, section, setSection, notificat
     Promise.all([
       api<{ categories: Category[] }>("/pool/categories"),
       api<{ groups: GroupView[] }>("/rider/pool/groups", { token: session.token }),
-    ]).then(([categoryResult, groupResult]) => {
+      api<{ places: SavedPlace[] }>("/rider/saved-places", { token: session.token }),
+    ]).then(([categoryResult, groupResult, savedPlaceResult]) => {
       if (!active) return;
-      setCategories(categoryResult.categories); setCategoryId(categoryResult.categories[0]?.id ?? ""); setGroups(groupResult.groups ?? []);
+      setCategories(categoryResult.categories); setCategoryId(categoryResult.categories[0]?.id ?? ""); setGroups(groupResult.groups ?? []); setSavedPlaces(savedPlaceResult.places ?? []);
       setSelectedGroup(groupResult.groups?.[0]?.group.id ?? null);
     }).catch((error) => notify(errorText(error), "error")).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
@@ -118,6 +120,24 @@ export default function RiderWorkspace({ session, section, setSection, notificat
     finally { setSubmitting(false); }
   };
 
+  const savePlace = async (placeType: SavedPlace["place_type"], point: MapPoint) => {
+    if (typeof point.lat !== "number" || typeof point.lng !== "number") return;
+    try {
+      const result = await api<{ place: SavedPlace }>(`/rider/saved-places/${placeType}`, {
+        method: "PUT", token: session.token, body: { label: point.label ?? `موقع ${placeType === "home" ? "المنزل" : "العمل"}`, lat: point.lat, lng: point.lng },
+      });
+      setSavedPlaces((current) => [...current.filter((place) => place.place_type !== placeType), result.place]);
+      notify(`تم حفظ مكان ${placeType === "home" ? "المنزل" : "العمل"}.`, "success");
+    } catch (error) { notify(errorText(error), "error"); }
+  };
+  const removeSavedPlace = async (placeType: SavedPlace["place_type"]) => {
+    try {
+      await api(`/rider/saved-places/${placeType}`, { method: "DELETE", token: session.token });
+      setSavedPlaces((current) => current.filter((place) => place.place_type !== placeType));
+      notify(`تم حذف مكان ${placeType === "home" ? "المنزل" : "العمل"}.`, "success");
+    } catch (error) { notify(errorText(error), "error"); }
+  };
+
   const groupAction = async (groupId: number, action: string, body?: unknown) => {
     setSubmitting(true);
     try {
@@ -155,8 +175,8 @@ export default function RiderWorkspace({ session, section, setSection, notificat
       <form className="form-stack" onSubmit={bookingMode === "new" ? createGroup : joinGroup}>
         {bookingMode === "join" && <><label>رقم المجموعة<input type="number" min="1" value={inviteCode} onChange={(e) => setInviteCode(e.target.value)} placeholder="مثال: 124" required /></label><div className="info-note">لازم نقط الركوب والنزول تكون في حدود ٣ كم من مسار المجموعة.</div></>}
         <div className="location-search-stack">
-          <LocationSearchField kind="pickup" title="نقطة الركوب" value={pickupSearch} token={session.token} onChange={(value) => { setPickupSearch(value); setPickup(null); }} onSelect={(point) => { setPickup(point); setPickupSearch(point.label ?? ""); }} onChooseMap={() => chooseMap("pickup")} />
-          <LocationSearchField kind="dropoff" title="نقطة النزول" value={dropoffSearch} token={session.token} onChange={(value) => { setDropoffSearch(value); setDropoff(null); }} onSelect={(point) => { setDropoff(point); setDropoffSearch(point.label ?? ""); }} onChooseMap={() => chooseMap("dropoff")} />
+          <LocationSearchField kind="pickup" title="نقطة الركوب" value={pickupSearch} token={session.token} onChange={(value) => { setPickupSearch(value); setPickup(null); }} onSelect={(point) => { setPickup(point); setPickupSearch(point.label ?? ""); }} onChooseMap={() => chooseMap("pickup")} savedPlaces={savedPlaces} selectedPoint={pickup} onSavePlace={savePlace} onRemoveSavedPlace={removeSavedPlace} />
+          <LocationSearchField kind="dropoff" title="نقطة النزول" value={dropoffSearch} token={session.token} onChange={(value) => { setDropoffSearch(value); setDropoff(null); }} onSelect={(point) => { setDropoff(point); setDropoffSearch(point.label ?? ""); }} onChooseMap={() => chooseMap("dropoff")} savedPlaces={savedPlaces} selectedPoint={dropoff} onSavePlace={savePlace} onRemoveSavedPlace={removeSavedPlace} />
         </div>
         {mapOpen && <section className="booking-map-panel" aria-label="اختيار الموقع من الخريطة">
           <div className="booking-map-toolbar">

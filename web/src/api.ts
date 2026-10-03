@@ -4,6 +4,8 @@ export interface Category {
   id: string; speed_tier: "faster" | "saver"; has_ac: number; seats: number;
   base_fee: number; rate_per_km: number; rate_per_min: number;
 }
+export interface SavedPlace { place_type: "home" | "work"; label: string; lat: number; lng: number; }
+
 export interface RouteLine { type: "LineString"; coordinates: [number, number][] }
 export interface RouteSegment {
   from_stop_sequence: number;

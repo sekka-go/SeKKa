@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { api } from "../api";
+import { api, type SavedPlace } from "../api";
 import { isInsideGreaterCairo } from "../lib/greater-cairo";
 import type { MapPoint, MapPickMode } from "../MapPicker";
 
@@ -13,6 +13,10 @@ export default function LocationSearchField({
   onChange,
   onSelect,
   onChooseMap,
+  savedPlaces,
+  selectedPoint,
+  onSavePlace,
+  onRemoveSavedPlace,
 }: {
   kind: MapPickMode;
   title: string;
@@ -21,6 +25,10 @@ export default function LocationSearchField({
   onChange: (value: string) => void;
   onSelect: (point: MapPoint) => void;
   onChooseMap: () => void;
+  savedPlaces: SavedPlace[];
+  selectedPoint: MapPoint | null;
+  onSavePlace: (placeType: SavedPlace["place_type"], point: MapPoint) => Promise<void>;
+  onRemoveSavedPlace: (placeType: SavedPlace["place_type"]) => Promise<void>;
 }) {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(false);
@@ -107,6 +115,12 @@ export default function LocationSearchField({
     setSuggestions([]);
     setError("");
   };
+  const selectSavedPlace = (place: SavedPlace) => {
+    skipNextSearch.current = true;
+    onSelect({ lat: place.lat, lng: place.lng, kind, label: place.label });
+    setSuggestions([]);
+    setError("");
+  };
 
   return <div className={`location-search-field location-search-${kind}`}>
     <div className="location-search-heading">
@@ -140,6 +154,23 @@ export default function LocationSearchField({
         autoComplete="off"
       />
     </div>
+    {savedPlaces.length > 0 && <div className="location-saved-places" aria-label="الأماكن المحفوظة">
+      {savedPlaces.map((place) => <div className="location-saved-place" key={place.place_type}>
+        <button type="button" className="location-saved-place-select" onClick={() => selectSavedPlace(place)}>
+          <strong>{place.place_type === "home" ? "⌂ المنزل" : "▣ العمل"}</strong><span>{place.label}</span>
+        </button>
+        <button type="button" className="location-saved-place-remove" onClick={() => void onRemoveSavedPlace(place.place_type)} aria-label={`حذف المكان المحفوظ ${place.place_type === "home" ? "المنزل" : "العمل"}`}>×</button>
+      </div>)}
+    </div>}
+    {selectedPoint && typeof selectedPoint.lat === "number" && typeof selectedPoint.lng === "number" && <div className="location-save-actions">
+      <small>احفظ الموقع لاختياره بسرعة بعد كده</small>
+      {(["home", "work"] as const).map((placeType) => {
+        const existing = savedPlaces.some((place) => place.place_type === placeType);
+        return <button type="button" key={placeType} onClick={() => void onSavePlace(placeType, selectedPoint)}>
+          {existing ? "تحديث" : "حفظ"} {placeType === "home" ? "المنزل" : "العمل"}
+        </button>;
+      })}
+    </div>}
     {loading && <p className="location-search-message" role="status">جاري البحث…</p>}
     {error && <p className="location-search-message" role="status">{error}</p>}
     {suggestions.length > 0 && <ul className="location-search-results" aria-label={`نتائج ${title}`}>
