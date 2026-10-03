@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "sekka-shell-";
-const CACHE_NAME = "sekka-shell-v2";
+const CACHE_NAME = "sekka-shell-v3";
 const APP_SHELL = [
   "/offline.html",
   "/manifest.webmanifest",
@@ -88,3 +88,4 @@ self.addEventListener("fetch", (event) => {
     || url.pathname === "/favicon.ico";
   if (isStaticAsset) event.respondWith(cacheFirst(request));
 });
+
