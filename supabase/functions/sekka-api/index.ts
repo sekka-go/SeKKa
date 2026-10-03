@@ -46,7 +46,7 @@ async function searchGreaterCairo(query: string) {
   searchUrl.searchParams.set("q", query);
   searchUrl.searchParams.set("bbox", `${GREATER_CAIRO.west},${GREATER_CAIRO.south},${GREATER_CAIRO.east},${GREATER_CAIRO.north}`);
   searchUrl.searchParams.set("countrycode", "EG");
-  searchUrl.searchParams.set("lang", "ar");
+
   searchUrl.searchParams.set("limit", "8");
   searchUrl.searchParams.set("lat", "30.0444");
   searchUrl.searchParams.set("lon", "31.2357");
