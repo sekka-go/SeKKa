@@ -115,7 +115,7 @@ export default function LocationSearchField({
     <div className="location-search-heading">
       <i className={`point-dot ${kind === "pickup" ? "pickup-dot" : "dropoff-dot"}`} />
       <strong>{title}</strong>
-      <span className={pointSelected ? "location-point-status is-selected" : "location-point-status"}>{pointSelected ? "تم التحديد ✓" : "اختيار مطلوب"}</span>
+      <span className={pointSelected ? "location-point-status is-selected" : "location-point-status"} title={pointSelected ? "تم التحديد" : "اختيار مطلوب"} aria-label={pointSelected ? "تم تحديد الموقع" : "يجب اختيار الموقع من النتائج"}>{pointSelected ? "✓" : "!"}</span>
       <button type="button" className="location-device-pin" onClick={useDeviceLocation} disabled={locating} aria-label={`استخدم موقعك الحالي لتحديد ${title}`} title="استخدم موقعي الحالي">{locating ? "…" : "⌖"}</button>
       <button type="button" className="location-map-pin" onClick={onChooseMap} aria-label={`اختيار ${title} من الخريطة`} title="اختيار من الخريطة">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
