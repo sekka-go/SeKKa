@@ -10,6 +10,10 @@ import {
   AccountPanel, EmptyState, GroupDetail, GroupSummary, LoadingCard,
   NotificationsPanel, TripList,
 } from "../components/workspace-shared";
+
+const hasSelectedPoint = (point: MapPoint | null) =>
+  typeof point?.lat === "number" && Number.isFinite(point.lat) &&
+  typeof point?.lng === "number" && Number.isFinite(point.lng);
 export default function RiderWorkspace({ session, section, setSection, notifications, refreshNotifications, notify }: {
   session: Session; section: NavKey; setSection: (section: NavKey) => void; notifications: Notification[];
   refreshNotifications: () => Promise<void>; notify: (text: string, tone?: Toast["tone"]) => void;
@@ -53,8 +57,20 @@ export default function RiderWorkspace({ session, section, setSection, notificat
   };
 
   const continueToSchedule = () => {
-    if (!pickup || !dropoff) { notify("حدد نقطة الركوب والنزول أولًا.", "error"); return; }
-    if (!isInsideGreaterCairo(pickup.lat!, pickup.lng!) || !isInsideGreaterCairo(dropoff.lat!, dropoff.lng!)) { notify("المشاوير متاحة داخل القاهرة الكبرى فقط.", "error"); return; }
+    const missing = [
+      !hasSelectedPoint(pickup) ? "pickup" : null,
+      !hasSelectedPoint(dropoff) ? "dropoff" : null,
+    ].filter((kind): kind is "pickup" | "dropoff" => kind !== null);
+    if (missing.length > 0) {
+      const firstMissing = missing[0]!;
+      setSavedPlaceTarget(firstMissing);
+      const field = document.querySelector<HTMLElement>(`.location-search-${firstMissing}`);
+      field?.scrollIntoView({ behavior: "smooth", block: "center" });
+      field?.querySelector<HTMLInputElement>("input")?.focus({ preventScroll: true });
+      notify(`اختار نقطة ${firstMissing === "pickup" ? "الركوب" : "النزول"} من نتائج البحث أو حددها بالدبوس قبل المتابعة.`, "error");
+      return;
+    }
+    if (!isInsideGreaterCairo(pickup!.lat!, pickup!.lng!) || !isInsideGreaterCairo(dropoff!.lat!, dropoff!.lng!)) { notify("المشاوير متاحة داخل القاهرة الكبرى فقط.", "error"); return; }
     setBookingStep("schedule");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -123,6 +139,10 @@ export default function RiderWorkspace({ session, section, setSection, notificat
 
   const createGroup = async (event: FormEvent) => {
     event.preventDefault();
+    if (bookingStep !== "schedule") {
+      notify("أكمل اختيار التاريخ والوقت والباقات والفئة أولًا.", "error");
+      return;
+    }
     if (!pickup || !dropoff) { notify("اختار نقطة الركوب والنزول بالدبوس أو البحث أو الخريطة.", "error"); return; }
     if (!isInsideGreaterCairo(pickup.lat!, pickup.lng!) || !isInsideGreaterCairo(dropoff.lat!, dropoff.lng!)) { notify("المشاوير متاحة داخل القاهرة الكبرى فقط.", "error"); return; }
     if (!categoryId || dates.length !== (packageType === "daily" ? 1 : packageType === "weekly" ? 5 : 22)) { notify("اختار تاريخ بداية صحيح وفئة للمشوار.", "error"); return; }
@@ -253,8 +273,8 @@ export default function RiderWorkspace({ session, section, setSection, notificat
           </div>
         </details>
         <div className="location-search-stack">
-          <LocationSearchField kind="pickup" title="نقطة الركوب" value={pickupSearch} token={session.token} onChange={(value) => { setPickupSearch(value); setPickup(null); }} onSelect={(point) => { setSavedPlaceTarget("pickup"); setPickup(point); setPickupSearch(point.label ?? ""); }} onChooseMap={() => { setSavedPlaceTarget("pickup"); chooseMap("pickup"); }} onFocus={() => setSavedPlaceTarget("pickup")} />
-          <LocationSearchField kind="dropoff" title="نقطة النزول" value={dropoffSearch} token={session.token} onChange={(value) => { setDropoffSearch(value); setDropoff(null); }} onSelect={(point) => { setSavedPlaceTarget("dropoff"); setDropoff(point); setDropoffSearch(point.label ?? ""); }} onChooseMap={() => { setSavedPlaceTarget("dropoff"); chooseMap("dropoff"); }} onFocus={() => setSavedPlaceTarget("dropoff")} />
+          <LocationSearchField kind="pickup" title="نقطة الركوب" value={pickupSearch} token={session.token} onChange={(value) => { setPickupSearch(value); setPickup(null); }} onSelect={(point) => { setSavedPlaceTarget("pickup"); setPickup(point); setPickupSearch(point.label ?? ""); }} onChooseMap={() => { setSavedPlaceTarget("pickup"); chooseMap("pickup"); }} onFocus={() => setSavedPlaceTarget("pickup")} pointSelected={hasSelectedPoint(pickup)} />
+          <LocationSearchField kind="dropoff" title="نقطة النزول" value={dropoffSearch} token={session.token} onChange={(value) => { setDropoffSearch(value); setDropoff(null); }} onSelect={(point) => { setSavedPlaceTarget("dropoff"); setDropoff(point); setDropoffSearch(point.label ?? ""); }} onChooseMap={() => { setSavedPlaceTarget("dropoff"); chooseMap("dropoff"); }} onFocus={() => setSavedPlaceTarget("dropoff")} pointSelected={hasSelectedPoint(dropoff)} />
         </div>
         <small className="location-search-attribution">نتائج الأماكن من OpenStreetMap</small>
         {mapOpen && <section className="booking-map-panel" aria-label="اختيار الموقع من الخريطة">
