@@ -4,7 +4,7 @@ import LocationSearchField from "../components/LocationSearchField";
 import { categoryName, errorText, formatDate, money, statusLabel } from "../lib/formatters";
 import { isInsideGreaterCairo } from "../lib/greater-cairo";
 import { api, type Category, type GroupView, type Notification } from "../api";
-import { defaultDates, serviceMonth, serviceWeek, todayInCairo } from "../lib/booking-dates";
+import { defaultDates, isServiceDay, serviceDatesFromStart, todayInCairo } from "../lib/booking-dates";
 import type { NavKey, Session, Toast } from "../types";
 import {
   AccountPanel, EmptyState, GroupDetail, GroupSummary, LoadingCard, Metric,
@@ -32,6 +32,9 @@ export default function RiderWorkspace({ session, section, setSection, notificat
   const [pickMode, setPickMode] = useState<MapPickMode>("pickup");
   const [mapOpen, setMapOpen] = useState(false);
   const [inviteCode, setInviteCode] = useState("");
+  const [priceQuotes, setPriceQuotes] = useState<Record<string, { daily: number; weekly: number; monthly: number; seat_day_fare: number }> | null>(null);
+  const [priceLoading, setPriceLoading] = useState(false);
+  const [priceError, setPriceError] = useState("");
   const selectedCategory = categories.find((item) => item.id === categoryId) ?? null;
   const selected = groups.find((view) => view.group.id === selectedGroup) ?? null;
 
@@ -52,6 +55,26 @@ export default function RiderWorkspace({ session, section, setSection, notificat
     return () => { active = false; };
   }, [session.token, notify]);
 
+  useEffect(() => {
+    if (bookingMode !== "new" || !pickup || !dropoff) {
+      setPriceQuotes(null); setPriceError(""); setPriceLoading(false);
+      return;
+    }
+    let active = true;
+    setPriceLoading(true); setPriceError("");
+    const timer = window.setTimeout(() => {
+      void api<{ prices: Array<{ category_id: string; daily: number; weekly: number; monthly: number; seat_day_fare: number }> }>("/rider/pool/quote", {
+        method: "POST", token: session.token,
+        body: { pickup_lat: pickup.lat, pickup_lng: pickup.lng, dropoff_lat: dropoff.lat, dropoff_lng: dropoff.lng },
+      }).then((result) => {
+        if (active) setPriceQuotes(Object.fromEntries(result.prices.map((price) => [price.category_id, price])));
+      }).catch((error) => {
+        if (active) { setPriceQuotes(null); setPriceError(errorText(error)); }
+      }).finally(() => { if (active) setPriceLoading(false); });
+    }, 250);
+    return () => { active = false; window.clearTimeout(timer); };
+  }, [bookingMode, pickup, dropoff, session.token]);
+
   const refresh = async () => {
     try { await refreshGroups(); await refreshNotifications(); }
     catch (error) { notify(errorText(error), "error"); }
@@ -66,8 +89,7 @@ export default function RiderWorkspace({ session, section, setSection, notificat
     event.preventDefault();
     if (!pickup || !dropoff) { notify("اختار نقطة الركوب والنزول بالدبوس أو البحث أو الخريطة.", "error"); return; }
     if (!isInsideGreaterCairo(pickup.lat!, pickup.lng!) || !isInsideGreaterCairo(dropoff.lat!, dropoff.lng!)) { notify("المشاوير متاحة داخل القاهرة الكبرى فقط.", "error"); return; }
-    const expected = packageType === "daily" ? 1 : packageType === "weekly" ? 5 : 22;
-    if (dates.length !== expected) { notify(`اختار ${expected} ${packageType === "daily" ? "يوم" : "يوم خدمة"} بالضبط.`, "error"); return; }
+    if (!categoryId || dates.length !== (packageType === "daily" ? 1 : packageType === "weekly" ? 5 : 22)) { notify("اختار تاريخ بداية صحيح وفئة للمشوار.", "error"); return; }
     setSubmitting(true);
     try {
       await api("/rider/pool/groups", { method: "POST", token: session.token, body: {
@@ -105,8 +127,6 @@ export default function RiderWorkspace({ session, section, setSection, notificat
     finally { setSubmitting(false); }
   };
 
-  const dateOptions = useMemo(() => packageType === "weekly" ? serviceWeek() : packageType === "monthly" ? serviceMonth() : dates, [packageType, dates]);
-  const expectedDays = packageType === "daily" ? 1 : packageType === "weekly" ? 5 : 22;
   const chooseMap = (mode: MapPickMode) => {
     setPickMode(mode);
     setMapOpen(true);
@@ -133,16 +153,7 @@ export default function RiderWorkspace({ session, section, setSection, notificat
       <div className="surface-heading"><div><span className="eyebrow">الخطوة {bookingMode === "new" ? "١" : "١"} من ٢</span><h2>{bookingMode === "new" ? "ابدأ مجموعة جديدة" : "انضم لمجموعة موجودة"}</h2><p>مشوارك يتحدد على الخريطة، والباقي سهل.</p></div><span className="surface-icon">{bookingMode === "new" ? "↗" : "＋"}</span></div>
       <div className="segmented-control"><button className={bookingMode === "new" ? "selected" : ""} onClick={() => setBookingMode("new")}>إنشاء مجموعة</button><button className={bookingMode === "join" ? "selected" : ""} onClick={() => setBookingMode("join")}>الانضمام برقم</button></div>
       <form className="form-stack" onSubmit={bookingMode === "new" ? createGroup : joinGroup}>
-        {bookingMode === "new" ? <>
-          <label>فئة المشوار<select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>{categories.map((category) => <option key={category.id} value={category.id}>{categoryName(category)} · {category.seats} مقاعد</option>)}</select></label>
-          <div className="tier-helper">{selectedCategory ? <><strong>{selectedCategory.speed_tier === "faster" ? "Faster" : "Saver"}</strong><span>الحد الأدنى {selectedCategory.speed_tier === "faster" ? "راكبان" : "٣ ركاب"} · {selectedCategory.seats} مقاعد</span></> : "جاري تحميل الفئات"}</div>
-          <label>نوع الباقة<div className="package-options">
-            {(["daily", "weekly", "monthly"] as const).map((type) => <button type="button" key={type} className={packageType === type ? "package-option selected" : "package-option"} onClick={() => { setPackageType(type); setDates(defaultDates(type)); }}><strong>{type === "daily" ? "يومي" : type === "weekly" ? "أسبوعي" : "شهري"}</strong><small>{type === "daily" ? "يوم واحد" : type === "weekly" ? "٥ أيام · خصم ٥٪" : "٢٢ يومًا · خصم ١٠٪"}</small></button>)}
-          </div></label>
-          {packageType === "daily" ? <label>تاريخ المشوار<input type="date" min={todayInCairo()} value={dates[0] ?? ""} onChange={(e) => setDates(e.target.value ? [e.target.value] : [])} required /></label>
-            : <div className="date-picker-block"><div className="field-heading"><strong>{packageType === "weekly" ? "اختار ٥ أيام في أسبوع الخدمة" : "اختار ٢٢ يوم خدمة في الشهر"}</strong><span>{dates.length} / {expectedDays}</span></div><div className="date-chips">{dateOptions.map((date) => <button type="button" key={date} className={dates.includes(date) ? "date-chip active" : "date-chip"} onClick={() => setDates((current) => current.includes(date) ? current.filter((d) => d !== date) : [...current, date].sort())}>{formatDate(date)}</button>)}</div><small className="muted-text">أيام الخدمة من الأحد إلى الخميس، والمواعيد يحددها الراكب.</small></div>}
-          <div className="time-row"><label>وقت الذهاب<input type="time" value={morning} onChange={(e) => setMorning(e.target.value)} required /></label><label>وقت العودة<input type="time" value={returnTime} onChange={(e) => setReturnTime(e.target.value)} required /></label></div>
-        </> : <><label>رقم المجموعة<input type="number" min="1" value={inviteCode} onChange={(e) => setInviteCode(e.target.value)} placeholder="مثال: 124" required /></label><div className="info-note">لازم نقط الركوب والنزول تكون في حدود ٣ كم من مسار المجموعة.</div></>}
+        {bookingMode === "join" && <><label>رقم المجموعة<input type="number" min="1" value={inviteCode} onChange={(e) => setInviteCode(e.target.value)} placeholder="مثال: 124" required /></label><div className="info-note">لازم نقط الركوب والنزول تكون في حدود ٣ كم من مسار المجموعة.</div></>}
         <div className="location-search-stack">
           <LocationSearchField kind="pickup" title="نقطة الركوب" value={pickupSearch} token={session.token} onChange={(value) => { setPickupSearch(value); setPickup(null); }} onSelect={(point) => { setPickup(point); setPickupSearch(point.label ?? ""); }} onChooseMap={() => chooseMap("pickup")} />
           <LocationSearchField kind="dropoff" title="نقطة النزول" value={dropoffSearch} token={session.token} onChange={(value) => { setDropoffSearch(value); setDropoff(null); }} onSelect={(point) => { setDropoff(point); setDropoffSearch(point.label ?? ""); }} onChooseMap={() => chooseMap("dropoff")} />
@@ -154,8 +165,31 @@ export default function RiderWorkspace({ session, section, setSection, notificat
           </div>
           <div className="booking-map"><MapPicker pickup={pickup} dropoff={dropoff} mode={pickMode} restrictToGreaterCairo onOutsidePick={() => notify("اختار نقطة داخل القاهرة الكبرى فقط.", "error")} onPick={setMapPoint} /></div>
         </section>}
+        {bookingMode === "new" && <>
+          <label>نوع الباقة<div className="package-options">
+            {(["daily", "weekly", "monthly"] as const).map((type) => <button type="button" key={type} className={packageType === type ? "package-option selected" : "package-option"} onClick={() => { setPackageType(type); setDates(serviceDatesFromStart(dates[0] && isServiceDay(dates[0]) ? dates[0] : defaultDates(type)[0]!, type)); }}><strong>{type === "daily" ? "يومي" : type === "weekly" ? "أسبوعي" : "شهري"}</strong><small>{type === "daily" ? "يوم واحد" : type === "weekly" ? "٥ أيام خدمة · خصم ٥٪" : "٢٢ يوم خدمة · خصم ١٠٪"}</small><b>{priceQuotes?.[categoryId] ? money(priceQuotes[categoryId]![type]) : priceLoading ? "جارٍ حساب السعر…" : "السعر بعد تحديد النقط"}</b></button>)}
+          </div></label>
+          <label>تاريخ بداية الرحلة<input type="date" min={todayInCairo()} value={dates[0] ?? ""} onChange={(e) => {
+            const start = e.target.value;
+            if (start && !isServiceDay(start)) { setDates([]); notify("اختار يومًا من الأحد للخميس؛ الجمعة والسبت إجازة.", "error"); return; }
+            setDates(start ? serviceDatesFromStart(start, packageType) : []);
+          }} required /></label>
+          {dates.length > 1 && <small className="muted-text">أيام الخدمة: {formatDate(dates[0]!)} إلى {formatDate(dates[dates.length - 1]!)} · متتابعة مع استثناء الجمعة والسبت ({dates.length} يومًا)</small>}
+          <div className="time-row"><label>وقت الذهاب<input type="time" value={morning} onChange={(e) => setMorning(e.target.value)} required /></label><label>وقت العودة<input type="time" value={returnTime} onChange={(e) => setReturnTime(e.target.value)} required /></label></div>
+          <section className="category-picker"><div className="field-heading"><strong>اختار الفئة وشوف سعرها</strong>{priceLoading && <span>جارٍ تحديث الأسعار…</span>}</div>
+            {priceError && <p className="price-error">{priceError}</p>}
+            <div className="category-options">{categories.map((category) => {
+              const quote = priceQuotes?.[category.id];
+              return <button type="button" key={category.id} className={categoryId === category.id ? "category-option selected" : "category-option"} onClick={() => setCategoryId(category.id)} aria-pressed={categoryId === category.id}>
+                <span><strong>{categoryName(category)}</strong><small>{category.speed_tier === "faster" ? "Faster" : "Saver"} · {category.seats} مقاعد</small></span>
+                <b>{quote ? money(quote[packageType]) : priceLoading ? "…" : "—"}</b>
+              </button>;
+            })}</div>
+            <div className="tier-helper">{selectedCategory ? <><strong>{selectedCategory.speed_tier === "faster" ? "Faster" : "Saver"}</strong><span>الحد الأدنى {selectedCategory.speed_tier === "faster" ? "راكبان" : "٣ ركاب"} · {selectedCategory.seats} مقاعد · السعر للفرد شامل الباقة</span></> : "جاري تحميل الفئات"}</div>
+          </section>
+        </>}
         <button className="button button-primary button-wide" disabled={submitting}>{submitting ? "جاري الحفظ…" : bookingMode === "new" ? "تأكيد المشوار" : "الانضمام للمجموعة"}<span>←</span></button>
-        {bookingMode === "new" && <p className="form-footnote">مفيش دفع دلوقتي؛ المبلغ هيظهر بعد اكتمال الحد الأدنى وتأكيد المسار.</p>}
+        {bookingMode === "new" && <p className="form-footnote">الأسعار تقديرية للفرد، والباقات الأسبوعية والشهرية تبدأ من التاريخ المحدد وتستثني الجمعة والسبت. مفيش دفع دلوقتي.</p>}
       </form>
     </section>
     <aside className="booking-aside"><div className="surface soft-surface"><span className="aside-icon">✦</span><h3>مشوار مشترك، بسعر أعدل</h3><p>Faster يبدأ براكبين، وSaver بثلاثة. سعر الفرد يتحسب على عدد مقاعد الفئة بالكامل.</p><ul><li>ذهاب وعودة كل يوم خدمة</li><li>إلغاء اليوم مجانًا قبل ١٢ ساعة</li><li>خصم حتى ١٠٪ على الباقات</li></ul></div><div className="surface compact-note"><span>ⓘ</span><p>الموقع اللي بتختاره بيُستخدم لحساب الطريق ومشاركة تفاصيل المشوار مع مجموعتك.</p></div></aside>
