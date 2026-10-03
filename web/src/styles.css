@@ -1526,3 +1526,6 @@ button { line-height: 1.45; }
   .workspace .group-management-actions { gap: .5rem; }
   .workspace .group-management-actions .button { font-size: .85rem; }
 }
+
+.workspace .booking-step { font: inherit; color: inherit; background: transparent; border: 0; cursor: pointer; }
+.workspace .booking-step:focus-visible { outline: 2px solid var(--yellow); outline-offset: 3px; border-radius: .5rem; }
