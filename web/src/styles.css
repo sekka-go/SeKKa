@@ -1557,3 +1557,126 @@ button { line-height: 1.45; }
   .workspace .map-segments { padding: .55rem; }
 }
 
+/* Consistent content rhythm and responsive layouts for workspace cards. */
+.workspace h1,
+.workspace h2,
+.workspace h3,
+.workspace p { overflow-wrap: break-word; }
+.workspace :is(.surface-heading, .section-title-row, .section-toolbar, .offer-toolbar) > :first-child { min-width: 0; }
+.workspace :is(.surface-heading, .section-title-row, .section-toolbar, .offer-toolbar) h2,
+.workspace :is(.surface-heading, .section-title-row, .section-toolbar, .offer-toolbar) h3 { margin-block: .2rem; }
+.workspace :is(.surface-heading, .section-title-row, .section-toolbar, .offer-toolbar) p { margin-block: .25rem 0; line-height: 1.55; }
+.workspace .metric-grid { gap: .7rem; margin-block: .85rem 1.25rem; }
+.workspace .group-list, .workspace .activity-card { gap: .65rem; margin-block-start: .7rem; }
+
+/* The summary card was flowing as plain inline text, causing the category,
+   package, price and trip metadata to collide on narrow screens. */
+.workspace .group-summary { min-width: 0; gap: .7rem; text-align: right; }
+.workspace .group-summary-top { align-items: center; gap: .55rem; }
+.workspace .group-summary-top .group-number { margin-inline-start: auto; }
+.workspace .group-summary-main {
+  display: grid;
+  grid-template-columns: 2.4rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .65rem;
+  min-width: 0;
+}
+.workspace .group-summary-main > div { display: grid; gap: .15rem; min-width: 0; }
+.workspace .group-summary-main strong { line-height: 1.4; overflow-wrap: break-word; }
+.workspace .group-summary-main small { color: var(--muted); line-height: 1.45; }
+.workspace .route-badge { display: grid; place-items: center; width: 2.35rem; height: 2.35rem; color: var(--yellow); background: rgba(255,210,31,.09); border-radius: .7rem; font-size: 1.15rem; }
+.workspace .group-price { color: var(--yellow); font-weight: 800; white-space: nowrap; }
+.workspace .seat-progress { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: .35rem .7rem; min-width: 0; color: var(--muted); font-size: .8rem; }
+.workspace .seat-progress > div { grid-column: 1 / -1; height: .35rem; overflow: hidden; background: rgba(243,236,217,.1); border-radius: 99px; }
+.workspace .seat-progress i { display: block; height: 100%; background: var(--cyan); border-radius: inherit; }
+.workspace .seat-progress small { text-align: left; }
+.workspace .group-summary-foot { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .8rem; padding-top: .55rem; border-top: 1px solid var(--line); font-size: .78rem; line-height: 1.45; }
+.workspace .group-summary-foot span { min-width: 0; }
+.workspace .group-summary-foot span:last-child { margin-inline-start: auto; color: var(--yellow); font-weight: 700; white-space: nowrap; }
+
+/* Align detail pages and shared information panels to the same card rhythm. */
+.workspace .group-detail-layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(16rem, .7fr); align-items: start; gap: .85rem; }
+.workspace .group-detail-main, .workspace .group-detail-side { display: grid; gap: .75rem; min-width: 0; }
+.workspace .group-detail-side { position: sticky; top: 1rem; }
+.workspace .detail-hero > h2 { margin: .45rem 0 0; }
+.workspace .detail-section { min-width: 0; }
+.workspace .rider-list, .workspace .service-date-list, .workspace .stop-list { display: grid; gap: .45rem; }
+.workspace .rider-row, .workspace .service-date-row, .workspace .stop-row { display: flex; align-items: center; gap: .65rem; min-width: 0; padding: .65rem 0; border-bottom: 1px solid var(--line); }
+.workspace .rider-row:last-child, .workspace .service-date-row:last-child, .workspace .stop-row:last-child { border-bottom: 0; }
+.workspace .rider-row > div, .workspace .service-date-row > div, .workspace .stop-row > div { display: grid; flex: 1; gap: .12rem; min-width: 0; }
+.workspace .rider-row small, .workspace .service-date-row small, .workspace .stop-row small { color: var(--muted); line-height: 1.45; overflow-wrap: break-word; }
+.workspace .date-price, .workspace .rider-state, .workspace .stop-done { flex: 0 0 auto; color: var(--yellow); }
+.workspace .action-card { display: grid; gap: .7rem; }
+.workspace .action-card h3 { margin: 0 0 .15rem; }
+.workspace .group-management-actions, .workspace .trip-actions, .workspace .warning-actions, .workspace .offer-actions { display: flex; flex-wrap: wrap; gap: .55rem; min-width: 0; }
+.workspace .group-management-actions > *, .workspace .trip-actions > * { flex: 1 1 8rem; }
+.workspace .warning-panel { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: .55rem .75rem; padding: .8rem; color: var(--ink); background: rgba(255,210,31,.07); border: 1px solid rgba(255,210,31,.2); border-radius: .75rem; }
+.workspace .warning-panel > span { color: var(--yellow); font-weight: 800; }
+.workspace .warning-panel p { margin: .2rem 0 0; color: var(--muted); line-height: 1.55; }
+.workspace .warning-actions { grid-column: 2; }
+.workspace .trip-table-head, .workspace .trip-table-row { display: grid; grid-template-columns: 1.1fr 1fr 1.15fr auto; align-items: center; gap: .65rem; min-width: 0; padding: .7rem .85rem; border-bottom: 1px solid var(--line); }
+.workspace .trip-table-head { font-size: .78rem; font-weight: 700; }
+.workspace .trip-table-row:last-child { border-bottom: 0; }
+.workspace .trip-table-row > div { display: grid; gap: .15rem; min-width: 0; }
+.workspace .trip-table-row small { color: var(--muted); }
+.workspace .trip-arrow { display: inline-grid; place-items: center; width: 1.6rem; height: 1.6rem; margin-inline-end: .3rem; border-radius: 50%; }
+
+/* Account, notification, and captain panels had unstructured child flow. */
+.workspace .account-grid, .workspace .captain-account { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); align-items: start; gap: .85rem; }
+.workspace .account-card, .workspace .password-card, .workspace .onboarding-card { display: grid; align-content: start; gap: .65rem; min-width: 0; }
+.workspace .account-avatar { display: grid; place-items: center; width: 3.25rem; height: 3.25rem; color: #201b09; background: var(--yellow); border-radius: 50%; font-size: 1.35rem; font-weight: 800; }
+.workspace .account-card h2, .workspace .account-card p { margin: 0; }
+.workspace .account-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .35rem .75rem; padding-top: .65rem; border-top: 1px solid var(--line); }
+.workspace .notifications-panel { display: grid; gap: .7rem; }
+.workspace .notification-button-row { min-width: 0; border-bottom: 1px solid var(--line); }
+.workspace .notification-main-action { display: flex; align-items: center; justify-content: space-between; gap: .7rem; width: 100%; min-width: 0; padding: .65rem 0; color: inherit; text-align: right; background: transparent; border: 0; }
+.workspace .notification-row { flex: 1; align-items: center; min-width: 0; padding: 0; border: 0; }
+.workspace .notification-row > div { display: grid; gap: .12rem; min-width: 0; }
+.workspace .notification-row small { color: var(--muted); line-height: 1.45; }
+.workspace .notification-open { flex: 0 0 auto; color: var(--cyan); font-size: .78rem; }
+.workspace .notification-choice-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; padding: 0 0 .65rem; }
+.workspace .notification-choice-actions > span { flex: 0 0 100%; color: var(--muted); font-size: .82rem; }
+.workspace .profile-data-grid, .workspace .admin-summary-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
+.workspace .profile-data-grid > div, .workspace .admin-summary-grid > div { display: grid; align-content: start; gap: .2rem; min-width: 0; padding: .7rem; background: rgba(0,0,0,.12); border: 1px solid var(--line); border-radius: .65rem; }
+.workspace .profile-data-grid small, .workspace .admin-summary-grid small { color: var(--muted); line-height: 1.4; }
+.workspace .profile-data-grid strong, .workspace .admin-summary-grid strong { overflow-wrap: break-word; }
+.workspace .captain-status-box { padding: .7rem .8rem; background: rgba(158,232,230,.06); border: 1px solid rgba(158,232,230,.16); border-radius: .7rem; }
+.workspace .captain-status-box p { margin: .4rem 0 0; line-height: 1.55; }
+.workspace .otp-row { display: grid; grid-template-columns: auto minmax(5rem, 1fr) auto; align-items: center; gap: .45rem; margin-top: .65rem; }
+.workspace .otp-row input { min-width: 0; width: 100%; padding: .55rem; color: var(--ink); background: #171309; border: 1px solid var(--line); border-radius: .55rem; }
+.workspace .otp-row small { grid-column: 1 / -1; color: var(--muted); line-height: 1.45; }
+.workspace .admin-dashboard { display: grid; gap: .75rem; }
+.workspace .admin-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }
+.workspace .admin-secondary-details { margin-top: .1rem; }
+
+@media (max-width: 800px) {
+  .workspace .group-detail-layout { grid-template-columns: minmax(0, 1fr); }
+  .workspace .group-detail-side { position: static; }
+  .workspace .account-grid, .workspace .captain-account { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 560px) {
+  .workspace .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .workspace .group-summary { gap: .6rem; padding: .8rem; }
+  .workspace .group-summary-main { grid-template-columns: 2rem minmax(0, 1fr); gap: .5rem; }
+  .workspace .route-badge { width: 2rem; height: 2rem; }
+  .workspace .group-price { grid-column: 2; justify-self: start; font-size: .95rem; }
+  .workspace .group-summary-foot { gap: .35rem .6rem; font-size: .74rem; }
+  .workspace .group-summary-foot span:nth-child(2) { flex: 1 1 100%; }
+  .workspace .trip-table-head { display: none; }
+  .workspace .trip-table-row { grid-template-columns: minmax(0, 1fr) auto; gap: .45rem .65rem; padding: .65rem; }
+  .workspace .trip-table-row > :nth-child(3) { grid-column: 1; color: var(--muted); font-size: .85rem; }
+  .workspace .trip-table-row > :nth-child(4) { grid-column: 2; grid-row: 1 / span 2; justify-self: end; }
+  .workspace .notification-main-action { align-items: flex-start; }
+  .workspace .notification-open { max-width: 6rem; white-space: normal; text-align: left; }
+  .workspace .otp-row { grid-template-columns: minmax(0, 1fr) minmax(4.5rem, .75fr); }
+  .workspace .otp-row input { grid-column: 1 / -1; grid-row: 1; }
+  .workspace .otp-row small { grid-column: 1 / -1; }
+}
+@media (max-width: 360px) {
+  .workspace .group-summary-top { align-items: flex-start; flex-direction: column-reverse; }
+  .workspace .group-summary-top .group-number { margin-inline-start: 0; }
+  .workspace .metric-grid, .workspace .admin-stats-grid, .workspace .profile-data-grid, .workspace .admin-summary-grid { grid-template-columns: minmax(0, 1fr); }
+  .workspace .group-summary-foot span:last-child { margin-inline-start: 0; }
+}
+
+
