@@ -40,6 +40,34 @@ export function createAdminRouter(db: DatabaseSync): Router {
   const router = Router();
   const guarded = [requireAuth(db), requireRole(db, "admin")];
 
+  router.post("/admin/notifications/broadcast", ...guarded, (req, res) => {
+    const body = (req.body ?? {}) as { title?: unknown; message?: unknown; request_id?: unknown };
+    const title = typeof body.title === "string" ? body.title.trim() : "";
+    const message = typeof body.message === "string" ? body.message.trim() : "";
+    const requestId = typeof body.request_id === "string" ? body.request_id.trim() : "";
+    if (!title || title.length > 100 || !message || message.length > 1000 || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId)) {
+      res.status(400).json({ error: "اكتب عنوانًا ونصًا صحيحين للرسالة ثم حاول مرة أخرى." });
+      return;
+    }
+    const recipients = db.prepare("SELECT id FROM users ORDER BY id").all() as { id: number }[];
+    const insert = db.prepare("INSERT OR IGNORE INTO pool_notifications(user_id,group_id,event_key,payload) VALUES(?,NULL,?,?)");
+    const eventKey = `broadcast:${requestId}`;
+    let insertedNotifications = 0;
+    db.exec("BEGIN IMMEDIATE");
+    try {
+      for (const recipient of recipients) {
+        const result = insert.run(recipient.id, eventKey, JSON.stringify({ title, message }));
+        insertedNotifications += Number(result.changes);
+      }
+      db.exec("COMMIT");
+    } catch {
+      db.exec("ROLLBACK");
+      res.status(500).json({ error: "تعذر إرسال الرسالة للجميع. لم يتم حفظها." });
+      return;
+    }
+    res.status(200).json({ success: true, notified_users: recipients.length, inserted_notifications: insertedNotifications, request_id: requestId });
+  });
+
   router.get("/admin/captains", ...guarded, (req, res) => {
     const status = typeof req.query.status === "string" ? req.query.status : "pending";
     if (!VERIFICATION_STATUSES.includes(status as VerificationStatus)) {
