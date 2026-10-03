@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import MapPicker, { type MapPickMode, type MapPoint } from "../MapPicker";
+import LocationSearchField from "../components/LocationSearchField";
 import { categoryName, errorText, formatDate, money, statusLabel } from "../lib/formatters";
+import { isInsideGreaterCairo } from "../lib/greater-cairo";
 import { api, type Category, type GroupView, type Notification } from "../api";
-import { defaultDates, pointLabel, serviceMonth, serviceWeek, todayInCairo } from "../lib/booking-dates";
+import { defaultDates, serviceMonth, serviceWeek, todayInCairo } from "../lib/booking-dates";
 import type { NavKey, Session, Toast } from "../types";
 import {
   AccountPanel, EmptyState, GroupDetail, GroupSummary, LoadingCard, Metric,
@@ -25,6 +27,8 @@ export default function RiderWorkspace({ session, section, setSection, notificat
   const [returnTime, setReturnTime] = useState("17:00");
   const [pickup, setPickup] = useState<MapPoint | null>(null);
   const [dropoff, setDropoff] = useState<MapPoint | null>(null);
+  const [pickupSearch, setPickupSearch] = useState("");
+  const [dropoffSearch, setDropoffSearch] = useState("");
   const [pickMode, setPickMode] = useState<MapPickMode>("pickup");
   const [inviteCode, setInviteCode] = useState("");
   const selectedCategory = categories.find((item) => item.id === categoryId) ?? null;
@@ -60,6 +64,7 @@ export default function RiderWorkspace({ session, section, setSection, notificat
   const createGroup = async (event: FormEvent) => {
     event.preventDefault();
     if (!pickup || !dropoff) { notify("حدد نقطة الركوب ونقطة النزول على الخريطة.", "error"); return; }
+    if (!isInsideGreaterCairo(pickup.lat!, pickup.lng!) || !isInsideGreaterCairo(dropoff.lat!, dropoff.lng!)) { notify("المشاوير متاحة داخل القاهرة الكبرى فقط.", "error"); return; }
     const expected = packageType === "daily" ? 1 : packageType === "weekly" ? 5 : 22;
     if (dates.length !== expected) { notify(`اختار ${expected} ${packageType === "daily" ? "يوم" : "يوم خدمة"} بالضبط.`, "error"); return; }
     setSubmitting(true);
@@ -79,6 +84,7 @@ export default function RiderWorkspace({ session, section, setSection, notificat
   const joinGroup = async (event: FormEvent) => {
     event.preventDefault();
     if (!pickup || !dropoff) { notify("حدد نقطتي الركوب والنزول على الخريطة.", "error"); return; }
+    if (!isInsideGreaterCairo(pickup.lat!, pickup.lng!) || !isInsideGreaterCairo(dropoff.lat!, dropoff.lng!)) { notify("المشاوير متاحة داخل القاهرة الكبرى فقط.", "error"); return; }
     setSubmitting(true);
     try {
       const result = await api<{ group: { id: number } }>(`/rider/pool/groups/${Number(inviteCode)}/join`, { method: "POST", token: session.token,
@@ -100,6 +106,16 @@ export default function RiderWorkspace({ session, section, setSection, notificat
 
   const dateOptions = useMemo(() => packageType === "weekly" ? serviceWeek() : packageType === "monthly" ? serviceMonth() : dates, [packageType, dates]);
   const expectedDays = packageType === "daily" ? 1 : packageType === "weekly" ? 5 : 22;
+  const chooseMap = (mode: MapPickMode) => {
+    setPickMode(mode);
+    window.setTimeout(() => document.querySelector(".booking-map")?.scrollIntoView({ behavior: "smooth", block: "center" }), 0);
+  };
+  const setMapPoint = (mode: MapPickMode, point: MapPoint) => {
+    const label = `${point.lat?.toFixed(5)}, ${point.lng?.toFixed(5)}`;
+    const selected = { ...point, label };
+    if (mode === "pickup") { setPickup(selected); setPickupSearch(label); }
+    else { setDropoff(selected); setDropoffSearch(label); }
+  };
 
   if (loading) return <LoadingCard text="بنجهّز مساحة مشاويرك…" />;
 
@@ -121,9 +137,12 @@ export default function RiderWorkspace({ session, section, setSection, notificat
             : <div className="date-picker-block"><div className="field-heading"><strong>{packageType === "weekly" ? "اختار ٥ أيام في أسبوع الخدمة" : "اختار ٢٢ يوم خدمة في الشهر"}</strong><span>{dates.length} / {expectedDays}</span></div><div className="date-chips">{dateOptions.map((date) => <button type="button" key={date} className={dates.includes(date) ? "date-chip active" : "date-chip"} onClick={() => setDates((current) => current.includes(date) ? current.filter((d) => d !== date) : [...current, date].sort())}>{formatDate(date)}</button>)}</div><small className="muted-text">أيام الخدمة من الأحد إلى الخميس، والمواعيد يحددها الراكب.</small></div>}
           <div className="time-row"><label>وقت الذهاب<input type="time" value={morning} onChange={(e) => setMorning(e.target.value)} required /></label><label>وقت العودة<input type="time" value={returnTime} onChange={(e) => setReturnTime(e.target.value)} required /></label></div>
         </> : <><label>رقم المجموعة<input type="number" min="1" value={inviteCode} onChange={(e) => setInviteCode(e.target.value)} placeholder="مثال: 124" required /></label><div className="info-note">لازم نقط الركوب والنزول تكون في حدود ٣ كم من مسار المجموعة.</div></>}
-        <div className="map-points-readout"><div><i className="point-dot pickup-dot" /><span><strong>نقطة الركوب</strong><small>{pointLabel(pickup)}</small></span><button type="button" className={pickMode === "pickup" ? "text-action active" : "text-action"} onClick={() => setPickMode("pickup")}>حدد</button></div><div><i className="point-dot dropoff-dot" /><span><strong>نقطة النزول</strong><small>{pointLabel(dropoff)}</small></span><button type="button" className={pickMode === "dropoff" ? "text-action active" : "text-action"} onClick={() => setPickMode("dropoff")}>حدد</button></div></div>
-        <p className="map-instruction">اضغط على الخريطة لتحديد <b>{pickMode === "pickup" ? "نقطة الركوب" : "نقطة النزول"}</b></p>
-        <MapPicker pickup={pickup} dropoff={dropoff} mode={pickMode} onPick={(type, point) => type === "pickup" ? setPickup(point) : setDropoff(point)} />
+        <div className="location-search-stack">
+          <LocationSearchField kind="pickup" title="نقطة الركوب" value={pickupSearch} token={session.token} onChange={(value) => { setPickupSearch(value); setPickup(null); }} onSelect={(point) => { setPickup(point); setPickupSearch(point.label ?? ""); }} onChooseMap={() => chooseMap("pickup")} />
+          <LocationSearchField kind="dropoff" title="نقطة النزول" value={dropoffSearch} token={session.token} onChange={(value) => { setDropoffSearch(value); setDropoff(null); }} onSelect={(point) => { setDropoff(point); setDropoffSearch(point.label ?? ""); }} onChooseMap={() => chooseMap("dropoff")} />
+        </div>
+        <p className="map-instruction">اختار نتيجة البحث أو حدد <b>{pickMode === "pickup" ? "نقطة الركوب" : "نقطة النزول"}</b> بالدبوس على الخريطة · القاهرة الكبرى فقط</p>
+        <div className="booking-map"><MapPicker pickup={pickup} dropoff={dropoff} mode={pickMode} restrictToGreaterCairo onOutsidePick={() => notify("اختار نقطة داخل القاهرة الكبرى فقط.", "error")} onPick={setMapPoint} /></div>
         <button className="button button-primary button-wide" disabled={submitting}>{submitting ? "جاري الحفظ…" : bookingMode === "new" ? "تأكيد المشوار" : "الانضمام للمجموعة"}<span>←</span></button>
         {bookingMode === "new" && <p className="form-footnote">مفيش دفع دلوقتي؛ المبلغ هيظهر بعد اكتمال الحد الأدنى وتأكيد المسار.</p>}
       </form>

@@ -779,5 +779,33 @@ button { line-height: 1.45; }
   .workspace .surface { border-radius: 1rem; }
 }
 
+.workspace .location-search-stack { display: grid; gap: .75rem; margin-block: .85rem; }
+.workspace .location-search-field { min-width: 0; padding: .8rem; background: rgba(36, 32, 20, .72); border: 1px solid var(--line); border-radius: .95rem; }
+.workspace .location-search-heading { display: flex; align-items: center; gap: .55rem; margin-bottom: .55rem; }
+.workspace .location-search-heading strong { flex: 1; color: var(--ink); }
+.workspace .location-search-dropoff .point-dot { background: var(--cyan); }
+.workspace .location-map-pin, .workspace .location-search-submit { display: grid; flex: 0 0 2.35rem; place-items: center; width: 2.35rem; height: 2.35rem; color: #201b09; background: var(--yellow); border: 0; border-radius: .7rem; font-size: 1.25rem; font-weight: 700; }
+.workspace .location-map-pin { color: var(--cyan); background: rgba(158, 232, 230, .12); border: 1px solid rgba(158, 232, 230, .25); }
+.workspace .location-search-dropoff .location-search-submit { color: #15302d; background: var(--cyan); }
+.workspace .location-search-form { display: flex; align-items: center; gap: .5rem; }
+.workspace .location-search-form input { flex: 1; min-width: 0; min-height: 2.65rem; padding: .55rem .75rem; }
+.workspace .location-search-form input:focus { border-color: var(--yellow); outline: 2px solid rgba(255, 210, 31, .15); }
+.workspace .location-search-dropoff .location-search-form input:focus { border-color: var(--cyan); outline-color: rgba(158, 232, 230, .15); }
+.workspace .location-search-message { margin: .5rem .1rem 0; color: var(--muted); font-size: .8rem; }
+.workspace .location-search-attribution { display: block; margin-top: .45rem; color: #8e8774; font-size: .68rem; }
+.workspace .location-search-results { display: grid; gap: .35rem; padding: 0; margin: .55rem 0 0; list-style: none; }
+.workspace .location-search-results li { min-width: 0; }
+.workspace .location-search-results button { display: flex; align-items: center; justify-content: space-between; gap: .6rem; width: 100%; padding: .65rem .7rem; color: var(--ink); text-align: right; background: rgba(0, 0, 0, .16); border: 1px solid var(--line); border-radius: .65rem; }
+.workspace .location-search-results button:hover { border-color: var(--yellow); }
+.workspace .location-search-dropoff .location-search-results button:hover { border-color: var(--cyan); }
+.workspace .location-search-results button span { flex: 0 0 auto; color: var(--yellow); font-size: .75rem; }
+.workspace .location-search-dropoff .location-search-results button span { color: var(--cyan); }
+.workspace .booking-map { scroll-margin-block: 1rem; }
+@media (max-width: 560px) {
+  .workspace .location-search-field { padding: .65rem; }
+  .workspace .location-search-form input { font-size: .88rem; }
+  .workspace .location-search-results button { align-items: flex-start; flex-direction: column; }
+}
+
 
 

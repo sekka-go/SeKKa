@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import type { RouteGeometry, RouteSegment } from "./api";
+import { GREATER_CAIRO_BOUNDS, isInsideGreaterCairo } from "./lib/greater-cairo";
 
 export type MapPoint = {
   lat: number | null;
@@ -20,6 +21,8 @@ type MapPickerProps = {
   routePlaces?: MapPoint[];
   direction?: RouteDirection;
   readOnly?: boolean;
+  restrictToGreaterCairo?: boolean;
+  onOutsidePick?: () => void;
   onPick: (mode: MapPickMode, point: MapPoint) => void;
 };
 
@@ -58,24 +61,35 @@ export default function MapPicker({
   routePlaces = [],
   direction,
   readOnly = false,
+  restrictToGreaterCairo = false,
+  onOutsidePick,
   onPick,
 }: MapPickerProps) {
   const elementRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const layersRef = useRef<L.LayerGroup | null>(null);
   const onPickRef = useRef(onPick);
+  const onOutsidePickRef = useRef(onOutsidePick);
   const modeRef = useRef(mode);
   const [tilesLoaded, setTilesLoaded] = useState(false);
   const [tileError, setTileError] = useState(false);
 
   useEffect(() => { onPickRef.current = onPick; }, [onPick]);
+  useEffect(() => { onOutsidePickRef.current = onOutsidePick; }, [onOutsidePick]);
   useEffect(() => { modeRef.current = mode; }, [mode]);
 
   useEffect(() => {
     if (!elementRef.current || mapRef.current) return;
 
-    const map = L.map(elementRef.current, { zoomControl: false, attributionControl: true })
-      .setView(CAIRO, 11);
+    const cairoBounds = L.latLngBounds(
+      [GREATER_CAIRO_BOUNDS.south, GREATER_CAIRO_BOUNDS.west],
+      [GREATER_CAIRO_BOUNDS.north, GREATER_CAIRO_BOUNDS.east],
+    );
+    const map = L.map(elementRef.current, {
+      zoomControl: false,
+      attributionControl: true,
+      ...(restrictToGreaterCairo ? { maxBounds: cairoBounds, maxBoundsViscosity: 1 } : {}),
+    }).setView(CAIRO, restrictToGreaterCairo ? 10 : 11);
     L.control.zoom({ position: "bottomright" }).addTo(map);
 
     let failedTiles = 0;
@@ -102,6 +116,11 @@ export default function MapPicker({
 
     map.on("click", (event) => {
       if (!readOnly) {
+        if (restrictToGreaterCairo && !isInsideGreaterCairo(event.latlng.lat, event.latlng.lng)) {
+          onOutsidePickRef.current?.();
+          map.panInsideBounds(cairoBounds, { animate: true });
+          return;
+        }
         onPickRef.current(modeRef.current, {
           lat: event.latlng.lat,
           lng: event.latlng.lng,
@@ -123,7 +142,7 @@ export default function MapPicker({
       mapRef.current = null;
       layersRef.current = null;
     };
-  }, [readOnly]);
+  }, [readOnly, restrictToGreaterCairo]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -191,7 +210,7 @@ export default function MapPicker({
       {tileError && <div className="map-state map-state-warning" role="status">تعذر تحميل بعض بلاطات الخريطة. يمكنك الاستمرار في اختيار الموقع.</div>}
       {!hasVisibleStops && !hasRouteGeometry && readOnly && <div className="map-state map-state-warning" role="status">لا توجد بيانات موقع كافية لعرض هذا المسار.</div>}
       {hasVisibleStops && !hasRouteGeometry && readOnly && <div className="map-state map-state-warning" role="status">تعذر تحميل الطريق الفعلي؛ لن نعرض خطًا تقريبيًا بدلًا منه.</div>}
-      {!readOnly && <div className="map-hint">اضغط على الخريطة لتحديد {mode === "pickup" ? "نقطة الركوب" : "نقطة النزول"}</div>}
+      {!readOnly && <div className="map-hint">اضغط على الخريطة لتحديد {mode === "pickup" ? "نقطة الركوب" : "نقطة النزول"}{restrictToGreaterCairo ? " · القاهرة الكبرى فقط" : ""}</div>}
       {readOnly && <div className="map-hint">خريطة OpenStreetMap · الطريق الفعلي</div>}
     </div>
 
