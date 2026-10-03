@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, type KeyboardEvent } from "react";
 import { api } from "../api";
 import type { MapPoint, MapPickMode } from "../MapPicker";
 
@@ -25,8 +25,7 @@ export default function LocationSearchField({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const search = async (event: FormEvent) => {
-    event.preventDefault();
+  const search = async () => {
     const query = value.trim();
     if (query.length < 3) { setError("اكتب ٣ أحرف على الأقل للبحث."); setSuggestions([]); return; }
     setLoading(true); setError("");
@@ -44,10 +43,10 @@ export default function LocationSearchField({
 
   return <div className={`location-search-field location-search-${kind}`}>
     <div className="location-search-heading"><i className="point-dot pickup-dot" /><strong>{title}</strong><button type="button" className="location-map-pin" onClick={onChooseMap} aria-label={`حدد ${title} على الخريطة`} title="حدد على الخريطة">⌖</button></div>
-    <form className="location-search-form" onSubmit={(event) => void search(event)}>
-      <input aria-label={`ابحث عن ${title}`} value={value} onChange={(event) => { onChange(event.target.value); setSuggestions([]); setError(""); }} placeholder={kind === "pickup" ? "ابحث عن نقطة الركوب" : "ابحث عن نقطة النزول"} autoComplete="off" />
-      <button className="location-search-submit" type="submit" disabled={loading} aria-label={`بحث ${title}`}>{loading ? "…" : "⌕"}</button>
-    </form>
+    <div className="location-search-form" role="search">
+      <input aria-label={`ابحث عن ${title}`} value={value} onChange={(event) => { onChange(event.target.value); setSuggestions([]); setError(""); }} onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => { if (event.key === "Enter") { event.preventDefault(); void search(); } }} placeholder={kind === "pickup" ? "ابحث عن نقطة الركوب" : "ابحث عن نقطة النزول"} autoComplete="off" />
+      <button className="location-search-submit" type="button" onClick={() => void search()} disabled={loading} aria-label={`بحث ${title}`}>{loading ? "…" : "⌕"}</button>
+    </div>
     {error && <p className="location-search-message" role="status">{error}</p>}
     {suggestions.length > 0 && <ul className="location-search-results" aria-label={`نتائج ${title}`}>
       {suggestions.map((item, index) => <li key={`${item.lat}-${item.lng}-${index}`}><button type="button" onClick={() => { onSelect({ lat: item.lat, lng: item.lng, kind, label: item.label }); setSuggestions([]); setError(""); }}>{item.label}<span>اختيار ←</span></button></li>)}
