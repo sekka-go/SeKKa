@@ -1498,3 +1498,31 @@ button { line-height: 1.45; }
   background: var(--cyan);
   border-color: var(--cyan);
 }
+
+
+/* Branded trip controls and confirmations. */
+.workspace .group-management-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; margin-top: .9rem; }
+.workspace .group-management-actions .button { min-width: 0; padding-inline: .65rem; }
+.workspace .button-cancel-trip { color: #fff; background: #b83c35; border: 1px solid #d45149; border-radius: .8rem; font-weight: 800; }
+.workspace .button-cancel-trip:hover { background: #cc463e; }
+.workspace .button-edit-trip { color: #151208; background: var(--cyan); border: 1px solid rgba(158, 232, 230, .8); border-radius: .8rem; font-weight: 800; }
+.brand-modal-backdrop { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom)); background: rgba(7, 6, 3, .76); backdrop-filter: blur(5px); }
+.brand-confirm-dialog { width: min(100%, 30rem); padding: clamp(1.25rem, 5vw, 2rem); color: var(--ink); text-align: right; background: linear-gradient(145deg, #302a1d, #211d12); border: 1px solid rgba(255, 210, 31, .38); border-radius: 1.4rem; box-shadow: 0 1.5rem 5rem rgba(0, 0, 0, .52); animation: brand-dialog-enter .18s ease-out both; }
+.brand-confirm-dialog h2 { margin: .7rem 0 .35rem; font-size: 1.35rem; }
+.brand-confirm-dialog p { margin: 0; color: var(--muted); line-height: 1.7; }
+.brand-confirm-icon { display: grid; width: 2.6rem; height: 2.6rem; place-items: center; color: #201b09; background: var(--yellow); border-radius: 50%; font-weight: 800; }
+.brand-modal-actions { display: flex; justify-content: flex-start; gap: .65rem; margin-top: 1.4rem; }
+.brand-modal-actions .button { min-height: 2.8rem; padding-inline: 1rem; border-radius: .8rem; }
+@keyframes brand-dialog-enter { from { opacity: 0; transform: translateY(.65rem) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+/* Toasts sit above the mobile navigation and use the Sekka surface palette. */
+.app-shell > .toast { inset: auto 1rem 1.25rem auto; display: flex; align-items: center; gap: .55rem; width: max-content; max-width: min(28rem, calc(100vw - 2rem)); padding: .8rem 1rem; color: var(--ink); background: rgba(36, 32, 20, .97); border: 1px solid rgba(255, 210, 31, .42); border-radius: 1.1rem; box-shadow: 0 1rem 3rem rgba(0, 0, 0, .4); line-height: 1.45; animation: sekka-toast-enter .2s ease-out both; }
+.app-shell > .toast button { flex: 0 0 2rem; width: 2rem; height: 2rem; margin: 0; color: var(--yellow); background: rgba(255, 210, 31, .09); border: 1px solid rgba(255, 210, 31, .22); border-radius: 50%; }
+.app-shell > .toast.toast-error { border-color: rgba(255, 111, 97, .62); }
+.app-shell > .toast.toast-success { border-color: rgba(158, 232, 230, .55); }
+@keyframes sekka-toast-enter { from { opacity: 0; transform: translateY(.7rem); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 560px) {
+  .app-shell > .toast { inset-inline: 1rem; bottom: calc(env(safe-area-inset-bottom) + 1rem); width: auto; max-width: none; }
+  .workspace .group-management-actions { gap: .5rem; }
+  .workspace .group-management-actions .button { font-size: .85rem; }
+}
