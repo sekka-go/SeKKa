@@ -679,4 +679,105 @@ button { line-height: 1.45; }
   }
 }
 
+/* Keep the signed-in app on Sekka's established dark olive palette. */
+.workspace {
+  --ink: #f3ecd9;
+  --muted: #bcb39d;
+  --line: rgba(243, 236, 217, .14);
+  --panel: #242014;
+  --yellow: #ffd21f;
+  --cyan: #9ee8e6;
+  --danger: #ffb4ab;
+  color: var(--ink);
+  background: #171309;
+}
+.workspace .sidebar { background: #110e05; border-color: var(--line); box-shadow: none; }
+.workspace .sidebar-label { color: #817967; }
+.workspace .sidebar-brand { border-color: var(--line); }
+.workspace .nav-item { color: var(--muted); }
+.workspace .nav-item.nav-active, .workspace .nav-item:hover { color: var(--ink); background: #242014; }
+.workspace .nav-icon, .workspace .heading-mark, .workspace .empty-icon, .workspace .aside-icon, .workspace .surface-icon { color: var(--yellow); }
+.workspace .help-card { color: var(--muted); background: #242014; border-color: var(--line); }
+.workspace .help-card strong, .workspace .sidebar-profile, .workspace .breadcrumbs strong { color: var(--ink); }
+.workspace .help-card button { color: var(--yellow); }
+.workspace .profile-copy small, .workspace .page-heading p, .workspace .eyebrow { color: var(--muted); }
+.workspace .avatar { color: #201b09; background: var(--yellow); }
+.workspace .main-area { background: #171309; }
+.workspace .topbar { background: #171309; border-color: var(--line); }
+.workspace .breadcrumbs, .workspace .icon-button, .workspace .text-action, .workspace .mobile-menu { color: var(--muted); }
+.workspace .breadcrumbs b { color: #665f50; }
+.workspace .page-heading h1 { color: var(--ink); }
+.workspace .surface { color: var(--ink); background: rgba(36, 32, 20, .88); border-color: var(--line); box-shadow: 0 .5rem 1.6rem rgba(0, 0, 0, .12); }
+.workspace .surface h2, .workspace .surface h3, .workspace .surface strong { color: var(--ink); }
+.workspace .surface p, .workspace .surface small, .workspace .surface .muted-text { color: var(--muted); }
+.workspace .button { border-radius: .8rem; }
+.workspace .button-primary { color: #201b09; background: var(--yellow); border-color: var(--yellow); box-shadow: 0 .35rem .8rem rgba(255, 210, 31, .14); }
+.workspace .button-primary:hover { background: #ffe05b; border-color: #ffe05b; }
+.workspace .button-secondary { color: var(--cyan); background: rgba(158, 232, 230, .09); border-color: rgba(158, 232, 230, .28); }
+.workspace .button-outline { color: var(--ink); border-color: var(--line); background: transparent; }
+.workspace .button-quiet { color: var(--muted); background: rgba(243, 236, 217, .05); border-color: var(--line); }
+.workspace .button-dark { color: var(--ink); background: #171309; }
+.workspace input, .workspace select, .workspace textarea { color: var(--ink); background: #171309; border-color: var(--line); border-radius: .75rem; }
+.workspace input::placeholder, .workspace textarea::placeholder { color: #817967; }
+.workspace .segmented-control { background: #171309; border-color: var(--line); }
+.workspace .segmented-control button { color: var(--muted); }
+.workspace .segmented-control button.selected { color: #201b09; background: var(--yellow); }
+.workspace .package-option { color: var(--muted); border-color: var(--line); }
+.workspace .package-option strong { color: var(--ink); }
+.workspace .package-option.selected { border-color: var(--yellow); background: rgba(255, 210, 31, .08); }
+.workspace .tier-helper, .workspace .info-note, .workspace .form-footnote { color: var(--muted); background: rgba(158, 232, 230, .06); border-right-color: var(--cyan); }
+.workspace .tier-helper strong, .workspace .field-heading span { color: var(--yellow); }
+.workspace .date-chip, .workspace .group-chip { color: var(--muted); border-color: var(--line); }
+.workspace .date-chip.active, .workspace .group-chip.active { color: #201b09; background: var(--yellow); border-color: var(--yellow); }
+.workspace .map-points-readout > div { background: rgba(0, 0, 0, .14); border-color: var(--line); }
+.workspace .map-points-readout strong, .workspace .map-instruction b { color: var(--ink); }
+.workspace .map-picker { border-color: var(--line); }
+.workspace .map-canvas { background: #d6d0be; }
+.workspace .welcome-banner { color: var(--ink); background: linear-gradient(120deg, #3b3112, #242014 65%); border-color: rgba(255, 210, 31, .24); box-shadow: none; }
+.workspace .welcome-copy h2 { color: var(--ink); }
+.workspace .welcome-copy em, .workspace .metric-card strong, .workspace .admin-stat strong, .workspace .admin-summary-grid strong { color: var(--yellow); }
+.workspace .welcome-copy p, .workspace .metric-card small, .workspace .admin-stat small, .workspace .admin-summary-grid small { color: var(--muted); }
+.workspace .sun-orbit { border-color: rgba(255, 210, 31, .3); }
+.workspace .route-art span, .workspace .route-art i { border-color: var(--yellow); }
+.workspace .route-art b, .workspace .mini-car { color: var(--cyan); background-color: var(--cyan); }
+.workspace .metric-card, .workspace .group-summary { color: var(--ink); background: #242014; border-color: var(--line); }
+.workspace .metric-icon { color: var(--cyan); }
+.workspace .status-chip, .workspace .online-pill { color: var(--cyan); background: rgba(158, 232, 230, .1); }
+.workspace .status-waiting, .workspace .status-needs_captain { color: var(--yellow); background: rgba(255, 210, 31, .1); }
+.workspace .status-cancelled, .workspace .status-rejected { color: var(--danger); background: rgba(255, 180, 171, .1); }
+.workspace .status-completed, .workspace .status-approved { color: var(--cyan); background: rgba(158, 232, 230, .1); }
+.workspace .group-summary:hover { border-color: var(--yellow); }
+.workspace .group-summary-foot, .workspace .group-summary-top, .workspace .group-summary-meta { color: var(--muted); }
+.workspace .route-badge, .workspace .calendar-badge, .workspace .rider-sequence, .workspace .section-count { color: var(--yellow); background: rgba(255, 210, 31, .1); }
+.workspace .detail-stats, .workspace .account-meta, .workspace .trip-table-head, .workspace .trip-table-row, .workspace .rider-row, .workspace .service-date-row, .workspace .upcoming-row, .workspace .admin-captain-row, .workspace .notification-row { border-color: var(--line); }
+.workspace .trip-table-head { color: var(--muted); }
+.workspace .trip-table-row, .workspace .rider-row, .workspace .service-date-row, .workspace .upcoming-row { color: var(--ink); }
+.workspace .trip-arrow { color: var(--cyan); background: rgba(158, 232, 230, .1); }
+.workspace .notification-mark { color: var(--yellow); background: rgba(255, 210, 31, .1); }
+.workspace .notification-main-action, .workspace .empty-state { color: var(--ink); }
+.workspace .soft-surface { background: linear-gradient(150deg, rgba(255, 210, 31, .12), rgba(36, 32, 20, .92) 55%); }
+.workspace .soft-surface p, .workspace .soft-surface li, .workspace .compact-note p, .workspace .activity-card p, .workspace .account-card p { color: var(--muted); }
+.workspace .soft-surface li::marker { color: var(--yellow); }
+.workspace .text-action.active { color: var(--yellow); }
+.workspace .text-danger { color: var(--danger); }
+.workspace .sidebar-scrim { background: rgba(0, 0, 0, .55); }
+@media (max-width: 800px) {
+  .workspace .sidebar { background: #110e05; border-color: var(--line); box-shadow: -.5rem 0 2rem rgba(0, 0, 0, .25); }
+  .workspace .sidebar-close { color: var(--muted); }
+  .workspace .topbar { background: #171309; }
+}
+@media (max-width: 560px) {
+  .workspace { background: #171309; }
+  .workspace .topbar { border-bottom-color: var(--line); }
+  .workspace .page-heading { padding: .15rem .1rem 0; }
+  .workspace .page-content { padding-bottom: 1.25rem; }
+  .workspace .welcome-banner { position: relative; min-height: 15.5rem; padding: 1.15rem; }
+  .workspace .welcome-copy { max-width: 100%; }
+  .workspace .welcome-copy h2 { font-size: clamp(1.8rem, 8vw, 2.35rem); }
+  .workspace .welcome-illustration { position: absolute; inset: auto .5rem .35rem auto; width: 7.25rem; min-height: 7rem; opacity: .55; }
+  .workspace .metric-card { padding: .8rem; }
+  .workspace .surface { border-radius: 1rem; }
+}
+
+
 
