@@ -42,11 +42,11 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
   return <div className="workspace">
     <aside className={`sidebar ${navOpen ? "sidebar-open" : ""}`}>
       <div className="sidebar-brand"><BrandLogo variant="dark" /><button className="sidebar-close" onClick={() => setNavOpen(false)} aria-label="إغلاق القائمة">×</button></div>
-      <div className="sidebar-label">القائمة الرئيسية</div>
-      <nav>{nav.map((item) => <button key={item.key} className={`nav-item ${section === item.key ? "nav-active" : ""}`} onClick={() => { setSection(item.key); setNavOpen(false); }}><span className="nav-icon">{item.icon}</span>{item.label}{item.key === "notifications" && unread > 0 && <b className="nav-count">{unread}</b>}</button>)}</nav>
+      <div className="sidebar-label">{session.user.role === "rider" ? "مساحة الراكب" : session.user.role === "captain" ? "مساحة الكابتن" : "إدارة سِكّة"}</div>
+      <nav aria-label="التنقل الرئيسي">{nav.map((item) => <button key={item.key} aria-current={section === item.key ? "page" : undefined} className={`nav-item ${section === item.key ? "nav-active" : ""}`} onClick={() => { setSection(item.key); setNavOpen(false); }}><span className="nav-icon">{item.icon}</span>{item.label}{item.key === "notifications" && unread > 0 && <b className="nav-count">{unread}</b>}</button>)}</nav>
       <div className="sidebar-spacer" />
       <div className="help-card"><span>✦</span><strong>محتاج مساعدة؟</strong><p>لو ظهر خطأ، ستجد تفاصيله في الرسالة أعلى الصفحة. يمكنك تحديث البيانات أو المحاولة مرة أخرى.</p></div>
-      <button className="sidebar-profile" onClick={() => setSection("account")}><span className="avatar">{session.user.full_name.slice(0, 1)}</span><span className="profile-copy"><strong>{session.user.full_name}</strong><small>{session.user.role === "rider" ? "راكب" : session.user.role === "captain" ? "كابتن" : "مدير النظام"}</small></span><span className="profile-more">···</span></button>
+      <button className="sidebar-profile" onClick={() => { setSection("account"); setNavOpen(false); }}><span className="avatar">{session.user.full_name.slice(0, 1)}</span><span className="profile-copy"><strong>{session.user.full_name}</strong><small>{session.user.role === "rider" ? "راكب" : session.user.role === "captain" ? "كابتن" : "مدير النظام"}</small></span><span className="profile-more">···</span></button>
     </aside>
     {navOpen && <button className="sidebar-scrim" onClick={() => setNavOpen(false)} aria-label="إغلاق القائمة" />}
     <main className="main-area">
