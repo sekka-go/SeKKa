@@ -1718,3 +1718,13 @@ button { line-height: 1.45; }
 }
 
 
+
+.workspace .notification-message { margin: .1rem 0; color: var(--ink); line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.workspace .admin-broadcast { max-width: 48rem; border-radius: 1rem; }
+.workspace .admin-broadcast-form { display: grid; gap: .85rem; margin-top: .8rem; }
+.workspace .admin-broadcast-form label { display: grid; gap: .35rem; color: var(--muted); }
+.workspace .admin-broadcast-form input, .workspace .admin-broadcast-form textarea { width: 100%; min-width: 0; padding: .75rem .85rem; color: var(--ink); background: #171309; border: 1px solid var(--line); border-radius: .65rem; font: inherit; }
+.workspace .admin-broadcast-form textarea { resize: vertical; }
+.workspace .admin-broadcast-form input:focus, .workspace .admin-broadcast-form textarea:focus { outline: 2px solid var(--cyan); outline-offset: 1px; }
+.workspace .admin-broadcast-footer { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+.workspace .admin-broadcast-footer small { color: var(--muted); }
