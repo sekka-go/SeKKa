@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import MapPicker from "../MapPicker";
 import { categoryName, errorText, formatDate, money, statusLabel } from "../lib/formatters";
-import { hasPushSubscription, subscribeToPush, unsubscribeFromPush } from "../lib/push";
+import { getConfiguredPushPublicKey, hasPushSubscription, subscribeToPush, unsubscribeFromPush } from "../lib/push";
 import { api, type Category, type GroupView, type Notification } from "../api";
 import { readDates, todayInCairo } from "../lib/booking-dates";
 import type { RiderWorkspaceTrip, Session, Toast } from "../types";
@@ -81,10 +81,13 @@ export function NotificationRow({ item }: { item: Notification }) {
 
 export function NotificationsPanel({ items, token, onRefresh, onPoolChanged, allowWaitActions = false, notify }: { items: Notification[]; token: string; onRefresh: () => Promise<void>; onPoolChanged?: () => Promise<void>; allowWaitActions?: boolean; notify: (text: string, tone?: Toast["tone"]) => void }) {
   const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushReady, setPushReady] = useState(false);
   const [pushBusy, setPushBusy] = useState(false);
   useEffect(() => {
     let active = true;
-    void hasPushSubscription().then((enabled) => { if (active) setPushEnabled(enabled); }).catch(() => undefined);
+    void Promise.all([getConfiguredPushPublicKey(), hasPushSubscription()]).then(([publicKey, enabled]) => {
+      if (active) { setPushReady(Boolean(publicKey)); setPushEnabled(Boolean(publicKey) && enabled); }
+    }).catch(() => { if (active) setPushReady(false); });
     return () => { active = false; };
   }, []);
 
@@ -118,7 +121,7 @@ export function NotificationsPanel({ items, token, onRefresh, onPoolChanged, all
       notify(action === "cancel" ? "تم إلغاء المجموعة مجانًا." : "تم حجز المقاعد المتبقية للمجموعة.", "success");
     } catch (error) { notify(errorText(error), "error"); }
   };
-  return <section className="surface notifications-panel"><div className="section-title-row"><div><h2>كل الإشعارات</h2><p>الإشعارات محفوظة داخل حسابك</p></div><div className="notification-controls"><button className="button button-outline button-small" onClick={() => void togglePush()} disabled={pushBusy || !import.meta.env.PROD}>{pushBusy ? "جاري التحديث…" : pushEnabled ? "إيقاف إشعارات الجهاز" : import.meta.env.PROD ? "تفعيل إشعارات الجهاز" : "تفعيل الإشعارات بعد النشر"}</button><button className="text-action" onClick={() => void onRefresh()}>تحديث ↻</button></div></div>{items.length ? items.map((item) => {
+  return <section className="surface notifications-panel"><div className="section-title-row"><div><h2>كل الإشعارات</h2><p>الإشعارات محفوظة داخل حسابك</p></div><div className="notification-controls">{pushReady ? <button className="button button-outline button-small" onClick={() => void togglePush()} disabled={pushBusy}>{pushBusy ? "جاري التحديث…" : pushEnabled ? "إيقاف إشعارات الجهاز" : "تفعيل إشعارات الجهاز"}</button> : import.meta.env.PROD ? <small className="push-unavailable-note">إشعارات الجهاز غير مهيأة حاليًا</small> : <button className="button button-outline button-small" disabled>تفعيل الإشعارات بعد النشر</button>}<button className="text-action" onClick={() => void onRefresh()}>تحديث ↻</button></div></div>{items.length ? items.map((item) => {
     const options = Array.isArray(item.payload.options) ? item.payload.options : [];
     const isWaitNotice = allowWaitActions && item.event_key.includes("wait-72h") && Boolean(item.group_id);
     return <article className="notification-button-row" key={item.id}><button className="notification-main-action" onClick={() => void markRead(item)}><NotificationRow item={item} /><span className="notification-open">{item.read_at ? "" : "تعليم كمقروء"}</span></button>{isWaitNotice && options.length > 0 && <div className="notification-choice-actions"><span>اختار ما يناسبك:</span>{options.includes("wait") && <button className="button button-outline button-small" onClick={() => void markRead(item)}>الانتظار</button>}{options.includes("book_remaining_seats") && <button className="button button-secondary button-small" onClick={() => void waitAction(item, "complete-seats")}>حجز باقي المقاعد</button>}{options.includes("cancel_free") && <button className="button button-quiet button-small" onClick={() => void waitAction(item, "cancel")}>إلغاء مجاني</button>}</div>}</article>;
