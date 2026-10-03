@@ -1880,6 +1880,9 @@ button { line-height: 1.45; }
 @keyframes commuter-card-in-down { 0% { opacity: 0; transform-origin: center top; transform: rotateX(88deg) translateY(-35%) scale(.96); filter: brightness(.68); } 38% { opacity: 1; transform: rotateX(-22deg) translateY(3%) scale(1.005); filter: brightness(1.08); } 70% { transform: rotateX(7deg) translateY(-1%) scale(1); filter: brightness(1); } 100% { opacity: 1; transform-origin: center center; transform: rotateX(0) translateY(0) scale(1); filter: brightness(1); } }
 @media (prefers-reduced-motion: reduce) { .workspace .commuter-board-card { animation: none; } .workspace .commuter-board-indicators button { transition: none; } }
 @media (max-width: 560px) { .workspace .commuter-board-card { min-height: 13rem; } .workspace .commuter-board-main { gap: .6rem; } .workspace .commuter-board-icon { flex-basis: 2.5rem; width: 2.5rem; height: 2.5rem; font-size: 1.25rem; } .workspace .commuter-preferences-days { grid-template-columns: repeat(4, minmax(0,1fr)); } .workspace .commuter-preferences-times { grid-template-columns: 1fr; } }
+.workspace .welcome-actions { display: flex; align-items: stretch; gap: .55rem; width: 100%; }
+.workspace .welcome-actions .button { display: inline-flex; flex: 1 1 0; align-items: center; justify-content: center; gap: .3rem; width: auto; min-width: 0; padding: .72rem .6rem; font-size: clamp(.72rem, 3vw, .96rem); white-space: nowrap; }
+@media (max-width: 360px) { .workspace .welcome-actions { gap: .35rem; } .workspace .welcome-actions .button { padding-inline: .4rem; font-size: .7rem; } }
 .workspace .notification-main-action { display: block; padding: .95rem 1rem; }
 .workspace .notification-row { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: .85rem; direction: rtl; }
 .workspace .notification-row > div { min-width: 0; }
