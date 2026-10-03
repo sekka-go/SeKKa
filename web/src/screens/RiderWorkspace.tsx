@@ -108,7 +108,11 @@ export default function RiderWorkspace({ session, section, setSection, notificat
   const expectedDays = packageType === "daily" ? 1 : packageType === "weekly" ? 5 : 22;
   const chooseMap = (mode: MapPickMode) => {
     setPickMode(mode);
-    window.setTimeout(() => document.querySelector(".booking-map")?.scrollIntoView({ behavior: "smooth", block: "center" }), 0);
+    window.setTimeout(() => {
+      const mapContainer = document.querySelector(".booking-map");
+      mapContainer?.scrollIntoView({ behavior: "smooth", block: "center" });
+      window.setTimeout(() => mapContainer?.querySelector<HTMLElement>(".leaflet-map")?.focus({ preventScroll: true }), 250);
+    }, 0);
   };
   const setMapPoint = (mode: MapPickMode, point: MapPoint) => {
     const label = `${point.lat?.toFixed(5)}, ${point.lng?.toFixed(5)}`;
