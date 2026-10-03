@@ -21,9 +21,6 @@ export default function RiderCommuterBoard({ token, places, groups, categories, 
   const [campaigns, setCampaigns] = useState<CommuterBoardCard[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [slideDirection, setSlideDirection] = useState<"up" | "down">("up");
-  const [paused, setPaused] = useState(false);
-  const [hovered, setHovered] = useState(false);
-  const [focused, setFocused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const pointerStart = useRef<number | null>(null);
   const home = places.find((place) => place.place_type === "home");
@@ -63,13 +60,13 @@ export default function RiderCommuterBoard({ token, places, groups, categories, 
 
   useEffect(() => { setActiveIndex((index) => cards.length ? index % cards.length : 0); }, [cards.length]);
   useEffect(() => {
-    if (cards.length < 2 || paused || hovered || focused || reducedMotion) return;
+    if (cards.length < 2 || reducedMotion) return;
     const timer = window.setTimeout(() => {
       setSlideDirection("up");
       setActiveIndex((index) => (index + 1) % cards.length);
     }, 5_000);
     return () => window.clearTimeout(timer);
-  }, [activeIndex, cards.length, focused, hovered, paused, reducedMotion]);
+  }, [activeIndex, cards.length, reducedMotion]);
   const navigate = (index: number) => {
     setSlideDirection(index >= activeIndex ? "up" : "down");
     setActiveIndex(nextCommuterCardIndex(activeIndex, cards.length, index - activeIndex));
@@ -83,7 +80,10 @@ export default function RiderCommuterBoard({ token, places, groups, categories, 
       },
     }, card.type);
   };
-  const onPointerDown = (event: PointerEvent<HTMLElement>) => { pointerStart.current = event.clientY; };
+  const onPointerDown = (event: PointerEvent<HTMLElement>) => {
+    if ((event.target as HTMLElement).closest("button")) return;
+    pointerStart.current = event.clientY;
+  };
   const onPointerUp = (event: PointerEvent<HTMLElement>) => {
     if (pointerStart.current === null) return;
     const delta = event.clientY - pointerStart.current;
@@ -93,7 +93,7 @@ export default function RiderCommuterBoard({ token, places, groups, categories, 
   };
   const card = cards[activeIndex];
 
-  return <section className="surface commuter-board" aria-label="اقتراحات مشاويرك الشخصية" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onFocusCapture={() => setFocused(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false); }}>
+  return <section className="surface commuter-board" aria-label="اقتراحات مشاويرك الشخصية">
     <div className="commuter-board-viewport" onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerCancel={() => { pointerStart.current = null; }}>
       {card && <article key={card.id} className={`commuter-board-card slide-${slideDirection}`} aria-live="off">
         <div className="commuter-board-copy"><span className="commuter-board-icon" aria-hidden="true">{card.icon}</span><span className="eyebrow">{card.type === "campaign" ? "اقتراح من سِكّة" : "اقتراح على طريقك"}</span><h2>{card.title}</h2><p>{card.description.split("\n").map((line, index) => <span key={index}>{line}{index < card.description.split("\n").length - 1 && <br />}</span>)}</p>
@@ -103,10 +103,8 @@ export default function RiderCommuterBoard({ token, places, groups, categories, 
       </article>}
     </div>
     <div className="commuter-board-controls">
-      <button type="button" className="commuter-board-arrow" onClick={() => navigate(activeIndex - 1)} aria-label="البطاقة السابقة">↑</button>
       <div className="commuter-board-indicators" role="group" aria-label="اختيار بطاقة الاقتراح">{cards.map((item, index) => <button key={item.id} type="button" className={index === activeIndex ? "active" : ""} aria-label={`عرض البطاقة ${index + 1} من ${cards.length}`} aria-current={index === activeIndex ? "true" : undefined} onClick={() => navigate(index)} />)}</div>
-      <button type="button" className="commuter-board-arrow" onClick={() => navigate(activeIndex + 1)} aria-label="البطاقة التالية">↓</button>
     </div>
-    {cards.length > 1 && <button type="button" className="commuter-board-pause" aria-pressed={paused} onClick={() => setPaused((value) => !value)}>{paused ? "تشغيل العرض التلقائي" : "إيقاف العرض التلقائي"}</button>}
+    {cards.length > 1 && <small className="commuter-board-swipe-hint">اسحب لأعلى أو لأسفل للتنقل</small>}
   </section>;
 }
