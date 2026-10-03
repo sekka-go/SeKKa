@@ -149,6 +149,5 @@ export default function LocationSearchField({
         <button type="button" onClick={() => selectSuggestion(item)}>{item.label}<span>اختيار ←</span></button>
       </li>)}
     </ul>}
-    <small className="location-search-attribution">نتائج الأماكن من OpenStreetMap</small>
   </div>;
 }
