@@ -1794,11 +1794,13 @@ button { line-height: 1.45; }
 .workspace .commuter-board-viewport { min-width: 0; perspective: 900px; touch-action: pan-x; }
 .workspace .commuter-board-card { min-height: 14rem; display: grid; align-items: center; padding: clamp(.4rem, 1vw, .8rem); backface-visibility: hidden; transform-style: preserve-3d; will-change: transform, opacity; animation: commuter-card-in-up .72s cubic-bezier(.2,.78,.25,1) both; }
 .workspace .commuter-board-card.slide-down { animation-name: commuter-card-in-down; }
-.workspace .commuter-board-copy { position: relative; display: grid; justify-items: start; gap: .45rem; max-width: 42rem; padding-inline-start: clamp(0rem, 8vw, 4.5rem); }
-.workspace .commuter-board-icon { position: absolute; inset-inline-start: 0; top: .1rem; display: grid; width: 2.9rem; height: 2.9rem; place-items: center; color: var(--yellow); background: rgba(255,210,31,.09); border: 1px solid rgba(255,210,31,.24); border-radius: 50%; font-size: 1.5rem; }
-.workspace .commuter-board-copy h2, .workspace .commuter-board-copy p { margin: 0; }
-.workspace .commuter-board-copy h2 { color: var(--ink); font-size: clamp(1.25rem, 4vw, 1.65rem); line-height: 1.35; }
-.workspace .commuter-board-copy p { color: var(--muted); font-size: .95rem; line-height: 1.7; white-space: normal; }
+.workspace .commuter-board-copy { display: grid; justify-items: start; gap: .7rem; width: 100%; max-width: 42rem; direction: rtl; }
+.workspace .commuter-board-main { display: flex; align-items: flex-start; gap: .8rem; width: 100%; direction: ltr; }
+.workspace .commuter-board-icon { display: grid; flex: 0 0 2.9rem; width: 2.9rem; height: 2.9rem; place-items: center; color: var(--yellow); background: rgba(255,210,31,.09); border: 1px solid rgba(255,210,31,.24); border-radius: 50%; font-size: 1.5rem; }
+.workspace .commuter-board-text { display: grid; flex: 1; justify-items: start; gap: .45rem; min-width: 0; direction: rtl; text-align: right; }
+.workspace .commuter-board-text h2, .workspace .commuter-board-text p { margin: 0; }
+.workspace .commuter-board-text h2 { color: var(--ink); font-size: clamp(1.25rem, 4vw, 1.65rem); line-height: 1.35; }
+.workspace .commuter-board-text p { color: var(--muted); font-size: .95rem; line-height: 1.7; white-space: normal; }
 .workspace .commuter-board-meta { color: var(--yellow); font-size: .82rem; line-height: 1.5; }
 .workspace .commuter-board-cta { min-width: min(100%, 14rem); margin-top: .35rem; }
 .workspace .commuter-board-controls { display: flex; align-items: center; justify-content: center; gap: .75rem; }
@@ -1825,4 +1827,4 @@ button { line-height: 1.45; }
 @keyframes commuter-card-in-up { 0% { opacity: 0; transform-origin: center bottom; transform: rotateX(-88deg) translateY(35%) scale(.96); filter: brightness(.68); } 38% { opacity: 1; transform: rotateX(22deg) translateY(-3%) scale(1.005); filter: brightness(1.08); } 70% { transform: rotateX(-7deg) translateY(1%) scale(1); filter: brightness(1); } 100% { opacity: 1; transform-origin: center center; transform: rotateX(0) translateY(0) scale(1); filter: brightness(1); } }
 @keyframes commuter-card-in-down { 0% { opacity: 0; transform-origin: center top; transform: rotateX(88deg) translateY(-35%) scale(.96); filter: brightness(.68); } 38% { opacity: 1; transform: rotateX(-22deg) translateY(3%) scale(1.005); filter: brightness(1.08); } 70% { transform: rotateX(7deg) translateY(-1%) scale(1); filter: brightness(1); } 100% { opacity: 1; transform-origin: center center; transform: rotateX(0) translateY(0) scale(1); filter: brightness(1); } }
 @media (prefers-reduced-motion: reduce) { .workspace .commuter-board-card { animation: none; } .workspace .commuter-board-indicators button { transition: none; } }
-@media (max-width: 560px) { .workspace .commuter-board-card { min-height: 13rem; } .workspace .commuter-board-copy { padding-inline-start: 0; padding-top: 3.25rem; } .workspace .commuter-board-icon { inset-inline-start: auto; inset-inline-end: 0; top: 0; } .workspace .commuter-preferences-days { grid-template-columns: repeat(4, minmax(0,1fr)); } .workspace .commuter-preferences-times { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .workspace .commuter-board-card { min-height: 13rem; } .workspace .commuter-board-main { gap: .6rem; } .workspace .commuter-board-icon { flex-basis: 2.5rem; width: 2.5rem; height: 2.5rem; font-size: 1.25rem; } .workspace .commuter-preferences-days { grid-template-columns: repeat(4, minmax(0,1fr)); } .workspace .commuter-preferences-times { grid-template-columns: 1fr; } }

@@ -96,8 +96,9 @@ export default function RiderCommuterBoard({ token, places, groups, categories, 
   return <section className="surface commuter-board" aria-label="اقتراحات مشاويرك الشخصية">
     <div className="commuter-board-viewport" onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerCancel={() => { pointerStart.current = null; }}>
       {card && <article key={card.id} className={`commuter-board-card slide-${slideDirection}`} aria-live="off">
-        <div className="commuter-board-copy"><span className="commuter-board-icon" aria-hidden="true">{card.icon}</span><span className="eyebrow">{card.type === "campaign" ? "اقتراح من سِكّة" : "اقتراح على طريقك"}</span><h2>{card.title}</h2><p>{card.description.split("\n").map((line, index) => <span key={index}>{line}{index < card.description.split("\n").length - 1 && <br />}</span>)}</p>
+        <div className="commuter-board-copy"><div className="commuter-board-main"><span className="commuter-board-icon" aria-hidden="true">{card.icon}</span><div className="commuter-board-text"><span className="eyebrow">{card.type === "campaign" ? "اقتراح من سِكّة" : "اقتراح على طريقك"}</span><h2>{card.title}</h2><p>{card.description.split("\n").map((line, index) => <span key={index}>{line}{index < card.description.split("\n").length - 1 && <br />}</span>)}</p>
           {card.group_id && (() => { const item = groups.find(({ group }) => group.id === card.group_id); const category = categories.find(({ id }) => id === item?.group.category_id); return item ? <small className="commuter-board-meta">{category ? categoryName(category) : "رحلة مشتركة"} · {packageLabel(item.group.package_type)}{item.group.seat_day_fare === null ? "" : ` · ${money(item.group.seat_day_fare)} للفرد / يوم`}</small> : null; })()}
+        </div></div>
           <button type="button" className="button button-primary commuter-board-cta" onClick={() => act(card)}>{card.cta_text}<span aria-hidden="true">←</span></button>
         </div>
       </article>}
