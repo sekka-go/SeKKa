@@ -35,7 +35,7 @@ export function GroupDetail({ view, categories, busy, action, notify, onEdit, cu
   const firstFutureDate = trips.find((trip) => trip.service_date >= todayInCairo() && trip.status !== "completed")?.service_date;
 
   return <div className="group-detail-layout"><div className="group-detail-main">
-    <section className="surface detail-hero"><div className="detail-hero-top"><span className="group-number">مجموعة #{group.id}</span></div><h2>{categoryName(category)}</h2>
+    <section className="surface detail-hero"><div className="detail-hero-top"><span className={`status-chip status-${group.status}`} aria-label="حالة الرحلة">{group.status === "needs_captain" ? "جاري البحث عن كابتن" : statusLabel(group.status)}</span><span className="group-number">مجموعة #{group.id}</span></div><h2>{categoryName(category)}</h2>
       {group.status === "price_review" && <div className="warning-panel"><span>!</span><div><strong>في تعديل على السعر</strong><p>راجع السعر الجديد واختار تكمل أو تخرج من المجموعة بدون غرامة.</p></div><div className="warning-actions"><button className="button button-primary button-small" disabled={busy} onClick={() => action(group.id, "price-decision", { action: "accept" })}>موافق</button><button className="button button-quiet button-small" disabled={busy} onClick={() => action(group.id, "price-decision", { action: "decline" })}>رفض</button></div></div>}
 
     </section>
@@ -58,7 +58,7 @@ export function GroupDetail({ view, categories, busy, action, notify, onEdit, cu
           <div className="brand-modal-actions"><button className="button button-quiet" disabled={busy || canceling} onClick={() => setConfirmCancellation(null)}>رجوع</button><button className="button button-cancel-trip" disabled={busy || canceling} onClick={() => void cancel()}>{canceling ? "جارٍ الإلغاء…" : "تأكيد الإلغاء"}</button></div>
         </section>
       </div>}
-      <details className="surface upcoming-card"><summary>الرحلات القادمة · {trips.length}</summary>{trips.slice(0, 6).map((trip) => <div className="upcoming-row" key={trip.id}><span className={`trip-arrow ${trip.direction}`}>{trip.direction === "outbound" ? "↗" : "↙"}</span><div><strong>{formatDate(trip.service_date)}</strong><small>{trip.direction === "outbound" ? "ذهاب" : "عودة"} · {trip.departure_at.slice(11, 16)}</small></div><span className={`tiny-status status-${trip.status}`}>{statusLabel(trip.status)}</span></div>)}</details>
+      
     </aside></div>;
 }
 
