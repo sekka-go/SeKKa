@@ -17,6 +17,7 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
   });
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [navOpen, setNavOpen] = useState(false);
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine);
 
   const setSection = useCallback((next: NavKey, historyMode: "push" | "replace" = "push") => {
     const current = window.history.state as { sekkaWorkspace?: boolean; sekkaSection?: NavKey; sekkaIndex?: number } | null;
@@ -87,12 +88,30 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
     const timer = window.setInterval(() => { void refreshNotifications(); }, 30_000);
     return () => window.clearInterval(timer);
   }, [refreshNotifications]);
+  useEffect(() => {
+    const updateConnection = () => setIsOnline(navigator.onLine);
+    window.addEventListener("online", updateConnection);
+    window.addEventListener("offline", updateConnection);
+    return () => {
+      window.removeEventListener("online", updateConnection);
+      window.removeEventListener("offline", updateConnection);
+    };
+  }, []);
+  const inviteFriends = async () => {
+    const invite = { title: "أطلب سِكّة", text: "شارك الطريق مع ناس رايحة في نفس اتجاهك.", url: window.location.origin };
+    try {
+      if (navigator.share) await navigator.share(invite);
+      else if (navigator.clipboard) { await navigator.clipboard.writeText(invite.url); notify("تم نسخ رابط سِكّة للمشاركة.", "success"); }
+      else notify("شارك رابط التطبيق مع أصدقائك.", "info");
+    } catch { /* تجاهل إغلاق نافذة المشاركة من المستخدم */ }
+    setNavOpen(false);
+  };
 
   const nav: { key: NavKey; label: string; icon: string }[] = session.user.role === "rider"
-    ? [{ key: "home", label: "الرئيسية", icon: "⌂" }, { key: "booking", label: "مشوار جديد", icon: "＋" }, { key: "trips", label: "رحلاتي", icon: "↗" }, { key: "notifications", label: "الإشعارات", icon: "◌" }, { key: "account", label: "حسابي", icon: "♙" }]
+    ? [{ key: "home", label: "الرئيسية", icon: "⌂" }, { key: "booking", label: "مشوار جديد", icon: "＋" }, { key: "trips", label: "رحلاتي", icon: "↗" }, { key: "notifications", label: "الرسائل", icon: "✉" }, { key: "account", label: "الإعدادات", icon: "⚙" }]
     : session.user.role === "captain"
-      ? [{ key: "offers", label: "المسارات المتاحة", icon: "⌖" }, { key: "captainTrips", label: "رحلاتي", icon: "↗" }, { key: "notifications", label: "الإشعارات", icon: "◌" }, { key: "account", label: "حسابي", icon: "♙" }]
-      : [{ key: "admin", label: "نظرة عامة", icon: "▦" }, { key: "notifications", label: "الإشعارات", icon: "◌" }, { key: "account", label: "حسابي", icon: "♙" }];
+      ? [{ key: "offers", label: "العروض", icon: "⌖" }, { key: "captainTrips", label: "رحلاتي", icon: "↗" }, { key: "notifications", label: "الرسائل", icon: "✉" }, { key: "account", label: "الإعدادات", icon: "⚙" }]
+      : [{ key: "admin", label: "نظرة عامة", icon: "▦" }, { key: "notifications", label: "الرسائل", icon: "✉" }, { key: "account", label: "الإعدادات", icon: "⚙" }];
 
   const titles: Record<NavKey, [string, string]> = {
     home: ["صباح الخير", "طريقك اليوم يبدأ من هنا"], booking: ["خطط لمشوارك", "اختار أيامك ونقاطك، وإحنا نرتّب الباقي"],
@@ -105,15 +124,16 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
 
   return <div className="workspace">
     <aside className={`sidebar ${navOpen ? "sidebar-open" : ""}`}>
-      <div className="sidebar-brand"><BrandLogo /><button className="sidebar-close" onClick={() => setNavOpen(false)} aria-label="إغلاق القائمة">×</button></div>
-      <div className="sidebar-label">{session.user.role === "rider" ? "مساحة الراكب" : session.user.role === "captain" ? "مساحة الكابتن" : "إدارة سِكّة"}</div>
+      <div className="sidebar-brand"><div className="sidebar-label">{session.user.role === "rider" ? "مساحة الراكب" : session.user.role === "captain" ? "مساحة الكابتن" : "إدارة سِكّة"}</div><button className="sidebar-close" onClick={() => setNavOpen(false)} aria-label="إغلاق القائمة">×</button></div>
       <nav aria-label="التنقل الرئيسي">{nav.map((item) => <button key={item.key} aria-current={section === item.key ? "page" : undefined} className={`nav-item ${section === item.key ? "nav-active" : ""}`} onClick={() => { if (item.key === "booking") window.dispatchEvent(new CustomEvent("sekka:booking-mode", { detail: "new" })); setSection(item.key); setNavOpen(false); }}><span className="nav-icon">{item.icon}</span>{item.label}{item.key === "notifications" && unread > 0 && <b className="nav-count">{unread}</b>}</button>)}</nav>
+      <div className="sidebar-utilities"><a className="nav-item" href="mailto:sekkago.app@gmail.com"><span className="nav-icon">؟</span>خدمة العملاء والإدارة</a><button className="nav-item" onClick={() => void inviteFriends()}><span className="nav-icon">↗</span>دعوة الأصدقاء</button></div>
       <div className="sidebar-spacer" />
       <button className="sidebar-profile" onClick={() => { setSection("account"); setNavOpen(false); }}><span className="avatar">{session.user.full_name.slice(0, 1)}</span><span className="profile-copy"><strong>{session.user.full_name}</strong><small>{session.user.role === "rider" ? "راكب" : session.user.role === "captain" ? "كابتن" : "مدير النظام"}</small></span><span className="profile-more">···</span></button>
+      <button className="sidebar-signout" onClick={onSignOut}>تسجيل الخروج</button>
     </aside>
     {navOpen && <button className="sidebar-scrim" onClick={() => setNavOpen(false)} aria-label="إغلاق القائمة" />}
     <main className="main-area">
-      <header className="topbar">{historyDepth > 0 && section !== "booking" && <button className="workspace-back icon-button" onClick={() => window.history.back()} aria-label="رجوع">→</button>}<button className="mobile-menu" onClick={() => setNavOpen(true)} aria-label="فتح القائمة">☰</button><div className="breadcrumbs"><span>سِكّة</span></div><div className="topbar-actions"><button className="icon-button notification-button" onClick={() => setSection("notifications")} aria-label="الإشعارات">♧{unread > 0 && <i />}</button><span className="topbar-divider" /><span className="topbar-user">{session.user.full_name}</span><span className="avatar avatar-small">{session.user.full_name.slice(0, 1)}</span><button className="text-action sign-out-action" onClick={onSignOut}>خروج</button></div></header>
+      <header className="topbar"><div className="topbar-brand-group"><button className="mobile-menu" onClick={() => setNavOpen(true)} aria-label="فتح القائمة">☰</button><BrandLogo className="topbar-brand" /></div><div className="topbar-actions">{historyDepth > 0 && section !== "booking" && <button className="workspace-back icon-button" onClick={() => window.history.back()} aria-label="رجوع">→</button>}<span className={`connection-state ${isOnline ? "is-online" : "is-offline"}`} role="status"><i />{isOnline ? "متصل" : "غير متصل"}</span><button className="icon-button notification-bell" onClick={() => setSection("notifications")} aria-label={unread > 0 ? `الرسائل، ${unread} غير مقروءة` : "الرسائل"}><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" /><path d="M10 21h4" /></svg>{unread > 0 && <i />}</button></div></header>
       <div className="page-content">{section !== "booking" && <div className="page-heading"><div><h1>{title}</h1><p>{subtitle}</p></div></div>}
         {session.user.role === "rider" && <RiderWorkspace session={session} section={section} setSection={setSection} notifications={notifications} refreshNotifications={refreshNotifications} notify={notify} />}
         {session.user.role === "captain" && <CaptainWorkspace session={session} section={section} notifications={notifications} refreshNotifications={refreshNotifications} notify={notify} />}
