@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { api, type Notification } from "../api";
 import { errorText, money } from "../lib/formatters";
 import type { NavKey, Session, Toast } from "../types";
@@ -10,6 +10,10 @@ export default function AdminWorkspace({ session, section, notifications, refres
   const [poolOverview, setPoolOverview] = useState<Record<string, number | boolean | string> | null>(null);
   const [captains, setCaptains] = useState<Record<string, unknown>[]>([]);
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [broadcastTitle, setBroadcastTitle] = useState("");
+  const [broadcastMessage, setBroadcastMessage] = useState("");
+  const [broadcastBusy, setBroadcastBusy] = useState(false);
+  const [broadcastRequestId, setBroadcastRequestId] = useState("");
   const refresh = useCallback(async () => {
     const [stats, pending, pool] = await Promise.all([
       api<{ overview: Record<string, number> }>("/admin/analytics/overview", { token: session.token }),
@@ -26,6 +30,24 @@ export default function AdminWorkspace({ session, section, notifications, refres
   }, [section, refresh, notify]);
   if (section === "account") return <AccountPanel session={session} notify={notify} />;
   if (section === "notifications") return <NotificationsPanel items={notifications} token={session.token} onRefresh={refreshNotifications} notify={notify} />;
+  if (section === "broadcast") {
+    const submitBroadcast = async (event: FormEvent) => {
+      event.preventDefault();
+      const title = broadcastTitle.trim(), message = broadcastMessage.trim();
+      if (!title || !message) { notify("اكتب عنوان الرسالة ومحتواها أولًا.", "error"); return; }
+      setBroadcastBusy(true);
+      const requestId = broadcastRequestId || crypto.randomUUID();
+      setBroadcastRequestId(requestId);
+      try {
+        const result = await api<{ notified_users: number }>("/admin/notifications/broadcast", { method: "POST", token: session.token, body: { title, message, request_id: requestId } });
+        setBroadcastTitle(""); setBroadcastMessage(""); setBroadcastRequestId("");
+        await refreshNotifications();
+        notify(`تم إرسال الرسالة إلى ${result.notified_users} مستخدم.`, "success");
+      } catch (error) { notify(errorText(error), "error"); }
+      finally { setBroadcastBusy(false); }
+    };
+    return <section className="surface admin-broadcast"><div className="section-title-row"><div><span className="eyebrow">إدارة سِكّة</span><h2>إرسال رسالة عامة</h2><p>ستظهر الرسالة في صندوق الإشعارات لدى جميع المستخدمين.</p></div></div><form className="admin-broadcast-form" onSubmit={(event) => void submitBroadcast(event)}><label>عنوان الرسالة<input value={broadcastTitle} onChange={(event) => setBroadcastTitle(event.target.value)} maxLength={100} required placeholder="مثال: تحديث مهم" /></label><label>نص الرسالة<textarea value={broadcastMessage} onChange={(event) => setBroadcastMessage(event.target.value)} maxLength={1000} rows={5} required placeholder="اكتب الرسالة التي ستصل للجميع" /></label><div className="admin-broadcast-footer"><small>{broadcastMessage.length}/1000 حرف</small><button className="button button-primary" type="submit" disabled={broadcastBusy || !broadcastTitle.trim() || !broadcastMessage.trim()}>{broadcastBusy ? "جاري الإرسال…" : "إرسال للجميع"}</button></div></form></section>;
+  }
   const decide = async (captainId: number, status: "approved" | "rejected") => {
     setBusyId(captainId);
     try { await api(`/admin/captains/${captainId}/verification`, { method: "POST", token: session.token, body: { status } }); await refresh(); notify(status === "approved" ? "تم توثيق الكابتن." : "تم رفض طلب التوثيق.", "success"); }
