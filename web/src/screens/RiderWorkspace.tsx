@@ -39,6 +39,11 @@ export default function RiderWorkspace({ session, section, setSection, notificat
   const selectedCategory = categories.find((item) => item.id === categoryId) ?? null;
   const selected = groups.find((view) => view.group.id === selectedGroup) ?? null;
 
+  const openBooking = (mode: "new" | "join") => {
+    setBookingMode(mode);
+    setSection("booking");
+  };
+
   const refreshGroups = useCallback(async () => {
     const result = await api<{ groups: GroupView[] }>("/rider/pool/groups", { token: session.token });
     setGroups(result.groups ?? []);
@@ -56,6 +61,15 @@ export default function RiderWorkspace({ session, section, setSection, notificat
     }).catch((error) => notify(errorText(error), "error")).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [session.token, notify]);
+
+  useEffect(() => {
+    const handleBookingMode = (event: Event) => {
+      const mode = (event as CustomEvent<"new" | "join">).detail;
+      if (mode === "new" || mode === "join") setBookingMode(mode);
+    };
+    window.addEventListener("sekka:booking-mode", handleBookingMode);
+    return () => window.removeEventListener("sekka:booking-mode", handleBookingMode);
+  }, []);
 
   useEffect(() => {
     if (bookingMode !== "new" || !pickup || !dropoff) {
@@ -170,8 +184,8 @@ export default function RiderWorkspace({ session, section, setSection, notificat
 
   if (section === "booking") return <div className="booking-layout">
     <section className="surface booking-form-surface">
-      <div className="surface-heading"><div><span className="eyebrow">الخطوة {bookingMode === "new" ? "١" : "١"} من ٢</span><h2>{bookingMode === "new" ? "ابدأ مجموعة جديدة" : "انضم لمجموعة موجودة"}</h2><p>مشوارك يتحدد على الخريطة، والباقي سهل.</p></div><span className="surface-icon">{bookingMode === "new" ? "↗" : "＋"}</span></div>
-      <div className="segmented-control"><button className={bookingMode === "new" ? "selected" : ""} onClick={() => setBookingMode("new")}>إنشاء مجموعة</button><button className={bookingMode === "join" ? "selected" : ""} onClick={() => setBookingMode("join")}>الانضمام برقم</button></div>
+      <div className="surface-heading"><div><span className="eyebrow">{bookingMode === "new" ? "إنشاء مشوار" : "الانضمام لمجموعة"}</span><h2>{bookingMode === "new" ? "ابدأ مجموعة جديدة" : "انضم لمجموعة موجودة"}</h2><p>مشوارك يتحدد على الخريطة، والباقي سهل.</p></div><span className="surface-icon">{bookingMode === "new" ? "↗" : "＋"}</span></div>
+      
       <form className="form-stack" onSubmit={bookingMode === "new" ? createGroup : joinGroup}>
         {bookingMode === "join" && <><label>رقم المجموعة<input type="number" min="1" value={inviteCode} onChange={(e) => setInviteCode(e.target.value)} placeholder="مثال: 124" required /></label><div className="info-note">لازم نقط الركوب والنزول تكون في حدود ٣ كم من مسار المجموعة.</div></>}
         <div className="location-search-stack">
@@ -196,16 +210,18 @@ export default function RiderWorkspace({ session, section, setSection, notificat
           }} required /></label>
           {dates.length > 1 && <small className="muted-text">أيام الخدمة: {formatDate(dates[0]!)} إلى {formatDate(dates[dates.length - 1]!)} · متتابعة مع استثناء الجمعة والسبت ({dates.length} يومًا)</small>}
           <div className="time-row"><label>وقت الذهاب<input type="time" value={morning} onChange={(e) => setMorning(e.target.value)} required /></label><label>وقت العودة<input type="time" value={returnTime} onChange={(e) => setReturnTime(e.target.value)} required /></label></div>
-          <section className="category-picker"><div className="field-heading"><strong>اختار الفئة وشوف سعرها</strong>{priceLoading && <span>جارٍ تحديث الأسعار…</span>}</div>
+          <section className="category-picker"><div className="field-heading"><strong>الفئة والسعر</strong>{priceLoading && <span>جارٍ تحديث الأسعار…</span>}</div>
             {priceError && <p className="price-error">{priceError}</p>}
-            <div className="category-options">{categories.map((category) => {
-              const quote = priceQuotes?.[category.id];
-              return <button type="button" key={category.id} className={categoryId === category.id ? "category-option selected" : "category-option"} onClick={() => setCategoryId(category.id)} aria-pressed={categoryId === category.id}>
-                <span><strong>{categoryName(category)}</strong><small>{category.speed_tier === "faster" ? "Faster" : "Saver"} · {category.seats} مقاعد</small></span>
-                <b>{quote ? money(quote[packageType]) : priceLoading ? "…" : "—"}</b>
-              </button>;
-            })}</div>
-            <div className="tier-helper">{selectedCategory ? <><strong>{selectedCategory.speed_tier === "faster" ? "Faster" : "Saver"}</strong><span>اكتمال الفئة عند {selectedCategory.seats} ركاب · السعر للفرد شامل الباقة</span></> : "جاري تحميل الفئات"}</div>
+            <label className="category-select-label">اختار الفئة
+              <select className="category-select" value={categoryId} onChange={(event) => setCategoryId(event.target.value)} required>
+                {categories.map((category) => {
+                  const quote = priceQuotes?.[category.id];
+                  const fare = quote ? money(quote[packageType]) : priceLoading ? "جارٍ حساب السعر…" : "السعر بعد تحديد النقط";
+                  return <option key={category.id} value={category.id}>{categoryName(category)} · {category.seats} مقاعد · {fare}</option>;
+                })}
+              </select>
+            </label>
+            <div className="tier-helper">{selectedCategory ? <><strong>{categoryName(selectedCategory)}</strong><span>{selectedCategory.speed_tier === "faster" ? "Faster" : "Saver"} · الفئة تكتمل عند {selectedCategory.seats} ركاب · السعر للفرد</span></> : "جاري تحميل الفئات"}</div>
           </section>
         </>}
         <button className="button button-primary button-wide" disabled={submitting || (bookingMode === "new" && Boolean(pickup && dropoff) && (!priceQuotes || priceLoading))}>{submitting ? "جاري الحفظ…" : bookingMode === "new" ? "تأكيد المشوار" : "الانضمام للمجموعة"}<span>←</span></button>
@@ -217,17 +233,17 @@ export default function RiderWorkspace({ session, section, setSection, notificat
 
   const allTrips = groups.flatMap((view) => view.trips.map((trip) => ({ ...trip, groupId: view.group.id, categoryId: view.group.category_id, fare: view.group.seat_day_fare })));
   if (section === "trips") return <div className="trips-page">
-    <div className="section-toolbar"><div className="segmented-control compact"><button className={selectedGroup ? "selected" : ""} onClick={() => setSelectedGroup(groups[0]?.group.id ?? null)}>المجموعات <span>{groups.length}</span></button><button className={!selectedGroup ? "selected" : ""} onClick={() => setSelectedGroup(null)}>مواعيد الرحلات <span>{allTrips.length}</span></button></div><button className="button button-primary button-small" onClick={() => setSection("booking")}>＋ مشوار جديد</button></div>
-    {selectedGroup && selected ? <GroupDetail view={selected} categories={categories} busy={submitting} action={groupAction} notify={notify} onNew={() => setSection("booking")} />
-      : allTrips.length ? <TripList trips={allTrips} categories={categories} /> : <EmptyState icon="↗" title="لسه مفيش رحلات" text="لما تنشئ أو تنضم لمجموعة، هتلاقي مشاويرك هنا." action="ابدأ مشوارك" onAction={() => setSection("booking")} />}
+    <div className="section-toolbar"><div className="segmented-control compact"><button className={selectedGroup ? "selected" : ""} onClick={() => setSelectedGroup(groups[0]?.group.id ?? null)}>المجموعات <span>{groups.length}</span></button><button className={!selectedGroup ? "selected" : ""} onClick={() => setSelectedGroup(null)}>مواعيد الرحلات <span>{allTrips.length}</span></button></div><button className="button button-primary button-small" onClick={() => openBooking("new")}>＋ مشوار جديد</button></div>
+    {selectedGroup && selected ? <GroupDetail view={selected} categories={categories} busy={submitting} action={groupAction} notify={notify} onNew={() => openBooking("new")} />
+      : allTrips.length ? <TripList trips={allTrips} categories={categories} /> : <EmptyState icon="↗" title="لسه مفيش رحلات" text="لما تنشئ أو تنضم لمجموعة، هتلاقي مشاويرك هنا." action="ابدأ مشوارك" onAction={() => openBooking("new")} />}
     {groups.length > 1 && selectedGroup && <div className="group-switcher">{groups.map((view) => <button key={view.group.id} className={view.group.id === selectedGroup ? "group-chip active" : "group-chip"} onClick={() => setSelectedGroup(view.group.id)}>مجموعة #{view.group.id} · {statusLabel(view.group.status)}</button>)}</div>}
   </div>;
 
   return <div className="dashboard-grid rider-dashboard">
     <section className="dashboard-main">
-      <div className="welcome-banner"><div className="welcome-copy"><span className="eyebrow">سِكّة أقرب لك</span><h2>طريقك أسهل<br /><em>مع سِكّة.</em></h2><button className="button button-dark" onClick={() => { setBookingMode("new"); setSection("booking"); }}>إنشاء مشوار جديد <span>←</span></button></div><div className="welcome-illustration"><div className="sun-orbit" /><div className="route-art"><span /><i /><i /><i /><b /></div><div className="mini-car">▰</div></div></div>
+      <div className="welcome-banner"><div className="welcome-copy"><span className="eyebrow">سِكّة أقرب لك</span><h2>طريقك أسهل<br /><em>مع سِكّة.</em></h2><button className="button button-dark" onClick={() => openBooking("new")}>إنشاء مشوار جديد <span>←</span></button></div><div className="welcome-illustration"><div className="sun-orbit" /><div className="route-art"><span /><i /><i /><i /><b /></div><div className="mini-car">▰</div></div></div>
       <div className="section-title-row rider-trips-heading"><h2>مشاويرك الحالية</h2><button className="text-action" onClick={() => setSection("trips")}>عرض الكل <span>←</span></button></div>
-      {groups.length ? <div className="group-list">{groups.slice(0, 1).map((view) => <GroupSummary key={view.group.id} view={view} categories={categories} onClick={() => { setSelectedGroup(view.group.id); setSection("trips"); }} />)}</div> : <EmptyState icon="⌖" title="معاك رقم مجموعة؟" text="اكتب رقمها وانضم لمشوار موجود." action="انضم لمجموعة" onAction={() => { setBookingMode("join"); setSection("booking"); }} />}
+      {groups.length ? <div className="group-list">{groups.slice(0, 1).map((view) => <GroupSummary key={view.group.id} view={view} categories={categories} onClick={() => { setSelectedGroup(view.group.id); setSection("trips"); }} />)}</div> : <EmptyState icon="⌖" title="معاك رقم مجموعة؟" text="اكتب رقمها وانضم لمشوار موجود." action="انضم لمجموعة" onAction={() => openBooking("join")} />}
     </section>
   </div>;
 }
