@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import MapPicker, { type MapPickMode, type MapPoint } from "../MapPicker";
 import RiderCommuterBoard from "../components/RiderCommuterBoard";
 import LocationSearchField from "../components/LocationSearchField";
 import { categoryName, errorText, formatDate, money, statusLabel } from "../lib/formatters";
 import { isInsideGreaterCairo } from "../lib/greater-cairo";
+import { reverseGeocode } from "../lib/location-address";
 import { api, type Category, type GroupView, type RiderCommuterPreferences, type SavedPlace } from "../api";
 import { defaultDates, isServiceDay, serviceDatesFromStart } from "../lib/booking-dates";
 import type { NavKey, Session, Toast } from "../types";
@@ -45,6 +46,8 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
   const [priceQuotes, setPriceQuotes] = useState<Record<string, { daily: number; weekly: number; monthly: number; seat_day_fare: number }> | null>(null);
   const [priceLoading, setPriceLoading] = useState(false);
   const [priceError, setPriceError] = useState("");
+  const mapAddressRequests = useRef<Record<MapPickMode, number>>({ pickup: 0, dropoff: 0 });
+  const editAddressRequest = useRef(0);
   const selectedCategory = categories.find((item) => item.id === categoryId) ?? null;
   const selected = groups.find((view) => view.group.id === selectedGroup) ?? null;
   const priceLabel = (type: "daily" | "weekly" | "monthly", selectedCategoryId = categoryId) => {
@@ -54,6 +57,7 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
   };
 
   const openBooking = (mode: "new" | "join", prefill?: { groupId: number; pickup: MapPoint; dropoff: MapPoint }) => {
+    editAddressRequest.current++;
     setBookingMode(mode);
     setEditingGroupId(null);
     if (mode === "new") { setCategoryId(""); setPackageType("daily"); setDates(defaultDates("daily")); }
@@ -84,10 +88,25 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
     setDates(serviceDates);
     setMorning(group.morning_departure.slice(0, 5));
     setReturnTime(group.return_departure.slice(0, 5));
-    const nextPickup = { lat: member.pickup_lat, lng: member.pickup_lng, kind: "pickup" as const, label: String(member.pickup_lat) + ", " + String(member.pickup_lng) };
-    const nextDropoff = { lat: member.dropoff_lat, lng: member.dropoff_lng, kind: "dropoff" as const, label: String(member.dropoff_lat) + ", " + String(member.dropoff_lng) };
+    const requestId = ++editAddressRequest.current;
+    const nextPickup = { lat: member.pickup_lat, lng: member.pickup_lng, kind: "pickup" as const, label: "جارٍ استرجاع العنوان…", primaryLabel: "جارٍ استرجاع العنوان…" };
+    const nextDropoff = { lat: member.dropoff_lat, lng: member.dropoff_lng, kind: "dropoff" as const, label: "جارٍ استرجاع العنوان…", primaryLabel: "جارٍ استرجاع العنوان…" };
     setPickup(nextPickup); setDropoff(nextDropoff);
     setPickupSearch(nextPickup.label); setDropoffSearch(nextDropoff.label);
+    if (hasSelectedPoint(nextPickup) && hasSelectedPoint(nextDropoff)) {
+      void Promise.all([reverseGeocode(session.token, nextPickup.lat!, nextPickup.lng!), reverseGeocode(session.token, nextDropoff.lat!, nextDropoff.lng!)])
+        .then(([pickupAddress, dropoffAddress]) => {
+          if (requestId !== editAddressRequest.current) return;
+          const pickupPoint = { ...nextPickup, ...pickupAddress, primaryLabel: pickupAddress.primary, secondaryLabel: pickupAddress.secondary };
+          const dropoffPoint = { ...nextDropoff, ...dropoffAddress, primaryLabel: dropoffAddress.primary, secondaryLabel: dropoffAddress.secondary };
+          setPickup(pickupPoint); setDropoff(dropoffPoint); setPickupSearch(pickupAddress.label); setDropoffSearch(dropoffAddress.label);
+        }).catch(() => {
+          if (requestId !== editAddressRequest.current) return;
+          setPickup((point) => point ? { ...point, label: "موقع محدد على الخريطة", primaryLabel: "موقع محدد على الخريطة" } : point);
+          setDropoff((point) => point ? { ...point, label: "موقع محدد على الخريطة", primaryLabel: "موقع محدد على الخريطة" } : point);
+          setPickupSearch("موقع محدد على الخريطة"); setDropoffSearch("موقع محدد على الخريطة");
+        });
+    }
     setSection("booking");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -280,10 +299,24 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
     }, 0);
   };
   const setMapPoint = (mode: MapPickMode, point: MapPoint) => {
-    const label = `${point.lat?.toFixed(5)}, ${point.lng?.toFixed(5)}`;
-    const selected = { ...point, label };
+    editAddressRequest.current++;
+    const label = "جارٍ تحديد العنوان…";
+    const requestId = ++mapAddressRequests.current[mode];
+    const selected = { ...point, label, primaryLabel: label, secondaryLabel: "" };
     if (mode === "pickup") { setPickup(selected); setPickupSearch(label); }
     else { setDropoff(selected); setDropoffSearch(label); }
+    if (typeof point.lat !== "number" || typeof point.lng !== "number") return;
+    void reverseGeocode(session.token, point.lat, point.lng).then((address) => {
+      if (requestId !== mapAddressRequests.current[mode]) return;
+      const resolved = { ...point, ...address, primaryLabel: address.primary, secondaryLabel: address.secondary };
+      if (mode === "pickup") { setPickup(resolved); setPickupSearch(address.label); }
+      else { setDropoff(resolved); setDropoffSearch(address.label); }
+    }).catch(() => {
+      if (requestId !== mapAddressRequests.current[mode]) return;
+      const fallback = { ...point, label: "موقع محدد على الخريطة", primaryLabel: "موقع محدد على الخريطة", secondaryLabel: "" };
+      if (mode === "pickup") { setPickup(fallback); setPickupSearch(fallback.label); }
+      else { setDropoff(fallback); setDropoffSearch(fallback.label); }
+    });
   };
 
   if (loading) return <LoadingCard text="بنجهّز مساحة مشاويرك…" />;
@@ -315,8 +348,8 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
         {bookingStep === "route" && <>
         {bookingMode === "join" && <><label>رقم المجموعة<input type="number" min="1" value={inviteCode} onChange={(e) => setInviteCode(e.target.value)} placeholder="مثال: 124" required /></label><div className="info-note">لازم نقط الركوب والنزول تكون في حدود ٣ كم من مسار المجموعة.</div></>}
         <div className="location-search-stack">
-          <LocationSearchField kind="pickup" title="نقطة الركوب" value={pickupSearch} token={session.token} savedPlaces={savedPlaces} onChange={(value) => { setPickupSearch(value); setPickup(null); }} onSelect={(point) => { setPickup(point); setPickupSearch(point.label ?? ""); }} onChooseMap={() => chooseMap("pickup")} onFocus={() => undefined} pointSelected={hasSelectedPoint(pickup)} />
-          <LocationSearchField kind="dropoff" title="نقطة النزول" value={dropoffSearch} token={session.token} savedPlaces={savedPlaces} onChange={(value) => { setDropoffSearch(value); setDropoff(null); }} onSelect={(point) => { setDropoff(point); setDropoffSearch(point.label ?? ""); }} onChooseMap={() => chooseMap("dropoff")} onFocus={() => undefined} pointSelected={hasSelectedPoint(dropoff)} />
+          <LocationSearchField kind="pickup" title="نقطة الركوب" value={pickupSearch} token={session.token} savedPlaces={savedPlaces} onChange={(value) => { mapAddressRequests.current.pickup++; editAddressRequest.current++; setPickupSearch(value); setPickup(null); }} onSelect={(point) => { mapAddressRequests.current.pickup++; setPickup(point); setPickupSearch(point.label ?? ""); }} onChooseMap={() => chooseMap("pickup")} onFocus={() => undefined} pointSelected={hasSelectedPoint(pickup)} />
+          <LocationSearchField kind="dropoff" title="نقطة النزول" value={dropoffSearch} token={session.token} savedPlaces={savedPlaces} onChange={(value) => { mapAddressRequests.current.dropoff++; editAddressRequest.current++; setDropoffSearch(value); setDropoff(null); }} onSelect={(point) => { mapAddressRequests.current.dropoff++; setDropoff(point); setDropoffSearch(point.label ?? ""); }} onChooseMap={() => chooseMap("dropoff")} onFocus={() => undefined} pointSelected={hasSelectedPoint(dropoff)} />
         </div>
         <small className="location-search-attribution">نتائج الأماكن من OpenStreetMap</small>
         {mapOpen && <section className="booking-map-panel" aria-label="اختيار الموقع من الخريطة">
@@ -391,7 +424,7 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
   const allTrips = groups.flatMap((view) => view.trips.map((trip) => ({ ...trip, groupId: view.group.id, categoryId: view.group.category_id, fare: view.group.seat_day_fare })));
   if (section === "trips") return <div className="trips-page">
     <div className="section-toolbar"><button className="button button-primary button-small" onClick={() => openBooking("new")}>＋ مشوار جديد</button></div>
-    {selectedGroup && selected ? <><button className="button button-quiet button-small trips-back-to-groups" onClick={() => setSelectedGroup(null)}>→ رجوع لمجموعاتي</button><GroupDetail view={selected} categories={categories} busy={submitting} action={groupAction} notify={notify} onEdit={() => startEditingGroup(selected)} currentUserId={session.user.id} /></> : groups.length ? <section className="group-list trips-group-list" aria-label="مجموعات مشاويرك">{groups.map((view) => <GroupSummary key={view.group.id} view={view} categories={categories} onClick={() => setSelectedGroup(view.group.id)} />)}</section> : null}
+    {selectedGroup && selected ? <><button className="button button-quiet button-small trips-back-to-groups" onClick={() => setSelectedGroup(null)}>→ رجوع لمجموعاتي</button><GroupDetail view={selected} categories={categories} busy={submitting} action={groupAction} notify={notify} onEdit={() => startEditingGroup(selected)} currentUserId={session.user.id} token={session.token} /></> : groups.length ? <section className="group-list trips-group-list" aria-label="مجموعات مشاويرك">{groups.map((view) => <GroupSummary key={view.group.id} view={view} categories={categories} onClick={() => setSelectedGroup(view.group.id)} />)}</section> : null}
     {allTrips.length ? <section className="all-trips-section"><div className="section-title-row"><div><h2>مواعيد رحلاتك</h2><p>كل مواعيد الذهاب والعودة لمجموعاتك</p></div><span className="section-count">{allTrips.length}</span></div><TripList trips={allTrips} categories={categories} /></section> : <EmptyState icon="↗" title="لسه مفيش رحلات مجدولة" text={groups.length ? "مجموعة مشوارك ظاهرة فوق؛ ستظهر مواعيده هنا بعد اكتمالها وتأكيد الكابتن." : "لما تنشئ أو تنضم لمجموعة، هتلاقي مشاويرك هنا."} />}
     {groups.length > 1 && selectedGroup && <div className="group-switcher">{groups.map((view) => <button key={view.group.id} className={view.group.id === selectedGroup ? "group-chip active" : "group-chip"} onClick={() => setSelectedGroup(view.group.id)}>مجموعة #{view.group.id} · {statusLabel(view.group.status)}</button>)}</div>}
   </div>;

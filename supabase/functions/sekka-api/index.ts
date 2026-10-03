@@ -40,50 +40,91 @@ const GREATER_CAIRO = { south: 29.65, west: 30.55, north: 30.45, east: 31.85 } a
 function isGreaterCairoPoint(lat: number, lng: number) {
   return lat >= GREATER_CAIRO.south && lat <= GREATER_CAIRO.north && lng >= GREATER_CAIRO.west && lng <= GREATER_CAIRO.east;
 }
-async function searchGreaterCairo(query: string) {
+type PhotonProperties = Record<string, unknown>;
+type LocationAddress = { label: string; primary: string; secondary: string };
+function formatPhotonAddress(properties: PhotonProperties): LocationAddress {
+  const text = (...keys: string[]) => keys.map((key) => properties[key]).find((value): value is string => clean(value))?.trim() ?? "";
+  const unique = (values: string[]) => values.filter((value, index) => value && values.findIndex((candidate) => candidate.toLocaleLowerCase("ar-EG") === value.toLocaleLowerCase("ar-EG")) === index);
+  const name = text("name");
+  const street = text("street", "road");
+  const number = text("housenumber");
+  const streetAddress = [street, number].filter(Boolean).join(" ");
+  const localities = unique([text("district"), text("suburb"), text("locality"), text("city"), text("county"), text("state")]);
+  const nameIsLocality = localities.some((part) => part.toLocaleLowerCase("ar-EG") === name.toLocaleLowerCase("ar-EG"));
+  const primary = name && !nameIsLocality ? name : streetAddress || name || localities[0] || "موقع محدد على الخريطة";
+  const secondary = unique([...(name && primary === name && streetAddress !== primary ? [streetAddress] : []), ...localities])
+    .filter((part) => part.toLocaleLowerCase("ar-EG") !== primary.toLocaleLowerCase("ar-EG"))
+    .join("، ").slice(0, 200);
+  return { primary: primary.slice(0, 120), secondary, label: [primary, secondary].filter(Boolean).join("، ").slice(0, 240) };
+}
+function photonBaseUrl() {
   const configured = Deno.env.get("PHOTON_API_BASE_URL") ?? "https://photon.komoot.io";
   let base: URL;
   try { base = new URL(configured); } catch { throw new ApiFailure("إعدادات البحث عن العناوين غير صالحة.", 503); }
   if (base.protocol !== "https:" || base.username || base.password || base.search || base.hash) {
     throw new ApiFailure("إعدادات البحث عن العناوين غير صالحة.", 503);
   }
-  const searchUrl = new URL(`${base.toString().replace(/\/$/, "")}/api`);
-  searchUrl.searchParams.set("q", query);
-  searchUrl.searchParams.set("bbox", `${GREATER_CAIRO.west},${GREATER_CAIRO.south},${GREATER_CAIRO.east},${GREATER_CAIRO.north}`);
-  searchUrl.searchParams.set("countrycode", "EG");
-
-  searchUrl.searchParams.set("limit", "8");
-  searchUrl.searchParams.set("lat", "30.0444");
-  searchUrl.searchParams.set("lon", "31.2357");
-
+  return base.toString().replace(/\/$/, "");
+}
+async function fetchPhotonFeatures(url: URL) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 7_000);
   try {
-    const response = await fetch(searchUrl, {
-      headers: { "User-Agent": "SeKKa-Ride-App/1.0 (+https://sekka-go.pages.dev/)" },
+    const response = await fetch(url, {
+      headers: { "User-Agent": "SeKKa-Ride-App/1.0 (+https://sekka-go.pages.dev/)", "Accept-Language": "ar" },
       signal: controller.signal,
     });
     if (!response.ok) throw new ApiFailure("خدمة البحث عن المواقع غير متاحة مؤقتًا. حاول مرة أخرى.", 503);
-    const payload = await response.json() as { features?: Array<{ geometry?: { coordinates?: unknown }; properties?: Record<string, unknown> }> };
+    const payload = await response.json() as { features?: Array<{ geometry?: { coordinates?: unknown }; properties?: PhotonProperties }> };
     if (!Array.isArray(payload.features)) throw new ApiFailure("خدمة البحث أعادت نتائج غير صالحة.", 502);
-    const suggestions = payload.features.flatMap((feature) => {
+    return payload.features;
+  } catch (cause) {
+    if (cause instanceof ApiFailure) throw cause;
+    throw new ApiFailure("تعذر البحث عن العنوان الآن. حاول مرة أخرى.", 503);
+  } finally { clearTimeout(timeout); }
+}
+async function searchGreaterCairo(query: string) {
+  const searchUrl = new URL(`${photonBaseUrl()}/api`);
+  searchUrl.searchParams.set("q", query);
+  searchUrl.searchParams.set("bbox", `${GREATER_CAIRO.west},${GREATER_CAIRO.south},${GREATER_CAIRO.east},${GREATER_CAIRO.north}`);
+  searchUrl.searchParams.set("countrycode", "EG");
+  searchUrl.searchParams.set("lang", "ar");
+  searchUrl.searchParams.set("limit", "12");
+  searchUrl.searchParams.set("lat", "30.0444");
+  searchUrl.searchParams.set("lon", "31.2357");
+  searchUrl.searchParams.set("zoom", "12");
+  searchUrl.searchParams.set("location_bias_scale", "0.25");
+  const suggestions = (await fetchPhotonFeatures(searchUrl)).flatMap((feature) => {
       const coordinates = feature.geometry?.coordinates;
       if (!Array.isArray(coordinates) || coordinates.length < 2) return [];
       const lng = coordinates[0], lat = coordinates[1];
       if (!number(lng) || !number(lat)) return [];
       if (!isGreaterCairoPoint(lat, lng)) return [];
       const properties = feature.properties ?? {};
-      const name = clean(properties.name) ? properties.name : "موقع داخل القاهرة الكبرى";
-      const detail = [properties.housenumber, properties.street, properties.district, properties.city, properties.state]
-        .filter((part): part is string => typeof part === "string" && part.trim().length > 0 && part.trim() !== name.trim());
-      const label = [name, ...detail].filter((part, index, all) => all.indexOf(part) === index).join("، ").slice(0, 240);
-      return [{ label, lat, lng }];
+      const address = formatPhotonAddress(properties);
+      const osmKey = String(properties.osm_key ?? "");
+      const isPlaceOfInterest = ["amenity", "shop", "office", "leisure", "tourism", "building"].includes(osmKey);
+      const isAddress = Boolean(properties.housenumber || properties.street || ["house", "street"].includes(String(properties.type ?? "")));
+      const priority = Number(isPlaceOfInterest) * 2 + Number(isAddress);
+      return [{ ...address, lat, lng, priority }];
     });
-    return suggestions.slice(0, 5);
-  } catch (cause) {
-    if (cause instanceof ApiFailure) throw cause;
-    throw new ApiFailure("تعذر البحث عن العنوان الآن. حاول مرة أخرى.", 503);
-  } finally { clearTimeout(timeout); }
+  const unique = new Map<string, (typeof suggestions)[number]>();
+  for (const suggestion of suggestions.sort((left, right) => right.priority - left.priority)) {
+    const key = suggestion.label.toLocaleLowerCase("ar-EG").replace(/[\s،,]+/g, " ").trim();
+    if (!unique.has(key)) unique.set(key, suggestion);
+  }
+  return [...unique.values()].slice(0, 6).map(({ priority: _priority, ...suggestion }) => suggestion);
+}
+async function reverseGreaterCairo(lat: number, lng: number): Promise<LocationAddress> {
+  const reverseUrl = new URL(`${photonBaseUrl()}/reverse`);
+  reverseUrl.searchParams.set("lat", String(lat));
+  reverseUrl.searchParams.set("lon", String(lng));
+  reverseUrl.searchParams.set("radius", "0.5");
+  reverseUrl.searchParams.set("lang", "ar");
+  reverseUrl.searchParams.set("limit", "1");
+  const features = await fetchPhotonFeatures(reverseUrl);
+  const properties = features[0]?.properties;
+  return properties ? formatPhotonAddress(properties) : { primary: "موقع داخل القاهرة الكبرى", secondary: "", label: "موقع داخل القاهرة الكبرى" };
 }
 function hex(bytes: Uint8Array) { return [...bytes].map((v) => v.toString(16).padStart(2, "0")).join(""); }
 function bytesFromHex(value: string) { return new Uint8Array(value.match(/.{2}/g)?.map((b) => Number.parseInt(b, 16)) ?? []); }
@@ -460,6 +501,12 @@ Deno.serve(async (req: Request) => {
       if (query.length < 3 || query.length > 120) return error("اكتب من ٣ إلى ١٢٠ حرفًا للبحث عن العنوان.", 400, origin);
       if (!await takeLimit(`location-search:user:${user!.id}`, 20, 300)) return error("استخدم البحث بعد دقائق؛ عدد المحاولات كبير.", 429, origin);
       return reply({ suggestions: await searchGreaterCairo(query) }, 200, origin);
+    }
+    if (req.method === "POST" && path === "/locations/reverse") {
+      const gate = await requireRole(user, ["rider", "captain"], origin); if (gate) return gate;
+      if (!validPoint(body.lat, body.lng) || !isGreaterCairoPoint(Number(body.lat), Number(body.lng))) return error("اختار نقطة صحيحة داخل القاهرة الكبرى.", 400, origin);
+      if (!await takeLimit(`location-reverse:user:${user!.id}`, 30, 300)) return error("استخدم تحديد العنوان بعد دقائق؛ عدد المحاولات كبير.", 429, origin);
+      return reply(await reverseGreaterCairo(Number(body.lat), Number(body.lng)), 200, origin);
     }
     if (req.method === "POST" && path === "/locations/resolve") {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;

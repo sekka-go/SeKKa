@@ -33,5 +33,5 @@ export function pointLabel(point: MapPoint | null) {
   if (!point) return "اضغط على الخريطة لتحديد الموقع";
   if (point.label) return point.label;
   if (typeof point.lat !== "number" || typeof point.lng !== "number") return "الموقع غير متاح";
-  return `${point.lat.toFixed(5)}, ${point.lng.toFixed(5)}`;
+  return "عنوان محدد على الخريطة";
 }

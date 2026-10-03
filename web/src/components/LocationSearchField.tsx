@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { api, type SavedPlace } from "../api";
 import { isInsideGreaterCairo } from "../lib/greater-cairo";
+import { addressParts, reverseGeocode, safeAddressLabel, type LocationSuggestion } from "../lib/location-address";
 import type { MapPoint, MapPickMode } from "../MapPicker";
-
-type Suggestion = { label: string; lat: number; lng: number };
 
 export default function LocationSearchField({
   kind,
@@ -28,7 +27,7 @@ export default function LocationSearchField({
   pointSelected: boolean;
   savedPlaces?: SavedPlace[];
 }) {
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [locating, setLocating] = useState(false);
   const [error, setError] = useState("");
@@ -60,7 +59,7 @@ export default function LocationSearchField({
     const timer = window.setTimeout(() => {
       setLoading(true);
       setError("");
-      void api<{ suggestions: Suggestion[] }>("/locations/search", {
+      void api<{ suggestions: LocationSuggestion[] }>("/locations/search", {
         method: "POST",
         token,
         body: { query },
@@ -100,24 +99,30 @@ export default function LocationSearchField({
 
     setLocating(true);
     setError("");
-    requestId.current++;
+    const locationRequest = ++requestId.current;
     setSuggestions([]);
     setShowSavedPlaces(false);
     setSearchOpen(false);
     setEditing(false);
     navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
+      async ({ coords }) => {
         const { latitude: lat, longitude: lng } = coords;
+        if (locationRequest !== requestId.current) return;
         if (!isInsideGreaterCairo(lat, lng)) {
           setError("موقعك الحالي خارج القاهرة الكبرى. ابحث عن موقع داخل نطاق الخدمة أو حدده على الخريطة.");
         } else {
           skipNextSearch.current = true;
-          const label = `موقعي الحالي · ${lat.toFixed(5)}، ${lng.toFixed(5)}`;
-          onSelect({ lat, lng, kind, label });
+          try {
+            const address = await reverseGeocode(token, lat, lng);
+            if (locationRequest === requestId.current) onSelect({ lat, lng, kind, label: address.label, primaryLabel: address.primary, secondaryLabel: address.secondary });
+          } catch {
+            if (locationRequest === requestId.current) onSelect({ lat, lng, kind, label: "موقعي الحالي داخل القاهرة الكبرى", primaryLabel: "موقعي الحالي", secondaryLabel: "القاهرة الكبرى" });
+          }
         }
-        setLocating(false);
+        if (locationRequest === requestId.current) setLocating(false);
       },
       (cause) => {
+        if (locationRequest !== requestId.current) return;
         setError(cause.code === cause.PERMISSION_DENIED
           ? "اسمح للتطبيق بالوصول لموقعك أو استخدم البحث النصي أو الخريطة."
           : "تعذر تحديد موقعك الآن. حاول مرة أخرى أو استخدم البحث النصي أو الخريطة.");
@@ -127,10 +132,10 @@ export default function LocationSearchField({
     );
   };
 
-  const selectSuggestion = (item: Suggestion) => {
+  const selectSuggestion = (item: LocationSuggestion) => {
     requestId.current++;
     skipNextSearch.current = true;
-    onSelect({ lat: item.lat, lng: item.lng, kind, label: item.label });
+    onSelect({ lat: item.lat, lng: item.lng, kind, label: item.label, primaryLabel: item.primary, secondaryLabel: item.secondary });
     setSuggestions([]);
     setLoading(false);
     setShowSavedPlaces(false);
@@ -141,7 +146,9 @@ export default function LocationSearchField({
   const selectSavedPlace = (place: SavedPlace) => {
     requestId.current++;
     skipNextSearch.current = true;
-    onSelect({ lat: place.lat, lng: place.lng, kind, label: place.label });
+    const address = safeAddressLabel(place.label) || "موقع محدد على الخريطة";
+    const parts = addressParts(address);
+    onSelect({ lat: place.lat, lng: place.lng, kind, label: address, primaryLabel: parts.primary, secondaryLabel: parts.secondary });
     setSuggestions([]);
     setLoading(false);
     setShowSavedPlaces(false);
@@ -201,10 +208,10 @@ export default function LocationSearchField({
     {searchOpen && (showSavedPlaces && savedPlaces.length > 0 || suggestions.length > 0) && <ul className="location-search-results" aria-label={`نتائج ${title}`}>
       {showSavedPlaces && savedPlaces.length > 0 && <li className="location-search-saved-heading">نقاطك المفضلة</li>}
       {showSavedPlaces && savedPlaces.map((place) => <li key={`favorite-${place.place_type}-${place.lat}-${place.lng}`}>
-        <button type="button" className="location-search-saved-option" onClick={() => selectSavedPlace(place)}><span className="location-search-saved-mark">⌖</span><span><strong>{place.place_type === "home" ? "الركوب المفضل" : place.place_type === "work" ? "الوصول المفضل" : "مكان متكرر"}</strong><small>{place.label}</small></span><span>اختيار</span></button>
+        <button type="button" className="location-search-saved-option" onClick={() => selectSavedPlace(place)}><span className="location-search-saved-mark">⌖</span><span><strong>{place.place_type === "home" ? "الركوب المفضل" : place.place_type === "work" ? "الوصول المفضل" : "مكان متكرر"}</strong><small>{safeAddressLabel(place.label)}</small></span><span className="location-suggestion-action">اختيار</span></button>
       </li>)}
       {suggestions.map((item) => <li key={`${item.lat.toFixed(5)}-${item.lng.toFixed(5)}`}>
-        <button type="button" onClick={() => selectSuggestion(item)}>{item.label}<span>اختيار</span></button>
+        <button type="button" className="location-suggestion-option" onClick={() => selectSuggestion(item)}><span className="location-suggestion-copy"><strong>{item.primary || addressParts(item.label).primary}</strong>{item.secondary && <small>{item.secondary}</small>}</span><span className="location-suggestion-action">اختيار</span></button>
       </li>)}
     </ul>}
   </div>;

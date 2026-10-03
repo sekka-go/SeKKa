@@ -5,6 +5,7 @@ import { categoryName, errorText, formatDate, money, statusLabel } from "../lib/
 import { getConfiguredPushPublicKey, hasPushSubscription, subscribeToPush, unsubscribeFromPush } from "../lib/push";
 import { api, type Category, type GroupView, type Notification } from "../api";
 import { readDates, todayInCairo } from "../lib/booking-dates";
+import { useResolvedLocationPoints } from "../lib/use-location-addresses";
 import type { RiderWorkspaceTrip, Session, Toast } from "../types";
 export function Metric({ icon, label, value, hint }: { icon: string; label: string; value: string; hint: string }) {
   return <div className="surface metric-card"><span className="metric-icon">{icon}</span><div><small>{label}</small><strong>{value}</strong><em>{hint}</em></div></div>;
@@ -17,16 +18,21 @@ export function GroupSummary({ view, categories, onClick }: { view: GroupView; c
   return <button className="surface group-summary" onClick={onClick}><div className="group-summary-top"><span className={`status-chip status-${group.status}`}>{statusLabel(group.status)}</span><span className="group-number">مجموعة #{group.id}</span></div><div className="group-summary-main"><span className="route-badge">↗</span><div><strong>{categoryName(category)}</strong><small>{group.package_type === "weekly" ? "باقة أسبوعية" : group.package_type === "monthly" ? "باقة شهرية" : "مشوار يومي"} · {view.members.length} ركاب</small></div><span className="group-price">{money(group.seat_day_fare)}</span></div><div className="seat-progress"><span>{seats} مقاعد محجوزة</span><div><i style={{ width: `${category ? Math.min(100, seats / category.seats * 100) : 0}%` }} /></div><small>{category?.seats ?? "—"} إجمالي المقاعد</small></div><div className="group-summary-foot"><span>⌖ {group.route_distance_km ?? "—"} كم</span><span>◷ {group.morning_departure} ذهاب · {group.return_departure} عودة</span><span>التفاصيل ←</span></div></button>;
 }
 
-export function GroupDetail({ view, categories, busy, action, notify, onEdit, currentUserId }: {
+export function GroupDetail({ view, categories, busy, action, notify, onEdit, currentUserId, token }: {
   view: GroupView; categories: Category[]; busy: boolean;
   action: (groupId: number, action: string, body?: unknown) => Promise<void>; notify: (text: string, tone?: Toast["tone"]) => void;
-  onEdit: () => void; currentUserId: number;
+  onEdit: () => void; currentUserId: number; token: string;
 }) {
   const { group, members, trips } = view;
   const category = categories.find((item) => item.id === group.category_id);
   const activeMembers = members.filter((m) => m.status === "active");
   const seats = activeMembers.reduce((sum, m) => sum + m.seats_reserved, 0);
   const dates = readDates(group.service_dates);
+  const firstMember = members[0];
+  const routeStops = useResolvedLocationPoints(token, firstMember ? [
+    { lat: firstMember.pickup_lat, lng: firstMember.pickup_lng, kind: "pickup", sequence: 1 },
+    { lat: firstMember.dropoff_lat, lng: firstMember.dropoff_lng, kind: "dropoff", sequence: 2 },
+  ] : []);
   const [canceling, setCanceling] = useState(false);
   const [confirmCancellation, setConfirmCancellation] = useState<{ title: string; message: string; action: string } | null>(null);
   const cancel = async () => {
@@ -41,7 +47,7 @@ export function GroupDetail({ view, categories, busy, action, notify, onEdit, cu
 
     </section>
     <details className="trip-extra-details"><summary>تفاصيل المشوار · المسار والركاب والمواعيد</summary>
-      <div className="detail-route-map"><div className="section-title-row"><div><h3>خط السير</h3><p>ذهاب وعودة · الخريطة تعرض الطريق الفعلي</p></div>{!(group.route_geometry?.outbound_segments?.length || group.route_geometry?.return_segments?.length) && <span className="map-distance">{group.route_duration_min ?? "—"} د</span>}</div><MapPicker pickup={members[0] ? { lat: members[0].pickup_lat, lng: members[0].pickup_lng } : null} dropoff={members[0] ? { lat: members[0].dropoff_lat, lng: members[0].dropoff_lng } : null} mode="pickup" route={group.route_geometry} onPick={() => undefined} /></div>
+      <div className="detail-route-map"><div className="section-title-row"><div><h3>خط السير</h3><p>ذهاب وعودة · الخريطة تعرض الطريق الفعلي</p></div>{!(group.route_geometry?.outbound_segments?.length || group.route_geometry?.return_segments?.length) && <span className="map-distance">{group.route_duration_min ?? "—"} د</span>}</div><MapPicker pickup={routeStops[0] ?? null} dropoff={routeStops[1] ?? null} mode="pickup" route={group.route_geometry} onPick={() => undefined} /></div>
     <section className="surface detail-section"><div className="section-title-row"><div><h3>الركاب والمقاعد</h3><p>{seats} مقاعد من {category?.seats ?? "—"} محجوزة</p></div></div><div className="rider-list">{members.map((member, index) => <div key={member.id} className={`rider-row ${member.status !== "active" ? "rider-muted" : ""}`}><div><strong>{index === 0 ? "أنت" : `راكب ${index + 1}`}</strong><small>{member.seats_reserved} مقعد · {member.status === "active" ? "مؤكد" : member.status === "awaiting_confirmation" ? "بانتظار التأكيد" : "غادر المجموعة"}</small></div>{member.price_decision === "pending" && group.status === "price_review" && <span className="rider-state">مطلوب ردك</span>}</div>)}</div></section>
     <section className="surface detail-section"><div className="section-title-row"><div><h3>أيام الخدمة</h3><p>الوقت المحلي للقاهرة</p></div></div><div className="service-date-list">{dates.map((date) => <div key={date} className="service-date-row"><span className="calendar-badge">{new Date(`${date}T12:00:00Z`).getUTCDate()}</span><div><strong>{formatDate(date)}</strong><small>{group.morning_departure} ذهاب · {group.return_departure} عودة</small></div><span className="date-price">{money(group.seat_day_fare)}</span></div>)}</div></section>
     </details>

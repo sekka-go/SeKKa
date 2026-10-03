@@ -9,6 +9,8 @@ export type MapPoint = {
   kind?: "pickup" | "dropoff";
   sequence?: number;
   label?: string;
+  primaryLabel?: string;
+  secondaryLabel?: string;
 };
 export type MapPickMode = "pickup" | "dropoff";
 type RouteDirection = "outbound" | "return";
@@ -173,7 +175,7 @@ export default function MapPicker({
         keyboard: true,
         draggable: !readOnly && routePlaces.length === 0,
       });
-      marker.bindTooltip(point.label ?? (kind === "pickup" ? `ركوب · محطة ${sequence}` : `نزول · محطة ${sequence}`));
+      marker.bindTooltip([point.primaryLabel ?? point.label ?? (kind === "pickup" ? `ركوب · محطة ${sequence}` : `نزول · محطة ${sequence}`), point.secondaryLabel].filter(Boolean).join(" · "));
       if (!readOnly && routePlaces.length === 0) {
         marker.on("dragend", () => {
           const moved = marker.getLatLng();
@@ -182,7 +184,7 @@ export default function MapPicker({
             onOutsidePickRef.current?.();
             return;
           }
-          onPickRef.current(kind, { lat: moved.lat, lng: moved.lng, kind, label: point.label });
+          onPickRef.current(kind, { lat: moved.lat, lng: moved.lng, kind });
         });
       }
       marker.addTo(layers);
@@ -238,7 +240,7 @@ export default function MapPicker({
         const label = (point.label ?? (kind === "pickup" ? "ركوب" : "نزول")).replace(new RegExp("\\s*[·•-]?\\s*محطة\\s*" + sequence + "$"), "");
         return <li key={`${kind}-${sequence}-${index}`}>
           <span className={`map-stop-list-number map-stop-${kind}`}>{sequence}</span>
-          <span>{label}</span>
+          <span className="map-stop-location"><strong>{point.primaryLabel ?? label}</strong>{point.secondaryLabel && <small>{point.secondaryLabel}</small>}</span>
           {!hasCoordinates(point) && <small>الموقع غير متاح</small>}
         </li>;
       })}

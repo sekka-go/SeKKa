@@ -193,6 +193,10 @@ button { line-height: 1.45; }
 .map-stop-list small{margin-inline-start:auto;color:var(--muted);font-size:.68rem;white-space:nowrap}
 .map-stop-list-number{display:grid;flex:0 0 1.65rem;place-items:center;width:1.65rem;height:1.65rem;color:#201b09;background:var(--yellow);border-radius:50%;font-size:.72rem;font-weight:800}
 .map-stop-list-number.map-stop-dropoff{background:#6bd4d0}
+.map-stop-list .map-stop-location{display:grid;flex:1;min-width:0;gap:.08rem}
+.map-stop-location strong,.map-stop-location small{display:block;overflow:hidden;margin:0;text-overflow:ellipsis;white-space:nowrap}
+.map-stop-location strong{color:var(--ink);font-size:.8rem}
+.map-stop-location small{margin-inline-start:0;color:var(--muted);font-size:.7rem}
 .map-segments{display:grid;gap:.35rem;padding:.75rem;background:rgba(36,32,20,.72);border-top:1px solid var(--line)}
 .map-segment-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:.5rem;color:var(--muted);font-size:.72rem;line-height:1.45}
 .map-segment-row strong{color:var(--ink);font-weight:600}
@@ -827,11 +831,19 @@ button { line-height: 1.45; }
 .workspace .location-search-saved-option > span:nth-child(2) strong { color: var(--ink); font-size: .82rem; }
 .workspace .location-search-saved-option > span:nth-child(2) small { overflow: hidden; color: var(--muted); text-overflow: ellipsis; white-space: nowrap; }
 .workspace .location-search-saved-option .location-search-saved-mark { display: grid; place-items: center; width: 1.55rem; height: 1.55rem; color: var(--yellow); background: rgba(255,210,31,.1); border-radius: 50%; }
+.workspace .location-search-results .location-suggestion-option { align-items: center; flex-direction: row; }
+.workspace .location-search-results .location-suggestion-copy { display: grid; flex: 1 1 auto; min-width: 0; gap: .12rem; }
+.workspace .location-search-results .location-suggestion-copy strong,
+.workspace .location-search-results .location-suggestion-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.workspace .location-search-results .location-suggestion-copy strong { color: var(--ink); font-size: .88rem; }
+.workspace .location-search-results .location-suggestion-copy small { color: var(--muted); font-size: .75rem; }
+.workspace .location-search-results button .location-suggestion-action { flex: 0 0 auto; color: var(--yellow); font-size: .75rem; }
+.workspace .location-search-dropoff .location-search-results button .location-suggestion-action { color: var(--cyan); }
 .workspace .booking-map { scroll-margin-block: 1rem; }
 @media (max-width: 560px) {
   .workspace .location-search-field { padding: .65rem; }
   .workspace .location-search-form input { font-size: .88rem; }
-  .workspace .location-search-results button { align-items: flex-start; flex-direction: column; }
+  .workspace .location-search-results button { align-items: center; flex-direction: row; }
 }
 
 .route-preferences-card { display: grid; gap: .85rem; width: 100%; border-radius: 1.1rem; }
@@ -850,6 +862,13 @@ button { line-height: 1.45; }
 .route-preferences-card .location-search-results li { min-width: 0; }
 .route-preferences-card .location-search-results .location-search-saved-heading { padding: .35rem .55rem .1rem; color: var(--yellow); font-size: .72rem; font-weight: 700; }
 .route-preferences-card .location-search-results button { display: flex; align-items: center; justify-content: space-between; gap: .6rem; width: 100%; padding: .65rem .7rem; color: var(--ink); text-align: right; background: rgba(0,0,0,.16); border: 1px solid var(--line); border-radius: .65rem; }
+.route-preferences-card .location-search-results .location-suggestion-option { align-items: center; flex-direction: row; }
+.route-preferences-card .location-search-results .location-suggestion-copy { display: grid; flex: 1 1 auto; min-width: 0; gap: .12rem; }
+.route-preferences-card .location-suggestion-copy strong,.route-preferences-card .location-suggestion-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.route-preferences-card .location-suggestion-copy strong { color: var(--ink); font-size: .88rem; }
+.route-preferences-card .location-suggestion-copy small { color: var(--muted); font-size: .75rem; }
+.route-preferences-card .location-search-results button .location-suggestion-action { color: var(--yellow); font-size: .75rem; }
+.route-preferences-card .location-search-dropoff .location-search-results button .location-suggestion-action { color: var(--cyan); }
 .route-preferences-card .location-search-results button:hover { border-color: var(--yellow); }
 .route-preferences-card .location-search-results button span { flex: 0 0 auto; color: var(--yellow); font-size: .75rem; }
 .route-preferences-card .location-search-message { margin: .5rem .1rem 0; color: var(--muted); font-size: .8rem; }
