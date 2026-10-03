@@ -1792,7 +1792,8 @@ button { line-height: 1.45; }
 /* Personalized commuter board and optional commute preferences. */
 .workspace .commuter-board { display: grid; gap: .7rem; margin-top: .8rem; padding: clamp(.9rem, 2vw, 1.2rem); border-color: rgba(255,210,31,.24); overflow: hidden; }
 .workspace .commuter-board-viewport { min-width: 0; touch-action: pan-y; }
-.workspace .commuter-board-card { min-height: 14rem; display: grid; align-items: center; padding: clamp(.4rem, 1vw, .8rem); animation: commuter-card-in .22s ease-out both; }
+.workspace .commuter-board-card { min-height: 14rem; display: grid; align-items: center; padding: clamp(.4rem, 1vw, .8rem); animation: commuter-card-in-up .62s cubic-bezier(.2,.75,.25,1) both; }
+.workspace .commuter-board-card.slide-down { animation-name: commuter-card-in-down; }
 .workspace .commuter-board-copy { position: relative; display: grid; justify-items: start; gap: .45rem; max-width: 42rem; padding-inline-start: clamp(0rem, 8vw, 4.5rem); }
 .workspace .commuter-board-icon { position: absolute; inset-inline-start: 0; top: .1rem; display: grid; width: 2.9rem; height: 2.9rem; place-items: center; color: var(--yellow); background: rgba(255,210,31,.09); border: 1px solid rgba(255,210,31,.24); border-radius: 50%; font-size: 1.5rem; }
 .workspace .commuter-board-copy h2, .workspace .commuter-board-copy p { margin: 0; }
@@ -1805,6 +1806,7 @@ button { line-height: 1.45; }
 .workspace .commuter-board-indicators { display: flex; align-items: center; justify-content: center; gap: .45rem; }
 .workspace .commuter-board-indicators button { width: .5rem; height: .5rem; padding: 0; background: var(--line); border: 0; border-radius: 999px; transition: width .18s ease, background .18s ease; }
 .workspace .commuter-board-indicators button.active { width: 1.4rem; background: var(--yellow); }
+.workspace .commuter-board-pause { justify-self: center; padding: .3rem .65rem; color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 999px; font-size: .72rem; }
 .workspace .commuter-preferences-schedule { display: grid; gap: .8rem; min-width: 0; margin: .85rem 0 0; padding: .85rem; border: 1px solid var(--line); border-radius: .85rem; }
 .workspace .commuter-preferences-schedule legend { padding-inline: .4rem; color: var(--ink); font-weight: 700; }
 .workspace .commuter-preferences-schedule legend small, .workspace .commuter-preferences-frequent > div small { display: block; margin-top: .18rem; color: var(--muted); font-size: .78rem; font-weight: 400; }
@@ -1820,6 +1822,7 @@ button { line-height: 1.45; }
 .workspace .commuter-preferences-place-list { display: flex; flex-wrap: wrap; gap: .4rem; }
 .workspace .commuter-preferences-place-list > span { display: inline-flex; align-items: center; gap: .35rem; max-width: 100%; padding: .35rem .55rem; color: var(--ink); background: rgba(158,232,230,.07); border: 1px solid rgba(158,232,230,.22); border-radius: 999px; font-size: .78rem; }
 .workspace .commuter-preferences-place-list button { color: var(--muted); background: transparent; border: 0; font-size: 1rem; }
-@keyframes commuter-card-in { from { opacity: .35; transform: translateY(.25rem); } to { opacity: 1; transform: translateY(0); } }
+@keyframes commuter-card-in-up { from { opacity: 0; transform: translateY(2rem) scale(.985); } 65% { opacity: 1; } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes commuter-card-in-down { from { opacity: 0; transform: translateY(-2rem) scale(.985); } 65% { opacity: 1; } to { opacity: 1; transform: translateY(0) scale(1); } }
 @media (prefers-reduced-motion: reduce) { .workspace .commuter-board-card { animation: none; } .workspace .commuter-board-indicators button { transition: none; } }
 @media (max-width: 560px) { .workspace .commuter-board-card { min-height: 13rem; } .workspace .commuter-board-copy { padding-inline-start: 0; padding-top: 3.25rem; } .workspace .commuter-board-icon { inset-inline-start: auto; inset-inline-end: 0; top: 0; } .workspace .commuter-preferences-days { grid-template-columns: repeat(4, minmax(0,1fr)); } .workspace .commuter-preferences-times { grid-template-columns: 1fr; } }

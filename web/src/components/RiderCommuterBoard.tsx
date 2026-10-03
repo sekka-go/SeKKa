@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import type { MapPoint } from "../MapPicker";
 import { api, type Category, type CommuterBoardCard, type GroupView, type PoolDiscoveryMatch, type RiderCommuterPreferences, type SavedPlace } from "../api";
 import { categoryName, money } from "../lib/formatters";
-import { buildPersonalizedCommuterCards, commuterCardDurationMs, commuterSwipeDirection, nextCommuterCardIndex, runCommuterCardAction } from "../lib/commuter-board";
+import { buildPersonalizedCommuterCards, commuterSwipeDirection, nextCommuterCardIndex, runCommuterCardAction } from "../lib/commuter-board";
 
 const DEFAULT_PREFERENCES: RiderCommuterPreferences = { usual_days: [0, 1, 2, 3, 4], usual_departure_time: "07:30", usual_return_time: "17:00", frequent_places: [] };
 const pointFrom = (place: SavedPlace, kind: "pickup" | "dropoff"): MapPoint => ({ lat: place.lat, lng: place.lng, label: place.label, kind });
@@ -20,6 +20,11 @@ export default function RiderCommuterBoard({ token, places, groups, categories, 
   const [matches, setMatches] = useState<PoolDiscoveryMatch[]>([]);
   const [campaigns, setCampaigns] = useState<CommuterBoardCard[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [slideDirection, setSlideDirection] = useState<"up" | "down">("up");
+  const [paused, setPaused] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
   const pointerStart = useRef<number | null>(null);
   const home = places.find((place) => place.place_type === "home");
   const work = places.find((place) => place.place_type === "work");
@@ -38,6 +43,14 @@ export default function RiderCommuterBoard({ token, places, groups, categories, 
   }, [token]);
 
   useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReducedMotion(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
     let active = true;
     if (!home || !work) { setMatches([]); return () => { active = false; }; }
     void api<{ matches: PoolDiscoveryMatch[] }>("/rider/pool/discover", { method: "POST", token, body: { pickup_lat: home.lat, pickup_lng: home.lng, dropoff_lat: work.lat, dropoff_lng: work.lng } })
@@ -50,12 +63,15 @@ export default function RiderCommuterBoard({ token, places, groups, categories, 
 
   useEffect(() => { setActiveIndex((index) => cards.length ? index % cards.length : 0); }, [cards.length]);
   useEffect(() => {
-    if (cards.length < 2) return;
-    const duration = commuterCardDurationMs(cards[activeIndex]);
-    const timer = window.setTimeout(() => setActiveIndex((index) => (index + 1) % cards.length), duration);
+    if (cards.length < 2 || paused || hovered || focused || reducedMotion) return;
+    const timer = window.setTimeout(() => {
+      setSlideDirection("up");
+      setActiveIndex((index) => (index + 1) % cards.length);
+    }, 5_000);
     return () => window.clearTimeout(timer);
-  }, [activeIndex, cards]);
+  }, [activeIndex, cards.length, focused, hovered, paused, reducedMotion]);
   const navigate = (index: number) => {
+    setSlideDirection(index >= activeIndex ? "up" : "down");
     setActiveIndex(nextCommuterCardIndex(activeIndex, cards.length, index - activeIndex));
   };
   const act = (card: CommuterBoardCard) => {
@@ -67,19 +83,19 @@ export default function RiderCommuterBoard({ token, places, groups, categories, 
       },
     }, card.type);
   };
-  const onPointerDown = (event: PointerEvent<HTMLElement>) => { pointerStart.current = event.clientX; };
+  const onPointerDown = (event: PointerEvent<HTMLElement>) => { pointerStart.current = event.clientY; };
   const onPointerUp = (event: PointerEvent<HTMLElement>) => {
     if (pointerStart.current === null) return;
-    const delta = event.clientX - pointerStart.current;
+    const delta = event.clientY - pointerStart.current;
     pointerStart.current = null;
     const direction = commuterSwipeDirection(delta);
     if (direction) navigate(activeIndex + direction);
   };
   const card = cards[activeIndex];
 
-  return <section className="surface commuter-board" aria-label="اقتراحات مشاويرك الشخصية">
+  return <section className="surface commuter-board" aria-label="اقتراحات مشاويرك الشخصية" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onFocusCapture={() => setFocused(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false); }}>
     <div className="commuter-board-viewport" onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerCancel={() => { pointerStart.current = null; }}>
-      {card && <article key={card.id} className="commuter-board-card" aria-live="polite">
+      {card && <article key={card.id} className={`commuter-board-card slide-${slideDirection}`} aria-live="off">
         <div className="commuter-board-copy"><span className="commuter-board-icon" aria-hidden="true">{card.icon}</span><span className="eyebrow">{card.type === "campaign" ? "اقتراح من سِكّة" : "اقتراح على طريقك"}</span><h2>{card.title}</h2><p>{card.description.split("\n").map((line, index) => <span key={index}>{line}{index < card.description.split("\n").length - 1 && <br />}</span>)}</p>
           {card.group_id && (() => { const item = groups.find(({ group }) => group.id === card.group_id); const category = categories.find(({ id }) => id === item?.group.category_id); return item ? <small className="commuter-board-meta">{category ? categoryName(category) : "رحلة مشتركة"} · {packageLabel(item.group.package_type)}{item.group.seat_day_fare === null ? "" : ` · ${money(item.group.seat_day_fare)} للفرد / يوم`}</small> : null; })()}
           <button type="button" className="button button-primary commuter-board-cta" onClick={() => act(card)}>{card.cta_text}<span aria-hidden="true">←</span></button>
@@ -87,9 +103,10 @@ export default function RiderCommuterBoard({ token, places, groups, categories, 
       </article>}
     </div>
     <div className="commuter-board-controls">
-      <button type="button" className="commuter-board-arrow" onClick={() => navigate(activeIndex - 1)} aria-label="البطاقة السابقة">›</button>
+      <button type="button" className="commuter-board-arrow" onClick={() => navigate(activeIndex - 1)} aria-label="البطاقة السابقة">↑</button>
       <div className="commuter-board-indicators" role="group" aria-label="اختيار بطاقة الاقتراح">{cards.map((item, index) => <button key={item.id} type="button" className={index === activeIndex ? "active" : ""} aria-label={`عرض البطاقة ${index + 1} من ${cards.length}`} aria-current={index === activeIndex ? "true" : undefined} onClick={() => navigate(index)} />)}</div>
-      <button type="button" className="commuter-board-arrow" onClick={() => navigate(activeIndex + 1)} aria-label="البطاقة التالية">‹</button>
+      <button type="button" className="commuter-board-arrow" onClick={() => navigate(activeIndex + 1)} aria-label="البطاقة التالية">↓</button>
     </div>
+    {cards.length > 1 && <button type="button" className="commuter-board-pause" aria-pressed={paused} onClick={() => setPaused((value) => !value)}>{paused ? "تشغيل العرض التلقائي" : "إيقاف العرض التلقائي"}</button>}
   </section>;
 }
