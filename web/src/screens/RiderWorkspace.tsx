@@ -210,7 +210,7 @@ export default function RiderWorkspace({ session, section, setSection, notificat
 
   if (section === "booking") return <div className="booking-layout">
     <section className="surface booking-form-surface">
-      <div className="surface-heading"><div><span className="eyebrow">{bookingMode === "new" ? (bookingStep === "route" ? "الخطوة الأولى · تحديد المشوار" : "الخطوة الثانية · تفاصيل الرحلة") : "الانضمام لمجموعة"}</span><h2>{bookingMode === "new" ? (bookingStep === "route" ? "حدد نقطتي مشوارك" : "اختار موعدك وفئتك") : "انضم لمجموعة موجودة"}</h2><p>{bookingMode === "new" ? (bookingStep === "route" ? "ابحث عن نقطة الركوب والنزول أو حددهما بالدبوس." : "حدد التاريخ والوقت، ثم قارن أسعار الباقات والفئات.") : "حدد رقم المجموعة ونقطتي الركوب والنزول."}</p></div><span className="surface-icon">{bookingMode === "new" ? (bookingStep === "route" ? "⌖" : "◷") : "＋"}</span></div>
+      <div className="surface-heading"><div><span className="eyebrow">{bookingMode === "new" ? (bookingStep === "route" ? "الخطوة الأولى · تحديد المشوار" : "الخطوة الثانية · تفاصيل الرحلة") : "الانضمام لمجموعة"}</span><h2>{bookingMode === "new" ? (bookingStep === "route" ? "حدد نقطتي مشوارك" : "اختار موعدك وفئتك") : "انضم لمجموعة موجودة"}</h2><p>{bookingMode === "new" ? (bookingStep === "route" ? "ابحث عن نقطة الركوب والنزول أو حددهما بالدبوس." : "حدد التاريخ والوقت، ثم قارن أسعار الباقات والفئات.") : "حدد رقم المجموعة ونقطتي الركوب والنزول."}</p></div>{bookingMode === "new" && bookingStep === "schedule" ? <button type="button" className="booking-step-back" onClick={returnToRoute}><span aria-hidden="true">→</span> العودة للنقط</button> : <span className="surface-icon">{bookingMode === "new" ? "⌖" : "＋"}</span>}</div>
       {bookingMode === "new" && <div className="booking-stepper" aria-label="خطوات إنشاء المشوار">
         <div className={bookingStep === "route" ? "booking-step active" : "booking-step complete"}><span>١</span><strong>النقط</strong></div>
         <i className={bookingStep === "schedule" ? "complete" : ""} />
@@ -219,9 +219,11 @@ export default function RiderWorkspace({ session, section, setSection, notificat
       <form className="form-stack" onSubmit={bookingMode === "new" ? createGroup : joinGroup}>
         {(bookingMode === "join" || bookingStep === "route") && <>
         {bookingMode === "join" && <><label>رقم المجموعة<input type="number" min="1" value={inviteCode} onChange={(e) => setInviteCode(e.target.value)} placeholder="مثال: 124" required /></label><div className="info-note">لازم نقط الركوب والنزول تكون في حدود ٣ كم من مسار المجموعة.</div></>}
-        <section className="saved-place-tools" aria-label="الأماكن المحفوظة">
+        <details className="saved-place-tools">
+          <summary><span>الأماكن المحفوظة</span><small>{savedPlaces.length ? `${savedPlaces.length} مكان محفوظ` : "إظهار خيارات الحفظ"}</small></summary>
+          <div className="saved-place-tools-content">
           <div className="saved-place-tools-heading">
-            <strong>الأماكن المحفوظة</strong>
+            <strong>اختر نقطة الاستخدام</strong>
             <div className="saved-place-target" aria-label="المكان الذي سيُستخدم">
               <button type="button" className={savedPlaceTarget === "pickup" ? "active" : ""} aria-pressed={savedPlaceTarget === "pickup"} onClick={() => { setSavedPlaceTarget("pickup"); setSavedPlaceMenuOpen(false); }}>للركوب</button>
               <button type="button" className={savedPlaceTarget === "dropoff" ? "active" : ""} aria-pressed={savedPlaceTarget === "dropoff"} onClick={() => { setSavedPlaceTarget("dropoff"); setSavedPlaceMenuOpen(false); }}>للنزول</button>
@@ -248,11 +250,13 @@ export default function RiderWorkspace({ session, section, setSection, notificat
               })}
             </div>}
           </div>}
-        </section>
+          </div>
+        </details>
         <div className="location-search-stack">
           <LocationSearchField kind="pickup" title="نقطة الركوب" value={pickupSearch} token={session.token} onChange={(value) => { setPickupSearch(value); setPickup(null); }} onSelect={(point) => { setSavedPlaceTarget("pickup"); setPickup(point); setPickupSearch(point.label ?? ""); }} onChooseMap={() => { setSavedPlaceTarget("pickup"); chooseMap("pickup"); }} onFocus={() => setSavedPlaceTarget("pickup")} />
           <LocationSearchField kind="dropoff" title="نقطة النزول" value={dropoffSearch} token={session.token} onChange={(value) => { setDropoffSearch(value); setDropoff(null); }} onSelect={(point) => { setSavedPlaceTarget("dropoff"); setDropoff(point); setDropoffSearch(point.label ?? ""); }} onChooseMap={() => { setSavedPlaceTarget("dropoff"); chooseMap("dropoff"); }} onFocus={() => setSavedPlaceTarget("dropoff")} />
         </div>
+        <small className="location-search-attribution">نتائج الأماكن من OpenStreetMap</small>
         {mapOpen && <section className="booking-map-panel" aria-label="اختيار الموقع من الخريطة">
           <div className="booking-map-toolbar">
             <p className="map-instruction">انقر أو اسحب الدبوس لتحديد {pickMode === "pickup" ? "نقطة الركوب" : "نقطة النزول"} · القاهرة الكبرى فقط</p>
@@ -294,13 +298,10 @@ export default function RiderWorkspace({ session, section, setSection, notificat
                 })}
               </div>}
             </div>
-            <div className="tier-helper">{selectedCategory ? <><strong>{categoryName(selectedCategory)}</strong><span>{selectedCategory.speed_tier === "faster" ? "Faster" : "Saver"} · الفئة تكتمل عند {selectedCategory.seats} ركاب · السعر للفرد</span></> : "جاري تحميل الفئات"}</div>
+            
           </section>
         </>}
-        {bookingMode === "new" ? bookingStep === "route" ? <button type="button" className="button button-primary button-wide" onClick={continueToSchedule} disabled={!pickup || !dropoff}>التالي · التاريخ والأسعار <span>←</span></button> : <div className="booking-step-actions">
-          <button type="button" className="button button-outline" onClick={returnToRoute}>الرجوع للنقط</button>
-          <button type="submit" className="button button-primary" disabled={submitting || Boolean(pickup && dropoff) && (!priceQuotes || priceLoading)}>{submitting ? "جاري الحفظ…" : "تأكيد المشوار"} <span>←</span></button>
-        </div> : <button type="submit" className="button button-primary button-wide" disabled={submitting}>{submitting ? "جاري الحفظ…" : "الانضمام للمجموعة"} <span>←</span></button>}
+        {bookingMode === "new" ? bookingStep === "route" ? <button type="button" className="button button-primary button-wide" onClick={continueToSchedule}>التالي · التاريخ والأسعار <span>←</span></button> : <button type="submit" className="button button-primary button-wide" disabled={submitting || Boolean(pickup && dropoff) && (!priceQuotes || priceLoading)}>{submitting ? "جاري الحفظ…" : "تأكيد المشوار"} <span>←</span></button> : <button type="submit" className="button button-primary button-wide" disabled={submitting}>{submitting ? "جاري الحفظ…" : "الانضمام للمجموعة"} <span>←</span></button>}
       </form>
     </section>
     
