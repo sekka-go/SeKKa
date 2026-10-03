@@ -41,7 +41,7 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .segmented-control button.selected { color: #201b09; background: var(--yellow); font-weight: 700; }
 .segmented-control.compact { width: fit-content; margin: 0; }
 .segmented-control.compact button { flex: 0 1 auto; }
-.package-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; }
+.package-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr)); gap: .6rem; }
 .package-option { display: grid; gap: .25rem; min-height: 4.5rem; padding: .75rem; color: var(--muted); text-align: right; background: transparent; border: 1px solid var(--line); }
 .package-option strong { color: var(--ink); }.package-option small { line-height: 1.5; }.package-option.selected { border-color: var(--yellow); background: rgba(255,210,31,.08); }
 .category-picker { display: grid; gap: .75rem; }
