@@ -1020,6 +1020,8 @@ button { line-height: 1.45; }
   margin: .3rem 0 .75rem;
   font-size: clamp(1.65rem, 3.5vw, 2.4rem);
 }
+.workspace .welcome-actions { display: grid; justify-items: start; gap: .55rem; }
+.workspace .welcome-actions .button { min-width: min(100%, 17rem); }
 .workspace .rider-dashboard .welcome-illustration {
   flex: 0 0 9rem;
   min-height: 7rem;
