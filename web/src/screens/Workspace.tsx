@@ -18,14 +18,19 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [navOpen, setNavOpen] = useState(false);
 
-  const setSection = useCallback((next: NavKey) => {
+  const setSection = useCallback((next: NavKey, historyMode: "push" | "replace" = "push") => {
     const current = window.history.state as { sekkaWorkspace?: boolean; sekkaSection?: NavKey; sekkaIndex?: number } | null;
     if (current?.sekkaWorkspace && current.sekkaSection === next) {
       setSectionState(next);
       return;
     }
-    const nextIndex = (current?.sekkaWorkspace ? current.sekkaIndex ?? 0 : historyDepth) + 1;
-    window.history.pushState({ ...(current ?? {}), sekkaWorkspace: true, sekkaSection: next, sekkaIndex: nextIndex }, "", window.location.href);
+    const currentIndex = current?.sekkaWorkspace ? current.sekkaIndex ?? historyDepth : historyDepth;
+    const nextIndex = historyMode === "replace"
+      ? currentIndex
+      : currentIndex + 1;
+    const nextState = { ...(current ?? {}), sekkaWorkspace: true, sekkaSection: next, sekkaIndex: nextIndex };
+    if (historyMode === "replace") window.history.replaceState(nextState, "", window.location.href);
+    else window.history.pushState(nextState, "", window.location.href);
     setHistoryDepth(nextIndex);
     setSectionState(next);
   }, [historyDepth]);

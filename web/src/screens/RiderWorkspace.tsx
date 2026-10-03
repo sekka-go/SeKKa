@@ -15,7 +15,7 @@ const hasSelectedPoint = (point: MapPoint | null) =>
   typeof point?.lat === "number" && Number.isFinite(point.lat) &&
   typeof point?.lng === "number" && Number.isFinite(point.lng);
 export default function RiderWorkspace({ session, section, setSection, notifications, refreshNotifications, notify }: {
-  session: Session; section: NavKey; setSection: (section: NavKey) => void; notifications: Notification[];
+  session: Session; section: NavKey; setSection: (section: NavKey, historyMode?: "push" | "replace") => void; notifications: Notification[];
   refreshNotifications: () => Promise<void>; notify: (text: string, tone?: Toast["tone"]) => void;
 }) {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -189,7 +189,7 @@ export default function RiderWorkspace({ session, section, setSection, notificat
         pickup_lat: pickup.lat, pickup_lng: pickup.lng, dropoff_lat: dropoff.lat, dropoff_lng: dropoff.lng,
       } });
       await refreshGroups(); await refreshNotifications();
-      setBookingMode("new"); setEditingGroupId(null); setSelectedGroup(editing && editedGroupId !== null ? editedGroupId : result.group.id); setSection("trips"); setPickup(null); setDropoff(null);
+      setBookingMode("new"); setEditingGroupId(null); setSelectedGroup(editing && editedGroupId !== null ? editedGroupId : result.group.id); setSection("trips", "replace"); setPickup(null); setDropoff(null);
       notify(editing ? "تم تعديل المشوار." : "تم إنشاء المجموعة. شارك رقمها مع الركاب اللي رايحين نفس اتجاهك.", "success");
     } catch (error) { notify(errorText(error), "error"); }
     finally { setSubmitting(false); }
@@ -203,7 +203,7 @@ export default function RiderWorkspace({ session, section, setSection, notificat
     try {
       const result = await api<{ group: { id: number } }>(`/rider/pool/groups/${Number(inviteCode)}/join`, { method: "POST", token: session.token,
         body: { pickup_lat: pickup.lat, pickup_lng: pickup.lng, dropoff_lat: dropoff.lat, dropoff_lng: dropoff.lng } });
-      await refreshGroups(); setSelectedGroup(result.group.id); setSection("trips"); setPickup(null); setDropoff(null); setInviteCode("");
+      await refreshGroups(); setSelectedGroup(result.group.id); setSection("trips", "replace"); setPickup(null); setDropoff(null); setInviteCode("");
       notify("انضممت للمجموعة بنجاح.", "success");
     } catch (error) { notify(errorText(error), "error"); }
     finally { setSubmitting(false); }
