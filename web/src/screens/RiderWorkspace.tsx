@@ -7,8 +7,8 @@ import { api, type Category, type GroupView, type Notification, type SavedPlace 
 import { defaultDates, isServiceDay, serviceDatesFromStart, todayInCairo } from "../lib/booking-dates";
 import type { NavKey, Session, Toast } from "../types";
 import {
-  AccountPanel, EmptyState, GroupDetail, GroupSummary, LoadingCard, Metric,
-  NotificationRow, NotificationsPanel, TripList,
+  AccountPanel, EmptyState, GroupDetail, GroupSummary, LoadingCard,
+  NotificationsPanel, TripList,
 } from "../components/workspace-shared";
 export default function RiderWorkspace({ session, section, setSection, notifications, refreshNotifications, notify }: {
   session: Session; section: NavKey; setSection: (section: NavKey) => void; notifications: Notification[];
@@ -212,7 +212,7 @@ export default function RiderWorkspace({ session, section, setSection, notificat
         {bookingMode === "new" && <p className="form-footnote">الأسعار تقديرية للفرد، والباقات الأسبوعية والشهرية تبدأ من التاريخ المحدد وتستثني الجمعة والسبت. مفيش دفع دلوقتي.</p>}
       </form>
     </section>
-    <aside className="booking-aside"><div className="surface soft-surface"><span className="aside-icon">✦</span><h3>مشوار مشترك، بسعر أعدل</h3><p>المشوار يبدأ لما يكتمل عدد ركاب الفئة المختارة. سعر الفرد يتحسب على عدد مقاعدها بالكامل.</p><ul><li>ذهاب وعودة كل يوم خدمة</li><li>إلغاء اليوم مجانًا قبل ١٢ ساعة</li><li>خصم حتى ١٠٪ على الباقات</li></ul></div><div className="surface compact-note"><span>ⓘ</span><p>الموقع اللي بتختاره بيُستخدم لحساب الطريق ومشاركة تفاصيل المشوار مع مجموعتك.</p></div></aside>
+    
   </div>;
 
   const allTrips = groups.flatMap((view) => view.trips.map((trip) => ({ ...trip, groupId: view.group.id, categoryId: view.group.category_id, fare: view.group.seat_day_fare })));
@@ -223,16 +223,11 @@ export default function RiderWorkspace({ session, section, setSection, notificat
     {groups.length > 1 && selectedGroup && <div className="group-switcher">{groups.map((view) => <button key={view.group.id} className={view.group.id === selectedGroup ? "group-chip active" : "group-chip"} onClick={() => setSelectedGroup(view.group.id)}>مجموعة #{view.group.id} · {statusLabel(view.group.status)}</button>)}</div>}
   </div>;
 
-  return <div className="dashboard-grid">
+  return <div className="dashboard-grid rider-dashboard">
     <section className="dashboard-main">
-      <div className="welcome-banner"><div className="welcome-copy"><span className="eyebrow">سِكّة أقرب لك</span><h2>خلّي الطريق<br /><em>على مزاجك.</em></h2><p>مشاويرك اليومية، بتكلفة أقل وناس شبه طريقك.</p><button className="button button-dark" onClick={() => setSection("booking")}>خطط لمشوار <span>←</span></button></div><div className="welcome-illustration"><div className="sun-orbit" /><div className="route-art"><span /><i /><i /><i /><b /></div><div className="mini-car">▰</div></div></div>
-      <div className="metric-grid"><Metric icon="↗" label="مجموعاتي" value={String(groups.length)} hint="باقات ومشاوير" /><Metric icon="◷" label="الأيام المجدولة" value={String(allTrips.filter((trip) => ["scheduled", "assigned", "needs_captain"].includes(trip.status)).length)} hint="ذهاب وعودة" /><Metric icon="♙" label="سعر المقعد" value={money(groups.find((g) => g.group.seat_day_fare)?.group.seat_day_fare)} hint="حسب المسار والفئة" /></div>
-      <div className="section-title-row"><div><h2>مشاويرك الحالية</h2><p>تابع حالة المجموعة والمواعيد القادمة</p></div><button className="text-action" onClick={() => setSection("trips")}>عرض الكل <span>←</span></button></div>
-      {groups.length ? <div className="group-list">{groups.slice(0, 2).map((view) => <GroupSummary key={view.group.id} view={view} categories={categories} onClick={() => { setSelectedGroup(view.group.id); setSection("trips"); }} />)}</div> : <EmptyState icon="⌖" title="مشوارك الأول مستنيك" text="حدد طريقك، اختار أيامك، وابدأ مجموعة جديدة." action="خطط لمشوار" onAction={() => setSection("booking")} />}
+      <div className="welcome-banner"><div className="welcome-copy"><span className="eyebrow">سِكّة أقرب لك</span><h2>طريقك أسهل<br /><em>مع سِكّة.</em></h2><button className="button button-dark" onClick={() => setSection("booking")}>ابدأ مشوارك <span>←</span></button></div><div className="welcome-illustration"><div className="sun-orbit" /><div className="route-art"><span /><i /><i /><i /><b /></div><div className="mini-car">▰</div></div></div>
+      <div className="section-title-row rider-trips-heading"><h2>مشاويرك الحالية</h2><button className="text-action" onClick={() => setSection("trips")}>عرض الكل <span>←</span></button></div>
+      {groups.length ? <div className="group-list">{groups.slice(0, 1).map((view) => <GroupSummary key={view.group.id} view={view} categories={categories} onClick={() => { setSelectedGroup(view.group.id); setSection("trips"); }} />)}</div> : <EmptyState icon="⌖" title="ابدأ أول مشوار" text="حدد نقطتي الركوب والنزول ثم اختر باقتك." action="خطط لمشوار" onAction={() => setSection("booking")} />}
     </section>
-    <aside className="dashboard-side"><div className="surface side-date-card"><div className="side-date-top"><span>سِكّة اليوم</span><span className="weather-mark">☀</span></div><strong>{new Intl.DateTimeFormat("ar-EG", { day: "numeric", month: "long" }).format(new Date())}</strong><small>{new Intl.DateTimeFormat("ar-EG", { weekday: "long" }).format(new Date())}</small><div className="week-strip">{[0, 1, 2, 3, 4].map((n) => <span key={n} className={n === new Date().getDay() ? "today" : ""}>{["ح", "ن", "ث", "ر", "خ"][n]}<b>{n + 1}</b></span>)}</div></div>
-      <div className="surface activity-card"><div className="section-title-row"><div><h3>آخر التحديثات</h3><p>إشعارات مجموعاتك</p></div><button className="text-action" onClick={() => setSection("notifications")}>الكل</button></div>{notifications.slice(0, 3).length ? notifications.slice(0, 3).map((item) => <NotificationRow key={item.id} item={item} />) : <p className="muted-text">مفيش تحديثات جديدة.</p>}</div>
-      <div className="surface callout-card"><span>✦</span><h3>وفّر مع كل باقة</h3><p>احجز ٥ أيام أسبوعيًا ووفر ٥٪، أو اختار ٢٢ يومًا شهريًا ووفر ١٠٪.</p><button className="text-action" onClick={() => setSection("booking")}>اكتشف الباقات ←</button></div>
-    </aside>
   </div>;
 }
