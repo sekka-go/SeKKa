@@ -1091,22 +1091,28 @@ button { line-height: 1.45; }
 }
 
 /* A calm, single-layer notification inbox with clear RTL hierarchy. */
-.workspace .notifications-page { display: grid; align-content: start; gap: 1.25rem; min-height: min(68vh, 44rem); padding: .25rem 0; color: var(--ink); background: transparent; border: 0; }
+.workspace .notifications-page { display: grid; align-content: start; gap: 1.25rem; min-height: 0; padding: .25rem 0; color: var(--ink); background: transparent; border: 0; }
 .workspace .notifications-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-bottom: .9rem; border-bottom: 1px solid var(--line); direction: rtl; }
 .workspace .notifications-header h2 { margin: .2rem 0 0; color: var(--ink); font-size: clamp(1.45rem, 4vw, 1.85rem); line-height: 1.3; }
 .workspace .notification-header-actions { display: flex; align-items: center; gap: .55rem; }
-.workspace .notification-icon-action { display: grid; place-items: center; width: 2.65rem; height: 2.65rem; padding: .65rem; color: var(--muted); background: rgba(36,32,20,.35); border: 1px solid var(--line); border-radius: .8rem; transition: color .18s ease, border-color .18s ease, background .18s ease, transform .18s ease; }
+.workspace .notification-icon-action { display: grid; place-items: center; width: 2.65rem; height: 2.65rem; padding: .65rem; color: #f4e6bd; background: rgba(255,210,31,.075); border: 1px solid rgba(255,210,31,.4); border-radius: .8rem; transition: color .18s ease, border-color .18s ease, background .18s ease, transform .18s ease; }
 .workspace .notification-icon-action:hover:not(:disabled) { color: var(--yellow); background: rgba(255,210,31,.07); border-color: rgba(255,210,31,.35); }
 .workspace .notification-icon-action:active:not(:disabled) { transform: scale(.96); }
-.workspace .notification-icon-action:disabled { opacity: .48; cursor: not-allowed; }
+.workspace .notification-icon-action:disabled { color: #c9bd9f; background: rgba(255,210,31,.04); border-color: rgba(255,210,31,.25); opacity: .82; cursor: not-allowed; }
 .workspace .notification-icon-action svg { width: 1.2rem; height: 1.2rem; }
 .workspace .notification-icon-action .is-spinning { animation: notification-spin .8s linear infinite; }
 .workspace .notification-list { display: grid; gap: .65rem; width: 100%; }
 .workspace .notification-item { min-width: 0; overflow: hidden; background: rgba(36,32,20,.42); border: 1px solid var(--line); border-radius: .95rem; transition: background .18s ease, border-color .18s ease; }
 .workspace .notification-item:hover { background: rgba(36,32,20,.78); border-color: rgba(158,232,230,.22); }
 .workspace .notification-item:active { background: rgba(36,32,20,.95); }
-.workspace .notification-main-action { display: block; width: 100%; min-width: 0; padding: .95rem 1rem; color: inherit; text-align: right; background: transparent; border: 0; }
+.workspace .notification-main-action { display: grid; grid-template-columns: auto minmax(0,1fr); align-items: stretch; gap: .75rem; width: 100%; min-width: 0; padding: .95rem 1rem; color: inherit; text-align: right; }
+.workspace .notification-main-action:not(.has-edit-action) .notification-read-action { grid-column: 1 / -1; }
+.workspace .notification-read-action { display: block; min-width: 0; padding: 0; color: inherit; text-align: right; background: transparent; border: 0; }
+.workspace .notification-edit-action { align-self: center; min-width: 5.25rem; min-height: 2.65rem; padding: .45rem .85rem; color: #151208; background: var(--cyan); border: 1px solid rgba(158,232,230,.85); border-radius: .7rem; font-size: .92rem; font-weight: 800; transition: filter .16s ease, transform .16s ease; }
+.workspace .notification-edit-action:hover { filter: brightness(1.08); }
+.workspace .notification-edit-action:active { transform: scale(.97); }
 .workspace .notification-row { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: .85rem; min-width: 0; padding: 0; border: 0; direction: rtl; }
+.workspace .notification-row-with-edit { grid-template-columns: minmax(0,1fr) auto; }
 .workspace .notification-mark { display: grid; flex: initial; place-items: center; width: 2.8rem; height: 2.8rem; color: var(--cyan); background: rgba(158,232,230,.08); border: 1px solid rgba(158,232,230,.16); border-radius: .8rem; }
 .workspace .notification-mark svg { width: 1.2rem; height: 1.2rem; }
 .workspace .notification-content { display: grid; gap: .28rem; min-width: 0; }
@@ -1117,17 +1123,17 @@ button { line-height: 1.45; }
 .workspace .notification-time i { width: .48rem; height: .48rem; margin-top: .12rem; background: var(--cyan); border-radius: 50%; box-shadow: 0 0 0 .22rem rgba(158,232,230,.1); }
 .workspace .notification-item.is-unread { border-inline-start: 2px solid var(--cyan); }
 .workspace .notification-item.is-read .notification-mark { color: var(--muted); background: rgba(255,255,255,.025); border-color: rgba(255,255,255,.06); }
-.workspace .notifications-empty { display: grid; align-content: center; justify-items: center; gap: .75rem; flex: 1; min-height: min(58vh, 34rem); padding: 2.25rem 1rem; text-align: center; }
+.workspace .notifications-empty { display: grid; align-content: center; justify-items: center; gap: .75rem; min-height: 17rem; padding: 2.25rem 1rem; text-align: center; }
 .workspace .notifications-empty-icon { display: grid; place-items: center; width: 4.2rem; height: 4.2rem; margin-bottom: .3rem; color: var(--cyan); background: rgba(158,232,230,.07); border: 1px solid rgba(158,232,230,.13); border-radius: 1.25rem; }
 .workspace .notifications-empty-icon svg { width: 1.8rem; height: 1.8rem; }
 .workspace .notifications-empty h3 { margin: 0; color: var(--ink); font-size: 1.2rem; font-weight: 750; }
 .workspace .notifications-empty p { max-width: 22rem; margin: 0; color: var(--muted); font-size: .92rem; line-height: 1.75; }
-.workspace .notifications-loading { display: flex; align-items: center; justify-content: center; gap: .7rem; flex: 1; min-height: min(58vh, 34rem); color: var(--muted); }
+.workspace .notifications-loading { display: flex; align-items: center; justify-content: center; gap: .7rem; min-height: 7rem; color: var(--muted); }
 .workspace .notification-choice-actions { padding: .1rem 1rem 1rem; }
-.workspace .notification-main-action:focus-visible, .workspace .notification-icon-action:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+.workspace .notification-read-action:focus-visible, .workspace .notification-edit-action:focus-visible, .workspace .notification-icon-action:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
 @keyframes notification-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .workspace .notification-icon-action, .workspace .notification-item { transition: none; } .workspace .notification-icon-action .is-spinning { animation: none; } }
-@media (max-width: 560px) { .workspace .notifications-page { gap: .9rem; min-height: 70vh; } .workspace .notification-main-action { padding: .8rem; } .workspace .notification-row { grid-template-columns: auto minmax(0,1fr) auto; gap: .6rem; align-items: start; } .workspace .notification-mark { width: 2.45rem; height: 2.45rem; border-radius: .7rem; } .workspace .notification-mark svg { width: 1.05rem; height: 1.05rem; } .workspace .notification-time { min-width: auto; } .workspace .notification-time small:first-child:empty { display: none; } .workspace .notification-time small { font-size: .66rem; } .workspace .notification-content strong { font-size: .87rem; } .workspace .notification-message { font-size: .78rem; } }
+@media (max-width: 560px) { .workspace .notifications-page { gap: .9rem; min-height: 0; } .workspace .notification-main-action { gap: .5rem; padding: .8rem; } .workspace .notification-edit-action { min-width: 4.65rem; min-height: 2.45rem; padding-inline: .65rem; font-size: .84rem; } .workspace .notification-row { grid-template-columns: auto minmax(0,1fr) auto; gap: .6rem; align-items: start; } .workspace .notification-row.notification-row-with-edit { grid-template-columns: minmax(0,1fr) auto; } .workspace .notification-mark { width: 2.45rem; height: 2.45rem; border-radius: .7rem; } .workspace .notification-mark svg { width: 1.05rem; height: 1.05rem; } .workspace .notification-time { min-width: auto; } .workspace .notification-time small:first-child:empty { display: none; } .workspace .notification-time small { font-size: .66rem; } .workspace .notification-content strong { font-size: .87rem; } .workspace .notification-message { font-size: .78rem; } }
 
 
 /* Show the primary task first; keep supporting detail on demand. */
@@ -1757,7 +1763,7 @@ button { line-height: 1.45; }
 .workspace .account-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .35rem .75rem; padding-top: .65rem; border-top: 1px solid var(--line); }
 .workspace .notifications-panel { display: grid; gap: .7rem; }
 .workspace .notification-button-row { min-width: 0; border-bottom: 1px solid var(--line); }
-.workspace .notification-main-action { display: flex; align-items: center; justify-content: space-between; gap: .7rem; width: 100%; min-width: 0; padding: .65rem 0; color: inherit; text-align: right; background: transparent; border: 0; }
+.workspace .notification-main-action { display: grid; grid-template-columns: auto minmax(0,1fr); align-items: stretch; gap: .75rem; width: 100%; min-width: 0; padding: .65rem 0; color: inherit; text-align: right; }
 .workspace .notification-row { flex: 1; align-items: center; min-width: 0; padding: 0; border: 0; }
 .workspace .notification-row > div { display: grid; gap: .12rem; min-width: 0; }
 .workspace .notification-row small { color: var(--muted); line-height: 1.45; }
@@ -1938,8 +1944,10 @@ button { line-height: 1.45; }
 .workspace .welcome-actions { display: flex; align-items: stretch; justify-content: center; gap: 12px; width: 100%; margin: 0; }
 .workspace .welcome-actions .button { display: inline-flex; flex: 1 1 0; align-items: center; justify-content: center; width: auto; min-width: 0; height: 48px; min-height: 48px; padding: 0 .75rem; border-radius: 12px; font-size: clamp(.85rem, 3.8vw, 1.1rem); text-align: center; white-space: nowrap; }
 @media (max-width: 360px) { .workspace .welcome-actions { gap: .5rem; } .workspace .welcome-actions .button { padding-inline: .4rem; font-size: .78rem; } }
-.workspace .notification-main-action { display: block; padding: .95rem 1rem; }
+.workspace .notification-main-action { display: grid; grid-template-columns: auto minmax(0,1fr); align-items: stretch; gap: .75rem; padding: .95rem 1rem; }
+.workspace .notification-main-action:not(.has-edit-action) .notification-read-action { grid-column: 1 / -1; }
 .workspace .notification-row { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: .85rem; direction: rtl; }
+.workspace .notification-row-with-edit { grid-template-columns: minmax(0,1fr) auto; }
 .workspace .notification-row > div { min-width: 0; }
 .workspace .notification-content { gap: .28rem; }
 .workspace .notification-time { justify-items: end; gap: .3rem; min-width: 5.6rem; text-align: left; }
@@ -1949,12 +1957,12 @@ button { line-height: 1.45; }
 /* Notifications open as a side drawer; the uncovered right side dismisses it. */
 .workspace .topbar { position: relative; z-index: 92; }
 .workspace .notification-bell.is-open { color: var(--yellow); border-color: rgba(255,210,31,.55); background: rgba(255,210,31,.08); }
-.workspace .notifications-overlay { position: fixed; z-index: 90; inset-inline: 0; bottom: 0; display: flex; justify-content: flex-start; direction: ltr; background: rgba(0,0,0,.56); -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px); animation: notifications-backdrop-in .18s ease both; }
-.workspace .notifications-drawer { width: min(31rem, calc(100vw - 3.5rem)); min-width: 0; height: 100%; overflow-x: hidden; overflow-y: auto; padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom)); color: var(--ink); background: linear-gradient(155deg, #201b0e 0%, #171309 46%, #151207 100%); border-inline-start: 1px solid rgba(255,210,31,.14); border-radius: 0 1.2rem 1.2rem 0; box-shadow: 1.2rem 0 3rem rgba(0,0,0,.38); direction: rtl; overscroll-behavior: contain; animation: notifications-drawer-in .24s cubic-bezier(.2,.75,.25,1) both; }
-.workspace .notifications-page { display: flex; flex-direction: column; gap: 1rem; min-height: 100%; height: 100%; padding: .25rem 0; }
+.workspace .notifications-overlay { position: fixed; z-index: 90; inset-inline: 0; bottom: 0; display: flex; align-items: flex-start; justify-content: flex-start; direction: ltr; background: rgba(0,0,0,.56); -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px); animation: notifications-backdrop-in .18s ease both; }
+.workspace .notifications-drawer { align-self: flex-start; width: min(31rem, calc(100vw - 3.5rem)); min-width: 0; height: fit-content; max-height: 100%; overflow-x: hidden; overflow-y: auto; padding: 1rem; color: var(--ink); background: linear-gradient(155deg, #201b0e 0%, #171309 46%, #151207 100%); border-inline-start: 1px solid rgba(255,210,31,.14); border-radius: 0 1.2rem 1.2rem 0; box-shadow: 1.2rem 0 3rem rgba(0,0,0,.38); direction: rtl; overscroll-behavior: contain; animation: notifications-drawer-in .24s cubic-bezier(.2,.75,.25,1) both; }
+.workspace .notifications-page { display: flex; flex-direction: column; gap: 1rem; min-height: 0; height: auto; padding: .25rem 0; }
 .workspace .notification-close { display: grid; }
 .workspace .notifications-overlay:focus { outline: none; }
 @keyframes notifications-drawer-in { from { opacity: .7; transform: translateX(-1.5rem); } to { opacity: 1; transform: translateX(0); } }
 @keyframes notifications-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
-@media (max-width: 560px) { .workspace .notifications-drawer { width: calc(100vw - 3.5rem); padding: .85rem .85rem calc(.85rem + env(safe-area-inset-bottom)); border-radius: 0 .9rem .9rem 0; } .workspace .notifications-page { min-height: 100%; } }
+@media (max-width: 560px) { .workspace .notifications-drawer { width: calc(100vw - 3.5rem); padding: .85rem; border-radius: 0 .9rem .9rem 0; } .workspace .notifications-page { min-height: 0; } }
 @media (prefers-reduced-motion: reduce) { .workspace .notifications-overlay, .workspace .notifications-drawer { animation: none; } }

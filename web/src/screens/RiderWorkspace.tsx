@@ -24,6 +24,7 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
   const [savedPlaces, setSavedPlaces] = useState<SavedPlace[]>([]);
   const [groups, setGroups] = useState<GroupView[]>([]);
   const [loading, setLoading] = useState(true);
+  const pendingNotificationEdit = useRef<number | null>(null);
   const [selectedGroup, setSelectedGroup] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [bookingMode, setBookingMode] = useState<"new" | "join" | "edit">("new");
@@ -110,6 +111,34 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
     setSection("booking");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  useEffect(() => {
+    const openGroupEditor = (event: Event) => {
+      const groupId = (event as CustomEvent<number>).detail;
+      if (loading) { pendingNotificationEdit.current = groupId; return; }
+      const view = groups.find((item) => item.group.id === groupId);
+      if (!view) {
+        notify("لم نتمكن من العثور على المجموعة. حدّث قائمة رحلاتك وحاول مرة أخرى.", "error");
+        setSection("trips");
+        return;
+      }
+      startEditingGroup(view);
+    };
+    window.addEventListener("sekka:edit-group", openGroupEditor);
+    return () => window.removeEventListener("sekka:edit-group", openGroupEditor);
+  }, [groups, loading, notify, setSection]);
+
+  useEffect(() => {
+    const groupId = pendingNotificationEdit.current;
+    if (loading || groupId === null) return;
+    pendingNotificationEdit.current = null;
+    const view = groups.find((item) => item.group.id === groupId);
+    if (view) startEditingGroup(view);
+    else {
+      notify("لم نتمكن من العثور على المجموعة. حدّث قائمة رحلاتك وحاول مرة أخرى.", "error");
+      setSection("trips");
+    }
+  }, [groups, loading, notify, setSection]);
 
   const continueToSchedule = () => {
     const missing = [
