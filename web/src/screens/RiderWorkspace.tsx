@@ -49,6 +49,16 @@ export default function RiderWorkspace({ session, section, setSection, notificat
   const selectedCategory = categories.find((item) => item.id === categoryId) ?? null;
   const selectedPointForSavedPlace = savedPlaceTarget === "pickup" ? pickup : dropoff;
   const selected = groups.find((view) => view.group.id === selectedGroup) ?? null;
+  const priceLabel = (type: "daily" | "weekly" | "monthly", selectedCategoryId = categoryId) => {
+    const selectedQuote = selectedCategoryId ? priceQuotes?.[selectedCategoryId] : null;
+    if (selectedQuote) return money(selectedQuote[type]);
+    const fares = Object.values(priceQuotes ?? {}).map((quote) => quote[type]).filter((fare) => Number.isFinite(fare));
+    if (fares.length) {
+      const minimum = Math.min(...fares), maximum = Math.max(...fares);
+      return minimum === maximum ? money(minimum) : `من ${money(minimum)} إلى ${money(maximum)}`;
+    }
+    return priceLoading ? "جارٍ حساب الأسعار…" : priceError ? "تعذر حساب السعر" : "جارٍ تجهيز الأسعار";
+  };
 
   const openBooking = (mode: "new" | "join") => {
     setBookingMode(mode);
@@ -178,13 +188,13 @@ export default function RiderWorkspace({ session, section, setSection, notificat
     try {
       const editing = bookingMode === "edit" && editingGroupId !== null;
       const editedGroupId = editingGroupId;
-      await api(editing ? `/rider/pool/groups/${editedGroupId}` : "/rider/pool/groups", { method: editing ? "PUT" : "POST", token: session.token, body: {
+      const result = await api<{ group: { id: number } }>(editing ? `/rider/pool/groups/${editedGroupId}` : "/rider/pool/groups", { method: editing ? "PUT" : "POST", token: session.token, body: {
         category_id: categoryId, package_type: packageType, service_dates: dates,
         morning_departure: morning, return_departure: returnTime,
         pickup_lat: pickup.lat, pickup_lng: pickup.lng, dropoff_lat: dropoff.lat, dropoff_lng: dropoff.lng,
       } });
       await refreshGroups(); await refreshNotifications();
-      setBookingMode("new"); setEditingGroupId(null); if (editing && editedGroupId !== null) setSelectedGroup(editedGroupId); setSection("trips"); setPickup(null); setDropoff(null);
+      setBookingMode("new"); setEditingGroupId(null); setSelectedGroup(editing && editedGroupId !== null ? editedGroupId : result.group.id); setSection("trips"); setPickup(null); setDropoff(null);
       notify(editing ? "تم تعديل المشوار." : "تم إنشاء المجموعة. شارك رقمها مع الركاب اللي رايحين نفس اتجاهك.", "success");
     } catch (error) { notify(errorText(error), "error"); }
     finally { setSubmitting(false); }
@@ -329,7 +339,7 @@ export default function RiderWorkspace({ session, section, setSection, notificat
         </>}
         {bookingMode !== "join" && bookingStep === "schedule" && <>
           <label>نوع الباقة<div className="package-options">
-            {(["daily", "weekly", "monthly"] as const).map((type) => <button type="button" key={type} className={packageType === type ? "package-option selected" : "package-option"} onClick={() => { setPackageType(type); setDates(serviceDatesFromStart(dates[0] && isServiceDay(dates[0]) ? dates[0] : defaultDates(type)[0]!, type)); }}><strong>{type === "daily" ? "يومي" : type === "weekly" ? "أسبوعي" : "شهري"}</strong><small>{type === "daily" ? "يوم واحد" : type === "weekly" ? "٥ أيام خدمة · خصم ٥٪" : "٢٢ يوم خدمة · خصم ١٠٪"}</small><b>{priceQuotes?.[categoryId] ? money(priceQuotes[categoryId]![type]) : priceLoading ? "جارٍ حساب السعر…" : "السعر بعد تحديد النقط"}</b></button>)}
+            {(["daily", "weekly", "monthly"] as const).map((type) => <button type="button" key={type} className={packageType === type ? "package-option selected" : "package-option"} onClick={() => { setPackageType(type); setDates(serviceDatesFromStart(dates[0] && isServiceDay(dates[0]) ? dates[0] : defaultDates(type)[0]!, type)); }}><strong>{type === "daily" ? "يومي" : type === "weekly" ? "أسبوعي" : "شهري"}</strong><small>{type === "daily" ? "يوم واحد" : type === "weekly" ? "٥ أيام خدمة · خصم ٥٪" : "٢٢ يوم خدمة · خصم ١٠٪"}</small><b>{priceLabel(type)}</b></button>)}
           </div></label>
           <div className="time-row"><label>وقت الذهاب<input type="time" value={morning} onChange={(e) => setMorning(e.target.value)} required /></label><label>وقت العودة<input type="time" value={returnTime} onChange={(e) => setReturnTime(e.target.value)} required /></label></div>
           <section className="category-picker"><div className="field-heading"><strong>الفئة والسعر</strong><div className="category-heading-actions">{priceLoading && <span>جارٍ تحديث الأسعار…</span>}<button type="button" className="price-info-trigger" aria-label="معلومات عن الأسعار والباقات" aria-expanded={priceInfoOpen} onClick={() => setPriceInfoOpen((open) => !open)}>ⓘ</button></div></div>
@@ -339,13 +349,13 @@ export default function RiderWorkspace({ session, section, setSection, notificat
               <span>اختار الفئة</span>
               <button type="button" className="category-select-trigger" aria-haspopup="listbox" aria-expanded={categoryMenuOpen} aria-controls="category-options" disabled={categories.length === 0} onClick={() => setCategoryMenuOpen((open) => !open)}>
                 <span>{selectedCategory ? `${categoryName(selectedCategory)} · ${selectedCategory.seats} مقاعد` : categories.length > 0 ? "اختر الفئة للمتابعة" : "لا توجد فئات متاحة"}</span>
-                <strong>{selectedCategory && priceQuotes?.[selectedCategory.id] ? money(priceQuotes[selectedCategory.id]![packageType]) : priceLoading ? "جارٍ حساب السعر…" : "السعر بعد تحديد النقط"}</strong>
+                <strong>{priceLabel(packageType, selectedCategory?.id ?? "")}</strong>
                 <span className="category-select-chevron" aria-hidden="true">{categoryMenuOpen ? "⌃" : "⌄"}</span>
               </button>
               {categoryMenuOpen && <div className="category-select-options" id="category-options" role="listbox" aria-label="الفئات المتاحة">
                 {categories.map((category) => {
                   const quote = priceQuotes?.[category.id];
-                  const fare = quote ? money(quote[packageType]) : priceLoading ? "جارٍ حساب السعر…" : "السعر بعد تحديد النقط";
+                  const fare = quote ? money(quote[packageType]) : priceLoading ? "جارٍ حساب السعر…" : priceError ? "تعذر حساب السعر" : "السعر غير متاح";
                   const chosen = category.id === categoryId;
                   return <button type="button" key={category.id} role="option" aria-selected={chosen} className={chosen ? "category-select-option selected" : "category-select-option"} onClick={() => { setCategoryId(category.id); setCategoryMenuOpen(false); }}>
                     <span><strong>{categoryName(category)}</strong><small>{category.seats} مقاعد · {category.speed_tier === "faster" ? "Faster" : "Saver"}</small></span>
@@ -357,7 +367,7 @@ export default function RiderWorkspace({ session, section, setSection, notificat
             
           </section>
         </>}
-        {bookingMode !== "join" ? bookingStep === "route" ? <button type="button" className="button button-primary button-wide" onClick={continueToSchedule}>التالي · الموعد والأسعار <span>←</span></button> : <button type="submit" data-confirm-trip="true" className="button button-primary button-wide" disabled={submitting || !categoryId || dates.length !== (packageType === "daily" ? 1 : packageType === "weekly" ? 5 : 22) || Boolean(pickup && dropoff) && (!priceQuotes || priceLoading)}>{submitting ? "جاري الحفظ…" : bookingMode === "edit" ? "حفظ التعديلات" : "تأكيد المشوار"} <span>←</span></button> : <button type="submit" className="button button-primary button-wide" disabled={submitting}>{submitting ? "جاري الحفظ…" : "الانضمام للمجموعة"} <span>←</span></button>}
+        {bookingMode !== "join" ? bookingStep === "route" ? <button type="button" className="button button-primary button-wide" onClick={continueToSchedule}>التالي · الموعد والأسعار <span>←</span></button> : <button type="submit" data-confirm-trip="true" className="button button-primary button-wide" disabled={submitting || !categoryId || dates.length !== (packageType === "daily" ? 1 : packageType === "weekly" ? 5 : 22) || Boolean(pickup && dropoff) && (!priceQuotes || priceLoading)}>{submitting ? "جاري الحفظ…" : !categoryId ? "اختار الفئة لإكمال الحجز" : bookingMode === "edit" ? "حفظ التعديلات" : "تأكيد المشوار"} <span>←</span></button> : <button type="submit" className="button button-primary button-wide" disabled={submitting}>{submitting ? "جاري الحفظ…" : "الانضمام للمجموعة"} <span>←</span></button>}
       </form>
     </section>
     
@@ -365,9 +375,9 @@ export default function RiderWorkspace({ session, section, setSection, notificat
 
   const allTrips = groups.flatMap((view) => view.trips.map((trip) => ({ ...trip, groupId: view.group.id, categoryId: view.group.category_id, fare: view.group.seat_day_fare })));
   if (section === "trips") return <div className="trips-page">
-    <div className="section-toolbar">{groups.length > 0 && <button className="button button-quiet button-small" onClick={() => setSelectedGroup(selectedGroup ? null : groups[0]?.group.id ?? null)}>{selectedGroup ? "مواعيد الرحلات ←" : "العودة للمجموعات →"}</button>}<button className="button button-primary button-small" onClick={() => openBooking("new")}>＋ مشوار جديد</button></div>
-    {selectedGroup && selected ? <GroupDetail view={selected} categories={categories} busy={submitting} action={groupAction} notify={notify} onEdit={() => startEditingGroup(selected)} currentUserId={session.user.id} />
-      : allTrips.length ? <TripList trips={allTrips} categories={categories} /> : <EmptyState icon="↗" title="لسه مفيش رحلات" text="لما تنشئ أو تنضم لمجموعة، هتلاقي مشاويرك هنا." action="ابدأ مشوارك" onAction={() => openBooking("new")} />}
+    <div className="section-toolbar"><button className="button button-primary button-small" onClick={() => openBooking("new")}>＋ مشوار جديد</button></div>
+    {selectedGroup && selected && <GroupDetail view={selected} categories={categories} busy={submitting} action={groupAction} notify={notify} onEdit={() => startEditingGroup(selected)} currentUserId={session.user.id} />}
+    {allTrips.length ? <section className="all-trips-section"><div className="section-title-row"><div><h2>مواعيد رحلاتك</h2><p>كل مواعيد الذهاب والعودة لمجموعاتك</p></div><span className="section-count">{allTrips.length}</span></div><TripList trips={allTrips} categories={categories} /></section> : <EmptyState icon="↗" title="لسه مفيش رحلات مجدولة" text={groups.length ? "مجموعة مشوارك ظاهرة فوق؛ ستظهر مواعيده هنا بعد اكتمالها وتأكيد الكابتن." : "لما تنشئ أو تنضم لمجموعة، هتلاقي مشاويرك هنا."} />}
     {groups.length > 1 && selectedGroup && <div className="group-switcher">{groups.map((view) => <button key={view.group.id} className={view.group.id === selectedGroup ? "group-chip active" : "group-chip"} onClick={() => setSelectedGroup(view.group.id)}>مجموعة #{view.group.id} · {statusLabel(view.group.status)}</button>)}</div>}
   </div>;
 
