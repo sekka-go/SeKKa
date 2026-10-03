@@ -6,14 +6,73 @@ import RiderWorkspace from "./RiderWorkspace";
 import CaptainWorkspace from "./CaptainWorkspace";
 import AdminWorkspace from "./AdminWorkspace";
 export default function Workspace({ session, onSignOut, notify }: { session: Session; onSignOut: () => void; notify: (text: string, tone?: Toast["tone"]) => void }) {
-  const [section, setSection] = useState<NavKey>(session.user.role === "captain" ? "offers" : session.user.role === "admin" ? "admin" : "home");
+  const initialSection: NavKey = session.user.role === "captain" ? "offers" : session.user.role === "admin" ? "admin" : "home";
+  const [section, setSectionState] = useState<NavKey>(() => {
+    const state = window.history.state as { sekkaWorkspace?: boolean; sekkaSection?: NavKey } | null;
+    return state?.sekkaWorkspace && state.sekkaSection ? state.sekkaSection : initialSection;
+  });
+  const [historyDepth, setHistoryDepth] = useState(() => {
+    const state = window.history.state as { sekkaWorkspace?: boolean; sekkaIndex?: number } | null;
+    return state?.sekkaWorkspace ? state.sekkaIndex ?? 0 : 0;
+  });
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [navOpen, setNavOpen] = useState(false);
+
+  const setSection = useCallback((next: NavKey) => {
+    const current = window.history.state as { sekkaWorkspace?: boolean; sekkaSection?: NavKey; sekkaIndex?: number } | null;
+    if (current?.sekkaWorkspace && current.sekkaSection === next) {
+      setSectionState(next);
+      return;
+    }
+    const nextIndex = (current?.sekkaWorkspace ? current.sekkaIndex ?? 0 : historyDepth) + 1;
+    window.history.pushState({ ...(current ?? {}), sekkaWorkspace: true, sekkaSection: next, sekkaIndex: nextIndex }, "", window.location.href);
+    setHistoryDepth(nextIndex);
+    setSectionState(next);
+  }, [historyDepth]);
+
+  useEffect(() => {
+    const current = window.history.state as { sekkaWorkspace?: boolean; sekkaSection?: NavKey; sekkaIndex?: number; sekkaGuard?: boolean } | null;
+    if (!current?.sekkaWorkspace) {
+      const base = { ...(current ?? {}), sekkaWorkspace: true, sekkaSection: section, sekkaIndex: 0 };
+      window.history.replaceState(base, "", window.location.href);
+      window.history.pushState({ ...base, sekkaGuard: true }, "", window.location.href);
+    } else if ((current.sekkaIndex ?? 0) === 0 && !current.sekkaGuard) {
+      window.history.pushState({ ...current, sekkaGuard: true }, "", window.location.href);
+    }
+
+    const onPopState = (event: PopStateEvent) => {
+      const state = event.state as { sekkaWorkspace?: boolean; sekkaSection?: NavKey; sekkaIndex?: number; sekkaGuard?: boolean } | null;
+      if (state?.sekkaWorkspace) {
+        const restored = state.sekkaSection ?? initialSection;
+        const depth = state.sekkaIndex ?? 0;
+        setSectionState(restored);
+        setHistoryDepth(depth);
+        setNavOpen(false);
+        if (depth === 0 && !state.sekkaGuard) {
+          window.setTimeout(() => {
+            const latest = window.history.state as { sekkaWorkspace?: boolean; sekkaGuard?: boolean } | null;
+            if (latest?.sekkaWorkspace && !latest.sekkaGuard) {
+              window.history.pushState({ ...latest, sekkaGuard: true }, "", window.location.href);
+            }
+          }, 0);
+        }
+        return;
+      }
+
+      setSectionState(initialSection);
+      setHistoryDepth(0);
+      setNavOpen(false);
+      window.history.pushState({ sekkaWorkspace: true, sekkaSection: initialSection, sekkaIndex: 0, sekkaGuard: true }, "", window.location.href);
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [initialSection]);
+
   useEffect(() => {
     const navigate = (event: Event) => setSection((event as CustomEvent<NavKey>).detail);
     window.addEventListener("sekka:navigate", navigate);
     return () => window.removeEventListener("sekka:navigate", navigate);
-  }, []);
+  }, [setSection]);
   const refreshNotifications = useCallback(async () => {
     try { const result = await api<{ notifications: Notification[] }>("/pool/notifications", { token: session.token }); setNotifications(result.notifications); }
     catch { /* session banner handles expiry */ }
@@ -49,7 +108,7 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
     </aside>
     {navOpen && <button className="sidebar-scrim" onClick={() => setNavOpen(false)} aria-label="إغلاق القائمة" />}
     <main className="main-area">
-      <header className="topbar"><button className="mobile-menu" onClick={() => setNavOpen(true)} aria-label="فتح القائمة">☰</button><div className="breadcrumbs"><span>سِكّة</span></div><div className="topbar-actions"><button className="icon-button notification-button" onClick={() => setSection("notifications")} aria-label="الإشعارات">♧{unread > 0 && <i />}</button><span className="topbar-divider" /><span className="topbar-user">{session.user.full_name}</span><span className="avatar avatar-small">{session.user.full_name.slice(0, 1)}</span><button className="text-action sign-out-action" onClick={onSignOut}>خروج</button></div></header>
+      <header className="topbar">{historyDepth > 0 && <button className="workspace-back icon-button" onClick={() => window.history.back()} aria-label="رجوع">→</button>}<button className="mobile-menu" onClick={() => setNavOpen(true)} aria-label="فتح القائمة">☰</button><div className="breadcrumbs"><span>سِكّة</span></div><div className="topbar-actions"><button className="icon-button notification-button" onClick={() => setSection("notifications")} aria-label="الإشعارات">♧{unread > 0 && <i />}</button><span className="topbar-divider" /><span className="topbar-user">{session.user.full_name}</span><span className="avatar avatar-small">{session.user.full_name.slice(0, 1)}</span><button className="text-action sign-out-action" onClick={onSignOut}>خروج</button></div></header>
       <div className="page-content"><div className="page-heading"><div><h1>{title}</h1><p>{subtitle}</p></div></div>
         {session.user.role === "rider" && <RiderWorkspace session={session} section={section} setSection={setSection} notifications={notifications} refreshNotifications={refreshNotifications} notify={notify} />}
         {session.user.role === "captain" && <CaptainWorkspace session={session} section={section} notifications={notifications} refreshNotifications={refreshNotifications} notify={notify} />}
