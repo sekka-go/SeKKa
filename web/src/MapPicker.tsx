@@ -205,7 +205,7 @@ export default function MapPicker({
 
   return <div className={`map-picker${readOnly ? " map-picker-readonly" : ""}`}>
     <div className="map-canvas">
-      <div ref={elementRef} className="leaflet-map" role="application" aria-label="خريطة اختيار وعرض مسار الرحلة" />
+      <div ref={elementRef} className="leaflet-map" role="application" tabIndex={0} aria-label="خريطة اختيار وعرض مسار الرحلة" />
       {!tilesLoaded && !tileError && <div className="map-state" role="status">جاري تحميل الخريطة…</div>}
       {tileError && <div className="map-state map-state-warning" role="status">تعذر تحميل بعض بلاطات الخريطة. يمكنك الاستمرار في اختيار الموقع.</div>}
       {!hasVisibleStops && !hasRouteGeometry && readOnly && <div className="map-state map-state-warning" role="status">لا توجد بيانات موقع كافية لعرض هذا المسار.</div>}
