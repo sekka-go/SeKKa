@@ -588,11 +588,12 @@ Deno.serve(async (req: Request) => {
       if (group.status !== "waiting") return error("يمكن تعديل المشوار قبل اكتمال المجموعة فقط.", 409, origin);
       const members = await getMembers(groupId);
       if (members.length !== 1 || Number(members[0].rider_user_id) !== user!.id) return error("لا يمكن تعديل المشوار بعد انضمام ركاب آخرين.", 409, origin);
-      const [{ data: existingTrips }, { data: existingSubscription }] = await Promise.all([
+      const [tripCheck, subscriptionCheck] = await Promise.all([
         db.from("pool_trips").select("id").eq("group_id", groupId).limit(1),
         db.from("pool_subscriptions").select("id").eq("group_id", groupId).limit(1),
       ]);
-      if (existingTrips?.length || existingSubscription?.length) return error("لا يمكن تعديل مشوار بدأ تفعيله.", 409, origin);
+      if (tripCheck.error || subscriptionCheck.error) throw tripCheck.error ?? subscriptionCheck.error;
+      if (tripCheck.data?.length || subscriptionCheck.data?.length) return error("لا يمكن تعديل مشوار بدأ تفعيله.", 409, origin);
       const { category_id, package_type, service_dates, morning_departure, return_departure } = body;
       const dates = validDates(service_dates, String(package_type));
       if (!clean(category_id) || !dates || !/^\d{2}:\d{2}$/.test(String(morning_departure)) || !/^\d{2}:\d{2}$/.test(String(return_departure)) || String(return_departure) <= String(morning_departure)) return error("راجع الفئة والأيام ومواعيد الذهاب والعودة.", 400, origin);
