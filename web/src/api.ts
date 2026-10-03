@@ -38,6 +38,7 @@ export interface PoolGroup {
   route_version: number; fixed_captain_user_id: number | null;
 }
 export interface GroupView { group: PoolGroup; members: PoolMember[]; trips: PoolTrip[]; subscription?: { amount_due: number; refund_amount: number; service_days: number; discount_rate: number } }
+export interface PoolDiscoveryMatch { group: PoolGroup; seats_available: number; pickup_distance_km: number; dropoff_distance_km: number }
 export interface Notification { id: number; group_id: number | null; event_key: string; payload: Record<string, unknown>; created_at: string; read_at: string | null }
 export interface CaptainProfile { verification_status: "pending" | "approved" | "rejected"; vehicle_type_id: string; license_number: string; vehicle_plate: string; current_lat: number | null; current_lng: number | null }
 export interface CaptainOffer { group_id: number; category_id: string; package_type: string; route_distance_km: number | null; seat_day_fare: number | null; route_geometry: RouteGeometry | null; trip: PoolTrip }
