@@ -229,8 +229,8 @@ export default function RiderWorkspace({ session, section, setSection, notificat
           </div>}
         </section>
         <div className="location-search-stack">
-          <LocationSearchField kind="pickup" title="نقطة الركوب" value={pickupSearch} token={session.token} onChange={(value) => { setPickupSearch(value); setPickup(null); }} onSelect={(point) => { setPickup(point); setPickupSearch(point.label ?? ""); }} onChooseMap={() => chooseMap("pickup")} onFocus={() => setSavedPlaceTarget("pickup")} />
-          <LocationSearchField kind="dropoff" title="نقطة النزول" value={dropoffSearch} token={session.token} onChange={(value) => { setDropoffSearch(value); setDropoff(null); }} onSelect={(point) => { setDropoff(point); setDropoffSearch(point.label ?? ""); }} onChooseMap={() => chooseMap("dropoff")} onFocus={() => setSavedPlaceTarget("dropoff")} />
+          <LocationSearchField kind="pickup" title="نقطة الركوب" value={pickupSearch} token={session.token} onChange={(value) => { setPickupSearch(value); setPickup(null); }} onSelect={(point) => { setSavedPlaceTarget("pickup"); setPickup(point); setPickupSearch(point.label ?? ""); }} onChooseMap={() => { setSavedPlaceTarget("pickup"); chooseMap("pickup"); }} onFocus={() => setSavedPlaceTarget("pickup")} />
+          <LocationSearchField kind="dropoff" title="نقطة النزول" value={dropoffSearch} token={session.token} onChange={(value) => { setDropoffSearch(value); setDropoff(null); }} onSelect={(point) => { setSavedPlaceTarget("dropoff"); setDropoff(point); setDropoffSearch(point.label ?? ""); }} onChooseMap={() => { setSavedPlaceTarget("dropoff"); chooseMap("dropoff"); }} onFocus={() => setSavedPlaceTarget("dropoff")} />
         </div>
         {mapOpen && <section className="booking-map-panel" aria-label="اختيار الموقع من الخريطة">
           <div className="booking-map-toolbar">
