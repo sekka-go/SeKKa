@@ -383,6 +383,28 @@ Deno.serve(async (req: Request) => {
       });
       return reply({ prices }, 200, origin);
     }
+    if (req.method === "GET" && path === "/rider/saved-places") {
+      const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      const { data, error: placesError } = await db.from("rider_saved_places").select("place_type,label,lat,lng").eq("user_id", user!.id).order("place_type");
+      if (placesError) throw placesError;
+      return reply({ places: data ?? [] }, 200, origin);
+    }
+    const savedPlaceAction = path.match(/^\\/rider\\/saved-places\\/(home|work)$/);
+    if (savedPlaceAction && (req.method === "PUT" || req.method === "DELETE")) {
+      const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      const placeType = savedPlaceAction[1] as "home" | "work";
+      if (req.method === "DELETE") {
+        const { error: deleteError } = await db.from("rider_saved_places").delete().eq("user_id", user!.id).eq("place_type", placeType);
+        if (deleteError) throw deleteError;
+        return reply({ success: true }, 200, origin);
+      }
+      const label = typeof body.label === "string" ? body.label.trim().slice(0, 240) : "";
+      const lat = body.lat, lng = body.lng;
+      if (!label || !validPoint(lat, lng) || !isGreaterCairoPoint(Number(lat), Number(lng))) return error("اختار عنوانًا صحيحًا داخل القاهرة الكبرى.", 400, origin);
+      const { data, error: saveError } = await db.from("rider_saved_places").upsert({ user_id: user!.id, place_type: placeType, label, lat: Number(lat), lng: Number(lng), updated_at: new Date().toISOString() }, { onConflict: "user_id,place_type" }).select("place_type,label,lat,lng").single();
+      if (saveError) throw saveError;
+      return reply({ place: data }, 200, origin);
+    }
     if (req.method === "POST" && path === "/locations/search") {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
       const query = clean(body.query) ? body.query.trim().replace(/\s+/g, " ") : "";
