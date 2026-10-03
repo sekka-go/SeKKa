@@ -16,10 +16,10 @@ export function GroupSummary({ view, categories, onClick }: { view: GroupView; c
   return <button className="surface group-summary" onClick={onClick}><div className="group-summary-top"><span className={`status-chip status-${group.status}`}>{statusLabel(group.status)}</span><span className="group-number">مجموعة #{group.id}</span></div><div className="group-summary-main"><span className="route-badge">↗</span><div><strong>{categoryName(category)}</strong><small>{group.package_type === "weekly" ? "باقة أسبوعية" : group.package_type === "monthly" ? "باقة شهرية" : "مشوار يومي"} · {view.members.length} ركاب</small></div><span className="group-price">{money(group.seat_day_fare)}</span></div><div className="seat-progress"><span>{seats} مقاعد محجوزة</span><div><i style={{ width: `${category ? Math.min(100, seats / category.seats * 100) : 0}%` }} /></div><small>{category?.seats ?? "—"} إجمالي المقاعد</small></div><div className="group-summary-foot"><span>⌖ {group.route_distance_km ?? "—"} كم</span><span>◷ {group.morning_departure} ذهاب · {group.return_departure} عودة</span><span>التفاصيل ←</span></div></button>;
 }
 
-export function GroupDetail({ view, categories, busy, action, notify, onNew, onEdit, currentUserId }: {
+export function GroupDetail({ view, categories, busy, action, notify, onEdit, currentUserId }: {
   view: GroupView; categories: Category[]; busy: boolean;
   action: (groupId: number, action: string, body?: unknown) => Promise<void>; notify: (text: string, tone?: Toast["tone"]) => void;
-  onNew: () => void; onEdit: () => void; currentUserId: number;
+  onEdit: () => void; currentUserId: number;
 }) {
   const { group, members, trips } = view;
   const category = categories.find((item) => item.id === group.category_id);
@@ -35,10 +35,8 @@ export function GroupDetail({ view, categories, busy, action, notify, onNew, onE
   const firstFutureDate = trips.find((trip) => trip.service_date >= todayInCairo() && trip.status !== "completed")?.service_date;
 
   return <div className="group-detail-layout"><div className="group-detail-main">
-    <section className="surface detail-hero"><div className="detail-hero-top"><span className={`status-chip status-${group.status}`}>{statusLabel(group.status)}</span><span className="group-number">رقم المجموعة #{group.id}</span><button className="icon-button" title="نسخ رقم المجموعة" onClick={() => { void navigator.clipboard?.writeText(String(group.id)); notify("اتنسخ رقم المجموعة.", "success"); }}>⧉</button></div><h2>{categoryName(category)}</h2><p>{group.package_type === "monthly" ? "باقة شهرية" : group.package_type === "weekly" ? "باقة أسبوعية" : "مشوار يومي"} · {dates.length} أيام خدمة · ذهاب وعودة</p><div className="detail-stats"><div><small>سعر المقعد لليوم</small><strong>{money(group.seat_day_fare)}</strong></div><div><small>الطريق</small><strong>{group.route_distance_km ?? "—"} كم</strong></div><div><small>الركاب</small><strong>{activeMembers.length} / {category?.seats ?? "—"}</strong></div></div>
+    <section className="surface detail-hero"><div className="detail-hero-top"><span className="group-number">مجموعة #{group.id}</span></div><h2>{categoryName(category)}</h2>
       {group.status === "price_review" && <div className="warning-panel"><span>!</span><div><strong>في تعديل على السعر</strong><p>راجع السعر الجديد واختار تكمل أو تخرج من المجموعة بدون غرامة.</p></div><div className="warning-actions"><button className="button button-primary button-small" disabled={busy} onClick={() => action(group.id, "price-decision", { action: "accept" })}>موافق</button><button className="button button-quiet button-small" disabled={busy} onClick={() => action(group.id, "price-decision", { action: "decline" })}>رفض</button></div></div>}
-      {group.status === "waiting" && <div className="info-note"><strong>المجموعة لسه بتكتمل.</strong> المجموعة بتكمل عدد ركاب الفئة قبل ما يبدأ تفعيلها. بعد ٧٢ ساعة هيوصلك إشعار بالاختيارات المتاحة.</div>}
-      {group.status === "needs_captain" && <div className="info-note"><strong>اكتمل عدد الركاب.</strong> بندور على كابتن قريب للمسار، وهيوصلك تحديث أول ما يتحدد.</div>}
 
     </section>
     <details className="trip-extra-details"><summary>تفاصيل المشوار · المسار والركاب والمواعيد</summary>
@@ -46,7 +44,7 @@ export function GroupDetail({ view, categories, busy, action, notify, onNew, onE
     <section className="surface detail-section"><div className="section-title-row"><div><h3>الركاب والمقاعد</h3><p>{seats} مقاعد من {category?.seats ?? "—"} محجوزة</p></div><span className="section-count">{activeMembers.length}</span></div><div className="rider-list">{members.map((member, index) => <div key={member.id} className={`rider-row ${member.status !== "active" ? "rider-muted" : ""}`}><span className="rider-sequence">{String(index + 1).padStart(2, "0")}</span><div><strong>{index === 0 ? "أنت" : `راكب ${index + 1}`}</strong><small>{member.seats_reserved} مقعد · {member.status === "active" ? "مؤكد" : member.status === "awaiting_confirmation" ? "بانتظار التأكيد" : "غادر المجموعة"}</small></div><span className="rider-state">{member.price_decision === "pending" && group.status === "price_review" ? "مطلوب ردك" : "●"}</span></div>)}</div></section>
     <section className="surface detail-section"><div className="section-title-row"><div><h3>أيام الخدمة</h3><p>الوقت المحلي للقاهرة</p></div><span className="section-count">{dates.length}</span></div><div className="service-date-list">{dates.map((date) => <div key={date} className="service-date-row"><span className="calendar-badge">{new Date(`${date}T12:00:00Z`).getUTCDate()}</span><div><strong>{formatDate(date)}</strong><small>{group.morning_departure} ذهاب · {group.return_departure} عودة</small></div><span className="date-price">{money(group.seat_day_fare)}</span></div>)}</div></section>
     </details>
-  </div><aside className="group-detail-side"><section className="surface action-card"><h3>إدارة المشوار</h3><button className="button button-outline button-wide" onClick={() => { void navigator.clipboard?.writeText(String(group.id)); notify("اتنسخ رقم المجموعة.", "success"); }}>⧉ نسخ رقم المجموعة</button>
+  </div><aside className="group-detail-side"><section className="surface action-card"><h3>إدارة المشوار</h3>
       {group.status === "waiting" && category && seats < category.seats && activeMembers.length < category.seats && <button className="button button-secondary button-wide" disabled={busy} onClick={() => action(group.id, "complete-seats")}>احجز باقي المقاعد</button>}
       {firstFutureDate && ["active", "minimum_met", "needs_captain"].includes(group.status) && <button className="button button-quiet button-wide" disabled={busy} onClick={() => setConfirmCancellation({ title: "إلغاء يوم الخدمة؟", message: `سيتم إلغاء رحلة ${formatDate(firstFutureDate)} وفق سياسة الإلغاء.`, action: `days/${firstFutureDate}/cancel` })}>إلغاء يوم الخدمة</button>}
       <div className="group-management-actions">
@@ -61,7 +59,6 @@ export function GroupDetail({ view, categories, busy, action, notify, onNew, onE
         </section>
       </div>}
       <details className="surface upcoming-card"><summary>الرحلات القادمة · {trips.length}</summary>{trips.slice(0, 6).map((trip) => <div className="upcoming-row" key={trip.id}><span className={`trip-arrow ${trip.direction}`}>{trip.direction === "outbound" ? "↗" : "↙"}</span><div><strong>{formatDate(trip.service_date)}</strong><small>{trip.direction === "outbound" ? "ذهاب" : "عودة"} · {trip.departure_at.slice(11, 16)}</small></div><span className={`tiny-status status-${trip.status}`}>{statusLabel(trip.status)}</span></div>)}</details>
-      <button className="button button-primary button-wide" onClick={onNew}>＋ ابدأ مجموعة جديدة</button>
     </aside></div>;
 }
 
