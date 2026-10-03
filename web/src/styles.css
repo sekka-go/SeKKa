@@ -861,6 +861,15 @@ button { line-height: 1.45; }
 .route-preferences-card .location-search-dropoff .location-device-pin { color: #15302d; background: var(--cyan); }
 .route-preferences-card .location-search-dropoff .location-map-pin { color: var(--cyan); background: rgba(158,232,230,.12); }
 .route-preferences-card .location-search-form input { width: 100%; min-width: 0; min-height: 2.65rem; padding: .55rem .7rem; }
+.route-preferences-card .location-search-form input,
+.route-preferences-card .commuter-preferences-times input { color: var(--ink); color-scheme: dark; background: #171309; border: 1px solid var(--line); border-radius: .65rem; font: inherit; }
+.route-preferences-card .location-search-form input:focus { border-color: var(--yellow); outline: 2px solid rgba(255,210,31,.15); }
+.route-preferences-card .location-search-dropoff .location-search-form input:focus { border-color: var(--cyan); outline-color: rgba(158,232,230,.15); }
+.route-preferences-card .location-search-form input:disabled { color: var(--ink); background: rgba(0,0,0,.16); opacity: 1; cursor: default; }
+.route-preferences-card .location-point-status { display: grid; flex: 0 0 1.15rem; place-items: center; width: 1.15rem; height: 1.15rem; color: var(--yellow); background: rgba(255,210,31,.09); border: 1px solid rgba(255,210,31,.35); border-radius: 50%; font-size: .68rem; font-weight: 800; }
+.route-preferences-card .location-point-status.is-selected { color: #15302d; background: var(--cyan); border-color: var(--cyan); }
+.route-preferences-card .location-edit-button { flex: 0 0 auto; padding: .35rem .5rem; color: var(--cyan); background: rgba(158,232,230,.08); border: 1px solid rgba(158,232,230,.22); border-radius: .55rem; font-size: .75rem; }
+.route-preferences-card .location-device-pin:disabled { opacity: .65; cursor: wait; }
 .route-preferences-card .location-search-results { display: grid; gap: .35rem; padding: 0; margin: .55rem 0 0; list-style: none; }
 .route-preferences-card .location-search-results li { min-width: 0; }
 .route-preferences-card .location-search-results .location-search-saved-heading { padding: .35rem .55rem .1rem; color: var(--yellow); font-size: .72rem; font-weight: 700; }
@@ -876,6 +885,22 @@ button { line-height: 1.45; }
 .route-preferences-card .location-search-results button:hover { border-color: var(--yellow); }
 .route-preferences-card .location-search-results button span { flex: 0 0 auto; color: var(--yellow); font-size: .75rem; }
 .route-preferences-card .location-search-message { margin: .5rem .1rem 0; color: var(--muted); font-size: .8rem; }
+.route-preferences-card .commuter-preferences-schedule { display: grid; gap: .8rem; min-width: 0; margin: .85rem 0 0; padding: .85rem; border: 1px solid var(--line); border-radius: .85rem; }
+.route-preferences-card .commuter-preferences-schedule legend { padding-inline: .4rem; color: var(--ink); font-weight: 700; }
+.route-preferences-card .commuter-preferences-schedule legend small,
+.route-preferences-card .commuter-preferences-frequent > div small { display: block; margin-top: .18rem; color: var(--muted); font-size: .78rem; font-weight: 400; }
+.route-preferences-card .commuter-preferences-days { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: .35rem; }
+.route-preferences-card .commuter-preferences-days label { display: grid; justify-items: center; gap: .3rem; padding: .45rem .15rem; color: var(--muted); border: 1px solid var(--line); border-radius: .6rem; font-size: .72rem; cursor: pointer; }
+.route-preferences-card .commuter-preferences-days label.selected { color: var(--yellow); border-color: rgba(255,210,31,.6); background: rgba(255,210,31,.06); }
+.route-preferences-card .commuter-preferences-days input { accent-color: var(--yellow); }
+.route-preferences-card .commuter-preferences-times { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .7rem; }
+.route-preferences-card .commuter-preferences-times label { display: grid; gap: .35rem; color: var(--muted); font-size: .82rem; }
+.route-preferences-card .commuter-preferences-times input { min-width: 0; padding: .65rem; text-align: center; }
+.route-preferences-card .commuter-preferences-frequent { display: grid; gap: .55rem; margin-top: .8rem; }
+.route-preferences-card .commuter-preferences-frequent .location-search-field { padding: .65rem; background: rgba(0,0,0,.12); border: 1px solid var(--line); border-radius: .8rem; }
+.route-preferences-card .commuter-preferences-place-list { display: flex; flex-wrap: wrap; gap: .4rem; }
+.route-preferences-card .commuter-preferences-place-list > span { display: inline-flex; align-items: center; gap: .35rem; max-width: 100%; padding: .35rem .55rem; color: var(--ink); background: rgba(158,232,230,.07); border: 1px solid rgba(158,232,230,.22); border-radius: 999px; font-size: .78rem; }
+.route-preferences-card .commuter-preferences-place-list button { color: var(--muted); background: transparent; border: 0; font-size: 1rem; }
 .route-preferences-footer { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding-top: .7rem; border-top: 1px solid var(--line); }
 .route-preferences-footer small { color: var(--muted); line-height: 1.55; }
 .route-onboarding-content > .route-preferences-card { max-width: 54rem; }
@@ -884,6 +909,10 @@ button { line-height: 1.45; }
   .route-preferences-fields { grid-template-columns: minmax(0, 1fr); }
   .route-preferences-footer { align-items: stretch; flex-direction: column; }
   .workspace .location-search-results .location-search-saved-option { align-items: center; flex-direction: row; }
+}
+@media (max-width: 560px) {
+  .route-preferences-card .commuter-preferences-days { grid-template-columns: repeat(4, minmax(0,1fr)); }
+  .route-preferences-card .commuter-preferences-times { grid-template-columns: 1fr; }
 }
 
 

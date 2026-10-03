@@ -233,7 +233,8 @@ async function reverseGreaterCairo(lat: number, lng: number): Promise<LocationAd
   reverseUrl.searchParams.set("lat", String(lat));
   reverseUrl.searchParams.set("lon", String(lng));
   reverseUrl.searchParams.set("radius", "0.5");
-  reverseUrl.searchParams.set("lang", "ar");
+  // Photon rejects `lang=ar`; fetchPhotonFeatures negotiates Arabic through
+  // the Accept-Language header, so keep the reverse request compatible too.
   reverseUrl.searchParams.set("limit", "1");
   try {
     const features = await fetchPhotonFeatures(reverseUrl);
