@@ -351,7 +351,7 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
           <LocationSearchField kind="pickup" title="نقطة الركوب" value={pickupSearch} token={session.token} savedPlaces={savedPlaces} onChange={(value) => { mapAddressRequests.current.pickup++; editAddressRequest.current++; setPickupSearch(value); setPickup(null); }} onSelect={(point) => { mapAddressRequests.current.pickup++; setPickup(point); setPickupSearch(point.label ?? ""); }} onChooseMap={() => chooseMap("pickup")} onFocus={() => undefined} pointSelected={hasSelectedPoint(pickup)} />
           <LocationSearchField kind="dropoff" title="نقطة النزول" value={dropoffSearch} token={session.token} savedPlaces={savedPlaces} onChange={(value) => { mapAddressRequests.current.dropoff++; editAddressRequest.current++; setDropoffSearch(value); setDropoff(null); }} onSelect={(point) => { mapAddressRequests.current.dropoff++; setDropoff(point); setDropoffSearch(point.label ?? ""); }} onChooseMap={() => chooseMap("dropoff")} onFocus={() => undefined} pointSelected={hasSelectedPoint(dropoff)} />
         </div>
-        <small className="location-search-attribution">نتائج الأماكن من OpenStreetMap</small>
+        <small className="location-search-attribution">بيانات الأماكن © OpenStreetMap contributors</small>
         {mapOpen && <section className="booking-map-panel" aria-label="اختيار الموقع من الخريطة">
           <div className="booking-map-toolbar">
             <p className="map-instruction">انقر أو اسحب الدبوس لتحديد {pickMode === "pickup" ? "نقطة الركوب" : "نقطة النزول"} · القاهرة الكبرى فقط</p>

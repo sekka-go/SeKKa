@@ -839,6 +839,9 @@ button { line-height: 1.45; }
 .workspace .location-search-results .location-suggestion-copy small { color: var(--muted); font-size: .75rem; }
 .workspace .location-search-results button .location-suggestion-action { flex: 0 0 auto; color: var(--yellow); font-size: .75rem; }
 .workspace .location-search-dropoff .location-search-results button .location-suggestion-action { color: var(--cyan); }
+.workspace .location-search-precise,.route-preferences-card .location-search-precise { display: block; width: 100%; padding: .55rem .7rem; color: var(--muted); font-size: .78rem; text-align: center; background: transparent; border: 1px dashed var(--line); border-radius: .65rem; }
+.workspace .location-search-precise:hover,.route-preferences-card .location-search-precise:hover { color: var(--ink); border-color: var(--yellow); }
+.workspace .location-search-precise:disabled,.route-preferences-card .location-search-precise:disabled { opacity: .65; cursor: wait; }
 .workspace .booking-map { scroll-margin-block: 1rem; }
 @media (max-width: 560px) {
   .workspace .location-search-field { padding: .65rem; }
@@ -869,6 +872,7 @@ button { line-height: 1.45; }
 .route-preferences-card .location-suggestion-copy small { color: var(--muted); font-size: .75rem; }
 .route-preferences-card .location-search-results button .location-suggestion-action { color: var(--yellow); font-size: .75rem; }
 .route-preferences-card .location-search-dropoff .location-search-results button .location-suggestion-action { color: var(--cyan); }
+.route-preferences-card .location-search-precise { margin-top: .45rem; }
 .route-preferences-card .location-search-results button:hover { border-color: var(--yellow); }
 .route-preferences-card .location-search-results button span { flex: 0 0 auto; color: var(--yellow); font-size: .75rem; }
 .route-preferences-card .location-search-message { margin: .5rem .1rem 0; color: var(--muted); font-size: .8rem; }

@@ -143,6 +143,35 @@ export default function LocationSearchField({
     setEditing(false);
     setError("");
   };
+  const searchPrecisely = () => {
+    const query = value.trim().replace(/\s+/g, " ");
+    if (query.length < 3 || /^-?\d{1,3}(?:\.\d+)?\s*[,،]\s*-?\d{1,3}(?:\.\d+)?$/.test(query)) return;
+    const currentRequest = ++requestId.current;
+    setLoading(true);
+    setError("");
+    setSearchOpen(true);
+    setShowSavedPlaces(false);
+    void api<{ suggestions: LocationSuggestion[] }>("/locations/search/precise", {
+      method: "POST",
+      token,
+      body: { query },
+    }).then((result) => {
+      if (currentRequest !== requestId.current) return;
+      const seen = new Set<string>();
+      const unique = result.suggestions.filter((item) => {
+        const key = item.label.normalize("NFKC").trim().replace(/[\s،,]+/g, " ").toLocaleLowerCase("ar-EG");
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      setSuggestions(unique);
+      setError(unique.length ? "" : "ملقيناش عنوانًا أدق. اختار من الاقتراحات القريبة أو حدّد المكان على الخريطة.");
+    }).catch((cause) => {
+      if (currentRequest === requestId.current) setError(cause instanceof Error ? cause.message : "تعذر البحث الدقيق الآن. اختار من الاقتراحات الظاهرة.");
+    }).finally(() => {
+      if (currentRequest === requestId.current) setLoading(false);
+    });
+  };
   const selectSavedPlace = (place: SavedPlace) => {
     requestId.current++;
     skipNextSearch.current = true;
@@ -193,6 +222,7 @@ export default function LocationSearchField({
           if (event.key === "Enter") {
             event.preventDefault();
             event.stopPropagation();
+            searchPrecisely();
           } else if (event.key === "Escape") {
             setSearchOpen(false);
             setShowSavedPlaces(false);
@@ -214,5 +244,8 @@ export default function LocationSearchField({
         <button type="button" className="location-suggestion-option" onClick={() => selectSuggestion(item)}><span className="location-suggestion-copy"><strong>{item.primary || addressParts(item.label).primary}</strong>{item.secondary && <small>{item.secondary}</small>}</span><span className="location-suggestion-action">اختيار</span></button>
       </li>)}
     </ul>}
+    {searchOpen && value.trim().length >= 3 && <button type="button" className="location-search-precise" onMouseDown={(event) => event.preventDefault()} onClick={searchPrecisely} disabled={loading}>
+      {loading ? "جارٍ البحث الدقيق…" : "بحث دقيق بالعنوان"}
+    </button>}
   </div>;
 }

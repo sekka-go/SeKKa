@@ -42,6 +42,29 @@ function isGreaterCairoPoint(lat: number, lng: number) {
 }
 type PhotonProperties = Record<string, unknown>;
 type LocationAddress = { label: string; primary: string; secondary: string };
+type NominatimResult = {
+  name?: string;
+  display_name?: string;
+  lat?: string;
+  lon?: string;
+  address?: Record<string, unknown>;
+  namedetails?: Record<string, unknown>;
+};
+const NOMINATIM_VIEWBOX = "30.8,30.3,31.6,29.7";
+const geocodeCache = new Map<string, { expiresAt: number; value: LocationAddress | LocationSuggestion[] }>();
+type LocationSuggestion = LocationAddress & { lat: number; lng: number };
+function cacheRead<T extends LocationAddress | LocationSuggestion[]>(key: string): T | null {
+  const hit = geocodeCache.get(key);
+  if (!hit || hit.expiresAt <= Date.now()) { geocodeCache.delete(key); return null; }
+  return hit.value as T;
+}
+function cacheWrite<T extends LocationAddress | LocationSuggestion[]>(key: string, value: T) {
+  if (geocodeCache.size > 1_000) {
+    for (const [oldKey, item] of geocodeCache) if (item.expiresAt <= Date.now()) geocodeCache.delete(oldKey);
+    while (geocodeCache.size > 1_000) geocodeCache.delete(geocodeCache.keys().next().value!);
+  }
+  geocodeCache.set(key, { expiresAt: Date.now() + 86_400_000, value });
+}
 function formatPhotonAddress(properties: PhotonProperties): LocationAddress {
   const text = (...keys: string[]) => keys.map((key) => properties[key]).find((value): value is string => clean(value))?.trim() ?? "";
   const unique = (values: string[]) => values.filter((value, index) => value && values.findIndex((candidate) => candidate.toLocaleLowerCase("ar-EG") === value.toLocaleLowerCase("ar-EG")) === index);
@@ -54,6 +77,26 @@ function formatPhotonAddress(properties: PhotonProperties): LocationAddress {
   const primary = name && !nameIsLocality ? name : streetAddress || name || localities[0] || "موقع محدد على الخريطة";
   const secondary = unique([...(name && primary === name && streetAddress !== primary ? [streetAddress] : []), ...localities])
     .filter((part) => part.toLocaleLowerCase("ar-EG") !== primary.toLocaleLowerCase("ar-EG"))
+    .join("، ").slice(0, 200);
+  return { primary: primary.slice(0, 120), secondary, label: [primary, secondary].filter(Boolean).join("، ").slice(0, 240) };
+}
+function formatNominatimAddress(result: NominatimResult): LocationAddress {
+  const address = result.address ?? {};
+  const names = result.namedetails ?? {};
+  const get = (...keys: string[]) => keys.map((key) => address[key]).find((value): value is string => clean(value))?.trim() ?? "";
+  const taggedName = [names["name:ar"], names.name, result.name].find((value): value is string => clean(value))?.trim() ?? "";
+  const addressName = get("amenity", "shop", "office", "tourism", "leisure", "historic", "building");
+  const placeName = [taggedName, addressName && !["yes", "residential", "commercial", "apartments"].includes(addressName.toLocaleLowerCase("ar-EG")) ? addressName : ""]
+    .find((value): value is string => clean(value))?.trim() ?? "";
+  const road = get("road", "pedestrian", "footway", "residential", "path");
+  const house = get("house_number");
+  const street = [road, house].filter(Boolean).join(" ");
+  const localities = ["neighbourhood", "neighborhood", "quarter", "suburb", "city_district", "district", "borough", "city", "town", "village", "municipality", "state"]
+    .map((key) => get(key)).filter((value, index, list) => value && list.findIndex((part) => part.toLocaleLowerCase("ar-EG") === value.toLocaleLowerCase("ar-EG")) === index);
+  const displayFocus = result.display_name?.split(",")[0]?.trim() ?? "";
+  const primary = placeName || street || displayFocus || localities[0] || "موقع محدد على الخريطة";
+  const secondary = [...(street && street !== primary ? [street] : []), ...localities]
+    .filter((value, index, list) => value.toLocaleLowerCase("ar-EG") !== primary.toLocaleLowerCase("ar-EG") && list.findIndex((part) => part.toLocaleLowerCase("ar-EG") === value.toLocaleLowerCase("ar-EG")) === index)
     .join("، ").slice(0, 200);
   return { primary: primary.slice(0, 120), secondary, label: [primary, secondary].filter(Boolean).join("، ").slice(0, 240) };
 }
@@ -82,6 +125,52 @@ async function fetchPhotonFeatures(url: URL) {
     if (cause instanceof ApiFailure) throw cause;
     throw new ApiFailure("تعذر البحث عن العنوان الآن. حاول مرة أخرى.", 503);
   } finally { clearTimeout(timeout); }
+}
+function nominatimBaseUrl() {
+  const configured = Deno.env.get("NOMINATIM_API_BASE_URL") ?? "https://nominatim.openstreetmap.org";
+  let base: URL;
+  try { base = new URL(configured); } catch { throw new ApiFailure("إعدادات البحث عن العناوين غير صالحة.", 503); }
+  if (base.protocol !== "https:" || base.username || base.password || base.search || base.hash) throw new ApiFailure("إعدادات البحث عن العناوين غير صالحة.", 503);
+  return base.toString().replace(/\/$/, "");
+}
+async function fetchNominatim<T>(url: URL): Promise<T> {
+  const response = await fetch(url, {
+    headers: { "User-Agent": "SeKKa-Ride-App/1.0 (+https://sekka-go.pages.dev/)", "Accept-Language": "ar" },
+    signal: AbortSignal.timeout(7_000),
+  }).catch(() => { throw new ApiFailure("خدمة العناوين غير متاحة مؤقتًا.", 503); });
+  if (!response.ok) throw new ApiFailure("خدمة العناوين غير متاحة مؤقتًا.", 503);
+  const payload = await response.json().catch(() => null);
+  if (!payload || typeof payload !== "object") throw new ApiFailure("خدمة العناوين أعادت نتائج غير صالحة.", 502);
+  return payload as T;
+}
+async function searchNominatimGreaterCairo(query: string): Promise<LocationSuggestion[]> {
+  const cacheKey = `nominatim-search:${query.toLocaleLowerCase("ar-EG")}`;
+  const cached = cacheRead<LocationSuggestion[]>(cacheKey);
+  if (cached) return cached;
+  // The public Nominatim service forbids autocomplete. This route is called only
+  // after an explicit submit, and the shared limiter stays below its 1 req/s cap.
+  if (!await takeLimit("nominatim-global", 1, 2)) throw new ApiFailure("خدمة البحث الدقيق مشغولة حاليًا. تقدر تختار من اقتراحات البحث السريع.", 429);
+  const searchUrl = new URL(`${nominatimBaseUrl()}/search`);
+  searchUrl.searchParams.set("q", query);
+  searchUrl.searchParams.set("format", "jsonv2");
+  searchUrl.searchParams.set("addressdetails", "1");
+  searchUrl.searchParams.set("namedetails", "1");
+  searchUrl.searchParams.set("accept-language", "ar");
+  searchUrl.searchParams.set("countrycodes", "eg");
+  searchUrl.searchParams.set("viewbox", NOMINATIM_VIEWBOX);
+  searchUrl.searchParams.set("bounded", "1");
+  searchUrl.searchParams.set("limit", "8");
+  const bounds = await fetchNominatim<NominatimResult[]>(searchUrl);
+  if (!Array.isArray(bounds)) throw new ApiFailure("خدمة العناوين أعادت نتائج غير صالحة.", 502);
+  const suggestions = bounds.flatMap((item) => {
+    const lat = Number(item.lat), lng = Number(item.lon);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || !isGreaterCairoPoint(lat, lng)) return [];
+    const address = formatNominatimAddress(item);
+    return [{ ...address, lat, lng }];
+  });
+  const unique = [...new Map(suggestions.map((item) => [item.label.toLocaleLowerCase("ar-EG"), item])).values()];
+  cacheWrite(cacheKey, unique);
+  return unique;
 }
 async function searchGreaterCairo(query: string) {
   const searchUrl = new URL(`${photonBaseUrl()}/api`);
@@ -116,15 +205,45 @@ async function searchGreaterCairo(query: string) {
   return [...unique.values()].slice(0, 6).map(({ priority: _priority, ...suggestion }) => suggestion);
 }
 async function reverseGreaterCairo(lat: number, lng: number): Promise<LocationAddress> {
+  const cacheKey = `reverse:${lat.toFixed(5)}:${lng.toFixed(5)}`;
+  const cached = cacheRead<LocationAddress>(cacheKey);
+  if (cached) return cached;
+  let nominatimError: unknown;
+  if (await takeLimit("nominatim-global", 1, 2)) {
+    const reverseUrl = new URL(`${nominatimBaseUrl()}/reverse`);
+    reverseUrl.searchParams.set("format", "jsonv2");
+    reverseUrl.searchParams.set("lat", String(lat));
+    reverseUrl.searchParams.set("lon", String(lng));
+    reverseUrl.searchParams.set("addressdetails", "1");
+    reverseUrl.searchParams.set("namedetails", "1");
+    reverseUrl.searchParams.set("zoom", "18");
+    reverseUrl.searchParams.set("accept-language", "ar");
+    try {
+      const result = await fetchNominatim<NominatimResult>(reverseUrl);
+      if (result && typeof result === "object") {
+        const address = formatNominatimAddress(result);
+        cacheWrite(cacheKey, address);
+        return address;
+      }
+    } catch (cause) { nominatimError = cause; }
+  }
+  // Photon remains the responsive OSM-based fallback when Nominatim is busy or sparse.
   const reverseUrl = new URL(`${photonBaseUrl()}/reverse`);
   reverseUrl.searchParams.set("lat", String(lat));
   reverseUrl.searchParams.set("lon", String(lng));
   reverseUrl.searchParams.set("radius", "0.5");
   reverseUrl.searchParams.set("lang", "ar");
   reverseUrl.searchParams.set("limit", "1");
-  const features = await fetchPhotonFeatures(reverseUrl);
-  const properties = features[0]?.properties;
-  return properties ? formatPhotonAddress(properties) : { primary: "موقع داخل القاهرة الكبرى", secondary: "", label: "موقع داخل القاهرة الكبرى" };
+  try {
+    const features = await fetchPhotonFeatures(reverseUrl);
+    const properties = features[0]?.properties;
+    const address = properties ? formatPhotonAddress(properties) : { primary: "موقع داخل القاهرة الكبرى", secondary: "", label: "موقع داخل القاهرة الكبرى" };
+    cacheWrite(cacheKey, address);
+    return address;
+  } catch (cause) {
+    if (nominatimError instanceof ApiFailure) throw nominatimError;
+    throw cause;
+  }
 }
 function hex(bytes: Uint8Array) { return [...bytes].map((v) => v.toString(16).padStart(2, "0")).join(""); }
 function bytesFromHex(value: string) { return new Uint8Array(value.match(/.{2}/g)?.map((b) => Number.parseInt(b, 16)) ?? []); }
@@ -404,7 +523,7 @@ Deno.serve(async (req: Request) => {
     if (req.method === "GET" && path === "/config") {
       const [vehicles, categories] = await Promise.all([db.from("vehicle_types").select("*").order("id"), db.from("service_categories").select("*").order("id")]);
       if (vehicles.error || categories.error) return error("حصل خطأ ونحن بنجيب الإعدادات، جرّب تاني بعد شوية.", 500, origin);
-      return reply({ vehicle_types: vehicles.data, service_categories: categories.data, maps: { address_search_enabled: true, provider: "photon", routing_provider: "osrm", service_area: "greater-cairo" } }, 200, origin);
+      return reply({ vehicle_types: vehicles.data, service_categories: categories.data, maps: { address_search_enabled: true, provider: "photon+nominatim", routing_provider: "osrm", service_area: "greater-cairo" } }, 200, origin);
     }
     if (req.method === "GET" && path === "/pool/categories") {
       const { data, error: e } = await db.from("pool_categories").select("id,speed_tier,has_ac,seats,base_fee,rate_per_km,rate_per_min").order("id");
@@ -501,6 +620,13 @@ Deno.serve(async (req: Request) => {
       if (query.length < 3 || query.length > 120) return error("اكتب من ٣ إلى ١٢٠ حرفًا للبحث عن العنوان.", 400, origin);
       if (!await takeLimit(`location-search:user:${user!.id}`, 20, 300)) return error("استخدم البحث بعد دقائق؛ عدد المحاولات كبير.", 429, origin);
       return reply({ suggestions: await searchGreaterCairo(query) }, 200, origin);
+    }
+    if (req.method === "POST" && path === "/locations/search/precise") {
+      const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      const query = clean(body.query) ? body.query.trim().replace(/\s+/g, " ") : "";
+      if (query.length < 3 || query.length > 120) return error("اكتب من ٣ إلى ١٢٠ حرفًا للبحث عن العنوان.", 400, origin);
+      if (!await takeLimit(`location-precise:user:${user!.id}`, 10, 300)) return error("استخدم البحث الدقيق بعد دقائق؛ عدد المحاولات كبير.", 429, origin);
+      return reply({ suggestions: await searchNominatimGreaterCairo(query) }, 200, origin);
     }
     if (req.method === "POST" && path === "/locations/reverse") {
       const gate = await requireRole(user, ["rider", "captain"], origin); if (gate) return gate;
