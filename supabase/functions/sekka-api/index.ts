@@ -270,9 +270,8 @@ async function quote(members: Json[], category: Json) {
   return { out, back, total: roundMoney(outFare + backFare), seatDayFare: roundMoney((outFare + backFare) / Number(category.seats)), geometry: { outbound: out.geometry, outbound_segments: out.segments, return: back.geometry, return_segments: back.segments, provider: out.provider } };
 }
 async function activateGroup(group: Json, members: Json[], category: Json, quoteData: Awaited<ReturnType<typeof quote>>) {
-  const min = category.speed_tier === "faster" ? 2 : 3;
   const occupiedSeats = members.reduce((sum, m) => sum + Number(m.seats_reserved), 0);
-  if (members.length < min && occupiedSeats < Number(category.seats)) return;
+  if (occupiedSeats < Number(category.seats)) return;
   if (members.some((m) => m.price_decision !== "accepted")) return;
   const dates = Array.isArray(group.service_dates) ? group.service_dates as string[] : JSON.parse(String(group.service_dates));
   const type = String(group.package_type), discount = discountRate(type);
@@ -293,7 +292,7 @@ async function activateGroup(group: Json, members: Json[], category: Json, quote
     }
   }
   await db!.from("pool_groups").update({ status: "active", seat_day_fare: quoteData.seatDayFare, route_geometry: quoteData.geometry, route_distance_km: quoteData.out.distanceKm, route_duration_min: quoteData.out.durationMin, updated_at: new Date().toISOString() }).eq("id", group.id);
-  for (const m of members) { const riderUserId = Number(m.rider_user_id); if (!Number.isSafeInteger(riderUserId)) throw new Error("invalid rider user ID"); await notifyUser(riderUserId, Number(group.id), `group-active-${group.id}`, { message: "اكتمل الحد الأدنى وبدأ تفعيل مسارك." }); }
+  for (const m of members) { const riderUserId = Number(m.rider_user_id); if (!Number.isSafeInteger(riderUserId)) throw new Error("invalid rider user ID"); await notifyUser(riderUserId, Number(group.id), `group-active-${group.id}`, { message: "اكتمل عدد ركاب الفئة وبدأ تفعيل مسارك." }); }
 }
 async function groupView(group: Json) {
   const { current_rider_id: _currentRiderId, ...publicGroup } = group;
@@ -640,9 +639,8 @@ Deno.serve(async (req: Request) => {
         await db.from("pool_members").update({ status: "cancelled", cancelled_at: new Date().toISOString() }).eq("id", member.id);
         const remaining = await getMembers(Number(group.id));
         const { data: category } = await db.from("pool_categories").select("*").eq("id", group.category_id).single();
-        const minimum = category.speed_tier === "faster" ? 2 : 3;
         const seats = remaining.reduce((s, m) => s + Number(m.seats_reserved), 0);
-        if (remaining.length < minimum && seats < Number(category.seats)) {
+        if (seats < Number(category.seats)) {
           await db.from("pool_groups").update({ status: "cancelled" }).eq("id", group.id);
         } else if (remaining.every((m) => m.price_decision === "accepted")) {
           const q = await quote(remaining, category);

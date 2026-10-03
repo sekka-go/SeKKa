@@ -185,14 +185,14 @@ export default function RiderWorkspace({ session, section, setSection, notificat
                 <b>{quote ? money(quote[packageType]) : priceLoading ? "…" : "—"}</b>
               </button>;
             })}</div>
-            <div className="tier-helper">{selectedCategory ? <><strong>{selectedCategory.speed_tier === "faster" ? "Faster" : "Saver"}</strong><span>الحد الأدنى {selectedCategory.speed_tier === "faster" ? "راكبان" : "٣ ركاب"} · {selectedCategory.seats} مقاعد · السعر للفرد شامل الباقة</span></> : "جاري تحميل الفئات"}</div>
+            <div className="tier-helper">{selectedCategory ? <><strong>{selectedCategory.speed_tier === "faster" ? "Faster" : "Saver"}</strong><span>اكتمال الفئة عند {selectedCategory.seats} ركاب · السعر للفرد شامل الباقة</span></> : "جاري تحميل الفئات"}</div>
           </section>
         </>}
         <button className="button button-primary button-wide" disabled={submitting || (bookingMode === "new" && Boolean(pickup && dropoff) && (!priceQuotes || priceLoading))}>{submitting ? "جاري الحفظ…" : bookingMode === "new" ? "تأكيد المشوار" : "الانضمام للمجموعة"}<span>←</span></button>
         {bookingMode === "new" && <p className="form-footnote">الأسعار تقديرية للفرد، والباقات الأسبوعية والشهرية تبدأ من التاريخ المحدد وتستثني الجمعة والسبت. مفيش دفع دلوقتي.</p>}
       </form>
     </section>
-    <aside className="booking-aside"><div className="surface soft-surface"><span className="aside-icon">✦</span><h3>مشوار مشترك، بسعر أعدل</h3><p>Faster يبدأ براكبين، وSaver بثلاثة. سعر الفرد يتحسب على عدد مقاعد الفئة بالكامل.</p><ul><li>ذهاب وعودة كل يوم خدمة</li><li>إلغاء اليوم مجانًا قبل ١٢ ساعة</li><li>خصم حتى ١٠٪ على الباقات</li></ul></div><div className="surface compact-note"><span>ⓘ</span><p>الموقع اللي بتختاره بيُستخدم لحساب الطريق ومشاركة تفاصيل المشوار مع مجموعتك.</p></div></aside>
+    <aside className="booking-aside"><div className="surface soft-surface"><span className="aside-icon">✦</span><h3>مشوار مشترك، بسعر أعدل</h3><p>المشوار يبدأ لما يكتمل عدد ركاب الفئة المختارة. سعر الفرد يتحسب على عدد مقاعدها بالكامل.</p><ul><li>ذهاب وعودة كل يوم خدمة</li><li>إلغاء اليوم مجانًا قبل ١٢ ساعة</li><li>خصم حتى ١٠٪ على الباقات</li></ul></div><div className="surface compact-note"><span>ⓘ</span><p>الموقع اللي بتختاره بيُستخدم لحساب الطريق ومشاركة تفاصيل المشوار مع مجموعتك.</p></div></aside>
   </div>;
 
   const allTrips = groups.flatMap((view) => view.trips.map((trip) => ({ ...trip, groupId: view.group.id, categoryId: view.group.category_id, fare: view.group.seat_day_fare })));
