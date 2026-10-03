@@ -111,13 +111,14 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
     ? [{ key: "home", label: "الرئيسية", icon: "⌂" }, { key: "booking", label: "مشوار جديد", icon: "＋" }, { key: "trips", label: "رحلاتي", icon: "↗" }, { key: "notifications", label: "الرسائل", icon: "✉" }, { key: "account", label: "الإعدادات", icon: "⚙" }]
     : session.user.role === "captain"
       ? [{ key: "offers", label: "العروض", icon: "⌖" }, { key: "captainTrips", label: "رحلاتي", icon: "↗" }, { key: "notifications", label: "الرسائل", icon: "✉" }, { key: "account", label: "الإعدادات", icon: "⚙" }]
-      : [{ key: "admin", label: "نظرة عامة", icon: "▦" }, { key: "notifications", label: "الرسائل", icon: "✉" }, { key: "account", label: "الإعدادات", icon: "⚙" }];
+      : [{ key: "admin", label: "نظرة عامة", icon: "▦" }, { key: "broadcast", label: "بث الرسائل", icon: "◉" }, { key: "notifications", label: "الرسائل", icon: "✉" }, { key: "account", label: "الإعدادات", icon: "⚙" }];
 
   const titles: Record<NavKey, [string, string]> = {
     home: ["صباح الخير", "طريقك اليوم يبدأ من هنا"], booking: ["خطط لمشوارك", "اختار أيامك ونقاطك، وإحنا نرتّب الباقي"],
     trips: ["رحلاتي", "كل مشاويرك ومجموعاتك في مكان واحد"], notifications: ["الإشعارات", "آخر التحديثات الخاصة بمشاويرك"],
     account: ["حسابي", "بياناتك وإعدادات الأمان"], offers: ["المسارات المتاحة", "اختار المسار المناسب لسيارتك ومواعيدك"],
     captainTrips: ["رحلاتي", "المسارات المقبولة وخطوات تنفيذها"], admin: ["لوحة الإدارة", "متابعة المنصة وتوثيق الكباتن"],
+    broadcast: ["رسالة عامة", "إرسال إعلان محفوظ إلى جميع مستخدمي سِكّة"],
   };
   const [title, subtitle] = titles[section];
   const unread = notifications.filter((item) => !item.read_at).length;

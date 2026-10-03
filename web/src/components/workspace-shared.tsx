@@ -72,9 +72,11 @@ export function EmptyState({ icon, title, text, action, onAction }: { icon: stri
 export function LoadingCard({ text }: { text: string }) { return <div className="surface loading-card"><span className="spinner" /><strong>{text}</strong></div>; }
 
 export function NotificationRow({ item }: { item: Notification }) {
-  const title = item.event_key.includes("price") ? "تحديث على سعر المجموعة" : item.event_key.includes("captain") ? "تحديث الكابتن" : item.event_key.includes("wait") ? "المجموعة ما زالت في الانتظار" : item.event_key.includes("invite") ? "دعوة لمجموعة مشوار" : "تحديث جديد على مشوارك";
+  const isBroadcast = item.event_key.startsWith("broadcast:");
+  const title = isBroadcast ? (typeof item.payload.title === "string" ? item.payload.title : "رسالة من إدارة سِكّة") : item.event_key.includes("price") ? "تحديث على سعر المجموعة" : item.event_key.includes("captain") ? "تحديث الكابتن" : item.event_key.includes("wait") ? "المجموعة ما زالت في الانتظار" : item.event_key.includes("invite") ? "دعوة لمجموعة مشوار" : "تحديث جديد على مشوارك";
+  const message = isBroadcast && typeof item.payload.message === "string" ? item.payload.message : "";
   const date = new Intl.DateTimeFormat("ar-EG", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(item.created_at));
-  return <div className={`notification-row ${item.read_at ? "read" : ""}`}><span className="notification-mark">{item.event_key.includes("price") ? "٪" : item.event_key.includes("captain") ? "⌖" : "↗"}</span><div><strong>{title}</strong><small>{item.group_id ? `مجموعة #${item.group_id} · ` : ""}{date}</small></div>{!item.read_at && <i />}</div>;
+  return <div className={`notification-row ${item.read_at ? "read" : ""}`}><span className="notification-mark">{isBroadcast ? "✉" : item.event_key.includes("price") ? "٪" : item.event_key.includes("captain") ? "⌖" : "↗"}</span><div><strong>{title}</strong>{message && <p className="notification-message">{message}</p>}<small>{item.group_id ? `مجموعة #${item.group_id} · ` : ""}{date}</small></div>{!item.read_at && <i />}</div>;
 }
 
 export function NotificationsPanel({ items, token, onRefresh, onPoolChanged, allowWaitActions = false, notify }: { items: Notification[]; token: string; onRefresh: () => Promise<void>; onPoolChanged?: () => Promise<void>; allowWaitActions?: boolean; notify: (text: string, tone?: Toast["tone"]) => void }) {

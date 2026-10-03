@@ -1243,6 +1243,28 @@ Deno.serve(async (req: Request) => {
     }
     const adminGate = path.startsWith("/admin/") ? await requireRole(user, ["admin"], origin) : null;
     if (adminGate) return adminGate;
+    if (req.method === "POST" && path === "/admin/notifications/broadcast") {
+      const title = clean(body.title) ? body.title.trim() : "";
+      const message = clean(body.message) ? body.message.trim() : "";
+      const requestId = clean(body.request_id) ? body.request_id.trim() : "";
+      if (!title || title.length > 100 || !message || message.length > 1000 || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId)) {
+        return error("اكتب عنوانًا ونصًا صحيحين للرسالة ثم حاول مرة أخرى.", 400, origin);
+      }
+      const requestKey = `broadcast:${requestId}`;
+      let offset = 0, recipientCount = 0;
+      while (true) {
+        const { data: recipients, error: recipientsError } = await db.from("users").select("id").order("id", { ascending: true }).range(offset, offset + 999);
+        if (recipientsError) throw recipientsError;
+        if (!recipients?.length) break;
+        const rows = recipients.map(({ id }) => ({ user_id: id, group_id: null, event_key: requestKey, payload: { title, message } }));
+        recipientCount += rows.length;
+        const { error: insertError } = await db.from("pool_notifications").upsert(rows, { onConflict: "user_id,event_key", ignoreDuplicates: true });
+        if (insertError) throw insertError;
+        offset += recipients.length;
+        if (recipients.length < 1000) break;
+      }
+      return reply({ success: true, notified_users: recipientCount, request_id: requestId }, 200, origin);
+    }
     if (req.method === "GET" && path === "/admin/settings/otp") {
       const { data, error: settingsError } = await db.from("app_feature_flags").select("enabled").eq("flag_name", "captain_phone_otp").maybeSingle();
       if (settingsError) throw settingsError;
