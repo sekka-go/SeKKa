@@ -786,6 +786,7 @@ button { line-height: 1.45; }
 .workspace .location-search-dropoff .point-dot { background: var(--cyan); }
 .workspace .location-map-pin, .workspace .location-search-submit { display: grid; flex: 0 0 2.35rem; place-items: center; width: 2.35rem; height: 2.35rem; color: #201b09; background: var(--yellow); border: 0; border-radius: .7rem; font-size: 1.25rem; font-weight: 700; }
 .workspace .location-map-pin { color: var(--cyan); background: rgba(158, 232, 230, .12); border: 1px solid rgba(158, 232, 230, .25); }
+.workspace .location-map-pin svg { width: 1.1rem; height: 1.1rem; }
 .workspace .location-search-dropoff .location-search-submit { color: #15302d; background: var(--cyan); }
 .workspace .location-search-form { display: flex; align-items: center; gap: .5rem; }
 .workspace .location-search-form input { flex: 1; min-width: 0; min-height: 2.65rem; padding: .55rem .75rem; }
@@ -813,3 +814,12 @@ button { line-height: 1.45; }
 .workspace .location-device-pin { display: grid; flex: 0 0 2.35rem; place-items: center; width: 2.35rem; height: 2.35rem; color: #201b09; background: var(--yellow); border: 0; border-radius: .7rem; font-size: 1.25rem; font-weight: 700; }
 .workspace .location-device-pin:disabled { opacity: .65; cursor: wait; }
 .workspace .location-map-pin { flex: 0 0 auto; width: auto; padding-inline: .6rem; font-size: .76rem; }
+
+.workspace .booking-map-panel { margin-top: .75rem; }
+.workspace .booking-map-toolbar { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+.workspace .booking-map-toolbar .map-instruction { margin: 0; }
+.workspace .map-close-button { display: grid; flex: 0 0 2.25rem; place-items: center; width: 2.25rem; height: 2.25rem; color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 50%; font-size: 1.25rem; }
+@media (max-width: 560px) {
+  .workspace .booking-map-panel { margin-top: .6rem; }
+  .workspace .booking-map-toolbar { align-items: flex-start; }
+}

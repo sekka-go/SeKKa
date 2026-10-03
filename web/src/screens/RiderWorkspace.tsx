@@ -30,6 +30,7 @@ export default function RiderWorkspace({ session, section, setSection, notificat
   const [pickupSearch, setPickupSearch] = useState("");
   const [dropoffSearch, setDropoffSearch] = useState("");
   const [pickMode, setPickMode] = useState<MapPickMode>("pickup");
+  const [mapOpen, setMapOpen] = useState(false);
   const [inviteCode, setInviteCode] = useState("");
   const selectedCategory = categories.find((item) => item.id === categoryId) ?? null;
   const selected = groups.find((view) => view.group.id === selectedGroup) ?? null;
@@ -108,6 +109,7 @@ export default function RiderWorkspace({ session, section, setSection, notificat
   const expectedDays = packageType === "daily" ? 1 : packageType === "weekly" ? 5 : 22;
   const chooseMap = (mode: MapPickMode) => {
     setPickMode(mode);
+    setMapOpen(true);
     window.setTimeout(() => {
       const mapContainer = document.querySelector(".booking-map");
       mapContainer?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -145,8 +147,13 @@ export default function RiderWorkspace({ session, section, setSection, notificat
           <LocationSearchField kind="pickup" title="نقطة الركوب" value={pickupSearch} token={session.token} onChange={(value) => { setPickupSearch(value); setPickup(null); }} onSelect={(point) => { setPickup(point); setPickupSearch(point.label ?? ""); }} onChooseMap={() => chooseMap("pickup")} />
           <LocationSearchField kind="dropoff" title="نقطة النزول" value={dropoffSearch} token={session.token} onChange={(value) => { setDropoffSearch(value); setDropoff(null); }} onSelect={(point) => { setDropoff(point); setDropoffSearch(point.label ?? ""); }} onChooseMap={() => chooseMap("dropoff")} />
         </div>
-        <p className="map-instruction">اختار نتيجة البحث أو حدد <b>{pickMode === "pickup" ? "نقطة الركوب" : "نقطة النزول"}</b> بالدبوس على الخريطة · القاهرة الكبرى فقط</p>
-        <div className="booking-map"><MapPicker pickup={pickup} dropoff={dropoff} mode={pickMode} restrictToGreaterCairo onOutsidePick={() => notify("اختار نقطة داخل القاهرة الكبرى فقط.", "error")} onPick={setMapPoint} /></div>
+        {mapOpen && <section className="booking-map-panel" aria-label="اختيار الموقع من الخريطة">
+          <div className="booking-map-toolbar">
+            <p className="map-instruction">انقر أو اسحب الدبوس لتحديد {pickMode === "pickup" ? "نقطة الركوب" : "نقطة النزول"} · القاهرة الكبرى فقط</p>
+            <button type="button" className="map-close-button" onClick={() => setMapOpen(false)} aria-label="إغلاق الخريطة">×</button>
+          </div>
+          <div className="booking-map"><MapPicker pickup={pickup} dropoff={dropoff} mode={pickMode} restrictToGreaterCairo onOutsidePick={() => notify("اختار نقطة داخل القاهرة الكبرى فقط.", "error")} onPick={setMapPoint} /></div>
+        </section>}
         <button className="button button-primary button-wide" disabled={submitting}>{submitting ? "جاري الحفظ…" : bookingMode === "new" ? "تأكيد المشوار" : "الانضمام للمجموعة"}<span>←</span></button>
         {bookingMode === "new" && <p className="form-footnote">مفيش دفع دلوقتي؛ المبلغ هيظهر بعد اكتمال الحد الأدنى وتأكيد المسار.</p>}
       </form>
