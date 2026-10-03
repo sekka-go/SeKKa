@@ -41,9 +41,19 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .segmented-control button.selected { color: #201b09; background: var(--yellow); font-weight: 700; }
 .segmented-control.compact { width: fit-content; margin: 0; }
 .segmented-control.compact button { flex: 0 1 auto; }
-.package-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; }
+.package-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr)); gap: .6rem; }
 .package-option { display: grid; gap: .25rem; min-height: 4.5rem; padding: .75rem; color: var(--muted); text-align: right; background: transparent; border: 1px solid var(--line); }
 .package-option strong { color: var(--ink); }.package-option small { line-height: 1.5; }.package-option.selected { border-color: var(--yellow); background: rgba(255,210,31,.08); }
+.category-picker { display: grid; gap: .75rem; }
+.category-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: .6rem; }
+.category-option { display: flex; align-items: center; justify-content: space-between; gap: .75rem; min-width: 0; padding: .85rem; color: var(--muted); text-align: right; background: rgba(0,0,0,.12); border: 1px solid var(--line); }
+.category-option > span { display: grid; gap: .25rem; min-width: 0; }
+.category-option strong, .category-option b { color: var(--ink); }
+.category-option b { color: var(--yellow); white-space: nowrap; }
+.category-option small { color: var(--muted); }
+.category-option.selected { border-color: var(--yellow); background: rgba(255,210,31,.08); }
+.package-option b { color: var(--yellow); }
+.price-error { margin: 0; color: #f1aaa5; font-size: .88rem; }
 .tier-helper, .info-note, .form-footnote { padding: .7rem .8rem; color: var(--muted); line-height: 1.6; background: rgba(158,232,230,.06); border-right: 2px solid var(--cyan); }
 .tier-helper { display: flex; justify-content: space-between; gap: .75rem; }.tier-helper strong { color: var(--yellow); }
 .date-picker-block { display: grid; gap: .75rem; }.field-heading { display: flex; justify-content: space-between; gap: 1rem; }.field-heading span { color: var(--yellow); font-weight: 700; }

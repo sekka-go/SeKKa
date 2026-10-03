@@ -175,14 +175,19 @@ function roundMoney(value: number) { return Math.round((value + Number.EPSILON) 
 function validDates(value: unknown, type: string): string[] | null {
   const count = packageDays(type);
   if (!count || !Array.isArray(value) || value.length !== count || !value.every((d) => typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d))) return null;
-  const dates = [...new Set(value as string[])].sort();
-  if (dates.length !== count || dates[0] < new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Cairo" }).format(new Date())) return null;
-  for (const date of dates) {
+  const dates = value as string[];
+  if (new Set(dates).size !== count || dates[0]! < new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Cairo" }).format(new Date())) return null;
+  for (let index = 0; index < dates.length; index++) {
+    const date = dates[index]!;
     const parsed = new Date(date + "T12:00:00Z");
     if (Number.isNaN(parsed.valueOf()) || parsed.toISOString().slice(0, 10) !== date || [5, 6].includes(parsed.getUTCDay())) return null;
+    if (index > 0) {
+      let expected = new Date(dates[index - 1]! + "T12:00:00Z");
+      expected.setUTCDate(expected.getUTCDate() + 1);
+      while ([5, 6].includes(expected.getUTCDay())) expected.setUTCDate(expected.getUTCDate() + 1);
+      if (expected.toISOString().slice(0, 10) !== date) return null;
+    }
   }
-  if (type === "weekly" && new Set(dates.map((date) => { const d = new Date(date + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() - d.getUTCDay()); return d.toISOString().slice(0, 10); })).size !== 1) return null;
-  if (type === "monthly" && new Set(dates.map((date) => date.slice(0, 7))).size !== 1) return null;
   return dates;
 }
 function cairoIso(date: string, time: string) {
@@ -361,6 +366,24 @@ Deno.serve(async (req: Request) => {
       if (e) throw e; return reply({ categories: data }, 200, origin);
     }
     const user = await authenticate(req);
+    if (req.method === "POST" && path === "/rider/pool/quote") {
+      const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      let pickup, dropoff;
+      try { pickup = await selectLocation(body, "pickup"); dropoff = await selectLocation(body, "dropoff"); }
+      catch (err) { if (err instanceof ApiFailure) return error(err.message, err.status, origin); throw err; }
+      const { data: categories, error: categoryError } = await db.from("pool_categories").select("id,seats,base_fee,rate_per_km,rate_per_min").order("id");
+      if (categoryError) throw categoryError;
+      const outboundPoints = [{ lat: pickup.lat, lng: pickup.lng }, { lat: dropoff.lat, lng: dropoff.lng }];
+      const returnPoints = [...outboundPoints].reverse();
+      const [out, back] = await Promise.all([roadRoute(outboundPoints), roadRoute(returnPoints)]);
+      const prices = (categories ?? []).map((category) => {
+        const outbound = Number(category.base_fee) + out.distanceKm * Number(category.rate_per_km) + out.durationMin * Number(category.rate_per_min);
+        const returning = Number(category.base_fee) + back.distanceKm * Number(category.rate_per_km) + back.durationMin * Number(category.rate_per_min);
+        const seat_day_fare = roundMoney((outbound + returning) / Number(category.seats));
+        return { category_id: category.id, seat_day_fare, daily: seat_day_fare, weekly: roundMoney(seat_day_fare * 5 * 0.95), monthly: roundMoney(seat_day_fare * 22 * 0.9) };
+      });
+      return reply({ prices }, 200, origin);
+    }
     if (req.method === "POST" && path === "/locations/search") {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
       const query = clean(body.query) ? body.query.trim().replace(/\s+/g, " ") : "";
@@ -715,7 +738,6 @@ Deno.serve(async (req: Request) => {
       if (memberError) throw memberError;
       if (!group || !member) return error("الحجز النشط غير موجود.", 404, origin);
       const { data: subscription } = await db.from("pool_subscriptions").select("*").eq("member_id", member.id).maybeSingle();
-      if (cancelPackage && group.package_type === "daily") return error("استخدم إلغاء يوم الخدمة للحجز اليومي.", 400, origin);
       const dates = Array.isArray(group.service_dates) ? group.service_dates as string[] : JSON.parse(String(group.service_dates));
       const dateToCancel = cancelDay?.[2];
       if (dateToCancel && !dates.includes(dateToCancel)) return error("التاريخ غير موجود ضمن أيام الحجز.", 404, origin);
@@ -742,7 +764,7 @@ Deno.serve(async (req: Request) => {
         processed++;
       }
       if (cancelPackage || (cancelDay && group.package_type === "daily")) {
-        if (cancelPackage) {
+        if (cancelPackage && group.package_type !== "daily") {
           const adminFee = roundMoney(refundTotal * 0.10);
           refundTotal = roundMoney(refundTotal - adminFee);
         }
@@ -750,7 +772,7 @@ Deno.serve(async (req: Request) => {
       }
       if (subscription && processed > 0) {
         const { error: se } = await db.from("pool_subscriptions").update({
-          amount_due: Math.max(0, Number(subscription.amount_due) - (cancelPackage ? roundMoney(refundTotal / 0.9) : refundTotal)),
+          amount_due: Math.max(0, Number(subscription.amount_due) - (cancelPackage && group.package_type !== "daily" ? roundMoney(refundTotal / 0.9) : refundTotal)),
           refund_amount: roundMoney(Number(subscription.refund_amount) + refundTotal),
           cancelled_at: cancelPackage ? new Date().toISOString() : null,
         }).eq("id", subscription.id);
@@ -760,7 +782,7 @@ Deno.serve(async (req: Request) => {
         const { data: active } = await db.from("pool_members").select("id").eq("group_id", groupId).eq("status", "active");
         if (!active?.length) await db.from("pool_groups").update({ status: "cancelled" }).eq("id", groupId);
       }
-      return reply({ success: true, days_processed: processed, charged_amount: roundMoney(chargeTotal), refund_amount: roundMoney(refundTotal), admin_fee: cancelPackage ? roundMoney(refundTotal / 9) : 0, payment: "deferred" }, 200, origin);
+      return reply({ success: true, days_processed: processed, charged_amount: roundMoney(chargeTotal), refund_amount: roundMoney(refundTotal), admin_fee: cancelPackage && group.package_type !== "daily" ? roundMoney(refundTotal / 9) : 0, payment: "deferred" }, 200, origin);
     }
 
     if (req.method === "GET" && path === "/pool/push/vapid-public-key") {
