@@ -122,11 +122,13 @@ export default function RiderWorkspace({ session, section, setSection, notificat
 
   const savePlace = async (placeType: SavedPlace["place_type"], point: MapPoint) => {
     if (typeof point.lat !== "number" || typeof point.lng !== "number") return;
-    const result = await api<{ place: SavedPlace }>(`/rider/saved-places/${placeType}`, {
-      method: "PUT", token: session.token, body: { label: point.label ?? `موقع ${placeType === "home" ? "المنزل" : "العمل"}`, lat: point.lat, lng: point.lng },
-    });
-    setSavedPlaces((current) => [...current.filter((place) => place.place_type !== placeType), result.place]);
-    notify(`تم حفظ مكان ${placeType === "home" ? "المنزل" : "العمل"}.`, "success");
+    try {
+      const result = await api<{ place: SavedPlace }>(`/rider/saved-places/${placeType}`, {
+        method: "PUT", token: session.token, body: { label: point.label ?? `موقع ${placeType === "home" ? "المنزل" : "العمل"}`, lat: point.lat, lng: point.lng },
+      });
+      setSavedPlaces((current) => [...current.filter((place) => place.place_type !== placeType), result.place]);
+      notify(`تم حفظ مكان ${placeType === "home" ? "المنزل" : "العمل"}.`, "success");
+    } catch (error) { notify(errorText(error), "error"); }
   };
   const removeSavedPlace = async (placeType: SavedPlace["place_type"]) => {
     try {
