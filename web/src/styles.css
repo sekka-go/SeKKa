@@ -1442,3 +1442,19 @@ button { line-height: 1.45; }
   .workspace .saved-place-tools > summary { gap: .4rem; font-size: .82rem; }
   .workspace .saved-place-tools > summary small { font-size: .68rem; }
 }
+
+.workspace .booking-step-back {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  flex: 0 0 auto;
+  padding: .5rem .65rem;
+  color: var(--yellow);
+  background: rgba(255, 210, 31, .06);
+  border: 1px solid rgba(255, 210, 31, .22);
+  border-radius: .65rem;
+  font-size: .78rem;
+  font-weight: 700;
+}
+.workspace .booking-step-back > span { font-size: 1.1rem; }
+.workspace .booking-step-back:hover { background: rgba(255, 210, 31, .12); }
