@@ -13,6 +13,7 @@ const hasPoint = (point: MapPoint | null): point is MapPoint & { lat: number; ln
   typeof point?.lat === "number" && Number.isFinite(point.lat) && typeof point.lng === "number" && Number.isFinite(point.lng);
 const WEEK_DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
 const defaultPreferences: RiderCommuterPreferences = { usual_days: [0, 1, 2, 3, 4], usual_departure_time: "07:30", usual_return_time: "17:00", frequent_places: [] };
+const normalizeTime = (value: string | undefined, fallback: string) => (value ?? fallback).slice(0, 5);
 
 export default function RiderRoutePreferences({ token, notify, onComplete, onboarding = false }: {
   token: string;
@@ -42,7 +43,13 @@ export default function RiderRoutePreferences({ token, notify, onComplete, onboa
       const dropoff = toPoint(places.find((place) => place.place_type === "work"));
       setRoute({ pickup, dropoff });
       setQuery({ pickup: pickup?.label ?? "", dropoff: dropoff?.label ?? "" });
-      setPreferences({ ...defaultPreferences, ...savedPreferences, frequent_places: savedPreferences.frequent_places ?? [] });
+      setPreferences({
+        ...defaultPreferences,
+        ...savedPreferences,
+        usual_departure_time: normalizeTime(savedPreferences.usual_departure_time, defaultPreferences.usual_departure_time),
+        usual_return_time: normalizeTime(savedPreferences.usual_return_time, defaultPreferences.usual_return_time),
+        frequent_places: savedPreferences.frequent_places ?? [],
+      });
     }).catch((cause) => {
       if (active) setError(errorText(cause));
     }).finally(() => { if (active) setLoading(false); });

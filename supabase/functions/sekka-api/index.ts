@@ -31,6 +31,11 @@ function selectLocation(body: Json, prefix: "pickup" | "dropoff"): { lat: number
 function clean(value: unknown): value is string { return typeof value === "string" && value.trim().length > 0; }
 function number(value: unknown): value is number { return typeof value === "number" && Number.isFinite(value); }
 function validPoint(lat: unknown, lng: unknown) { return number(lat) && lat >= -90 && lat <= 90 && number(lng) && lng >= -180 && lng <= 180; }
+function normalizeClock(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const match = /^(?:([01]\d|2[0-3]):([0-5]\d))(?:[:][0-5]\d(?:\.\d{1,6})?)?$/.exec(value);
+  return match ? `${match[1]}:${match[2]}` : null;
+}
 const GREATER_CAIRO = { south: 29.65, west: 30.55, north: 30.45, east: 31.85 } as const;
 function isGreaterCairoPoint(lat: number, lng: number) {
   return lat >= GREATER_CAIRO.south && lat <= GREATER_CAIRO.north && lng >= GREATER_CAIRO.west && lng <= GREATER_CAIRO.east;
@@ -397,10 +402,10 @@ Deno.serve(async (req: Request) => {
         return reply({ preferences: data ?? { usual_days: [0,1,2,3,4], usual_departure_time: "07:30:00", usual_return_time: "17:00:00", frequent_places: [] } }, 200, origin);
       }
       const days = Array.isArray(body.usual_days) ? body.usual_days : [];
-      const departure = typeof body.usual_departure_time === "string" ? body.usual_departure_time : "";
-      const returning = typeof body.usual_return_time === "string" ? body.usual_return_time : "";
+      const departure = normalizeClock(body.usual_departure_time);
+      const returning = normalizeClock(body.usual_return_time);
       const places = Array.isArray(body.frequent_places) ? body.frequent_places : [];
-      if (!days.length || days.length > 7 || days.some(day => !Number.isInteger(day) || Number(day) < 0 || Number(day) > 6) || new Set(days).size !== days.length || !/^\d{2}:\d{2}$/.test(departure) || !/^\d{2}:\d{2}$/.test(returning) || returning <= departure || places.length > 5 || places.some(place => !place || typeof place !== "object" || typeof place.label !== "string" || !place.label.trim() || place.label.length > 240 || !validPoint(place.lat, place.lng) || !isGreaterCairoPoint(Number(place.lat), Number(place.lng)))) {
+      if (!days.length || days.length > 7 || days.some(day => !Number.isInteger(day) || Number(day) < 0 || Number(day) > 6) || new Set(days).size !== days.length || !departure || !returning || returning <= departure || places.length > 5 || places.some(place => !place || typeof place !== "object" || typeof place.label !== "string" || !place.label.trim() || place.label.length > 240 || !validPoint(place.lat, place.lng) || !isGreaterCairoPoint(Number(place.lat), Number(place.lng)))) {
         return error("راجع أيام المشوار ومواعيده والأماكن المتكررة داخل القاهرة الكبرى.", 400, origin);
       }
       const frequentPlaces = places.map(place => ({ label: String(place.label).trim(), lat: Number(place.lat), lng: Number(place.lng) }));
