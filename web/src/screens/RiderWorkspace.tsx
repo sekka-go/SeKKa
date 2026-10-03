@@ -188,7 +188,7 @@ export default function RiderWorkspace({ session, section, setSection, notificat
             <div className="tier-helper">{selectedCategory ? <><strong>{selectedCategory.speed_tier === "faster" ? "Faster" : "Saver"}</strong><span>الحد الأدنى {selectedCategory.speed_tier === "faster" ? "راكبان" : "٣ ركاب"} · {selectedCategory.seats} مقاعد · السعر للفرد شامل الباقة</span></> : "جاري تحميل الفئات"}</div>
           </section>
         </>}
-        <button className="button button-primary button-wide" disabled={submitting}>{submitting ? "جاري الحفظ…" : bookingMode === "new" ? "تأكيد المشوار" : "الانضمام للمجموعة"}<span>←</span></button>
+        <button className="button button-primary button-wide" disabled={submitting || (bookingMode === "new" && Boolean(pickup && dropoff) && (!priceQuotes || priceLoading))}>{submitting ? "جاري الحفظ…" : bookingMode === "new" ? "تأكيد المشوار" : "الانضمام للمجموعة"}<span>←</span></button>
         {bookingMode === "new" && <p className="form-footnote">الأسعار تقديرية للفرد، والباقات الأسبوعية والشهرية تبدأ من التاريخ المحدد وتستثني الجمعة والسبت. مفيش دفع دلوقتي.</p>}
       </form>
     </section>
