@@ -1,4 +1,4 @@
-import { useState, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { api } from "../api";
 import { isInsideGreaterCairo } from "../lib/greater-cairo";
 import type { MapPoint, MapPickMode } from "../MapPicker";
@@ -26,6 +26,48 @@ export default function LocationSearchField({
   const [loading, setLoading] = useState(false);
   const [locating, setLocating] = useState(false);
   const [error, setError] = useState("");
+  const requestId = useRef(0);
+  const skipNextSearch = useRef(false);
+
+  useEffect(() => {
+    if (skipNextSearch.current) {
+      skipNextSearch.current = false;
+      return;
+    }
+
+    const query = value.trim();
+    const currentRequest = ++requestId.current;
+    if (query.length < 3) {
+      setSuggestions([]);
+      setLoading(false);
+      setError("");
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setLoading(true);
+      setError("");
+      void api<{ suggestions: Suggestion[] }>("/locations/search", {
+        method: "POST",
+        token,
+        body: { query },
+      }).then((result) => {
+        if (currentRequest !== requestId.current) return;
+        setSuggestions(result.suggestions);
+        if (result.suggestions.length === 0) {
+          setError("مفيش نتائج داخل القاهرة الكبرى. جرّب اسم شارع أو منطقة أقرب.");
+        }
+      }).catch((cause) => {
+        if (currentRequest !== requestId.current) return;
+        setError(cause instanceof Error ? cause.message : "تعذر البحث الآن. حاول مرة أخرى.");
+        setSuggestions([]);
+      }).finally(() => {
+        if (currentRequest === requestId.current) setLoading(false);
+      });
+    }, 350);
+
+    return () => window.clearTimeout(timer);
+  }, [value, token]);
 
   const useDeviceLocation = () => {
     if (!navigator.geolocation) {
@@ -42,6 +84,7 @@ export default function LocationSearchField({
         if (!isInsideGreaterCairo(lat, lng)) {
           setError("موقعك الحالي خارج القاهرة الكبرى. ابحث عن موقع داخل نطاق الخدمة أو حدده على الخريطة.");
         } else {
+          skipNextSearch.current = true;
           const label = `موقعي الحالي · ${lat.toFixed(5)}، ${lng.toFixed(5)}`;
           onSelect({ lat, lng, kind, label });
         }
@@ -57,31 +100,51 @@ export default function LocationSearchField({
     );
   };
 
-  const search = async () => {
-    const query = value.trim();
-    if (query.length < 3) { setError("اكتب ٣ أحرف على الأقل للبحث."); setSuggestions([]); return; }
-    setLoading(true); setError("");
-    try {
-      const result = await api<{ suggestions: Suggestion[] }>("/locations/search", {
-        method: "POST", token, body: { query },
-      });
-      setSuggestions(result.suggestions);
-      if (result.suggestions.length === 0) setError("مفيش نتائج داخل القاهرة الكبرى. جرّب اسم شارع أو منطقة أقرب.");
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "تعذر البحث الآن. حاول مرة أخرى.");
-      setSuggestions([]);
-    } finally { setLoading(false); }
+  const selectSuggestion = (item: Suggestion) => {
+    skipNextSearch.current = true;
+    onSelect({ lat: item.lat, lng: item.lng, kind, label: item.label });
+    setSuggestions([]);
+    setError("");
   };
 
   return <div className={`location-search-field location-search-${kind}`}>
-    <div className="location-search-heading"><i className={`point-dot ${kind === "pickup" ? "pickup-dot" : "dropoff-dot"}`} /><strong>{title}</strong><button type="button" className="location-device-pin" onClick={useDeviceLocation} disabled={locating} aria-label={`استخدم موقعك الحالي لتحديد ${title}`} title="استخدم موقعي الحالي">{locating ? "…" : "⌖"}</button><button type="button" className="location-map-pin" onClick={onChooseMap} aria-label={`حدد ${title} على الخريطة`} title="حدد على الخريطة">خريطة</button></div>
-    <div className="location-search-form" role="search">
-      <input aria-label={`ابحث عن ${title}`} value={value} onChange={(event) => { onChange(event.target.value); setSuggestions([]); setError(""); }} onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => { if (event.key === "Enter") { event.preventDefault(); void search(); } }} placeholder={kind === "pickup" ? "ابحث عن نقطة الركوب" : "ابحث عن نقطة النزول"} autoComplete="off" />
-      <button className="location-search-submit" type="button" onClick={() => void search()} disabled={loading} aria-label={`بحث ${title}`}>{loading ? "…" : "⌕"}</button>
+    <div className="location-search-heading">
+      <i className={`point-dot ${kind === "pickup" ? "pickup-dot" : "dropoff-dot"}`} />
+      <strong>{title}</strong>
+      <button type="button" className="location-device-pin" onClick={useDeviceLocation} disabled={locating} aria-label={`استخدم موقعك الحالي لتحديد ${title}`} title="استخدم موقعي الحالي">{locating ? "…" : "⌖"}</button>
+      <button type="button" className="location-map-pin" onClick={onChooseMap} aria-label={`اختيار ${title} من الخريطة`} title="اختيار من الخريطة">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z" /><path d="M9 3v15m6-12v15" />
+        </svg>
+      </button>
     </div>
+    <div className="location-search-form" role="search">
+      <input
+        aria-label={`ابحث عن ${title}`}
+        value={value}
+        onChange={(event) => {
+          requestId.current++;
+          onChange(event.target.value);
+          setSuggestions([]);
+          setError("");
+          setLoading(false);
+        }}
+        onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+        }}
+        placeholder={kind === "pickup" ? "ابحث عن نقطة الركوب" : "ابحث عن نقطة النزول"}
+        autoComplete="off"
+      />
+    </div>
+    {loading && <p className="location-search-message" role="status">جاري البحث…</p>}
     {error && <p className="location-search-message" role="status">{error}</p>}
     {suggestions.length > 0 && <ul className="location-search-results" aria-label={`نتائج ${title}`}>
-      {suggestions.map((item, index) => <li key={`${item.lat}-${item.lng}-${index}`}><button type="button" onClick={() => { onSelect({ lat: item.lat, lng: item.lng, kind, label: item.label }); setSuggestions([]); setError(""); }}>{item.label}<span>اختيار ←</span></button></li>)}
+      {suggestions.map((item, index) => <li key={`${item.lat}-${item.lng}-${index}`}>
+        <button type="button" onClick={() => selectSuggestion(item)}>{item.label}<span>اختيار ←</span></button>
+      </li>)}
     </ul>}
     <small className="location-search-attribution">نتائج الأماكن من OpenStreetMap</small>
   </div>;
