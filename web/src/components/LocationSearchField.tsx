@@ -37,7 +37,8 @@ export default function LocationSearchField({
 
     const query = value.trim();
     const currentRequest = ++requestId.current;
-    if (query.length < 3) {
+    const isCoordinate = /^-?\d{1,3}(?:\.\d+)?\s*[,،]\s*-?\d{1,3}(?:\.\d+)?$/.test(query);
+    if (query.length < 3 || isCoordinate || query.startsWith("موقعي الحالي ·")) {
       setSuggestions([]);
       setLoading(false);
       setError("");
