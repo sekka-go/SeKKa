@@ -1891,12 +1891,12 @@ button { line-height: 1.45; }
 /* Notifications open as a side drawer; the uncovered right side dismisses it. */
 .workspace .topbar { position: relative; z-index: 92; }
 .workspace .notification-bell.is-open { color: var(--yellow); border-color: rgba(255,210,31,.55); background: rgba(255,210,31,.08); }
-.workspace .notifications-overlay { position: fixed; z-index: 90; inset: 0; display: flex; justify-content: flex-start; direction: ltr; background: rgba(0,0,0,.58); animation: notifications-backdrop-in .18s ease both; }
-.workspace .notifications-drawer { width: min(30rem, calc(100vw - 4.25rem)); min-width: 0; height: 100%; overflow-x: hidden; overflow-y: auto; padding: 1rem; color: var(--ink); background: #171309; border-inline-end: 1px solid var(--line); box-shadow: 1.2rem 0 3rem rgba(0,0,0,.35); direction: rtl; overscroll-behavior: contain; animation: notifications-drawer-in .24s cubic-bezier(.2,.75,.25,1) both; }
-.workspace .notifications-page { min-height: 100%; padding: .25rem 0; }
+.workspace .notifications-overlay { position: fixed; z-index: 90; inset-inline: 0; bottom: 0; display: flex; justify-content: flex-start; direction: rtl; background: rgba(0,0,0,.56); -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px); animation: notifications-backdrop-in .18s ease both; }
+.workspace .notifications-drawer { width: min(31rem, calc(100vw - 3.5rem)); min-width: 0; height: 100%; overflow-x: hidden; overflow-y: auto; padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom)); color: var(--ink); background: linear-gradient(155deg, #201b0e 0%, #171309 46%, #151207 100%); border-inline-start: 1px solid rgba(255,210,31,.14); border-radius: 0 0 0 1.2rem; box-shadow: -1.2rem 0 3rem rgba(0,0,0,.38); direction: rtl; overscroll-behavior: contain; animation: notifications-drawer-in .24s cubic-bezier(.2,.75,.25,1) both; }
+.workspace .notifications-page { display: flex; flex-direction: column; gap: 1rem; min-height: 100%; height: 100%; padding: .25rem 0; }
 .workspace .notification-close { display: grid; }
 .workspace .notifications-overlay:focus { outline: none; }
-@keyframes notifications-drawer-in { from { opacity: .7; transform: translateX(-1.5rem); } to { opacity: 1; transform: translateX(0); } }
+@keyframes notifications-drawer-in { from { opacity: .7; transform: translateX(1.5rem); } to { opacity: 1; transform: translateX(0); } }
 @keyframes notifications-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
-@media (max-width: 560px) { .workspace .notifications-drawer { width: calc(100vw - 3.5rem); padding: .85rem; } .workspace .notifications-page { min-height: 100%; } }
+@media (max-width: 560px) { .workspace .notifications-drawer { width: calc(100vw - 3.5rem); padding: .85rem .85rem calc(.85rem + env(safe-area-inset-bottom)); border-radius: 0 0 0 .9rem; } .workspace .notifications-page { min-height: 100%; } }
 @media (prefers-reduced-motion: reduce) { .workspace .notifications-overlay, .workspace .notifications-drawer { animation: none; } }

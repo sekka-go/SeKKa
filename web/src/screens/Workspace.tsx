@@ -19,6 +19,7 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notificationsLoaded, setNotificationsLoaded] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notificationsTop, setNotificationsTop] = useState(0);
   const riderPoolRefreshRef = useRef<() => Promise<void>>(async () => undefined);
   const [navOpen, setNavOpen] = useState(false);
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
@@ -92,9 +93,15 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
   const closeNotifications = useCallback(() => setNotificationsOpen(false), []);
   useEffect(() => {
     if (!notificationsOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const syncTopbar = () => setNotificationsTop(Math.round(document.querySelector(".workspace .topbar")?.getBoundingClientRect().bottom ?? 0));
+    syncTopbar();
     const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") closeNotifications(); };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener("resize", syncTopbar);
+    window.addEventListener("orientationchange", syncTopbar);
+    return () => { document.body.style.overflow = previousOverflow; window.removeEventListener("keydown", onKeyDown); window.removeEventListener("resize", syncTopbar); window.removeEventListener("orientationchange", syncTopbar); };
   }, [notificationsOpen, closeNotifications]);
   useEffect(() => { void refreshNotifications(); }, [refreshNotifications]);
   useEffect(() => {
@@ -158,7 +165,7 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
         {session.user.role === "captain" && <CaptainWorkspace session={session} section={section} notify={notify} />}
         {session.user.role === "admin" && <AdminWorkspace session={session} section={section} refreshNotifications={refreshNotifications} notify={notify} />}
       </div>
-      {notificationsOpen && <NotificationsPanel items={notifications} token={session.token} onRefresh={refreshNotifications} onPoolChanged={session.user.role === "rider" ? () => riderPoolRefreshRef.current() : undefined} allowWaitActions={session.user.role === "rider"} notify={notify} isLoading={!notificationsLoaded} onClose={closeNotifications} />}
+      {notificationsOpen && <NotificationsPanel items={notifications} token={session.token} onRefresh={refreshNotifications} onPoolChanged={session.user.role === "rider" ? () => riderPoolRefreshRef.current() : undefined} allowWaitActions={session.user.role === "rider"} notify={notify} isLoading={!notificationsLoaded} onClose={closeNotifications} topOffset={notificationsTop} />}
     </main>
   </div>;
 }
