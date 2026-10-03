@@ -190,14 +190,13 @@ export default function LocationSearchField({
   const editSelection = () => {
     setEditing(true);
     setSearchOpen(true);
-    window.setTimeout(() => inputRef.current?.focus(), 0);
+    window.setTimeout(() => { inputRef.current?.focus(); inputRef.current?.select(); }, 0);
   };
   return <div className={`location-search-field location-search-${kind}`} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) { setSearchOpen(false); setShowSavedPlaces(false); } }}>
     <div className="location-search-heading">
       <i className={`point-dot ${kind === "pickup" ? "pickup-dot" : "dropoff-dot"}`} />
       <strong>{title}</strong>
       <span className={pointSelected ? "location-point-status is-selected" : "location-point-status"} title={pointSelected ? "تم التحديد" : "اختيار مطلوب"} aria-label={pointSelected ? "تم تحديد الموقع" : "يجب اختيار الموقع من النتائج"}>{pointSelected ? "✓" : "!"}</span>
-      {pointSelected && !editing && <button type="button" className="location-edit-button" onClick={editSelection}>تعديل</button>}
       <button type="button" className="location-device-pin" onClick={useDeviceLocation} disabled={locating} aria-label={`استخدم موقعك الحالي لتحديد ${title}`} title="استخدم موقعي الحالي">{locating ? "…" : "⌖"}</button>
       <button type="button" className="location-map-pin" onClick={() => { setShowSavedPlaces(false); onChooseMap(); }} aria-label={`اختيار ${title} من الخريطة`} title="اختيار من الخريطة">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -210,7 +209,8 @@ export default function LocationSearchField({
         ref={inputRef}
         aria-label={`ابحث عن ${title}`}
         value={value}
-        disabled={pointSelected && !editing}
+        readOnly={pointSelected && !editing}
+        onClick={() => { if (pointSelected && !editing) editSelection(); }}
         onChange={(event) => {
           requestId.current++;
           onChange(event.target.value);
