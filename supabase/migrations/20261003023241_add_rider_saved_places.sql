@@ -1,4 +1,4 @@
-CREATE TABLE public.rider_saved_places (
+CREATE TABLE IF NOT EXISTS public.rider_saved_places (
   user_id integer NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   place_type text NOT NULL CHECK (place_type IN ('home', 'work')),
   label text NOT NULL CHECK (char_length(btrim(label)) BETWEEN 1 AND 240),
