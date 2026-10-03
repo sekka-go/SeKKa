@@ -33,8 +33,13 @@ export default function LocationSearchField({
   const [locating, setLocating] = useState(false);
   const [error, setError] = useState("");
   const [showSavedPlaces, setShowSavedPlaces] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [editing, setEditing] = useState(!pointSelected);
+  const inputRef = useRef<HTMLInputElement>(null);
   const requestId = useRef(0);
   const skipNextSearch = useRef(false);
+
+  useEffect(() => { setEditing(!pointSelected); }, [pointSelected]);
 
   useEffect(() => {
     if (skipNextSearch.current) {
@@ -61,8 +66,18 @@ export default function LocationSearchField({
         body: { query },
       }).then((result) => {
         if (currentRequest !== requestId.current) return;
-        setSuggestions(result.suggestions);
-        if (result.suggestions.length === 0) {
+        const seenLabels = new Set<string>();
+        const seenCoordinates = new Set<string>();
+        const uniqueSuggestions = result.suggestions.filter((item) => {
+          const labelKey = item.label.normalize("NFKC").trim().replace(/\s+/g, " ").toLocaleLowerCase("ar-EG");
+          const coordinateKey = `${item.lat.toFixed(5)}:${item.lng.toFixed(5)}`;
+          if (seenLabels.has(labelKey) || seenCoordinates.has(coordinateKey)) return false;
+          seenLabels.add(labelKey);
+          seenCoordinates.add(coordinateKey);
+          return true;
+        });
+        setSuggestions(uniqueSuggestions);
+        if (uniqueSuggestions.length === 0) {
           setError("مفيش نتائج داخل القاهرة الكبرى. جرّب اسم شارع أو منطقة أقرب.");
         }
       }).catch((cause) => {
@@ -85,8 +100,11 @@ export default function LocationSearchField({
 
     setLocating(true);
     setError("");
+    requestId.current++;
     setSuggestions([]);
     setShowSavedPlaces(false);
+    setSearchOpen(false);
+    setEditing(false);
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
         const { latitude: lat, longitude: lng } = coords;
@@ -110,17 +128,38 @@ export default function LocationSearchField({
   };
 
   const selectSuggestion = (item: Suggestion) => {
+    requestId.current++;
     skipNextSearch.current = true;
     onSelect({ lat: item.lat, lng: item.lng, kind, label: item.label });
     setSuggestions([]);
+    setLoading(false);
     setShowSavedPlaces(false);
+    setSearchOpen(false);
+    setEditing(false);
     setError("");
   };
-  return <div className={`location-search-field location-search-${kind}`} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) window.setTimeout(() => setShowSavedPlaces(false), 100); }}>
+  const selectSavedPlace = (place: SavedPlace) => {
+    requestId.current++;
+    skipNextSearch.current = true;
+    onSelect({ lat: place.lat, lng: place.lng, kind, label: place.label });
+    setSuggestions([]);
+    setLoading(false);
+    setShowSavedPlaces(false);
+    setSearchOpen(false);
+    setEditing(false);
+    setError("");
+  };
+  const editSelection = () => {
+    setEditing(true);
+    setSearchOpen(true);
+    window.setTimeout(() => inputRef.current?.focus(), 0);
+  };
+  return <div className={`location-search-field location-search-${kind}`} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) { setSearchOpen(false); setShowSavedPlaces(false); } }}>
     <div className="location-search-heading">
       <i className={`point-dot ${kind === "pickup" ? "pickup-dot" : "dropoff-dot"}`} />
       <strong>{title}</strong>
       <span className={pointSelected ? "location-point-status is-selected" : "location-point-status"} title={pointSelected ? "تم التحديد" : "اختيار مطلوب"} aria-label={pointSelected ? "تم تحديد الموقع" : "يجب اختيار الموقع من النتائج"}>{pointSelected ? "✓" : "!"}</span>
+      {pointSelected && !editing && <button type="button" className="location-edit-button" onClick={editSelection}>تعديل</button>}
       <button type="button" className="location-device-pin" onClick={useDeviceLocation} disabled={locating} aria-label={`استخدم موقعك الحالي لتحديد ${title}`} title="استخدم موقعي الحالي">{locating ? "…" : "⌖"}</button>
       <button type="button" className="location-map-pin" onClick={() => { setShowSavedPlaces(false); onChooseMap(); }} aria-label={`اختيار ${title} من الخريطة`} title="اختيار من الخريطة">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -130,11 +169,14 @@ export default function LocationSearchField({
     </div>
     <div className="location-search-form" role="search">
       <input
+        ref={inputRef}
         aria-label={`ابحث عن ${title}`}
         value={value}
+        disabled={pointSelected && !editing}
         onChange={(event) => {
           requestId.current++;
           onChange(event.target.value);
+          setSearchOpen(true);
           setShowSavedPlaces(true);
           setSuggestions([]);
           setError("");
@@ -145,23 +187,24 @@ export default function LocationSearchField({
             event.preventDefault();
             event.stopPropagation();
           } else if (event.key === "Escape") {
+            setSearchOpen(false);
             setShowSavedPlaces(false);
           }
         }}
-        onFocus={(event) => { setShowSavedPlaces(true); onFocus(); }}
+        onFocus={() => { if (!pointSelected || editing) { setSearchOpen(true); setShowSavedPlaces(value.trim().length === 0); onFocus(); } }}
         placeholder={kind === "pickup" ? "ابحث عن نقطة الركوب" : "ابحث عن نقطة النزول"}
         autoComplete="off"
       />
     </div>
     {loading && <p className="location-search-message" role="status">جاري البحث…</p>}
     {error && <p className="location-search-message" role="status">{error}</p>}
-    {(showSavedPlaces && savedPlaces.length > 0 || suggestions.length > 0) && <ul className="location-search-results" aria-label={`نتائج ${title}`}>
+    {searchOpen && (showSavedPlaces && savedPlaces.length > 0 || suggestions.length > 0) && <ul className="location-search-results" aria-label={`نتائج ${title}`}>
       {showSavedPlaces && savedPlaces.length > 0 && <li className="location-search-saved-heading">نقاطك المفضلة</li>}
       {showSavedPlaces && savedPlaces.map((place) => <li key={`favorite-${place.place_type}-${place.lat}-${place.lng}`}>
-        <button type="button" className="location-search-saved-option" onClick={() => { onSelect({ lat: place.lat, lng: place.lng, kind, label: place.label }); setShowSavedPlaces(false); setSuggestions([]); setError(""); }}><span className="location-search-saved-mark">⌖</span><span><strong>{place.place_type === "home" ? "الركوب المفضل" : place.place_type === "work" ? "الوصول المفضل" : "مكان متكرر"}</strong><small>{place.label}</small></span><span>اختيار ←</span></button>
+        <button type="button" className="location-search-saved-option" onClick={() => selectSavedPlace(place)}><span className="location-search-saved-mark">⌖</span><span><strong>{place.place_type === "home" ? "الركوب المفضل" : place.place_type === "work" ? "الوصول المفضل" : "مكان متكرر"}</strong><small>{place.label}</small></span><span>اختيار</span></button>
       </li>)}
-      {suggestions.map((item, index) => <li key={`${item.lat}-${item.lng}-${index}`}>
-        <button type="button" onClick={() => selectSuggestion(item)}>{item.label}<span>اختيار ←</span></button>
+      {suggestions.map((item) => <li key={`${item.lat.toFixed(5)}-${item.lng.toFixed(5)}`}>
+        <button type="button" onClick={() => selectSuggestion(item)}>{item.label}<span>اختيار</span></button>
       </li>)}
     </ul>}
   </div>;
