@@ -11,7 +11,9 @@ All routes are under `/api`. Requests and responses use JSON. Authenticated rout
 5. When the minimum is met, the server snapshots the price and creates one outbound and one return trip for every selected service date. The group appears in nearby captains' offers.
 6. Riders can review their groups with `GET /rider/pool/groups`, cancel one service day or a whole package, and respond to route price changes.
 
-A group can be edited only while `waiting`, by its creator, while it has exactly one active member and no generated trips or subscription.\n\n## Categories and service dates
+A group can be edited only while `waiting`, by its creator, while it has exactly one active member and no generated trips or subscription.
+
+## Categories and service dates
 
 `GET /pool/categories` is public and returns category pricing, capacity, and minimum rider count.
 
