@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { api, type SavedPlace } from "../api";
 import { isInsideGreaterCairo } from "../lib/greater-cairo";
 import { addressParts, reverseGeocode, safeAddressLabel, type LocationSuggestion } from "../lib/location-address";
+import { useResolvedLocationPoints } from "../lib/use-location-addresses";
 import type { MapPoint, MapPickMode } from "../MapPicker";
 
 export default function LocationSearchField({
@@ -34,6 +35,7 @@ export default function LocationSearchField({
   const [showSavedPlaces, setShowSavedPlaces] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [editing, setEditing] = useState(!pointSelected);
+  const resolvedSavedPlaces = useResolvedLocationPoints(token, savedPlaces.map((place) => ({ lat: place.lat, lng: place.lng, label: place.label })));
   const inputRef = useRef<HTMLInputElement>(null);
   const requestId = useRef(0);
   const skipNextSearch = useRef(false);
@@ -172,10 +174,10 @@ export default function LocationSearchField({
       if (currentRequest === requestId.current) setLoading(false);
     });
   };
-  const selectSavedPlace = (place: SavedPlace) => {
+  const selectSavedPlace = (place: SavedPlace, resolvedLabel?: string) => {
     requestId.current++;
     skipNextSearch.current = true;
-    const address = safeAddressLabel(place.label) || "موقع محدد على الخريطة";
+    const address = safeAddressLabel(resolvedLabel || place.label) || "موقع محدد على الخريطة";
     const parts = addressParts(address);
     onSelect({ lat: place.lat, lng: place.lng, kind, label: address, primaryLabel: parts.primary, secondaryLabel: parts.secondary });
     setSuggestions([]);
@@ -237,8 +239,8 @@ export default function LocationSearchField({
     {error && <p className="location-search-message" role="status">{error}</p>}
     {searchOpen && (showSavedPlaces && savedPlaces.length > 0 || suggestions.length > 0) && <ul className="location-search-results" aria-label={`نتائج ${title}`}>
       {showSavedPlaces && savedPlaces.length > 0 && <li className="location-search-saved-heading">نقاطك المفضلة</li>}
-      {showSavedPlaces && savedPlaces.map((place) => <li key={`favorite-${place.place_type}-${place.lat}-${place.lng}`}>
-        <button type="button" className="location-search-saved-option" onClick={() => selectSavedPlace(place)}><span className="location-search-saved-mark">⌖</span><span><strong>{place.place_type === "home" ? "الركوب المفضل" : place.place_type === "work" ? "الوصول المفضل" : "مكان متكرر"}</strong><small>{safeAddressLabel(place.label)}</small></span><span className="location-suggestion-action">اختيار</span></button>
+      {showSavedPlaces && savedPlaces.map((place, index) => <li key={`favorite-${place.place_type}-${place.lat}-${place.lng}`}>
+        <button type="button" className="location-search-saved-option" onClick={() => selectSavedPlace(place, resolvedSavedPlaces[index]?.label)}><span className="location-search-saved-mark">⌖</span><span><strong>{place.place_type === "home" ? "الركوب المفضل" : place.place_type === "work" ? "الوصول المفضل" : "مكان متكرر"}</strong><small>{safeAddressLabel(resolvedSavedPlaces[index]?.label || place.label)}</small></span><span className="location-suggestion-action">اختيار</span></button>
       </li>)}
       {suggestions.map((item) => <li key={`${item.lat.toFixed(5)}-${item.lng.toFixed(5)}`}>
         <button type="button" className="location-suggestion-option" onClick={() => selectSuggestion(item)}><span className="location-suggestion-copy"><strong>{item.primary || addressParts(item.label).primary}</strong>{item.secondary && <small>{item.secondary}</small>}</span><span className="location-suggestion-action">اختيار</span></button>
