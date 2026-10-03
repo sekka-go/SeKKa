@@ -1075,3 +1075,18 @@ button { line-height: 1.45; }
 @media (max-width: 360px) {
   .workspace .rider-dashboard .welcome-illustration { display: none; }
 }
+
+.workspace .workspace-back {
+  display: grid;
+  flex: 0 0 2.25rem;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--yellow);
+  border: 1px solid var(--line);
+  border-radius: .65rem;
+  font-size: 1.25rem;
+}
+@media (max-width: 800px) {
+  .workspace .workspace-back { margin-inline-end: -.35rem; }
+}
