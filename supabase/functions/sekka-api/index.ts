@@ -578,6 +578,52 @@ Deno.serve(async (req: Request) => {
       if (memberError) throw memberError;
       return reply({ ...(await groupView(group)), auto_matched: false }, 201, origin);
     }
+    const editGroupMatch = path.match(/^\/rider\/pool\/groups\/(\d+)$/);
+    if (req.method === "PUT" && editGroupMatch) {
+      const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      const groupId = Number(editGroupMatch[1]);
+      const group = await getGroup(groupId);
+      if (!group) return error("المجموعة غير موجودة.", 404, origin);
+      if (Number(group.created_by_user_id) !== user!.id) return error("يمكن لصاحب المجموعة تعديل المشوار فقط.", 403, origin);
+      if (group.status !== "waiting") return error("يمكن تعديل المشوار قبل اكتمال المجموعة فقط.", 409, origin);
+      const members = await getMembers(groupId);
+      if (members.length !== 1 || Number(members[0].rider_user_id) !== user!.id) return error("لا يمكن تعديل المشوار بعد انضمام ركاب آخرين.", 409, origin);
+      const [{ data: existingTrips }, { data: existingSubscription }] = await Promise.all([
+        db.from("pool_trips").select("id").eq("group_id", groupId).limit(1),
+        db.from("pool_subscriptions").select("id").eq("group_id", groupId).limit(1),
+      ]);
+      if (existingTrips?.length || existingSubscription?.length) return error("لا يمكن تعديل مشوار بدأ تفعيله.", 409, origin);
+      const { category_id, package_type, service_dates, morning_departure, return_departure } = body;
+      const dates = validDates(service_dates, String(package_type));
+      if (!clean(category_id) || !dates || !/^\d{2}:\d{2}$/.test(String(morning_departure)) || !/^\d{2}:\d{2}$/.test(String(return_departure)) || String(return_departure) <= String(morning_departure)) return error("راجع الفئة والأيام ومواعيد الذهاب والعودة.", 400, origin);
+      let pickup, dropoff;
+      try { pickup = await selectLocation(body, "pickup"); dropoff = await selectLocation(body, "dropoff"); }
+      catch (err) { if (err instanceof ApiFailure) return error(err.message, err.status, origin); throw err; }
+      const { data: category } = await db.from("pool_categories").select("*").eq("id", category_id).maybeSingle();
+      if (!category) return error("فئة الرحلة غير موجودة.", 404, origin);
+      const member = members[0];
+      const updatedMember = { ...member, pickup_lat: pickup.lat, pickup_lng: pickup.lng, pickup_place_id: pickup.place_id, dropoff_lat: dropoff.lat, dropoff_lng: dropoff.lng, dropoff_place_id: dropoff.place_id };
+      let q; try { q = await quote([updatedMember], category); }
+      catch (err) { if (err instanceof ApiFailure) return error(err.message, err.status, origin); return error("خدمة حساب المسار غير متاحة حاليًا.", 503, origin); }
+      const memberPatch = { pickup_lat: pickup.lat, pickup_lng: pickup.lng, pickup_place_id: pickup.place_id, dropoff_lat: dropoff.lat, dropoff_lng: dropoff.lng, dropoff_place_id: dropoff.place_id };
+      const { error: memberUpdateError } = await db.from("pool_members").update(memberPatch).eq("id", member.id).eq("status", "active");
+      if (memberUpdateError) throw memberUpdateError;
+      const { data: updatedGroup, error: groupUpdateError } = await db.from("pool_groups").update({
+        category_id, package_type, service_dates: dates, morning_departure: morning_departure + ":00",
+        return_departure: return_departure + ":00", route_distance_km: q.out.distanceKm,
+        route_duration_min: q.out.durationMin, seat_day_fare: q.seatDayFare, route_geometry: q.geometry,
+        updated_at: new Date().toISOString(),
+      }).eq("id", groupId).eq("created_by_user_id", user!.id).eq("status", "waiting").select().maybeSingle();
+      if (groupUpdateError || !updatedGroup) {
+        await db.from("pool_members").update({
+          pickup_lat: member.pickup_lat, pickup_lng: member.pickup_lng, pickup_place_id: member.pickup_place_id,
+          dropoff_lat: member.dropoff_lat, dropoff_lng: member.dropoff_lng, dropoff_place_id: member.dropoff_place_id,
+        }).eq("id", member.id);
+        if (groupUpdateError) throw groupUpdateError;
+        return error("تغيرت حالة المشوار؛ حدّث الصفحة وحاول مرة أخرى.", 409, origin);
+      }
+      return reply(await groupView({ ...updatedGroup, current_rider_id: user!.id }), 200, origin);
+    }
     const joinMatch = path.match(/^\/rider\/pool\/groups\/(\d+)\/join$/);
     if (req.method === "POST" && joinMatch) {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
