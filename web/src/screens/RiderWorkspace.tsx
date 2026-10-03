@@ -22,6 +22,9 @@ export default function RiderWorkspace({ session, section, setSection, notificat
   const [submitting, setSubmitting] = useState(false);
   const [bookingMode, setBookingMode] = useState<"new" | "join">("new");
   const [categoryId, setCategoryId] = useState("");
+  const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
+  const [savedPlaceTarget, setSavedPlaceTarget] = useState<"pickup" | "dropoff">("pickup");
+  const [savedPlaceMenuOpen, setSavedPlaceMenuOpen] = useState(false);
   const [packageType, setPackageType] = useState<"daily" | "weekly" | "monthly">("daily");
   const [dates, setDates] = useState<string[]>(() => defaultDates("daily"));
   const [morning, setMorning] = useState("07:30");
@@ -37,6 +40,7 @@ export default function RiderWorkspace({ session, section, setSection, notificat
   const [priceLoading, setPriceLoading] = useState(false);
   const [priceError, setPriceError] = useState("");
   const selectedCategory = categories.find((item) => item.id === categoryId) ?? null;
+  const selectedPointForSavedPlace = savedPlaceTarget === "pickup" ? pickup : dropoff;
   const selected = groups.find((view) => view.group.id === selectedGroup) ?? null;
 
   const openBooking = (mode: "new" | "join") => {
@@ -152,6 +156,12 @@ export default function RiderWorkspace({ session, section, setSection, notificat
     } catch (error) { notify(errorText(error), "error"); }
   };
 
+  const selectSavedPlace = (place: SavedPlace) => {
+    const point = { lat: place.lat, lng: place.lng, kind: savedPlaceTarget, label: place.label };
+    if (savedPlaceTarget === "pickup") { setPickup(point); setPickupSearch(place.label); }
+    else { setDropoff(point); setDropoffSearch(place.label); }
+  };
+
   const groupAction = async (groupId: number, action: string, body?: unknown) => {
     setSubmitting(true);
     try {
@@ -188,9 +198,39 @@ export default function RiderWorkspace({ session, section, setSection, notificat
       
       <form className="form-stack" onSubmit={bookingMode === "new" ? createGroup : joinGroup}>
         {bookingMode === "join" && <><label>رقم المجموعة<input type="number" min="1" value={inviteCode} onChange={(e) => setInviteCode(e.target.value)} placeholder="مثال: 124" required /></label><div className="info-note">لازم نقط الركوب والنزول تكون في حدود ٣ كم من مسار المجموعة.</div></>}
+        <section className="saved-place-tools" aria-label="الأماكن المحفوظة">
+          <div className="saved-place-tools-heading">
+            <strong>الأماكن المحفوظة</strong>
+            <div className="saved-place-target" aria-label="المكان الذي سيُستخدم">
+              <button type="button" className={savedPlaceTarget === "pickup" ? "active" : ""} aria-pressed={savedPlaceTarget === "pickup"} onClick={() => { setSavedPlaceTarget("pickup"); setSavedPlaceMenuOpen(false); }}>للركوب</button>
+              <button type="button" className={savedPlaceTarget === "dropoff" ? "active" : ""} aria-pressed={savedPlaceTarget === "dropoff"} onClick={() => { setSavedPlaceTarget("dropoff"); setSavedPlaceMenuOpen(false); }}>للنزول</button>
+            </div>
+          </div>
+          {savedPlaces.length > 0 ? <div className="saved-place-chips">
+            {savedPlaces.map((place) => <div className="saved-place-chip" key={place.place_type}>
+              <button type="button" onClick={() => selectSavedPlace(place)} aria-label={`استخدم ${place.place_type === "home" ? "المنزل" : "العمل"} لنقطة ${savedPlaceTarget === "pickup" ? "الركوب" : "النزول"}`}>
+                <strong>{place.place_type === "home" ? "⌂ المنزل" : "▣ العمل"}</strong><span>{place.label}</span>
+              </button>
+              <button type="button" className="saved-place-remove" onClick={() => void removeSavedPlace(place.place_type)} aria-label={`حذف ${place.place_type === "home" ? "المنزل" : "العمل"} المحفوظ`}>×</button>
+            </div>)}
+          </div> : <p className="saved-place-empty">احفظ نقطة الركوب أو النزول لاستخدامها بسرعة في المرات القادمة.</p>}
+          {selectedPointForSavedPlace && typeof selectedPointForSavedPlace.lat === "number" && typeof selectedPointForSavedPlace.lng === "number" && <div className="saved-place-save">
+            <button type="button" className="saved-place-save-trigger" aria-expanded={savedPlaceMenuOpen} onClick={() => setSavedPlaceMenuOpen((open) => !open)}>
+              {savedPlaceMenuOpen ? "إغلاق خيارات الحفظ" : `حفظ نقطة ${savedPlaceTarget === "pickup" ? "الركوب" : "النزول"}`} <span aria-hidden="true">{savedPlaceMenuOpen ? "⌃" : "⌄"}</span>
+            </button>
+            {savedPlaceMenuOpen && <div className="saved-place-save-options">
+              {(["home", "work"] as const).map((placeType) => {
+                const exists = savedPlaces.some((place) => place.place_type === placeType);
+                return <button type="button" key={placeType} onClick={() => { void savePlace(placeType, selectedPointForSavedPlace); setSavedPlaceMenuOpen(false); }}>
+                  <span>{placeType === "home" ? "⌂ المنزل" : "▣ العمل"}</span><small>{exists ? "تحديث المكان" : "حفظ لأول مرة"}</small>
+                </button>;
+              })}
+            </div>}
+          </div>}
+        </section>
         <div className="location-search-stack">
-          <LocationSearchField kind="pickup" title="نقطة الركوب" value={pickupSearch} token={session.token} onChange={(value) => { setPickupSearch(value); setPickup(null); }} onSelect={(point) => { setPickup(point); setPickupSearch(point.label ?? ""); }} onChooseMap={() => chooseMap("pickup")} savedPlaces={savedPlaces} selectedPoint={pickup} onSavePlace={savePlace} onRemoveSavedPlace={removeSavedPlace} />
-          <LocationSearchField kind="dropoff" title="نقطة النزول" value={dropoffSearch} token={session.token} onChange={(value) => { setDropoffSearch(value); setDropoff(null); }} onSelect={(point) => { setDropoff(point); setDropoffSearch(point.label ?? ""); }} onChooseMap={() => chooseMap("dropoff")} savedPlaces={savedPlaces} selectedPoint={dropoff} onSavePlace={savePlace} onRemoveSavedPlace={removeSavedPlace} />
+          <LocationSearchField kind="pickup" title="نقطة الركوب" value={pickupSearch} token={session.token} onChange={(value) => { setPickupSearch(value); setPickup(null); }} onSelect={(point) => { setSavedPlaceTarget("pickup"); setPickup(point); setPickupSearch(point.label ?? ""); }} onChooseMap={() => { setSavedPlaceTarget("pickup"); chooseMap("pickup"); }} onFocus={() => setSavedPlaceTarget("pickup")} />
+          <LocationSearchField kind="dropoff" title="نقطة النزول" value={dropoffSearch} token={session.token} onChange={(value) => { setDropoffSearch(value); setDropoff(null); }} onSelect={(point) => { setSavedPlaceTarget("dropoff"); setDropoff(point); setDropoffSearch(point.label ?? ""); }} onChooseMap={() => { setSavedPlaceTarget("dropoff"); chooseMap("dropoff"); }} onFocus={() => setSavedPlaceTarget("dropoff")} />
         </div>
         {mapOpen && <section className="booking-map-panel" aria-label="اختيار الموقع من الخريطة">
           <div className="booking-map-toolbar">
@@ -212,15 +252,25 @@ export default function RiderWorkspace({ session, section, setSection, notificat
           <div className="time-row"><label>وقت الذهاب<input type="time" value={morning} onChange={(e) => setMorning(e.target.value)} required /></label><label>وقت العودة<input type="time" value={returnTime} onChange={(e) => setReturnTime(e.target.value)} required /></label></div>
           <section className="category-picker"><div className="field-heading"><strong>الفئة والسعر</strong>{priceLoading && <span>جارٍ تحديث الأسعار…</span>}</div>
             {priceError && <p className="price-error">{priceError}</p>}
-            <label className="category-select-label">اختار الفئة
-              <select className="category-select" value={categoryId} onChange={(event) => setCategoryId(event.target.value)} required>
+            <div className="category-select-label" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setCategoryMenuOpen(false); }} onKeyDown={(event) => { if (event.key === "Escape") setCategoryMenuOpen(false); }}>
+              <span>اختار الفئة</span>
+              <button type="button" className="category-select-trigger" aria-haspopup="listbox" aria-expanded={categoryMenuOpen} aria-controls="category-options" disabled={categories.length === 0} onClick={() => setCategoryMenuOpen((open) => !open)}>
+                <span>{selectedCategory ? `${categoryName(selectedCategory)} · ${selectedCategory.seats} مقاعد` : "جاري تحميل الفئات"}</span>
+                <strong>{selectedCategory && priceQuotes?.[selectedCategory.id] ? money(priceQuotes[selectedCategory.id]![packageType]) : priceLoading ? "جارٍ حساب السعر…" : "السعر بعد تحديد النقط"}</strong>
+                <span className="category-select-chevron" aria-hidden="true">{categoryMenuOpen ? "⌃" : "⌄"}</span>
+              </button>
+              {categoryMenuOpen && <div className="category-select-options" id="category-options" role="listbox" aria-label="الفئات المتاحة">
                 {categories.map((category) => {
                   const quote = priceQuotes?.[category.id];
                   const fare = quote ? money(quote[packageType]) : priceLoading ? "جارٍ حساب السعر…" : "السعر بعد تحديد النقط";
-                  return <option key={category.id} value={category.id}>{categoryName(category)} · {category.seats} مقاعد · {fare}</option>;
+                  const chosen = category.id === categoryId;
+                  return <button type="button" key={category.id} role="option" aria-selected={chosen} className={chosen ? "category-select-option selected" : "category-select-option"} onClick={() => { setCategoryId(category.id); setCategoryMenuOpen(false); }}>
+                    <span><strong>{categoryName(category)}</strong><small>{category.seats} مقاعد · {category.speed_tier === "faster" ? "Faster" : "Saver"}</small></span>
+                    <b>{fare}</b>
+                  </button>;
                 })}
-              </select>
-            </label>
+              </div>}
+            </div>
             <div className="tier-helper">{selectedCategory ? <><strong>{categoryName(selectedCategory)}</strong><span>{selectedCategory.speed_tier === "faster" ? "Faster" : "Saver"} · الفئة تكتمل عند {selectedCategory.seats} ركاب · السعر للفرد</span></> : "جاري تحميل الفئات"}</div>
           </section>
         </>}
