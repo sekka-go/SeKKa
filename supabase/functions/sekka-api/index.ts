@@ -389,7 +389,7 @@ Deno.serve(async (req: Request) => {
       if (placesError) throw placesError;
       return reply({ places: data ?? [] }, 200, origin);
     }
-    const savedPlaceAction = path.match(/^\\/rider\\/saved-places\\/(home|work)$/);
+    const savedPlaceAction = path.match(/^\/rider\/saved-places\/(home|work)$/);
     if (savedPlaceAction && (req.method === "PUT" || req.method === "DELETE")) {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
       const placeType = savedPlaceAction[1] as "home" | "work";
