@@ -16,6 +16,7 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
     return state?.sekkaWorkspace ? state.sekkaIndex ?? 0 : 0;
   });
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notificationsLoaded, setNotificationsLoaded] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
 
@@ -82,6 +83,7 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
   const refreshNotifications = useCallback(async () => {
     try { const result = await api<{ notifications: Notification[] }>("/pool/notifications", { token: session.token }); setNotifications(result.notifications); }
     catch { /* session banner handles expiry */ }
+    finally { setNotificationsLoaded(true); }
   }, [session.token]);
   useEffect(() => { void refreshNotifications(); }, [refreshNotifications]);
   useEffect(() => {
@@ -140,10 +142,10 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
     {navOpen && <button className="sidebar-scrim" onClick={() => setNavOpen(false)} aria-label="إغلاق القائمة" />}
     <main className="main-area">
       <header className="topbar"><div className="topbar-brand-group"><button className="mobile-menu" onClick={() => setNavOpen(true)} aria-label="فتح القائمة">☰</button><button type="button" className="topbar-brand-home" onClick={() => { setSection(initialSection); setNavOpen(false); }} aria-label="العودة للرئيسية"><BrandLogo className="topbar-brand" /></button></div><div className="topbar-actions"><span className={`connection-state ${isOnline ? "is-online" : "is-offline"}`} role="status"><i />{isOnline ? "متصل" : "غير متصل"}</span><button className="icon-button notification-bell" onClick={() => setSection("notifications")} aria-label={unread > 0 ? `الرسائل، ${unread} غير مقروءة` : "الرسائل"}><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" /><path d="M10 21h4" /></svg>{unread > 0 && <i />}</button></div></header>
-      <div className="page-content">{section !== "booking" && <div className="page-heading"><div><h1>{title}</h1><p>{subtitle}</p></div></div>}
-        {session.user.role === "rider" && <RiderWorkspace session={session} section={section} setSection={setSection} notifications={notifications} refreshNotifications={refreshNotifications} notify={notify} />}
-        {session.user.role === "captain" && <CaptainWorkspace session={session} section={section} notifications={notifications} refreshNotifications={refreshNotifications} notify={notify} />}
-        {session.user.role === "admin" && <AdminWorkspace session={session} section={section} notifications={notifications} refreshNotifications={refreshNotifications} notify={notify} />}
+      <div className="page-content">{section !== "booking" && section !== "notifications" && <div className="page-heading"><div><h1>{title}</h1><p>{subtitle}</p></div></div>}
+        {session.user.role === "rider" && <RiderWorkspace session={session} section={section} setSection={setSection} notifications={notifications} notificationsLoading={!notificationsLoaded} refreshNotifications={refreshNotifications} notify={notify} />}
+        {session.user.role === "captain" && <CaptainWorkspace session={session} section={section} notifications={notifications} notificationsLoading={!notificationsLoaded} refreshNotifications={refreshNotifications} notify={notify} />}
+        {session.user.role === "admin" && <AdminWorkspace session={session} section={section} notifications={notifications} notificationsLoading={!notificationsLoaded} refreshNotifications={refreshNotifications} notify={notify} />}
       </div>
     </main>
   </div>;

@@ -15,8 +15,9 @@ import {
 const hasSelectedPoint = (point: MapPoint | null) =>
   typeof point?.lat === "number" && Number.isFinite(point.lat) &&
   typeof point?.lng === "number" && Number.isFinite(point.lng);
-export default function RiderWorkspace({ session, section, setSection, notifications, refreshNotifications, notify }: {
+export default function RiderWorkspace({ session, section, setSection, notifications, notificationsLoading, refreshNotifications, notify }: {
   session: Session; section: NavKey; setSection: (section: NavKey, historyMode?: "push" | "replace") => void; notifications: Notification[];
+  notificationsLoading: boolean;
   refreshNotifications: () => Promise<void>; notify: (text: string, tone?: Toast["tone"]) => void;
 }) {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -287,7 +288,7 @@ export default function RiderWorkspace({ session, section, setSection, notificat
   if (loading) return <LoadingCard text="بنجهّز مساحة مشاويرك…" />;
 
   if (section === "account") return <AccountPanel session={session} notify={notify} />;
-  if (section === "notifications") return <NotificationsPanel items={notifications} token={session.token} onRefresh={refreshNotifications} onPoolChanged={refresh} allowWaitActions notify={notify} />;
+  if (section === "notifications") return <NotificationsPanel items={notifications} token={session.token} onRefresh={refreshNotifications} onPoolChanged={refresh} allowWaitActions notify={notify} isLoading={notificationsLoading} />;
 
   if (section === "booking") return <div className="booking-layout">
     <section className="surface booking-form-surface">

@@ -72,18 +72,30 @@ export function EmptyState({ icon, title, text, action, onAction }: { icon: stri
 }
 export function LoadingCard({ text }: { text: string }) { return <div className="surface loading-card"><span className="spinner" /><strong>{text}</strong></div>; }
 
+function NotificationGlyph({ eventKey }: { eventKey: string }) {
+  const broadcast = eventKey.startsWith("broadcast:");
+  const price = eventKey.includes("price");
+  const captain = eventKey.includes("captain");
+  return <span className="notification-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{broadcast ? <><path d="M4 5.5h16v13H4z"/><path d="m4 7 8 6 8-6"/></> : price ? <><path d="M12 3v18"/><path d="M17 7.5c0-1.7-2.2-2.5-5-2.5S7 6 7 8s2.2 3 5 3 5 1.1 5 3-2.2 3-5 3-5-.8-5-2.5"/></> : captain ? <><circle cx="12" cy="8" r="3"/><path d="M5 20c.6-3.4 3-5 7-5s6.4 1.6 7 5"/><path d="M19 5v4m-2-2h4"/></> : <><path d="M4 17.5h3l10-10a2.1 2.1 0 0 0-3-3l-10 10z"/><path d="m12.5 6.5 3 3"/><path d="M4 21h16"/></>}</svg></span>;
+}
+
 export function NotificationRow({ item }: { item: Notification }) {
   const isBroadcast = item.event_key.startsWith("broadcast:");
   const title = isBroadcast ? (typeof item.payload.title === "string" ? item.payload.title : "رسالة من إدارة سِكّة") : item.event_key.includes("price") ? "تحديث على سعر المجموعة" : item.event_key.includes("captain") ? "تحديث الكابتن" : item.event_key.includes("wait") ? "المجموعة ما زالت في الانتظار" : item.event_key.includes("invite") ? "دعوة لمجموعة مشوار" : "تحديث جديد على مشوارك";
-  const message = isBroadcast && typeof item.payload.message === "string" ? item.payload.message : "";
+  const message = typeof item.payload.message === "string" ? item.payload.message : item.event_key.includes("price") ? "راجع تفاصيل مجموعتك للاطلاع على السعر المحدّث." : item.event_key.includes("captain") ? "يوجد تحديث بخصوص الكابتن ورحلتك." : item.event_key.includes("wait") ? "تابع حالة المجموعة واختار الإجراء المناسب." : item.event_key.includes("invite") ? "يمكنك مراجعة تفاصيل الدعوة والرد عليها من رحلاتك." : "سنوافيك بأي تغيير جديد يخص رحلتك أو مجموعتك.";
   const date = new Intl.DateTimeFormat("ar-EG", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(item.created_at));
-  return <div className={`notification-row ${item.read_at ? "read" : ""}`}><span className="notification-mark">{isBroadcast ? "✉" : item.event_key.includes("price") ? "٪" : item.event_key.includes("captain") ? "⌖" : "↗"}</span><div><strong>{title}</strong>{message && <p className="notification-message">{message}</p>}<small>{item.group_id ? `مجموعة #${item.group_id} · ` : ""}{date}</small></div>{!item.read_at && <i />}</div>;
+  return <div className={`notification-row ${item.read_at ? "read" : "unread"}`}><NotificationGlyph eventKey={item.event_key} /><div className="notification-content"><strong>{title}</strong><p className="notification-message">{message}</p></div><div className="notification-time"><small>{item.group_id ? `مجموعة #${item.group_id}` : ""}</small><small>{date}</small>{!item.read_at && <i aria-label="غير مقروء" />}</div></div>;
 }
 
-export function NotificationsPanel({ items, token, onRefresh, onPoolChanged, allowWaitActions = false, notify }: { items: Notification[]; token: string; onRefresh: () => Promise<void>; onPoolChanged?: () => Promise<void>; allowWaitActions?: boolean; notify: (text: string, tone?: Toast["tone"]) => void }) {
+function NotificationHeader({ isLoading, refreshing, onRefresh, onToggleSettings, settingsLabel, settingsDisabled }: { isLoading: boolean; refreshing: boolean; onRefresh: () => void; onToggleSettings: () => void; settingsLabel: string; settingsDisabled: boolean }) {
+  return <header className="notifications-header"><div><span className="eyebrow">مركز التحديثات</span><h2>الإشعارات</h2></div><div className="notification-header-actions"><button type="button" className="notification-icon-action" onClick={onRefresh} disabled={isLoading || refreshing} aria-label="تحديث الإشعارات" title="تحديث الإشعارات"><svg className={refreshing ? "is-spinning" : ""} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M4.8 9a8 8 0 0 1 13.5-2L20 12M4 17v-5h5"/><path d="M19.2 15A8 8 0 0 1 5.7 17L4 12"/></svg></button><button type="button" className={`notification-icon-action ${settingsDisabled ? "is-unavailable" : ""}`} onClick={onToggleSettings} disabled={settingsDisabled} aria-label={settingsLabel} title={settingsLabel}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.4 13.5 1.1.9-1.3 2.2-1.4-.5a7 7 0 0 1-1.5.9l-.3 1.5h-2.6l-.3-1.5a7 7 0 0 1-1.6-.9l-1.4.5-1.3-2.2 1.1-.9a7 7 0 0 1 0-1.8l-1.1-.9 1.3-2.2 1.4.5a7 7 0 0 1 1.6-.9l.3-1.5H16l.3 1.5a7 7 0 0 1 1.5.9l1.4-.5 1.3 2.2-1.1.9a7 7 0 0 1 0 1.8Z"/></svg></button></div></header>;
+}
+
+export function NotificationsPanel({ items, token, onRefresh, onPoolChanged, allowWaitActions = false, notify, isLoading = false }: { items: Notification[]; token: string; onRefresh: () => Promise<void>; onPoolChanged?: () => Promise<void>; allowWaitActions?: boolean; notify: (text: string, tone?: Toast["tone"]) => void; isLoading?: boolean }) {
   const [pushEnabled, setPushEnabled] = useState(false);
   const [pushReady, setPushReady] = useState(false);
   const [pushBusy, setPushBusy] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   useEffect(() => {
     let active = true;
     void Promise.all([getConfiguredPushPublicKey(), hasPushSubscription()]).then(([publicKey, enabled]) => {
@@ -108,6 +120,12 @@ export function NotificationsPanel({ items, token, onRefresh, onPoolChanged, all
     finally { setPushBusy(false); }
   };
 
+  const refresh = async () => {
+    setRefreshing(true);
+    try { await onRefresh(); }
+    finally { setRefreshing(false); }
+  };
+
   const markRead = async (item: Notification) => {
     if (item.read_at) return;
     try { await api(`/pool/notifications/${item.id}/read`, { method: "POST", token }); await onRefresh(); }
@@ -122,11 +140,11 @@ export function NotificationsPanel({ items, token, onRefresh, onPoolChanged, all
       notify(action === "cancel" ? "تم إلغاء المجموعة مجانًا." : "تم حجز المقاعد المتبقية للمجموعة.", "success");
     } catch (error) { notify(errorText(error), "error"); }
   };
-  return <section className="surface notifications-panel"><div className="section-title-row"><div><h2>كل الإشعارات</h2><p>الإشعارات محفوظة داخل حسابك</p></div><div className="notification-controls">{pushReady ? <button className="button button-outline button-small" onClick={() => void togglePush()} disabled={pushBusy}>{pushBusy ? "جاري التحديث…" : pushEnabled ? "إيقاف إشعارات الجهاز" : "تفعيل إشعارات الجهاز"}</button> : import.meta.env.PROD ? <small className="push-unavailable-note">إشعارات الجهاز غير مهيأة حاليًا</small> : <button className="button button-outline button-small" disabled>تفعيل الإشعارات بعد النشر</button>}<button className="text-action" onClick={() => void onRefresh()}>تحديث ↻</button></div></div>{items.length ? items.map((item) => {
+  return <section className="notifications-page" aria-label="الإشعارات"><NotificationHeader isLoading={isLoading} refreshing={refreshing} onRefresh={() => void refresh()} onToggleSettings={() => void togglePush()} settingsLabel={pushBusy ? "جارٍ تحديث إعدادات الإشعارات" : pushReady ? pushEnabled ? "إيقاف إشعارات هذا الجهاز" : "تفعيل إشعارات هذا الجهاز" : "إشعارات الجهاز غير مهيأة حاليًا"} settingsDisabled={!pushReady || pushBusy} />{isLoading ? <div className="notifications-loading" role="status"><span className="spinner" /><span>بنحمّل إشعاراتك…</span></div> : items.length ? <div className="notification-list">{items.map((item) => {
     const options = Array.isArray(item.payload.options) ? item.payload.options : [];
     const isWaitNotice = allowWaitActions && item.event_key.includes("wait-72h") && Boolean(item.group_id);
-    return <article className="notification-button-row" key={item.id}><button className="notification-main-action" onClick={() => void markRead(item)}><NotificationRow item={item} /><span className="notification-open">{item.read_at ? "" : "تعليم كمقروء"}</span></button>{isWaitNotice && options.length > 0 && <div className="notification-choice-actions"><span>اختار ما يناسبك:</span>{options.includes("wait") && <button className="button button-outline button-small" onClick={() => void markRead(item)}>الانتظار</button>}{options.includes("book_remaining_seats") && <button className="button button-secondary button-small" onClick={() => void waitAction(item, "complete-seats")}>حجز باقي المقاعد</button>}{options.includes("cancel_free") && <button className="button button-quiet button-small" onClick={() => void waitAction(item, "cancel")}>إلغاء مجاني</button>}</div>}</article>;
-  }) : <EmptyState icon="◌" title="مفيش إشعارات لسه" text="هنبلغك بأي تحديث على رحلاتك ومجموعاتك." />}</section>;
+    return <article className={`notification-item ${item.read_at ? "is-read" : "is-unread"}`} key={item.id}><button type="button" className="notification-main-action" onClick={() => void markRead(item)} aria-label={`${item.read_at ? "" : "تعليم كمقروء: "}${item.event_key.startsWith("broadcast:") && typeof item.payload.title === "string" ? item.payload.title : "إشعار عن مشوارك"}`}><NotificationRow item={item} /></button>{isWaitNotice && options.length > 0 && <div className="notification-choice-actions"><span>اختار ما يناسبك:</span>{options.includes("wait") && <button className="button button-outline button-small" onClick={() => void markRead(item)}>الانتظار</button>}{options.includes("book_remaining_seats") && <button className="button button-secondary button-small" onClick={() => void waitAction(item, "complete-seats")}>حجز باقي المقاعد</button>}{options.includes("cancel_free") && <button className="button button-quiet button-small" onClick={() => void waitAction(item, "cancel")}>إلغاء مجاني</button>}</div>}</article>;
+  })}</div> : <div className="notifications-empty"><span className="notifications-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg></span><h3>لا توجد إشعارات حالياً</h3><p>سنقوم بتبليغك بأي تحديثات جديدة تخص رحلاتك ومجموعاتك فور توفرها.</p></div>}</section>;
 }
 
 export function AccountPanel({ session, notify }: { session: Session; notify: (text: string, tone?: Toast["tone"]) => void }) {

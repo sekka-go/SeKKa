@@ -3,8 +3,8 @@ import { api, type Notification } from "../api";
 import { errorText, money } from "../lib/formatters";
 import type { NavKey, Session, Toast } from "../types";
 import { AccountPanel, EmptyState, NotificationsPanel } from "../components/workspace-shared";
-export default function AdminWorkspace({ session, section, notifications, refreshNotifications, notify }: {
-  session: Session; section: NavKey; notifications: Notification[]; refreshNotifications: () => Promise<void>; notify: (text: string, tone?: Toast["tone"]) => void;
+export default function AdminWorkspace({ session, section, notifications, notificationsLoading, refreshNotifications, notify }: {
+  session: Session; section: NavKey; notifications: Notification[]; notificationsLoading: boolean; refreshNotifications: () => Promise<void>; notify: (text: string, tone?: Toast["tone"]) => void;
 }) {
   const [overview, setOverview] = useState<Record<string, number> | null>(null);
   const [poolOverview, setPoolOverview] = useState<Record<string, number | boolean | string> | null>(null);
@@ -29,7 +29,7 @@ export default function AdminWorkspace({ session, section, notifications, refres
     return () => window.clearInterval(timer);
   }, [section, refresh, notify]);
   if (section === "account") return <AccountPanel session={session} notify={notify} />;
-  if (section === "notifications") return <NotificationsPanel items={notifications} token={session.token} onRefresh={refreshNotifications} notify={notify} />;
+  if (section === "notifications") return <NotificationsPanel items={notifications} token={session.token} onRefresh={refreshNotifications} notify={notify} isLoading={notificationsLoading} />;
   if (section === "broadcast") {
     const submitBroadcast = async (event: FormEvent) => {
       event.preventDefault();
