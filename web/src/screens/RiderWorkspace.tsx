@@ -212,7 +212,7 @@ export default function RiderWorkspace({ session, section, setSection, notificat
         {bookingMode === "new" && <p className="form-footnote">الأسعار تقديرية للفرد، والباقات الأسبوعية والشهرية تبدأ من التاريخ المحدد وتستثني الجمعة والسبت. مفيش دفع دلوقتي.</p>}
       </form>
     </section>
-    <aside className="booking-aside"><div className="surface soft-surface"><span className="aside-icon">✦</span><h3>مشوار مشترك، بسعر أعدل</h3><p>المشوار يبدأ لما يكتمل عدد ركاب الفئة المختارة. سعر الفرد يتحسب على عدد مقاعدها بالكامل.</p><ul><li>ذهاب وعودة كل يوم خدمة</li><li>إلغاء اليوم مجانًا قبل ١٢ ساعة</li><li>خصم حتى ١٠٪ على الباقات</li></ul></div><div className="surface compact-note"><span>ⓘ</span><p>الموقع اللي بتختاره بيُستخدم لحساب الطريق ومشاركة تفاصيل المشوار مع مجموعتك.</p></div></aside>
+    
   </div>;
 
   const allTrips = groups.flatMap((view) => view.trips.map((trip) => ({ ...trip, groupId: view.group.id, categoryId: view.group.category_id, fare: view.group.seat_day_fare })));
