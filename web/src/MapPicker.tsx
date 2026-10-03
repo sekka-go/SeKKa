@@ -235,7 +235,7 @@ export default function MapPicker({
           ? Number(point.sequence)
           : index + 1;
         const kind = point.kind ?? (index === 0 ? "pickup" : "dropoff");
-        const label = point.label ?? `${kind === "pickup" ? "ركوب" : "نزول"} · محطة ${sequence}`;
+        const label = (point.label ?? (kind === "pickup" ? "ركوب" : "نزول")).replace(new RegExp("\\s*[·•-]?\\s*محطة\\s*" + sequence + "$"), "");
         return <li key={`${kind}-${sequence}-${index}`}>
           <span className={`map-stop-list-number map-stop-${kind}`}>{sequence}</span>
           <span>{label}</span>
