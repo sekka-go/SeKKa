@@ -1734,3 +1734,52 @@ button { line-height: 1.45; }
 .workspace .rider-join-heading .empty-icon { font-size: 1.3rem; line-height: 1; }
 .workspace .rider-join-heading h3, .workspace .rider-join-card p { margin: 0; }
 .workspace .rider-join-card p { color: var(--muted); line-height: 1.5; }
+
+/* Route based ride discovery on the rider dashboard. */
+.workspace .rider-discovery-card { display: grid; gap: .85rem; padding: clamp(.9rem, 2vw, 1.25rem); margin-top: .8rem; border-color: rgba(255,210,31,.2); }
+.workspace .rider-discovery-header { display: flex; align-items: flex-start; justify-content: space-between; gap: .8rem; }
+.workspace .rider-discovery-header > div { min-width: 0; }
+.workspace .rider-discovery-header h3 { margin: .15rem 0; font-size: 1.2rem; }
+.workspace .rider-discovery-header p { margin: .2rem 0 0; color: var(--muted); font-size: .88rem; line-height: 1.55; }
+.workspace .rider-discovery-mark { display: grid; flex: 0 0 2.4rem; width: 2.4rem; height: 2.4rem; place-items: center; color: var(--yellow); background: rgba(255,210,31,.08); border: 1px solid rgba(255,210,31,.24); border-radius: 50%; font-size: 1.65rem; line-height: 1; }
+.workspace .rider-discovery-presets { display: flex; align-items: center; flex-wrap: wrap; gap: .45rem; padding: .55rem .65rem; background: rgba(158,232,230,.045); border: 1px solid rgba(158,232,230,.14); border-radius: .8rem; }
+.workspace .rider-discovery-presets > span { margin-inline-end: auto; color: var(--muted); font-size: .78rem; }
+.workspace .rider-discovery-presets button { padding: .45rem .6rem; color: var(--ink); background: #171309; border: 1px solid var(--line); border-radius: .6rem; font-size: .8rem; }
+.workspace .rider-discovery-presets button:hover { border-color: var(--cyan); }
+.workspace .rider-discovery-presets i { color: var(--yellow); font-style: normal; }
+.workspace .rider-discovery-locations { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; }
+.workspace .rider-discovery-locations .location-search-field { align-content: start; min-width: 0; padding: .7rem; background: rgba(0,0,0,.12); border: 1px solid var(--line); border-radius: .8rem; }
+.workspace .rider-discovery-locations .location-search-heading { gap: .4rem; }
+.workspace .rider-discovery-locations .location-search-heading strong { font-size: .85rem; }
+.workspace .rider-discovery-locations .location-search-form input { min-height: 2.7rem; }
+.workspace .rider-discovery-actions { display: flex; align-items: center; justify-content: space-between; gap: .65rem; }
+.workspace .rider-discovery-actions small, .workspace .rider-discovery-attribution { color: var(--muted); font-size: .74rem; line-height: 1.5; }
+.workspace .rider-discovery-actions .button { flex: 0 0 auto; }
+.workspace .rider-discovery-map { margin: 0; padding: .65rem; background: #171309; border: 1px solid var(--line); border-radius: .9rem; }
+.workspace .rider-discovery-map .booking-map { height: min(48vh, 22rem); min-height: 14rem; border-radius: .7rem; overflow: hidden; }
+.workspace .rider-discovery-error { margin: 0; padding: .6rem .75rem; color: #ffb4ab; background: rgba(255,116,104,.08); border: 1px solid rgba(255,116,104,.2); border-radius: .65rem; font-size: .82rem; }
+.workspace .rider-discovery-status { margin: 0; padding: .7rem; color: var(--cyan); text-align: center; background: rgba(158,232,230,.06); border-radius: .7rem; }
+.workspace .rider-discovery-empty { display: grid; justify-items: start; gap: .3rem; padding: .85rem; background: rgba(255,210,31,.045); border: 1px dashed rgba(255,210,31,.25); border-radius: .75rem; }
+.workspace .rider-discovery-empty strong { color: var(--ink); font-size: .9rem; }
+.workspace .rider-discovery-empty > span { color: var(--muted); font-size: .8rem; line-height: 1.5; }
+.workspace .rider-discovery-empty .text-action { margin-top: .2rem; color: var(--yellow); }
+.workspace .rider-discovery-results { display: grid; gap: .55rem; }
+.workspace .rider-discovery-results-heading { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.workspace .rider-discovery-results-heading span { color: var(--muted); font-size: .78rem; }
+.workspace .rider-discovery-result { display: grid; gap: .5rem; min-width: 0; padding: .75rem; background: linear-gradient(135deg, rgba(255,210,31,.055), rgba(158,232,230,.035)); border: 1px solid var(--line); border-radius: .8rem; }
+.workspace .rider-discovery-result-top, .workspace .rider-discovery-result-main { display: flex; align-items: center; justify-content: space-between; gap: .6rem; min-width: 0; }
+.workspace .rider-discovery-result-top { color: var(--muted); font-size: .78rem; }
+.workspace .rider-discovery-result-top .status-chip { padding: .2rem .45rem; border-radius: 999px; }
+.workspace .rider-discovery-result-main > * { min-width: 0; }
+.workspace .rider-discovery-result-main b { color: var(--yellow); font-size: .87rem; text-align: left; }
+.workspace .rider-discovery-result-meta { display: flex; flex-wrap: wrap; gap: .3rem .8rem; color: var(--muted); font-size: .76rem; }
+.workspace .rider-discovery-result > .button { justify-self: end; }
+.workspace .rider-discovery-attribution { justify-self: end; }
+@media (max-width: 560px) {
+  .workspace .rider-discovery-locations { grid-template-columns: minmax(0, 1fr); }
+  .workspace .rider-discovery-actions { align-items: stretch; flex-direction: column; }
+  .workspace .rider-discovery-actions .button { width: 100%; }
+  .workspace .rider-discovery-presets > span { flex-basis: 100%; }
+  .workspace .rider-discovery-result-main { align-items: flex-start; flex-direction: column; gap: .15rem; }
+  .workspace .rider-discovery-result > .button { justify-self: stretch; }
+}
