@@ -4,21 +4,20 @@ import RiderCommuterBoard from "../components/RiderCommuterBoard";
 import LocationSearchField from "../components/LocationSearchField";
 import { categoryName, errorText, formatDate, money, statusLabel } from "../lib/formatters";
 import { isInsideGreaterCairo } from "../lib/greater-cairo";
-import { api, type Category, type GroupView, type Notification, type RiderCommuterPreferences, type SavedPlace } from "../api";
+import { api, type Category, type GroupView, type RiderCommuterPreferences, type SavedPlace } from "../api";
 import { defaultDates, isServiceDay, serviceDatesFromStart } from "../lib/booking-dates";
 import type { NavKey, Session, Toast } from "../types";
 import {
   AccountPanel, EmptyState, GroupDetail, GroupSummary, LoadingCard,
-  NotificationsPanel, TripList,
+  TripList,
 } from "../components/workspace-shared";
 
 const hasSelectedPoint = (point: MapPoint | null) =>
   typeof point?.lat === "number" && Number.isFinite(point.lat) &&
   typeof point?.lng === "number" && Number.isFinite(point.lng);
-export default function RiderWorkspace({ session, section, setSection, notifications, notificationsLoading, refreshNotifications, notify }: {
-  session: Session; section: NavKey; setSection: (section: NavKey, historyMode?: "push" | "replace") => void; notifications: Notification[];
-  notificationsLoading: boolean;
-  refreshNotifications: () => Promise<void>; notify: (text: string, tone?: Toast["tone"]) => void;
+export default function RiderWorkspace({ session, section, setSection, refreshNotifications, registerPoolRefresh, notify }: {
+  session: Session; section: NavKey; setSection: (section: NavKey, historyMode?: "push" | "replace") => void;
+  refreshNotifications: () => Promise<void>; registerPoolRefresh: (refresh: () => Promise<void>) => void; notify: (text: string, tone?: Toast["tone"]) => void;
 }) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [savedPlaces, setSavedPlaces] = useState<SavedPlace[]>([]);
@@ -210,10 +209,12 @@ export default function RiderWorkspace({ session, section, setSection, notificat
     return () => { active = false; window.clearTimeout(timer); };
   }, [bookingMode, pickup, dropoff, session.token]);
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     try { await refreshGroups(); await refreshNotifications(); }
     catch (error) { notify(errorText(error), "error"); }
-  };
+  }, [refreshGroups, refreshNotifications, notify]);
+
+  useEffect(() => { registerPoolRefresh(refresh); }, [registerPoolRefresh, refresh]);
 
   useEffect(() => {
     const timer = window.setInterval(() => { void refresh(); }, 30_000);
@@ -288,7 +289,6 @@ export default function RiderWorkspace({ session, section, setSection, notificat
   if (loading) return <LoadingCard text="بنجهّز مساحة مشاويرك…" />;
 
   if (section === "account") return <AccountPanel session={session} notify={notify} />;
-  if (section === "notifications") return <NotificationsPanel items={notifications} token={session.token} onRefresh={refreshNotifications} onPoolChanged={refresh} allowWaitActions notify={notify} isLoading={notificationsLoading} />;
 
   if (section === "booking") return <div className="booking-layout">
     <section className="surface booking-form-surface">
