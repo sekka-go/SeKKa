@@ -16,17 +16,24 @@ function sameApplicationServerKey(subscription: PushSubscription, expected: Arra
   return currentBytes.length === expectedBytes.length && currentBytes.every((byte, index) => byte === expectedBytes[index]);
 }
 
+export async function getConfiguredPushPublicKey() {
+  if (!import.meta.env.PROD) return null;
+  const { public_key: publicKey } = await api<{ public_key: string }>("/pool/push/vapid-public-key");
+  return publicKey;
+}
+
 export async function subscribeToPush(token: string) {
   if (!import.meta.env.PROD) throw new Error("إشعارات الجهاز تتاح بعد نشر التطبيق عبر HTTPS.");
   if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
     throw new Error("المتصفح الحالي لا يدعم إشعارات الجهاز.");
   }
 
+  // Check server readiness first so permission is only requested when setup can finish.
+  const publicKey = await getConfiguredPushPublicKey();
+  if (!publicKey) throw new Error("إشعارات الجهاز غير متاحة حاليًا.");
   let permission = Notification.permission;
   if (permission === "default") permission = await Notification.requestPermission();
   if (permission !== "granted") throw new Error("اسمح بالإشعارات من إعدادات المتصفح لتفعيلها.");
-
-  const { public_key: publicKey } = await api<{ public_key: string }>("/pool/push/vapid-public-key");
   const registration = await navigator.serviceWorker.ready;
   const applicationServerKey = decodeApplicationServerKey(publicKey);
   let subscription = await registration.pushManager.getSubscription();

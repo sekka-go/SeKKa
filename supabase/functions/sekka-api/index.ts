@@ -902,7 +902,9 @@ Deno.serve(async (req: Request) => {
 
     if (req.method === "GET" && path === "/pool/push/vapid-public-key") {
       const publicKey = Deno.env.get("SEKKA_VAPID_PUBLIC_KEY") ?? "";
-      if (!publicKey) return error("إشعارات الجهاز غير مهيأة على الخادم.", 503, origin);
+      const privateKey = Deno.env.get("SEKKA_VAPID_PRIVATE_KEY") ?? "";
+      const subject = Deno.env.get("SEKKA_VAPID_SUBJECT") ?? "";
+      if (!publicKey || !privateKey || !subject) return error("إشعارات الجهاز غير مهيأة على الخادم.", 503, origin);
       return reply({ public_key: publicKey }, 200, origin);
     }
     if (req.method === "PUT" && path === "/pool/push/subscriptions") {
