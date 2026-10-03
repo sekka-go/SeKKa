@@ -8,7 +8,7 @@ SeKKa is served over HTTPS by Cloudflare Pages and has an Arabic RTL web app man
 - On iOS, the app shows instructions to use Share → Add to Home Screen.
 - A waiting service-worker update is announced; the user chooses when to activate it and reload.
 - When offline, SeKKa serves a small branded retry page. Booking and live trip data require an internet connection and are never represented as available offline.
-- The manifest and install icons use SeKKa's dark background, yellow route mark, Arabic name, RTL language, and standalone launch mode.
+- The manifest and install icons use SeKKa's road-and-pin app logo, Arabic name, RTL language, and standalone launch mode.
 
 ## Cache and privacy boundaries
 
@@ -34,3 +34,4 @@ SeKKa is served over HTTPS by Cloudflare Pages and has an Arabic RTL web app man
 - After the first online load, switch offline and navigate/reload: the branded offline page should appear.
 - Confirm API and OSM requests are not cached. Restore connectivity and verify retry works.
 - Deploy a newer build, then verify the update notice appears and a user-selected update reloads once.
+
