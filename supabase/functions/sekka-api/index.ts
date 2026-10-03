@@ -68,8 +68,8 @@ function cacheWrite<T extends LocationAddress | LocationSuggestion[]>(key: strin
 function formatPhotonAddress(properties: PhotonProperties): LocationAddress {
   const text = (...keys: string[]) => keys.map((key) => properties[key]).find((value): value is string => clean(value))?.trim() ?? "";
   const unique = (values: string[]) => values.filter((value, index) => value && values.findIndex((candidate) => candidate.toLocaleLowerCase("ar-EG") === value.toLocaleLowerCase("ar-EG")) === index);
-  const name = text("name");
-  const street = text("street", "road");
+  const name = text("name:ar", "name");
+  const street = text("street:ar", "street", "road");
   const number = text("housenumber");
   const streetAddress = [street, number].filter(Boolean).join(" ");
   const localities = unique([text("district"), text("suburb"), text("locality"), text("city"), text("county"), text("state")]);
@@ -177,7 +177,8 @@ async function searchGreaterCairo(query: string) {
   searchUrl.searchParams.set("q", query);
   searchUrl.searchParams.set("bbox", `${GREATER_CAIRO.west},${GREATER_CAIRO.south},${GREATER_CAIRO.east},${GREATER_CAIRO.north}`);
   searchUrl.searchParams.set("countrycode", "EG");
-  searchUrl.searchParams.set("lang", "ar");
+  // The public Photon instance does not accept `lang=ar`; let its supported
+  // language negotiation use the Arabic Accept-Language header instead.
   searchUrl.searchParams.set("limit", "12");
   searchUrl.searchParams.set("lat", "30.0444");
   searchUrl.searchParams.set("lon", "31.2357");

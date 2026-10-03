@@ -9,7 +9,10 @@ export function reverseGeocode(token: string, lat: number, lng: number) {
 
 export function safeAddressLabel(label: string | null | undefined) {
   const value = (label ?? "").trim();
-  return /^-?\d{1,3}(?:\.\d+)?\s*[,،]\s*-?\d{1,3}(?:\.\d+)?$/.test(value) ? "موقع محدد على الخريطة" : value;
+  const coordinatePair = /(?<![\d.])-?\d{1,2}\.\d{3,}\s*[,،]\s*-?\d{1,3}\.\d{3,}(?![\d.])/g;
+  if (!coordinatePair.test(value)) return value;
+  const withoutCoordinates = value.replace(coordinatePair, "").replace(/[\s·•،,؛:–—-]+$/g, "").trim();
+  return withoutCoordinates || "موقع محدد على الخريطة";
 }
 
 export function addressParts(label: string | null | undefined) {
