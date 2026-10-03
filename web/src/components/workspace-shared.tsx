@@ -16,10 +16,10 @@ export function GroupSummary({ view, categories, onClick }: { view: GroupView; c
   return <button className="surface group-summary" onClick={onClick}><div className="group-summary-top"><span className={`status-chip status-${group.status}`}>{statusLabel(group.status)}</span><span className="group-number">مجموعة #{group.id}</span></div><div className="group-summary-main"><span className="route-badge">↗</span><div><strong>{categoryName(category)}</strong><small>{group.package_type === "weekly" ? "باقة أسبوعية" : group.package_type === "monthly" ? "باقة شهرية" : "مشوار يومي"} · {view.members.length} ركاب</small></div><span className="group-price">{money(group.seat_day_fare)}</span></div><div className="seat-progress"><span>{seats} مقاعد محجوزة</span><div><i style={{ width: `${category ? Math.min(100, seats / category.seats * 100) : 0}%` }} /></div><small>{category?.seats ?? "—"} إجمالي المقاعد</small></div><div className="group-summary-foot"><span>⌖ {group.route_distance_km ?? "—"} كم</span><span>◷ {group.morning_departure} ذهاب · {group.return_departure} عودة</span><span>التفاصيل ←</span></div></button>;
 }
 
-export function GroupDetail({ view, categories, busy, action, notify, onNew }: {
+export function GroupDetail({ view, categories, busy, action, notify, onNew, onEdit, currentUserId }: {
   view: GroupView; categories: Category[]; busy: boolean;
   action: (groupId: number, action: string, body?: unknown) => Promise<void>; notify: (text: string, tone?: Toast["tone"]) => void;
-  onNew: () => void;
+  onNew: () => void; onEdit: () => void; currentUserId: number;
 }) {
   const { group, members, trips } = view;
   const category = categories.find((item) => item.id === group.category_id);
@@ -27,10 +27,11 @@ export function GroupDetail({ view, categories, busy, action, notify, onNew }: {
   const seats = activeMembers.reduce((sum, m) => sum + m.seats_reserved, 0);
   const dates = readDates(group.service_dates);
   const [canceling, setCanceling] = useState(false);
+  const [confirmCancellation, setConfirmCancellation] = useState<{ title: string; message: string; action: string } | null>(null);
   const cancel = async () => {
-    if (!window.confirm(group.package_type === "daily" ? "متأكد إنك عايز تلغي المشوار؟" : "متأكد إنك عايز تلغي الباقة؟ هتشوف قيمة الاسترداد قبل أي تحصيل مستقبلي.")) return;
-    setCanceling(true); await action(group.id, "cancel"); setCanceling(false);
+    setCanceling(true); await action(group.id, confirmCancellation?.action ?? "cancel"); setCanceling(false); setConfirmCancellation(null);
   };
+  const canEdit = group.status === "waiting" && group.created_by_user_id === currentUserId && activeMembers.length === 1 && activeMembers[0]?.rider_user_id === currentUserId && trips.length === 0;
   const firstFutureDate = trips.find((trip) => trip.service_date >= todayInCairo() && trip.status !== "completed")?.service_date;
 
   return <div className="group-detail-layout"><div className="group-detail-main">
@@ -47,9 +48,24 @@ export function GroupDetail({ view, categories, busy, action, notify, onNew }: {
     </details>
   </div><aside className="group-detail-side"><section className="surface action-card"><h3>إدارة المشوار</h3><button className="button button-outline button-wide" onClick={() => { void navigator.clipboard?.writeText(String(group.id)); notify("اتنسخ رقم المجموعة.", "success"); }}>⧉ نسخ رقم المجموعة</button>
       {group.status === "waiting" && category && seats < category.seats && activeMembers.length < category.seats && <button className="button button-secondary button-wide" disabled={busy} onClick={() => action(group.id, "complete-seats")}>احجز باقي المقاعد</button>}
-      {firstFutureDate && ["active", "minimum_met", "needs_captain"].includes(group.status) && <button className="button button-quiet button-wide" disabled={busy} onClick={() => { if (window.confirm(`إلغاء يوم ${formatDate(firstFutureDate)}؟`)) action(group.id, `days/${firstFutureDate}/cancel`); }}>إلغاء يوم الخدمة</button>}
-      {!(["cancelled", "completed"].includes(group.status)) && <button className="text-danger" disabled={busy || canceling} onClick={() => void cancel()}>{canceling ? "جاري الإلغاء…" : group.package_type === "daily" ? "إلغاء المشوار" : "إلغاء الباقة"}</button>}
+      {firstFutureDate && ["active", "minimum_met", "needs_captain"].includes(group.status) && <button className="button button-quiet button-wide" disabled={busy} onClick={() => setConfirmCancellation({ title: "إلغاء يوم الخدمة؟", message: `سيتم إلغاء رحلة ${formatDate(firstFutureDate)} وفق سياسة الإلغاء.`, action: `days/${firstFutureDate}/cancel` })}>إلغاء يوم الخدمة</button>}
+      <div className="group-management-actions">
+        {canEdit && <button className="button button-edit-trip" disabled={busy} onClick={onEdit}>تعديل المشوار</button>}
+        {!(["cancelled", "completed"].includes(group.status)) && <button className="button button-cancel-trip" disabled={busy || canceling} onClick={() => setConfirmCancellation({ title: group.package_type === "daily" ? "إلغاء المشوار؟" : "إلغاء الباقة؟", message: group.package_type === "daily" ? "هل تريد إلغاء هذا المشوار؟ راجع سياسة الإلغاء قبل التأكيد." : "سيتم إلغاء الباقة مع احتساب الاسترداد المستحق وفق سياسة الإلغاء.", action: "cancel" })}>{canceling ? "جارٍ الإلغاء…" : group.package_type === "daily" ? "إلغاء المشوار" : "إلغاء الباقة"}</button>}
+      </div>
 </section>
+      {confirmCancellation && <div className="brand-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setConfirmCancellation(null); }}>
+        <section className="brand-confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="cancel-dialog-title" aria-describedby="cancel-dialog-message">
+          <span className="brand-confirm-icon" aria-hidden="true">!</span><h2 id="cancel-dialog-title">{confirmCancellation.title}</h2><p id="cancel-dialog-message">{confirmCancellation.message}</p>
+          <div className="brand-modal-actions"><button className="button button-quiet" disabled={busy || canceling} onClick={() => setConfirmCancellation(null)}>رجوع</button><button className="button button-cancel-trip" disabled={busy || canceling} onClick={() => void cancel()}>{canceling ? "جارٍ الإلغاء…" : "تأكيد الإلغاء"}</button></div>
+        </section>
+      </div>}
+      {confirmCancellation && <div className="brand-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setConfirmCancellation(null); }}>
+        <section className="brand-confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="cancel-dialog-title" aria-describedby="cancel-dialog-message">
+          <span className="brand-confirm-icon" aria-hidden="true">!</span><h2 id="cancel-dialog-title">{confirmCancellation.title}</h2><p id="cancel-dialog-message">{confirmCancellation.message}</p>
+          <div className="brand-modal-actions"><button className="button button-quiet" disabled={busy || canceling} onClick={() => setConfirmCancellation(null)}>رجوع</button><button className="button button-cancel-trip" disabled={busy || canceling} onClick={() => void cancel()}>{canceling ? "جارٍ الإلغاء…" : "تأكيد الإلغاء"}</button></div>
+        </section>
+      </div>}
       <details className="surface upcoming-card"><summary>الرحلات القادمة · {trips.length}</summary>{trips.slice(0, 6).map((trip) => <div className="upcoming-row" key={trip.id}><span className={`trip-arrow ${trip.direction}`}>{trip.direction === "outbound" ? "↗" : "↙"}</span><div><strong>{formatDate(trip.service_date)}</strong><small>{trip.direction === "outbound" ? "ذهاب" : "عودة"} · {trip.departure_at.slice(11, 16)}</small></div><span className={`tiny-status status-${trip.status}`}>{statusLabel(trip.status)}</span></div>)}</details>
       <button className="button button-primary button-wide" onClick={onNew}>＋ ابدأ مجموعة جديدة</button>
     </aside></div>;
