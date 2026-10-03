@@ -225,9 +225,9 @@ export default function RiderWorkspace({ session, section, setSection, notificat
 
   return <div className="dashboard-grid rider-dashboard">
     <section className="dashboard-main">
-      <div className="welcome-banner"><div className="welcome-copy"><span className="eyebrow">سِكّة أقرب لك</span><h2>طريقك أسهل<br /><em>مع سِكّة.</em></h2><button className="button button-dark" onClick={() => setSection("booking")}>ابدأ مشوارك <span>←</span></button></div><div className="welcome-illustration"><div className="sun-orbit" /><div className="route-art"><span /><i /><i /><i /><b /></div><div className="mini-car">▰</div></div></div>
+      <div className="welcome-banner"><div className="welcome-copy"><span className="eyebrow">سِكّة أقرب لك</span><h2>طريقك أسهل<br /><em>مع سِكّة.</em></h2><button className="button button-dark" onClick={() => { setBookingMode("new"); setSection("booking"); }}>إنشاء مشوار جديد <span>←</span></button></div><div className="welcome-illustration"><div className="sun-orbit" /><div className="route-art"><span /><i /><i /><i /><b /></div><div className="mini-car">▰</div></div></div>
       <div className="section-title-row rider-trips-heading"><h2>مشاويرك الحالية</h2><button className="text-action" onClick={() => setSection("trips")}>عرض الكل <span>←</span></button></div>
-      {groups.length ? <div className="group-list">{groups.slice(0, 1).map((view) => <GroupSummary key={view.group.id} view={view} categories={categories} onClick={() => { setSelectedGroup(view.group.id); setSection("trips"); }} />)}</div> : <EmptyState icon="⌖" title="ابدأ أول مشوار" text="حدد نقطتي الركوب والنزول ثم اختر باقتك." action="خطط لمشوار" onAction={() => setSection("booking")} />}
+      {groups.length ? <div className="group-list">{groups.slice(0, 1).map((view) => <GroupSummary key={view.group.id} view={view} categories={categories} onClick={() => { setSelectedGroup(view.group.id); setSection("trips"); }} />)}</div> : <EmptyState icon="⌖" title="معاك رقم مجموعة؟" text="اكتب رقمها وانضم لمشوار موجود." action="انضم لمجموعة" onAction={() => { setBookingMode("join"); setSection("booking"); }} />}
     </section>
   </div>;
 }
