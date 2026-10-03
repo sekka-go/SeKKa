@@ -126,10 +126,16 @@ export default function RiderWorkspace({ session, section, setSection, notificat
     ]).then(([categoryResult, groupResult, savedPlaceResult]) => {
       if (!active) return;
       setCategories(categoryResult.categories); setGroups(groupResult.groups ?? []); setSavedPlaces(savedPlaceResult.places ?? []);
-      setSelectedGroup(groupResult.groups?.[0]?.group.id ?? null);
     }).catch((error) => notify(errorText(error), "error")).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [session.token, notify]);
+
+  // A trip detail should only open after the rider chooses a group. Leaving
+  // the trips section clears that transient selection so Back never reopens
+  // a stale detail panel when the rider returns later.
+  useEffect(() => {
+    if (section !== "trips") setSelectedGroup(null);
+  }, [section]);
 
   useEffect(() => {
     const handleBookingMode = (event: Event) => {
@@ -183,13 +189,13 @@ export default function RiderWorkspace({ session, section, setSection, notificat
     try {
       const editing = bookingMode === "edit" && editingGroupId !== null;
       const editedGroupId = editingGroupId;
-      const result = await api<{ group: { id: number } }>(editing ? `/rider/pool/groups/${editedGroupId}` : "/rider/pool/groups", { method: editing ? "PUT" : "POST", token: session.token, body: {
+      await api(editing ? `/rider/pool/groups/${editedGroupId}` : "/rider/pool/groups", { method: editing ? "PUT" : "POST", token: session.token, body: {
         category_id: categoryId, package_type: packageType, service_dates: dates,
         morning_departure: morning, return_departure: returnTime,
         pickup_lat: pickup.lat, pickup_lng: pickup.lng, dropoff_lat: dropoff.lat, dropoff_lng: dropoff.lng,
       } });
       await refreshGroups(); await refreshNotifications();
-      setBookingMode("new"); setEditingGroupId(null); setSelectedGroup(editing && editedGroupId !== null ? editedGroupId : result.group.id); setSection("trips", "replace"); setPickup(null); setDropoff(null);
+      setBookingMode("new"); setEditingGroupId(null); setSelectedGroup(null); setSection("trips", "replace"); setPickup(null); setDropoff(null);
       notify(editing ? "تم تعديل المشوار." : "تم إنشاء المجموعة. شارك رقمها مع الركاب اللي رايحين نفس اتجاهك.", "success");
     } catch (error) { notify(errorText(error), "error"); }
     finally { setSubmitting(false); }
@@ -371,7 +377,7 @@ export default function RiderWorkspace({ session, section, setSection, notificat
   const allTrips = groups.flatMap((view) => view.trips.map((trip) => ({ ...trip, groupId: view.group.id, categoryId: view.group.category_id, fare: view.group.seat_day_fare })));
   if (section === "trips") return <div className="trips-page">
     <div className="section-toolbar"><button className="button button-primary button-small" onClick={() => openBooking("new")}>＋ مشوار جديد</button></div>
-    {selectedGroup && selected && <GroupDetail view={selected} categories={categories} busy={submitting} action={groupAction} notify={notify} onEdit={() => startEditingGroup(selected)} currentUserId={session.user.id} />}
+    {selectedGroup && selected ? <><button className="button button-quiet button-small trips-back-to-groups" onClick={() => setSelectedGroup(null)}>→ رجوع لمجموعاتي</button><GroupDetail view={selected} categories={categories} busy={submitting} action={groupAction} notify={notify} onEdit={() => startEditingGroup(selected)} currentUserId={session.user.id} /></> : groups.length ? <section className="group-list trips-group-list" aria-label="مجموعات مشاويرك">{groups.map((view) => <GroupSummary key={view.group.id} view={view} categories={categories} onClick={() => setSelectedGroup(view.group.id)} />)}</section> : null}
     {allTrips.length ? <section className="all-trips-section"><div className="section-title-row"><div><h2>مواعيد رحلاتك</h2><p>كل مواعيد الذهاب والعودة لمجموعاتك</p></div><span className="section-count">{allTrips.length}</span></div><TripList trips={allTrips} categories={categories} /></section> : <EmptyState icon="↗" title="لسه مفيش رحلات مجدولة" text={groups.length ? "مجموعة مشوارك ظاهرة فوق؛ ستظهر مواعيده هنا بعد اكتمالها وتأكيد الكابتن." : "لما تنشئ أو تنضم لمجموعة، هتلاقي مشاويرك هنا."} />}
     {groups.length > 1 && selectedGroup && <div className="group-switcher">{groups.map((view) => <button key={view.group.id} className={view.group.id === selectedGroup ? "group-chip active" : "group-chip"} onClick={() => setSelectedGroup(view.group.id)}>مجموعة #{view.group.id} · {statusLabel(view.group.status)}</button>)}</div>}
   </div>;
@@ -384,3 +390,4 @@ export default function RiderWorkspace({ session, section, setSection, notificat
     </section>
   </div>;
 }
+

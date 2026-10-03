@@ -1028,6 +1028,8 @@ button { line-height: 1.45; }
 .workspace .rider-dashboard .rider-trips-heading { margin-top: .1rem; }
 .workspace .rider-dashboard .rider-trips-heading h2 { margin: 0; }
 .workspace .rider-dashboard .group-list { margin-top: -.35rem; }
+.workspace .trips-back-to-groups { margin: .25rem 0 0; }
+.workspace .trips-group-list { margin-top: .25rem; }
 .workspace .admin-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .workspace .admin-user-breakdown, .workspace .admin-secondary-details,
 .workspace .trip-extra-details, .workspace .upcoming-card,
@@ -1554,3 +1556,4 @@ button { line-height: 1.45; }
   .workspace .map-stop-list { gap: .3rem; padding: .5rem; }
   .workspace .map-segments { padding: .55rem; }
 }
+
