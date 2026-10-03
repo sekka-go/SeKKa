@@ -1458,3 +1458,43 @@ button { line-height: 1.45; }
 }
 .workspace .booking-step-back > span { font-size: 1.1rem; }
 .workspace .booking-step-back:hover { background: rgba(255, 210, 31, .12); }
+
+
+/* Keep saved-place addresses from widening the mobile booking form. */
+.workspace .saved-place-tools,
+.workspace .saved-place-tools-content,
+.workspace .saved-place-chips,
+.workspace .saved-place-chip { min-width: 0; max-width: 100%; }
+.workspace .saved-place-tools-content { width: 100%; }
+.workspace .saved-place-chips {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+}
+.workspace .saved-place-chip { width: 100%; }
+.workspace .saved-place-chip > button:first-child {
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+.workspace .saved-place-chip > button:first-child span {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.workspace .location-point-status {
+  display: grid;
+  flex: 0 0 1.15rem;
+  place-items: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  color: var(--yellow);
+  background: rgba(255, 210, 31, .09);
+  border: 1px solid rgba(255, 210, 31, .35);
+  border-radius: 50%;
+  font-size: .68rem;
+  font-weight: 800;
+}
+.workspace .location-point-status.is-selected {
+  color: #15302d;
+  background: var(--cyan);
+  border-color: var(--cyan);
+}
