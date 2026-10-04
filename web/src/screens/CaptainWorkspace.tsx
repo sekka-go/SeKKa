@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import MapPicker from "../MapPicker";
+import MapPicker from "../components/MapPickerLoader";
 import { categoryName, errorText, formatDate, money, statusLabel } from "../lib/formatters";
 import { useResolvedLocationPoints } from "../lib/use-location-addresses";
 import { ApiError, api, type CaptainOffer, type CaptainProfile, type PoolStop, type RouteGeometry } from "../api";

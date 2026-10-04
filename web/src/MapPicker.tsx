@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import type { RouteGeometry, RouteSegment } from "./api";
 import { GREATER_CAIRO_BOUNDS, isInsideGreaterCairo } from "./lib/greater-cairo";
 

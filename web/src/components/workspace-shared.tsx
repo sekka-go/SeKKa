@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import MapPicker from "../MapPicker";
+import MapPicker from "./MapPickerLoader";
 import RiderRoutePreferences from "./RiderRoutePreferences";
 import { categoryName, errorText, formatDate, money, statusLabel } from "../lib/formatters";
 import { getConfiguredPushPublicKey, hasPushSubscription, subscribeToPush, unsubscribeFromPush } from "../lib/push";

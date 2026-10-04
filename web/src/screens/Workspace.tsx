@@ -91,10 +91,6 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
   }, [session.token]);
   const registerPoolRefresh = useCallback((refresh: () => Promise<void>) => { riderPoolRefreshRef.current = refresh; }, []);
   const closeNotifications = useCallback(() => setNotificationsOpen(false), []);
-  const editNotificationGroup = useCallback((groupId: number) => {
-    closeNotifications();
-    window.dispatchEvent(new CustomEvent<number>("sekka:edit-group", { detail: groupId }));
-  }, [closeNotifications]);
   useEffect(() => {
     if (!notificationsOpen) return;
     const previousOverflow = document.body.style.overflow;
@@ -169,7 +165,7 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
         {session.user.role === "captain" && <CaptainWorkspace session={session} section={section} notify={notify} />}
         {session.user.role === "admin" && <AdminWorkspace session={session} section={section} refreshNotifications={refreshNotifications} notify={notify} />}
       </div>
-      {notificationsOpen && <NotificationsPanel items={notifications} token={session.token} onRefresh={refreshNotifications} onPoolChanged={session.user.role === "rider" ? () => riderPoolRefreshRef.current() : undefined} onEditGroup={session.user.role === "rider" ? editNotificationGroup : undefined} allowWaitActions={session.user.role === "rider"} notify={notify} isLoading={!notificationsLoaded} onClose={closeNotifications} topOffset={notificationsTop} />}
+      {notificationsOpen && <NotificationsPanel items={notifications} token={session.token} onRefresh={refreshNotifications} onPoolChanged={session.user.role === "rider" ? () => riderPoolRefreshRef.current() : undefined} allowWaitActions={session.user.role === "rider"} notify={notify} isLoading={!notificationsLoaded} onClose={closeNotifications} topOffset={notificationsTop} />}
     </main>
   </div>;
 }

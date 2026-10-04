@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import MapPicker, { type MapPickMode, type MapPoint } from "../MapPicker";
+import MapPicker from "./MapPickerLoader";
+import type { MapPickMode, MapPoint } from "../MapPicker";
 import { api, type RiderCommuterPreferences, type SavedPlace } from "../api";
 import { errorText } from "../lib/formatters";
 import { addressParts, reverseGeocode, safeAddressLabel } from "../lib/location-address";

@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { routeWithOsrm, RoutingError } from "./routing.ts";
+import { dedupeLocationSuggestions, formatNominatimAddress, formatPhotonAddress, GREATER_CAIRO, isGreaterCairoPoint, normalizeLocationQuery, type LocationAddress, type LocationSuggestion, type NominatimResult, type PhotonProperties } from "./locations.ts";
 
 type Json = Record<string, unknown>;
 type User = { id: number; full_name: string; phone_number: string; role: "rider" | "captain" | "admin"; verified_at: string | null; created_at: string };
@@ -36,69 +37,20 @@ function normalizeClock(value: unknown): string | null {
   const match = /^(?:([01]\d|2[0-3]):([0-5]\d))(?:[:][0-5]\d(?:\.\d{1,6})?)?$/.exec(value);
   return match ? `${match[1]}:${match[2]}` : null;
 }
-const GREATER_CAIRO = { south: 29.65, west: 30.55, north: 30.45, east: 31.85 } as const;
-function isGreaterCairoPoint(lat: number, lng: number) {
-  return lat >= GREATER_CAIRO.south && lat <= GREATER_CAIRO.north && lng >= GREATER_CAIRO.west && lng <= GREATER_CAIRO.east;
-}
-type PhotonProperties = Record<string, unknown>;
-type LocationAddress = { label: string; primary: string; secondary: string };
-type NominatimResult = {
-  name?: string;
-  display_name?: string;
-  lat?: string;
-  lon?: string;
-  address?: Record<string, unknown>;
-  namedetails?: Record<string, unknown>;
-};
 const NOMINATIM_VIEWBOX = "30.8,30.3,31.6,29.7";
 const geocodeCache = new Map<string, { expiresAt: number; value: LocationAddress | LocationSuggestion[] }>();
-type LocationSuggestion = LocationAddress & { lat: number; lng: number };
+const locationRequests = new Map<string, Promise<LocationSuggestion[]>>();
 function cacheRead<T extends LocationAddress | LocationSuggestion[]>(key: string): T | null {
   const hit = geocodeCache.get(key);
   if (!hit || hit.expiresAt <= Date.now()) { geocodeCache.delete(key); return null; }
   return hit.value as T;
 }
-function cacheWrite<T extends LocationAddress | LocationSuggestion[]>(key: string, value: T) {
+function cacheWrite<T extends LocationAddress | LocationSuggestion[]>(key: string, value: T, ttlMs = 86_400_000) {
   if (geocodeCache.size > 1_000) {
     for (const [oldKey, item] of geocodeCache) if (item.expiresAt <= Date.now()) geocodeCache.delete(oldKey);
     while (geocodeCache.size > 1_000) geocodeCache.delete(geocodeCache.keys().next().value!);
   }
-  geocodeCache.set(key, { expiresAt: Date.now() + 86_400_000, value });
-}
-function formatPhotonAddress(properties: PhotonProperties): LocationAddress {
-  const text = (...keys: string[]) => keys.map((key) => properties[key]).find((value): value is string => clean(value))?.trim() ?? "";
-  const unique = (values: string[]) => values.filter((value, index) => value && values.findIndex((candidate) => candidate.toLocaleLowerCase("ar-EG") === value.toLocaleLowerCase("ar-EG")) === index);
-  const name = text("name:ar", "name");
-  const street = text("street:ar", "street", "road");
-  const number = text("housenumber");
-  const streetAddress = [street, number].filter(Boolean).join(" ");
-  const localities = unique([text("district"), text("suburb"), text("locality"), text("city"), text("county"), text("state")]);
-  const nameIsLocality = localities.some((part) => part.toLocaleLowerCase("ar-EG") === name.toLocaleLowerCase("ar-EG"));
-  const primary = name && !nameIsLocality ? name : streetAddress || name || localities[0] || "موقع محدد على الخريطة";
-  const secondary = unique([...(name && primary === name && streetAddress !== primary ? [streetAddress] : []), ...localities])
-    .filter((part) => part.toLocaleLowerCase("ar-EG") !== primary.toLocaleLowerCase("ar-EG"))
-    .join("، ").slice(0, 200);
-  return { primary: primary.slice(0, 120), secondary, label: [primary, secondary].filter(Boolean).join("، ").slice(0, 240) };
-}
-function formatNominatimAddress(result: NominatimResult): LocationAddress {
-  const address = result.address ?? {};
-  const names = result.namedetails ?? {};
-  const get = (...keys: string[]) => keys.map((key) => address[key]).find((value): value is string => clean(value))?.trim() ?? "";
-  const taggedName = [names["name:ar"], names.name, result.name].find((value): value is string => clean(value))?.trim() ?? "";
-  const addressName = get("amenity", "shop", "office", "tourism", "leisure", "historic", "building");
-  const placeName = [taggedName, addressName && !["yes", "residential", "commercial", "apartments"].includes(addressName.toLocaleLowerCase("ar-EG")) ? addressName : ""]
-    .find((value): value is string => clean(value))?.trim() ?? "";
-  const road = get("road", "pedestrian", "footway", "residential", "path");
-  const house = get("house_number");
-  const street = [road, house].filter(Boolean).join(" ");
-  const localities = ["neighbourhood", "neighborhood", "quarter", "suburb", "city_district", "district", "borough", "city", "town", "village", "municipality", "state"]
-    .map((key) => get(key)).filter((value, index, list) => value && list.findIndex((part) => part.toLocaleLowerCase("ar-EG") === value.toLocaleLowerCase("ar-EG")) === index);
-  const displayFocus = result.display_name?.split(",")[0]?.trim() ?? "";
-  const primary = placeName || street || displayFocus || localities[0] || "موقع محدد على الخريطة";
-  const secondary = [...(street && street !== primary ? [street] : []), ...localities]
-    .filter((value, index, list) => value.toLocaleLowerCase("ar-EG") !== primary.toLocaleLowerCase("ar-EG") && list.findIndex((part) => part.toLocaleLowerCase("ar-EG") === value.toLocaleLowerCase("ar-EG")) === index)
-    .join("، ").slice(0, 200);
-  return { primary: primary.slice(0, 120), secondary, label: [primary, secondary].filter(Boolean).join("، ").slice(0, 240) };
+  geocodeCache.set(key, { expiresAt: Date.now() + ttlMs, value });
 }
 function photonBaseUrl() {
   const configured = Deno.env.get("PHOTON_API_BASE_URL") ?? "https://photon.komoot.io";
@@ -144,7 +96,7 @@ async function fetchNominatim<T>(url: URL): Promise<T> {
   return payload as T;
 }
 async function searchNominatimGreaterCairo(query: string): Promise<LocationSuggestion[]> {
-  const cacheKey = `nominatim-search:${query.toLocaleLowerCase("ar-EG")}`;
+  const cacheKey = `nominatim-search:${normalizeLocationQuery(query)}`;
   const cached = cacheRead<LocationSuggestion[]>(cacheKey);
   if (cached) return cached;
   // The public Nominatim service forbids autocomplete. This route is called only
@@ -173,18 +125,24 @@ async function searchNominatimGreaterCairo(query: string): Promise<LocationSugge
   return unique;
 }
 async function searchGreaterCairo(query: string) {
-  const searchUrl = new URL(`${photonBaseUrl()}/api`);
-  searchUrl.searchParams.set("q", query);
-  searchUrl.searchParams.set("bbox", `${GREATER_CAIRO.west},${GREATER_CAIRO.south},${GREATER_CAIRO.east},${GREATER_CAIRO.north}`);
-  searchUrl.searchParams.set("countrycode", "EG");
-  // The public Photon instance does not accept `lang=ar`; let its supported
-  // language negotiation use the Arabic Accept-Language header instead.
-  searchUrl.searchParams.set("limit", "12");
-  searchUrl.searchParams.set("lat", "30.0444");
-  searchUrl.searchParams.set("lon", "31.2357");
-  searchUrl.searchParams.set("zoom", "12");
-  searchUrl.searchParams.set("location_bias_scale", "0.25");
-  const suggestions = (await fetchPhotonFeatures(searchUrl)).flatMap((feature) => {
+  const cacheKey = `photon-search:${normalizeLocationQuery(query)}`;
+  const cached = cacheRead<LocationSuggestion[]>(cacheKey);
+  if (cached) return cached;
+  const pending = locationRequests.get(cacheKey);
+  if (pending) return pending;
+  const request = (async () => {
+    const searchUrl = new URL(`${photonBaseUrl()}/api`);
+    searchUrl.searchParams.set("q", query.trim().replace(/\s+/g, " "));
+    searchUrl.searchParams.set("bbox", `${GREATER_CAIRO.west},${GREATER_CAIRO.south},${GREATER_CAIRO.east},${GREATER_CAIRO.north}`);
+    searchUrl.searchParams.set("countrycode", "EG");
+    // The public Photon instance does not accept `lang=ar`; let its supported
+    // language negotiation use the Arabic Accept-Language header instead.
+    searchUrl.searchParams.set("limit", "12");
+    searchUrl.searchParams.set("lat", "30.0444");
+    searchUrl.searchParams.set("lon", "31.2357");
+    searchUrl.searchParams.set("zoom", "12");
+    searchUrl.searchParams.set("location_bias_scale", "0.25");
+    const suggestions = (await fetchPhotonFeatures(searchUrl)).flatMap((feature) => {
       const coordinates = feature.geometry?.coordinates;
       if (!Array.isArray(coordinates) || coordinates.length < 2) return [];
       const lng = coordinates[0], lat = coordinates[1];
@@ -198,12 +156,17 @@ async function searchGreaterCairo(query: string) {
       const priority = Number(isPlaceOfInterest) * 2 + Number(isAddress);
       return [{ ...address, lat, lng, priority }];
     });
-  const unique = new Map<string, (typeof suggestions)[number]>();
-  for (const suggestion of suggestions.sort((left, right) => right.priority - left.priority)) {
-    const key = suggestion.label.toLocaleLowerCase("ar-EG").replace(/[\s،,]+/g, " ").trim();
-    if (!unique.has(key)) unique.set(key, suggestion);
-  }
-  return [...unique.values()].slice(0, 6).map(({ priority: _priority, ...suggestion }) => suggestion);
+    const unique = new Map<string, (typeof suggestions)[number]>();
+    for (const suggestion of suggestions.sort((left, right) => right.priority - left.priority)) {
+      const key = normalizeLocationQuery(suggestion.label).replace(/[\s،,]+/g, " ").trim();
+      if (!unique.has(key)) unique.set(key, suggestion);
+    }
+    const results = dedupeLocationSuggestions([...unique.values()].slice(0, 6).map(({ priority: _priority, ...suggestion }) => suggestion));
+    cacheWrite(cacheKey, results, 15 * 60_000);
+    return results;
+  })().finally(() => locationRequests.delete(cacheKey));
+  locationRequests.set(cacheKey, request);
+  return request;
 }
 async function reverseGreaterCairo(lat: number, lng: number): Promise<LocationAddress> {
   const cacheKey = `reverse:${lat.toFixed(5)}:${lng.toFixed(5)}`;

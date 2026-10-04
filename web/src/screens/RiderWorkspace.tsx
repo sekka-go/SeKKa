@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import MapPicker, { type MapPickMode, type MapPoint } from "../MapPicker";
+import MapPicker from "../components/MapPickerLoader";
+import type { MapPickMode, MapPoint } from "../MapPicker";
 import RiderCommuterBoard from "../components/RiderCommuterBoard";
 import LocationSearchField from "../components/LocationSearchField";
 import { categoryName, errorText, formatDate, money, statusLabel } from "../lib/formatters";

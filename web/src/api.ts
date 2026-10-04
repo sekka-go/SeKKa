@@ -86,7 +86,7 @@ export class ApiError extends Error {
   constructor(status: number, message: string) { super(message); this.status = status; }
 }
 
-export async function api<T>(path: string, options: { method?: string; body?: unknown; token?: string | null } = {}): Promise<T> {
+export async function api<T>(path: string, options: { method?: string; body?: unknown; token?: string | null; signal?: AbortSignal } = {}): Promise<T> {
   const headers: Record<string, string> = { Accept: "application/json" };
   if (options.body !== undefined) headers["Content-Type"] = "application/json";
   if (options.token) headers.Authorization = `Bearer ${options.token}`;
@@ -97,8 +97,10 @@ export async function api<T>(path: string, options: { method?: string; body?: un
     response = await fetch(`${API_BASE_URL}/api${path}`, {
       method: options.method ?? "GET", headers,
       ...(options.body !== undefined ? { body: JSON.stringify(options.body) } : {}),
+      ...(options.signal ? { signal: options.signal } : {}),
     });
-  } catch {
+  } catch (cause) {
+    if (options.signal?.aborted) throw cause;
     throw new ApiError(0, "تعذر الاتصال بالخادم. تأكد أنه يعمل ثم حاول مرة أخرى.");
   }
   const payload = await response.json().catch(() => ({})) as { error?: string } & T;

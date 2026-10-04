@@ -38,9 +38,15 @@ export default function LocationSearchField({
   const resolvedSavedPlaces = useResolvedLocationPoints(token, savedPlaces.map((place) => ({ lat: place.lat, lng: place.lng, label: place.label })));
   const inputRef = useRef<HTMLInputElement>(null);
   const requestId = useRef(0);
+  const activeSearch = useRef<AbortController | null>(null);
   const skipNextSearch = useRef(false);
 
   useEffect(() => { setEditing(!pointSelected); }, [pointSelected]);
+  useEffect(() => () => {
+    requestId.current++;
+    activeSearch.current?.abort();
+    activeSearch.current = null;
+  }, []);
 
   useEffect(() => {
     if (skipNextSearch.current) {
@@ -50,6 +56,8 @@ export default function LocationSearchField({
 
     const query = value.trim();
     const currentRequest = ++requestId.current;
+    const controller = new AbortController();
+    activeSearch.current = controller;
     const isCoordinate = /^-?\d{1,3}(?:\.\d+)?\s*[,،]\s*-?\d{1,3}(?:\.\d+)?$/.test(query);
     if (query.length < 3 || isCoordinate || query.startsWith("موقعي الحالي ·")) {
       setSuggestions([]);
@@ -59,12 +67,14 @@ export default function LocationSearchField({
     }
 
     const timer = window.setTimeout(() => {
+      if (controller.signal.aborted) return;
       setLoading(true);
       setError("");
       void api<{ suggestions: LocationSuggestion[] }>("/locations/search", {
         method: "POST",
         token,
         body: { query },
+        signal: controller.signal,
       }).then((result) => {
         if (currentRequest !== requestId.current) return;
         const seenLabels = new Set<string>();
@@ -90,7 +100,12 @@ export default function LocationSearchField({
       });
     }, 350);
 
-    return () => window.clearTimeout(timer);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+      if (activeSearch.current === controller) activeSearch.current = null;
+      if (requestId.current === currentRequest) requestId.current++;
+    };
   }, [value, token]);
 
   const useDeviceLocation = () => {
@@ -100,6 +115,7 @@ export default function LocationSearchField({
     }
 
     setLocating(true);
+    activeSearch.current?.abort();
     setError("");
     const locationRequest = ++requestId.current;
     setSuggestions([]);
@@ -135,6 +151,7 @@ export default function LocationSearchField({
   };
 
   const selectSuggestion = (item: LocationSuggestion) => {
+    activeSearch.current?.abort();
     requestId.current++;
     skipNextSearch.current = true;
     onSelect({ lat: item.lat, lng: item.lng, kind, label: item.label, primaryLabel: item.primary, secondaryLabel: item.secondary });
@@ -149,6 +166,9 @@ export default function LocationSearchField({
     const query = value.trim().replace(/\s+/g, " ");
     if (query.length < 3 || /^-?\d{1,3}(?:\.\d+)?\s*[,،]\s*-?\d{1,3}(?:\.\d+)?$/.test(query)) return;
     const currentRequest = ++requestId.current;
+    activeSearch.current?.abort();
+    const controller = new AbortController();
+    activeSearch.current = controller;
     setLoading(true);
     setError("");
     setSearchOpen(true);
@@ -157,6 +177,7 @@ export default function LocationSearchField({
       method: "POST",
       token,
       body: { query },
+      signal: controller.signal,
     }).then((result) => {
       if (currentRequest !== requestId.current) return;
       const seen = new Set<string>();
@@ -171,10 +192,12 @@ export default function LocationSearchField({
     }).catch((cause) => {
       if (currentRequest === requestId.current) setError(cause instanceof Error ? cause.message : "تعذر البحث الدقيق الآن. اختار من الاقتراحات الظاهرة.");
     }).finally(() => {
+      if (activeSearch.current === controller) activeSearch.current = null;
       if (currentRequest === requestId.current) setLoading(false);
     });
   };
   const selectSavedPlace = (place: SavedPlace, resolvedLabel?: string) => {
+    activeSearch.current?.abort();
     requestId.current++;
     skipNextSearch.current = true;
     const address = safeAddressLabel(resolvedLabel || place.label) || "موقع محدد على الخريطة";
