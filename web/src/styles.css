@@ -1923,6 +1923,85 @@ button { line-height: 1.45; }
 .workspace .commuter-preferences-schedule { display: grid; gap: .8rem; min-width: 0; margin: .85rem 0 0; padding: .85rem; border: 1px solid var(--line); border-radius: .85rem; }
 .workspace .commuter-preferences-schedule legend { padding-inline: .4rem; color: var(--ink); font-weight: 700; }
 .workspace .commuter-preferences-schedule legend small, .workspace .commuter-preferences-frequent > div small { display: block; margin-top: .18rem; color: var(--muted); font-size: .78rem; font-weight: 400; }
+
+/* Charcoal and amber trip-discovery styling inspired by map-first mobility apps. */
+.workspace {
+  --ink: #f8fafc;
+  --muted: #a1a1aa;
+  --line: rgba(148, 163, 184, .2);
+  --panel: #1e1e1e;
+  --panel-hi: #272727;
+  --yellow: #eab308;
+  --yellow-deep: #a87905;
+  background: #121212;
+  color: var(--ink);
+}
+.workspace .sidebar { background: #171717; border-color: rgba(148, 163, 184, .16); }
+.workspace .surface { border-radius: 1.25rem; border-color: rgba(148, 163, 184, .2); background: #1e1e1e; }
+.workspace .button { border-radius: .8rem; }
+.workspace :is(input, select, textarea) { border-radius: .8rem; }
+.workspace .status-chip { border-radius: 999px; }
+.workspace .captain-offers-page { display: grid; gap: 1rem; }
+.workspace .captain-offers-page > .offer-toolbar { padding: .9rem 1rem; border: 1px solid rgba(148, 163, 184, .16); border-radius: 1.1rem; background: #191919; }
+.workspace .captain-offers-page .offer-actions { display: flex; flex-wrap: wrap; gap: .6rem; }
+.workspace .captain-offers-page .offer-grid.route-offer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.workspace .route-offer-card {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: .9rem;
+  overflow: hidden;
+  padding: 1.1rem;
+  border-color: rgba(148, 163, 184, .19);
+  background: linear-gradient(150deg, #242424 0%, #1b1b1b 60%, #191919 100%);
+  box-shadow: 0 1rem 2.4rem rgba(0, 0, 0, .16);
+  transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.workspace .route-offer-card:hover { transform: translateY(-2px); border-color: rgba(234, 179, 8, .48); box-shadow: 0 1.1rem 2.5rem rgba(0, 0, 0, .24); }
+.workspace .route-offer-top,
+.workspace .route-offer-title { display: flex; align-items: flex-start; justify-content: space-between; gap: .8rem; min-width: 0; }
+.workspace .route-offer-top { align-items: center; color: var(--muted); font-size: .82rem; }
+.workspace .route-offer-top time { white-space: nowrap; }
+.workspace .route-offer-top .status-chip { color: #fbbf24; background: rgba(234, 179, 8, .1); border: 1px solid rgba(234, 179, 8, .2); }
+.workspace .route-offer-top .status-chip i { width: .4rem; height: .4rem; border-radius: 50%; background: currentColor; }
+.workspace .route-offer-title { align-items: center; }
+.workspace .route-offer-title > div:first-child { min-width: 0; }
+.workspace .route-offer-title small,
+.workspace .route-offer-price small,
+.workspace .route-offer-facts small { color: var(--muted); font-size: .78rem; }
+.workspace .route-offer-title h3 { margin: .18rem 0 0; font-size: 1.12rem; }
+.workspace .route-offer-price { display: grid; flex: 0 0 auto; justify-items: end; gap: .12rem; }
+.workspace .route-offer-price strong { color: var(--yellow); font-size: 1.4rem; line-height: 1.2; }
+.workspace .route-offer-timeline { display: grid; gap: .05rem; padding: .72rem .8rem; border: 1px solid rgba(148, 163, 184, .12); border-radius: .95rem; background: rgba(15, 15, 15, .42); }
+.workspace .route-offer-stop { display: grid; grid-template-columns: .85rem minmax(0, 1fr); align-items: start; gap: .55rem; min-height: 2.3rem; }
+.workspace .route-offer-stop > span { position: relative; width: .72rem; height: .72rem; margin-top: .28rem; border: 2px solid var(--yellow); border-radius: 50%; }
+.workspace .route-offer-stop:first-child > span::after { position: absolute; top: .56rem; right: .19rem; width: 1px; height: 1.75rem; background: rgba(148, 163, 184, .35); content: ""; }
+.workspace .route-offer-stop.dropoff > span { border-color: var(--cyan); }
+.workspace .route-offer-stop > div { display: flex; justify-content: space-between; align-items: baseline; gap: .6rem; }
+.workspace .route-offer-stop strong { font-size: .9rem; }
+.workspace .route-offer-stop small { color: var(--muted); font-size: .78rem; }
+.workspace .route-offer-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; }
+.workspace .route-offer-facts > div { display: grid; gap: .12rem; min-width: 0; padding: .55rem; border-radius: .75rem; background: rgba(148, 163, 184, .055); }
+.workspace .route-offer-facts strong { overflow-wrap: anywhere; font-size: .86rem; }
+.workspace .route-offer-map-toggle { justify-self: start; }
+.workspace .route-offer-accept { min-height: 3rem; font-size: 1rem; }
+.workspace .route-offer-card .map-picker { overflow: hidden; border-radius: 1rem; }
+.workspace .route-offer-card .map-canvas { height: 15rem; }
+.workspace :is(.route-offer-card, .route-offer-card button):focus-visible { outline: 2px solid var(--yellow); outline-offset: 3px; }
+@media (max-width: 800px) {
+  .workspace .captain-offers-page .offer-grid.route-offer-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 560px) {
+  .workspace .captain-offers-page > .offer-toolbar { padding: .8rem; }
+  .workspace .captain-offers-page .offer-actions { width: 100%; }
+  .workspace .captain-offers-page .offer-actions .button { flex: 1; }
+  .workspace .route-offer-card { padding: .9rem; gap: .75rem; }
+  .workspace .route-offer-facts > div { padding: .45rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .workspace .route-offer-card { transition: none; }
+  .workspace .route-offer-card:hover { transform: none; }
+}
 .workspace .commuter-preferences-days { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: .35rem; }
 .workspace .commuter-preferences-days label { display: grid; justify-items: center; gap: .3rem; padding: .45rem .15rem; color: var(--muted); border: 1px solid var(--line); border-radius: .6rem; font-size: .72rem; cursor: pointer; }
 .workspace .commuter-preferences-days label.selected { color: var(--yellow); border-color: rgba(255,210,31,.6); background: rgba(255,210,31,.06); }
