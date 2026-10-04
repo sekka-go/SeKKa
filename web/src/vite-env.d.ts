@@ -1,10 +1,1 @@
-/// <reference types="vite/client" />
-
-interface ImportMetaEnv {
-  readonly VITE_API_BASE_URL?: string;
-  readonly VITE_SUPABASE_PUBLISHABLE_KEY?: string;
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
-}
+Ly8vIDxyZWZlcmVuY2UgdHlwZXM9InZpdGUvY2xpZW50IiAvPg0KDQppbnRlcmZhY2UgSW1wb3J0TWV0YUVudiB7CiAgcmVhZG9ubHkgVklURV9BUElfQkFTRV9VUkw/OiBzdHJpbmc7CiAgcmVhZG9ubHkgVklURV9TVVBBQkFTRV9QVUJMSVNIQUJMRV9LRVk/OiBzdHJpbmc7CiAgcmVhZG9ubHkgVklURV9GSVJFQkFTRV9BUElfS0VZPzogc3RyaW5nOwogIHJlYWRvbmx5IFZJVEVfRklSRUJBU0VfQVVUSF9ET01BSU4/OiBzdHJpbmc7CiAgcmVhZG9ubHkgVklURV9GSVJFQkFTRV9QUk9KRUNUX0lEPzogc3RyaW5nOwogIHJlYWRvbmx5IFZJVEVfRklSRUJBU0VfQVBQX0lEPzogc3RyaW5nOwp9Cg0KaW50ZXJmYWNlIEltcG9ydE1ldGEgew0KICByZWFkb25seSBlbnY6IEltcG9ydE1ldGFFbnY7DQp9DQo=

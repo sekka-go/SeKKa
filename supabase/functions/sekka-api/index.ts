@@ -219,6 +219,36 @@ async function hashPassword(password: string) {
   const derived = new Uint8Array(await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt, iterations: 310_000 }, key, 256));
   return `pbkdf2$310000$${hex(salt)}$${hex(derived)}`;
 }
+type FirebaseIdentity = { uid: string; email: string | null; displayName: string | null; disabled: boolean };
+async function verifyFirebaseIdentity(idToken: unknown): Promise<FirebaseIdentity> {
+  const firebaseApiKey = Deno.env.get("FIREBASE_WEB_API_KEY") ?? "";
+  if (!firebaseApiKey) throw new ApiFailure("تسجيل الدخول الاجتماعي غير مُعدّ على الخادم بعد.", 503);
+  if (typeof idToken !== "string" || idToken.length < 100 || idToken.length > 8_192) throw new ApiFailure("رمز Firebase غير صالح.", 401);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8_000);
+  try {
+    const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(firebaseApiKey)}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ idToken }),
+      signal: controller.signal,
+    });
+    if (!response.ok) throw new ApiFailure(response.status === 400 ? "انتهت جلسة Google أو Facebook. سجّل الدخول مرة أخرى." : "تعذر التحقق من جلسة Firebase.", response.status === 400 ? 401 : 503);
+    const payload = await response.json() as { users?: Array<{ localId?: string; email?: string; displayName?: string; disabled?: boolean }> };
+    const identity = payload.users?.[0];
+    if (!identity?.localId || identity.disabled) throw new ApiFailure("حساب Google أو Facebook غير صالح أو موقوف.", 401);
+    return { uid: identity.localId, email: clean(identity.email) ? identity.email.trim().toLowerCase() : null, displayName: clean(identity.displayName) ? identity.displayName.trim().slice(0, 120) : null, disabled: identity.disabled === true };
+  } catch (cause) {
+    if (cause instanceof ApiFailure) throw cause;
+    throw new ApiFailure("تعذر الاتصال بخدمة التحقق من Firebase. حاول مرة أخرى.", 503);
+  } finally { clearTimeout(timeout); }
+}
+async function createLoginSession(user: Omit<User, "account_status">, origin: string) {
+  const token = randomUrlToken(32);
+  const { error: sessionError } = await db!.from("sessions").insert({ user_id: user.id, token_hash: await digest(token), expires_at: new Date(Date.now() + 7 * 86400_000).toISOString() });
+  if (sessionError) throw sessionError;
+  return reply({ token, user }, 200, origin);
+}
 async function verifyPassword(password: string, stored: string) {
   const [kind, rounds, saltText, expected] = stored.split("$");
   if (kind !== "pbkdf2" || Number(rounds) !== 310_000 || !saltText || !expected) return false;
@@ -621,6 +651,62 @@ Deno.serve(async (req: Request) => {
     }
     const user = await authenticate(req);
     if (user && user.account_status !== "active" && path !== "/auth/logout") return error("الحساب موقوف حاليًا. تواصل مع خدمة العملاء للمساعدة.", 403, origin);
+    if (req.method === "POST" && path === "/auth/firebase/session") {
+      const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
+      if (!await takeLimit(`firebase-login:${ip}`, 12, 900)) return error("محاولات تسجيل دخول كثيرة. حاول مرة أخرى بعد قليل.", 429, origin);
+      const identity = await verifyFirebaseIdentity(body.id_token);
+      const { data: link, error: linkError } = await db.from("firebase_auth_links").select("user_id").eq("firebase_uid", identity.uid).maybeSingle();
+      if (linkError) throw linkError;
+      if (!link) return reply({ needs_registration: true, email: identity.email, full_name: identity.displayName }, 200, origin);
+      const { data: record, error: userError } = await db.from("users").select("id,full_name,phone_number,role,verified_at,created_at").eq("id", link.user_id).maybeSingle();
+      if (userError) throw userError;
+      if (!record) return error("الحساب المرتبط غير موجود. تواصل مع الدعم.", 401, origin);
+      const { data: controls, error: controlsError } = await db.from("admin_user_controls").select("status").eq("user_id", record.id).maybeSingle();
+      if (controlsError) throw controlsError;
+      if (controls && controls.status !== "active") return error("الحساب موقوف حاليًا. تواصل مع خدمة العملاء للمساعدة.", 403, origin);
+      return await createLoginSession(record, origin);
+    }
+    if (req.method === "POST" && path === "/auth/firebase/register") {
+      const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
+      const phone = typeof body.phone_number === "string" ? body.phone_number.trim().slice(0, 100) : "";
+      if (!await takeLimit(`firebase-register:ip:${ip}`, 8, 3600) || !await takeLimit(`firebase-register:phone:${phone}`, 4, 3600)) return error("تم إنشاء حسابات كثيرة مؤخرًا. حاول بعد ساعة.", 429, origin);
+      if (!clean(body.full_name) || body.full_name.trim().length > 120 || !clean(phone) || !clean(body.password) || String(body.password).length < 8) return error("اكتب الاسم ورقم الهاتف وكلمة سر من ٨ أحرف على الأقل.", 400, origin);
+      if (!["rider", "captain"].includes(String(body.role))) return error("نوع الحساب المطلوب مش متاح.", 400, origin);
+      const identity = await verifyFirebaseIdentity(body.id_token);
+      const { data: existingLink, error: lookupLinkError } = await db.from("firebase_auth_links").select("user_id").eq("firebase_uid", identity.uid).maybeSingle();
+      if (lookupLinkError) throw lookupLinkError;
+      if (existingLink) return error("الحساب الاجتماعي مسجّل بالفعل. سجّل الدخول من جديد.", 409, origin);
+      const { data: existingPhone, error: lookupPhoneError } = await db.from("users").select("id").eq("phone_number", phone).maybeSingle();
+      if (lookupPhoneError) throw lookupPhoneError;
+      if (existingPhone) return error("رقم الهاتف مسجّل بالفعل. سجّل دخولك بهاتفك وكلمة السر لربط Google أو Facebook بحسابك بأمان.", 409, origin);
+      const { data: record, error: createError } = await db.from("users").insert({
+        full_name: body.full_name.trim(), phone_number: phone, password_hash: await hashPassword(String(body.password)), role: body.role,
+      }).select("id,full_name,phone_number,role,verified_at,created_at").single();
+      if (createError || !record) return error("تعذر إنشاء الحساب. تأكد أن رقم الهاتف غير مسجل.", 409, origin);
+      const { error: createLinkError } = await db.from("firebase_auth_links").insert({ firebase_uid: identity.uid, user_id: record.id, email: identity.email });
+      if (createLinkError) {
+        await db.from("users").delete().eq("id", record.id);
+        if (createLinkError.code === "23505") return error("حساب Google أو Facebook مرتبط بحساب سِكَّة آخر.", 409, origin);
+        throw createLinkError;
+      }
+      return await createLoginSession(record, origin);
+    }
+    if (req.method === "POST" && path === "/auth/firebase/link") {
+      const gate = await requireRole(user, ["rider", "captain", "admin"], origin); if (gate) return gate;
+      if (!await takeLimit(`firebase-link:${user!.id}`, 8, 900)) return error("محاولات ربط كثيرة. حاول مرة أخرى بعد قليل.", 429, origin);
+      const identity = await verifyFirebaseIdentity(body.id_token);
+      const { data: existingLink, error: lookupError } = await db.from("firebase_auth_links").select("user_id").eq("firebase_uid", identity.uid).maybeSingle();
+      if (lookupError) throw lookupError;
+      if (existingLink && Number(existingLink.user_id) !== user!.id) return error("حساب Google أو Facebook مرتبط بحساب سِكَّة آخر.", 409, origin);
+      if (!existingLink) {
+        const { error: insertError } = await db.from("firebase_auth_links").insert({ firebase_uid: identity.uid, user_id: user!.id, email: identity.email });
+        if (insertError) {
+          if (insertError.code === "23505") return error("لديك حساب اجتماعي آخر مرتبط بحساب سِكَّة بالفعل.", 409, origin);
+          throw insertError;
+        }
+      }
+      return reply({ success: true }, 200, origin);
+    }
     if (req.method === "GET" && path === "/verification") {
       const gate = await requireRole(user, ["rider", "captain"], origin); if (gate) return gate;
       const [{ data: documents, error: documentsError }, { data: profile, error: profileError }] = await Promise.all([
