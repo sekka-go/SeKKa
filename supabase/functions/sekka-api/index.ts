@@ -3,7 +3,7 @@ import { routeWithOsrm, RoutingError } from "./routing.ts";
 import { dedupeLocationSuggestions, formatNominatimAddress, formatPhotonAddress, GREATER_CAIRO, isGreaterCairoPoint, normalizeLocationQuery, type LocationAddress, type LocationSuggestion, type NominatimResult, type PhotonProperties } from "./locations.ts";
 
 type Json = Record<string, unknown>;
-type User = { id: number; full_name: string; phone_number: string; role: "rider" | "captain" | "admin"; verified_at: string | null; created_at: string };
+type User = { id: number; full_name: string; phone_number: string; role: "rider" | "captain" | "admin"; verified_at: string | null; created_at: string; account_status?: "active" | "suspended" | "banned" };
 const encoder = new TextEncoder();
 const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, apikey, content-type",
@@ -254,13 +254,30 @@ async function authenticate(req: Request): Promise<User | null> {
   const tokenHash = await digest(raw);
   const { data: session, error: queryError } = await db!.from("sessions").select("user_id,expires_at,revoked_at").eq("token_hash", tokenHash).maybeSingle();
   if (queryError || !session || session.revoked_at || Date.parse(session.expires_at) <= Date.now()) return null;
-  const { data: user } = await db!.from("users").select("id,full_name,phone_number,role,verified_at,created_at").eq("id", session.user_id).maybeSingle();
-  return user as User | null;
+  const { data: user, error: userError } = await db!.from("users").select("id,full_name,phone_number,role,verified_at,created_at").eq("id", session.user_id).maybeSingle();
+  if (userError || !user) return null;
+  const { data: controls, error: controlsError } = await db!.from("admin_user_controls").select("status").eq("user_id", user.id).maybeSingle();
+  if (controlsError) throw controlsError;
+  return { ...user, account_status: (controls?.status ?? "active") as User["account_status"] };
 }
 async function requireRole(user: User | null, roles: User["role"][], origin: string) {
   if (!user) return error("سجّل الدخول أولًا.", 401, origin);
   if (!roles.includes(user.role)) return error("ما عندكش صلاحية لتنفيذ الإجراء ده.", 403, origin);
   return null;
+}
+async function requireSuperAdmin(user: User | null, origin: string) {
+  const roleGate = await requireRole(user, ["admin"], origin);
+  if (roleGate) return roleGate;
+  const { data, error: lookupError } = await db!.from("super_admins").select("user_id").eq("user_id", user!.id).maybeSingle();
+  if (lookupError) throw lookupError;
+  return data ? null : error("هذا الإجراء متاح لحساب Super Admin فقط.", 403, origin);
+}
+async function writeAdminAudit(actorId: number, action: string, resourceType: string, resourceId: string | null, reason: string | null, before: Json = {}, after: Json = {}) {
+  const { error: auditError } = await db!.rpc("admin_write_audit", {
+    p_actor_user_id: actorId, p_action: action, p_resource_type: resourceType, p_resource_id: resourceId,
+    p_reason: reason, p_before: before, p_after: after,
+  });
+  if (auditError) throw auditError;
 }
 async function notifyUser(userId: number, groupId: number | null, eventKey: string, payload: Json = {}) {
   await db!.from("pool_notifications").upsert({ user_id: userId, group_id: groupId, event_key: eventKey, payload }, { onConflict: "user_id,event_key", ignoreDuplicates: true });
@@ -495,6 +512,7 @@ Deno.serve(async (req: Request) => {
       if (e) throw e; return reply({ categories: data }, 200, origin);
     }
     const user = await authenticate(req);
+    if (user && user.account_status !== "active" && path !== "/auth/logout") return error("الحساب موقوف حاليًا. تواصل مع خدمة العملاء للمساعدة.", 403, origin);
     if (req.method === "POST" && path === "/rider/pool/quote") {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
       let pickup, dropoff;
@@ -626,6 +644,9 @@ Deno.serve(async (req: Request) => {
       const { data: record } = await db.from("users").select("id,full_name,phone_number,password_hash,role,verified_at,created_at").eq("phone_number", phone).maybeSingle();
       const valid = record ? await verifyPassword(String(body.password ?? ""), record.password_hash) : await verifyPassword(String(body.password ?? ""), "pbkdf2$310000$00000000000000000000000000000000$0000000000000000000000000000000000000000000000000000000000000000");
       if (!record || !valid) return error("رقم الهاتف أو كلمة السر غلط.", 401, origin);
+      const { data: accountControl, error: controlError } = await db.from("admin_user_controls").select("status").eq("user_id", record.id).maybeSingle();
+      if (controlError) throw controlError;
+      if (accountControl && accountControl.status !== "active") return error("الحساب موقوف حاليًا. تواصل مع خدمة العملاء للمساعدة.", 403, origin);
       const token = hex(crypto.getRandomValues(new Uint8Array(32))), tokenHash = await digest(token);
       const { error: se } = await db.from("sessions").insert({ user_id: record.id, token_hash: tokenHash, expires_at: new Date(Date.now() + 7 * 86400_000).toISOString() });
       if (se) throw se;
@@ -1378,12 +1399,15 @@ Deno.serve(async (req: Request) => {
         if (stops?.some((s) => !s.reached_at)) return error("لا يمكن إنهاء الرحلة قبل تسجيل الوصول لكل النقاط.", 409, origin);
         const { data: group } = await db.from("pool_groups").select("package_type,seat_day_fare").eq("id", trip.group_id).single();
         if (!group) return error("بيانات المجموعة المرتبطة بالرحلة غير متاحة.", 500, origin);
+        const { data: commissionSetting, error: commissionError } = await db.from("admin_system_settings").select("numeric_value").eq("setting_key", "company_commission_rate").maybeSingle();
+        if (commissionError) throw commissionError;
+        const commissionRate = number(Number(commissionSetting?.numeric_value)) ? Number(commissionSetting!.numeric_value) : 0.2;
         const { data: members } = await db.from("pool_members").select("*").eq("group_id", trip.group_id).eq("status", "active");
         for (const m of members ?? []) {
           const listAmount = roundMoney(Number(group.seat_day_fare) * Number(m.seats_reserved));
           const discount = discountRate(group.package_type);
           const riderAmount = roundMoney(listAmount * (1 - discount));
-          await db.from("pool_ledger").upsert({ trip_id: tripId, member_id: m.id, list_amount: listAmount, rider_amount: riderAmount, discount_amount: roundMoney(listAmount - riderAmount), captain_share_amount: roundMoney(listAmount * 0.8), company_share_amount: roundMoney(Math.max(0, listAmount * 0.2 - (listAmount - riderAmount))), company_commission_rate: 0.2, settlement_status: "pending" }, { onConflict: "trip_id,member_id" });
+          await db.from("pool_ledger").upsert({ trip_id: tripId, member_id: m.id, list_amount: listAmount, rider_amount: riderAmount, discount_amount: roundMoney(listAmount - riderAmount), captain_share_amount: roundMoney(listAmount * (1 - commissionRate)), company_share_amount: roundMoney(Math.max(0, listAmount * commissionRate - (listAmount - riderAmount))), company_commission_rate: commissionRate, settlement_status: "pending" }, { onConflict: "trip_id,member_id" });
         }
         const { error: e } = await db.from("pool_trips").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", tripId).eq("captain_user_id", user!.id);
         if (e) throw e;
@@ -1478,8 +1502,216 @@ Deno.serve(async (req: Request) => {
 
       return error("المسار غير موجود في واجهة Supabase بعد.", 501, origin);
     }
-    const adminGate = path.startsWith("/admin/") ? await requireRole(user, ["admin"], origin) : null;
+    const adminGate = path.startsWith("/admin/") ? await requireSuperAdmin(user, origin) : null;
     if (adminGate) return adminGate;
+    if (req.method === "GET" && path === "/admin/users") {
+      const q = (url.searchParams.get("q") ?? "").trim().slice(0, 100);
+      const role = url.searchParams.get("role");
+      const limit = Math.min(100, Math.max(1, Number(url.searchParams.get("limit") ?? 50) || 50));
+      const buildUserQuery = () => {
+        let query = db.from("users").select("id,full_name,phone_number,role,verified_at,created_at").order("created_at", { ascending: false }).limit(limit);
+        if (["rider", "captain", "admin"].includes(String(role))) query = query.eq("role", role);
+        return query;
+      };
+      const escapedQuery = q.replace(/[\\%_]/g, "\\$&");
+      const queries = q
+        ? await Promise.all([buildUserQuery().ilike("full_name", `%${escapedQuery}%`), buildUserQuery().ilike("phone_number", `%${escapedQuery}%`)])
+        : [await buildUserQuery()];
+      const queryError = queries.find((result) => result.error)?.error;
+      if (queryError) throw queryError;
+      const data = [...new Map(queries.flatMap((result) => result.data ?? []).map((item) => [item.id, item])).values()]
+        .sort((left, right) => Date.parse(right.created_at) - Date.parse(left.created_at)).slice(0, limit);
+      const ids = (data ?? []).map((item) => item.id);
+      const [controls, profiles] = await Promise.all([
+        ids.length ? db.from("admin_user_controls").select("user_id,status,reason,updated_at").in("user_id", ids) : Promise.resolve({ data: [], error: null }),
+        ids.length ? db.from("captain_profiles").select("user_id,vehicle_type_id,license_number,vehicle_plate,verification_status").in("user_id", ids) : Promise.resolve({ data: [], error: null }),
+      ]);
+      if (controls.error || profiles.error) throw controls.error ?? profiles.error;
+      const statusById = new Map((controls.data ?? []).map((item) => [item.user_id, item]));
+      const profileById = new Map((profiles.data ?? []).map((item) => [item.user_id, item]));
+      return reply({ users: (data ?? []).map((item) => ({ ...item, account_status: statusById.get(item.id)?.status ?? "active", control: statusById.get(item.id) ?? null, captain: profileById.get(item.id) ?? null })) }, 200, origin);
+    }
+    const userStatusRoute = path.match(/^\/admin\/users\/(\d+)\/status$/);
+    if (req.method === "PATCH" && userStatusRoute) {
+      if (!clean(body.reason) || body.reason.trim().length > 1000 || !["active", "suspended", "banned"].includes(String(body.status))) return error("حدد الحالة وسبب التغيير (حتى 1000 حرف).", 400, origin);
+      const { data, error: statusError } = await db.rpc("admin_set_user_status", { p_actor_user_id: user!.id, p_target_user_id: Number(userStatusRoute[1]), p_status: body.status, p_reason: body.reason.trim() });
+      if (statusError) throw statusError;
+      return reply({ user_control: data }, 200, origin);
+    }
+    const userProfileRoute = path.match(/^\/admin\/users\/(\d+)$/);
+    if (req.method === "PATCH" && userProfileRoute) {
+      if (!clean(body.reason) || body.reason.trim().length > 1000) return error("اكتب سبب تعديل الحساب.", 400, origin);
+      const patch: Record<string, string> = {};
+      if ("full_name" in body) { if (!clean(body.full_name) || body.full_name.trim().length > 120) return error("الاسم غير صالح.", 400, origin); patch.full_name = body.full_name.trim(); }
+      if ("phone_number" in body) { if (!clean(body.phone_number) || body.phone_number.trim().length > 20) return error("رقم الهاتف غير صالح.", 400, origin); patch.phone_number = body.phone_number.trim(); }
+      if (!Object.keys(patch).length) return error("لا توجد بيانات صالحة للتحديث.", 400, origin);
+      const { data: before, error: readError } = await db.from("users").select("id,full_name,phone_number,role").eq("id", userProfileRoute[1]).maybeSingle();
+      if (readError) throw readError;
+      if (!before) return error("المستخدم غير موجود.", 404, origin);
+      if (before.role === "admin") return error("لا يمكن تعديل حسابات الإدارة من هذه الشاشة.", 403, origin);
+      const { data, error: updateError } = await db.from("users").update(patch).eq("id", userProfileRoute[1]).select("id,full_name,phone_number,role,verified_at,created_at").single();
+      if (updateError) throw updateError;
+      await writeAdminAudit(user!.id, "user.profile_updated", "user", String(data.id), body.reason.trim(), before as Json, data as Json);
+      return reply({ user: data }, 200, origin);
+    }
+    if (req.method === "GET" && path === "/admin/trips") {
+      const [daily, pooled] = await Promise.all([
+        db.from("trips").select("id,status,started_at,completed_at,total_distance_km,total_amount,match_id").eq("status", "in_progress").order("started_at", { ascending: false }).limit(100),
+        db.from("pool_trips").select("id,group_id,service_date,direction,departure_at,estimated_arrival_at,captain_user_id,status,group:pool_groups!inner(category_id,status,created_by_user_id)").in("status", ["scheduled", "assigned", "needs_captain"]).order("departure_at", { ascending: true }).limit(100),
+      ]);
+      if (daily.error || pooled.error) throw daily.error ?? pooled.error;
+      const matchIds = (daily.data ?? []).map((trip) => trip.match_id);
+      const { data: matches, error: matchError } = matchIds.length ? await db.from("matches").select("id,captain_user_id,daily_commute_request_id").in("id", matchIds) : { data: [], error: null };
+      if (matchError) throw matchError;
+      const requestIds = (matches ?? []).map((match) => match.daily_commute_request_id);
+      const { data: requests, error: requestError } = requestIds.length ? await db.from("daily_commute_requests").select("id,rider_user_id,service_category_id,created_at").in("id", requestIds) : { data: [], error: null };
+      if (requestError) throw requestError;
+      const matchById = new Map((matches ?? []).map((match) => [match.id, match]));
+      const requestById = new Map((requests ?? []).map((request) => [request.id, request]));
+      const dailyTrips = (daily.data ?? []).map((trip) => {
+        const match = matchById.get(trip.match_id);
+        return { ...trip, captain_user_id: match?.captain_user_id ?? null, request: match ? requestById.get(match.daily_commute_request_id) ?? null : null };
+      });
+      return reply({ daily_trips: dailyTrips, pool_trips: pooled.data ?? [] }, 200, origin);
+    }
+    const tripActionRoute = path.match(/^\/admin\/trips\/(daily|pool)\/(\d+)\/(cancel|captain)$/);
+    if (req.method === "POST" && tripActionRoute) {
+      const [, kind, rawTripId, action] = tripActionRoute;
+      const tripId = Number(rawTripId);
+      if (!clean(body.reason) || body.reason.trim().length > 1000) return error("اكتب سبب الإجراء بوضوح (حتى 1000 حرف).", 400, origin);
+      const reasonTag = clean(body.reason_tag) ? body.reason_tag.trim().slice(0, 80) : action === "cancel" ? "other" : "operational_reassignment";
+      if (action === "cancel") {
+        if (!clean(body.reason_tag)) return error("اختر تصنيفًا لسبب إلغاء الرحلة.", 400, origin);
+        let before: Json;
+        let affectedUsers: number[] = [];
+        if (kind === "daily") {
+          const { data, error: lookupError } = await db.from("trips").select("id,status,match_id").eq("id", tripId).maybeSingle();
+          if (lookupError) throw lookupError;
+          if (!data || data.status !== "in_progress") return error("الرحلة غير موجودة أو لم تعد قابلة للإلغاء.", 409, origin);
+          before = data as unknown as Json;
+          const { data: match, error: matchError } = await db.from("matches").select("captain_user_id,daily_commute_request_id").eq("id", data.match_id).maybeSingle();
+          if (matchError) throw matchError;
+          const { data: request, error: requestError } = match ? await db.from("daily_commute_requests").select("rider_user_id").eq("id", match.daily_commute_request_id).maybeSingle() : { data: null, error: null };
+          if (requestError) throw requestError;
+          const captainId = Number(match?.captain_user_id ?? 0);
+          const riderId = Number(request?.rider_user_id ?? 0);
+          affectedUsers = [captainId, riderId].filter((id) => id > 0);
+          const { data: updated, error: updateError } = await db.from("trips").update({ status: "cancelled" }).eq("id", tripId).eq("status", "in_progress").select("id,status").maybeSingle();
+          if (updateError) throw updateError;
+          if (!updated) return error("تغيرت حالة الرحلة. حدّث القائمة وحاول مرة أخرى.", 409, origin);
+        } else {
+          const { data, error: lookupError } = await db.from("pool_trips").select("id,group_id,status,captain_user_id").eq("id", tripId).maybeSingle();
+          if (lookupError) throw lookupError;
+          if (!data || !["scheduled", "assigned", "needs_captain"].includes(data.status)) return error("الرحلة غير موجودة أو بدأت بالفعل ولا يمكن إلغاؤها من هنا.", 409, origin);
+          before = data as unknown as Json;
+          const { data: members, error: memberError } = await db.from("pool_members").select("rider_user_id").eq("group_id", data.group_id).eq("status", "active");
+          if (memberError) throw memberError;
+          affectedUsers = [...new Set([data.captain_user_id, ...(members ?? []).map((member) => member.rider_user_id)].filter((id): id is number => Number.isInteger(id)))];
+          const { data: updated, error: updateError } = await db.from("pool_trips").update({ status: "cancelled" }).eq("id", tripId).in("status", ["scheduled", "assigned", "needs_captain"]).select("id,status").maybeSingle();
+          if (updateError) throw updateError;
+          if (!updated) return error("تغيرت حالة الرحلة. حدّث القائمة وحاول مرة أخرى.", 409, origin);
+        }
+        const { error: actionError } = await db.from("admin_trip_actions").insert({ trip_kind: kind, trip_id: tripId, action: "cancelled", reason_tag: reasonTag, reason: body.reason.trim(), actor_user_id: user!.id });
+        if (actionError) throw actionError;
+        await writeAdminAudit(user!.id, "trip.cancelled", `${kind}_trip`, String(tripId), body.reason.trim(), before, { status: "cancelled", reason_tag: reasonTag });
+        await Promise.all(affectedUsers.map((id) => notifyUser(id, null, `admin-trip-cancelled:${kind}:${tripId}`, { title: "تم إلغاء الرحلة", message: "تم إلغاء الرحلة بواسطة فريق الدعم. افتح التطبيق لمراجعة التفاصيل." })));
+        return reply({ success: true, status: "cancelled" }, 200, origin);
+      }
+      if (!Number.isInteger(body.captain_user_id)) return error("اختر كابتنًا صالحًا لإعادة التعيين.", 400, origin);
+      const captainId = Number(body.captain_user_id);
+      const { data: captain, error: captainError } = await db.from("captain_profiles").select("user_id,verification_status").eq("user_id", captainId).eq("verification_status", "approved").maybeSingle();
+      if (captainError) throw captainError;
+      if (!captain) return error("لا يمكن تعيين هذا الحساب؛ يجب أن يكون كابتنًا موثقًا.", 409, origin);
+      let before: Json;
+      if (kind === "daily") {
+        const { data, error: lookupError } = await db.from("trips").select("id,status,match_id").eq("id", tripId).maybeSingle();
+        if (lookupError) throw lookupError;
+        if (!data || data.status !== "in_progress") return error("الرحلة غير موجودة أو لا يمكن إعادة تعيينها.", 409, origin);
+        before = data as unknown as Json;
+        const { error: updateError } = await db.from("matches").update({ captain_user_id: captainId }).eq("id", data.match_id);
+        if (updateError) throw updateError;
+      } else {
+        const { data, error: lookupError } = await db.from("pool_trips").select("id,group_id,status,captain_user_id").eq("id", tripId).maybeSingle();
+        if (lookupError) throw lookupError;
+        if (!data || !["scheduled", "assigned", "needs_captain"].includes(data.status)) return error("الرحلة غير موجودة أو بدأت بالفعل ولا يمكن إعادة تعيينها.", 409, origin);
+        before = data as unknown as Json;
+        const { data: updated, error: updateError } = await db.from("pool_trips").update({ captain_user_id: captainId, status: "assigned" }).eq("id", tripId).in("status", ["scheduled", "assigned", "needs_captain"]).select("id,status,captain_user_id").maybeSingle();
+        if (updateError) throw updateError;
+        if (!updated) return error("تغيرت حالة الرحلة. حدّث القائمة وحاول مرة أخرى.", 409, origin);
+      }
+      const { error: actionError } = await db.from("admin_trip_actions").insert({ trip_kind: kind, trip_id: tripId, action: "captain_reassigned", reason_tag: reasonTag, reason: body.reason.trim(), actor_user_id: user!.id });
+      if (actionError) throw actionError;
+      await writeAdminAudit(user!.id, "trip.captain_reassigned", `${kind}_trip`, String(tripId), body.reason.trim(), before, { captain_user_id: captainId });
+      await notifyUser(captainId, null, `admin-trip-assigned:${kind}:${tripId}`, { title: "تم تعيين رحلة لك", message: "راجع تفاصيل الرحلة ومواعيدها من التطبيق." });
+      return reply({ success: true, captain_user_id: captainId }, 200, origin);
+    }
+    if (req.method === "GET" && path === "/admin/disputes") {
+      const { data: events, error: eventError } = await db.from("payment_status_events").select("id,payment_id,from_status,to_status,actor_user_id,reason,adjusted_amount,created_at").eq("to_status", "disputed").order("created_at", { ascending: false }).order("id", { ascending: false }).limit(100);
+      if (eventError) throw eventError;
+      const paymentIds = [...new Set((events ?? []).map((event) => event.payment_id))];
+      const [payments, history] = await Promise.all([
+        paymentIds.length ? db.from("payments").select("id,trip_id,amount,reported_by_user_id,reported_at").in("id", paymentIds) : Promise.resolve({ data: [], error: null }),
+        paymentIds.length ? db.from("payment_status_events").select("id,payment_id,from_status,to_status,actor_user_id,reason,adjusted_amount,created_at").in("payment_id", paymentIds).order("created_at", { ascending: false }).order("id", { ascending: false }) : Promise.resolve({ data: [], error: null }),
+      ]);
+      if (payments.error || history.error) throw payments.error ?? history.error;
+      const paymentById = new Map((payments.data ?? []).map((payment) => [payment.id, payment]));
+      const latestByPayment = new Map<number, NonNullable<typeof history.data>[number]>();
+      for (const event of history.data ?? []) if (!latestByPayment.has(event.payment_id)) latestByPayment.set(event.payment_id, event);
+      const disputes = [...latestByPayment.entries()]
+        .filter(([, event]) => event.to_status === "disputed")
+        .map(([paymentId, event]) => ({ ...event, payment: paymentById.get(paymentId), history: (history.data ?? []).filter((item) => item.payment_id === paymentId) }))
+        .sort((left, right) => Date.parse(right.created_at) - Date.parse(left.created_at));
+      return reply({ disputes }, 200, origin);
+    }
+    if (req.method === "GET" && path === "/admin/settings") {
+      const [pricing, categories, commission] = await Promise.all([
+        db.from("pricing_config").select("*,vehicle:vehicle_types(id,name_ar)").order("vehicle_type_id"),
+        db.from("pool_categories").select("id,speed_tier,has_ac,seats,base_fee,rate_per_km,rate_per_min").order("id"),
+        db.from("admin_system_settings").select("setting_key,numeric_value,updated_at").eq("setting_key", "company_commission_rate").maybeSingle(),
+      ]);
+      if (pricing.error || categories.error || commission.error) throw pricing.error ?? categories.error ?? commission.error;
+      return reply({ pricing: pricing.data ?? [], pool_categories: categories.data ?? [], commission_rate: commission.data?.numeric_value ?? 0.2 }, 200, origin);
+    }
+    if (req.method === "PATCH" && path === "/admin/settings/commission") {
+      if (!number(body.rate) || body.rate < 0 || body.rate > 1) return error("نسبة العمولة يجب أن تكون بين 0 و1.", 400, origin);
+      if (!clean(body.reason)) return error("اكتب سبب تغيير العمولة.", 400, origin);
+      const { data, error: settingsError } = await db.rpc("admin_set_commission_rate", { p_actor_user_id: user!.id, p_rate: body.rate, p_reason: body.reason.trim() });
+      if (settingsError) throw settingsError;
+      return reply({ setting: data }, 200, origin);
+    }
+    const poolPricingRoute = path.match(/^\/admin\/settings\/pool-categories\/([^/]+)$/);
+    if (req.method === "PATCH" && poolPricingRoute) {
+      const values = [body.base_fee, body.rate_per_km, body.rate_per_min];
+      if (!values.every((value) => number(value) && value >= 0) || !clean(body.reason)) return error("راجع قيم التسعير وسبب التعديل.", 400, origin);
+      const { data: before, error: readError } = await db.from("pool_categories").select("*").eq("id", poolPricingRoute[1]).maybeSingle();
+      if (readError) throw readError;
+      if (!before) return error("الفئة غير موجودة.", 404, origin);
+      const { data, error: updateError } = await db.from("pool_categories").update({ base_fee: values[0], rate_per_km: values[1], rate_per_min: values[2], updated_at: new Date().toISOString() }).eq("id", poolPricingRoute[1]).select().maybeSingle();
+      if (updateError) throw updateError;
+      if (!data) return error("الفئة غير موجودة.", 404, origin);
+      await writeAdminAudit(user!.id, "pricing.pool_category_updated", "pool_category", poolPricingRoute[1], body.reason.trim(), before as Json, data as Json);
+      return reply({ pool_category: data }, 200, origin);
+    }
+    if (req.method === "POST" && path === "/admin/ledger/adjustments") {
+      if (!Number.isInteger(body.trip_id) || !["daily", "pool"].includes(String(body.trip_kind)) || !number(body.amount) || body.amount === 0 || !clean(body.reason)) return error("راجع الرحلة والمبلغ وسبب التسوية.", 400, origin);
+      const memberId = body.member_id === null || body.member_id === undefined ? null : Number(body.member_id);
+      if (memberId !== null && !Number.isInteger(memberId)) return error("رقم الراكب غير صالح.", 400, origin);
+      const { data, error: adjustmentError } = await db.rpc("admin_add_ledger_adjustment", { p_actor_user_id: user!.id, p_trip_kind: body.trip_kind, p_trip_id: body.trip_id, p_member_id: memberId, p_amount: body.amount, p_reason: body.reason.trim() });
+      if (adjustmentError) throw adjustmentError;
+      return reply({ adjustment: data }, 201, origin);
+    }
+    if (req.method === "GET" && path === "/admin/ledger/adjustments") {
+      const limit = Math.min(200, Math.max(1, Number(url.searchParams.get("limit") ?? 50) || 50));
+      const { data, error: adjustmentError } = await db.from("admin_ledger_adjustments").select("id,trip_kind,trip_id,member_id,amount,reason,actor_user_id,created_at").order("created_at", { ascending: false }).limit(limit);
+      if (adjustmentError) throw adjustmentError;
+      return reply({ adjustments: data ?? [], total_adjustment_amount: (data ?? []).reduce((sum, row) => sum + Number(row.amount), 0) }, 200, origin);
+    }
+    if (req.method === "GET" && path === "/admin/audit") {
+      const limit = Math.min(200, Math.max(1, Number(url.searchParams.get("limit") ?? 50) || 50));
+      const { data, error: auditError } = await db.from("admin_audit_logs").select("id,actor_user_id,action,resource_type,resource_id,reason,before_state,after_state,created_at").order("created_at", { ascending: false }).limit(limit);
+      if (auditError) throw auditError;
+      return reply({ audit_logs: data ?? [] }, 200, origin);
+    }
     if (req.method === "GET" && path === "/admin/commuter-board-campaigns") {
       const { data, error: campaignError } = await db.from("commuter_board_campaigns").select("*").order("priority", { ascending: false }).order("created_at", { ascending: false });
       if (campaignError) throw campaignError;
@@ -1495,6 +1727,7 @@ Deno.serve(async (req: Request) => {
       if ((starts && !Number.isFinite(Date.parse(starts))) || (ends && !Number.isFinite(Date.parse(ends))) || (starts && ends && Date.parse(ends) <= Date.parse(starts))) return error("راجع تاريخ بداية البطاقة ونهايتها.", 400, origin);
       const { data, error: insertError } = await db.from("commuter_board_campaigns").insert({ type: body.type, title, description, icon: typeof body.icon === "string" ? body.icon.slice(0, 16) : "⌖", cta_text: ctaText, cta_action: body.cta_action, priority: body.priority, targeting_rules: body.targeting_rules ?? {}, start_date: starts, end_date: ends, active: body.active, display_duration: body.display_duration, created_by_admin: user!.id }).select().single();
       if (insertError) throw insertError;
+      await writeAdminAudit(user!.id, "campaign.created", "commuter_board_campaign", String(data.id), null, {}, data as Json);
       return reply({ card: data }, 201, origin);
     }
     const campaignAction = path.match(/^\/admin\/commuter-board-campaigns\/([0-9a-f-]{36})$/i);
@@ -1506,7 +1739,7 @@ Deno.serve(async (req: Request) => {
       if (patch.start_date === "") patch.start_date = null;
       if (patch.end_date === "") patch.end_date = null;
       for (const field of ["start_date", "end_date"] as const) if (patch[field] !== undefined && patch[field] !== null && !Number.isFinite(Date.parse(String(patch[field])))) return error("تاريخ الحملة غير صحيح.", 400, origin);
-      const { data: existingCampaign, error: campaignLookupError } = await db.from("commuter_board_campaigns").select("start_date,end_date").eq("id", campaignAction[1]).maybeSingle();
+      const { data: existingCampaign, error: campaignLookupError } = await db.from("commuter_board_campaigns").select("*").eq("id", campaignAction[1]).maybeSingle();
       if (campaignLookupError) throw campaignLookupError;
       if (!existingCampaign) return error("بطاقة الحملة غير موجودة.", 404, origin);
       const nextStart = patch.start_date === undefined ? existingCampaign.start_date : patch.start_date;
@@ -1516,12 +1749,17 @@ Deno.serve(async (req: Request) => {
       const { data, error: updateError } = await db.from("commuter_board_campaigns").update(patch).eq("id", campaignAction[1]).select().maybeSingle();
       if (updateError) throw updateError;
       if (!data) return error("بطاقة الحملة غير موجودة.", 404, origin);
+      await writeAdminAudit(user!.id, "campaign.updated", "commuter_board_campaign", campaignAction[1], clean(body.reason) ? body.reason.trim() : null, existingCampaign as Json, data as Json);
       return reply({ card: data }, 200, origin);
     }
     if (campaignAction && req.method === "DELETE") {
+      const { data: before, error: readError } = await db.from("commuter_board_campaigns").select("*").eq("id", campaignAction[1]).maybeSingle();
+      if (readError) throw readError;
+      if (!before) return error("بطاقة الحملة غير موجودة.", 404, origin);
       const { data, error: deleteError } = await db.from("commuter_board_campaigns").delete().eq("id", campaignAction[1]).select("id").maybeSingle();
       if (deleteError) throw deleteError;
       if (!data) return error("بطاقة الحملة غير موجودة.", 404, origin);
+      await writeAdminAudit(user!.id, "campaign.deleted", "commuter_board_campaign", campaignAction[1], null, before as Json, {});
       return reply({ success: true }, 200, origin);
     }
     if (req.method === "POST" && path === "/admin/notifications/broadcast") {
@@ -1544,6 +1782,7 @@ Deno.serve(async (req: Request) => {
         offset += recipients.length;
         if (recipients.length < 1000) break;
       }
+      await writeAdminAudit(user!.id, "notification.broadcast", "notification_batch", requestId, null, {}, { title, notified_users: recipientCount });
       return reply({ success: true, notified_users: recipientCount, request_id: requestId }, 200, origin);
     }
     if (req.method === "GET" && path === "/admin/settings/otp") {
@@ -1557,24 +1796,51 @@ Deno.serve(async (req: Request) => {
       const { data, error: settingsError } = await db.from("app_feature_flags").update({ enabled: body.enabled, updated_by_user_id: user!.id, updated_at: new Date().toISOString() }).eq("flag_name", "captain_phone_otp").select("enabled").maybeSingle();
       if (settingsError) throw settingsError;
       if (!data) return error("إعداد توثيق الهاتف غير موجود.", 500, origin);
+      await writeAdminAudit(user!.id, "config.captain_otp_changed", "feature_flag", "captain_phone_otp", null, { enabled: !body.enabled }, { enabled: data.enabled });
       return reply({ otp: { enabled: data.enabled === true, provider: "twilio_verify", provider_ready: otpProviderReady() } }, 200, origin);
     }
     if (req.method === "GET" && path === "/admin/captains") {
       const status = url.searchParams.get("status") ?? "pending";
       if (!["pending", "approved", "rejected"].includes(status)) return error("حالة التوثيق المطلوبة مش صحيحة.", 400, origin);
-      const { data: profiles } = await db.from("captain_profiles").select("*").eq("verification_status", status).order("created_at", { ascending: false });
+      const { data: profiles, error: profileError } = await db.from("captain_profiles").select("*").eq("verification_status", status).order("created_at", { ascending: false });
+      if (profileError) throw profileError;
       const captains = [];
       for (const p of profiles ?? []) {
-        const { data: u } = await db.from("users").select("id,full_name,phone_number,verified_at").eq("id", p.user_id).single();
+        const { data: u, error: userError } = await db.from("users").select("id,full_name,phone_number,verified_at").eq("id", p.user_id).single();
+        if (userError) throw userError;
         captains.push({ user_id: p.user_id, ...u, vehicle_type_id: p.vehicle_type_id, license_number: p.license_number, vehicle_plate: p.vehicle_plate, verification_status: p.verification_status, current_lat: p.current_lat, current_lng: p.current_lng, created_at: p.created_at });
       }
       return reply({ captains }, 200, origin);
     }
     const verifyCaptain = path.match(/^\/admin\/captains\/(\d+)\/verification$/);
     if (req.method === "POST" && verifyCaptain) {
-      if (!["pending", "approved", "rejected"].includes(String(body.status))) return error("حالة التوثيق المطلوبة مش صحيحة.", 400, origin);
+      if (!["pending", "approved", "rejected"].includes(String(body.status)) || !clean(body.reason)) return error("حدد حالة التوثيق واكتب سبب القرار.", 400, origin);
+      const { data: oldProfile, error: readError } = await db.from("captain_profiles").select("*").eq("user_id", verifyCaptain[1]).maybeSingle();
+      if (readError) throw readError;
+      if (!oldProfile) return error("الكابتن غير موجود.", 404, origin);
       const { data, error: e } = await db.from("captain_profiles").update({ verification_status: body.status }).eq("user_id", verifyCaptain[1]).neq("verification_status", body.status).select().maybeSingle();
       if (e) throw e; if (!data) return error("الكابتن غير موجود أو حالته لم تتغير.", 404, origin);
+      await writeAdminAudit(user!.id, "captain.verification_changed", "captain", String(verifyCaptain[1]), body.reason.trim(), oldProfile as Json, data as Json);
+      await notifyUser(Number(verifyCaptain[1]), null, `admin-verification:${data.verification_status}:${Date.now()}`, { title: "تحديث توثيق الكابتن", message: body.status === "approved" ? "تم توثيق حسابك ويمكنك استقبال الرحلات." : body.status === "rejected" ? "لم يتم قبول التوثيق. راجع بيانات المركبة والرخصة ثم تواصل مع الدعم." : "تم تحديث حالة التوثيق." });
+      return reply({ captain_profile: data }, 200, origin);
+    }
+    const captainProfileRoute = path.match(/^\/admin\/captains\/(\d+)$/);
+    if (req.method === "PATCH" && captainProfileRoute) {
+      const allowed = ["vehicle_type_id", "license_number", "vehicle_plate", "verification_status"] as const;
+      const patch: Record<string, string> = {};
+      for (const field of allowed) if (field in body) {
+        if (!clean(body[field]) || body[field].trim().length > (field === "license_number" || field === "vehicle_plate" ? 40 : 80)) return error("راجع بيانات الكابتن قبل الحفظ.", 400, origin);
+        patch[field] = body[field].trim();
+      }
+      if (!Object.keys(patch).length || (patch.verification_status && !["pending", "approved", "rejected"].includes(patch.verification_status))) return error("لا توجد تغييرات صالحة للحفظ.", 400, origin);
+      if (!clean(body.reason)) return error("اكتب سبب تعديل بيانات الكابتن.", 400, origin);
+      const { data: before, error: readError } = await db.from("captain_profiles").select("*").eq("user_id", captainProfileRoute[1]).maybeSingle();
+      if (readError) throw readError;
+      if (!before) return error("بيانات الكابتن غير موجودة.", 404, origin);
+      const { data, error: updateError } = await db.from("captain_profiles").update(patch).eq("user_id", captainProfileRoute[1]).select().single();
+      if (updateError) throw updateError;
+      await writeAdminAudit(user!.id, "captain.profile_updated", "captain", captainProfileRoute[1], body.reason.trim(), before as Json, data as Json);
+      if (patch.verification_status && patch.verification_status !== before.verification_status) await notifyUser(Number(captainProfileRoute[1]), null, `admin-verification:${data.verification_status}:${Date.now()}`, { title: "تحديث توثيق الكابتن", message: patch.verification_status === "approved" ? "تم توثيق حسابك ويمكنك استقبال الرحلات." : patch.verification_status === "rejected" ? "لم يتم قبول التوثيق. راجع بيانات المركبة والرخصة ثم تواصل مع الدعم." : "تم تحديث حالة التوثيق." });
       return reply({ captain_profile: data }, 200, origin);
     }
 
@@ -1582,8 +1848,13 @@ Deno.serve(async (req: Request) => {
     if (req.method === "PATCH" && priceUpdate) {
       const values = [body.base_fee, body.rate_per_km, body.rate_per_min];
       if (!values.every(value => number(value) && value >= 0)) return error("قيم التسعير المطلوبة ناقصة أو غير صحيحة.", 400, origin);
+      const { data: before, error: readError } = await db.from("pricing_config").select("*").eq("vehicle_type_id", priceUpdate[1]).maybeSingle();
+      if (readError) throw readError;
+      if (!before) return error("نوع المركبة ده مش موجود في إعدادات التسعير.", 404, origin);
       const { data, error: pe } = await db.from("pricing_config").update({ base_fee: values[0], rate_per_km: values[1], rate_per_min: values[2], updated_at: new Date().toISOString() }).eq("vehicle_type_id", priceUpdate[1]).select().maybeSingle();
       if (pe) throw pe; if (!data) return error("نوع المركبة ده مش موجود في إعدادات التسعير.", 404, origin);
+      const reason = clean(body.reason) ? body.reason.trim() : "تحديث تسعير النظام";
+      await writeAdminAudit(user!.id, "pricing.updated", "pricing_config", String(priceUpdate[1]), reason, before as Json, data as Json);
       return reply({ pricing_config: data }, 200, origin);
     }
     const paymentView = path.match(/^\/admin\/payments\/(\d+)$/);
@@ -1597,15 +1868,17 @@ Deno.serve(async (req: Request) => {
     const paymentAction = path.match(/^\/admin\/payments\/(\d+)\/(resolve|adjust|void)$/);
     if (req.method === "POST" && paymentAction) {
       const paymentId = Number(paymentAction[1]), action = paymentAction[2];
+      if (!clean(body.reason) || body.reason.trim().length > 1000) return error("اكتب سبب معالجة الاعتراض.", 400, origin);
       const { data: payment, error: pe } = await db.from("payments").select("id").eq("id", paymentId).maybeSingle();
       if (pe) throw pe; if (!payment) return error("الدفعة دي مش موجودة.", 404, origin);
-      const { data: events, error: ee } = await db.from("payment_status_events").select("to_status").eq("payment_id", paymentId).order("created_at", { ascending: false }).limit(1);
+      const { data: events, error: ee } = await db.from("payment_status_events").select("id,to_status").eq("payment_id", paymentId).order("created_at", { ascending: false }).order("id", { ascending: false }).limit(1);
       if (ee) throw ee;
       if ((events?.[0]?.to_status ?? "confirmed") !== "disputed") return error("لا يمكن اتخاذ إجراء إلا على دفعة معترض عليها.", 409, origin);
       const target = action === "resolve" ? "resolved" : action === "adjust" ? "adjusted" : "voided";
       if (action === "adjust" && (!number(body.adjusted_amount) || body.adjusted_amount < 0)) return error("المبلغ المعدل غير صالح.", 400, origin);
       const { data: event, error: insertError } = await db.from("payment_status_events").insert({ payment_id: paymentId, from_status: "disputed", to_status: target, actor_user_id: user!.id, reason: typeof body.reason === "string" ? body.reason.trim().slice(0, 1000) : null, adjusted_amount: action === "adjust" ? body.adjusted_amount : null }).select().single();
       if (insertError) throw insertError;
+      await writeAdminAudit(user!.id, `payment.${action}`, "payment", String(paymentId), body.reason.trim(), { status: "disputed" }, { status: target, adjusted_amount: action === "adjust" ? body.adjusted_amount : null });
       return reply({ event }, 200, origin);
     }
     if (req.method === "GET" && path === "/admin/analytics/overview") {

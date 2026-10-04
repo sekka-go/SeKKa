@@ -34,7 +34,7 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
     const nextIndex = historyMode === "replace"
       ? currentIndex
       : currentIndex + 1;
-    const nextState = { ...(current ?? {}), sekkaWorkspace: true, sekkaSection: next, sekkaIndex: nextIndex };
+    const nextState = { ...current, sekkaWorkspace: true, sekkaSection: next, sekkaIndex: nextIndex };
     if (historyMode === "replace") window.history.replaceState(nextState, "", window.location.href);
     else window.history.pushState(nextState, "", window.location.href);
     setHistoryDepth(nextIndex);
@@ -44,7 +44,7 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
   useEffect(() => {
     const current = window.history.state as { sekkaWorkspace?: boolean; sekkaSection?: NavKey; sekkaIndex?: number; sekkaGuard?: boolean } | null;
     if (!current?.sekkaWorkspace) {
-      const base = { ...(current ?? {}), sekkaWorkspace: true, sekkaSection: section, sekkaIndex: 0 };
+      const base = { ...current, sekkaWorkspace: true, sekkaSection: section, sekkaIndex: 0 };
       window.history.replaceState(base, "", window.location.href);
       window.history.pushState({ ...base, sekkaGuard: true }, "", window.location.href);
     } else if ((current.sekkaIndex ?? 0) === 0 && !current.sekkaGuard) {

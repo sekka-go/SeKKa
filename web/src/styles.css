@@ -1,4 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+@layer theme, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
 
 :root { font-family: Tajawal, sans-serif; color: #f3ecd9; background: #171309; font-synthesis: none; --ink: #f3ecd9; --muted: #bcb39d; --line: rgba(243,236,217,.14); --panel: #242014; --panel-hi: #302a1d; --yellow: #ffd21f; --yellow-deep: #b28b00; --cyan: #9ee8e6; --danger: #ffb4ab; }
 * { box-sizing: border-box; }

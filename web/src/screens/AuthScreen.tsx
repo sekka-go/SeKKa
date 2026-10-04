@@ -6,7 +6,7 @@ import { api, type SavedPlace, type User } from "../api";
 import type { Session, Toast } from "../types";
 
 export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (session: Session) => void; notify: (text: string, tone?: Toast["tone"]) => void }) {
-  const [mode, setMode] = useState<"login" | "register">(() => window.location.pathname === "/register" ? "register" : "login");
+  const mode = window.location.pathname === "/register" ? "register" : "login";
   const [role, setRole] = useState<"rider" | "captain">("rider");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
