@@ -1971,3 +1971,38 @@ button { line-height: 1.45; }
 @media (prefers-reduced-motion: reduce) { .workspace .notifications-overlay, .workspace .notifications-drawer { animation: none; } }
 
 .map-loading { display: grid; place-items: center; color: var(--muted); }
+
+.verification-center { grid-column: 1 / -1; display: grid; gap: 1rem; padding: clamp(1rem, 3vw, 1.5rem); scroll-margin-top: 1rem; color: #f5f0e3; background: #1e1e1e; border: 1px solid rgba(234,179,8,.25); border-radius: 1.1rem; }
+.verification-heading,.verification-progress-copy,.verification-doc-top,.verification-deferred-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.verification-heading h2,.verification-doc-card h3,.verification-deferred h3 { margin: .25rem 0; }
+.verification-heading p,.verification-phone-row p,.verification-deferred p { margin: .25rem 0 0; color: #a8a29e; }
+.verification-progress { display: grid; gap: .55rem; padding: .9rem 1rem; background: #121212; border: 1px solid #38352b; border-radius: .85rem; }
+.verification-progress-copy { color: #a8a29e; font-size: .85rem; }
+.verification-progress-copy strong { color: #EAB308; font-size: 1rem; }
+.verification-progress-track { height: .55rem; overflow: hidden; background: #35332b; border-radius: 999px; }
+.verification-progress-track span { display: block; height: 100%; background: #EAB308; border-radius: inherit; transition: width .35s ease; }
+.verification-phone-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem; background: #181818; border: 1px solid #39362e; border-radius: .9rem; }
+.verification-phone-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.verification-doc-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .75rem; }
+.verification-doc-card { display: grid; align-content: start; gap: .65rem; min-width: 0; padding: 1rem; background: #181818; border: 1px solid #39362e; border-radius: .9rem; transition: border-color .2s ease, transform .2s ease; }
+.verification-doc-card:hover { border-color: rgba(234,179,8,.6); transform: translateY(-1px); }
+.verification-doc-top > div { display: grid; justify-items: start; gap: .45rem; }
+.verification-doc-card h3 { font-size: .96rem; line-height: 1.5; }
+.verification-doc-icon { display: grid; place-items: center; width: 2.5rem; height: 2.5rem; flex: 0 0 auto; color: #EAB308; background: rgba(234,179,8,.1); border-radius: .75rem; font-size: 1.35rem; }
+.verification-status { display: inline-flex; align-items: center; width: fit-content; padding: .25rem .55rem; border-radius: 999px; font-size: .75rem; font-weight: 700; }
+.verification-status.is-approved { color: #86efac; background: rgba(34,197,94,.13); }
+.verification-status.is-pending { color: #fcd34d; background: rgba(245,158,11,.13); }
+.verification-status.is-rejected { color: #fca5a5; background: rgba(239,68,68,.13); }
+.verification-status.is-empty { color: #a8a29e; background: rgba(168,162,158,.12); }
+.verification-upload { position: relative; display: inline-flex; justify-content: center; align-items: center; width: 100%; overflow: hidden; cursor: pointer; }
+.verification-upload input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.verification-date { color: #8e897e; }
+.verification-rejection,.verification-warning { margin: 0; color: #fca5a5; font-size: .85rem; line-height: 1.6; }
+.verification-deferred { display: grid; gap: .75rem; padding: 1rem; background: rgba(245,158,11,.045); border: 1px solid rgba(245,158,11,.22); border-radius: .95rem; }
+.verification-deferred-heading > strong { flex: 0 0 auto; color: #fcd34d; font-size: .9rem; }
+.verification-deferred-heading > strong.is-rejected { color: #fca5a5; }
+.verification-privacy { margin: 0; color: #8e897e; font-size: .78rem; }
+.verification-required-banner { border-color: rgba(245,158,11,.42); }
+.verification-required-banner .button { min-width: 11rem; }
+@media (max-width: 620px) { .verification-doc-grid { grid-template-columns: 1fr; } .verification-heading,.verification-phone-row,.verification-deferred-heading { align-items: flex-start; flex-direction: column; } .verification-phone-actions { width: 100%; } .verification-phone-actions .button { flex: 1; justify-content: center; } }
+@media (prefers-reduced-motion: reduce) { .verification-progress-track span,.verification-doc-card { transition: none; } }

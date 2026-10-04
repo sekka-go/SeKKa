@@ -243,6 +243,107 @@ async function readBody(req: Request): Promise<Json> {
   const value = JSON.parse(text);
   return value && typeof value === "object" && !Array.isArray(value) ? value as Json : {};
 }
+function randomUrlToken(byteLength = 18) {
+  const bytes = crypto.getRandomValues(new Uint8Array(byteLength));
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+const verificationDocuments = {
+  rider: ["national_id_front", "national_id_back"],
+  captainImmediate: ["national_id_front", "national_id_back", "driving_license_front", "driving_license_back", "vehicle_license_front", "vehicle_license_back"],
+  captainDeferred: ["criminal_record", "drug_test"],
+} as const;
+const verificationDocLabels: Record<string, string> = {
+  national_id_front: "الرقم القومي — الوجه الأمامي", national_id_back: "الرقم القومي — الوجه الخلفي",
+  driving_license_front: "رخصة القيادة — الوجه الأمامي", driving_license_back: "رخصة القيادة — الوجه الخلفي",
+  vehicle_license_front: "رخصة المركبة — الوجه الأمامي", vehicle_license_back: "رخصة المركبة — الوجه الخلفي",
+  criminal_record: "الفيش والتشبيه", drug_test: "تحليل المخدرات",
+};
+async function telegramRequest(method: string, payload: Json) {
+  const token = Deno.env.get("TELEGRAM_BOT_TOKEN");
+  if (!token) throw new ApiFailure("خدمة التحقق المجانية غير مهيأة بعد.", 503);
+  const response = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
+    method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload), signal: AbortSignal.timeout(8000),
+  });
+  const result = await response.json().catch(() => ({})) as Json;
+  if (!response.ok || result.ok !== true) throw new ApiFailure("تعذر الاتصال بخدمة التحقق. حاول لاحقًا.", 502);
+  return result;
+}
+async function handleTelegramVerificationWebhook(body: Json, origin: string) {
+  const update = body as Record<string, any>;
+  const message = update.message as Record<string, any> | undefined;
+  if (!message || !Number.isInteger(message.from?.id) || !Number.isInteger(message.chat?.id)) return reply({ ok: true }, 200, origin);
+  const chatId = Number(message.chat.id), telegramUserId = Number(message.from.id);
+  const text = typeof message.text === "string" ? message.text : "";
+  const start = /^\/start\s+verify_([A-Za-z0-9_-]{20,32})$/.exec(text);
+  if (start) {
+    const tokenHash = await digest(start[1]);
+    const { data: challenge, error: challengeError } = await db!.from("telegram_phone_verification_challenges").select("token_hash,user_id,status,expires_at").eq("token_hash", tokenHash).maybeSingle();
+    if (challengeError) throw challengeError;
+    if (!challenge || challenge.status !== "waiting_start" || Date.parse(challenge.expires_at) <= Date.now()) {
+      await telegramRequest("sendMessage", { chat_id: chatId, text: "انتهت صلاحية رابط التحقق. ارجع إلى سِكّة واطلب رابطًا جديدًا." });
+      return reply({ ok: true }, 200, origin);
+    }
+    const { error: updateError } = await db!.from("telegram_phone_verification_challenges").update({ telegram_user_id: telegramUserId, status: "waiting_contact" }).eq("token_hash", tokenHash).eq("status", "waiting_start");
+    if (updateError) throw updateError;
+    await telegramRequest("sendMessage", {
+      chat_id: chatId,
+      text: "لإثبات ملكية رقم الهاتف المسجّل في سِكّة، استخدم زر مشاركة رقم هاتفي. يجب إرسال رقمك أنت من حساب تيليجرام نفسه.",
+      reply_markup: { keyboard: [[{ text: "مشاركة رقم هاتفي", request_contact: true }]], resize_keyboard: true, one_time_keyboard: true },
+    });
+    return reply({ ok: true }, 200, origin);
+  }
+  if (message.contact && Number(message.contact.user_id) === telegramUserId) {
+    const { data: challenges, error: challengeError } = await db!.from("telegram_phone_verification_challenges").select("token_hash,user_id").eq("telegram_user_id", telegramUserId).eq("status", "waiting_contact").gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false }).limit(1);
+    if (challengeError) throw challengeError;
+    const challenge = challenges?.[0];
+    if (!challenge) {
+      await telegramRequest("sendMessage", { chat_id: chatId, text: "لا يوجد طلب تحقق نشط. ارجع إلى سِكّة وابدأ من جديد.", reply_markup: { remove_keyboard: true } });
+      return reply({ ok: true }, 200, origin);
+    }
+    const [{ data: target, error: userError }, { data: sender, error: challengeUpdateError }] = await Promise.all([
+      db!.from("users").select("id,phone_number,verified_at").eq("id", challenge.user_id).maybeSingle(),
+      db!.from("telegram_phone_verification_challenges").select("telegram_user_id").eq("token_hash", challenge.token_hash).maybeSingle(),
+    ]);
+    if (userError || challengeUpdateError) throw userError ?? challengeUpdateError;
+    if (!target || sender?.telegram_user_id !== telegramUserId || phoneE164(String(message.contact.phone_number ?? "")) !== phoneE164(target.phone_number)) {
+      await telegramRequest("sendMessage", { chat_id: chatId, text: "الرقم المرسل لا يطابق الرقم المسجّل في سِكّة. أرسل جهة اتصال رقمك المسجّل وحاول مرة أخرى.", reply_markup: { remove_keyboard: true } });
+      return reply({ ok: true }, 200, origin);
+    }
+    const verifiedAt = target.verified_at ?? new Date().toISOString();
+    const [{ error: userUpdateError }, { error: challengeCompleteError }] = await Promise.all([
+      db!.from("users").update({ verified_at: verifiedAt }).eq("id", challenge.user_id).is("verified_at", null),
+      db!.from("telegram_phone_verification_challenges").update({ status: "verified", verified_at: verifiedAt }).eq("token_hash", challenge.token_hash).eq("status", "waiting_contact"),
+    ]);
+    if (userUpdateError || challengeCompleteError) throw userUpdateError ?? challengeCompleteError;
+    await telegramRequest("sendMessage", { chat_id: chatId, text: "تم توثيق رقمك بنجاح. يمكنك الرجوع إلى تطبيق سِكّة.", reply_markup: { remove_keyboard: true } });
+  }
+  return reply({ ok: true }, 200, origin);
+}
+async function requireVerificationActivation(user: User, origin: string) {
+  if (!user.verified_at) return error("وثّق رقم هاتفك وأكمل مستنداتك من صفحة التوثيق قبل حجز رحلة.", 403, origin);
+  const { data: documents, error: documentsError } = await db!.from("user_verifications").select("document_type,status").eq("user_id", user.id);
+  if (documentsError) throw documentsError;
+  const approved = new Set((documents ?? []).filter((row) => row.status === "approved").map((row) => row.document_type));
+  const required = user.role === "rider" ? verificationDocuments.rider : verificationDocuments.captainImmediate;
+  if (required.some((type) => !approved.has(type))) return error("أكمل توثيق مستنداتك من صفحة التوثيق قبل تنفيذ هذا الإجراء.", 403, origin);
+  if (user.role === "captain") {
+    const { data: profile, error: profileError } = await db!.from("captain_profiles").select("status,verification_status").eq("user_id", user.id).maybeSingle();
+    if (profileError) throw profileError;
+    if (!profile || profile.status !== "active" || profile.verification_status !== "approved") return error("حساب الكابتن غير مفعّل لاستقبال الرحلات. راجع حالة التوثيق.", 403, origin);
+  }
+  return null;
+}
+async function captainHasImmediateVerification(userId: number) {
+  const [{ data: account, error: accountError }, { data: documents, error: documentsError }] = await Promise.all([
+    db!.from("users").select("verified_at").eq("id", userId).maybeSingle(),
+    db!.from("user_verifications").select("document_type,status").eq("user_id", userId),
+  ]);
+  if (accountError || documentsError) throw accountError ?? documentsError;
+  const approved = new Set((documents ?? []).filter((row) => row.status === "approved").map((row) => row.document_type));
+  return Boolean(account?.verified_at) && verificationDocuments.captainImmediate.every((type) => approved.has(type));
+}
 async function takeLimit(key: string, limit: number, seconds: number) {
   const { data, error: dbError } = await db!.rpc("sekka_take_rate_limit", { p_key: key.slice(0, 512), p_limit: limit, p_window_seconds: seconds });
   if (dbError) throw dbError;
@@ -493,10 +594,17 @@ Deno.serve(async (req: Request) => {
   const suffix = url.pathname.replace(/^\/(?:functions\/v1\/)?sekka-api(?=\/|$)/, "") || "/";
   const path = suffix.startsWith("/api/") ? suffix.slice(4) : suffix === "/api" ? "/" : suffix;
   let body: Json = {};
-  if (!["GET", "HEAD"].includes(req.method)) {
+  const multipart = req.headers.get("content-type")?.toLowerCase().startsWith("multipart/form-data") === true;
+  if (!["GET", "HEAD"].includes(req.method) && !multipart) {
     try { body = await readBody(req); } catch { return error("بيانات الطلب غير صالحة.", 400, origin); }
   }
   try {
+    if (req.method === "POST" && path === "/webhooks/telegram") {
+      const expected = Deno.env.get("TELEGRAM_WEBHOOK_SECRET") ?? "";
+      const received = req.headers.get("x-telegram-bot-api-secret-token") ?? "";
+      if (expected.length < 32 || received !== expected) return error("Webhook غير مصرح به.", 401, origin);
+      return await handleTelegramVerificationWebhook(body, origin);
+    }
     if (req.method === "GET" && (path === "/health" || path === "/")) {
       const { error: healthError } = await db.from("pool_categories").select("id").limit(1);
       if (healthError) return error("قاعدة البيانات غير متاحة مؤقتًا.", 503, origin);
@@ -513,6 +621,72 @@ Deno.serve(async (req: Request) => {
     }
     const user = await authenticate(req);
     if (user && user.account_status !== "active" && path !== "/auth/logout") return error("الحساب موقوف حاليًا. تواصل مع خدمة العملاء للمساعدة.", 403, origin);
+    if (req.method === "GET" && path === "/verification") {
+      const gate = await requireRole(user, ["rider", "captain"], origin); if (gate) return gate;
+      const [{ data: documents, error: documentsError }, { data: profile, error: profileError }] = await Promise.all([
+        db.from("user_verifications").select("id,document_type,status,rejection_reason,uploaded_at,reviewed_at").eq("user_id", user!.id).order("document_type"),
+        user!.role === "captain" ? db.from("captain_profiles").select("status,verification_status,grace_period_expires_at").eq("user_id", user!.id).maybeSingle() : Promise.resolve({ data: null, error: null }),
+      ]);
+      if (documentsError || profileError) throw documentsError ?? profileError;
+      const botUsername = Deno.env.get("TELEGRAM_BOT_USERNAME")?.replace(/^@/, "") ?? "";
+      return reply({
+        role: user!.role,
+        phone_verified: Boolean(user!.verified_at),
+        telegram_enabled: Boolean(Deno.env.get("TELEGRAM_BOT_TOKEN") && botUsername && Deno.env.get("TELEGRAM_WEBHOOK_SECRET")),
+        telegram_bot_username: /^[A-Za-z0-9_]{5,32}$/.test(botUsername) ? botUsername : null,
+        documents: documents ?? [],
+        captain_status: profile?.status ?? null,
+        verification_status: profile?.verification_status ?? null,
+        grace_period_expires_at: profile?.grace_period_expires_at ?? null,
+        requirements: { rider: verificationDocuments.rider, captain_immediate: verificationDocuments.captainImmediate, captain_deferred: verificationDocuments.captainDeferred, labels: verificationDocLabels },
+      }, 200, origin);
+    }
+    if (req.method === "POST" && path === "/verification/phone/telegram") {
+      const gate = await requireRole(user, ["rider", "captain"], origin); if (gate) return gate;
+      if (user!.verified_at) return reply({ success: true, already_verified: true }, 200, origin);
+      const botUsername = (Deno.env.get("TELEGRAM_BOT_USERNAME") ?? "").replace(/^@/, "");
+      if (!Deno.env.get("TELEGRAM_BOT_TOKEN") || !Deno.env.get("TELEGRAM_WEBHOOK_SECRET") || !/^[A-Za-z0-9_]{5,32}$/.test(botUsername)) return error("خدمة التحقق المجانية غير مهيأة بعد. تواصل مع الدعم.", 503, origin);
+      if (!phoneE164(user!.phone_number)) return error("رقم الهاتف المسجل غير صالح. حدّثه قبل بدء التحقق.", 400, origin);
+      if (!await takeLimit(`telegram-verification:${user!.id}`, 3, 3600)) return error("طلبت روابط تحقق كثيرة. حاول بعد قليل.", 429, origin);
+      const token = randomUrlToken();
+      const tokenHash = await digest(token);
+      const { error: insertError } = await db.from("telegram_phone_verification_challenges").insert({ token_hash: tokenHash, user_id: user!.id, expires_at: new Date(Date.now() + 15 * 60_000).toISOString() });
+      if (insertError) throw insertError;
+      return reply({ verification_url: `https://t.me/${botUsername}?start=verify_${token}`, expires_in_seconds: 900 }, 201, origin);
+    }
+    const documentUploadRoute = path.match(/^\/verification\/documents\/([a-z_]+)$/);
+    if (req.method === "POST" && documentUploadRoute) {
+      const gate = await requireRole(user, ["rider", "captain"], origin); if (gate) return gate;
+      const documentType = documentUploadRoute[1];
+      const allowed = user!.role === "rider" ? verificationDocuments.rider : [...verificationDocuments.captainImmediate, ...verificationDocuments.captainDeferred];
+      if (!(allowed as readonly string[]).includes(documentType)) return error("نوع المستند غير مطلوب لهذا الحساب.", 400, origin);
+      const contentLength = Number(req.headers.get("content-length") ?? 0);
+      if (contentLength > 9_000_000) return error("حجم الملف أكبر من 8 ميجابايت.", 413, origin);
+      let form: FormData;
+      try { form = await req.formData(); } catch { return error("تعذر قراءة الملف المرفق.", 400, origin); }
+      const file = form.get("file");
+      if (!(file instanceof File) || file.size < 1 || file.size > 8 * 1024 * 1024) return error("ارفع صورة أو PDF لا يتجاوز 8 ميجابايت.", 400, origin);
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const typeFromBytes = bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff ? "image/jpeg"
+        : bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47 ? "image/png"
+        : bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 && String.fromCharCode(...bytes.slice(8, 12)) === "WEBP" ? "image/webp"
+        : bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46 ? "application/pdf" : null;
+      if (!typeFromBytes || (file.type && file.type !== typeFromBytes)) return error("صيغة الملف غير مدعومة. استخدم JPEG أو PNG أو WebP أو PDF.", 415, origin);
+      const extension = typeFromBytes === "image/jpeg" ? "jpg" : typeFromBytes.split("/")[1];
+      const objectPath = `${user!.id}/${documentType}/${crypto.randomUUID()}.${extension}`;
+      const { data: previous, error: previousError } = await db.from("user_verifications").select("object_path").eq("user_id", user!.id).eq("document_type", documentType).maybeSingle();
+      if (previousError) throw previousError;
+      const { error: uploadError } = await db.storage.from("verification-documents").upload(objectPath, bytes, { contentType: typeFromBytes, upsert: false });
+      if (uploadError) throw uploadError;
+      const { data: document, error: saveError } = await db.from("user_verifications").upsert({
+        user_id: user!.id, document_type: documentType, status: "pending", object_path: objectPath,
+        content_type: typeFromBytes, file_size_bytes: bytes.byteLength,
+        rejection_reason: null, uploaded_at: new Date().toISOString(), reviewed_at: null, reviewed_by: null,
+      }, { onConflict: "user_id,document_type" }).select("id,document_type,status,rejection_reason,uploaded_at,reviewed_at").single();
+      if (saveError) { await db.storage.from("verification-documents").remove([objectPath]); throw saveError; }
+      if (previous?.object_path) await db.storage.from("verification-documents").remove([previous.object_path]);
+      return reply({ document }, 201, origin);
+    }
     if (req.method === "POST" && path === "/rider/pool/quote") {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
       let pickup, dropoff;
@@ -676,6 +850,7 @@ Deno.serve(async (req: Request) => {
     if (path === "/rider/requests") {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
       if (req.method === "POST") {
+        const activationGate = await requireVerificationActivation(user!, origin); if (activationGate) return activationGate;
         if (!clean(body.service_category_id) || !validPoint(body.pickup_lat, body.pickup_lng) || !validPoint(body.dropoff_lat, body.dropoff_lng)) return error("فئة الخدمة أو إحداثيات الرحلة غير صحيحة.", 400, origin);
         const { data: request, error: insertError } = await db.from("daily_commute_requests").insert({ rider_user_id: user!.id, service_category_id: body.service_category_id, pickup_lat: body.pickup_lat, pickup_lng: body.pickup_lng, dropoff_lat: body.dropoff_lat, dropoff_lng: body.dropoff_lng }).select().single();
         if (insertError) throw insertError;
@@ -817,6 +992,7 @@ Deno.serve(async (req: Request) => {
     }
     if (req.method === "POST" && path === "/rider/pool/groups") {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      const activationGate = await requireVerificationActivation(user!, origin); if (activationGate) return activationGate;
       const { category_id, package_type, service_dates, morning_departure, return_departure } = body;
       const dates = validDates(service_dates, String(package_type));
       if (!clean(category_id) || !dates || !/^\d{2}:\d{2}$/.test(String(morning_departure)) || !/^\d{2}:\d{2}$/.test(String(return_departure)) || String(return_departure) <= String(morning_departure)) return error("راجع الفئة والأيام ومواعيد الذهاب والعودة.", 400, origin);
@@ -884,6 +1060,7 @@ Deno.serve(async (req: Request) => {
     const joinMatch = path.match(/^\/rider\/pool\/groups\/(\d+)\/join$/);
     if (req.method === "POST" && joinMatch) {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      const activationGate = await requireVerificationActivation(user!, origin); if (activationGate) return activationGate;
       const group = await getGroup(Number(joinMatch[1]));
       if (!group || group.status !== "waiting") return error("المجموعة غير متاحة للانضمام.", 409, origin);
       const members = await getMembers(Number(group.id));
@@ -926,6 +1103,7 @@ Deno.serve(async (req: Request) => {
     const confirmInvite = path.match(/^\/rider\/pool\/groups\/(\d+)\/confirm$/);
     if (req.method === "POST" && confirmInvite) {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      if (body.action === "accept") { const activationGate = await requireVerificationActivation(user!, origin); if (activationGate) return activationGate; }
       if (!["accept", "decline"].includes(String(body.action))) return error("الاختيار غير صحيح.", 400, origin);
       const group = await getGroup(Number(confirmInvite[1]));
       const { data: member, error: memberError } = await db.from("pool_members").select("*").eq("group_id", confirmInvite[1]).eq("rider_user_id", user!.id).eq("status", "awaiting_confirmation").maybeSingle();
@@ -1259,17 +1437,27 @@ Deno.serve(async (req: Request) => {
         if (e) throw e; return reply({ success: true }, 200, origin);
       }
       if (req.method === "GET" && path === "/captain/pool/offers") {
-        const { data: profile } = await db.from("captain_profiles").select("*").eq("user_id", user!.id).maybeSingle();
+        const { data: profile, error: profileError } = await db.from("captain_profiles").select("*").eq("user_id", user!.id).maybeSingle();
+        if (profileError) throw profileError;
+        if (profile?.status === "suspended_grace_expired") return error("توقف استقبال المسارات لانتهاء مهلة المستندات المؤجلة. أكمل رفعها ثم تواصل مع الدعم.", 403, origin);
         if (!profile || profile.verification_status !== "approved" || !user!.verified_at) return error("يلزم توثيق ملف المركبة والهاتف قبل عرض المسارات.", 403, origin);
-        const { data: capability } = await db.from("pool_captain_capabilities").select("*").eq("captain_user_id", user!.id).maybeSingle();
-        const { data: stats } = await db.from("pool_captain_stats").select("*").eq("captain_user_id", user!.id).maybeSingle();
+        const activationGate = await requireVerificationActivation(user!, origin); if (activationGate) return activationGate;
+        const [{ data: capability, error: capabilityError }, { data: stats, error: statsError }] = await Promise.all([
+          db.from("pool_captain_capabilities").select("*").eq("captain_user_id", user!.id).maybeSingle(),
+          db.from("pool_captain_stats").select("*").eq("captain_user_id", user!.id).maybeSingle(),
+        ]);
+        if (capabilityError || statsError) throw capabilityError ?? statsError;
         if (!capability || profile.current_lat == null || profile.current_lng == null) return reply({ offers: [] }, 200, origin);
-        const { data: trips } = await db.from("pool_trips").select("*").in("status", ["scheduled", "needs_captain"]).is("captain_user_id", null).gte("departure_at", new Date().toISOString()).order("departure_at").limit(100);
+        const { data: trips, error: tripsError } = await db.from("pool_trips").select("*").in("status", ["scheduled", "needs_captain"]).is("captain_user_id", null).gte("departure_at", new Date().toISOString()).order("departure_at").limit(100);
+        if (tripsError) throw tripsError;
         const offers = [];
         for (const trip of trips ?? []) {
-          const { data: group } = await db.from("pool_groups").select("*").eq("id", trip.group_id).maybeSingle();
-          const { data: category } = group ? await db.from("pool_categories").select("*").eq("id", group.category_id).maybeSingle() : { data: null };
-          const { data: members } = group ? await db.from("pool_members").select("*").eq("group_id", group.id).eq("status", "active").order("pickup_order") : { data: [] };
+          const { data: group, error: groupError } = await db.from("pool_groups").select("*").eq("id", trip.group_id).maybeSingle();
+          if (groupError) throw groupError;
+          const { data: category, error: categoryError } = group ? await db.from("pool_categories").select("*").eq("id", group.category_id).maybeSingle() : { data: null, error: null };
+          if (categoryError) throw categoryError;
+          const { data: members, error: membersError } = group ? await db.from("pool_members").select("*").eq("group_id", group.id).eq("status", "active").order("pickup_order") : { data: [], error: null };
+          if (membersError) throw membersError;
           const first = members?.[0];
           if (!group || !category || !first || group.status !== "active") continue;
           if ((category.speed_tier === "faster" && !capability.accepts_faster) || (category.speed_tier === "saver" && !capability.accepts_saver) || Number(category.has_ac) !== Number(capability.has_ac)) continue;
@@ -1500,10 +1688,51 @@ Deno.serve(async (req: Request) => {
         return reply({ earnings, total_amount: earnings.reduce((sum, item) => sum + Number(item.payment?.amount ?? 0), 0) }, 200, origin);
       }
 
-      return error("المسار غير موجود في واجهة Supabase بعد.", 501, origin);
+      return error("مسار واجهة غير معروف ضمن خدمات الكابتن.", 404, origin);
     }
     const adminGate = path.startsWith("/admin/") ? await requireSuperAdmin(user, origin) : null;
     if (adminGate) return adminGate;
+    if (req.method === "POST" && path === "/admin/verification/telegram-webhook") {
+      const baseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+      const secret = Deno.env.get("TELEGRAM_WEBHOOK_SECRET") ?? "";
+      if (!baseUrl || !Deno.env.get("TELEGRAM_BOT_TOKEN") || !/^[A-Za-z0-9_-]{32,256}$/.test(secret)) return error("أكمل إعداد TELEGRAM_BOT_TOKEN وTELEGRAM_WEBHOOK_SECRET في أسرار Supabase أولًا.", 503, origin);
+      const hookUrl = `${baseUrl.replace(/\/$/, "")}/functions/v1/sekka-api/webhooks/telegram`;
+      await telegramRequest("setWebhook", { url: hookUrl, secret_token: secret, allowed_updates: ["message"], drop_pending_updates: false });
+      await writeAdminAudit(user!.id, "verification.telegram_webhook_configured", "telegram_bot", "phone_verification", null);
+      return reply({ success: true, webhook_url: hookUrl }, 200, origin);
+    }
+    if (req.method === "GET" && path === "/admin/verifications") {
+      const status = url.searchParams.get("status") ?? "pending";
+      if (!(["pending", "approved", "rejected", "all"] as const).includes(status as "pending" | "approved" | "rejected" | "all")) return error("حالة التوثيق غير صحيحة.", 400, origin);
+      let query = db.from("user_verifications").select("id,user_id,document_type,status,rejection_reason,uploaded_at,reviewed_at,reviewed_by").order("uploaded_at", { ascending: false }).limit(200);
+      if (status !== "all") query = query.eq("status", status);
+      const { data: documents, error: documentsError } = await query;
+      if (documentsError) throw documentsError;
+      const userIds = [...new Set((documents ?? []).map((row) => row.user_id))];
+      const { data: users, error: usersError } = userIds.length ? await db.from("users").select("id,full_name,phone_number,role,verified_at").in("id", userIds) : { data: [], error: null };
+      if (usersError) throw usersError;
+      const usersById = new Map((users ?? []).map((row) => [row.id, row]));
+      return reply({ documents: (documents ?? []).map((row) => ({ ...row, document_label: verificationDocLabels[row.document_type] ?? row.document_type, user: usersById.get(row.user_id) ?? null })) }, 200, origin);
+    }
+    const adminVerificationFile = path.match(/^\/admin\/verifications\/(\d+)\/file$/);
+    if (req.method === "GET" && adminVerificationFile) {
+      const { data: document, error: documentError } = await db.from("user_verifications").select("object_path").eq("id", adminVerificationFile[1]).maybeSingle();
+      if (documentError) throw documentError;
+      if (!document) return error("المستند غير موجود.", 404, origin);
+      const { data: signed, error: signedError } = await db.storage.from("verification-documents").createSignedUrl(document.object_path, 60);
+      if (signedError) throw signedError;
+      return reply({ signed_url: signed.signedUrl, expires_in_seconds: 60 }, 200, origin);
+    }
+    const reviewVerification = path.match(/^\/admin\/verifications\/(\d+)\/review$/);
+    if (req.method === "POST" && reviewVerification) {
+      if (!["approved", "rejected"].includes(String(body.status)) || (body.status === "rejected" && (!clean(body.reason) || body.reason.trim().length > 1000))) return error("اختر قرارًا واكتب سبب الرفض عند الحاجة.", 400, origin);
+      const { data: document, error: reviewError } = await db.rpc("admin_review_user_verification", {
+        p_actor_user_id: user!.id, p_verification_id: Number(reviewVerification[1]), p_status: body.status,
+        p_rejection_reason: body.status === "rejected" ? body.reason.trim() : null,
+      });
+      if (reviewError) throw reviewError;
+      return reply({ document }, 200, origin);
+    }
     if (req.method === "GET" && path === "/admin/users") {
       const q = (url.searchParams.get("q") ?? "").trim().slice(0, 100);
       const role = url.searchParams.get("role");
@@ -1818,6 +2047,7 @@ Deno.serve(async (req: Request) => {
       const { data: oldProfile, error: readError } = await db.from("captain_profiles").select("*").eq("user_id", verifyCaptain[1]).maybeSingle();
       if (readError) throw readError;
       if (!oldProfile) return error("الكابتن غير موجود.", 404, origin);
+      if (body.status === "approved" && !await captainHasImmediateVerification(Number(verifyCaptain[1]))) return error("لا يمكن اعتماد ملف الكابتن قبل توثيق الهاتف واعتماد المستندات الستة المطلوبة.", 409, origin);
       const { data, error: e } = await db.from("captain_profiles").update({ verification_status: body.status }).eq("user_id", verifyCaptain[1]).neq("verification_status", body.status).select().maybeSingle();
       if (e) throw e; if (!data) return error("الكابتن غير موجود أو حالته لم تتغير.", 404, origin);
       await writeAdminAudit(user!.id, "captain.verification_changed", "captain", String(verifyCaptain[1]), body.reason.trim(), oldProfile as Json, data as Json);
@@ -1837,6 +2067,7 @@ Deno.serve(async (req: Request) => {
       const { data: before, error: readError } = await db.from("captain_profiles").select("*").eq("user_id", captainProfileRoute[1]).maybeSingle();
       if (readError) throw readError;
       if (!before) return error("بيانات الكابتن غير موجودة.", 404, origin);
+      if (patch.verification_status === "approved" && !await captainHasImmediateVerification(Number(captainProfileRoute[1]))) return error("لا يمكن اعتماد ملف الكابتن قبل توثيق الهاتف واعتماد المستندات الستة المطلوبة.", 409, origin);
       const { data, error: updateError } = await db.from("captain_profiles").update(patch).eq("user_id", captainProfileRoute[1]).select().single();
       if (updateError) throw updateError;
       await writeAdminAudit(user!.id, "captain.profile_updated", "captain", captainProfileRoute[1], body.reason.trim(), before as Json, data as Json);

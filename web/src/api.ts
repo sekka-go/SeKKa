@@ -54,7 +54,9 @@ export interface PoolGroup {
 export interface GroupView { group: PoolGroup; members: PoolMember[]; trips: PoolTrip[]; subscription?: { amount_due: number; refund_amount: number; service_days: number; discount_rate: number } }
 export interface PoolDiscoveryMatch { group: PoolGroup; seats_available: number; pickup_distance_km: number; dropoff_distance_km: number }
 export interface Notification { id: number; group_id: number | null; event_key: string; payload: Record<string, unknown>; created_at: string; read_at: string | null }
-export interface CaptainProfile { verification_status: "pending" | "approved" | "rejected"; vehicle_type_id: string; license_number: string; vehicle_plate: string; current_lat: number | null; current_lng: number | null }
+export interface CaptainProfile { verification_status: "pending" | "approved" | "rejected"; status?: "active" | "suspended_grace_expired"; grace_period_expires_at?: string | null; vehicle_type_id: string; license_number: string; vehicle_plate: string; current_lat: number | null; current_lng: number | null }
+export type VerificationDocumentType = "national_id_front" | "national_id_back" | "driving_license_front" | "driving_license_back" | "vehicle_license_front" | "vehicle_license_back" | "criminal_record" | "drug_test";
+export type VerificationDocument = { id: number; document_type: VerificationDocumentType; status: "pending" | "approved" | "rejected"; rejection_reason: string | null; uploaded_at: string; reviewed_at: string | null };
 export interface CaptainOffer { group_id: number; category_id: string; package_type: string; route_distance_km: number | null; seat_day_fare: number | null; route_geometry: RouteGeometry | null; trip: PoolTrip }
 
 const TOKEN_KEY = "sekka.session.token";
@@ -106,4 +108,21 @@ export async function api<T>(path: string, options: { method?: string; body?: un
   const payload = await response.json().catch(() => ({})) as { error?: string } & T;
   if (!response.ok) throw new ApiError(response.status, payload.error ?? "حصل خطأ غير متوقع. حاول مرة أخرى.");
   return payload;
+}
+
+export async function uploadVerificationDocument(token: string, documentType: VerificationDocumentType, file: File): Promise<{ document: VerificationDocument }> {
+  const form = new FormData();
+  form.append("file", file, file.name);
+  const headers: Record<string, string> = { Authorization: `Bearer ${token}`, Accept: "application/json" };
+  if (API_BASE_URL) headers.apikey = SUPABASE_PUBLISHABLE_KEY;
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}/api/verification/documents/${documentType}`, { method: "POST", headers, body: form });
+  } catch {
+    throw new ApiError(0, "تعذر رفع الملف الآن. تأكد من اتصالك وحاول مرة أخرى.");
+  }
+  const payload = await response.json().catch(() => ({})) as { error?: string; document?: VerificationDocument };
+  if (!response.ok) throw new ApiError(response.status, payload.error ?? "تعذر رفع المستند.");
+  if (!payload.document) throw new ApiError(502, "لم يصل تأكيد رفع المستند من الخادم.");
+  return { document: payload.document };
 }
