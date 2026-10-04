@@ -313,12 +313,6 @@ button { line-height: 1.45; }
 .auth-switch { margin: 1.3rem 0 0; color: var(--muted); font-size: .88rem; text-align: center; }
 .auth-switch a { color: var(--yellow); text-underline-offset: .2em; }
 .auth-page-note { margin: 1.5rem 0 0; color: var(--muted); font-size: .8rem; text-align: center; }
-.auth-social-divider { display: flex; align-items: center; gap: .8rem; margin: 1.25rem 0 .8rem; color: var(--muted); font-size: .78rem; }
-.auth-social-divider::before, .auth-social-divider::after { content: ""; flex: 1; border-top: 1px solid var(--line); }
-.auth-social-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
-.auth-social-actions .button { min-height: 3rem; font-size: 1rem; }
-.auth-social-note { margin: 0; padding: .8rem; color: var(--muted); background: rgba(255,255,255,.025); border: 1px solid var(--line); line-height: 1.7; font-size: .85rem; overflow-wrap: anywhere; }
-.auth-social-cancel { padding: 0; color: var(--muted); background: transparent; border: 0; font: inherit; text-decoration: underline; text-underline-offset: .2em; cursor: pointer; }
 .landing-page a:focus-visible, .auth-page a:focus-visible, .landing-page button:focus-visible, .auth-page button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
 @media (max-width: 800px) {
   .landing-header { flex-wrap: wrap; }
