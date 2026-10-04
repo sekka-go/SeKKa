@@ -1725,10 +1725,11 @@ Deno.serve(async (req: Request) => {
     }
     const reviewVerification = path.match(/^\/admin\/verifications\/(\d+)\/review$/);
     if (req.method === "POST" && reviewVerification) {
-      if (!["approved", "rejected"].includes(String(body.status)) || (body.status === "rejected" && (!clean(body.reason) || body.reason.trim().length > 1000))) return error("اختر قرارًا واكتب سبب الرفض عند الحاجة.", 400, origin);
+      const rejectionReason = typeof body.reason === "string" ? body.reason.trim() : "";
+      if (!["approved", "rejected"].includes(String(body.status)) || (body.status === "rejected" && (!rejectionReason || rejectionReason.length > 1000))) return error("اختر قرارًا واكتب سبب الرفض عند الحاجة.", 400, origin);
       const { data: document, error: reviewError } = await db.rpc("admin_review_user_verification", {
         p_actor_user_id: user!.id, p_verification_id: Number(reviewVerification[1]), p_status: body.status,
-        p_rejection_reason: body.status === "rejected" ? body.reason.trim() : null,
+        p_rejection_reason: body.status === "rejected" ? rejectionReason : null,
       });
       if (reviewError) throw reviewError;
       return reply({ document }, 200, origin);
