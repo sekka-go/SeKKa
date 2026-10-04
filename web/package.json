@@ -1,1 +1,31 @@
-ew0KICAibmFtZSI6ICJ3ZWIiLA0KICAicHJpdmF0ZSI6IHRydWUsDQogICJ2ZXJzaW9uIjogIjAuMC4wIiwNCiAgInR5cGUiOiAibW9kdWxlIiwNCiAgInNjcmlwdHMiOiB7DQogICAgImRldiI6ICJ2aXRlIC0tY29uZmlnTG9hZGVyIG5hdGl2ZSIsDQogICAgImJ1aWxkIjogInRzYyAtYiAmJiB2aXRlIGJ1aWxkIC0tY29uZmlnTG9hZGVyIG5hdGl2ZSIsDQogICAgImxpbnQiOiAib3hsaW50IiwNCiAgICAiY2hlY2s6cHdhIjogIm5vZGUgc2NyaXB0cy9jaGVjay1wd2EubWpzIiwNCiAgICAicHJldmlldyI6ICJ2aXRlIHByZXZpZXcgLS1jb25maWdMb2FkZXIgbmF0aXZlIg0KICB9LA0KICAiZGVwZW5kZW5jaWVzIjogew0KICAgICJmaXJlYmFzZSI6ICIxMi4xOS4wIiwNCiAgICAibGVhZmxldCI6ICJeMS45LjQiLA0KICAgICJyZWFjdCI6ICJeMTkuMi44IiwNCiAgICAicmVhY3QtZG9tIjogIl4xOS4yLjgiDQogIH0sDQogICJkZXZEZXBlbmRlbmNpZXMiOiB7DQogICAgIkB0YWlsd2luZGNzcy92aXRlIjogIl40LjMuMyIsDQogICAgIkB0eXBlcy9sZWFmbGV0IjogIl4xLjkuMjIiLA0KICAgICJAdHlwZXMvbm9kZSI6ICJeMjQuMTMuMyIsDQogICAgIkB0eXBlcy9yZWFjdCI6ICJeMTkuMi4xOCIsDQogICAgIkB0eXBlcy9yZWFjdC1kb20iOiAiXjE5LjIuNyIsDQogICAgIkB2aXRlanMvcGx1Z2luLXJlYWN0IjogIl42LjEuMSIsDQogICAgIm94bGludCI6ICJeMS44MS4wIiwNCiAgICAidGFpbHdpbmRjc3MiOiAiXjQuMy4zIiwNCiAgICAidHlwZXNjcmlwdCI6ICJ+Ni4wLjIiLA0KICAgICJ2aXRlIjogIl44LjMuMCINCiAgfQ0KfQ0K
+{
+  "name": "web",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --configLoader native",
+    "build": "tsc -b && vite build --configLoader native",
+    "lint": "oxlint",
+    "check:pwa": "node scripts/check-pwa.mjs",
+    "preview": "vite preview --configLoader native"
+  },
+  "dependencies": {
+    "firebase": "12.19.0",
+    "leaflet": "^1.9.4",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/leaflet": "^1.9.22",
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "oxlint": "^1.81.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~6.0.2",
+    "vite": "^8.3.0"
+  }
+}

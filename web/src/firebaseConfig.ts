@@ -1,1 +1,17 @@
-aW1wb3J0IHsgZ2V0QXBwLCBnZXRBcHBzLCBpbml0aWFsaXplQXBwLCB0eXBlIEZpcmViYXNlT3B0aW9ucyB9IGZyb20gImZpcmViYXNlL2FwcCI7CmltcG9ydCB7IGdldEF1dGggfSBmcm9tICJmaXJlYmFzZS9hdXRoIjsKCmNvbnN0IGNvbmZpZyA9IHsKICBhcGlLZXk6IGltcG9ydC5tZXRhLmVudi5WSVRFX0ZJUkVCQVNFX0FQSV9LRVksCiAgYXV0aERvbWFpbjogaW1wb3J0Lm1ldGEuZW52LlZJVEVfRklSRUJBU0VfQVVUSF9ET01BSU4sCiAgcHJvamVjdElkOiBpbXBvcnQubWV0YS5lbnYuVklURV9GSVJFQkFTRV9QUk9KRUNUX0lELAogIGFwcElkOiBpbXBvcnQubWV0YS5lbnYuVklURV9GSVJFQkFTRV9BUFBfSUQsCn07CgpleHBvcnQgY29uc3QgZmlyZWJhc2VBdXRoQ29uZmlndXJlZCA9IE9iamVjdC52YWx1ZXMoY29uZmlnKS5ldmVyeSgodmFsdWUpID0+IHR5cGVvZiB2YWx1ZSA9PT0gInN0cmluZyIgJiYgdmFsdWUubGVuZ3RoID4gMCk7Cgpjb25zdCBhcHAgPSBmaXJlYmFzZUF1dGhDb25maWd1cmVkCiAgPyAoZ2V0QXBwcygpLmxlbmd0aCA/IGdldEFwcCgpIDogaW5pdGlhbGl6ZUFwcChjb25maWcgYXMgRmlyZWJhc2VPcHRpb25zKSkKICA6IG51bGw7CgpleHBvcnQgY29uc3QgZmlyZWJhc2VBdXRoID0gYXBwID8gZ2V0QXV0aChhcHApIDogbnVsbDsK
+import { getApp, getApps, initializeApp, type FirebaseOptions } from "firebase/app";
+import { getAuth } from "firebase/auth";
+
+const config = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+};
+
+export const firebaseAuthConfigured = Object.values(config).every((value) => typeof value === "string" && value.length > 0);
+
+const app = firebaseAuthConfigured
+  ? (getApps().length ? getApp() : initializeApp(config as FirebaseOptions))
+  : null;
+
+export const firebaseAuth = app ? getAuth(app) : null;
