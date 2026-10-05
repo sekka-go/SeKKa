@@ -10,6 +10,9 @@ import AdminWorkspace from "./AdminWorkspace";
 import { NotificationsPanel } from "../components/workspace-shared";
 import VerificationReminder from "../components/VerificationReminder";
 import InfoPages, { type InfoPageKey } from "../components/InfoPages";
+function cairoHour() {
+  return Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Africa/Cairo", hour: "2-digit", hourCycle: "h23" }).format(new Date()));
+}
 export default function Workspace({ session, onSignOut, notify }: { session: Session; onSignOut: () => void; notify: (text: string, tone?: Toast["tone"]) => void }) {
   const initialSection: NavKey = session.user.role === "captain" ? "offers" : session.user.role === "admin" ? "admin" : "home";
   const [section, setSectionState] = useState<NavKey>(() => {
@@ -28,6 +31,7 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
   const [navOpen, setNavOpen] = useState(false);
   const [infoPage, setInfoPage] = useState<InfoPageKey | null>(null);
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
+  const [localHour, setLocalHour] = useState(cairoHour);
 
   const setSection = useCallback((next: NavKey, historyMode: "push" | "replace" = "push") => {
     const current = window.history.state as { sekkaWorkspace?: boolean; sekkaSection?: NavKey; sekkaIndex?: number } | null;
@@ -111,6 +115,10 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
   }, [notificationsOpen, closeNotifications]);
   useEffect(() => { void refreshNotifications(); }, [refreshNotifications]);
   useEffect(() => {
+    const timer = window.setInterval(() => setLocalHour(cairoHour()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+  useEffect(() => {
     const timer = window.setInterval(() => { void refreshNotifications(); }, 30_000);
     return () => window.clearInterval(timer);
   }, [refreshNotifications]);
@@ -152,7 +160,7 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
     setNavOpen(false);
   };
   const titles: Record<NavKey, [string, string]> = {
-    home: ["صباح الخير", "طريقك اليوم يبدأ من هنا"], booking: ["خطط لمشوارك", "اختار أيامك ونقاطك، وإحنا نرتّب الباقي"],
+    home: [localHour >= 17 ? "مساء الخير" : "صباح الخير", "طريقك اليوم يبدأ من هنا"], booking: ["خطط لمشوارك", "اختار أيامك ونقاطك، وإحنا نرتّب الباقي"],
     trips: ["رحلاتي", "كل مشاويرك ومجموعاتك في مكان واحد"], notifications: ["الإشعارات", "آخر التحديثات الخاصة بمشاويرك"],
     account: ["حسابي", "بياناتك وإعدادات الأمان"], offers: ["المسارات المتاحة", "اختار المسار المناسب لسيارتك ومواعيدك"],
     captainTrips: ["رحلاتي", "المسارات المقبولة وخطوات تنفيذها"], admin: ["لوحة الإدارة", "متابعة المنصة وتوثيق الكباتن"],
