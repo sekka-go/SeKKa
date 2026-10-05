@@ -27,7 +27,7 @@ export default function WorkspaceNavigation({
   const sectionLabel = role === "rider" ? "مساحة الراكب" : role === "captain" ? "مساحة الكابتن" : "إدارة سِكَّة";
 
   const renderItem = (item: WorkspaceNavItem, mobile = false) => {
-    const active = item.key === "notifications" ? notificationsOpen : activeSection === item.key;
+    const active = notificationsOpen ? item.key === "notifications" : activeSection === item.key;
     return <button
       key={item.key}
       type="button"
