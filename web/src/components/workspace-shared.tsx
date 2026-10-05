@@ -170,7 +170,7 @@ export function NotificationsPanel({ items, token, onRefresh, onPoolChanged, onE
   };
 
   const markRead = async (item: Notification) => {
-    if (item.read_at) return;
+    if (item.read_at) { notify("الإشعار مقروء بالفعل.", "info"); return; }
     try { await api(`/pool/notifications/${item.id}/read`, { method: "POST", token }); await onRefresh(); }
     catch (error) { notify(errorText(error), "error"); }
   };
@@ -207,7 +207,7 @@ export function NotificationsPanel({ items, token, onRefresh, onPoolChanged, onE
         <div className="notification-item-actions">
           {canEditGroup && <button type="button" className="notification-edit-action" onClick={() => onEditGroup?.(item.group_id!)} aria-label={`تعديل مشوار المجموعة رقم ${item.group_id}`}>تعديل</button>}
           <details className="notification-action-menu"><summary aria-label="إجراءات الإشعار" title="إجراءات الإشعار">⋯</summary><div className="notification-action-options">
-            {!item.read_at && <button type="button" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); void markRead(item); }}>تعليم كمقروء</button>}
+            <button type="button" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); void markRead(item); }}>تعليم كمقروء</button>
             {item.group_id !== null && <button type="button" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); void muteTrip(item); }}>كتم إشعارات المشوار</button>}
             <button type="button" className="is-danger" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); void deleteNotification(item); }}>حذف الإشعار</button>
           </div></details>
