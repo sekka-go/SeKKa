@@ -72,9 +72,13 @@
   .auth-login-page {
     display: flex;
     flex-direction: column;
+    height: 100svh;
+    height: 100dvh;
     min-height: 100svh;
     min-height: 100dvh;
-    padding-block-end: env(safe-area-inset-bottom, 0px);
+    max-height: 100dvh;
+    overflow: hidden;
+    padding-block: env(safe-area-inset-top, 0px) env(safe-area-inset-bottom, 0px);
   }
 
   .auth-page-header {
@@ -92,12 +96,13 @@
   }
 
   .auth-page-content:has(.auth-login-card) {
-    flex: 1 0 auto;
+    flex: 1 1 0;
     display: grid;
     justify-items: center;
-    align-content: safe center;
+    align-content: center;
     min-height: 0;
-    padding-block: 16px;
+    padding-block: 8px;
+    overflow: hidden;
   }
 
   .auth-login-card .form-stack {
