@@ -32,8 +32,8 @@
 }
 
 .auth-login-card .form-stack {
-  gap: 16px;
-  margin-top: 16px;
+  gap: 12px;
+  margin-top: 12px;
 }
 
 .auth-login-card .form-stack label {
@@ -92,8 +92,8 @@
     display: flex;
     flex: 1 0 auto;
     flex-direction: column;
-    justify-content: space-evenly;
-    gap: clamp(12px, 2dvh, 16px);
+    justify-content: center;
+    gap: 12px;
     margin-top: 8px;
   }
 

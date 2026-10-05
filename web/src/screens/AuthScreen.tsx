@@ -118,7 +118,7 @@ export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (sessio
       <div className={`auth-card auth-page-card ${mode === "login" ? "auth-login-card" : "auth-register-card"}`}>
         <div className="auth-tabs"><span className="active" aria-current="page">{mode === "login" ? "تسجيل الدخول" : "حساب جديد"}</span></div>
         <div className="auth-heading">
-          <span className="eyebrow">{mode === "login" ? "سعيدين برجوعك" : "ابدأ رحلتك"}</span>
+          <span className="eyebrow">{mode === "login" ? "مبسوطين برجوعك" : "ابدأ رحلتك"}</span>
           <h1>{mode === "login" ? "أهلًا بيك تاني" : "انضم لسِكّة"}</h1>
           <p>{mode === "login" ? "سجّل دخولك وكمّل من حيث توقفت." : "أنشئ حسابك وابدأ ترتّب مشاويرك."}</p>
         </div>
