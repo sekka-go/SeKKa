@@ -1638,17 +1638,17 @@ button { line-height: 1.45; }
 @keyframes brand-dialog-enter { from { opacity: 0; transform: translateY(.65rem) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
 /* Toasts sit above the mobile navigation and use the Sekka surface palette. */
-.app-shell > .toast { z-index: 1500; inset: auto 1rem 1.25rem auto; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .7rem; width: min(32rem, calc(100vw - 2rem)); max-width: none; padding: .8rem 1rem; color: var(--ink); background: rgba(24, 37, 59, .98); border: 1px solid rgba(255, 210, 31, .42); border-radius: 1rem; box-shadow: 0 1rem 3rem rgba(0, 0, 0, .42); line-height: 1.55; overflow-wrap: anywhere; animation: sekka-toast-enter .2s ease-out both; }
-.app-shell > .toast .toast-message { min-width: 0; }
+.app-shell > .toast { z-index: 1500; inset: auto auto 1.25rem 50%; transform: translateX(-50%); display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .7rem; width: min(32rem, calc(100vw - 2rem)); max-width: none; padding: .8rem 1rem; color: var(--ink); background: rgba(24, 37, 59, .98); border: 1px solid rgba(255, 210, 31, .42); border-radius: 1rem; box-shadow: 0 1rem 3rem rgba(0, 0, 0, .42); line-height: 1.55; overflow-wrap: anywhere; animation: sekka-toast-enter .2s ease-out both; }
+.app-shell > .toast .toast-message { min-width: 0; text-align: center; }
 .app-shell > .toast .toast-icon { display: grid; width: 1.8rem; height: 1.8rem; place-items: center; color: #171c29; background: var(--yellow); border-radius: 50%; font-weight: 900; }
 .app-shell > .toast button { flex: 0 0 2rem; width: 2rem; height: 2rem; margin: 0; color: var(--yellow); background: rgba(255, 210, 31, .09); border: 1px solid rgba(255, 210, 31, .22); border-radius: 50%; font-size: 1.2rem; }
 .app-shell > .toast.toast-error { border-color: rgba(255, 111, 97, .72); }
 .app-shell > .toast.toast-error .toast-icon { color: #fff; background: #ce5b50; }
 .app-shell > .toast.toast-success { border-color: rgba(93, 209, 199, .65); }
 .app-shell > .toast.toast-success .toast-icon { background: var(--cyan); }
-@keyframes sekka-toast-enter { from { opacity: 0; transform: translateY(.7rem); } to { opacity: 1; transform: translateY(0); } }
+@keyframes sekka-toast-enter { from { opacity: 0; translate: 0 .7rem; } to { opacity: 1; translate: 0 0; } }
 @media (max-width: 560px) {
-  .app-shell > .toast { inset-inline: 1rem; bottom: calc(env(safe-area-inset-bottom) + 5.5rem); width: auto; max-width: none; }
+  .app-shell > .toast { left: 50%; right: auto; bottom: calc(env(safe-area-inset-bottom) + 5.5rem); width: min(32rem, calc(100vw - 2rem)); max-width: none; }
   .workspace .group-management-actions { gap: .5rem; }
   .workspace .group-management-actions .button { font-size: .85rem; }
 }
