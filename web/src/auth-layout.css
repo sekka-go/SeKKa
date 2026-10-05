@@ -68,6 +68,7 @@
 
   .auth-page-header {
     margin: 0;
+    padding-top: 16px;
   }
 
   .auth-login-card {
