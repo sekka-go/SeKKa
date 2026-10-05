@@ -1496,8 +1496,11 @@ button { line-height: 1.45; }
 .workspace .price-info-trigger:hover,
 .workspace .price-info-trigger[aria-expanded="true"] {
   color: #201b09;
-  background: var(--cyan);
+  background: var(--yellow);
+  border-color: var(--yellow);
 }
+.workspace .price-info-trigger:hover span,
+.workspace .price-info-trigger[aria-expanded="true"] span { color: #201b09; }
 .workspace .price-info-popover {
   padding: .7rem .8rem;
   color: var(--muted);
