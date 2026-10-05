@@ -10,4 +10,3 @@ export default function BrandLogo({ compact = false, className = "" }: BrandLogo
     </span>
   );
 }
-
