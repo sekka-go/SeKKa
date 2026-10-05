@@ -4,7 +4,7 @@ import { categoryName, errorText, formatDate, money, statusLabel } from "../lib/
 import { useResolvedLocationPoints } from "../lib/use-location-addresses";
 import { ApiError, api, type CaptainOffer, type CaptainProfile, type PoolStop, type RouteGeometry } from "../api";
 import type { NavKey, Session, Toast } from "../types";
-import { AccountPanel, EmptyState, LoadingCard } from "../components/workspace-shared";
+import { AccountPanel, EmptyState, ErrorState, LoadingCard } from "../components/workspace-shared";
 export default function CaptainWorkspace({ session, section, notify }: {
   session: Session; section: NavKey; notify: (text: string, tone?: Toast["tone"]) => void;
 }) {
@@ -23,6 +23,11 @@ export default function CaptainWorkspace({ session, section, notify }: {
   const [selectedTrip, setSelectedTrip] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [offerError, setOfferError] = useState("");
+  const [offersLoaded, setOffersLoaded] = useState(false);
+  const [offersLoading, setOffersLoading] = useState(false);
+  const [assignedTripsLoaded, setAssignedTripsLoaded] = useState(false);
+  const [assignedTripsLoading, setAssignedTripsLoading] = useState(false);
+  const [assignedTripsError, setAssignedTripsError] = useState("");
 
   const loadProfile = useCallback(async () => {
     try {
@@ -42,17 +47,22 @@ export default function CaptainWorkspace({ session, section, notify }: {
   useEffect(() => { void loadProfile(); }, [loadProfile]);
 
   const refreshTrips = useCallback(async () => {
-    // Pool trip ownership is exposed through the accepted offers already cached in the active dashboard.
-    const result = await api<{ offers: CaptainOffer[] }>("/captain/pool/offers", { token: session.token });
-    setOffers(result.offers ?? []);
+    setOffersLoading(true);
+    setOfferError("");
+    try {
+      // Pool trip ownership is exposed through the accepted offers already cached in the active dashboard.
+      const result = await api<{ offers: CaptainOffer[] }>("/captain/pool/offers", { token: session.token });
+      setOffers(result.offers ?? []);
+    } catch (error) { setOfferError(errorText(error)); }
+    finally { setOffersLoaded(true); setOffersLoading(false); }
   }, [session.token]);
   useEffect(() => {
     if (!profileLoaded || !profile || profile.verification_status !== "approved" || section !== "offers") return;
-    void refreshTrips().catch((error) => setOfferError(errorText(error)));
+    void refreshTrips();
   }, [profileLoaded, profile?.verification_status, section, refreshTrips]);
   useEffect(() => {
     if (!profileLoaded || !profile || profile.verification_status !== "approved" || section !== "offers") return;
-    const timer = window.setInterval(() => { void refreshTrips().catch((error) => setOfferError(errorText(error))); }, 30_000);
+    const timer = window.setInterval(() => { void refreshTrips(); }, 30_000);
     return () => window.clearInterval(timer);
   }, [profileLoaded, profile?.verification_status, section, refreshTrips]);
 
@@ -80,8 +90,15 @@ export default function CaptainWorkspace({ session, section, notify }: {
     finally { setBusy(false); }
   };
   const loadAssignedTrips = useCallback(async () => {
-    const result = await api<{ trips: { trip: { id: number; group_id: number; service_date: string; direction: string; departure_at: string; status: string; captain_user_id: number | null; route_geometry: RouteGeometry | null }; stops: PoolStop[] }[] }>("/captain/pool/trips", { token: session.token });
-    setMyTrips(result.trips.map((item) => ({ trip: item.trip, stops: item.stops, route: item.trip.route_geometry })));
+    setAssignedTripsLoading(true);
+    setAssignedTripsError("");
+    try {
+      const result = await api<{ trips: { trip: { id: number; group_id: number; service_date: string; direction: string; departure_at: string; status: string; captain_user_id: number | null; route_geometry: RouteGeometry | null }; stops: PoolStop[] }[] }>("/captain/pool/trips", { token: session.token });
+      setMyTrips(result.trips.map((item) => ({ trip: item.trip, stops: item.stops, route: item.trip.route_geometry })));
+    } catch (error) {
+      setAssignedTripsError(errorText(error));
+      throw error;
+    } finally { setAssignedTripsLoaded(true); setAssignedTripsLoading(false); }
   }, [session.token]);
   useEffect(() => { if (section === "captainTrips") void loadAssignedTrips().catch((error) => notify(errorText(error), "error")); }, [section, loadAssignedTrips, notify]);
   useEffect(() => {
@@ -103,8 +120,9 @@ export default function CaptainWorkspace({ session, section, notify }: {
     </div></details></section><AccountPanel session={session} notify={notify} /></div>;
 
   if (section === "captainTrips") return <div className="trips-page">
-    <div className="section-toolbar"><div><h2>المسارات المسندة إليك</h2><p>تابع نقاط التوقف بالترتيب وسجّل الوصول</p></div><button className="button button-outline button-small" onClick={() => void loadAssignedTrips()}>تحديث ↻</button></div>
-    {selected ? <section className="surface captain-trip-detail">
+    <div className="section-toolbar"><div><h2>المسارات المسندة إليك</h2><p>تابع نقاط التوقف بالترتيب وسجّل الوصول</p></div><button className="button button-outline button-small" disabled={assignedTripsLoading} onClick={() => void loadAssignedTrips().catch((error) => notify(errorText(error), "error"))}>{assignedTripsLoading ? "جارٍ التحديث…" : "تحديث ↻"}</button></div>
+    {assignedTripsError && myTrips.length > 0 && <ErrorState title="تعذر تحديث المسارات" text={assignedTripsError} action="إعادة المحاولة" onAction={() => void loadAssignedTrips().catch((error) => notify(errorText(error), "error"))} />}
+    {!assignedTripsLoaded || assignedTripsLoading ? <LoadingCard text="بنحمّل المسارات المسندة إليك…" /> : assignedTripsError && !myTrips.length ? <ErrorState text={assignedTripsError} action="إعادة المحاولة" onAction={() => void loadAssignedTrips().catch((error) => notify(errorText(error), "error"))} /> : selected ? <section className="surface captain-trip-detail">
       <div className="detail-hero-top"><span className="status-chip status-assigned">{statusLabel(selected.trip.status)}</span><strong>مجموعة #{selected.trip.group_id} · {formatDate(selected.trip.service_date)}</strong><span>{selected.trip.direction === "outbound" ? "ذهاب" : "عودة"}</span></div>
       <MapPicker pickup={null} dropoff={null} mode="pickup" direction={selected.trip.direction === "return" ? "return" : "outbound"} route={selected.route} routePlaces={selectedStopPoints} readOnly onPick={() => undefined} />
       <div className="stop-list">{selected.stops.map((stop, index) => <div className="stop-row" key={stop.id}>
@@ -117,8 +135,10 @@ export default function CaptainWorkspace({ session, section, notify }: {
   </div>;
   const openVerification = () => { window.dispatchEvent(new CustomEvent("sekka:navigate", { detail: "account" })); window.setTimeout(() => document.getElementById("verification-center")?.scrollIntoView({ behavior: "smooth", block: "start" }), 180); };
   if (!profile || profile.verification_status !== "approved" || profile.status === "suspended_grace_expired") return <div className="approval-state surface verification-required-banner" role="status"><span className="approval-icon">⌖</span><span className="eyebrow">خطوة قبل استقبال المشاوير</span><h2>{profile?.status === "suspended_grace_expired" ? "أكمل المستندات المؤجلة" : "وثّق حسابك لاستقبال المسارات"}</h2><p>{profile?.status === "suspended_grace_expired" ? "انتهت مهلة المستندات. ارفعها واطلب من الدعم إعادة تفعيل حسابك." : "أرسل مستندات الهوية والمركبة ووثّق رقم هاتفك. سنعرض المسارات بعد اكتمال المراجعة."}</p><button className="button button-primary button-small" onClick={openVerification}>وثّق حسابك الآن</button></div>;
-  const loadOffers = async () => { setOfferError(""); try { const result = await api<{ offers: CaptainOffer[] }>("/captain/pool/offers", { token: session.token }); setOffers(result.offers); } catch (error) { setOfferError(errorText(error)); } };
-  return <div className="captain-offers-page"><div className="offer-toolbar"><div><div className="online-pill"><i /> جاهز لاستقبال المسارات</div><p>موقعك الحالي يحدد المسارات القريبة منك.</p></div><div className="offer-actions"><button className="button button-outline button-small" onClick={() => void updateLocation()}>⌖ تحديث الموقع</button><button className="button button-primary button-small" onClick={() => void loadOffers()}>تحديث المسارات ↻</button></div></div>{offerError && <div className="inline-error" role="alert">{offerError}<button className="button button-primary button-small" onClick={openVerification}>وثّق حسابك الآن</button></div>}
+  const loadOffers = () => refreshTrips();
+  if (section === "offers" && (!offersLoaded || offersLoading)) return <LoadingCard text="بندور على المسارات المناسبة لسيارتك…" />;
+  if (section === "offers" && offerError && !offers.length) return <ErrorState text={offerError} action="تحديث المسارات" onAction={() => void loadOffers()} />;
+  return <div className="captain-offers-page"><div className="offer-toolbar"><div><div className="online-pill"><i /> جاهز لاستقبال المسارات</div><p>موقعك الحالي يحدد المسارات القريبة منك.</p></div><div className="offer-actions"><button className="button button-outline button-small" onClick={() => void updateLocation()}>⌖ تحديث الموقع</button><button className="button button-primary button-small" onClick={() => void loadOffers()} disabled={offersLoading}>{offersLoading ? "جارٍ التحديث…" : "تحديث المسارات ↻"}</button></div></div>{offerError && <div className="inline-error" role="alert">{offerError}<button className="button button-primary button-small" onClick={openVerification}>وثّق حسابك الآن</button></div>}
     {selectedOffer && <section className="surface captain-offer-review" aria-labelledby="captain-offer-review-title"><div className="captain-offer-review-heading"><div><span className="eyebrow">مراجعة قبل القبول</span><h2 id="captain-offer-review-title">تأكيد المسار المتاح</h2></div><span className="status-chip status-needs_captain">بانتظار كابتن</span></div><div className="captain-offer-review-grid"><div><small>المجموعة</small><strong>#{selectedOffer.group_id}</strong></div><div><small>التاريخ والاتجاه</small><strong>{formatDate(selectedOffer.trip.service_date)} · {selectedOffer.trip.direction === "outbound" ? "ذهاب" : "عودة"}</strong></div><div><small>موعد الانطلاق</small><strong>{selectedOffer.trip.departure_at.slice(11, 16)}</strong></div><div><small>المسافة</small><strong>{selectedOffer.route_distance_km ?? "—"} كم</strong></div><div><small>الفئة</small><strong>{categoryName({ id: selectedOffer.category_id, speed_tier: selectedOffer.category_id.includes("saver") ? "saver" : "faster", has_ac: selectedOffer.category_id.includes("ac") ? 1 : 0, seats: selectedOffer.category_id.includes("saver") ? 4 : 3, base_fee: 0, rate_per_km: 0, rate_per_min: 0 })}</strong></div><div><small>سعر المقعد</small><strong>{money(selectedOffer.seat_day_fare)}</strong></div></div><MapPicker pickup={null} dropoff={null} mode="pickup" route={selectedOffer.route_geometry} routePlaces={offerStopPoints} onPick={() => undefined} /><div className="captain-offer-review-actions"><button type="button" className="button button-outline" onClick={() => setSelectedOfferId(null)} disabled={busy}>العودة لقائمة المسارات</button><button type="button" className="button button-primary" onClick={() => void acceptOffer(selectedOffer)} disabled={busy}>{busy ? "جارٍ قبول المسار…" : "تأكيد قبول المسار"}</button></div></section>}
     {offers.length ? <div className="offer-grid route-offer-grid">{[...offers].sort((a, b) => a.trip.departure_at.localeCompare(b.trip.departure_at) || a.trip.id - b.trip.id).map((offer) => {
       const category = categoryName({ id: offer.category_id, speed_tier: offer.category_id.includes("saver") ? "saver" : "faster", has_ac: offer.category_id.includes("ac") ? 1 : 0, seats: offer.category_id.includes("saver") ? 4 : 3, base_fee: 0, rate_per_km: 0, rate_per_min: 0 });

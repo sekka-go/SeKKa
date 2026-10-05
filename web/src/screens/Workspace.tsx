@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import BrandLogo from "../components/BrandLogo";
+import AppIcon from "../components/AppIcon";
+import WorkspaceNavigation, { type WorkspaceNavItem } from "../components/WorkspaceNavigation";
 import { api, type Notification } from "../api";
 import type { NavKey, Session, Toast } from "../types";
 import RiderWorkspace from "./RiderWorkspace";
@@ -18,6 +20,7 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
   });
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notificationsLoaded, setNotificationsLoaded] = useState(false);
+  const [notificationsError, setNotificationsError] = useState("");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [notificationsTop, setNotificationsTop] = useState(0);
   const riderPoolRefreshRef = useRef<() => Promise<void>>(async () => undefined);
@@ -85,8 +88,9 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
     return () => window.removeEventListener("sekka:navigate", navigate);
   }, [setSection]);
   const refreshNotifications = useCallback(async () => {
+    setNotificationsError("");
     try { const result = await api<{ notifications: Notification[] }>("/pool/notifications", { token: session.token }); setNotifications(result.notifications); }
-    catch { /* session banner handles expiry */ }
+    catch (error) { setNotificationsError(error instanceof Error ? error.message : "تعذر تحميل الإشعارات. حاول مرة أخرى."); }
     finally { setNotificationsLoaded(true); }
   }, [session.token]);
   const registerPoolRefresh = useCallback((refresh: () => Promise<void>) => { riderPoolRefreshRef.current = refresh; }, []);
@@ -136,12 +140,18 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
     return () => window.removeEventListener("sekka:invite-friends", invite);
   }, [inviteFriends]);
 
-  const nav: { key: NavKey; label: string; icon: string }[] = session.user.role === "rider"
-    ? [{ key: "home", label: "الرئيسية", icon: "⌂" }, { key: "booking", label: "مشوار جديد", icon: "＋" }, { key: "trips", label: "رحلاتي", icon: "↗" }, { key: "notifications", label: "الرسائل", icon: "✉" }, { key: "account", label: "الإعدادات", icon: "⚙" }]
+  const nav: WorkspaceNavItem[] = session.user.role === "rider"
+    ? [{ key: "home", label: "الرئيسية", icon: "home" }, { key: "booking", label: "مشوار جديد", icon: "plus" }, { key: "trips", label: "رحلاتي", icon: "trips" }, { key: "notifications", label: "الإشعارات", icon: "bell" }, { key: "account", label: "حسابي", icon: "user" }]
     : session.user.role === "captain"
-      ? [{ key: "offers", label: "العروض", icon: "⌖" }, { key: "captainTrips", label: "رحلاتي", icon: "↗" }, { key: "notifications", label: "الرسائل", icon: "✉" }, { key: "account", label: "الإعدادات", icon: "⚙" }]
-      : [{ key: "admin", label: "نظرة عامة", icon: "▦" }, { key: "broadcast", label: "بث الرسائل", icon: "◉" }, { key: "notifications", label: "الرسائل", icon: "✉" }, { key: "account", label: "الإعدادات", icon: "⚙" }];
+      ? [{ key: "offers", label: "المسارات", icon: "route" }, { key: "captainTrips", label: "رحلاتي", icon: "trips" }, { key: "notifications", label: "الإشعارات", icon: "bell" }, { key: "account", label: "حسابي", icon: "user" }]
+      : [{ key: "admin", label: "نظرة عامة", icon: "chart" }, { key: "broadcast", label: "رسالة عامة", icon: "send" }, { key: "notifications", label: "الإشعارات", icon: "bell" }, { key: "account", label: "حسابي", icon: "settings" }];
 
+  const activateNav = (item: { key: NavKey }) => {
+    if (item.key === "booking") window.dispatchEvent(new CustomEvent("sekka:booking-mode", { detail: "new" }));
+    if (item.key === "notifications") setNotificationsOpen((open) => !open);
+    else setSection(item.key);
+    setNavOpen(false);
+  };
   const titles: Record<NavKey, [string, string]> = {
     home: ["صباح الخير", "طريقك اليوم يبدأ من هنا"], booking: ["خطط لمشوارك", "اختار أيامك ونقاطك، وإحنا نرتّب الباقي"],
     trips: ["رحلاتي", "كل مشاويرك ومجموعاتك في مكان واحد"], notifications: ["الإشعارات", "آخر التحديثات الخاصة بمشاويرك"],
@@ -153,23 +163,15 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
   const unread = notifications.filter((item) => !item.read_at).length;
 
   return <div className="workspace">
-    <aside className={`sidebar ${navOpen ? "sidebar-open" : ""}`}>
-      <div className="sidebar-brand"><div className="sidebar-label">{session.user.role === "rider" ? "مساحة الراكب" : session.user.role === "captain" ? "مساحة الكابتن" : "إدارة سِكّة"}</div><button className="sidebar-close" onClick={() => setNavOpen(false)} aria-label="إغلاق القائمة">×</button></div>
-      <nav aria-label="التنقل الرئيسي">{nav.map((item) => <button key={item.key} aria-current={item.key !== "notifications" && section === item.key ? "page" : undefined} className={`nav-item ${item.key !== "notifications" && section === item.key ? "nav-active" : ""}`} onClick={() => { if (item.key === "booking") window.dispatchEvent(new CustomEvent("sekka:booking-mode", { detail: "new" })); if (item.key === "notifications") setNotificationsOpen(true); else setSection(item.key); setNavOpen(false); }}><span className="nav-icon">{item.icon}</span>{item.label}{item.key === "notifications" && unread > 0 && <b className="nav-count">{unread}</b>}</button>)}</nav>
-      <div className="sidebar-utilities"><a className="nav-item" href="mailto:sekkago.app@gmail.com"><span className="nav-icon">؟</span>خدمة العملاء والإدارة</a><button className="nav-item" onClick={() => void inviteFriends()}><span className="nav-icon">↗</span>دعوة الأصدقاء</button></div>
-      <div className="sidebar-spacer" />
-      <button className="sidebar-profile" onClick={() => { setSection("account"); setNavOpen(false); }}><span className="avatar">{session.user.full_name.slice(0, 1)}</span><span className="profile-copy"><strong>{session.user.full_name}</strong><small>{session.user.role === "rider" ? "راكب" : session.user.role === "captain" ? "كابتن" : "مدير النظام"}</small></span><span className="profile-more">···</span></button>
-      <button className="sidebar-signout" onClick={onSignOut}>تسجيل الخروج</button>
-    </aside>
-    {navOpen && <button className="sidebar-scrim" onClick={() => setNavOpen(false)} aria-label="إغلاق القائمة" />}
+    <WorkspaceNavigation items={nav} activeSection={section} notificationsOpen={notificationsOpen} unreadCount={unread} role={session.user.role} fullName={session.user.full_name} open={navOpen} onSelect={activateNav} onClose={() => setNavOpen(false)} onAccount={() => { setSection("account"); setNavOpen(false); }} onInvite={() => void inviteFriends()} onSignOut={onSignOut} />
     <main className="main-area">
-      <header className="topbar" onClick={() => { if (notificationsOpen) closeNotifications(); }}><div className="topbar-brand-group"><button className="mobile-menu" onClick={() => setNavOpen(true)} aria-label="فتح القائمة">☰</button><button type="button" className="topbar-brand-home" onClick={() => { setSection(initialSection); setNavOpen(false); }} aria-label="العودة للرئيسية"><BrandLogo className="topbar-brand" /></button></div><div className="topbar-actions"><span className={`connection-state ${isOnline ? "is-online" : "is-offline"}`} role="status"><i />{isOnline ? "متصل" : "غير متصل"}</span><button className={`icon-button notification-bell ${notificationsOpen ? "is-open" : ""}`} onClick={(event) => { event.stopPropagation(); setNotificationsOpen((open) => !open); }} aria-expanded={notificationsOpen} aria-controls="sekka-notifications-drawer" aria-label={unread > 0 ? `الإشعارات، ${unread} غير مقروءة` : "الإشعارات"}><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" /><path d="M10 21h4" /></svg>{unread > 0 && <i />}</button></div></header>
+      <header className="topbar" onClick={() => { if (notificationsOpen) closeNotifications(); }}><div className="topbar-brand-group"><button type="button" className="mobile-menu" onClick={() => setNavOpen(true)} aria-label="فتح القائمة"><AppIcon name="menu" /></button><button type="button" className="topbar-brand-home" onClick={() => { setSection(initialSection); setNavOpen(false); }} aria-label="العودة للرئيسية"><BrandLogo className="topbar-brand" /></button></div><div className="topbar-actions"><span className={`connection-state ${isOnline ? "is-online" : "is-offline"}`} role="status"><i />{isOnline ? "متصل" : "غير متصل"}</span><button type="button" className={`icon-button notification-bell ${notificationsOpen ? "is-open" : ""}`} onClick={(event) => { event.stopPropagation(); setNotificationsOpen((open) => !open); }} aria-expanded={notificationsOpen} aria-controls="sekka-notifications-drawer" aria-label={unread > 0 ? `الإشعارات، ${unread} غير مقروءة` : "الإشعارات"}><AppIcon name="bell" size={21} />{unread > 0 && <i />}</button></div></header>
       <div className="page-content">{section !== "booking" && <div className="page-heading"><div><h1>{title}</h1><p>{subtitle}</p></div></div>}
         {session.user.role === "rider" && <RiderWorkspace session={session} section={section} setSection={setSection} refreshNotifications={refreshNotifications} registerPoolRefresh={registerPoolRefresh} notify={notify} />}
         {session.user.role === "captain" && <CaptainWorkspace session={session} section={section} notify={notify} />}
         {session.user.role === "admin" && <AdminWorkspace session={session} section={section} refreshNotifications={refreshNotifications} notify={notify} />}
       </div>
-      {notificationsOpen && <NotificationsPanel items={notifications} token={session.token} onRefresh={refreshNotifications} onPoolChanged={session.user.role === "rider" ? () => riderPoolRefreshRef.current() : undefined} onEditGroup={session.user.role === "rider" ? editNotificationGroup : undefined} allowWaitActions={session.user.role === "rider"} notify={notify} isLoading={!notificationsLoaded} onClose={closeNotifications} topOffset={notificationsTop} />}
+      {notificationsOpen && <NotificationsPanel items={notifications} token={session.token} onRefresh={refreshNotifications} onPoolChanged={session.user.role === "rider" ? () => riderPoolRefreshRef.current() : undefined} onEditGroup={session.user.role === "rider" ? editNotificationGroup : undefined} allowWaitActions={session.user.role === "rider"} notify={notify} isLoading={!notificationsLoaded} error={notificationsError} onClose={closeNotifications} topOffset={notificationsTop} />}
     </main>
   </div>;
 }
