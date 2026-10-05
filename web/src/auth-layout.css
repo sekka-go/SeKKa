@@ -10,6 +10,17 @@
   padding: 24px;
 }
 
+.auth-register-card .form-stack label.auth-consent-check {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  font-size: .74rem;
+  line-height: 1.35;
+}
+
 .auth-login-card .auth-tabs {
   margin-bottom: 16px;
 }
@@ -104,6 +115,11 @@
 
   .auth-register-card {
     padding: 16px;
+  }
+
+  .auth-register-card .form-stack label.auth-consent-check {
+    gap: 6px;
+    font-size: clamp(.62rem, 2.8vw, .7rem);
   }
 
   .auth-login-card .auth-tabs {
