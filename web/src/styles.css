@@ -1381,13 +1381,14 @@ button { line-height: 1.45; }
 }
 .workspace .category-select-chevron { color: var(--cyan); text-align: center; }
 .workspace .category-select-options {
-  position: absolute;
+  position: static;
   z-index: 30;
-  inset: calc(100% + .35rem) 0 auto;
   display: grid;
   gap: .3rem;
-  max-height: min(18rem, 45vh);
+  max-height: min(22rem, 45dvh);
+  margin-top: .3rem;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: .4rem;
   background: #201b0d;
   border: 1px solid rgba(255, 210, 31, .42);
@@ -1479,16 +1480,16 @@ button { line-height: 1.45; }
 .workspace .booking-step-actions .button { min-height: 3.1rem; }
 .workspace .category-heading-actions { display: flex; align-items: center; gap: .5rem; }
 .workspace .price-info-trigger {
-  display: grid;
-  flex: 0 0 1.7rem;
-  place-items: center;
-  width: 1.7rem;
-  height: 1.7rem;
-  padding: 0;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: .3rem;
+  min-height: 1.8rem;
+  padding: .25rem .55rem;
   color: var(--cyan);
   background: rgba(158, 232, 230, .08);
   border: 1px solid rgba(158, 232, 230, .45);
-  border-radius: 50%;
+  border-radius: .55rem;
   font-size: .82rem;
   font-weight: 800;
 }
@@ -1653,12 +1654,13 @@ button { line-height: 1.45; }
 }
 
 .workspace .booking-step { font: inherit; color: inherit; background: transparent; border: 0; cursor: pointer; }
-.time-picker-field { display: grid; min-width: 0; gap: .45rem; color: var(--muted); font-size: .9rem; }
-.time-picker-control { display: flex; min-width: 0; min-height: 3rem; align-items: center; justify-content: center; gap: .35rem; padding: .35rem .55rem; color: var(--ink); background: var(--field, #101b2d); border: 1px solid var(--line); border-radius: .8rem; }
-.time-picker-control select { min-width: 0; padding: .35rem .25rem; color: var(--ink); background: transparent; border: 0; outline: 0; text-align: center; font: inherit; font-variant-numeric: tabular-nums; }
+.time-picker-field { display: grid; min-width: 0; gap: .4rem; color: var(--muted); font-size: .9rem; }
+.time-picker-control { display: flex; min-width: 0; min-height: 2.8rem; align-items: center; justify-content: center; gap: .2rem; padding: .25rem .55rem; color: var(--ink); background: #101b2d; border: 1px solid var(--line); border-radius: .65rem; }
+.workspace .time-picker-control select { flex: 0 0 auto; width: auto; min-width: 0; min-height: auto; margin: 0; padding: .25rem .15rem; color: inherit; background: transparent; border: 0; border-radius: 0; outline: 0; text-align: center; font: inherit; font-variant-numeric: tabular-nums; }
+.workspace .time-picker-control select:first-child { width: 2.35rem; }
+.workspace .time-picker-control select:nth-of-type(2) { width: 2.65rem; }
+.workspace .time-picker-control select:last-child { width: 2rem; color: var(--yellow); font-weight: 800; }
 .time-picker-control select:focus-visible { outline: 2px solid var(--yellow); outline-offset: 1px; border-radius: .25rem; }
-.time-picker-control select:first-child, .time-picker-control select:nth-of-type(2) { width: 3.25rem; }
-.time-picker-control select:last-child { width: 2.7rem; color: var(--yellow); font-weight: 800; }
 .time-picker-control option { color: var(--ink); background: #18253b; }
 .workspace .commuter-preferences-times { align-items: start; }
 .workspace .commuter-preferences-times .time-picker-control { width: 100%; box-sizing: border-box; }
@@ -2102,6 +2104,7 @@ button { line-height: 1.45; }
   .workspace .notification-content { font-size: .78rem; }
   .workspace .notification-time { font-size: .65rem; }
 }
+.workspace .price-info-trigger span { font-size: .72rem; font-weight: 600; }
 
 /* Notifications use the full viewport so the complete feed and its controls remain reachable. */
 .workspace .notifications-overlay {

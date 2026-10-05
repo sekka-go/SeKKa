@@ -407,10 +407,7 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
         </section>}
         </>}
         {bookingMode !== "join" && bookingStep === "price" && <>
-          <label>نوع الباقة<div className="package-options">
-            {(["daily", "weekly", "monthly"] as const).map((type) => <button type="button" key={type} className={packageType === type ? "package-option selected" : "package-option"} onClick={() => { setPackageType(type); setDates(serviceDatesFromStart(dates[0] && isServiceDay(dates[0]) ? dates[0] : defaultDates(type)[0]!, type)); }}><strong>{type === "daily" ? "يومي" : type === "weekly" ? "أسبوعي" : "شهري"}</strong><small>{type === "daily" ? "يوم واحد" : type === "weekly" ? "٥ أيام خدمة · خصم ٥٪" : "٢٢ يوم خدمة · خصم ١٠٪"}</small><b>{priceLabel(type)}</b></button>)}
-          </div></label>
-          <section className="category-picker"><div className="field-heading"><strong>الفئة والسعر</strong><div className="category-heading-actions">{priceLoading && <span>جارٍ تحديث الأسعار…</span>}<button type="button" className="price-info-trigger" aria-label="معلومات عن الأسعار والباقات" aria-expanded={priceInfoOpen} onClick={() => setPriceInfoOpen((open) => !open)}>ⓘ</button></div></div>
+          <section className="category-picker"><div className="field-heading"><strong>الفئة والسعر</strong><div className="category-heading-actions">{priceLoading && <span>جارٍ تحديث الأسعار…</span>}<button type="button" className="price-info-trigger" aria-label="شرح الأسعار" aria-expanded={priceInfoOpen} onClick={() => setPriceInfoOpen((open) => !open)}>؟ <span>عن الأسعار</span></button></div></div>
             {priceInfoOpen && <div className="price-info-popover" role="note">الأسعار تقديرية للفرد. يبدأ الجدول تلقائيًا من يوم الخدمة القادم، مع استثناء الجمعة والسبت في الباقات الأسبوعية والشهرية.</div>}
             {priceError && <p className="price-error">{priceError}</p>}
             <div className="category-select-label" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setCategoryMenuOpen(false); }} onKeyDown={(event) => { if (event.key === "Escape") setCategoryMenuOpen(false); }}>
@@ -434,6 +431,9 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
             </div>
             
           </section>
+          <label>نوع الباقة<div className="package-options">
+            {(["daily", "weekly", "monthly"] as const).map((type) => <button type="button" key={type} className={packageType === type ? "package-option selected" : "package-option"} onClick={() => { setPackageType(type); setDates(serviceDatesFromStart(dates[0] && isServiceDay(dates[0]) ? dates[0] : defaultDates(type)[0]!, type)); }}><strong>{type === "daily" ? "يومي" : type === "weekly" ? "أسبوعي" : "شهري"}</strong><small>{type === "daily" ? "يوم واحد" : type === "weekly" ? "٥ أيام خدمة · خصم ٥٪" : "٢٢ يوم خدمة · خصم ١٠٪"}</small><b>{priceLabel(type)}</b></button>)}
+          </div></label>
         </>}
         {bookingStep === "review" && <section className="booking-review" aria-labelledby="booking-review-title">
           <div className="booking-review-heading"><div><span className="eyebrow">ملخص قبل التأكيد</span><h3 id="booking-review-title">تأكد من بيانات المشوار</h3></div><span className="status-chip status-waiting">مراجعة</span></div>
