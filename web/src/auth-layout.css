@@ -52,6 +52,10 @@
 }
 
 @media (max-width: 560px) {
+  .auth-page-header {
+    margin: 0;
+  }
+
   .auth-login-card {
     height: auto;
     padding: 16px;
