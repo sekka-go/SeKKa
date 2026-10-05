@@ -2162,6 +2162,8 @@ button { line-height: 1.45; }
 .workspace .notifications-empty {
   flex: 1 1 auto;
   min-height: 0;
+  width: calc(100% + 2.5rem);
+  margin-inline: -1.25rem;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -2191,6 +2193,7 @@ button { line-height: 1.45; }
 @media (max-width: 560px) {
   .workspace .notifications-page { width: 100%; padding-inline: 1rem; }
   .workspace .notifications-header { margin-inline: -1rem; padding-inline: 1rem; }
+  .workspace .notifications-empty { width: calc(100% + 2rem); margin-inline: -1rem; }
   .workspace .notification-list { gap: .8rem; padding-top: .85rem; }
   .workspace.notifications-open .mobile-tabbar { z-index: 130; }
   .workspace.notifications-open .notification-list { padding-bottom: calc(5rem + env(safe-area-inset-bottom)); }
