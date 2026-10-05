@@ -2148,6 +2148,7 @@ button { line-height: 1.45; }
 }
 .workspace .notifications-header .eyebrow { color: var(--yellow); }
 .workspace .notifications-header h2 { margin: 0; }
+.workspace .notifications-header h2 { color: var(--yellow); }
 .workspace .notification-icon-action {
   color: var(--yellow);
   background: rgba(245,189,8,.08);
@@ -2180,6 +2181,7 @@ button { line-height: 1.45; }
 .workspace .notification-action-options { background: #17243a; }
 .workspace .notification-action-options { inset-inline-start: 0; inset-inline-end: auto; }
 .workspace .notification-category-badge { inset-inline-end: calc(100% - 4rem); }
+.workspace .notification-content > .notification-title { color: var(--yellow); }
 .workspace .notifications-loading,
 .workspace .notifications-error,
 .workspace .notifications-empty { align-content: center; }
@@ -2189,6 +2191,8 @@ button { line-height: 1.45; }
   .workspace .notifications-page { width: 100%; padding-inline: 1rem; }
   .workspace .notifications-header { margin-inline: -1rem; padding-inline: 1rem; }
   .workspace .notification-list { gap: .8rem; padding-top: .85rem; }
+  .workspace.notifications-open .mobile-tabbar { z-index: 130; }
+  .workspace.notifications-open .notification-list { padding-bottom: calc(5rem + env(safe-area-inset-bottom)); }
   .workspace .notification-avatar { width: 3.5rem; height: 3.5rem; flex-basis: 3.5rem; }
   .workspace .notification-avatar.is-brand .brand-logo { transform: scale(.54); }
   .workspace .notification-category-badge { inset-inline-end: calc(100% - 3.5rem); }

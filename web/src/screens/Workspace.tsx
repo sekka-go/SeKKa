@@ -148,7 +148,7 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
     setInfoPage(null);
     if (item.key === "booking") window.dispatchEvent(new CustomEvent("sekka:booking-mode", { detail: "new" }));
     if (item.key === "notifications") setNotificationsOpen((open) => !open);
-    else setSection(item.key);
+    else { setNotificationsOpen(false); setSection(item.key); }
     setNavOpen(false);
   };
   const titles: Record<NavKey, [string, string]> = {
@@ -165,7 +165,7 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
     setSection("account");
   }, [session.user.id, setSection]);
 
-  return <div className="workspace">
+  return <div className={`workspace ${notificationsOpen ? "notifications-open" : ""}`}>
     <WorkspaceNavigation items={nav} activeSection={section} notificationsOpen={notificationsOpen} unreadCount={unread} role={session.user.role} fullName={session.user.full_name} open={navOpen} onSelect={activateNav} onClose={() => setNavOpen(false)} onAccount={() => { setInfoPage(null); setSection("account"); setNavOpen(false); }} onInvite={() => void inviteFriends()} onSignOut={onSignOut} onOpenInfo={(page) => { setInfoPage(page); setNotificationsOpen(false); setNavOpen(false); }} />
     <main className="main-area">
       <header className="topbar" onClick={() => { if (notificationsOpen) closeNotifications(); }}><div className="topbar-brand-group"><button type="button" className="mobile-menu" onClick={() => setNavOpen(true)} aria-label="فتح القائمة"><AppIcon name="menu" /></button><button type="button" className="topbar-brand-home" onClick={() => { setSection(initialSection); setNavOpen(false); }} aria-label="العودة للرئيسية"><BrandLogo className="topbar-brand" /></button></div><div className="topbar-actions"><span className={`connection-state ${isOnline ? "is-online" : "is-offline"}`} role="status"><i />{isOnline ? "متصل" : "غير متصل"}</span><button type="button" className={`icon-button notification-bell ${notificationsOpen ? "is-open" : ""}`} onClick={(event) => { event.stopPropagation(); setNotificationsOpen((open) => !open); }} aria-expanded={notificationsOpen} aria-controls="sekka-notifications-drawer" aria-label={unread > 0 ? `الإشعارات، ${unread} غير مقروءة` : "الإشعارات"}><AppIcon name="bell" size={21} />{unread > 0 && <i />}</button></div></header>
