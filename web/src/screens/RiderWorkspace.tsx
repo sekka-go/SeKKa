@@ -10,7 +10,7 @@ import { api, type Category, type GroupView, type RiderCommuterPreferences, type
 import { defaultDates, isServiceDay, serviceDatesFromStart } from "../lib/booking-dates";
 import type { NavKey, Session, Toast } from "../types";
 import {
-  AccountPanel, EmptyState, GroupDetail, GroupSummary, LoadingCard,
+  AccountPanel, EmptyState, ErrorState, GroupDetail, GroupSummary, LoadingCard,
   TripList,
 } from "../components/workspace-shared";
 
@@ -25,6 +25,7 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
   const [savedPlaces, setSavedPlaces] = useState<SavedPlace[]>([]);
   const [groups, setGroups] = useState<GroupView[]>([]);
   const [loading, setLoading] = useState(true);
+  const [initialLoadError, setInitialLoadError] = useState("");
   const pendingNotificationEdit = useRef<number | null>(null);
   const [selectedGroup, setSelectedGroup] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -190,18 +191,28 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
     const result = await api<{ groups: GroupView[] }>("/rider/pool/groups", { token: session.token });
     setGroups(result.groups ?? []);
   }, [session.token]);
-  useEffect(() => {
-    let active = true;
-    Promise.all([
+  const loadInitialData = useCallback(async () => {
+    setLoading(true);
+    setInitialLoadError("");
+    const results = await Promise.allSettled([
       api<{ categories: Category[] }>("/pool/categories"),
       api<{ groups: GroupView[] }>("/rider/pool/groups", { token: session.token }),
       api<{ places: SavedPlace[] }>("/rider/saved-places", { token: session.token }),
-    ]).then(([categoryResult, groupResult, savedPlaceResult]) => {
-      if (!active) return;
-      setCategories(categoryResult.categories); setGroups(groupResult.groups ?? []); setSavedPlaces(savedPlaceResult.places ?? []);
-    }).catch((error) => notify(errorText(error), "error")).finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
+    ]);
+    const errors: string[] = [];
+    const [categoryResult, groupResult, savedPlaceResult] = results;
+    if (categoryResult?.status === "fulfilled") setCategories(categoryResult.value.categories ?? []);
+    else if (categoryResult?.status === "rejected") errors.push(errorText(categoryResult.reason));
+    if (groupResult?.status === "fulfilled") setGroups(groupResult.value.groups ?? []);
+    else if (groupResult?.status === "rejected") errors.push(errorText(groupResult.reason));
+    if (savedPlaceResult?.status === "fulfilled") setSavedPlaces(savedPlaceResult.value.places ?? []);
+    else if (savedPlaceResult?.status === "rejected") errors.push(errorText(savedPlaceResult.reason));
+    const message = errors[0] ?? "";
+    setInitialLoadError(message);
+    if (message) notify(message, "error");
+    setLoading(false);
   }, [session.token, notify]);
+  useEffect(() => { void loadInitialData(); }, [loadInitialData]);
 
   useEffect(() => {
     let active = true;
@@ -350,10 +361,11 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
   };
 
   if (loading) return <LoadingCard text="بنجهّز مساحة مشاويرك…" />;
+  const dataErrorBanner = initialLoadError ? <ErrorState title="تعذر تحديث بعض البيانات" text={initialLoadError} action="إعادة المحاولة" onAction={() => void loadInitialData()} /> : null;
 
-  if (section === "account") return <AccountPanel session={session} notify={notify} />;
+  if (section === "account") return <>{dataErrorBanner}<AccountPanel session={session} notify={notify} /></>;
 
-  if (section === "booking") return <div className="booking-layout">
+  if (section === "booking") return <div className="booking-layout">{dataErrorBanner}
     <section className="surface booking-form-surface">
       <div className="surface-heading"><div><span className="eyebrow">{bookingMode === "join" ? "الانضمام لمجموعة" : `الخطوة ${bookingStep === "route" ? "الأولى · تحديد المسار" : bookingStep === "schedule" ? "الثانية · الموعد والفئة" : "الثالثة · المراجعة"}`}</span><h2>{bookingMode === "join" ? (bookingStep === "review" ? "راجع طلب الانضمام" : "انضم لمجموعة موجودة") : bookingStep === "route" ? "حدد نقطتي مشوارك" : bookingStep === "schedule" ? "اختار موعدك وفئتك" : "راجع تفاصيل مشوارك"}</h2><p>{bookingMode === "join" ? (bookingStep === "review" ? "تأكد من رقم المجموعة ونقطتي الركوب والوصول قبل إرسال الطلب." : "أدخل رقم المجموعة وحدد نقطتي الركوب والوصول.") : bookingStep === "route" ? "ابحث عن نقطة الركوب والوصول أو حددهما بالدبوس." : bookingStep === "schedule" ? "حدد التاريخ والوقت والباقات والفئة." : "راجع التفاصيل مرة واحدة، ويمكنك الرجوع لتعديل أي اختيار قبل الإنشاء."}</p></div><span className="surface-icon">{bookingMode !== "join" ? "⌖" : "＋"}</span></div>
       <div className="booking-stepper" dir="rtl" aria-label={bookingMode === "join" ? "خطوات الانضمام للمجموعة" : "خطوات إنشاء المشوار"}>
@@ -453,14 +465,15 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
 
   const allTrips = groups.flatMap((view) => view.trips.map((trip) => ({ ...trip, groupId: view.group.id, categoryId: view.group.category_id, fare: view.group.seat_day_fare })));
   if (section === "trips") return <div className="trips-page">
+    {dataErrorBanner}
     <div className="section-toolbar"><button className="button button-primary button-small" onClick={() => openBooking("new")}>＋ مشوار جديد</button></div>
     {selectedGroup && selected ? <><button className="button button-quiet button-small trips-back-to-groups" onClick={() => setSelectedGroup(null)}>→ رجوع لمجموعاتي</button><GroupDetail view={selected} categories={categories} busy={submitting} action={groupAction} notify={notify} onEdit={() => startEditingGroup(selected)} currentUserId={session.user.id} token={session.token} /></> : groups.length ? <section className="group-list trips-group-list" aria-label="مجموعات مشاويرك">{groups.map((view) => <GroupSummary key={view.group.id} view={view} categories={categories} onClick={() => setSelectedGroup(view.group.id)} />)}</section> : null}
-    {allTrips.length ? <section className="all-trips-section"><div className="section-title-row"><div><h2>مواعيد رحلاتك</h2><p>كل مواعيد الذهاب والعودة لمجموعاتك</p></div><span className="section-count">{allTrips.length}</span></div><TripList trips={allTrips} categories={categories} /></section> : <EmptyState icon="↗" title="لسه مفيش رحلات مجدولة" text={groups.length ? "مجموعة مشوارك ظاهرة فوق؛ ستظهر مواعيده هنا بعد اكتمالها وتأكيد الكابتن." : "لما تنشئ أو تنضم لمجموعة، هتلاقي مشاويرك هنا."} />}
+    {allTrips.length ? <section className="all-trips-section"><div className="section-title-row"><div><h2>مواعيد رحلاتك</h2><p>كل مواعيد الذهاب والعودة لمجموعاتك</p></div><span className="section-count">{allTrips.length}</span></div><TripList trips={allTrips} categories={categories} /></section> : initialLoadError ? null : <EmptyState icon="↗" title="لسه مفيش رحلات مجدولة" text={groups.length ? "مجموعة مشوارك ظاهرة فوق؛ ستظهر مواعيده هنا بعد اكتمالها وتأكيد الكابتن." : "لما تنشئ أو تنضم لمجموعة، هتلاقي مشاويرك هنا."} />}
     {groups.length > 1 && selectedGroup && <div className="group-switcher">{groups.map((view) => <button key={view.group.id} className={view.group.id === selectedGroup ? "group-chip active" : "group-chip"} onClick={() => setSelectedGroup(view.group.id)}>مجموعة #{view.group.id} · {statusLabel(view.group.status)}</button>)}</div>}
   </div>;
 
   return <div className="dashboard-grid rider-dashboard">
-    <section className="dashboard-main">
+    <section className="dashboard-main">{dataErrorBanner}
       <div className="welcome-banner"><div className="welcome-copy"><span className="eyebrow">سِكّة أقرب لك</span><h2>طريقك أسهل مع <em>سِكَّة.</em></h2><div className="welcome-actions"><button className="button button-dark" onClick={() => openBooking("new")}>إنشاء رحلة</button><button className="button button-primary" onClick={() => openBooking("join")}>انضمام لمجموعة</button></div></div><div className="welcome-illustration"><div className="sun-orbit" /><div className="route-art"><span /><i /><i /><i /><b /></div><div className="mini-car">▰</div></div></div>
       <div className="section-title-row rider-trips-heading"><h2>مشاويرك الحالية</h2><button className="text-action" onClick={() => setSection("trips")}>عرض الكل <span>←</span></button></div>
       {groups.length > 0 && <div className="group-list">{groups.slice(0, 1).map((view) => <GroupSummary key={view.group.id} view={view} categories={categories} onClick={() => { setSelectedGroup(view.group.id); setSection("trips"); }} />)}</div>}

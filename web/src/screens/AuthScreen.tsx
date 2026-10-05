@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import BrandLogo from "../components/BrandLogo";
+import AppIcon from "../components/AppIcon";
 import RiderRoutePreferences from "../components/RiderRoutePreferences";
 import { errorText } from "../lib/formatters";
 import { api, type SavedPlace, type User } from "../api";
@@ -63,7 +64,7 @@ export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (sessio
         <form onSubmit={submit} className="form-stack">
           {mode === "register" && <>
             <label>الاسم بالكامل<input autoComplete="name" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="مثال: ياسمين أحمد" required /></label>
-            <fieldset className="role-picker"><legend>هتستخدم سِكّة بصفتك؟</legend><button type="button" className={role === "rider" ? "selected" : ""} onClick={() => setRole("rider")}><span>♙</span><strong>راكب</strong><small>أدور على مشوار مشترك</small></button><button type="button" className={role === "captain" ? "selected" : ""} onClick={() => setRole("captain")}><span>⌖</span><strong>كابتن</strong><small>أوصل الركاب لوجهتهم</small></button></fieldset>
+            <fieldset className="role-picker"><legend>هتستخدم سِكّة بصفتك؟</legend><button type="button" aria-pressed={role === "rider"} className={role === "rider" ? "selected" : ""} onClick={() => setRole("rider")}><span><AppIcon name="user" size={21} /></span><strong>راكب</strong><small>أدور على مشوار مشترك</small></button><button type="button" aria-pressed={role === "captain"} className={role === "captain" ? "selected" : ""} onClick={() => setRole("captain")}><span><AppIcon name="car" size={21} /></span><strong>كابتن</strong><small>أوصل الركاب لوجهتهم</small></button></fieldset>
           </>}
           <label>رقم الهاتف<input autoComplete="tel" type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="01xxxxxxxxx" required /></label>
           <label>كلمة السر<input autoComplete={mode === "login" ? "current-password" : "new-password"} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={mode === "register" ? "8 أحرف على الأقل" : "••••••••"} minLength={mode === "register" ? 8 : 1} required /></label>

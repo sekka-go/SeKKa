@@ -8,11 +8,17 @@
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui"],
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
   "orientation": "portrait-primary",
-  "theme_color": "#171309",
-  "background_color": "#ffffff",
-  "categories": ["travel", "transportation"],
+  "theme_color": "#0F172A",
+  "background_color": "#0F172A",
+  "categories": [
+    "travel",
+    "transportation"
+  ],
   "prefer_related_applications": false,
   "icons": [
     {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError, api, clearSession, getStoredSession, storeSession, type User } from "./api";
 import AuthScreen from "./screens/AuthScreen";
 import LandingScreen from "./screens/LandingScreen";
@@ -7,10 +7,13 @@ import type { Session, Toast } from "./types";
 export default function App() {
   const [session, setSession] = useState<Session | null>(() => getStoredSession());
   const [toast, setToast] = useState<Toast | null>(null);
+  const toastTimer = useRef<number | null>(null);
   const notify = useCallback((text: string, tone: Toast["tone"] = "info") => {
     setToast({ text, tone });
-    window.setTimeout(() => setToast(null), 4200);
+    if (toastTimer.current !== null) window.clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => { setToast(null); toastTimer.current = null; }, 4200);
   }, []);
+  useEffect(() => () => { if (toastTimer.current !== null) window.clearTimeout(toastTimer.current); }, []);
 
   useEffect(() => {
     if (!session) return;
@@ -35,7 +38,7 @@ export default function App() {
   };
 
   return <div className="app-shell" dir="rtl">
-    {toast && <div className={`toast toast-${toast.tone}`} role="status">{toast.text}<button onClick={() => setToast(null)} aria-label="إغلاق">×</button></div>}
+    {toast && <div className={`toast toast-${toast.tone}`} role="status" aria-live="polite">{toast.text}<button onClick={() => { setToast(null); if (toastTimer.current !== null) window.clearTimeout(toastTimer.current); toastTimer.current = null; }} aria-label="إغلاق">×</button></div>}
     {session ? <Workspace session={session} onSignOut={signOut} notify={notify} /> : window.location.pathname === "/login" || window.location.pathname === "/register" ? <AuthScreen onSignedIn={onSignedIn} notify={notify} /> : <LandingScreen />}
   </div>;
 }
