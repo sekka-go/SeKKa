@@ -26,6 +26,9 @@
 
 html { min-width: 320px; background: var(--page-bg); scroll-padding-top: 6rem; }
 body { min-width: 320px; min-height: 100vh; background: var(--page-bg); }
+/* Keep swipe/keyboard scrolling available without showing browser scroll tracks. */
+* { scrollbar-width: none; }
+*::-webkit-scrollbar { display: none; width: 0; height: 0; }
 .app-shell { min-height: 100vh; background: var(--page-bg); }
 button, input, select, textarea { font: inherit; }
 button { -webkit-tap-highlight-color: transparent; }
