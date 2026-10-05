@@ -4,17 +4,26 @@
 
 .brand-logo-copy small {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+  gap: .3rem;
   width: 100%;
+  font-size: .88rem;
+}
+
+@media (max-width: 560px) {
+  .landing-header .brand-logo-copy small,
+  .auth-page-header .brand-logo-copy small {
+    font-size: .8rem;
+  }
 }
 
 .workspace .topbar-brand .brand-logo-copy small {
   display: flex;
-  font-size: .55rem;
+  font-size: .75rem;
 }
 
 @media (max-width: 400px) {
   .workspace .topbar-brand .brand-logo-copy small {
-    font-size: .48rem;
+    font-size: .7rem;
   }
 }

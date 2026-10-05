@@ -9,9 +9,9 @@ export default function LandingScreen() {
 
       <section className="landing-hero">
         <div className="landing-hero-copy">
-          <span className="eyebrow">تنقّل أسرع بشكل أذكى</span>
+          <span className="eyebrow">تنقّل أسرع بطريقة أذكى</span>
           <h1>مشوارك اليومي،<br /><em>على سِكَّة أسهل.</em></h1>
-          <p>شارك الطريق مع ناس رايحة في نفس اتجاهك، وخلي تنقّلك أسهل.</p>
+          <p>شارك الطريق مع ناس رايحة في نفس اتجاهك، وخلي مشاويرك أسهل.</p>
           <div className="landing-hero-actions">
             <a className="button landing-primary-cta" href="/login">ابدأ رحلتك الآن <span aria-hidden="true">←</span></a>
           </div>
