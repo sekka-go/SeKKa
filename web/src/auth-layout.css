@@ -1,6 +1,12 @@
 .auth-login-card {
   display: block;
   height: auto;
+  width: min(100%, 34rem);
+  padding: 24px;
+}
+
+.auth-register-card {
+  width: min(100%, 30rem);
   padding: 24px;
 }
 
@@ -58,14 +64,20 @@
 
   .auth-login-card {
     height: auto;
-    padding: 16px;
+    padding: 24px;
   }
 
   .auth-page-content:has(.auth-login-card) {
-    flex: 0 0 auto;
+    flex: 1 0 auto;
+    display: grid;
+    place-items: center;
+    align-content: safe center;
     min-height: 0;
-    align-content: start;
-    padding-block: 8px 0;
+    padding-block: 16px 24px;
+  }
+
+  .auth-register-card {
+    padding: 16px;
   }
 
   .auth-login-card .auth-tabs {
