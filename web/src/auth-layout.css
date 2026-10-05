@@ -10,6 +10,10 @@
   padding: 24px;
 }
 
+.auth-register-card .auth-heading h1 {
+  color: var(--yellow);
+}
+
 .auth-register-card .form-stack label.auth-consent-check {
   display: flex;
   flex-direction: row;
@@ -90,6 +94,25 @@
     padding-block: env(safe-area-inset-top, 0px) env(safe-area-inset-bottom, 0px);
   }
 
+  html:has(.auth-register-page),
+  body:has(.auth-register-page),
+  #root:has(.auth-register-page),
+  .app-shell:has(.auth-register-page) {
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .auth-register-page {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    min-height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+    padding-block: env(safe-area-inset-top, 0px) env(safe-area-inset-bottom, 0px);
+  }
+
   .auth-page-header {
     margin: 0;
     padding-top: 16px;
@@ -128,7 +151,94 @@
   }
 
   .auth-register-card {
-    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    width: min(100%, 30rem);
+    height: auto;
+    max-height: 100%;
+    padding: 10px 14px;
+  }
+
+  .auth-page-content:has(.auth-register-card) {
+    flex: 1 1 0;
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    min-height: 0;
+    padding-block: 6px;
+    overflow: hidden;
+  }
+
+  .auth-register-card .auth-tabs {
+    margin-bottom: 6px;
+  }
+
+  .auth-register-card .auth-heading .eyebrow {
+    display: none;
+  }
+
+  .auth-register-card .auth-heading h1 {
+    margin: 0;
+    color: var(--yellow);
+  }
+
+  .auth-register-card .auth-heading p {
+    margin-block: 4px 0;
+    font-size: .84rem;
+    line-height: 1.4;
+  }
+
+  .auth-register-card .form-stack {
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  .auth-register-card .form-stack label {
+    gap: 4px;
+  }
+
+  .auth-register-card .form-stack input {
+    min-height: 40px;
+    padding-block: 8px;
+  }
+
+  .auth-register-card .role-picker legend {
+    margin-bottom: 2px;
+  }
+
+  .auth-register-card .role-picker button {
+    min-height: 56px;
+    padding-block: 4px;
+  }
+
+  .auth-register-card .auth-consent {
+    gap: 4px;
+    padding: 8px 10px;
+  }
+
+  .auth-register-card .auth-consent > p {
+    font-size: .72rem;
+    line-height: 1.35;
+  }
+
+  .auth-register-card .auth-consent-links {
+    gap: 4px 12px;
+  }
+
+  .auth-register-card .auth-consent-links button {
+    font-size: .76rem;
+  }
+
+  .auth-register-card .form-stack > .button {
+    min-height: 44px;
+    padding-block: 8px;
+  }
+
+  .auth-register-card .auth-switch {
+    margin: 6px 0 0;
+    font-size: .84rem;
+    line-height: 1.35;
   }
 
   .auth-register-card .form-stack label.auth-consent-check {
@@ -153,6 +263,46 @@
 
   .auth-login-card .auth-tabs {
     margin-bottom: 0;
+  }
+
+  .auth-register-card {
+    padding-block: 6px;
+  }
+
+  .auth-register-card .auth-tabs span {
+    padding-block: 6px;
+  }
+
+  .auth-register-card .auth-heading h1 {
+    font-size: 1.35rem;
+  }
+
+  .auth-register-card .auth-heading p {
+    font-size: .78rem;
+  }
+
+  .auth-register-card .form-stack {
+    gap: 4px;
+    margin-top: 4px;
+  }
+
+  .auth-register-card .form-stack input {
+    min-height: 36px;
+    padding-block: 6px;
+  }
+
+  .auth-register-card .role-picker button {
+    min-height: 48px;
+  }
+
+  .auth-register-card .auth-consent {
+    gap: 3px;
+    padding: 6px 8px;
+  }
+
+  .auth-register-card .form-stack > .button {
+    min-height: 40px;
+    padding-block: 6px;
   }
 }
 
