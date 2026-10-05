@@ -2,12 +2,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import BrandLogo from "../components/BrandLogo";
 import AppIcon from "../components/AppIcon";
 import WorkspaceNavigation, { type WorkspaceNavItem } from "../components/WorkspaceNavigation";
-import { api, type Notification } from "../api";
+import { api, type Notification, type VerificationDocumentType } from "../api";
 import type { NavKey, Session, Toast } from "../types";
 import RiderWorkspace from "./RiderWorkspace";
 import CaptainWorkspace from "./CaptainWorkspace";
 import AdminWorkspace from "./AdminWorkspace";
 import { NotificationsPanel } from "../components/workspace-shared";
+import VerificationReminder from "../components/VerificationReminder";
 export default function Workspace({ session, onSignOut, notify }: { session: Session; onSignOut: () => void; notify: (text: string, tone?: Toast["tone"]) => void }) {
   const initialSection: NavKey = session.user.role === "captain" ? "offers" : session.user.role === "admin" ? "admin" : "home";
   const [section, setSectionState] = useState<NavKey>(() => {
@@ -161,12 +162,17 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
   };
   const [title, subtitle] = titles[section];
   const unread = notifications.filter((item) => !item.read_at).length;
+  const openMissingVerification = useCallback((target: "phone" | VerificationDocumentType) => {
+    localStorage.setItem(`sekka.verification.focus.${session.user.id}`, target);
+    setSection("account");
+  }, [session.user.id, setSection]);
 
   return <div className="workspace">
     <WorkspaceNavigation items={nav} activeSection={section} notificationsOpen={notificationsOpen} unreadCount={unread} role={session.user.role} fullName={session.user.full_name} open={navOpen} onSelect={activateNav} onClose={() => setNavOpen(false)} onAccount={() => { setSection("account"); setNavOpen(false); }} onInvite={() => void inviteFriends()} onSignOut={onSignOut} />
     <main className="main-area">
       <header className="topbar" onClick={() => { if (notificationsOpen) closeNotifications(); }}><div className="topbar-brand-group"><button type="button" className="mobile-menu" onClick={() => setNavOpen(true)} aria-label="فتح القائمة"><AppIcon name="menu" /></button><button type="button" className="topbar-brand-home" onClick={() => { setSection(initialSection); setNavOpen(false); }} aria-label="العودة للرئيسية"><BrandLogo className="topbar-brand" /></button></div><div className="topbar-actions"><span className={`connection-state ${isOnline ? "is-online" : "is-offline"}`} role="status"><i />{isOnline ? "متصل" : "غير متصل"}</span><button type="button" className={`icon-button notification-bell ${notificationsOpen ? "is-open" : ""}`} onClick={(event) => { event.stopPropagation(); setNotificationsOpen((open) => !open); }} aria-expanded={notificationsOpen} aria-controls="sekka-notifications-drawer" aria-label={unread > 0 ? `الإشعارات، ${unread} غير مقروءة` : "الإشعارات"}><AppIcon name="bell" size={21} />{unread > 0 && <i />}</button></div></header>
       <div className="page-content">{section !== "booking" && <div className="page-heading"><div><h1>{title}</h1><p>{subtitle}</p></div></div>}
+        {session.user.role !== "admin" && <VerificationReminder session={session} onOpen={openMissingVerification} visible={section !== "account" && !(session.user.role === "captain" && section === "offers")} />}
         {session.user.role === "rider" && <RiderWorkspace session={session} section={section} setSection={setSection} refreshNotifications={refreshNotifications} registerPoolRefresh={registerPoolRefresh} notify={notify} />}
         {session.user.role === "captain" && <CaptainWorkspace session={session} section={section} notify={notify} />}
         {session.user.role === "admin" && <AdminWorkspace session={session} section={section} refreshNotifications={refreshNotifications} notify={notify} />}
@@ -175,3 +181,4 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
     </main>
   </div>;
 }
+
