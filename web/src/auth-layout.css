@@ -72,3 +72,125 @@
     margin-bottom: 8px;
   }
 }
+
+.auth-login-page {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+}
+
+.auth-login-page > .auth-page-header,
+.auth-login-page > .auth-page-content {
+  position: relative;
+  z-index: 1;
+}
+
+.auth-journey-backdrop {
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.journey-car {
+  position: absolute;
+  left: 0;
+  display: inline-block;
+  font-size: clamp(20px, 3vw, 30px);
+  line-height: 1;
+  opacity: .62;
+  filter: drop-shadow(0 2px 8px rgb(0 0 0 / 24%));
+  will-change: transform;
+}
+
+.journey-car--taxi {
+  top: 31%;
+  animation: journey-drive-forward 39s linear -11s infinite;
+}
+
+.journey-car--van {
+  top: 82%;
+  animation: journey-drive-back 47s linear -24s infinite;
+}
+
+.journey-car--smile {
+  top: 91%;
+  animation: journey-drive-forward 34s linear -7s infinite;
+}
+
+.auth-journey-particles {
+  position: absolute;
+  inset: 0;
+}
+
+.journey-particle {
+  position: absolute;
+  display: block;
+  font-size: clamp(14px, 2vw, 20px);
+  line-height: 1;
+  opacity: 0;
+  animation: journey-float 7s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.journey-particle:nth-child(1) { left: 12%; top: 37%; animation-delay: -2s; }
+.journey-particle:nth-child(2) { left: 82%; top: 24%; animation-delay: -5s; }
+.journey-particle:nth-child(3) { left: 24%; top: 79%; animation-delay: -1s; }
+.journey-particle:nth-child(4) { left: 91%; top: 57%; animation-delay: -4s; }
+.journey-particle:nth-child(5) { left: 72%; top: 88%; animation-delay: -3s; }
+.journey-particle:nth-child(6) { left: 6%; top: 68%; animation-delay: -6s; }
+.journey-particle:nth-child(7) { left: 54%; top: 18%; animation-delay: -2.5s; }
+.journey-particle:nth-child(8) { left: 88%; top: 91%; animation-delay: -4.5s; }
+
+.journey-confetti {
+  width: 6px;
+  height: 10px;
+  border-radius: 2px;
+  background: #f59e0b;
+}
+
+.journey-particle:nth-child(9) { left: 18%; top: 89%; background: #fb7185; animation-delay: -3.5s; }
+.journey-particle:nth-child(10) { left: 77%; top: 35%; background: #34d399; animation-delay: -1.5s; }
+.journey-particle:nth-child(11) { left: 93%; top: 76%; background: #60a5fa; animation-delay: -5.5s; }
+.journey-particle:nth-child(12) { left: 42%; top: 12%; background: #facc15; animation-delay: -.5s; }
+
+@keyframes journey-drive-forward {
+  from { transform: translate3d(-12vw, 0, 0); }
+  to { transform: translate3d(112vw, 0, 0); }
+}
+
+@keyframes journey-drive-back {
+  from { transform: translate3d(112vw, 0, 0) scaleX(-1); }
+  to { transform: translate3d(-12vw, 0, 0) scaleX(-1); }
+}
+
+@keyframes journey-float {
+  0%, 100% { opacity: 0; transform: translate3d(0, 14px, 0) scale(.8) rotate(-8deg); }
+  22%, 72% { opacity: .52; }
+  90% { opacity: .12; transform: translate3d(8px, -42px, 0) scale(1) rotate(8deg); }
+}
+
+@media (max-width: 560px) {
+  .journey-car { font-size: 23px; }
+  .journey-car--taxi { top: 20%; }
+  .journey-car--van { top: 82%; }
+  .journey-car--smile { top: 94%; }
+  .journey-particle { font-size: 16px; }
+  .journey-particle:nth-child(9),
+  .journey-particle:nth-child(10),
+  .journey-particle:nth-child(11),
+  .journey-particle:nth-child(12) { width: 5px; height: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .journey-car,
+  .journey-particle {
+    animation: none;
+    will-change: auto;
+  }
+
+  .journey-car { transform: none; }
+  .journey-particle { opacity: .2; }
+}
