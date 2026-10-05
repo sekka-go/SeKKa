@@ -2,11 +2,12 @@ import AppIcon, { type AppIconName } from "./AppIcon";
 import type { NavKey } from "../types";
 import type { Role } from "../api";
 import type { InfoPageKey } from "./InfoPages";
+import ProfileAvatar from "./ProfileAvatar";
 
 export type WorkspaceNavItem = { key: NavKey; label: string; icon: AppIconName };
 
 export default function WorkspaceNavigation({
-  items, activeSection, notificationsOpen, unreadCount, role, fullName, open,
+  items, activeSection, notificationsOpen, unreadCount, role, fullName, userId, token, open,
   onSelect, onClose, onAccount, onInvite, onSignOut, onOpenInfo,
 }: {
   items: WorkspaceNavItem[];
@@ -15,6 +16,8 @@ export default function WorkspaceNavigation({
   unreadCount: number;
   role: Role;
   fullName: string;
+  userId: number;
+  token: string;
   open: boolean;
   onSelect: (item: WorkspaceNavItem) => void;
   onClose: () => void;
@@ -48,8 +51,10 @@ export default function WorkspaceNavigation({
         <div className="sidebar-label">{sectionLabel}</div>
         <button type="button" className="sidebar-close" onClick={onClose} aria-label="إغلاق القائمة"><AppIcon name="close" /></button>
       </div>
-      <nav aria-label="التنقل الرئيسي">{items.map((item) => renderItem(item))}</nav>
+      <div className="sidebar-section-heading">التنقل</div>
+      <nav className="sidebar-primary-nav" aria-label="التنقل الرئيسي">{items.map((item) => renderItem(item))}</nav>
       <div className="sidebar-utilities">
+        <div className="sidebar-section-heading">تواصل ومساعدة</div>
         <a className="nav-item" href="mailto:sekkago.app@gmail.com"><span className="nav-icon"><AppIcon name="support" size={19} /></span><span className="nav-label">خدمة العملاء والإدارة</span></a>
         <button type="button" className="nav-item" onClick={onInvite}><span className="nav-icon"><AppIcon name="users" size={19} /></span><span className="nav-label">دعوة الأصدقاء</span></button>
         <div className="sidebar-info-links" aria-label="معلومات ومساعدة">
@@ -60,7 +65,7 @@ export default function WorkspaceNavigation({
       </div>
       <div className="sidebar-spacer" />
       <button type="button" className="sidebar-profile" onClick={onAccount}>
-        <span className="avatar">{fullName.slice(0, 1)}</span>
+        <ProfileAvatar userId={userId} token={token} name={fullName} />
         <span className="profile-copy"><strong>{fullName}</strong><small>{roleLabel}</small></span>
         <span className="profile-more" aria-hidden="true">···</span>
       </button>

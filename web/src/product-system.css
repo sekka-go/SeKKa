@@ -38,6 +38,31 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
 }
 ::selection { color: #171717; background: rgba(234, 179, 8, .78); }
 
+/* A clear hierarchy for the workspace sidebar and protected profile photos. */
+.workspace .sidebar-brand { padding-bottom: .65rem; }
+.workspace .sidebar-brand .sidebar-label {
+  display: flex; align-items: center; min-height: 2.9rem; margin: .2rem .2rem .1rem; padding: .55rem .75rem;
+  color: #e2e8f0; background: rgba(148, 163, 184, .06); border: 1px solid rgba(148, 163, 184, .12); border-radius: .75rem;
+  font-size: .84rem; font-weight: 800;
+}
+.workspace .sidebar-section-heading { padding: .35rem .8rem; color: #718096; font-size: .68rem; font-weight: 800; letter-spacing: .04em; }
+.workspace .sidebar-primary-nav { display: grid; gap: .2rem; }
+.workspace .sidebar-primary-nav .nav-item { min-height: 2.8rem; }
+.workspace .sidebar-utilities { gap: .15rem; margin-top: .85rem; padding-top: .65rem; }
+.workspace .sidebar-utilities .sidebar-section-heading { padding-top: .3rem; }
+.workspace .sidebar-info-links { display: grid; gap: .12rem; margin: .35rem .2rem 0; padding: .55rem .65rem 0; border-top: 1px solid rgba(148, 163, 184, .1); }
+.workspace .sidebar-profile { gap: .7rem; min-height: 4rem; margin-top: .4rem; padding: .55rem .65rem; background: rgba(148, 163, 184, .055); border: 1px solid rgba(148, 163, 184, .12); border-radius: .9rem; }
+.workspace .sidebar-profile:hover { background: rgba(148, 163, 184, .1); border-color: rgba(234, 179, 8, .3); }
+.workspace .sidebar-profile .avatar { flex: 0 0 2.35rem; width: 2.35rem; height: 2.35rem; }
+.workspace .sidebar-signout { margin-top: .3rem; }
+.profile-avatar { position: relative; flex: 0 0 auto; overflow: hidden; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.profile-avatar img { display: block; width: 100%; height: 100%; object-fit: cover; pointer-events: none; -webkit-user-drag: none; user-select: none; }
+.workspace .account-avatar-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; }
+.workspace .account-avatar-actions input[type="file"] { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
+.workspace .account-avatar-note { color: var(--muted); font-size: .76rem; line-height: 1.55; }
+.workspace .rider-profile-line { display: flex; align-items: center; gap: .65rem; min-width: 0; }
+.workspace .rider-profile-avatar { width: 2.35rem; height: 2.35rem; color: #111827; background: var(--yellow); border-radius: 50%; font-weight: 800; }
+
 .workspace { grid-template-columns: minmax(15rem, 17rem) minmax(0, 1fr); min-height: 100dvh; background: var(--page-bg); }
 .workspace { --ink: #f8fafc; --muted: #94a3b8; --line: rgba(148, 163, 184, .2); --panel: #1e293b; --panel-hi: #334155; --yellow: #eab308; --yellow-deep: #a87900; --cyan: #67d6d4; --danger: #fca5a5; color: var(--ink); background: var(--page-bg); }
 .workspace .sidebar { background: #111b2e; border-color: var(--line); box-shadow: none; }

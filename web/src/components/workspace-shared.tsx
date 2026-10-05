@@ -1,12 +1,13 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import MapPicker from "./MapPickerLoader";
 import RiderRoutePreferences from "./RiderRoutePreferences";
 import VerificationCenter from "./VerificationCenter";
 import { categoryName, errorText, formatDate, money, statusLabel } from "../lib/formatters";
 import { getConfiguredPushPublicKey, hasPushSubscription, subscribeToPush, unsubscribeFromPush } from "../lib/push";
-import { api, type Category, type GroupView, type Notification } from "../api";
+import { api, deleteProfileAvatar, uploadProfileAvatar, type Category, type GroupView, type Notification } from "../api";
 import BrandLogo from "../components/BrandLogo";
 import AppIcon from "./AppIcon";
+import ProfileAvatar from "./ProfileAvatar";
 import { readDates, todayInCairo } from "../lib/booking-dates";
 import { useResolvedLocationPoints } from "../lib/use-location-addresses";
 import type { RiderWorkspaceTrip, Session, Toast } from "../types";
@@ -51,7 +52,7 @@ export function GroupDetail({ view, categories, busy, action, notify: _notify, o
     </section>
     <details className="trip-extra-details"><summary>تفاصيل المشوار · المسار والركاب والمواعيد</summary>
       <div className="detail-route-map"><div className="section-title-row"><div><h3>خط السير</h3><p>ذهاب وعودة · الخريطة تعرض الطريق الفعلي</p></div>{!(group.route_geometry?.outbound_segments?.length || group.route_geometry?.return_segments?.length) && <span className="map-distance">{group.route_duration_min ?? "—"} د</span>}</div><MapPicker pickup={routeStops[0] ?? null} dropoff={routeStops[1] ?? null} mode="pickup" route={group.route_geometry} onPick={() => undefined} /></div>
-    <section className="surface detail-section"><div className="section-title-row"><div><h3>الركاب والمقاعد</h3><p>{seats} مقاعد من {category?.seats ?? "—"} محجوزة</p></div></div><div className="rider-list">{members.map((member, index) => <div key={member.id} className={`rider-row ${member.status !== "active" ? "rider-muted" : ""}`}><div><strong>{index === 0 ? "أنت" : `راكب ${index + 1}`}</strong><small>{member.seats_reserved} مقعد · {member.status === "active" ? "مؤكد" : member.status === "awaiting_confirmation" ? "بانتظار التأكيد" : "غادر المجموعة"}</small></div>{member.price_decision === "pending" && group.status === "price_review" && <span className="rider-state">مطلوب ردك</span>}</div>)}</div></section>
+    <section className="surface detail-section"><div className="section-title-row"><div><h3>الركاب والمقاعد</h3><p>{seats} مقاعد من {category?.seats ?? "—"} محجوزة</p></div></div><div className="rider-list">{members.map((member, index) => <div key={member.id} className={`rider-row ${member.status !== "active" ? "rider-muted" : ""}`}><div className="rider-profile-line">{member.rider_user_id != null && <ProfileAvatar userId={member.rider_user_id} token={token} name={`راكب ${index + 1}`} className="avatar rider-profile-avatar" />}<div><strong>{index === 0 ? "أنت" : `راكب ${index + 1}`}</strong><small>{member.seats_reserved} مقعد · {member.status === "active" ? "مؤكد" : member.status === "awaiting_confirmation" ? "بانتظار التأكيد" : "غادر المجموعة"}</small></div></div>{member.price_decision === "pending" && group.status === "price_review" && <span className="rider-state">مطلوب ردك</span>}</div>)}</div></section>
     <section className="surface detail-section"><div className="section-title-row"><div><h3>أيام الخدمة</h3><p>الوقت المحلي للقاهرة</p></div></div><div className="service-date-list">{dates.map((date) => <div key={date} className="service-date-row"><span className="calendar-badge">{new Date(`${date}T12:00:00Z`).getUTCDate()}</span><div><strong>{formatDate(date)}</strong><small>{group.morning_departure} ذهاب · {group.return_departure} عودة</small></div><span className="date-price">{money(group.seat_day_fare)}</span></div>)}</div></section>
     </details>
   </div><aside className="group-detail-side"><section className="surface action-card"><h3>إدارة المشوار</h3>
@@ -111,19 +112,18 @@ function relativeNotificationTime(value: string) {
 function notificationDayKey(value: string) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Cairo", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(value));
 }
-function NotificationRow({ item }: { item: Notification }) {
+function NotificationRow({ item, token }: { item: Notification; token: string }) {
   const category = categoryFor(item);
   const { title, message } = notificationCopy(item);
   const hasActorName = typeof item.payload.actor_name === "string";
   const isSystemActor = item.actor_id == null && !hasActorName;
   const actor = hasActorName ? item.payload.actor_name as string : isSystemActor || category === "system" ? "سِكّة" : "عضو في سِكّة";
-  const avatar = typeof item.payload.actor_avatar_url === "string" ? item.payload.actor_avatar_url : "";
   const route = [item.payload.origin, item.payload.destination].filter((part): part is string => typeof part === "string" && Boolean(part.trim())).join(" ← ");
   const context = route || (typeof item.payload.trip_name === "string" ? item.payload.trip_name : item.group_id ? `مشوار #${item.group_id}` : "");
   const quote = typeof item.payload.quote === "string" ? item.payload.quote : typeof item.payload.preview === "string" ? item.payload.preview : "";
   const badge = category === "ride" ? "✓" : category === "chat" ? "●" : category === "rating" ? "★" : category === "alert" ? "!" : "•";
   return <div className={`notification-row category-${category}`}>
-    <span className={`notification-avatar ${isSystemActor && !avatar ? "is-brand" : ""}`} aria-hidden="true">{avatar ? <img src={avatar} alt="" /> : isSystemActor ? <BrandLogo compact /> : actor.slice(0, 1)}</span>
+    {item.actor_id != null ? <ProfileAvatar userId={item.actor_id} token={token} name={actor} className="notification-avatar" /> : <span className="notification-avatar is-brand" aria-hidden="true"><BrandLogo compact /></span>}
     <span className="notification-category-badge" aria-label={category === "ride" ? "مشوار" : category === "chat" ? "محادثة" : category === "rating" ? "تقييم" : category === "alert" ? "تنبيه" : "من سِكّة"}>{badge}</span>
     <span className="notification-content"><strong className="notification-title">{title}</strong><span className="notification-main-copy"><strong>{actor}</strong> {message}</span>{context && <span className="notification-context">{context}</span>}{quote && <span className="notification-quote">“{quote}”</span>}</span>
     <time className="notification-time" dateTime={item.created_at} title={new Intl.DateTimeFormat("ar-EG", { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.created_at))}>{relativeNotificationTime(item.created_at)}</time>
@@ -203,7 +203,7 @@ export function NotificationsPanel({ items, token, onRefresh, onPoolChanged, onE
     const canEditGroup = allowWaitActions && Boolean(item.group_id && onEditGroup);
     return <article className={`notification-item ${item.read_at ? "is-read" : "is-unread"}`} key={item.id}>
       <div className="notification-main-action">
-        <button type="button" className="notification-read-action" onClick={() => void markRead(item)} aria-label={`${item.read_at ? "" : "تعليم كمقروء: "}${notificationCopy(item).title}`}><NotificationRow item={item} /></button>
+        <button type="button" className="notification-read-action" onClick={() => void markRead(item)} aria-label={`${item.read_at ? "" : "تعليم كمقروء: "}${notificationCopy(item).title}`}><NotificationRow item={item} token={token} /></button>
         <div className="notification-item-actions">
           {canEditGroup && <button type="button" className="notification-edit-action" onClick={() => onEditGroup?.(item.group_id!)} aria-label={`تعديل مشوار المجموعة رقم ${item.group_id}`}>تعديل</button>}
           <details className="notification-action-menu"><summary aria-label="إجراءات الإشعار" title="إجراءات الإشعار">⋯</summary><div className="notification-action-options">
@@ -221,13 +221,31 @@ export function NotificationsPanel({ items, token, onRefresh, onPoolChanged, onE
 
 export function AccountPanel({ session, notify }: { session: Session; notify: (text: string, tone?: Toast["tone"]) => void }) {
   const [current, setCurrent] = useState(""); const [next, setNext] = useState(""); const [busy, setBusy] = useState(false);
+  const [avatarBusy, setAvatarBusy] = useState(false);
+  const changeAvatar = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = "";
+    if (!file) return;
+    if (!new Set(["image/jpeg", "image/png", "image/webp"]).has(file.type)) { notify("اختار صورة بصيغة JPEG أو PNG أو WebP.", "error"); return; }
+    if (file.size > 2 * 1024 * 1024) { notify("حجم الصورة لازم يكون أقل من 2 ميجابايت.", "error"); return; }
+    setAvatarBusy(true);
+    try { await uploadProfileAvatar(session.token, file); window.dispatchEvent(new CustomEvent("sekka:profile-updated", { detail: session.user.id })); notify("تم تحديث صورتك الشخصية.", "success"); }
+    catch (error) { notify(errorText(error), "error"); }
+    finally { setAvatarBusy(false); }
+  };
+  const removeAvatar = async () => {
+    setAvatarBusy(true);
+    try { await deleteProfileAvatar(session.token); window.dispatchEvent(new CustomEvent("sekka:profile-updated", { detail: session.user.id })); notify("تم حذف الصورة الشخصية.", "success"); }
+    catch (error) { notify(errorText(error), "error"); }
+    finally { setAvatarBusy(false); }
+  };
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setBusy(true);
     try { const result = await api<{ revoked_other_sessions: number }>("/auth/change-password", { method: "POST", token: session.token, body: { current_password: current, new_password: next } }); setCurrent(""); setNext(""); notify(`تم تحديث كلمة السر. تم إنهاء ${result.revoked_other_sessions} جلسة أخرى.`, "success"); }
     catch (error) { notify(errorText(error), "error"); }
     finally { setBusy(false); }
   };
-  return <div className="account-grid"><section className="surface account-card"><span className="account-avatar">{session.user.full_name.slice(0, 1)}</span><span className="eyebrow">بيانات الحساب</span><h2>{session.user.full_name}</h2><p>{session.user.phone_number}</p><span className="status-chip status-active">{session.user.role === "rider" ? "راكب" : session.user.role === "captain" ? "كابتن" : "مدير النظام"}</span><div className="account-meta"><span>عضو منذ</span><strong>{new Intl.DateTimeFormat("ar-EG", { day: "numeric", month: "long", year: "numeric" }).format(new Date(session.user.created_at ?? Date.now()))}</strong></div></section>
+  return <div className="account-grid"><section className="surface account-card"><ProfileAvatar userId={session.user.id} token={session.token} name={session.user.full_name} className="account-avatar" /><span className="eyebrow">بيانات الحساب</span><h2>{session.user.full_name}</h2><p>{session.user.phone_number}</p><span className="status-chip status-active">{session.user.role === "rider" ? "راكب" : session.user.role === "captain" ? "كابتن" : "مدير النظام"}</span><div className="account-avatar-actions"><label className="button button-outline button-small">{avatarBusy ? "جارٍ التحديث…" : "اختيار صورة"}<input type="file" accept="image/jpeg,image/png,image/webp" onChange={changeAvatar} disabled={avatarBusy} /></label><button type="button" className="button button-quiet button-small" onClick={() => void removeAvatar()} disabled={avatarBusy}>حذف الصورة</button></div><small className="account-avatar-note">تظهر صورتك داخل سِكّة للمستخدمين المسجلين. لا نوفر رابطًا عامًا للصورة.</small><div className="account-meta"><span>عضو منذ</span><strong>{new Intl.DateTimeFormat("ar-EG", { day: "numeric", month: "long", year: "numeric" }).format(new Date(session.user.created_at ?? Date.now()))}</strong></div></section>
     {session.user.role !== "admin" && <VerificationCenter session={session} notify={notify} />}
     {session.user.role === "rider" && <RiderRoutePreferences token={session.token} notify={notify} />}
     <details className="surface password-card settings-disclosure"><summary><span><span className="eyebrow">الأمان والخصوصية</span><strong>تغيير كلمة السر</strong><small>تقدر تفتح القسم عند الحاجة.</small></span><span className="settings-disclosure-chevron" aria-hidden="true">⌄</span></summary><form className="form-stack" onSubmit={submit}><label>كلمة السر الحالية<input type="password" value={current} onChange={(e) => setCurrent(e.target.value)} autoComplete="current-password" required /></label><label>كلمة السر الجديدة<input type="password" value={next} onChange={(e) => setNext(e.target.value)} autoComplete="new-password" minLength={8} required /></label><button className="button button-primary button-small" disabled={busy}>{busy ? "جاري التحديث…" : "حفظ كلمة السر"}</button></form></details></div>;

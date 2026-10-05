@@ -126,3 +126,29 @@ export async function uploadVerificationDocument(token: string, documentType: Ve
   if (!payload.document) throw new ApiError(502, "لم يصل تأكيد رفع المستند من الخادم.");
   return { document: payload.document };
 }
+
+async function profileAvatarRequest(token: string, method: "POST" | "DELETE", file?: File): Promise<void> {
+  const headers: Record<string, string> = { Authorization: `Bearer ${token}`, Accept: "application/json" };
+  if (API_BASE_URL) headers.apikey = SUPABASE_PUBLISHABLE_KEY;
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}/api/profile/avatar`, {
+      method, headers,
+      ...(file ? { body: (() => { const form = new FormData(); form.append("file", file, file.name); return form; })() } : {}),
+    });
+  } catch { throw new ApiError(0, "تعذر الاتصال بالخادم. حاول مرة أخرى."); }
+  const payload = await response.json().catch(() => ({})) as { error?: string };
+  if (!response.ok) throw new ApiError(response.status, payload.error ?? "تعذر تحديث الصورة الشخصية.");
+}
+
+export function uploadProfileAvatar(token: string, file: File) { return profileAvatarRequest(token, "POST", file); }
+export function deleteProfileAvatar(token: string) { return profileAvatarRequest(token, "DELETE"); }
+
+export async function fetchProfileAvatar(token: string, userId: number, signal: AbortSignal): Promise<string | null> {
+  const headers: Record<string, string> = { Authorization: `Bearer ${token}`, Accept: "image/*" };
+  if (API_BASE_URL) headers.apikey = SUPABASE_PUBLISHABLE_KEY;
+  const response = await fetch(`${API_BASE_URL}/api/profile/${userId}/avatar`, { headers, signal });
+  if (response.status === 404) return null;
+  if (!response.ok) throw new ApiError(response.status, "تعذر تحميل الصورة الشخصية.");
+  return URL.createObjectURL(await response.blob());
+}

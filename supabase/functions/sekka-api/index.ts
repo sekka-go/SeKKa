@@ -219,6 +219,13 @@ async function keyedDigest(value: string) {
   const key = await crypto.subtle.importKey("raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   return hex(new Uint8Array(await crypto.subtle.sign("HMAC", key, encoder.encode(value))));
 }
+function binaryReply(data: Uint8Array, contentType: string, origin = "") {
+  const corsOrigin = origin === "http://localhost:5173" || origin === "https://sekka-go.pages.dev" || origin.endsWith(".sekka-go.pages.dev") ? origin : "null";
+  return new Response(data, { status: 200, headers: {
+    "content-type": contentType, "content-disposition": "inline", "cache-control": "private, no-store",
+    "x-content-type-options": "nosniff", "access-control-allow-origin": corsOrigin, "vary": "Origin", ...corsHeaders,
+  } });
+}
 function phoneCandidates(value: string) {
   const normalized = phoneE164(value);
   if (!normalized) return [value.trim()];
@@ -684,6 +691,52 @@ Deno.serve(async (req: Request) => {
     }
     const user = await authenticate(req);
     if (user && user.account_status !== "active" && path !== "/auth/logout") return error("الحساب موقوف حاليًا. تواصل مع خدمة العملاء للمساعدة.", 403, origin);
+    const avatarRoute = path.match(/^\/profile\/(\d+)\/avatar$/);
+    if (req.method === "GET" && avatarRoute) {
+      if (!user) return error("سجّل الدخول لعرض الصور الشخصية.", 401, origin);
+      const userId = Number(avatarRoute[1]);
+      const { data: profile, error: profileError } = await db.from("users").select("avatar_path").eq("id", userId).maybeSingle();
+      if (profileError) throw profileError;
+      if (!profile?.avatar_path) return error("لا توجد صورة شخصية.", 404, origin);
+      const { data: image, error: imageError } = await db.storage.from("avatars").download(profile.avatar_path);
+      if (imageError || !image) throw imageError ?? new Error("Avatar could not be loaded");
+      const bytes = new Uint8Array(await image.arrayBuffer());
+      const contentType = image.type === "image/png" || image.type === "image/webp" ? image.type : "image/jpeg";
+      return binaryReply(bytes, contentType, origin);
+    }
+    if (req.method === "POST" && path === "/profile/avatar") {
+      if (!user) return error("سجّل الدخول لتحديث صورتك الشخصية.", 401, origin);
+      const contentLength = Number(req.headers.get("content-length") ?? 0);
+      if (contentLength > 2_150_000) return error("حجم الصورة لازم يكون أقل من 2 ميجابايت.", 413, origin);
+      let form: FormData;
+      try { form = await req.formData(); } catch { return error("تعذر قراءة الصورة المرفقة.", 400, origin); }
+      const file = form.get("file");
+      if (!(file instanceof File) || file.size < 1 || file.size > 2 * 1024 * 1024) return error("ارفع صورة لا يتجاوز حجمها 2 ميجابايت.", 400, origin);
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const typeFromBytes = bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff ? "image/jpeg"
+        : bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47 ? "image/png"
+        : bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 && String.fromCharCode(...bytes.slice(8, 12)) === "WEBP" ? "image/webp" : null;
+      if (!typeFromBytes || file.type !== typeFromBytes) return error("صيغة الصورة غير مدعومة. استخدم JPEG أو PNG أو WebP.", 415, origin);
+      const extension = typeFromBytes === "image/jpeg" ? "jpg" : typeFromBytes.split("/")[1];
+      const objectPath = `${user.id}/${crypto.randomUUID()}.${extension}`;
+      const { data: previous, error: previousError } = await db.from("users").select("avatar_path").eq("id", user.id).maybeSingle();
+      if (previousError) throw previousError;
+      const { error: uploadError } = await db.storage.from("avatars").upload(objectPath, bytes, { contentType: typeFromBytes, upsert: false });
+      if (uploadError) throw uploadError;
+      const { error: saveError } = await db.from("users").update({ avatar_path: objectPath }).eq("id", user.id);
+      if (saveError) { await db.storage.from("avatars").remove([objectPath]); throw saveError; }
+      if (previous?.avatar_path) await db.storage.from("avatars").remove([previous.avatar_path]);
+      return reply({ success: true }, 200, origin);
+    }
+    if (req.method === "DELETE" && path === "/profile/avatar") {
+      if (!user) return error("سجّل الدخول لحذف صورتك الشخصية.", 401, origin);
+      const { data: previous, error: previousError } = await db.from("users").select("avatar_path").eq("id", user.id).maybeSingle();
+      if (previousError) throw previousError;
+      const { error: saveError } = await db.from("users").update({ avatar_path: null }).eq("id", user.id);
+      if (saveError) throw saveError;
+      if (previous?.avatar_path) await db.storage.from("avatars").remove([previous.avatar_path]);
+      return reply({ success: true }, 200, origin);
+    }
     if (req.method === "GET" && path === "/verification") {
       const gate = await requireRole(user, ["rider", "captain"], origin); if (gate) return gate;
       const [{ data: documents, error: documentsError }, { data: profile, error: profileError }] = await Promise.all([
