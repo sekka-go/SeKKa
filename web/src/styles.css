@@ -2041,6 +2041,55 @@ button { line-height: 1.45; }
 @media (max-width: 560px) { .workspace .notifications-drawer { width: calc(100vw - 3.5rem); padding: .85rem; border-radius: 0 .9rem .9rem 0; } .workspace .notifications-page { min-height: 0; } }
 @media (prefers-reduced-motion: reduce) { .workspace .notifications-overlay, .workspace .notifications-drawer { animation: none; } }
 
+/* Social-feed notification rows: avatar and event badge lead the RTL item. */
+.workspace .notification-list { gap: 1rem; }
+.workspace .notification-feed-group { display: grid; gap: .55rem; }
+.workspace .notification-feed-group > h3 { margin: .2rem .25rem 0; color: var(--muted); font-size: .78rem; font-weight: 800; letter-spacing: .02em; }
+.workspace .notification-item { position: relative; overflow: visible; background: rgba(255,255,255,.018); border-radius: .95rem; }
+.workspace .notification-item.is-unread { background: rgba(255,210,31,.055); border-color: rgba(255,210,31,.16); }
+.workspace .notification-item.is-read { background: transparent; }
+.workspace .notification-item:hover { background: rgba(255,255,255,.045); }
+.workspace .notification-item.is-unread:hover { background: rgba(255,210,31,.085); }
+.workspace .notification-main-action { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: start; gap: .35rem; padding: .7rem .75rem; }
+.workspace .notification-read-action { display: block; min-width: 0; padding: 0; text-align: right; background: transparent; border: 0; cursor: pointer; }
+.workspace .notification-row { position: relative; display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: .72rem; direction: rtl; min-width: 0; }
+.workspace .notification-avatar { display: grid; place-items: center; width: 3rem; height: 3rem; flex: 0 0 3rem; overflow: hidden; color: #0e1523; background: #d7e0ea; border: 1px solid rgba(255,255,255,.14); border-radius: 50%; font-size: 1.05rem; font-weight: 800; }
+.workspace .notification-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.workspace .notification-avatar.is-brand { color: var(--yellow); background: #182133; }
+.workspace .notification-avatar.is-brand .brand-logo { transform: scale(.43); white-space: nowrap; }
+.workspace .notification-category-badge { position: absolute; inset-inline-start: auto; inset-inline-end: calc(100% - 3rem); top: calc(50% + .4rem); display: grid; place-items: center; width: 1.12rem; height: 1.12rem; color: white; background: #42a66a; border: 2px solid #1a2333; border-radius: 50%; font-size: .65rem; font-weight: 900; line-height: 1; transform: translate(18%, 18%); }
+.workspace .category-chat .notification-category-badge { background: #3287d5; }
+.workspace .category-rating .notification-category-badge { color: #1b1606; background: #e8b922; }
+.workspace .category-alert .notification-category-badge { background: #e3604b; }
+.workspace .category-system .notification-category-badge { background: #718096; }
+.workspace .notification-content { display: grid; gap: .16rem; min-width: 0; color: var(--muted); font-size: .84rem; line-height: 1.55; }
+.workspace .notification-main-copy { overflow-wrap: anywhere; }
+.workspace .notification-main-copy > strong { color: var(--ink); font-weight: 850; }
+.workspace .notification-title { color: var(--ink); font-size: .83rem; font-weight: 700; line-height: 1.45; }
+.workspace .notification-context { color: var(--yellow); font-size: .78rem; font-weight: 700; }
+.workspace .notification-quote { overflow: hidden; color: var(--muted); font-size: .77rem; text-overflow: ellipsis; white-space: nowrap; }
+.workspace .notification-time { align-self: start; margin-top: .15rem; color: var(--muted); font-size: .7rem; white-space: nowrap; }
+.workspace .notification-item-actions { display: flex; align-items: flex-start; gap: .3rem; }
+.workspace .notification-action-menu { position: relative; z-index: 2; }
+.workspace .notification-action-menu > summary { display: grid; place-items: center; width: 2rem; height: 2rem; color: var(--muted); border: 0; border-radius: 50%; cursor: pointer; font-size: 1.35rem; font-weight: 800; line-height: 1; list-style: none; }
+.workspace .notification-action-menu > summary::-webkit-details-marker { display: none; }
+.workspace .notification-action-menu > summary:hover, .workspace .notification-action-menu[open] > summary { color: var(--yellow); background: rgba(255,210,31,.09); }
+.workspace .notification-action-options { position: absolute; inset-inline-end: 0; top: calc(100% + .25rem); display: grid; min-width: 12rem; padding: .35rem; background: #111a29; border: 1px solid var(--line); border-radius: .75rem; box-shadow: 0 .8rem 2rem rgba(0,0,0,.36); }
+.workspace .notification-action-options button { padding: .65rem .75rem; color: var(--ink); text-align: right; background: transparent; border: 0; border-radius: .45rem; cursor: pointer; font: inherit; font-size: .8rem; }
+.workspace .notification-action-options button:hover { background: rgba(255,255,255,.07); }
+.workspace .notification-action-options button.is-danger { color: #ff8f7d; }
+.workspace .notification-action-menu:focus-within > summary, .workspace .notification-read-action:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+.workspace .notification-edit-action { min-width: 4.2rem; min-height: 2rem; padding: .3rem .55rem; font-size: .78rem; }
+.workspace .notification-choice-actions { padding-inline: .75rem; }
+@media (max-width: 560px) {
+  .workspace .notification-main-action { padding: .65rem .55rem; }
+  .workspace .notification-row { grid-template-columns: auto minmax(0,1fr) auto; gap: .55rem; }
+  .workspace .notification-avatar { width: 2.65rem; height: 2.65rem; flex-basis: 2.65rem; }
+  .workspace .notification-category-badge { inset-inline-end: calc(100% - 2.65rem); }
+  .workspace .notification-content { font-size: .78rem; }
+  .workspace .notification-time { font-size: .65rem; }
+}
+
 .map-loading { display: grid; place-items: center; color: var(--muted); }
 
 .verification-center { grid-column: 1 / -1; display: grid; gap: 1rem; padding: clamp(1rem, 3vw, 1.5rem); scroll-margin-top: 1rem; color: #f5f0e3; background: #1e1e1e; border: 1px solid rgba(234,179,8,.25); border-radius: 1.1rem; }

@@ -50,7 +50,7 @@ export function createAdminRouter(db: DatabaseSync): Router {
       return;
     }
     const recipients = db.prepare("SELECT id FROM users ORDER BY id").all() as { id: number }[];
-    const insert = db.prepare("INSERT OR IGNORE INTO pool_notifications(user_id,group_id,event_key,payload) VALUES(?,NULL,?,?)");
+    const insert = db.prepare("INSERT OR IGNORE INTO pool_notifications(user_id,group_id,type,event_key,payload) VALUES(?,NULL,'system',?,?)");
     const eventKey = `broadcast:${requestId}`;
     let insertedNotifications = 0;
     db.exec("BEGIN IMMEDIATE");

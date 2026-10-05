@@ -62,9 +62,18 @@ function getMembers(db: DatabaseSync, groupId: number, activeOnly = true): Membe
   const sql = `SELECT * FROM pool_members WHERE group_id=? ${activeOnly ? "AND status='active'" : ""} ORDER BY pickup_order, joined_at, id`;
   return db.prepare(sql).all(groupId) as unknown as Member[];
 }
+function notificationType(key: string): string {
+  if (key.includes("chat")) return "chat";
+  if (key.includes("rating") || key.includes("feedback")) return "rating";
+  if (key.startsWith("broadcast:") || key.includes("verification") || key.startsWith("admin-")) return "system";
+  if (["cancel", "delay", "route", "no-captain", "expired", "replacement", "price"].some((part) => key.includes(part))) return "alert";
+  return "ride";
+}
 function notify(db: DatabaseSync, userId: number, groupId: number | null, key: string, payload: object = {}) {
-  const inserted = db.prepare("INSERT OR IGNORE INTO pool_notifications(user_id,group_id,event_key,payload) VALUES(?,?,?,?)")
-    .run(userId, groupId, key, JSON.stringify(payload));
+  if (groupId !== null && db.prepare("SELECT 1 FROM pool_notification_mutes WHERE user_id=? AND group_id=?").get(userId, groupId)) return;
+  const actorId = typeof (payload as Record<string, unknown>).actor_id === "number" ? (payload as Record<string, unknown>).actor_id as number : null;
+  const inserted = db.prepare("INSERT OR IGNORE INTO pool_notifications(user_id,group_id,actor_id,type,event_key,payload) VALUES(?,?,?,?,?,?)")
+    .run(userId, groupId, actorId, notificationType(key), key, JSON.stringify(payload));
   if (Number(inserted.changes) > 0) queueMicrotask(() => sendWebPushToUser(db, userId, key));
 }
 function notifyGroup(db: DatabaseSync, groupId: number, key: string, payload: object = {}) {
@@ -768,13 +777,24 @@ export function createPoolRouter(db: DatabaseSync) {
   });
 
   router.get("/pool/notifications", requireAuth(db), (req, res) => {
-    const notifications = db.prepare("SELECT id,group_id,event_key,payload,created_at,read_at FROM pool_notifications WHERE user_id=? ORDER BY id DESC LIMIT 100").all(req.auth!.userId) as unknown as { payload: string }[];
+    const notifications = db.prepare("SELECT id,group_id,actor_id,type,event_key,payload,created_at,read_at FROM pool_notifications WHERE user_id=? AND deleted_at IS NULL ORDER BY id DESC LIMIT 100").all(req.auth!.userId) as unknown as { payload: string }[];
     res.json({ notifications: notifications.map((n) => ({ ...n, payload: JSON.parse(n.payload) })) });
   });
   router.post("/pool/notifications/:id/read", requireAuth(db), (req, res) => {
     const id = Number(req.params.id);
     const result = db.prepare("UPDATE pool_notifications SET read_at=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id=? AND user_id=? AND read_at IS NULL").run(id, req.auth!.userId);
     res.status(Number(result.changes) ? 200 : 404).json(Number(result.changes) ? { read: true } : { error: "الإشعار غير موجود." });
+  });
+  router.post("/pool/notifications/:id/delete", requireAuth(db), (req, res) => {
+    const result = db.prepare("UPDATE pool_notifications SET deleted_at=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id=? AND user_id=? AND deleted_at IS NULL").run(Number(req.params.id), req.auth!.userId);
+    res.status(Number(result.changes) ? 200 : 404).json(Number(result.changes) ? { deleted: true } : { error: "الإشعار غير موجود." });
+  });
+  router.post("/pool/notifications/:id/mute", requireAuth(db), (req, res) => {
+    const item = db.prepare("SELECT group_id FROM pool_notifications WHERE id=? AND user_id=? AND deleted_at IS NULL").get(Number(req.params.id), req.auth!.userId) as { group_id: number | null } | undefined;
+    if (!item) { res.status(404).json({ error: "الإشعار غير موجود." }); return; }
+    if (item.group_id === null) { res.status(400).json({ error: "هذا الإشعار غير مرتبط بمشوار." }); return; }
+    db.prepare("INSERT OR IGNORE INTO pool_notification_mutes(user_id,group_id) VALUES(?,?)").run(req.auth!.userId, item.group_id);
+    res.json({ muted: true, group_id: item.group_id });
   });
 
   router.get("/captain/pool/offers", ...captain, (req, res) => {

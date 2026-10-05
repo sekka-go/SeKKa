@@ -438,7 +438,13 @@ async function writeAdminAudit(actorId: number, action: string, resourceType: st
   if (auditError) throw auditError;
 }
 async function notifyUser(userId: number, groupId: number | null, eventKey: string, payload: Json = {}) {
-  await db!.from("pool_notifications").upsert({ user_id: userId, group_id: groupId, event_key: eventKey, payload }, { onConflict: "user_id,event_key", ignoreDuplicates: true });
+  if (groupId !== null) {
+    const { data: muted, error: muteError } = await db!.from("pool_notification_mutes").select("user_id").eq("user_id", userId).eq("group_id", groupId).maybeSingle();
+    if (muteError) throw muteError;
+    if (muted) return;
+  }
+  const type = eventKey.includes("chat") ? "chat" : eventKey.includes("rating") || eventKey.includes("feedback") ? "rating" : eventKey.startsWith("broadcast:") || eventKey.includes("verification") || eventKey.startsWith("admin-") ? "system" : ["cancel", "delay", "route", "no-captain", "expired", "replacement", "price"].some((part) => eventKey.includes(part)) ? "alert" : "ride";
+  await db!.from("pool_notifications").upsert({ user_id: userId, group_id: groupId, actor_id: typeof payload.actor_id === "number" ? payload.actor_id : null, type, event_key: eventKey, payload }, { onConflict: "user_id,event_key", ignoreDuplicates: true });
 }
 function packageDays(type: string) { return type === "weekly" ? 5 : type === "monthly" ? 22 : type === "daily" ? 1 : 0; }
 function discountRate(type: string) { return type === "weekly" ? 0.05 : type === "monthly" ? 0.10 : 0; }
@@ -1419,13 +1425,29 @@ Deno.serve(async (req: Request) => {
 
     if (req.method === "GET" && path === "/pool/notifications") {
       if (!user) return error("سجّل الدخول أولًا.", 401, origin);
-      const { data, error: e } = await db.from("pool_notifications").select("*").eq("user_id", user.id).order("id", { ascending: false }).limit(100);
+      const { data, error: e } = await db.from("pool_notifications").select("*").eq("user_id", user.id).is("deleted_at", null).order("id", { ascending: false }).limit(100);
       if (e) throw e; return reply({ notifications: data }, 200, origin);
     }
     const readNotice = path.match(/^\/pool\/notifications\/(\d+)\/read$/);
     if (req.method === "POST" && readNotice && user) {
       await db.from("pool_notifications").update({ read_at: new Date().toISOString() }).eq("id", readNotice[1]).eq("user_id", user.id);
       return reply({ success: true }, 200, origin);
+    }
+    const deleteNotice = path.match(/^\/pool\/notifications\/(\d+)\/delete$/);
+    if (req.method === "POST" && deleteNotice && user) {
+      const { error: deleteError } = await db.from("pool_notifications").update({ deleted_at: new Date().toISOString() }).eq("id", deleteNotice[1]).eq("user_id", user.id).is("deleted_at", null);
+      if (deleteError) throw deleteError;
+      return reply({ deleted: true }, 200, origin);
+    }
+    const muteNotice = path.match(/^\/pool\/notifications\/(\d+)\/mute$/);
+    if (req.method === "POST" && muteNotice && user) {
+      const { data: notice, error: noticeError } = await db.from("pool_notifications").select("group_id").eq("id", muteNotice[1]).eq("user_id", user.id).is("deleted_at", null).maybeSingle();
+      if (noticeError) throw noticeError;
+      if (!notice) return error("الإشعار غير موجود.", 404, origin);
+      if (notice.group_id === null) return error("هذا الإشعار غير مرتبط بمشوار.", 400, origin);
+      const { error: muteError } = await db.from("pool_notification_mutes").upsert({ user_id: user.id, group_id: notice.group_id }, { onConflict: "user_id,group_id", ignoreDuplicates: true });
+      if (muteError) throw muteError;
+      return reply({ muted: true, group_id: notice.group_id }, 200, origin);
     }
     if (req.method === "GET" && path === "/captain/verify/status") {
       const gate = await requireRole(user, ["captain"], origin); if (gate) return gate;
@@ -2108,7 +2130,7 @@ Deno.serve(async (req: Request) => {
         const { data: recipients, error: recipientsError } = await db.from("users").select("id").order("id", { ascending: true }).range(offset, offset + 999);
         if (recipientsError) throw recipientsError;
         if (!recipients?.length) break;
-        const rows = recipients.map(({ id }) => ({ user_id: id, group_id: null, event_key: requestKey, payload: { title, message } }));
+        const rows = recipients.map(({ id }) => ({ user_id: id, group_id: null, type: "system", event_key: requestKey, payload: { title, message } }));
         recipientCount += rows.length;
         const { error: insertError } = await db.from("pool_notifications").upsert(rows, { onConflict: "user_id,event_key", ignoreDuplicates: true });
         if (insertError) throw insertError;

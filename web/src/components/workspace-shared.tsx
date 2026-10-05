@@ -5,6 +5,7 @@ import VerificationCenter from "./VerificationCenter";
 import { categoryName, errorText, formatDate, money, statusLabel } from "../lib/formatters";
 import { getConfiguredPushPublicKey, hasPushSubscription, subscribeToPush, unsubscribeFromPush } from "../lib/push";
 import { api, type Category, type GroupView, type Notification } from "../api";
+import BrandLogo from "../components/BrandLogo";
 import { readDates, todayInCairo } from "../lib/booking-dates";
 import { useResolvedLocationPoints } from "../lib/use-location-addresses";
 import type { RiderWorkspaceTrip, Session, Toast } from "../types";
@@ -82,19 +83,50 @@ export function ErrorState({ title = "حصلت مشكلة في تحميل الب
 }
 export function LoadingCard({ text }: { text: string }) { return <div className="surface loading-card"><span className="spinner" /><strong>{text}</strong></div>; }
 
-function NotificationGlyph({ eventKey }: { eventKey: string }) {
-  const broadcast = eventKey.startsWith("broadcast:");
-  const price = eventKey.includes("price");
-  const captain = eventKey.includes("captain");
-  return <span className="notification-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{broadcast ? <><path d="M4 5.5h16v13H4z"/><path d="m4 7 8 6 8-6"/></> : price ? <><path d="M12 3v18"/><path d="M17 7.5c0-1.7-2.2-2.5-5-2.5S7 6 7 8s2.2 3 5 3 5 1.1 5 3-2.2 3-5 3-5-.8-5-2.5"/></> : captain ? <><circle cx="12" cy="8" r="3"/><path d="M5 20c.6-3.4 3-5 7-5s6.4 1.6 7 5"/><path d="M19 5v4m-2-2h4"/></> : <><path d="M4 17.5h3l10-10a2.1 2.1 0 0 0-3-3l-10 10z"/><path d="m12.5 6.5 3 3"/><path d="M4 21h16"/></>}</svg></span>;
+type NotificationCategory = "ride" | "chat" | "rating" | "alert" | "system";
+function categoryFor(item: Notification): NotificationCategory {
+  if (item.type) return item.type;
+  const key = item.event_key;
+  if (key.includes("chat")) return "chat";
+  if (key.includes("rating") || key.includes("feedback")) return "rating";
+  if (key.startsWith("broadcast:") || key.includes("verification") || key.startsWith("admin-")) return "system";
+  if (["cancel", "delay", "route", "no-captain", "expired", "replacement", "price"].some((part) => key.includes(part))) return "alert";
+  return "ride";
 }
-
-export function NotificationRow({ item, showGlyph = true }: { item: Notification; showGlyph?: boolean }) {
-  const isBroadcast = item.event_key.startsWith("broadcast:");
-  const title = isBroadcast ? (typeof item.payload.title === "string" ? item.payload.title : "رسالة من إدارة سِكّة") : item.event_key.includes("price") ? "تحديث على سعر المجموعة" : item.event_key.includes("captain") ? "تحديث الكابتن" : item.event_key.includes("wait") ? "المجموعة ما زالت في الانتظار" : item.event_key.includes("invite") ? "دعوة لمجموعة مشوار" : "تحديث جديد على مشوارك";
-  const message = typeof item.payload.message === "string" ? item.payload.message : item.event_key.includes("price") ? "راجع تفاصيل مجموعتك للاطلاع على السعر المحدّث." : item.event_key.includes("captain") ? "يوجد تحديث بخصوص الكابتن ورحلتك." : item.event_key.includes("wait") ? "تابع حالة المجموعة واختار الإجراء المناسب." : item.event_key.includes("invite") ? "يمكنك مراجعة تفاصيل الدعوة والرد عليها من رحلاتك." : "سنوافيك بأي تغيير جديد يخص رحلتك أو مجموعتك.";
-  const date = new Intl.DateTimeFormat("ar-EG", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(item.created_at));
-  return <div className={`notification-row ${item.read_at ? "read" : "unread"} ${showGlyph ? "" : "notification-row-with-edit"}`}>{showGlyph && <NotificationGlyph eventKey={item.event_key} />}<div className="notification-content"><strong>{title}</strong><p className="notification-message">{message}</p></div><div className="notification-time"><small>{item.group_id ? `مجموعة #${item.group_id}` : ""}</small><small>{date}</small>{!item.read_at && <i aria-label="غير مقروء" />}</div></div>;
+function notificationCopy(item: Notification) {
+  const key = item.event_key;
+  const title = key.startsWith("broadcast:") ? "رسالة من إدارة سِكّة" : key.includes("price") ? "تحديث على سعر المشوار" : key.includes("captain") ? "تحديث الكابتن" : key.includes("wait") ? "المشوار ما زال في الانتظار" : key.includes("invite") ? "دعوة لمشوار" : key.includes("cancel") ? "إلغاء المشوار" : key.includes("delay") ? "تأخير في المشوار" : key.includes("chat") ? "رسالة جديدة" : key.includes("rating") ? "تقييم جديد" : "تحديث جديد على مشوارك";
+  const message = typeof item.payload.message === "string" ? item.payload.message : key.includes("price") ? "راجع تفاصيل المشوار للاطلاع على السعر المحدّث." : key.includes("captain") ? "فيه تحديث بخصوص الكابتن ورحلتك." : key.includes("wait") ? "تابع حالة المشوار واختار الإجراء المناسب." : key.includes("invite") ? "راجع تفاصيل الدعوة ورد عليها من رحلاتك." : key.includes("chat") ? "بعتلك رسالة في محادثة المشوار." : key.includes("rating") ? "وصلك تقييم جديد على رحلتك." : "هنبلغك بأي تغيير جديد يخص مشوارك.";
+  return { title: typeof item.payload.title === "string" ? item.payload.title : title, message };
+}
+function relativeNotificationTime(value: string) {
+  const seconds = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 1000));
+  if (seconds < 60) return "دلوقتي";
+  if (seconds < 3600) return new Intl.NumberFormat("ar-EG", { maximumFractionDigits: 0 }).format(Math.floor(seconds / 60)) + " د";
+  if (seconds < 86400) return new Intl.NumberFormat("ar-EG", { maximumFractionDigits: 0 }).format(Math.floor(seconds / 3600)) + " س";
+  if (seconds < 604800) return new Intl.NumberFormat("ar-EG", { maximumFractionDigits: 0 }).format(Math.floor(seconds / 86400)) + " ي";
+  return new Intl.DateTimeFormat("ar-EG", { day: "numeric", month: "short" }).format(new Date(value));
+}
+function notificationDayKey(value: string) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Cairo", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(value));
+}
+function NotificationRow({ item }: { item: Notification }) {
+  const category = categoryFor(item);
+  const { title, message } = notificationCopy(item);
+  const hasActorName = typeof item.payload.actor_name === "string";
+  const isSystemActor = item.actor_id == null && !hasActorName;
+  const actor = hasActorName ? item.payload.actor_name as string : isSystemActor || category === "system" ? "سِكّة" : "عضو في سِكّة";
+  const avatar = typeof item.payload.actor_avatar_url === "string" ? item.payload.actor_avatar_url : "";
+  const route = [item.payload.origin, item.payload.destination].filter((part): part is string => typeof part === "string" && Boolean(part.trim())).join(" ← ");
+  const context = route || (typeof item.payload.trip_name === "string" ? item.payload.trip_name : item.group_id ? `مشوار #${item.group_id}` : "");
+  const quote = typeof item.payload.quote === "string" ? item.payload.quote : typeof item.payload.preview === "string" ? item.payload.preview : "";
+  const badge = category === "ride" ? "✓" : category === "chat" ? "●" : category === "rating" ? "★" : category === "alert" ? "!" : "•";
+  return <div className={`notification-row category-${category}`}>
+    <span className={`notification-avatar ${isSystemActor && !avatar ? "is-brand" : ""}`} aria-hidden="true">{avatar ? <img src={avatar} alt="" /> : isSystemActor ? <BrandLogo compact /> : actor.slice(0, 1)}</span>
+    <span className="notification-category-badge" aria-label={category === "ride" ? "مشوار" : category === "chat" ? "محادثة" : category === "rating" ? "تقييم" : category === "alert" ? "تنبيه" : "من سِكّة"}>{badge}</span>
+    <span className="notification-content"><span className="notification-main-copy"><strong>{actor}</strong> {message}</span><strong className="notification-title">{title}</strong>{context && <span className="notification-context">{context}</span>}{quote && <span className="notification-quote">“{quote}”</span>}</span>
+    <time className="notification-time" dateTime={item.created_at} title={new Intl.DateTimeFormat("ar-EG", { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.created_at))}>{relativeNotificationTime(item.created_at)}</time>
+  </div>;
 }
 
 function NotificationHeader({ isLoading, refreshing, onRefresh, onToggleSettings, onClose, settingsLabel, settingsDisabled }: { isLoading: boolean; refreshing: boolean; onRefresh: () => void; onToggleSettings: () => void; onClose: () => void; settingsLabel: string; settingsDisabled: boolean }) {
@@ -150,12 +182,40 @@ export function NotificationsPanel({ items, token, onRefresh, onPoolChanged, onE
       notify(action === "cancel" ? "تم إلغاء المجموعة مجانًا." : "تم حجز المقاعد المتبقية للمجموعة.", "success");
     } catch (error) { notify(errorText(error), "error"); }
   };
-  return <div className="notifications-overlay" style={{ top: topOffset, height: `calc(100dvh - ${topOffset}px)` }} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><aside id="sekka-notifications-drawer" className="notifications-drawer" role="dialog" aria-modal="true" aria-label="الإشعارات" onMouseDown={(event) => event.stopPropagation()}><section className="notifications-page"><NotificationHeader isLoading={isLoading} refreshing={refreshing} onRefresh={() => void refresh()} onToggleSettings={() => void togglePush()} onClose={onClose} settingsLabel={pushBusy ? "جارٍ تحديث إعدادات الإشعارات" : pushReady ? pushEnabled ? "إيقاف إشعارات هذا الجهاز" : "تفعيل إشعارات هذا الجهاز" : "إشعارات الجهاز غير مهيأة حاليًا"} settingsDisabled={!pushReady || pushBusy} />{isLoading ? <div className="notifications-loading" role="status"><span className="spinner" /><span>بنحمّل إشعاراتك…</span></div> : error ? <div className="notifications-error" role="alert"><span className="error-state-mark" aria-hidden="true">!</span><strong>تعذر تحميل الإشعارات</strong><p>{error}</p><button type="button" className="button button-outline button-small" onClick={() => void refresh()}>إعادة المحاولة</button></div> : items.length ? <div className="notification-list">{items.map((item) => {
+  const deleteNotification = async (item: Notification) => {
+    try { await api(`/pool/notifications/${item.id}/delete`, { method: "POST", token }); await onRefresh(); notify("تم حذف الإشعار.", "success"); }
+    catch (error) { notify(errorText(error), "error"); }
+  };
+  const muteTrip = async (item: Notification) => {
+    try { await api(`/pool/notifications/${item.id}/mute`, { method: "POST", token }); await onRefresh(); notify("تم كتم إشعارات المشوار ده.", "success"); }
+    catch (error) { notify(errorText(error), "error"); }
+  };
+  const today = notificationDayKey(new Date().toISOString());
+  const groupedItems = [
+    { key: "new", label: "الجديد", items: items.filter((item) => !item.read_at) },
+    { key: "today", label: "اليوم", items: items.filter((item) => Boolean(item.read_at) && notificationDayKey(item.created_at) === today) },
+    { key: "earlier", label: "سابقاً", items: items.filter((item) => Boolean(item.read_at) && notificationDayKey(item.created_at) !== today) },
+  ].filter((group) => group.items.length > 0);
+  const renderItem = (item: Notification) => {
     const options = Array.isArray(item.payload.options) ? item.payload.options : [];
     const isWaitNotice = allowWaitActions && item.event_key.includes("wait-72h") && Boolean(item.group_id);
     const canEditGroup = allowWaitActions && Boolean(item.group_id && onEditGroup);
-    return <article className={`notification-item ${item.read_at ? "is-read" : "is-unread"}`} key={item.id}><div className={`notification-main-action ${canEditGroup ? "has-edit-action" : ""}`}>{canEditGroup && <button type="button" className="notification-edit-action" onClick={() => onEditGroup?.(item.group_id!)} aria-label={`تعديل مشوار المجموعة رقم ${item.group_id}`}>تعديل</button>}<button type="button" className="notification-read-action" onClick={() => void markRead(item)} aria-label={`${item.read_at ? "" : "تعليم كمقروء: "}${item.event_key.startsWith("broadcast:") && typeof item.payload.title === "string" ? item.payload.title : "إشعار عن مشوارك"}`}><NotificationRow item={item} showGlyph={!canEditGroup} /></button></div>{isWaitNotice && options.length > 0 && <div className="notification-choice-actions"><span>اختار ما يناسبك:</span>{options.includes("wait") && <button className="button button-outline button-small" onClick={() => void markRead(item)}>الانتظار</button>}{options.includes("book_remaining_seats") && <button className="button button-secondary button-small" onClick={() => void waitAction(item, "complete-seats")}>حجز باقي المقاعد</button>}{options.includes("cancel_free") && <button className="button button-quiet button-small" onClick={() => void waitAction(item, "cancel")}>إلغاء مجاني</button>}</div>}</article>;
-  })}</div> : <div className="notifications-empty"><span className="notifications-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg></span><h3>لا توجد إشعارات حالياً</h3><p>سنقوم بتبليغك بأي تحديثات جديدة تخص رحلاتك ومجموعاتك فور توفرها.</p></div>}</section></aside></div>;
+    return <article className={`notification-item ${item.read_at ? "is-read" : "is-unread"}`} key={item.id}>
+      <div className="notification-main-action">
+        <button type="button" className="notification-read-action" onClick={() => void markRead(item)} aria-label={`${item.read_at ? "" : "تعليم كمقروء: "}${notificationCopy(item).title}`}><NotificationRow item={item} /></button>
+        <div className="notification-item-actions">
+          {canEditGroup && <button type="button" className="notification-edit-action" onClick={() => onEditGroup?.(item.group_id!)} aria-label={`تعديل مشوار المجموعة رقم ${item.group_id}`}>تعديل</button>}
+          <details className="notification-action-menu"><summary aria-label="إجراءات الإشعار" title="إجراءات الإشعار">⋯</summary><div className="notification-action-options">
+            {!item.read_at && <button type="button" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); void markRead(item); }}>تعليم كمقروء</button>}
+            {item.group_id !== null && <button type="button" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); void muteTrip(item); }}>كتم إشعارات المشوار</button>}
+            <button type="button" className="is-danger" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); void deleteNotification(item); }}>حذف الإشعار</button>
+          </div></details>
+        </div>
+      </div>
+      {isWaitNotice && options.length > 0 && <div className="notification-choice-actions"><span>اختار ما يناسبك:</span>{options.includes("wait") && <button className="button button-outline button-small" onClick={() => void markRead(item)}>الانتظار</button>}{options.includes("book_remaining_seats") && <button className="button button-secondary button-small" onClick={() => void waitAction(item, "complete-seats")}>حجز باقي المقاعد</button>}{options.includes("cancel_free") && <button className="button button-quiet button-small" onClick={() => void waitAction(item, "cancel")}>إلغاء مجاني</button>}</div>}
+    </article>;
+  };
+  return <div className="notifications-overlay" style={{ top: topOffset, height: `calc(100dvh - ${topOffset}px)` }} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><aside id="sekka-notifications-drawer" className="notifications-drawer" role="dialog" aria-modal="true" aria-label="الإشعارات" onMouseDown={(event) => event.stopPropagation()}><section className="notifications-page"><NotificationHeader isLoading={isLoading} refreshing={refreshing} onRefresh={() => void refresh()} onToggleSettings={() => void togglePush()} onClose={onClose} settingsLabel={pushBusy ? "جارٍ تحديث إعدادات الإشعارات" : pushReady ? pushEnabled ? "إيقاف إشعارات هذا الجهاز" : "تفعيل إشعارات هذا الجهاز" : "إشعارات الجهاز غير مهيأة حاليًا"} settingsDisabled={!pushReady || pushBusy} />{isLoading ? <div className="notifications-loading" role="status"><span className="spinner" /><span>بنحمّل إشعاراتك…</span></div> : error ? <div className="notifications-error" role="alert"><span className="error-state-mark" aria-hidden="true">!</span><strong>تعذر تحميل الإشعارات</strong><p>{error}</p><button type="button" className="button button-outline button-small" onClick={() => void refresh()}>إعادة المحاولة</button></div> : items.length ? <div className="notification-list">{groupedItems.map((group) => <section className="notification-feed-group" key={group.key}><h3>{group.label}</h3>{group.items.map(renderItem)}</section>)}</div> : <div className="notifications-empty"><span className="notifications-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg></span><h3>لا توجد إشعارات حالياً</h3><p>سنقوم بتبليغك بأي تحديثات جديدة تخص رحلاتك ومجموعاتك فور توفرها.</p></div>}</section></aside></div>;
 }
 
 export function AccountPanel({ session, notify }: { session: Session; notify: (text: string, tone?: Toast["tone"]) => void }) {

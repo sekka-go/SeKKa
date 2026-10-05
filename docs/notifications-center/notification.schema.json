@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sekka.example/schemas/notification.schema.json",
+  "title": "SeKKa Notification",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "actor_id", "type", "payload", "is_read", "timestamp"],
+  "properties": {
+    "id": { "type": "integer", "minimum": 1 },
+    "actor_id": { "type": ["integer", "null"], "description": "User who caused the event; null for system notices." },
+    "type": { "type": "string", "enum": ["ride", "chat", "rating", "alert", "system"] },
+    "payload": {
+      "type": "object",
+      "description": "Event-specific JSON. Suggested keys: actor_name, actor_avatar_url, title, message, origin, destination, trip_name, quote, preview.",
+      "additionalProperties": true
+    },
+    "is_read": { "type": "boolean", "description": "Derived from read_at IS NOT NULL in the current database." },
+    "timestamp": { "type": "string", "format": "date-time", "description": "Creation timestamp (database column created_at)." },
+    "group_id": { "type": ["integer", "null"] },
+    "event_key": { "type": "string" },
+    "read_at": { "type": ["string", "null"], "format": "date-time" }
+  }
+}

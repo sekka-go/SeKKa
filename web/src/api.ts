@@ -53,7 +53,7 @@ export interface PoolGroup {
 }
 export interface GroupView { group: PoolGroup; members: PoolMember[]; trips: PoolTrip[]; subscription?: { amount_due: number; refund_amount: number; service_days: number; discount_rate: number } }
 export interface PoolDiscoveryMatch { group: PoolGroup; seats_available: number; pickup_distance_km: number; dropoff_distance_km: number }
-export interface Notification { id: number; group_id: number | null; event_key: string; payload: Record<string, unknown>; created_at: string; read_at: string | null }
+export interface Notification { id: number; group_id: number | null; actor_id?: number | null; type?: "ride" | "chat" | "rating" | "alert" | "system"; event_key: string; payload: Record<string, unknown>; created_at: string; read_at: string | null }
 export interface CaptainProfile { verification_status: "pending" | "approved" | "rejected"; status?: "active" | "suspended_grace_expired"; grace_period_expires_at?: string | null; vehicle_type_id: string; license_number: string; vehicle_plate: string; current_lat: number | null; current_lng: number | null }
 export type VerificationDocumentType = "national_id_front" | "national_id_back" | "driving_license_front" | "driving_license_back" | "vehicle_license_front" | "vehicle_license_back" | "criminal_record" | "drug_test";
 export type VerificationDocument = { id: number; document_type: VerificationDocumentType; status: "pending" | "approved" | "rejected"; rejection_reason: string | null; uploaded_at: string; reviewed_at: string | null };
