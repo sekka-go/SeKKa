@@ -69,6 +69,15 @@
 }
 
 @media (max-width: 560px) {
+  html:has(.auth-login-page),
+  body:has(.auth-login-page),
+  #root:has(.auth-login-page),
+  .app-shell:has(.auth-login-page) {
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
   .auth-login-page {
     display: flex;
     flex-direction: column;
