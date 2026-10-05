@@ -1,0 +1,20 @@
+.brand-logo-copy {
+  width: max-content;
+}
+
+.brand-logo-copy small {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.workspace .topbar-brand .brand-logo-copy small {
+  display: flex;
+  font-size: .55rem;
+}
+
+@media (max-width: 400px) {
+  .workspace .topbar-brand .brand-logo-copy small {
+    font-size: .48rem;
+  }
+}

@@ -24,7 +24,7 @@ export default function WorkspaceNavigation({
   onOpenInfo: (page: InfoPageKey) => void;
 }) {
   const roleLabel = role === "rider" ? "راكب" : role === "captain" ? "كابتن" : "مدير النظام";
-  const sectionLabel = role === "rider" ? "مساحة الراكب" : role === "captain" ? "مساحة الكابتن" : "إدارة سِكّة";
+  const sectionLabel = role === "rider" ? "مساحة الراكب" : role === "captain" ? "مساحة الكابتن" : "إدارة سِكَّة";
 
   const renderItem = (item: WorkspaceNavItem, mobile = false) => {
     const active = item.key === "notifications" ? notificationsOpen : activeSection === item.key;
