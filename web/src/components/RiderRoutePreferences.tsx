@@ -235,4 +235,3 @@ export default function RiderRoutePreferences({ token, notify, onComplete, onboa
   </details>;
 }
 
-
