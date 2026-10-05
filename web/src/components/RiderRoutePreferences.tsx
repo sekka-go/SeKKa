@@ -190,13 +190,14 @@ export default function RiderRoutePreferences({ token, notify, onComplete, onboa
     }
     if (requestId === frequentAddressRequest.current) setFrequentQuery("");
   };
-  const title = onboarding ? "نحدد طريقك المعتاد" : "نقاطك المفضلة";
-  if (loading) return <section className="surface route-preferences-card"><p role="status">بنحمّل نقاطك المفضلة…</p></section>;
+  const title = onboarding ? "نحدد طريقك المعتاد" : "مشاويرك المفضلة";
+  if (loading) return <section className="surface route-preferences-card"><p role="status">بنحمّل مشاويرك المفضلة…</p></section>;
 
-  return <section className="surface route-preferences-card" aria-labelledby="route-preferences-title">
-    <div className="surface-heading"><div><span className="eyebrow">{onboarding ? "خطوة إعداد الحساب" : "تفضيلات المشوار"}</span><h2 id="route-preferences-title">{title}</h2><p>{onboarding ? "حدد نقطة الركوب والوصول المعتادتين لتظهر اقتراحات أقرب لخطك." : "اضبط تفضيلاتك مرة واحدة، واستخدمها لترتيب الاقتراحات ونتائج البحث."}</p></div><span className="surface-icon" aria-hidden="true">⌖</span></div>
+  return <details className="surface route-preferences-card settings-disclosure route-preferences-disclosure" aria-labelledby="route-preferences-title" open={onboarding}>
+    <summary className="surface-heading"><span className="route-preferences-heading-copy">{onboarding && <span className="eyebrow">خطوة إعداد الحساب</span>}<strong id="route-preferences-title">{title}</strong><small>{onboarding ? "حدد نقطة الركوب والوصول المعتادتين لتظهر اقتراحات أقرب لخطك." : "احفظ طريقك المعتاد، وسنقترح عليك مشاوير تناسبك وتوفّر وقت البحث."}</small></span><span className="route-preferences-heading-actions"><span className="surface-icon" aria-hidden="true">⌖</span><span className="settings-disclosure-chevron" aria-hidden="true">⌄</span></span></summary>
+    <div className="route-preferences-content">
     <details className="settings-disclosure route-point-disclosure" open={onboarding}>
-      <summary><span><strong>نقاطك المفضلة</strong><small>اختر نقطة الركوب أو نقطة الوصول لإضافتها أو تعديلها</small></span><span className="settings-disclosure-chevron" aria-hidden="true">⌄</span></summary>
+      <summary><span><strong>نقطة الركوب والوصول</strong><small>اختر النقطتين اللتين تسلكهما غالبًا</small></span><span className="settings-disclosure-chevron" aria-hidden="true">⌄</span></summary>
       <div className="settings-disclosure-panel">
         <div className="route-point-choices">{(["pickup", "dropoff"] as const).map((kind) => {
           const point = pointFor(kind);
@@ -230,6 +231,8 @@ export default function RiderRoutePreferences({ token, notify, onComplete, onboa
     {mapOpen && <section className="booking-map-panel" aria-label="اختيار النقطة المفضلة من الخريطة"><div className="booking-map-toolbar"><p className="map-instruction">حدد {mapTarget === "pickup" ? "نقطة الركوب المفضلة" : "نقطة الوصول المفضلة"} على الخريطة.</p><button type="button" className="map-close-button" onClick={() => setMapOpen(false)} aria-label="إغلاق الخريطة">×</button></div><div className="booking-map"><MapPicker pickup={route.pickup} dropoff={route.dropoff} mode={mapTarget} restrictToGreaterCairo onOutsidePick={() => setError("اختار نقطة داخل القاهرة الكبرى فقط.")} onPick={(kind, point) => { setPoint(kind, point); setMapOpen(false); }} /></div></section>}
     {error && <p className="inline-error" role="alert">{error}</p>}
     <div className="route-preferences-footer"><small>{onboarding ? "تُحفظ كل نقطة فور اختيارها. احفظ الأيام والمواعيد والأماكن للمتابعة." : "النقاط تحفظ فور اختيارها. احفظ الأيام والمواعيد والأماكن عند تعديلها."}</small><button type="button" className="button button-primary button-small" onClick={() => void save()} disabled={saving || (onboarding && (!hasPoint(route.pickup) || !hasPoint(route.dropoff)))}>{saving ? "جارٍ حفظ التفضيلات…" : onboarding ? "حفظ التفضيلات والمتابعة" : "حفظ التفضيلات"}</button></div>
-  </section>;
+    </div>
+  </details>;
 }
+
 

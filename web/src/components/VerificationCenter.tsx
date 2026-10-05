@@ -36,6 +36,10 @@ export default function VerificationCenter({ session, notify }: { session: Sessi
     : ["pending", "approved"].includes(docs.get(step.type)?.status ?? ""), [docs, snapshot?.phone_verified]);
   const allCoreComplete = steps.length > 0 && steps.every(isStepComplete);
   const completedSteps = steps.filter(isStepComplete).length;
+  const allRequiredDocumentsApproved = mandatory.every((type) => docs.get(type)?.status === "approved");
+  const accountActivated = Boolean(snapshot?.phone_verified && allRequiredDocumentsApproved && (
+    snapshot.role === "rider" || (snapshot.captain_status === "active" && snapshot.verification_status === "approved")
+  ));
   const verificationSignature = useMemo(() => snapshot ? [snapshot.phone_verified, ...snapshot.documents.map((doc) => `${doc.document_type}:${doc.status}:${doc.reviewed_at ?? ""}`)].join("|") : "", [snapshot]);
 
   const refresh = useCallback(async (quiet = false) => {
@@ -89,6 +93,13 @@ export default function VerificationCenter({ session, notify }: { session: Sessi
     const timer = window.setInterval(() => { void refresh(true); }, 5_000);
     return () => window.clearInterval(timer);
   }, [telegramUrl, snapshot?.phone_verified, refresh]);
+  useEffect(() => {
+    if (!allCoreComplete || accountActivated) return;
+    const timer = window.setInterval(() => { void refresh(true); }, 20_000);
+    const onVisibilityChange = () => { if (document.visibilityState === "visible") void refresh(true); };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => { window.clearInterval(timer); document.removeEventListener("visibilitychange", onVisibilityChange); };
+  }, [accountActivated, allCoreComplete, refresh]);
 
   const upload = async (type: VerificationDocumentType, file?: File) => {
     if (!file) return;
@@ -117,8 +128,7 @@ export default function VerificationCenter({ session, notify }: { session: Sessi
   if (!snapshot) return <section id="verification-center" className="surface verification-center"><h2>توثيق الحساب</h2><p role="alert">{error || "تعذر تحميل حالة المستندات."}</p><button className="button button-outline" onClick={() => void refresh()}>إعادة المحاولة</button></section>;
 
   const deferred = snapshot.requirements.captain_deferred;
-  const approvedCount = mandatory.filter((type) => docs.get(type)?.status === "approved").length + Number(snapshot.phone_verified);
-  const progress = Math.round(approvedCount / (mandatory.length + 1) * 100);
+  const progress = Math.round(completedSteps / Math.max(steps.length, 1) * 100);
   const graceDays = snapshot.grace_period_expires_at ? Math.max(0, Math.ceil((Date.parse(snapshot.grace_period_expires_at) - Date.now()) / 86_400_000)) : null;
   const currentStep = steps[Math.min(activeStep, Math.max(steps.length - 1, 0))];
   const beginWizard = () => {
@@ -132,8 +142,8 @@ export default function VerificationCenter({ session, notify }: { session: Sessi
   };
 
   return <section id="verification-center" className="surface verification-center" aria-labelledby="verification-title">
-    <header className="verification-heading"><div><span className="eyebrow">خطوة تفعيل الحساب</span><h2 id="verification-title">تفعيل الحساب</h2></div><button className="button button-outline button-small" onClick={() => void refresh()} disabled={loading}>{loading ? "جارٍ التحديث…" : "تحديث الحالة ↻"}</button></header>
-    <div className="verification-progress" aria-label={`اكتمل ${progress}% من التوثيق`}><div className="verification-progress-copy"><strong>{progress}% مكتمل</strong><span>{approvedCount} من {mandatory.length + 1} متطلبات أساسية تم اعتمادها</span></div><div className="verification-progress-track"><span style={{ width: `${progress}%` }} /></div></div>
+    <header className="verification-heading"><div><span className="eyebrow">خطوة تفعيل الحساب</span><h2 id="verification-title">تفعيل الحساب</h2></div></header>
+    <div className="verification-progress" aria-label={`اكتمل رفع ${progress}% من المتطلبات الأساسية`}><div className="verification-progress-copy"><strong>{progress}% مكتمل</strong><span>{completedSteps} من {steps.length} متطلبات أساسية تم استلامها</span></div><div className="verification-progress-track"><span style={{ width: `${progress}%` }} /></div></div>
     {!wizardStarted && !allCoreComplete && <section className="verification-intro"><span className="verification-intro-icon" aria-hidden="true">✓</span><button className="button button-primary verification-start-button" onClick={beginWizard}>فعّل حسابك الآن</button><p>ارفع المستندات المطلوبة لتبدأ</p></section>}
     {wizardStarted && (!allCoreComplete || !wizardComplete) && currentStep && <section className="verification-wizard" aria-live="polite">
       <div className="verification-wizard-heading"><div><span className="eyebrow">الخطوة {activeStep + 1} من {steps.length}</span><h3>{currentStep.kind === "phone" ? currentStep.label : "ارفع المستند المطلوب"}</h3></div><strong>{completedSteps} من {steps.length} مكتمل</strong></div>
@@ -142,7 +152,7 @@ export default function VerificationCenter({ session, notify }: { session: Sessi
         : <DocumentCard type={currentStep.type} label={currentStep.label} document={docs.get(currentStep.type)} busy={busyDocument === currentStep.type} focused={focusedTarget === currentStep.id} onFile={(file) => void upload(currentStep.type, file)} />}
       <div className="verification-wizard-actions"><button className="button button-outline" onClick={() => setActiveStep((step) => Math.max(0, step - 1))} disabled={activeStep === 0}>السابق</button><button className="button button-primary" onClick={nextStep} disabled={!isStepComplete(currentStep) || busyDocument !== null}>{activeStep === steps.length - 1 ? "إنهاء" : "التالي"}</button></div>
     </section>}
-    {allCoreComplete && (!wizardStarted || wizardComplete) && <section className="verification-finish" role="status"><span className="verification-finish-icon" aria-hidden="true">✓</span><div><h3>مبروك، اكتملت خطوات الانضمام إلى سِكّة</h3><p>وصلت مستنداتك الأساسية. سنخبرك عند انتهاء المراجعة، ويمكنك متابعة حالة التوثيق من هذه الصفحة.</p></div><div className="verification-finish-actions"><button className="button button-outline button-small" onClick={() => { setActiveStep(0); setWizardComplete(false); setWizardStarted(true); }}>إدارة المستندات</button><button className="button button-outline button-small" onClick={() => void refresh()} disabled={loading}>{loading ? "جارٍ التحديث…" : "تحديث الحالة ↻"}</button></div></section>}
+    {allCoreComplete && (!wizardStarted || wizardComplete) && <section className={`verification-finish ${accountActivated ? "is-activated" : "is-review"}`} role="status"><span className="verification-finish-icon" aria-hidden="true">{accountActivated ? "✓" : "…"}</span><div><h3>{accountActivated ? "مبروك، تم تفعيل حسابك في سِكّة" : "اكتمل رفع المستندات"}</h3><p>{accountActivated ? "تم اعتماد متطلبات حسابك. تقدر تبدأ استخدام سِكّة الآن." : "وصلت مستنداتك الأساسية لفريق التوثيق، وحسابك الآن قيد المراجعة. سنحدّث الحالة تلقائيًا ونخبرك فور التفعيل."}</p></div><div className="verification-finish-actions"><button className="button button-outline button-small" onClick={() => { setActiveStep(0); setWizardComplete(false); setWizardStarted(true); }}>إدارة المستندات</button></div></section>}
     {snapshot.role === "captain" && <section className="verification-deferred"><div className="verification-deferred-heading"><div><h3>مستندات خلال 30 يومًا</h3><p>يمكن رفعهما الآن أو قبل انتهاء المهلة.</p></div><strong className={graceDays === 0 ? "is-rejected" : ""}>{graceDays === null ? "تبدأ المهلة عند إنشاء ملف المركبة" : graceDays === 0 ? "انتهت المهلة" : `متبقي ${graceDays} يومًا`}</strong></div><div className="verification-doc-grid">{deferred.map((type) => <DocumentCard key={type} type={type} label={snapshot.requirements.labels[type] ?? type} document={docs.get(type)} busy={busyDocument === type} focused={focusedTarget === type} onFile={(file) => void upload(type, file)} />)}</div></section>}
     {snapshot.captain_status === "suspended_grace_expired" && <p className="verification-warning" role="alert">توقف استقبال الرحلات بعد انتهاء المهلة. ارفع المستندين وتواصل مع الدعم لإعادة التفعيل.</p>}
     <p className="verification-privacy">المستندات خاصة، ولا يطّلع عليها إلا صاحب الحساب وفريق التوثيق المخوّل.</p>
@@ -160,5 +170,6 @@ function DocumentCard({ type, label, document, busy, focused, onFile }: { type: 
     <label id={`verification-upload-${type}`} tabIndex={0} className={`verification-upload button ${focused || status === "rejected" || status === "empty" ? "button-primary" : "button-outline"} button-small`}>{busy ? "جارٍ الرفع…" : status === "rejected" ? "أعد الرفع بعد المراجعة" : document ? "استبدال المستند" : "ارفع هذا المستند"}<input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" disabled={busy} onChange={(event) => { const file = event.currentTarget.files?.[0]; if (file) onFile(file); event.currentTarget.value = ""; }} /></label>
   </article>;
 }
+
 
 
