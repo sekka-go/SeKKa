@@ -73,32 +73,32 @@
   .auth-login-card {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-start;
     gap: 16px;
-    min-height: 100%;
+    min-height: 0;
     padding: 24px;
   }
 
   .auth-page-content:has(.auth-login-card) {
     flex: 1 0 auto;
     display: grid;
-    justify-items: stretch;
-    align-content: stretch;
+    justify-items: center;
+    align-content: safe center;
     min-height: 0;
-    padding-block: 8px 16px;
+    padding-block: 16px;
   }
 
   .auth-login-card .form-stack {
     display: flex;
-    flex: 1 0 auto;
+    flex: 0 0 auto;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 12px;
-    margin-top: 8px;
+    margin-top: 0;
   }
 
   .auth-login-card .auth-switch {
-    margin-top: 8px;
+    margin-top: 0;
   }
 
   .auth-register-card {
@@ -106,7 +106,7 @@
   }
 
   .auth-login-card .auth-tabs {
-    margin-bottom: 8px;
+    margin-bottom: 0;
   }
 }
 
