@@ -37,9 +37,67 @@ export default function RiderRoutePreferences({ token, notify, onComplete, onboa
   const [preferences, setPreferences] = useState(defaultPreferences);
   const [frequentQuery, setFrequentQuery] = useState("");
   const [frequentMapOpen, setFrequentMapOpen] = useState(false);
+  const [editingPoint, setEditingPoint] = useState<MapPickMode | null>(null);
+  const [savingPoint, setSavingPoint] = useState<MapPickMode | null>(null);
   const addressRequests = useRef<Record<MapPickMode, number>>({ pickup: 0, dropoff: 0 });
+  const pointSaveRequests = useRef<Record<MapPickMode, number>>({ pickup: 0, dropoff: 0 });
+  const routeRef = useRef(route);
+  routeRef.current = route;
   const frequentAddressRequest = useRef(0);
   const resolvedFrequentPlaces = useResolvedLocationPoints(token, preferences.frequent_places.map((place) => ({ lat: place.lat, lng: place.lng, label: place.label })));
+
+  const publishSavedPlaces = (kind: MapPickMode, point: MapPoint | null) => {
+    const current = { ...routeRef.current, [kind]: point };
+    routeRef.current = current;
+    const places: SavedPlace[] = [];
+    if (current.pickup && hasPoint(current.pickup)) places.push({ place_type: "home", label: current.pickup.label ?? "", lat: current.pickup.lat, lng: current.pickup.lng });
+    if (current.dropoff && hasPoint(current.dropoff)) places.push({ place_type: "work", label: current.dropoff.label ?? "", lat: current.dropoff.lat, lng: current.dropoff.lng });
+    window.dispatchEvent(new CustomEvent<SavedPlace[]>("sekka:rider-preferences", { detail: places }));
+  };
+
+  const savePoint = async (kind: MapPickMode, point: MapPoint) => {
+    if (!hasPoint(point)) return;
+    const requestId = ++pointSaveRequests.current[kind];
+    setSavingPoint(kind);
+    setError("");
+    try {
+      const placeType = kind === "pickup" ? "home" : "work";
+      const { place } = await api<{ place: SavedPlace }>(`/rider/saved-places/${placeType}`, { method: "PUT", token, body: { label: point.label || query[kind], lat: point.lat, lng: point.lng } });
+      if (requestId !== pointSaveRequests.current[kind]) return;
+      const savedPoint = { ...point, label: place.label };
+      setRoute((current) => ({ ...current, [kind]: savedPoint }));
+      setQuery((current) => ({ ...current, [kind]: place.label }));
+      publishSavedPlaces(kind, savedPoint);
+      setEditingPoint(null);
+      notify(`تم حفظ ${kind === "pickup" ? "نقطة الركوب" : "نقطة الوصول"} المفضلة.`, "success");
+    } catch (cause) {
+      if (requestId === pointSaveRequests.current[kind]) setError(errorText(cause));
+    } finally {
+      if (requestId === pointSaveRequests.current[kind]) setSavingPoint((current) => current === kind ? null : current);
+    }
+  };
+
+  const deletePoint = async (kind: MapPickMode) => {
+    if (savingPoint === kind) return;
+    const requestId = ++pointSaveRequests.current[kind];
+    setSavingPoint(kind);
+    setError("");
+    try {
+      const placeType = kind === "pickup" ? "home" : "work";
+      await api(`/rider/saved-places/${placeType}`, { method: "DELETE", token });
+      if (requestId !== pointSaveRequests.current[kind]) return;
+      addressRequests.current[kind]++;
+      setRoute((current) => ({ ...current, [kind]: null }));
+      setQuery((current) => ({ ...current, [kind]: "" }));
+      setEditingPoint(null);
+      publishSavedPlaces(kind, null);
+      notify(`تم حذف ${kind === "pickup" ? "نقطة الركوب" : "نقطة الوصول"} المفضلة.`, "success");
+    } catch (cause) {
+      if (requestId === pointSaveRequests.current[kind]) setError(errorText(cause));
+    } finally {
+      if (requestId === pointSaveRequests.current[kind]) setSavingPoint((current) => current === kind ? null : current);
+    }
+  };
 
   useEffect(() => {
     let active = true;
@@ -80,22 +138,26 @@ export default function RiderRoutePreferences({ token, notify, onComplete, onboa
     const selected = { ...point, kind, primaryLabel: point.primaryLabel ?? (point.label ? parts.primary : "جارٍ تحديد العنوان…"), secondaryLabel: point.secondaryLabel ?? parts.secondary };
     setRoute((current) => ({ ...current, [kind]: selected }));
     setQuery((current) => ({ ...current, [kind]: selected.label ?? "جارٍ تحديد العنوان…" }));
-    if (point.label || typeof point.lat !== "number" || typeof point.lng !== "number") return;
+    setEditingPoint(null);
+    if (point.label && hasPoint(point)) { void savePoint(kind, selected); return; }
+    if (typeof point.lat !== "number" || typeof point.lng !== "number") return;
     void reverseGeocode(token, point.lat, point.lng).then((address) => {
       if (requestId !== addressRequests.current[kind]) return;
       const resolved = { ...point, kind, ...address, primaryLabel: address.primary, secondaryLabel: address.secondary };
       setRoute((current) => ({ ...current, [kind]: resolved }));
       setQuery((current) => ({ ...current, [kind]: address.label }));
+      void savePoint(kind, resolved);
     }).catch(() => {
       if (requestId !== addressRequests.current[kind]) return;
       const fallback = { ...point, kind, label: "موقع محدد على الخريطة", primaryLabel: "موقع محدد على الخريطة", secondaryLabel: "" };
       setRoute((current) => ({ ...current, [kind]: fallback }));
       setQuery((current) => ({ ...current, [kind]: fallback.label! }));
+      void savePoint(kind, fallback);
     });
   };
 
   const save = async () => {
-    if (!hasPoint(route.pickup) || !hasPoint(route.dropoff)) {
+    if (onboarding && (!hasPoint(route.pickup) || !hasPoint(route.dropoff))) {
       setError("حدد نقطة الركوب المفضلة ونقطة الوصول المفضلة أولًا.");
       return;
     }
@@ -105,12 +167,7 @@ export default function RiderRoutePreferences({ token, notify, onComplete, onboa
     }
     setSaving(true); setError("");
     try {
-      const [pickupPlace, dropoffPlace] = await Promise.all([
-        api<{ place: SavedPlace }>("/rider/saved-places/home", { method: "PUT", token, body: { label: route.pickup.label || query.pickup, lat: route.pickup.lat, lng: route.pickup.lng } }),
-        api<{ place: SavedPlace }>("/rider/saved-places/work", { method: "PUT", token, body: { label: route.dropoff.label || query.dropoff, lat: route.dropoff.lat, lng: route.dropoff.lng } }),
-      ]);
       const savedPreferences = await api<{ preferences: RiderCommuterPreferences }>("/rider/commuter-preferences", { method: "PUT", token, body: preferences });
-      window.dispatchEvent(new CustomEvent<SavedPlace[]>("sekka:rider-preferences", { detail: [pickupPlace.place, dropoffPlace.place] }));
       window.dispatchEvent(new CustomEvent<RiderCommuterPreferences>("sekka:rider-commuter-preferences", { detail: savedPreferences.preferences }));
       if (!onboarding) notify("تم تحديث نقاطك المفضلة.", "success");
       onComplete?.();
@@ -137,20 +194,42 @@ export default function RiderRoutePreferences({ token, notify, onComplete, onboa
   if (loading) return <section className="surface route-preferences-card"><p role="status">بنحمّل نقاطك المفضلة…</p></section>;
 
   return <section className="surface route-preferences-card" aria-labelledby="route-preferences-title">
-    <div className="surface-heading"><div><span className="eyebrow">{onboarding ? "خطوة إعداد الحساب" : "تفضيلات المشوار"}</span><h2 id="route-preferences-title">{title}</h2><p>{onboarding ? "حدد نقطة الركوب والوصول المعتادتين لتظهر اقتراحات أقرب لخطك." : "عدّل النقطتين، وسنستخدمهما لترتيب اقتراحات المشاوير ونتائج البحث."}</p></div><span className="surface-icon" aria-hidden="true">⌖</span></div>
-    <div className="route-preferences-fields">
-      {(["pickup", "dropoff"] as const).map((kind) => <div className="route-preference-field" key={kind}>
-        <LocationSearchField kind={kind} title={kind === "pickup" ? "نقطة الركوب المفضلة" : "نقطة الوصول المفضلة"} value={query[kind]} token={token}
-          onChange={(value) => { addressRequests.current[kind]++; setQuery((current) => ({ ...current, [kind]: value })); setRoute((current) => ({ ...current, [kind]: null })); }}
-          onSelect={(point) => setPoint(kind, point)} onChooseMap={() => { setMapTarget(kind); setMapOpen(true); }} onFocus={() => undefined} pointSelected={hasPoint(pointFor(kind))} />
-      </div>)}
-    </div>
-    <small className="location-search-attribution">بيانات الأماكن © OpenStreetMap contributors</small>
-    <fieldset className="commuter-preferences-schedule"><legend>أيام ومواعيد مشوارك المعتاد <small>تقدر تغيّرها وقت ما تحب</small></legend><div className="commuter-preferences-days">{WEEK_DAYS.map((day, index) => <label key={day} className={preferences.usual_days.includes(index) ? "selected" : ""}><input type="checkbox" checked={preferences.usual_days.includes(index)} onChange={(event) => setPreferences((current) => ({ ...current, usual_days: event.target.checked ? [...current.usual_days, index].sort() : current.usual_days.filter((value) => value !== index) }))} />{day}</label>)}</div><div className="commuter-preferences-times"><label>وقت الذهاب المعتاد<input type="time" value={preferences.usual_departure_time.slice(0, 5)} onChange={(event) => setPreferences((current) => ({ ...current, usual_departure_time: event.target.value }))} /></label><label>وقت العودة المعتاد<input type="time" value={preferences.usual_return_time.slice(0, 5)} onChange={(event) => setPreferences((current) => ({ ...current, usual_return_time: event.target.value }))} /></label></div></fieldset>
-    <div className="commuter-preferences-frequent"><div><strong>أماكن بتتردد عليها</strong><small>اختياري · لحد ٥ أماكن داخل القاهرة الكبرى</small></div><LocationSearchField kind="pickup" title="أضف مكانًا متكررًا" value={frequentQuery} token={token} onChange={(value) => { frequentAddressRequest.current++; setFrequentQuery(value); }} onSelect={addFrequentPlace} onChooseMap={() => setFrequentMapOpen(true)} onFocus={() => undefined} pointSelected={false} /><div className="commuter-preferences-place-list">{resolvedFrequentPlaces.map((place) => <span key={`${place.lat}:${place.lng}`}>{place.label}<button type="button" onClick={() => setPreferences((current) => ({ ...current, frequent_places: current.frequent_places.filter((item) => item.lat !== place.lat || item.lng !== place.lng) }))} aria-label={`حذف ${place.label}`}>×</button></span>)}</div></div>
+    <div className="surface-heading"><div><span className="eyebrow">{onboarding ? "خطوة إعداد الحساب" : "تفضيلات المشوار"}</span><h2 id="route-preferences-title">{title}</h2><p>{onboarding ? "حدد نقطة الركوب والوصول المعتادتين لتظهر اقتراحات أقرب لخطك." : "اضبط تفضيلاتك مرة واحدة، واستخدمها لترتيب الاقتراحات ونتائج البحث."}</p></div><span className="surface-icon" aria-hidden="true">⌖</span></div>
+    <details className="settings-disclosure route-point-disclosure" open={onboarding}>
+      <summary><span><strong>نقاطك المفضلة</strong><small>اختر نقطة الركوب أو نقطة الوصول لإضافتها أو تعديلها</small></span><span className="settings-disclosure-chevron" aria-hidden="true">⌄</span></summary>
+      <div className="settings-disclosure-panel">
+        <div className="route-point-choices">{(["pickup", "dropoff"] as const).map((kind) => {
+          const point = pointFor(kind);
+          const label = kind === "pickup" ? "نقطة الركوب" : "نقطة الوصول";
+          return <div className={`route-point-choice-wrap ${kind === "dropoff" ? "is-dropoff" : ""}`} key={kind}>
+            <button type="button" className="route-point-choice" aria-expanded={editingPoint === kind} disabled={savingPoint === kind} onClick={() => { setEditingPoint((current) => current === kind ? null : kind); setQuery((current) => ({ ...current, [kind]: point?.label ?? "" })); }}>
+              <span className="route-point-choice-mark" aria-hidden="true">{kind === "pickup" ? "١" : "٢"}</span>
+              <span><strong>{label}</strong><small>{hasPoint(point) ? point.primaryLabel || point.label : "اضغط لاختيار النقطة"}</small>{hasPoint(point) && point.secondaryLabel && <small>{point.secondaryLabel}</small>}</span>
+              <span className="route-point-choice-status" aria-hidden="true">{hasPoint(point) ? "✓" : "+"}</span>
+            </button>
+            {hasPoint(point) && <button type="button" className="route-point-delete" aria-label={`حذف ${label} المفضلة`} title={`حذف ${label}`} disabled={savingPoint === kind} onClick={() => void deletePoint(kind)}>{savingPoint === kind ? "…" : "×"}</button>}
+          </div>;
+        })}</div>
+        {editingPoint && <div className="route-point-editor"><LocationSearchField kind={editingPoint} title={editingPoint === "pickup" ? "نقطة الركوب المفضلة" : "نقطة الوصول المفضلة"} value={query[editingPoint]} token={token}
+          onChange={(value) => { addressRequests.current[editingPoint]++; setQuery((current) => ({ ...current, [editingPoint]: value })); }}
+          onSelect={(point) => { const kind = editingPoint; setPoint(kind, point); }} onChooseMap={() => { setMapTarget(editingPoint); setMapOpen(true); }} onFocus={() => undefined} pointSelected={hasPoint(pointFor(editingPoint))} />
+          {savingPoint === editingPoint && <small role="status">جارٍ حفظ النقطة…</small>}
+        </div>}
+        <small className="location-search-attribution">بيانات الأماكن © OpenStreetMap contributors</small>
+      </div>
+    </details>
+    <details className="settings-disclosure commuter-disclosure" open={onboarding}>
+      <summary><span><strong>أيام ومواعيد مشوارك المعتاد</strong><small>تقدر تغيّرها وقت ما تحب</small></span><span className="settings-disclosure-chevron" aria-hidden="true">⌄</span></summary>
+      <fieldset className="commuter-preferences-schedule"><legend className="visually-hidden">أيام ومواعيد مشوارك المعتاد</legend><div className="commuter-preferences-days">{WEEK_DAYS.map((day, index) => <label key={day} className={preferences.usual_days.includes(index) ? "selected" : ""}><input type="checkbox" checked={preferences.usual_days.includes(index)} onChange={(event) => setPreferences((current) => ({ ...current, usual_days: event.target.checked ? [...current.usual_days, index].sort() : current.usual_days.filter((value) => value !== index) }))} />{day}</label>)}</div><div className="commuter-preferences-times"><label>وقت الذهاب المعتاد<input type="time" value={preferences.usual_departure_time.slice(0, 5)} onChange={(event) => setPreferences((current) => ({ ...current, usual_departure_time: event.target.value }))} /></label><label>وقت العودة المعتاد<input type="time" value={preferences.usual_return_time.slice(0, 5)} onChange={(event) => setPreferences((current) => ({ ...current, usual_return_time: event.target.value }))} /></label></div></fieldset>
+    </details>
+    <details className="settings-disclosure frequent-disclosure" open={onboarding}>
+      <summary><span><strong>أماكن بتتردد عليها</strong><small>اختياري · لحد ٥ أماكن داخل القاهرة الكبرى</small></span><span className="settings-disclosure-chevron" aria-hidden="true">⌄</span></summary>
+      <div className="commuter-preferences-frequent"><LocationSearchField kind="pickup" title="أضف مكانًا متكررًا" value={frequentQuery} token={token} onChange={(value) => { frequentAddressRequest.current++; setFrequentQuery(value); }} onSelect={addFrequentPlace} onChooseMap={() => setFrequentMapOpen(true)} onFocus={() => undefined} pointSelected={false} /><div className="commuter-preferences-place-list">{resolvedFrequentPlaces.map((place) => <span key={`${place.lat}:${place.lng}`}>{place.label}<button type="button" onClick={() => setPreferences((current) => ({ ...current, frequent_places: current.frequent_places.filter((item) => item.lat !== place.lat || item.lng !== place.lng) }))} aria-label={`حذف ${place.label}`}>×</button></span>)}</div></div>
+    </details>
     {frequentMapOpen && <section className="booking-map-panel" aria-label="إضافة مكان متكرر من الخريطة"><div className="booking-map-toolbar"><p className="map-instruction">حدد مكانًا متكررًا داخل القاهرة الكبرى.</p><button type="button" className="map-close-button" onClick={() => setFrequentMapOpen(false)} aria-label="إغلاق الخريطة">×</button></div><div className="booking-map"><MapPicker pickup={null} dropoff={null} mode="pickup" restrictToGreaterCairo onOutsidePick={() => setError("اختار نقطة داخل القاهرة الكبرى فقط.")} onPick={(_kind, point) => { addFrequentPlace(point); setFrequentMapOpen(false); }} /></div></section>}
     {mapOpen && <section className="booking-map-panel" aria-label="اختيار النقطة المفضلة من الخريطة"><div className="booking-map-toolbar"><p className="map-instruction">حدد {mapTarget === "pickup" ? "نقطة الركوب المفضلة" : "نقطة الوصول المفضلة"} على الخريطة.</p><button type="button" className="map-close-button" onClick={() => setMapOpen(false)} aria-label="إغلاق الخريطة">×</button></div><div className="booking-map"><MapPicker pickup={route.pickup} dropoff={route.dropoff} mode={mapTarget} restrictToGreaterCairo onOutsidePick={() => setError("اختار نقطة داخل القاهرة الكبرى فقط.")} onPick={(kind, point) => { setPoint(kind, point); setMapOpen(false); }} /></div></section>}
     {error && <p className="inline-error" role="alert">{error}</p>}
-    <div className="route-preferences-footer"><small>تقدر تعدّل النقطتين من صفحة الحساب في أي وقت.</small><button type="button" className="button button-primary button-small" onClick={() => void save()} disabled={saving || !hasPoint(route.pickup) || !hasPoint(route.dropoff)}>{saving ? "جارٍ حفظ النقطتين…" : onboarding ? "حفظ النقطتين والمتابعة" : "حفظ النقاط المفضلة"}</button></div>
+    <div className="route-preferences-footer"><small>{onboarding ? "تُحفظ كل نقطة فور اختيارها. احفظ الأيام والمواعيد والأماكن للمتابعة." : "النقاط تحفظ فور اختيارها. احفظ الأيام والمواعيد والأماكن عند تعديلها."}</small><button type="button" className="button button-primary button-small" onClick={() => void save()} disabled={saving || (onboarding && (!hasPoint(route.pickup) || !hasPoint(route.dropoff)))}>{saving ? "جارٍ حفظ التفضيلات…" : onboarding ? "حفظ التفضيلات والمتابعة" : "حفظ التفضيلات"}</button></div>
   </section>;
 }
+
