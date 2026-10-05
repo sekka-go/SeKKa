@@ -1,12 +1,13 @@
 import AppIcon, { type AppIconName } from "./AppIcon";
 import type { NavKey } from "../types";
 import type { Role } from "../api";
+import type { InfoPageKey } from "./InfoPages";
 
 export type WorkspaceNavItem = { key: NavKey; label: string; icon: AppIconName };
 
 export default function WorkspaceNavigation({
   items, activeSection, notificationsOpen, unreadCount, role, fullName, open,
-  onSelect, onClose, onAccount, onInvite, onSignOut,
+  onSelect, onClose, onAccount, onInvite, onSignOut, onOpenInfo,
 }: {
   items: WorkspaceNavItem[];
   activeSection: NavKey;
@@ -20,6 +21,7 @@ export default function WorkspaceNavigation({
   onAccount: () => void;
   onInvite: () => void;
   onSignOut: () => void;
+  onOpenInfo: (page: InfoPageKey) => void;
 }) {
   const roleLabel = role === "rider" ? "راكب" : role === "captain" ? "كابتن" : "مدير النظام";
   const sectionLabel = role === "rider" ? "مساحة الراكب" : role === "captain" ? "مساحة الكابتن" : "إدارة سِكّة";
@@ -50,6 +52,11 @@ export default function WorkspaceNavigation({
       <div className="sidebar-utilities">
         <a className="nav-item" href="mailto:sekkago.app@gmail.com"><span className="nav-icon"><AppIcon name="support" size={19} /></span><span className="nav-label">خدمة العملاء والإدارة</span></a>
         <button type="button" className="nav-item" onClick={onInvite}><span className="nav-icon"><AppIcon name="users" size={19} /></span><span className="nav-label">دعوة الأصدقاء</span></button>
+        <div className="sidebar-info-links" aria-label="معلومات ومساعدة">
+          <button type="button" onClick={() => onOpenInfo("terms")}>الشروط والأحكام</button>
+          <button type="button" onClick={() => onOpenInfo("privacy")}>سياسة الخصوصية</button>
+          <button type="button" onClick={() => onOpenInfo("faq")}>الأسئلة الشائعة</button>
+        </div>
       </div>
       <div className="sidebar-spacer" />
       <button type="button" className="sidebar-profile" onClick={onAccount}>

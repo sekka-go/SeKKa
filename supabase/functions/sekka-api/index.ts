@@ -213,6 +213,18 @@ async function reverseGreaterCairo(lat: number, lng: number): Promise<LocationAd
 function hex(bytes: Uint8Array) { return [...bytes].map((v) => v.toString(16).padStart(2, "0")).join(""); }
 function bytesFromHex(value: string) { return new Uint8Array(value.match(/.{2}/g)?.map((b) => Number.parseInt(b, 16)) ?? []); }
 async function digest(value: string) { return hex(new Uint8Array(await crypto.subtle.digest("SHA-256", encoder.encode(value)))); }
+async function keyedDigest(value: string) {
+  const secret = Deno.env.get("TELEGRAM_WEBHOOK_SECRET") ?? "";
+  if (secret.length < 32) throw new ApiFailure("خدمة استعادة كلمة السر غير مهيأة بعد.", 503);
+  const key = await crypto.subtle.importKey("raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  return hex(new Uint8Array(await crypto.subtle.sign("HMAC", key, encoder.encode(value))));
+}
+function phoneCandidates(value: string) {
+  const normalized = phoneE164(value);
+  if (!normalized) return [value.trim()];
+  const digits = normalized.replace(/\D/g, "");
+  return [...new Set([normalized, digits, digits.startsWith("20") ? `0${digits.slice(2)}` : digits])];
+}
 async function hashPassword(password: string) {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const key = await crypto.subtle.importKey("raw", encoder.encode(password), "PBKDF2", false, ["deriveBits"]);
@@ -276,6 +288,51 @@ async function handleTelegramVerificationWebhook(body: Json, origin: string) {
   if (!message || !Number.isInteger(message.from?.id) || !Number.isInteger(message.chat?.id)) return reply({ ok: true }, 200, origin);
   const chatId = Number(message.chat.id), telegramUserId = Number(message.from.id);
   const text = typeof message.text === "string" ? message.text : "";
+  const resetStart = /^\/start\s+reset_([A-Za-z0-9_-]{20,32})$/.exec(text);
+  if (resetStart) {
+    const tokenHash = await digest(resetStart[1]);
+    const { data: challenge, error: challengeError } = await db!.from("telegram_password_reset_challenges").select("token_hash,status,expires_at").eq("token_hash", tokenHash).maybeSingle();
+    if (challengeError) throw challengeError;
+    if (!challenge || challenge.status !== "waiting_start" || Date.parse(challenge.expires_at) <= Date.now()) {
+      await telegramRequest("sendMessage", { chat_id: chatId, text: "انتهت صلاحية رابط الاستعادة. ارجع إلى سِكّة واطلب رابطًا جديدًا." });
+      return reply({ ok: true }, 200, origin);
+    }
+    const { error: updateError } = await db!.from("telegram_password_reset_challenges").update({ telegram_user_id: telegramUserId, status: "waiting_contact" }).eq("token_hash", tokenHash).eq("status", "waiting_start");
+    if (updateError) throw updateError;
+    await telegramRequest("sendMessage", {
+      chat_id: chatId,
+      text: "للتأكد من ملكية حسابك، شارك رقم هاتفك المسجل في سِكّة باستخدام الزر. لن نطلب منك كلمة السر الحالية.",
+      reply_markup: { keyboard: [[{ text: "مشاركة رقم هاتفي", request_contact: true }]], resize_keyboard: true, one_time_keyboard: true },
+    });
+    return reply({ ok: true }, 200, origin);
+  }
+  if (message.contact && Number(message.contact.user_id) === telegramUserId) {
+    const { data: resetChallenges, error: resetError } = await db!.from("telegram_password_reset_challenges").select("token_hash,phone_hash,attempts").eq("telegram_user_id", telegramUserId).eq("status", "waiting_contact").gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false }).limit(1);
+    if (resetError) throw resetError;
+    const resetChallenge = resetChallenges?.[0];
+    if (resetChallenge) {
+      const contact = phoneE164(String(message.contact.phone_number ?? ""));
+      if (!contact || await keyedDigest(contact) !== resetChallenge.phone_hash) {
+        await telegramRequest("sendMessage", { chat_id: chatId, text: "رقم الهاتف لا يطابق الرقم المستخدم في الطلب. أرسل رقمك المسجل أو ابدأ طلبًا جديدًا.", reply_markup: { remove_keyboard: true } });
+        return reply({ ok: true }, 200, origin);
+      }
+      const candidates = phoneCandidates(contact);
+      const { data: account, error: accountError } = await db!.from("users").select("id,phone_number").in("phone_number", candidates).maybeSingle();
+      if (accountError) throw accountError;
+      if (!account) {
+        await db!.from("telegram_password_reset_challenges").update({ status: "used", used_at: new Date().toISOString() }).eq("token_hash", resetChallenge.token_hash).eq("status", "waiting_contact");
+        await telegramRequest("sendMessage", { chat_id: chatId, text: "إذا كان الرقم مرتبطًا بحساب في سِكّة، فستصلك خطوات الاستعادة. يمكنك الرجوع إلى التطبيق.", reply_markup: { remove_keyboard: true } });
+        return reply({ ok: true }, 200, origin);
+      }
+      const code = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1_000_000).padStart(6, "0");
+      const codeHash = await keyedDigest(`${resetChallenge.phone_hash}:${code}`);
+      const expiresAt = new Date(Date.now() + 15 * 60_000).toISOString();
+      const { error: updateError } = await db!.from("telegram_password_reset_challenges").update({ status: "code_sent", code_hash: codeHash, attempts: 0, expires_at: expiresAt }).eq("token_hash", resetChallenge.token_hash).eq("status", "waiting_contact");
+      if (updateError) throw updateError;
+      await telegramRequest("sendMessage", { chat_id: chatId, text: `رمز تغيير كلمة السر في سِكّة: ${code}\nصالح لمدة ١٥ دقيقة. لا تشاركه مع أي شخص.` , reply_markup: { remove_keyboard: true } });
+      return reply({ ok: true }, 200, origin);
+    }
+  }
   const start = /^\/start\s+verify_([A-Za-z0-9_-]{20,32})$/.exec(text);
   if (start) {
     const tokenHash = await digest(start[1]);
@@ -795,6 +852,51 @@ Deno.serve(async (req: Request) => {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
       return error("اختار العنوان من نتائج البحث الظاهرة.", 410, origin);
     }
+    if (req.method === "POST" && path === "/auth/password-reset/telegram") {
+      const suppliedPhone = typeof body.phone_number === "string" ? body.phone_number.trim() : "";
+      const normalizedPhone = phoneE164(suppliedPhone);
+      if (!normalizedPhone) return error("اكتب رقم هاتف صحيحًا.", 400, origin);
+      const username = (Deno.env.get("TELEGRAM_BOT_USERNAME") ?? "").replace(/^@/, "");
+      if (!/^[A-Za-z0-9_]{5,32}$/.test(username)) return error("خدمة استعادة كلمة السر غير مهيأة بعد.", 503, origin);
+      const phoneHash = await keyedDigest(normalizedPhone);
+      const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
+      if (!await takeLimit(`password-reset:ip:${ip}`, 5, 900) || !await takeLimit(`password-reset:phone:${phoneHash}`, 3, 3600)) return error("وصلت للحد المؤقت لطلبات الاستعادة. حاول مرة أخرى بعد قليل.", 429, origin);
+      await db.from("telegram_password_reset_challenges").update({ status: "expired" }).eq("phone_hash", phoneHash).in("status", ["waiting_start", "waiting_contact", "code_sent"]);
+      const token = randomUrlToken(24);
+      const { error: insertError } = await db.from("telegram_password_reset_challenges").insert({ token_hash: await digest(token), phone_hash: phoneHash });
+      if (insertError) throw insertError;
+      return reply({ reset_url: `https://t.me/${username}?start=reset_${token}` }, 200, origin);
+    }
+    if (req.method === "POST" && path === "/auth/password-reset/complete") {
+      const phone = typeof body.phone_number === "string" ? phoneE164(body.phone_number) : null;
+      const code = typeof body.code === "string" ? body.code.trim() : "";
+      const nextPassword = typeof body.new_password === "string" ? body.new_password : "";
+      if (!phone || !/^\d{6}$/.test(code) || nextPassword.length < 8) return error("أدخل رقم الهاتف والرمز المكوّن من ٦ أرقام وكلمة سر من ٨ أحرف على الأقل.", 400, origin);
+      const phoneHash = await keyedDigest(phone);
+      const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
+      if (!await takeLimit(`password-reset-complete:ip:${ip}`, 10, 900) || !await takeLimit(`password-reset-complete:phone:${phoneHash}`, 5, 900)) return error("محاولات كثيرة. ابدأ استعادة جديدة بعد قليل.", 429, origin);
+      const { data: challenges, error: queryError } = await db.from("telegram_password_reset_challenges").select("token_hash,code_hash,attempts").eq("phone_hash", phoneHash).eq("status", "code_sent").gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false }).limit(1);
+      if (queryError) throw queryError;
+      const challenge = challenges?.[0];
+      if (!challenge) return error("رمز الاستعادة غير صالح أو انتهت صلاحيته. ابدأ طلبًا جديدًا.", 400, origin);
+      const suppliedHash = await keyedDigest(`${phoneHash}:${code}`);
+      if (suppliedHash !== challenge.code_hash) {
+        const attempts = Number(challenge.attempts ?? 0) + 1;
+        await db.from("telegram_password_reset_challenges").update({ attempts, status: attempts >= 5 ? "locked" : "code_sent" }).eq("token_hash", challenge.token_hash).eq("attempts", challenge.attempts).eq("status", "code_sent");
+        return error(attempts >= 5 ? "تم إيقاف هذا الرمز. ابدأ طلب استعادة جديدًا." : "رمز التحقق غير صحيح.", 400, origin);
+      }
+      const { data: consumed, error: consumeError } = await db.from("telegram_password_reset_challenges").update({ status: "used", used_at: new Date().toISOString() }).eq("token_hash", challenge.token_hash).eq("code_hash", challenge.code_hash).eq("attempts", challenge.attempts).eq("status", "code_sent").select("token_hash").maybeSingle();
+      if (consumeError) throw consumeError;
+      if (!consumed) return error("تم استخدام هذا الرمز بالفعل. ابدأ طلبًا جديدًا.", 409, origin);
+      const { data: account, error: accountError } = await db.from("users").select("id").in("phone_number", phoneCandidates(phone)).maybeSingle();
+      if (accountError) throw accountError;
+      if (!account) return error("تعذر إكمال الاستعادة. ابدأ طلبًا جديدًا.", 400, origin);
+      const { error: updateError } = await db.from("users").update({ password_hash: await hashPassword(nextPassword), password_changed_at: new Date().toISOString() }).eq("id", account.id);
+      if (updateError) throw updateError;
+      const { error: sessionsError } = await db.from("sessions").update({ revoked_at: new Date().toISOString() }).eq("user_id", account.id).is("revoked_at", null);
+      if (sessionsError) throw sessionsError;
+      return reply({ success: true }, 200, origin);
+    }
     if (req.method === "POST" && path === "/auth/register") {
       const { full_name, phone_number, password, role } = body;
       const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
@@ -805,9 +907,10 @@ Deno.serve(async (req: Request) => {
       if (!clean(full_name) || !clean(phone_number) || !clean(password)) return error("لازم تكتب الاسم ورقم الهاتف وكلمة السر.", 400, origin);
       if (!["rider", "captain"].includes(String(role))) return error("نوع الحساب المطلوب مش متاح.", 400, origin);
       if (String(password).length < 8) return error("كلمة السر لازم تكون ٨ أحرف على الأقل.", 400, origin);
+      if (body.accepted_terms !== true || body.terms_version !== "2026-10-05" || body.privacy_version !== "2026-10-05") return error("اقرأ الشروط وسياسة الخصوصية ووافق عليهما قبل إنشاء الحساب.", 400, origin);
       const { data: existing } = await db.from("users").select("id").eq("phone_number", String(phone_number).trim()).maybeSingle();
       if (existing) return error("الرقم ده مسجّل قبل كده.", 409, origin);
-      const { data, error: e } = await db.from("users").insert({ full_name: String(full_name).trim(), phone_number: String(phone_number).trim(), password_hash: await hashPassword(String(password)), role }).select("id,full_name,phone_number,role,verified_at,created_at").single();
+      const { data, error: e } = await db.from("users").insert({ full_name: String(full_name).trim(), phone_number: String(phone_number).trim(), password_hash: await hashPassword(String(password)), role, terms_accepted_at: new Date().toISOString(), terms_version: "2026-10-05", privacy_version: "2026-10-05" }).select("id,full_name,phone_number,role,verified_at,created_at").single();
       if (e) return error("تعذر إنشاء الحساب؛ تأكد أن رقم الهاتف غير مسجل.", 409, origin);
       return reply({ user: data }, 201, origin);
     }
