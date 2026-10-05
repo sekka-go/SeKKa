@@ -38,7 +38,7 @@ export default function App() {
   };
 
   return <div className="app-shell" dir="rtl">
-    {toast && <div className={`toast toast-${toast.tone}`} role="status" aria-live="polite">{toast.text}<button onClick={() => { setToast(null); if (toastTimer.current !== null) window.clearTimeout(toastTimer.current); toastTimer.current = null; }} aria-label="إغلاق">×</button></div>}
+    {toast && <div className={`toast toast-${toast.tone}`} role={toast.tone === "error" ? "alert" : "status"} aria-live={toast.tone === "error" ? "assertive" : "polite"}><span className="toast-icon" aria-hidden="true">{toast.tone === "success" ? "✓" : toast.tone === "error" ? "!" : "i"}</span><span className="toast-message">{toast.text}</span><button onClick={() => { setToast(null); if (toastTimer.current !== null) window.clearTimeout(toastTimer.current); toastTimer.current = null; }} aria-label="إغلاق">×</button></div>}
     {session ? <Workspace session={session} onSignOut={signOut} notify={notify} /> : window.location.pathname === "/login" || window.location.pathname === "/register" ? <AuthScreen onSignedIn={onSignedIn} notify={notify} /> : <LandingScreen />}
   </div>;
 }

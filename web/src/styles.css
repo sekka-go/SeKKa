@@ -1637,18 +1637,31 @@ button { line-height: 1.45; }
 @keyframes brand-dialog-enter { from { opacity: 0; transform: translateY(.65rem) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
 /* Toasts sit above the mobile navigation and use the Sekka surface palette. */
-.app-shell > .toast { inset: auto 1rem 1.25rem auto; display: flex; align-items: center; gap: .55rem; width: max-content; max-width: min(28rem, calc(100vw - 2rem)); padding: .8rem 1rem; color: var(--ink); background: rgba(36, 32, 20, .97); border: 1px solid rgba(255, 210, 31, .42); border-radius: 1.1rem; box-shadow: 0 1rem 3rem rgba(0, 0, 0, .4); line-height: 1.45; animation: sekka-toast-enter .2s ease-out both; }
-.app-shell > .toast button { flex: 0 0 2rem; width: 2rem; height: 2rem; margin: 0; color: var(--yellow); background: rgba(255, 210, 31, .09); border: 1px solid rgba(255, 210, 31, .22); border-radius: 50%; }
-.app-shell > .toast.toast-error { border-color: rgba(255, 111, 97, .62); }
-.app-shell > .toast.toast-success { border-color: rgba(158, 232, 230, .55); }
+.app-shell > .toast { z-index: 1500; inset: auto 1rem 1.25rem auto; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .7rem; width: min(32rem, calc(100vw - 2rem)); max-width: none; padding: .8rem 1rem; color: var(--ink); background: rgba(24, 37, 59, .98); border: 1px solid rgba(255, 210, 31, .42); border-radius: 1rem; box-shadow: 0 1rem 3rem rgba(0, 0, 0, .42); line-height: 1.55; overflow-wrap: anywhere; animation: sekka-toast-enter .2s ease-out both; }
+.app-shell > .toast .toast-message { min-width: 0; }
+.app-shell > .toast .toast-icon { display: grid; width: 1.8rem; height: 1.8rem; place-items: center; color: #171c29; background: var(--yellow); border-radius: 50%; font-weight: 900; }
+.app-shell > .toast button { flex: 0 0 2rem; width: 2rem; height: 2rem; margin: 0; color: var(--yellow); background: rgba(255, 210, 31, .09); border: 1px solid rgba(255, 210, 31, .22); border-radius: 50%; font-size: 1.2rem; }
+.app-shell > .toast.toast-error { border-color: rgba(255, 111, 97, .72); }
+.app-shell > .toast.toast-error .toast-icon { color: #fff; background: #ce5b50; }
+.app-shell > .toast.toast-success { border-color: rgba(93, 209, 199, .65); }
+.app-shell > .toast.toast-success .toast-icon { background: var(--cyan); }
 @keyframes sekka-toast-enter { from { opacity: 0; transform: translateY(.7rem); } to { opacity: 1; transform: translateY(0); } }
 @media (max-width: 560px) {
-  .app-shell > .toast { inset-inline: 1rem; bottom: calc(env(safe-area-inset-bottom) + 1rem); width: auto; max-width: none; }
+  .app-shell > .toast { inset-inline: 1rem; bottom: calc(env(safe-area-inset-bottom) + 5.5rem); width: auto; max-width: none; }
   .workspace .group-management-actions { gap: .5rem; }
   .workspace .group-management-actions .button { font-size: .85rem; }
 }
 
 .workspace .booking-step { font: inherit; color: inherit; background: transparent; border: 0; cursor: pointer; }
+.time-picker-field { display: grid; min-width: 0; gap: .45rem; color: var(--muted); font-size: .9rem; }
+.time-picker-control { display: flex; min-width: 0; min-height: 3rem; align-items: center; justify-content: center; gap: .35rem; padding: .35rem .55rem; color: var(--ink); background: var(--field, #101b2d); border: 1px solid var(--line); border-radius: .8rem; }
+.time-picker-control select { min-width: 0; padding: .35rem .25rem; color: var(--ink); background: transparent; border: 0; outline: 0; text-align: center; font: inherit; font-variant-numeric: tabular-nums; }
+.time-picker-control select:focus-visible { outline: 2px solid var(--yellow); outline-offset: 1px; border-radius: .25rem; }
+.time-picker-control select:first-child, .time-picker-control select:nth-of-type(2) { width: 3.25rem; }
+.time-picker-control select:last-child { width: 2.7rem; color: var(--yellow); font-weight: 800; }
+.time-picker-control option { color: var(--ink); background: #18253b; }
+.workspace .commuter-preferences-times { align-items: start; }
+.workspace .commuter-preferences-times .time-picker-control { width: 100%; box-sizing: border-box; }
 .workspace .booking-step:focus-visible { outline: 2px solid var(--yellow); outline-offset: 3px; border-radius: .5rem; }
 .workspace .booking-stepper { width: 100%; min-width: 0; box-sizing: border-box; direction: rtl; justify-content: space-between; flex-wrap: nowrap; gap: clamp(.25rem, 1.2vw, .7rem); padding-inline: clamp(.45rem, 2vw, .85rem); }
 .workspace .booking-stepper > i { flex: 1 1 .35rem; min-width: .25rem; }

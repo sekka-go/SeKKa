@@ -6,6 +6,7 @@ import { errorText } from "../lib/formatters";
 import { addressParts, reverseGeocode, safeAddressLabel } from "../lib/location-address";
 import { useResolvedLocationPoints } from "../lib/use-location-addresses";
 import LocationSearchField from "./LocationSearchField";
+import TimePicker12h from "./TimePicker12h";
 import type { Toast } from "../types";
 
 type SavedRoute = { pickup: MapPoint | null; dropoff: MapPoint | null };
@@ -221,7 +222,7 @@ export default function RiderRoutePreferences({ token, notify, onComplete, onboa
     </details>
     <details className="settings-disclosure commuter-disclosure" open={onboarding}>
       <summary><span><strong>أيام ومواعيد مشوارك المعتاد</strong><small>تقدر تغيّرها وقت ما تحب</small></span><span className="settings-disclosure-chevron" aria-hidden="true">⌄</span></summary>
-      <fieldset className="commuter-preferences-schedule"><legend className="visually-hidden">أيام ومواعيد مشوارك المعتاد</legend><div className="commuter-preferences-days">{WEEK_DAYS.map((day, index) => <label key={day} className={preferences.usual_days.includes(index) ? "selected" : ""}><input type="checkbox" checked={preferences.usual_days.includes(index)} onChange={(event) => setPreferences((current) => ({ ...current, usual_days: event.target.checked ? [...current.usual_days, index].sort() : current.usual_days.filter((value) => value !== index) }))} />{day}</label>)}</div><div className="commuter-preferences-times"><label>وقت الذهاب المعتاد<input type="time" value={preferences.usual_departure_time.slice(0, 5)} onChange={(event) => setPreferences((current) => ({ ...current, usual_departure_time: event.target.value }))} /></label><label>وقت العودة المعتاد<input type="time" value={preferences.usual_return_time.slice(0, 5)} onChange={(event) => setPreferences((current) => ({ ...current, usual_return_time: event.target.value }))} /></label></div></fieldset>
+      <fieldset className="commuter-preferences-schedule"><legend className="visually-hidden">أيام ومواعيد مشوارك المعتاد</legend><div className="commuter-preferences-days">{WEEK_DAYS.map((day, index) => <label key={day} className={preferences.usual_days.includes(index) ? "selected" : ""}><input type="checkbox" checked={preferences.usual_days.includes(index)} onChange={(event) => setPreferences((current) => ({ ...current, usual_days: event.target.checked ? [...current.usual_days, index].sort() : current.usual_days.filter((value) => value !== index) }))} />{day}</label>)}</div><div className="commuter-preferences-times"><TimePicker12h label="وقت الذهاب المعتاد" value={preferences.usual_departure_time.slice(0, 5)} onChange={(value) => setPreferences((current) => ({ ...current, usual_departure_time: value }))} /><TimePicker12h label="وقت العودة المعتاد" value={preferences.usual_return_time.slice(0, 5)} onChange={(value) => setPreferences((current) => ({ ...current, usual_return_time: value }))} /></div></fieldset>
     </details>
     <details className="settings-disclosure frequent-disclosure" open={onboarding}>
       <summary><span><strong>أماكن بتتردد عليها</strong><small>اختياري · لحد ٥ أماكن داخل القاهرة الكبرى</small></span><span className="settings-disclosure-chevron" aria-hidden="true">⌄</span></summary>
