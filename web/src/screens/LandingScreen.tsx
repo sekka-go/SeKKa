@@ -15,7 +15,7 @@ export default function LandingScreen() {
           <div className="landing-hero-actions">
             <a className="button landing-primary-cta" href="/login">ابدأ رحلتك الآن <span aria-hidden="true">←</span></a>
           </div>
-          <div className="landing-trust"><span className="landing-trust-dot" />متاحة في القاهرة والجيزة</div>
+          <div className="landing-trust"><span className="landing-trust-dot" />متاح في القاهرة والجيزة</div>
         </div>
 
         <div className="landing-route-card" aria-hidden="true">

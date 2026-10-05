@@ -112,7 +112,7 @@ export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (sessio
   </main>;
 
   return <main className={`auth-page ${mode === "login" ? "auth-login-page" : "auth-register-page"}`}>
-    {mode === "login" && <AuthJourneyBackdrop />}
+    <AuthJourneyBackdrop />
     <header className="auth-page-header"><a href="/" aria-label="سِكّة، الرئيسية"><BrandLogo /></a></header>
     <section className="auth-page-content">
       <div className={`auth-card auth-page-card ${mode === "login" ? "auth-login-card" : "auth-register-card"}`}>
@@ -125,7 +125,7 @@ export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (sessio
 
         {forgotStep === "closed" ? <form onSubmit={submit} className="form-stack">
           {mode === "register" && <>
-            <label>الاسم بالكامل<input autoComplete="name" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="مثال: ياسمين أحمد" required /></label>
+            <label>الاسم بالكامل<input autoComplete="name" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="مثال: أحمد محمد أحمد" required /></label>
             <fieldset className="role-picker"><legend>هتستخدم سِكّة بصفتك؟</legend><button type="button" aria-pressed={role === "rider"} className={role === "rider" ? "selected" : ""} onClick={() => setRole("rider")}><span><AppIcon name="user" size={21} /></span><strong>راكب</strong><small>أدور على مشوار مشترك</small></button><button type="button" aria-pressed={role === "captain"} className={role === "captain" ? "selected" : ""} onClick={() => setRole("captain")}><span><AppIcon name="car" size={21} /></span><strong>كابتن</strong><small>أوصل الركاب لوجهتهم</small></button></fieldset>
           </>}
           <label>رقم الهاتف<input autoComplete="tel" type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="01xxxxxxxxx" required /></label>

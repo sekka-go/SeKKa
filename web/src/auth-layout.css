@@ -311,9 +311,15 @@
   isolation: isolate;
   overflow: clip;
 }
+.auth-register-page {
+  position: relative;
+  isolation: isolate;
+}
 
 .auth-login-page > .auth-page-header,
-.auth-login-page > .auth-page-content {
+.auth-login-page > .auth-page-content,
+.auth-register-page > .auth-page-header,
+.auth-register-page > .auth-page-content {
   position: relative;
   z-index: 1;
 }

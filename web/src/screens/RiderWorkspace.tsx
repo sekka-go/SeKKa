@@ -24,6 +24,7 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
   const [categories, setCategories] = useState<Category[]>([]);
   const [savedPlaces, setSavedPlaces] = useState<SavedPlace[]>([]);
   const [groups, setGroups] = useState<GroupView[]>([]);
+  const visibleGroups = groups.filter(({ group }) => !["cancelled", "canceled"].includes(group.status.trim().toLowerCase()));
   const [loading, setLoading] = useState(true);
   const [initialLoadError, setInitialLoadError] = useState("");
   const pendingNotificationEdit = useRef<number | null>(null);
@@ -52,7 +53,7 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
   const mapAddressRequests = useRef<Record<MapPickMode, number>>({ pickup: 0, dropoff: 0 });
   const editAddressRequest = useRef(0);
   const selectedCategory = categories.find((item) => item.id === categoryId) ?? null;
-  const selected = groups.find((view) => view.group.id === selectedGroup) ?? null;
+  const selected = visibleGroups.find((view) => view.group.id === selectedGroup) ?? null;
   const priceLabel = (type: "daily" | "weekly" | "monthly", selectedCategoryId = categoryId) => {
     const selectedQuote = selectedCategoryId ? priceQuotes?.[selectedCategoryId] : null;
     if (selectedQuote) return money(selectedQuote[type]);
@@ -463,21 +464,21 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
     
   </div>;
 
-  const allTrips = groups.flatMap((view) => view.trips.map((trip) => ({ ...trip, groupId: view.group.id, categoryId: view.group.category_id, fare: view.group.seat_day_fare })));
+  const allTrips = visibleGroups.flatMap((view) => view.trips.map((trip) => ({ ...trip, groupId: view.group.id, categoryId: view.group.category_id, fare: view.group.seat_day_fare })));
   if (section === "trips") return <div className="trips-page">
     {dataErrorBanner}
     <div className="section-toolbar"><button className="button button-primary button-small" onClick={() => openBooking("new")}>＋ مشوار جديد</button></div>
-    {selectedGroup && selected ? <><button className="button button-quiet button-small trips-back-to-groups" onClick={() => setSelectedGroup(null)}>→ رجوع لمجموعاتي</button><GroupDetail view={selected} categories={categories} busy={submitting} action={groupAction} notify={notify} onEdit={() => startEditingGroup(selected)} currentUserId={session.user.id} token={session.token} /></> : groups.length ? <section className="group-list trips-group-list" aria-label="مجموعات مشاويرك">{groups.map((view) => <GroupSummary key={view.group.id} view={view} categories={categories} onClick={() => setSelectedGroup(view.group.id)} />)}</section> : null}
-    {allTrips.length ? <section className="all-trips-section"><div className="section-title-row"><div><h2>مواعيد رحلاتك</h2><p>كل مواعيد الذهاب والعودة لمجموعاتك</p></div><span className="section-count">{allTrips.length}</span></div><TripList trips={allTrips} categories={categories} /></section> : initialLoadError ? null : <EmptyState icon="↗" title="لسه مفيش رحلات مجدولة" text={groups.length ? "مجموعة مشوارك ظاهرة فوق؛ ستظهر مواعيده هنا بعد اكتمالها وتأكيد الكابتن." : "لما تنشئ أو تنضم لمجموعة، هتلاقي مشاويرك هنا."} />}
-    {groups.length > 1 && selectedGroup && <div className="group-switcher">{groups.map((view) => <button key={view.group.id} className={view.group.id === selectedGroup ? "group-chip active" : "group-chip"} onClick={() => setSelectedGroup(view.group.id)}>مجموعة #{view.group.id} · {statusLabel(view.group.status)}</button>)}</div>}
+    {selectedGroup && selected ? <><button className="button button-quiet button-small trips-back-to-groups" onClick={() => setSelectedGroup(null)}>→ رجوع لمجموعاتي</button><GroupDetail view={selected} categories={categories} busy={submitting} action={groupAction} notify={notify} onEdit={() => startEditingGroup(selected)} currentUserId={session.user.id} token={session.token} /></> : visibleGroups.length ? <section className="group-list trips-group-list" aria-label="مجموعات مشاويرك">{visibleGroups.map((view) => <GroupSummary key={view.group.id} view={view} categories={categories} onClick={() => setSelectedGroup(view.group.id)} />)}</section> : null}
+    {allTrips.length ? <section className="all-trips-section"><div className="section-title-row"><div><h2>مواعيد رحلاتك</h2><p>كل مواعيد الذهاب والعودة لمجموعاتك</p></div><span className="section-count">{allTrips.length}</span></div><TripList trips={allTrips} categories={categories} /></section> : initialLoadError ? null : <EmptyState icon="↗" title="لسه مفيش رحلات مجدولة" text={visibleGroups.length ? "مجموعة مشوارك ظاهرة فوق؛ ستظهر مواعيده هنا بعد اكتمالها وتأكيد الكابتن." : "لما تنشئ أو تنضم لمجموعة، هتلاقي مشاويرك هنا."} />}
+    {visibleGroups.length > 1 && selectedGroup && <div className="group-switcher">{visibleGroups.map((view) => <button key={view.group.id} className={view.group.id === selectedGroup ? "group-chip active" : "group-chip"} onClick={() => setSelectedGroup(view.group.id)}>مجموعة #{view.group.id} · {statusLabel(view.group.status)}</button>)}</div>}
   </div>;
 
   return <div className="dashboard-grid rider-dashboard">
     <section className="dashboard-main">{dataErrorBanner}
       <div className="welcome-banner"><div className="welcome-copy"><span className="eyebrow">سِكّة أقرب لك</span><h2>طريقك أسهل مع <em>سِكَّة.</em></h2><div className="welcome-actions"><button className="button button-dark" onClick={() => openBooking("new")}>إنشاء رحلة</button><button className="button button-primary" onClick={() => openBooking("join")}>انضمام لمجموعة</button></div></div><div className="welcome-illustration"><div className="sun-orbit" /><div className="route-art"><span /><i /><i /><i /><b /></div><div className="mini-car">▰</div></div></div>
       <div className="section-title-row rider-trips-heading"><h2>مشاويرك الحالية</h2><button className="text-action" onClick={() => setSection("trips")}>عرض الكل <span>←</span></button></div>
-      {groups.length > 0 && <div className="group-list">{groups.slice(0, 1).map((view) => <GroupSummary key={view.group.id} view={view} categories={categories} onClick={() => { setSelectedGroup(view.group.id); setSection("trips"); }} />)}</div>}
-      <RiderCommuterBoard token={session.token} places={savedPlaces} groups={groups} categories={categories}
+      {visibleGroups.length > 0 && <div className="group-list">{visibleGroups.slice(0, 1).map((view) => <GroupSummary key={view.group.id} view={view} categories={categories} onClick={() => { setSelectedGroup(view.group.id); setSection("trips"); }} />)}</div>}
+      <RiderCommuterBoard token={session.token} places={savedPlaces} groups={visibleGroups} categories={categories}
         onCreateTrip={(type) => { openBooking("new"); if (type) { setPackageType(type); setDates(defaultDates(type)); } }}
         onOpenTrips={() => setSection("trips")}
         onJoin={(match, routePickup, routeDropoff) => openBooking("join", { groupId: match.group.id, pickup: routePickup, dropoff: routeDropoff })}
