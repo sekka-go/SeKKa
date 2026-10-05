@@ -1,4 +1,4 @@
-import type { ChangeEvent } from "react";
+import { useState, type ChangeEvent, type FocusEvent } from "react";
 
 type TimePicker12hProps = {
   label: string;
@@ -25,27 +25,44 @@ export const formatTime12h = (value: string) => {
 
 export default function TimePicker12h({ label, value, onChange }: TimePicker12hProps) {
   const parsed = parseTime(value);
-  const update = (field: "hour" | "minute" | "period", event: ChangeEvent<HTMLSelectElement>) => {
-    const hour12 = field === "hour" ? Number(event.target.value) : parsed.hour12;
-    const minute = field === "minute" ? Number(event.target.value) : parsed.minute;
-    const period = field === "period" ? event.target.value : parsed.period;
-    const hour24 = period === "م" ? hour12 % 12 + 12 : hour12 % 12;
+  const [hourDraft, setHourDraft] = useState(String(parsed.hour12).padStart(2, "0"));
+  const [minuteDraft, setMinuteDraft] = useState(String(parsed.minute).padStart(2, "0"));
+  const commit = (hour12: number, minute: number, period = parsed.period) => {
+    const hour24 = period === "pm" ? hour12 % 12 + 12 : hour12 % 12;
     onChange(`${String(hour24).padStart(2, "0")}:${String(minute).padStart(2, "0")}`);
   };
+  const handlePartChange = (part: "hour" | "minute", event: ChangeEvent<HTMLInputElement>) => {
+    const draft = event.currentTarget.value
+      .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
+      .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
+      .replace(/\D/g, "")
+      .slice(0, 2);
+    if (part === "hour") setHourDraft(draft);
+    else setMinuteDraft(draft);
+    const hour = part === "hour" ? Number(draft) : Number(hourDraft);
+    const minute = part === "minute" ? Number(draft) : Number(minuteDraft);
+    if (hour >= 1 && hour <= 12 && minute >= 0 && minute <= 59) commit(hour, minute);
+  };
+  const handlePartBlur = (part: "hour" | "minute", event: FocusEvent<HTMLInputElement>) => {
+    const raw = Number(event.currentTarget.value);
+    if (part === "hour") {
+      const hour = Number.isFinite(raw) ? Math.max(1, Math.min(12, raw)) : parsed.hour12;
+      setHourDraft(String(hour).padStart(2, "0"));
+      commit(hour, parsed.minute);
+    } else {
+      const minute = Number.isFinite(raw) ? Math.max(0, Math.min(59, raw)) : parsed.minute;
+      setMinuteDraft(String(minute).padStart(2, "0"));
+      commit(parsed.hour12, minute);
+    }
+  };
+  const togglePeriod = () => commit(Number(hourDraft) || parsed.hour12, Number(minuteDraft) || parsed.minute, parsed.period === "am" ? "pm" : "am");
 
   return <label className="time-picker-field">{label}
     <span className="time-picker-control" dir="ltr">
-      <select aria-label={`ساعة ${label}`} value={parsed.hour12} onChange={(event) => update("hour", event)}>
-        {Array.from({ length: 12 }, (_, index) => index + 1).map((hour) => <option key={hour} value={hour}>{String(hour).padStart(2, "0")}</option>)}
-      </select>
+      <input type="text" inputMode="numeric" pattern="[0-9]*" maxLength={2} aria-label={`ساعة ${label}`} value={hourDraft} onChange={(event) => handlePartChange("hour", event)} onBlur={(event) => handlePartBlur("hour", event)} />
       <span aria-hidden="true">:</span>
-      <select aria-label={`دقيقة ${label}`} value={parsed.minute} onChange={(event) => update("minute", event)}>
-        {Array.from({ length: 60 }, (_, minute) => minute).map((minute) => <option key={minute} value={minute}>{String(minute).padStart(2, "0")}</option>)}
-      </select>
-      <select aria-label={`صباحًا أم مساءً ${label}`} dir="rtl" value={parsed.period === "am" ? "ص" : "م"} onChange={(event) => update("period", event)}>
-        <option value="ص">ص</option>
-        <option value="م">م</option>
-      </select>
+      <input type="text" inputMode="numeric" pattern="[0-9]*" maxLength={2} aria-label={`دقيقة ${label}`} value={minuteDraft} onChange={(event) => handlePartChange("minute", event)} onBlur={(event) => handlePartBlur("minute", event)} />
+      <button type="button" className="time-period-toggle" dir="rtl" aria-label={`التبديل إلى ${parsed.period === "am" ? "مساءً" : "صباحًا"} · ${label}`} onClick={togglePeriod}>{parsed.period === "am" ? "ص" : "م"}</button>
     </span>
   </label>;
 }
