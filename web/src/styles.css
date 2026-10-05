@@ -2147,6 +2147,7 @@ button { line-height: 1.45; }
   border-bottom: 1px solid var(--line);
 }
 .workspace .notifications-header .eyebrow { color: var(--yellow); }
+.workspace .notifications-header h2 { margin: 0; }
 .workspace .notification-icon-action {
   color: var(--yellow);
   background: rgba(245,189,8,.08);
@@ -2169,11 +2170,16 @@ button { line-height: 1.45; }
 .workspace .notification-list { align-content: start; padding-block: 1.1rem 1.5rem; }
 .workspace .notification-feed-group > h3 { color: var(--cyan); }
 .workspace .notification-item { background: rgba(255,255,255,.025); border-color: rgba(151,172,202,.16); }
+.workspace .notification-item { overflow: visible; }
 .workspace .notification-item.is-unread { background: rgba(245,189,8,.075); border-color: rgba(245,189,8,.24); }
 .workspace .notification-item:hover { background: rgba(255,255,255,.055); }
 .workspace .notification-item.is-unread:hover { background: rgba(245,189,8,.11); }
 .workspace .notification-avatar.is-brand { background: #1c2a42; }
+.workspace .notification-avatar { width: 4rem; height: 4rem; flex-basis: 4rem; }
+.workspace .notification-avatar.is-brand .brand-logo { transform: scale(.62); }
 .workspace .notification-action-options { background: #17243a; }
+.workspace .notification-action-options { inset-inline-start: 0; inset-inline-end: auto; }
+.workspace .notification-category-badge { inset-inline-end: calc(100% - 4rem); }
 .workspace .notifications-loading,
 .workspace .notifications-error,
 .workspace .notifications-empty { align-content: center; }
@@ -2183,6 +2189,9 @@ button { line-height: 1.45; }
   .workspace .notifications-page { width: 100%; padding-inline: 1rem; }
   .workspace .notifications-header { margin-inline: -1rem; padding-inline: 1rem; }
   .workspace .notification-list { gap: .8rem; padding-top: .85rem; }
+  .workspace .notification-avatar { width: 3.5rem; height: 3.5rem; flex-basis: 3.5rem; }
+  .workspace .notification-avatar.is-brand .brand-logo { transform: scale(.54); }
+  .workspace .notification-category-badge { inset-inline-end: calc(100% - 3.5rem); }
 }
 @media (prefers-reduced-motion: reduce) { .workspace .notifications-overlay { animation: none; } }
 
