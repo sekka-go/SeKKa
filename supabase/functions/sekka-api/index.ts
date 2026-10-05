@@ -1881,9 +1881,13 @@ Deno.serve(async (req: Request) => {
     }
     if (req.method === "GET" && path === "/admin/verifications") {
       const status = url.searchParams.get("status") ?? "pending";
+      const requestedUserId = url.searchParams.get("user_id");
+      const userId = requestedUserId === null ? null : Number(requestedUserId);
       if (!(["pending", "approved", "rejected", "all"] as const).includes(status as "pending" | "approved" | "rejected" | "all")) return error("حالة التوثيق غير صحيحة.", 400, origin);
       let query = db.from("user_verifications").select("id,user_id,document_type,status,rejection_reason,uploaded_at,reviewed_at,reviewed_by").order("uploaded_at", { ascending: false }).limit(200);
       if (status !== "all") query = query.eq("status", status);
+      if (requestedUserId !== null && (!Number.isSafeInteger(userId) || userId! < 1)) return error("رقم المستخدم غير صالح.", 400, origin);
+      if (userId !== null) query = query.eq("user_id", userId);
       const { data: documents, error: documentsError } = await query;
       if (documentsError) throw documentsError;
       const userIds = [...new Set((documents ?? []).map((row) => row.user_id))];
