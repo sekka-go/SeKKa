@@ -1,0 +1,70 @@
+.auth-login-card {
+  display: block;
+  height: auto;
+  padding: 24px;
+}
+
+.auth-login-card .auth-tabs {
+  margin-bottom: 16px;
+}
+
+.auth-login-card .auth-tabs span {
+  padding: 12px 8px;
+}
+
+.auth-login-card .auth-heading {
+  text-align: right;
+}
+
+.auth-login-card .auth-heading h1 {
+  margin: 8px 0;
+}
+
+.auth-login-card .auth-heading p {
+  margin: 8px 0 0;
+  line-height: 24px;
+}
+
+.auth-login-card .form-stack {
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.auth-login-card .form-stack label {
+  gap: 8px;
+  align-items: stretch;
+  text-align: right;
+}
+
+.auth-login-card .form-stack input {
+  min-height: 44px;
+  padding-block: 8px;
+}
+
+.auth-login-card .form-stack > .button {
+  min-height: 44px;
+  padding-block: 8px;
+}
+
+.auth-login-card .auth-switch {
+  margin: 16px 0 0;
+  line-height: 24px;
+}
+
+@media (max-width: 560px) {
+  .auth-login-card {
+    height: auto;
+    padding: 16px;
+  }
+
+  .auth-page-content:has(.auth-login-card) {
+    flex: 0 0 auto;
+    min-height: 0;
+    align-content: start;
+    padding-block: 8px 0;
+  }
+
+  .auth-login-card .auth-tabs {
+    margin-bottom: 8px;
+  }
+}
