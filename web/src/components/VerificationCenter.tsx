@@ -22,7 +22,20 @@ export default function VerificationCenter({ session, notify }: { session: Sessi
   const [telegramUrl, setTelegramUrl] = useState("");
   const [error, setError] = useState("");
   const [focusedTarget, setFocusedTarget] = useState<string | null>(null);
+  const [wizardStarted, setWizardStarted] = useState(false);
+  const [wizardComplete, setWizardComplete] = useState(false);
+  const [activeStep, setActiveStep] = useState(0);
   const docs = useMemo(() => new Map((snapshot?.documents ?? []).map((doc) => [doc.document_type, doc])), [snapshot]);
+  const mandatory = useMemo(() => !snapshot ? [] : snapshot.role === "rider" ? snapshot.requirements.rider : snapshot.requirements.captain_immediate, [snapshot]);
+  const steps = useMemo(() => [
+    { id: "phone", kind: "phone" as const, label: "توثيق رقم الهاتف" },
+    ...mandatory.map((type) => ({ id: type, kind: "document" as const, type, label: snapshot?.requirements.labels[type] ?? type })),
+  ], [mandatory, snapshot]);
+  const isStepComplete = useCallback((step: (typeof steps)[number]) => step.kind === "phone"
+    ? Boolean(snapshot?.phone_verified)
+    : ["pending", "approved"].includes(docs.get(step.type)?.status ?? ""), [docs, snapshot?.phone_verified]);
+  const allCoreComplete = steps.length > 0 && steps.every(isStepComplete);
+  const completedSteps = steps.filter(isStepComplete).length;
   const verificationSignature = useMemo(() => snapshot ? [snapshot.phone_verified, ...snapshot.documents.map((doc) => `${doc.document_type}:${doc.status}:${doc.reviewed_at ?? ""}`)].join("|") : "", [snapshot]);
 
   const refresh = useCallback(async (quiet = false) => {
@@ -44,6 +57,13 @@ export default function VerificationCenter({ session, notify }: { session: Sessi
     if (!target) return;
     localStorage.removeItem(key);
     setFocusedTarget(target);
+    setWizardStarted(true);
+    const targetIndex = steps.findIndex((step) => step.id === target);
+    if (targetIndex >= 0) setActiveStep(targetIndex);
+  }, [snapshot, session.user.id, steps]);
+  useEffect(() => {
+    if (!wizardStarted || !focusedTarget) return;
+    const target = focusedTarget;
     const frame = window.requestAnimationFrame(() => {
       const node = document.getElementById(target === "phone" ? "verification-phone" : `verification-upload-${target}`);
       node?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -52,7 +72,13 @@ export default function VerificationCenter({ session, notify }: { session: Sessi
     });
     const timer = window.setTimeout(() => setFocusedTarget(null), 5_000);
     return () => { window.cancelAnimationFrame(frame); window.clearTimeout(timer); };
-  }, [snapshot, session.user.id]);
+  }, [wizardStarted, activeStep, focusedTarget]);
+  useEffect(() => {
+    if (!wizardStarted || !wizardComplete || allCoreComplete) return;
+    const firstIncomplete = steps.findIndex((step) => !isStepComplete(step));
+    setActiveStep(Math.max(firstIncomplete, 0));
+    setWizardComplete(false);
+  }, [allCoreComplete, isStepComplete, steps, wizardComplete, wizardStarted]);
   useEffect(() => {
     const onRefresh = () => { void refresh(true); };
     window.addEventListener("sekka:verification-refresh", onRefresh);
@@ -90,17 +116,33 @@ export default function VerificationCenter({ session, notify }: { session: Sessi
   if (loading && !snapshot) return <section id="verification-center" className="surface verification-center"><p>جارٍ تحميل حالة التوثيق…</p></section>;
   if (!snapshot) return <section id="verification-center" className="surface verification-center"><h2>توثيق الحساب</h2><p role="alert">{error || "تعذر تحميل حالة المستندات."}</p><button className="button button-outline" onClick={() => void refresh()}>إعادة المحاولة</button></section>;
 
-  const mandatory = snapshot.role === "rider" ? snapshot.requirements.rider : snapshot.requirements.captain_immediate;
   const deferred = snapshot.requirements.captain_deferred;
   const approvedCount = mandatory.filter((type) => docs.get(type)?.status === "approved").length + Number(snapshot.phone_verified);
   const progress = Math.round(approvedCount / (mandatory.length + 1) * 100);
   const graceDays = snapshot.grace_period_expires_at ? Math.max(0, Math.ceil((Date.parse(snapshot.grace_period_expires_at) - Date.now()) / 86_400_000)) : null;
+  const currentStep = steps[Math.min(activeStep, Math.max(steps.length - 1, 0))];
+  const beginWizard = () => {
+    setActiveStep(Math.max(0, steps.findIndex((step) => !isStepComplete(step))));
+    setWizardComplete(false);
+    setWizardStarted(true);
+  };
+  const nextStep = () => {
+    if (activeStep >= steps.length - 1) setWizardComplete(true);
+    else setActiveStep((step) => step + 1);
+  };
 
   return <section id="verification-center" className="surface verification-center" aria-labelledby="verification-title">
-    <header className="verification-heading"><div><span className="eyebrow">خطوة تفعيل الحساب</span><h2 id="verification-title">توثيق الحساب والمستندات</h2><p>ارفع المستندات المطلوبة. ستظهر حالة كل مستند هنا بعد المراجعة.</p></div><button className="button button-outline button-small" onClick={() => void refresh()} disabled={loading}>{loading ? "جارٍ التحديث…" : "تحديث الحالة ↻"}</button></header>
-    <div className="verification-progress" aria-label={`اكتمل ${progress}% من التوثيق`}><div className="verification-progress-copy"><strong>{progress}% مكتمل</strong><span>{approvedCount} من {mandatory.length + 1} متطلبات أساسية</span></div><div className="verification-progress-track"><span style={{ width: `${progress}%` }} /></div></div>
-    <article id="verification-phone" className={`verification-phone-row ${focusedTarget === "phone" ? "is-focus-target" : ""}`}><div><strong>توثيق رقم الهاتف</strong><p>{snapshot.phone_verified ? "تم توثيق الرقم المسجّل في الحساب." : snapshot.telegram_enabled ? "تحقق مجاني عبر تيليجرام بمشاركة رقمك من حسابك نفسه." : "خدمة تيليجرام لم تُهيأ بعد. تواصل مع الدعم لإكمال التحقق."}</p></div><div className="verification-phone-actions">{snapshot.phone_verified ? <span className="verification-status is-approved">موثّق ✓</span> : <><button className="button button-primary button-small" onClick={() => void verifyPhone()} disabled={!snapshot.telegram_enabled}>وثّق رقمك الآن</button>{telegramUrl && <a className="button button-outline button-small" href={telegramUrl} target="_blank" rel="noreferrer">فتح تيليجرام</a>}</>}</div></article>
-    <section className="verification-category"><div className="verification-category-heading"><h3>المستندات الأساسية</h3><p>{mandatory.length} مستندات مطلوبة لإكمال التوثيق</p></div><div className="verification-doc-grid">{mandatory.map((type) => <DocumentCard key={type} type={type} label={snapshot.requirements.labels[type] ?? type} document={docs.get(type)} busy={busyDocument === type} focused={focusedTarget === type} onFile={(file) => void upload(type, file)} />)}</div></section>
+    <header className="verification-heading"><div><span className="eyebrow">خطوة تفعيل الحساب</span><h2 id="verification-title">تفعيل الحساب</h2></div><button className="button button-outline button-small" onClick={() => void refresh()} disabled={loading}>{loading ? "جارٍ التحديث…" : "تحديث الحالة ↻"}</button></header>
+    <div className="verification-progress" aria-label={`اكتمل ${progress}% من التوثيق`}><div className="verification-progress-copy"><strong>{progress}% مكتمل</strong><span>{approvedCount} من {mandatory.length + 1} متطلبات أساسية تم اعتمادها</span></div><div className="verification-progress-track"><span style={{ width: `${progress}%` }} /></div></div>
+    {!wizardStarted && !allCoreComplete && <section className="verification-intro"><span className="verification-intro-icon" aria-hidden="true">✓</span><button className="button button-primary verification-start-button" onClick={beginWizard}>فعّل حسابك الآن</button><p>ارفع المستندات المطلوبة لتبدأ</p></section>}
+    {wizardStarted && (!allCoreComplete || !wizardComplete) && currentStep && <section className="verification-wizard" aria-live="polite">
+      <div className="verification-wizard-heading"><div><span className="eyebrow">الخطوة {activeStep + 1} من {steps.length}</span><h3>{currentStep.kind === "phone" ? currentStep.label : "ارفع المستند المطلوب"}</h3></div><strong>{completedSteps} من {steps.length} مكتمل</strong></div>
+      <div className="verification-progress-track" aria-label={`اكتمل ${Math.round(completedSteps / steps.length * 100)}% من الخطوات`}><span style={{ width: `${Math.round(completedSteps / steps.length * 100)}%` }} /></div>
+      {currentStep.kind === "phone" ? <article id="verification-phone" className={`verification-phone-row ${focusedTarget === "phone" ? "is-focus-target" : ""}`}><div><strong>توثيق رقم الهاتف</strong><p>{snapshot.phone_verified ? "تم توثيق الرقم المسجّل في الحساب." : snapshot.telegram_enabled ? "تحقق مجاني عبر تيليجرام بمشاركة رقمك من حسابك نفسه." : "خدمة تيليجرام غير مهيأة حاليًا. تواصل مع الدعم لإكمال التحقق."}</p></div><div className="verification-phone-actions">{snapshot.phone_verified ? <span className="verification-status is-approved">موثّق ✓</span> : <><button className="button button-primary button-small" onClick={() => void verifyPhone()} disabled={!snapshot.telegram_enabled}>وثّق رقمك الآن</button>{telegramUrl && <a className="button button-outline button-small" href={telegramUrl} target="_blank" rel="noreferrer">فتح تيليجرام</a>}</>}</div></article>
+        : <DocumentCard type={currentStep.type} label={currentStep.label} document={docs.get(currentStep.type)} busy={busyDocument === currentStep.type} focused={focusedTarget === currentStep.id} onFile={(file) => void upload(currentStep.type, file)} />}
+      <div className="verification-wizard-actions"><button className="button button-outline" onClick={() => setActiveStep((step) => Math.max(0, step - 1))} disabled={activeStep === 0}>السابق</button><button className="button button-primary" onClick={nextStep} disabled={!isStepComplete(currentStep) || busyDocument !== null}>{activeStep === steps.length - 1 ? "إنهاء" : "التالي"}</button></div>
+    </section>}
+    {allCoreComplete && (!wizardStarted || wizardComplete) && <section className="verification-finish" role="status"><span className="verification-finish-icon" aria-hidden="true">✓</span><div><h3>مبروك، اكتملت خطوات الانضمام إلى سِكّة</h3><p>وصلت مستنداتك الأساسية. سنخبرك عند انتهاء المراجعة، ويمكنك متابعة حالة التوثيق من هذه الصفحة.</p></div><div className="verification-finish-actions"><button className="button button-outline button-small" onClick={() => { setActiveStep(0); setWizardComplete(false); setWizardStarted(true); }}>إدارة المستندات</button><button className="button button-outline button-small" onClick={() => void refresh()} disabled={loading}>{loading ? "جارٍ التحديث…" : "تحديث الحالة ↻"}</button></div></section>}
     {snapshot.role === "captain" && <section className="verification-deferred"><div className="verification-deferred-heading"><div><h3>مستندات خلال 30 يومًا</h3><p>يمكن رفعهما الآن أو قبل انتهاء المهلة.</p></div><strong className={graceDays === 0 ? "is-rejected" : ""}>{graceDays === null ? "تبدأ المهلة عند إنشاء ملف المركبة" : graceDays === 0 ? "انتهت المهلة" : `متبقي ${graceDays} يومًا`}</strong></div><div className="verification-doc-grid">{deferred.map((type) => <DocumentCard key={type} type={type} label={snapshot.requirements.labels[type] ?? type} document={docs.get(type)} busy={busyDocument === type} focused={focusedTarget === type} onFile={(file) => void upload(type, file)} />)}</div></section>}
     {snapshot.captain_status === "suspended_grace_expired" && <p className="verification-warning" role="alert">توقف استقبال الرحلات بعد انتهاء المهلة. ارفع المستندين وتواصل مع الدعم لإعادة التفعيل.</p>}
     <p className="verification-privacy">المستندات خاصة، ولا يطّلع عليها إلا صاحب الحساب وفريق التوثيق المخوّل.</p>
@@ -118,4 +160,5 @@ function DocumentCard({ type, label, document, busy, focused, onFile }: { type: 
     <label id={`verification-upload-${type}`} tabIndex={0} className={`verification-upload button ${focused || status === "rejected" || status === "empty" ? "button-primary" : "button-outline"} button-small`}>{busy ? "جارٍ الرفع…" : status === "rejected" ? "أعد الرفع بعد المراجعة" : document ? "استبدال المستند" : "ارفع هذا المستند"}<input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" disabled={busy} onChange={(event) => { const file = event.currentTarget.files?.[0]; if (file) onFile(file); event.currentTarget.value = ""; }} /></label>
   </article>;
 }
+
 
