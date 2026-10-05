@@ -2090,6 +2090,102 @@ button { line-height: 1.45; }
   .workspace .notification-time { font-size: .65rem; }
 }
 
+/* Notifications use the full viewport so the complete feed and its controls remain reachable. */
+.workspace .notifications-overlay {
+  --ink: #f7f9fc;
+  --muted: #aab7ca;
+  --line: rgba(151, 172, 202, .2);
+  --yellow: #f5bd08;
+  --cyan: #62d8d4;
+  position: fixed;
+  z-index: 120;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+  color: var(--ink);
+  background: #10192b;
+  direction: ltr;
+  animation: notifications-backdrop-in .18s ease both;
+}
+.workspace .notifications-drawer {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  height: 100dvh;
+  max-height: none;
+  overflow: hidden;
+  padding: 0;
+  color: var(--ink);
+  background: #10192b;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  direction: rtl;
+  animation: none;
+}
+.workspace .notifications-page {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0;
+  width: min(100%, 64rem);
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  margin-inline: auto;
+  padding: 0 1.25rem max(.75rem, env(safe-area-inset-bottom));
+  background: transparent;
+}
+.workspace .notifications-header {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 auto;
+  margin-inline: -1.25rem;
+  padding: max(1rem, env(safe-area-inset-top)) 1.25rem .9rem;
+  background: #151f33;
+  border-bottom: 1px solid var(--line);
+}
+.workspace .notifications-header .eyebrow { color: var(--yellow); }
+.workspace .notification-icon-action {
+  color: var(--yellow);
+  background: rgba(245,189,8,.08);
+  border-color: rgba(245,189,8,.34);
+}
+.workspace .notification-icon-action:hover:not(:disabled) { background: rgba(245,189,8,.16); }
+.workspace .notification-close { color: var(--ink); background: rgba(151,172,202,.08); border-color: var(--line); }
+.workspace .notification-list,
+.workspace .notifications-loading,
+.workspace .notifications-error,
+.workspace .notifications-empty {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: rgba(245,189,8,.55) rgba(151,172,202,.08);
+  scrollbar-width: thin;
+}
+.workspace .notification-list { align-content: start; padding-block: 1.1rem 1.5rem; }
+.workspace .notification-feed-group > h3 { color: var(--cyan); }
+.workspace .notification-item { background: rgba(255,255,255,.025); border-color: rgba(151,172,202,.16); }
+.workspace .notification-item.is-unread { background: rgba(245,189,8,.075); border-color: rgba(245,189,8,.24); }
+.workspace .notification-item:hover { background: rgba(255,255,255,.055); }
+.workspace .notification-item.is-unread:hover { background: rgba(245,189,8,.11); }
+.workspace .notification-avatar.is-brand { background: #1c2a42; }
+.workspace .notification-action-options { background: #17243a; }
+.workspace .notifications-loading,
+.workspace .notifications-error,
+.workspace .notifications-empty { align-content: center; }
+.workspace .notification-mark { color: var(--yellow); background: rgba(245,189,8,.1); }
+.workspace .notifications-overlay:focus { outline: none; }
+@media (max-width: 560px) {
+  .workspace .notifications-page { width: 100%; padding-inline: 1rem; }
+  .workspace .notifications-header { margin-inline: -1rem; padding-inline: 1rem; }
+  .workspace .notification-list { gap: .8rem; padding-top: .85rem; }
+}
+@media (prefers-reduced-motion: reduce) { .workspace .notifications-overlay { animation: none; } }
+
 .map-loading { display: grid; place-items: center; color: var(--muted); }
 
 .verification-center { grid-column: 1 / -1; display: grid; gap: 1rem; padding: clamp(1rem, 3vw, 1.5rem); scroll-margin-top: 1rem; color: #f5f0e3; background: #1e1e1e; border: 1px solid rgba(234,179,8,.25); border-radius: 1.1rem; }

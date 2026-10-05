@@ -24,7 +24,6 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
   const [notificationsLoaded, setNotificationsLoaded] = useState(false);
   const [notificationsError, setNotificationsError] = useState("");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [notificationsTop, setNotificationsTop] = useState(0);
   const riderPoolRefreshRef = useRef<() => Promise<void>>(async () => undefined);
   const [navOpen, setNavOpen] = useState(false);
   const [infoPage, setInfoPage] = useState<InfoPageKey | null>(null);
@@ -106,13 +105,9 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
     if (!notificationsOpen) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const syncTopbar = () => setNotificationsTop(Math.round(document.querySelector(".workspace .topbar")?.getBoundingClientRect().bottom ?? 0));
-    syncTopbar();
     const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") closeNotifications(); };
     window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("resize", syncTopbar);
-    window.addEventListener("orientationchange", syncTopbar);
-    return () => { document.body.style.overflow = previousOverflow; window.removeEventListener("keydown", onKeyDown); window.removeEventListener("resize", syncTopbar); window.removeEventListener("orientationchange", syncTopbar); };
+    return () => { document.body.style.overflow = previousOverflow; window.removeEventListener("keydown", onKeyDown); };
   }, [notificationsOpen, closeNotifications]);
   useEffect(() => { void refreshNotifications(); }, [refreshNotifications]);
   useEffect(() => {
@@ -180,7 +175,7 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
         {session.user.role === "captain" && <CaptainWorkspace session={session} section={section} notify={notify} />}
         {session.user.role === "admin" && <AdminWorkspace session={session} section={section} refreshNotifications={refreshNotifications} notify={notify} />}</>}
       </div>
-      {notificationsOpen && <NotificationsPanel items={notifications} token={session.token} onRefresh={refreshNotifications} onPoolChanged={session.user.role === "rider" ? () => riderPoolRefreshRef.current() : undefined} onEditGroup={session.user.role === "rider" ? editNotificationGroup : undefined} allowWaitActions={session.user.role === "rider"} notify={notify} isLoading={!notificationsLoaded} error={notificationsError} onClose={closeNotifications} topOffset={notificationsTop} />}
+      {notificationsOpen && <NotificationsPanel items={notifications} token={session.token} onRefresh={refreshNotifications} onPoolChanged={session.user.role === "rider" ? () => riderPoolRefreshRef.current() : undefined} onEditGroup={session.user.role === "rider" ? editNotificationGroup : undefined} allowWaitActions={session.user.role === "rider"} notify={notify} isLoading={!notificationsLoaded} error={notificationsError} onClose={closeNotifications} />}
     </main>
   </div>;
 }
