@@ -7,13 +7,14 @@ import ProfileAvatar from "./ProfileAvatar";
 export type WorkspaceNavItem = { key: NavKey; label: string; icon: AppIconName };
 
 export default function WorkspaceNavigation({
-  items, activeSection, notificationsOpen, unreadCount, role, fullName, userId, token, open,
+  items, activeSection, notificationsOpen, unreadCount, unreadMessageCount, role, fullName, userId, token, open,
   onSelect, onClose, onAccount, onInvite, onSignOut, onOpenInfo,
 }: {
   items: WorkspaceNavItem[];
   activeSection: NavKey;
   notificationsOpen: boolean;
   unreadCount: number;
+  unreadMessageCount: number;
   role: Role;
   fullName: string;
   userId: number;
@@ -42,6 +43,7 @@ export default function WorkspaceNavigation({
       <span className="nav-icon"><AppIcon name={item.icon} size={19} /></span>
       <span className="nav-label">{item.label}</span>
       {item.key === "notifications" && unreadCount > 0 && <b className="nav-count">{unreadCount}</b>}
+      {item.key === "messages" && unreadMessageCount > 0 && <b className="nav-count">{unreadMessageCount}</b>}
     </button>;
   };
 
