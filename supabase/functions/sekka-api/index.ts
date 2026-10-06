@@ -425,6 +425,11 @@ async function authenticate(req: Request): Promise<User | null> {
   if (controlsError) throw controlsError;
   return { ...user, account_status: (controls?.status ?? "active") as User["account_status"] };
 }
+async function getDirectMessageContactIds(userId: number): Promise<number[]> {
+  const { data, error: contactsError } = await db!.rpc("direct_message_contact_ids", { p_user_id: userId });
+  if (contactsError) throw contactsError;
+  return (data ?? []).map((row: { contact_user_id: number | string }) => Number(row.contact_user_id)).filter(Number.isSafeInteger);
+}
 async function requireRole(user: User | null, roles: User["role"][], origin: string) {
   if (!user) return error("سجّل الدخول أولًا.", 401, origin);
   if (!roles.includes(user.role)) return error("ما عندكش صلاحية لتنفيذ الإجراء ده.", 403, origin);
@@ -1474,6 +1479,94 @@ Deno.serve(async (req: Request) => {
       const { error: deleteError } = await db.from("push_subscriptions").delete().eq("user_id", user.id).eq("endpoint", body.endpoint);
       if (deleteError) throw deleteError;
       return reply({ success: true }, 200, origin);
+    }
+
+    if (req.method === "GET" && path === "/messages/contacts") {
+      if (!user) return error("سجّل الدخول أولًا.", 401, origin);
+      if (user.role === "admin") return reply({ contacts: [] }, 200, origin);
+      const contactIds = await getDirectMessageContactIds(user.id);
+      if (!contactIds.length) return reply({ contacts: [] }, 200, origin);
+      const { data: contacts, error: contactsError } = await db.from("users").select("id,full_name,role,avatar_path").in("id", contactIds).order("full_name");
+      if (contactsError) throw contactsError;
+      return reply({ contacts: contacts ?? [] }, 200, origin);
+    }
+    if (req.method === "GET" && path === "/messages/conversations") {
+      if (!user) return error("سجّل الدخول أولًا.", 401, origin);
+      const { data: rows, error: conversationsError } = await db.from("message_conversations")
+        .select("id,participant_low_id,participant_high_id,last_message_at,last_message_body,last_message_sender_id,unread_low,unread_high,created_at")
+        .or(`participant_low_id.eq.${user.id},participant_high_id.eq.${user.id}`)
+        .order("last_message_at", { ascending: false, nullsFirst: false }).order("id", { ascending: false }).limit(100);
+      if (conversationsError) throw conversationsError;
+      const conversationRows = rows ?? [];
+      const otherUserIds = [...new Set(conversationRows.map((row) => Number(row.participant_low_id) === user.id ? Number(row.participant_high_id) : Number(row.participant_low_id)))];
+      const { data: contacts, error: usersError } = otherUserIds.length
+        ? await db.from("users").select("id,full_name,role,avatar_path").in("id", otherUserIds)
+        : { data: [], error: null };
+      if (usersError) throw usersError;
+      const byId = new Map((contacts ?? []).map((contact) => [Number(contact.id), contact]));
+      const conversations = conversationRows.flatMap((row) => {
+        const otherUserId = Number(row.participant_low_id) === user.id ? Number(row.participant_high_id) : Number(row.participant_low_id);
+        const contact = byId.get(otherUserId);
+        return contact ? [{ ...row, other_user: contact, unread_count: Number(row.participant_low_id) === user.id ? row.unread_low : row.unread_high }] : [];
+      });
+      return reply({ conversations, unread_total: conversations.reduce((sum, row) => sum + Number(row.unread_count), 0) }, 200, origin);
+    }
+    if (req.method === "POST" && path === "/messages/conversations") {
+      if (!user) return error("سجّل الدخول أولًا.", 401, origin);
+      const recipientId = Number(body.recipient_user_id);
+      if (!Number.isSafeInteger(recipientId) || recipientId < 1 || recipientId === user.id) return error("اختار مستخدمًا صحيحًا لبدء المحادثة.", 400, origin);
+      if (user.role === "admin" || !(await getDirectMessageContactIds(user.id)).includes(recipientId)) return error("يمكنك مراسلة مستخدم شاركك رحلة أو مجموعة فقط.", 403, origin);
+      const participantLowId = Math.min(user.id, recipientId), participantHighId = Math.max(user.id, recipientId);
+      const { data: existing, error: lookupError } = await db.from("message_conversations").select("id").eq("participant_low_id", participantLowId).eq("participant_high_id", participantHighId).maybeSingle();
+      if (lookupError) throw lookupError;
+      if (existing) return reply({ conversation: existing }, 200, origin);
+      const { data: conversation, error: createError } = await db.from("message_conversations").insert({ participant_low_id: participantLowId, participant_high_id: participantHighId }).select("id").single();
+      if (createError?.code === "23505") {
+        const { data: concurrent, error: concurrentError } = await db.from("message_conversations").select("id").eq("participant_low_id", participantLowId).eq("participant_high_id", participantHighId).single();
+        if (concurrentError) throw concurrentError;
+        return reply({ conversation: concurrent }, 200, origin);
+      }
+      if (createError) throw createError;
+      return reply({ conversation }, 201, origin);
+    }
+    const directMessageHistory = path.match(/^\/messages\/conversations\/(\d+)\/messages$/);
+    if (req.method === "GET" && directMessageHistory) {
+      if (!user) return error("سجّل الدخول أولًا.", 401, origin);
+      const conversationId = Number(directMessageHistory[1]);
+      const { data: conversation, error: conversationError } = await db.from("message_conversations").select("id").eq("id", conversationId).or(`participant_low_id.eq.${user.id},participant_high_id.eq.${user.id}`).maybeSingle();
+      if (conversationError) throw conversationError;
+      if (!conversation) return error("المحادثة غير موجودة.", 404, origin);
+      const beforeRaw = url.searchParams.get("before_id");
+      const beforeId = beforeRaw === null ? null : Number(beforeRaw);
+      if (beforeRaw !== null && (!Number.isSafeInteger(beforeId) || beforeId! < 1)) return error("مؤشر الرسائل غير صالح.", 400, origin);
+      let query = db.from("direct_messages").select("id,conversation_id,sender_user_id,body,created_at,read_at").eq("conversation_id", conversationId);
+      if (beforeId !== null) query = query.lt("id", beforeId);
+      const { data: messages, error: messagesError } = await query.order("id", { ascending: false }).limit(100);
+      if (messagesError) throw messagesError;
+      return reply({ messages: (messages ?? []).reverse(), has_older: (messages ?? []).length === 100 }, 200, origin);
+    }
+    const directMessageRead = path.match(/^\/messages\/conversations\/(\d+)\/read$/);
+    if (req.method === "POST" && directMessageRead) {
+      if (!user) return error("سجّل الدخول أولًا.", 401, origin);
+      const conversationId = Number(directMessageRead[1]);
+      const { data: conversation, error: conversationError } = await db.from("message_conversations").select("id").eq("id", conversationId).or(`participant_low_id.eq.${user.id},participant_high_id.eq.${user.id}`).maybeSingle();
+      if (conversationError) throw conversationError;
+      if (!conversation) return error("المحادثة غير موجودة.", 404, origin);
+      const { data: markedCount, error: markError } = await db.rpc("mark_direct_messages_read", { p_user_id: user.id, p_conversation_id: conversationId });
+      if (markError) throw markError;
+      return reply({ marked_count: markedCount }, 200, origin);
+    }
+    if (req.method === "POST" && directMessageHistory) {
+      if (!user) return error("سجّل الدخول أولًا.", 401, origin);
+      if (!clean(body.body) || body.body.trim().length > 2000) return error("اكتب رسالة من حرف واحد إلى 2000 حرف.", 400, origin);
+      if (!await takeLimit(`direct-message-send:${user.id}`, 30, 60)) return error("أرسلت رسائل كثيرة في وقت قصير. حاول بعد قليل.", 429, origin);
+      const conversationId = Number(directMessageHistory[1]);
+      const { data: conversation, error: conversationError } = await db.from("message_conversations").select("id").eq("id", conversationId).or(`participant_low_id.eq.${user.id},participant_high_id.eq.${user.id}`).maybeSingle();
+      if (conversationError) throw conversationError;
+      if (!conversation) return error("المحادثة غير موجودة.", 404, origin);
+      const { data: message, error: sendError } = await db.rpc("send_direct_message", { p_sender_user_id: user.id, p_conversation_id: conversationId, p_body: body.body.trim() });
+      if (sendError) throw sendError;
+      return reply({ message: Array.isArray(message) ? message[0] : message }, 201, origin);
     }
 
     if (req.method === "GET" && path === "/pool/notifications") {
