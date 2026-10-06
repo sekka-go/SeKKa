@@ -106,7 +106,7 @@ export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (sessio
   if (pendingRouteSetup) return <main className="auth-page">
     <header className="auth-page-header"><a href="/" aria-label="سِكّة، الرئيسية"><BrandLogo /></a></header>
     <section className="auth-page-content route-onboarding-content">
-      <RiderRoutePreferences token={pendingRouteSetup.token} notify={notify} onboarding onComplete={() => { onSignedIn(pendingRouteSetup); setPendingRouteSetup(null); }} />
+      <RiderRoutePreferences token={pendingRouteSetup.token} notify={notify} onboarding onComplete={() => { onSignedIn(pendingRouteSetup); setPendingRouteSetup(null); notify("أهلًا بك في سِكّة. حسابك ونقطك المفضلة جاهزين.", "success"); }} />
     </section>
   </main>;
 
