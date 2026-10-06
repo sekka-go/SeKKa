@@ -3,10 +3,12 @@ import { ApiError, api, clearSession, getStoredSession, storeSession, type User 
 import AuthScreen from "./screens/AuthScreen";
 import LandingScreen from "./screens/LandingScreen";
 import Workspace from "./screens/Workspace";
+import SikkaSplash from "./components/SikkaSplash";
 import type { Session, Toast } from "./types";
 export default function App() {
   const [session, setSession] = useState<Session | null>(() => getStoredSession());
   const [toast, setToast] = useState<Toast | null>(null);
+  const [splashVisible, setSplashVisible] = useState(() => !sessionStorage.getItem("sekka.splash.seen"));
   const toastTimer = useRef<number | null>(null);
   const notify = useCallback((text: string, tone: Toast["tone"] = "info") => {
     setToast({ text, tone });
@@ -14,6 +16,8 @@ export default function App() {
     toastTimer.current = window.setTimeout(() => { setToast(null); toastTimer.current = null; }, 4200);
   }, []);
   useEffect(() => () => { if (toastTimer.current !== null) window.clearTimeout(toastTimer.current); }, []);
+  useEffect(() => { if (splashVisible) sessionStorage.setItem("sekka.splash.seen", "1"); }, [splashVisible]);
+  const completeSplash = useCallback(() => setSplashVisible(false), []);
 
   useEffect(() => {
     if (!session) return;
@@ -40,5 +44,6 @@ export default function App() {
   return <div className="app-shell" dir="rtl">
     {toast && <div className={`toast toast-${toast.tone}`} role={toast.tone === "error" ? "alert" : "status"} aria-live={toast.tone === "error" ? "assertive" : "polite"}><span className="toast-icon" aria-hidden="true">{toast.tone === "success" ? "✓" : toast.tone === "error" ? "!" : "i"}</span><span className="toast-message">{toast.text}</span><button onClick={() => { setToast(null); if (toastTimer.current !== null) window.clearTimeout(toastTimer.current); toastTimer.current = null; }} aria-label="إغلاق">×</button></div>}
     {session ? <Workspace session={session} onSignOut={signOut} notify={notify} /> : window.location.pathname === "/login" || window.location.pathname === "/register" ? <AuthScreen onSignedIn={onSignedIn} notify={notify} /> : <LandingScreen />}
+    {splashVisible && <SikkaSplash onComplete={completeSplash} />}
   </div>;
 }
