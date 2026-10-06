@@ -132,7 +132,7 @@ function png(width, height) {
   return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk("IHDR", header), chunk("IDAT", deflateSync(rows, { level: 9 })), chunk("IEND", Buffer.alloc(0))]);
 }
 
-for (const [size, file] of [[192, "pwa-icon-192.png"], [512, "pwa-icon-512.png"], [1024, "sekka-icon-dark.png"]]) {
+for (const [size, file] of [[192, "pwa-icon-192.png"], [512, "pwa-icon-512.png"]]) {
   const output = resolve("public/brand", file);
   await mkdir(dirname(output), { recursive: true });
   await writeFile(output, png(size, size));
