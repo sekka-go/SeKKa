@@ -38,7 +38,7 @@ export default function App() {
   const onSignedIn = (next: Session) => { storeSession(next.token, next.user); setSession(next); };
   const signOut = async () => {
     if (session) await api("/auth/logout", { method: "POST", token: session.token }).catch(() => undefined);
-    clearSession(); setSession(null); notify("تم تسجيل الخروج.", "success");
+    clearSession(); setSession(null);
   };
 
   return <div className="app-shell" dir="rtl">
@@ -47,3 +47,4 @@ export default function App() {
     {splashVisible && <SikkaSplash onComplete={completeSplash} />}
   </div>;
 }
+
