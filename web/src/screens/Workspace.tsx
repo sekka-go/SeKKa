@@ -10,6 +10,7 @@ import AdminWorkspace from "./AdminWorkspace";
 import { NotificationsPanel } from "../components/workspace-shared";
 import VerificationReminder from "../components/VerificationReminder";
 import InfoPages, { type InfoPageKey } from "../components/InfoPages";
+import MessagesWorkspace from "./MessagesWorkspace";
 function cairoHour() {
   return Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Africa/Cairo", hour: "2-digit", hourCycle: "h23" }).format(new Date()));
 }
@@ -26,6 +27,7 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notificationsLoaded, setNotificationsLoaded] = useState(false);
   const [notificationsError, setNotificationsError] = useState("");
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const riderPoolRefreshRef = useRef<() => Promise<void>>(async () => undefined);
   const [navOpen, setNavOpen] = useState(false);
@@ -122,6 +124,14 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
     const timer = window.setInterval(() => { void refreshNotifications(); }, 30_000);
     return () => window.clearInterval(timer);
   }, [refreshNotifications]);
+  const refreshUnreadMessages = useCallback(async () => {
+    if (session.user.role === "admin") return;
+    try {
+      const result = await api<{ unread_total: number }>("/messages/conversations", { token: session.token });
+      setUnreadMessageCount(result.unread_total);
+    } catch { /* يظل شريط التنقل متاحًا حتى لو تعذر تحديث العدد */ }
+  }, [session.token, session.user.role]);
+  useEffect(() => { void refreshUnreadMessages(); const timer = window.setInterval(() => { void refreshUnreadMessages(); }, 30_000); return () => window.clearInterval(timer); }, [refreshUnreadMessages]);
   useEffect(() => {
     const updateConnection = () => setIsOnline(navigator.onLine);
     window.addEventListener("online", updateConnection);
@@ -147,10 +157,10 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
   }, [inviteFriends]);
 
   const nav: WorkspaceNavItem[] = session.user.role === "rider"
-    ? [{ key: "home", label: "الرئيسية", icon: "home" }, { key: "account", label: "حسابي", icon: "user" }, { key: "trips", label: "رحلاتي", icon: "trips" }, { key: "notifications", label: "الإشعارات", icon: "bell" }, { key: "booking", label: "مشوار جديد", icon: "plus" }]
+    ? [{ key: "home", label: "الرئيسية", icon: "home" }, { key: "account", label: "حسابي", icon: "user" }, { key: "trips", label: "رحلاتي", icon: "trips" }, { key: "messages", label: "الرسائل", icon: "messages" }, { key: "booking", label: "مشوار جديد", icon: "plus" }]
     : session.user.role === "captain"
-      ? [{ key: "account", label: "حسابي", icon: "user" }, { key: "captainTrips", label: "رحلاتي", icon: "trips" }, { key: "offers", label: "المسارات", icon: "route" }, { key: "notifications", label: "الإشعارات", icon: "bell" }]
-      : [{ key: "account", label: "حسابي", icon: "settings" }, { key: "notifications", label: "الإشعارات", icon: "bell" }, { key: "admin", label: "نظرة عامة", icon: "chart" }, { key: "broadcast", label: "رسالة عامة", icon: "send" }];
+      ? [{ key: "account", label: "حسابي", icon: "user" }, { key: "captainTrips", label: "رحلاتي", icon: "trips" }, { key: "offers", label: "المسارات", icon: "route" }, { key: "messages", label: "الرسائل", icon: "messages" }]
+      : [{ key: "account", label: "حسابي", icon: "settings" }, { key: "admin", label: "نظرة عامة", icon: "chart" }, { key: "broadcast", label: "رسالة عامة", icon: "send" }];
 
   const activateNav = (item: { key: NavKey }) => {
     setInfoPage(null);
@@ -161,7 +171,7 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
   };
   const titles: Record<NavKey, [string, string]> = {
     home: [localHour >= 17 ? "مساء الخير" : "صباح الخير", "مشوارك اليوم يبدأ من هنا"], booking: ["خطط لمشوارك", "اختار أيامك ونقاطك، وإحنا نرتّب الباقي"],
-    trips: ["رحلاتي", "كل مشاويرك ومجموعاتك في مكان واحد"], notifications: ["الإشعارات", "آخر التحديثات الخاصة بمشاويرك"],
+    trips: ["رحلاتي", "كل مشاويرك ومجموعاتك في مكان واحد"], notifications: ["الإشعارات", "آخر التحديثات الخاصة بمشاويرك"], messages: ["الرسائل", "تواصل مع المشاركين في مشاويرك ومجموعاتك"],
     account: ["حسابي", ""], offers: ["المسارات المتاحة", "اختار المسار المناسب لسيارتك ومواعيدك"],
     captainTrips: ["رحلاتي", "المسارات المقبولة وخطوات تنفيذها"], admin: ["لوحة الإدارة", "متابعة المنصة وتوثيق الكباتن"],
     broadcast: ["رسالة عامة", "إرسال إعلان محفوظ إلى جميع مستخدمي سِكّة"],
@@ -174,13 +184,14 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
   }, [session.user.id, setSection]);
 
   return <div className={`workspace ${notificationsOpen ? "notifications-open" : ""}`}>
-    <WorkspaceNavigation items={nav} activeSection={section} notificationsOpen={notificationsOpen} unreadCount={unread} role={session.user.role} fullName={session.user.full_name} userId={session.user.id} token={session.token} open={navOpen} onSelect={activateNav} onClose={() => setNavOpen(false)} onAccount={() => { setInfoPage(null); setSection("account"); setNavOpen(false); }} onInvite={() => void inviteFriends()} onSignOut={onSignOut} onOpenInfo={(page) => { setInfoPage(page); setNotificationsOpen(false); setNavOpen(false); }} />
+    <WorkspaceNavigation items={nav} activeSection={section} notificationsOpen={notificationsOpen} unreadCount={unread} unreadMessageCount={unreadMessageCount} role={session.user.role} fullName={session.user.full_name} userId={session.user.id} token={session.token} open={navOpen} onSelect={activateNav} onClose={() => setNavOpen(false)} onAccount={() => { setInfoPage(null); setSection("account"); setNavOpen(false); }} onInvite={() => void inviteFriends()} onSignOut={onSignOut} onOpenInfo={(page) => { setInfoPage(page); setNotificationsOpen(false); setNavOpen(false); }} />
     <main className="main-area">
       <header className="topbar" onClick={() => { if (notificationsOpen) closeNotifications(); }}><div className="topbar-brand-group"><button type="button" className="mobile-menu" onClick={() => setNavOpen(true)} aria-label="فتح القائمة"><AppIcon name="menu" /></button><button type="button" className="topbar-brand-home" onClick={() => { setSection(initialSection); setNavOpen(false); }} aria-label="العودة للرئيسية"><BrandLogo className="topbar-brand" /></button></div><div className="topbar-actions"><span className={`connection-state ${isOnline ? "is-online" : "is-offline"}`} role="status"><i />{isOnline ? "متصل" : "غير متصل"}</span><button type="button" className={`icon-button notification-bell ${notificationsOpen ? "is-open" : ""}`} onClick={(event) => { event.stopPropagation(); setNotificationsOpen((open) => !open); }} aria-expanded={notificationsOpen} aria-controls="sekka-notifications-drawer" aria-label={unread > 0 ? `الإشعارات، ${unread} غير مقروءة` : "الإشعارات"}><AppIcon name="bell" size={21} />{unread > 0 && <i />}</button></div></header>
       <div className="page-content">{infoPage ? <InfoPages page={infoPage} onBack={() => setInfoPage(null)} /> : <>{section !== "booking" && <div className={`page-heading ${section === "account" ? "page-heading-account" : ""}`}><div><h1>{title}</h1>{subtitle && <p>{subtitle}</p>}</div></div>}
         {session.user.role !== "admin" && <VerificationReminder session={session} onOpen={openMissingVerification} visible={section !== "account" && !(session.user.role === "captain" && section === "offers")} />}
-        {session.user.role === "rider" && <RiderWorkspace session={session} section={section} setSection={setSection} refreshNotifications={refreshNotifications} registerPoolRefresh={registerPoolRefresh} notify={notify} />}
-        {session.user.role === "captain" && <CaptainWorkspace session={session} section={section} notify={notify} />}
+        {section === "messages" && <MessagesWorkspace session={session} notify={notify} />}
+        {session.user.role === "rider" && section !== "messages" && <RiderWorkspace session={session} section={section} setSection={setSection} refreshNotifications={refreshNotifications} registerPoolRefresh={registerPoolRefresh} notify={notify} />}
+        {session.user.role === "captain" && section !== "messages" && <CaptainWorkspace session={session} section={section} notify={notify} />}
         {session.user.role === "admin" && <AdminWorkspace session={session} section={section} refreshNotifications={refreshNotifications} notify={notify} />}</>}
       </div>
       {notificationsOpen && <NotificationsPanel items={notifications} token={session.token} onRefresh={refreshNotifications} onPoolChanged={session.user.role === "rider" ? () => riderPoolRefreshRef.current() : undefined} onEditGroup={session.user.role === "rider" ? editNotificationGroup : undefined} allowWaitActions={session.user.role === "rider"} notify={notify} isLoading={!notificationsLoaded} error={notificationsError} onClose={closeNotifications} />}
