@@ -4,7 +4,7 @@ export type AppIconName =
   | "home" | "route" | "trips" | "bell" | "settings" | "menu" | "close"
   | "user" | "map" | "refresh" | "arrow" | "support" | "logout" | "calendar"
   | "users" | "plus" | "search" | "shield" | "chart" | "send" | "chevron"
-  | "check" | "car" | "pin" | "clock" | "inbox" | "filter" | "wallet";
+  | "check" | "car" | "pin" | "clock" | "inbox" | "filter" | "wallet" | "messages";
 
 const icons: Record<AppIconName, ReactNode> = {
   home: <><path d="m3 10 9-7 9 7"/><path d="M5 9v11h14V9M9 20v-6h6v6"/></>,
@@ -35,6 +35,7 @@ const icons: Record<AppIconName, ReactNode> = {
   inbox: <><path d="M4 4h16v16H4zM4 13h4l2 3h4l2-3h4"/></>,
   filter: <><path d="M4 6h16M7 12h10m-7 6h4"/><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="12" cy="18" r="1.5"/></>,
   wallet: <><rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 9h18m-5 5h2"/></>,
+  messages: <><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-3 2v-5.5A7.5 7.5 0 1 1 20 11.5Z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></>,
 };
 
 export default function AppIcon({ name, size = 20, strokeWidth = 1.8, className }: {
