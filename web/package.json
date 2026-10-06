@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --configLoader native",
-    "build": "tsc -b && vite build --configLoader native",
+    "build": "node scripts/generate-pwa-icons.mjs && tsc -b && vite build --configLoader native",
     "lint": "oxlint",
     "check:pwa": "node scripts/check-pwa.mjs",
     "preview": "vite preview --configLoader native"
