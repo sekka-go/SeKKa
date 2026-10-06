@@ -29,17 +29,17 @@ export default function WorkspaceNavigation({
   const roleLabel = role === "rider" ? "راكب" : role === "captain" ? "كابتن" : "مدير النظام";
   const sectionLabel = role === "rider" ? "مساحة الراكب" : role === "captain" ? "مساحة الكابتن" : "إدارة سِكَّة";
 
-  const renderItem = (item: WorkspaceNavItem, mobile = false) => {
+  const renderItem = (item: WorkspaceNavItem) => {
     const active = notificationsOpen ? item.key === "notifications" : activeSection === item.key;
     return <button
       key={item.key}
       type="button"
       aria-current={item.key !== "notifications" && active ? "page" : undefined}
       aria-expanded={item.key === "notifications" ? notificationsOpen : undefined}
-      className={`nav-item ${active ? "nav-active" : ""} ${mobile ? "mobile-tab" : ""}`}
+      className={`nav-item ${active ? "nav-active" : ""}`}
       onClick={() => onSelect(item)}
     >
-      <span className="nav-icon"><AppIcon name={item.icon} size={mobile ? 21 : 19} /></span>
+      <span className="nav-icon"><AppIcon name={item.icon} size={19} /></span>
       <span className="nav-label">{item.label}</span>
       {item.key === "notifications" && unreadCount > 0 && <b className="nav-count">{unreadCount}</b>}
     </button>;
@@ -55,7 +55,7 @@ export default function WorkspaceNavigation({
       <nav className="sidebar-primary-nav" aria-label="التنقل الرئيسي">{items.map((item) => renderItem(item))}</nav>
       <div className="sidebar-utilities">
         <div className="sidebar-section-heading">تواصل ومساعدة</div>
-        <a className="nav-item" href="mailto:sekkago.app@gmail.com"><span className="nav-icon"><AppIcon name="support" size={19} /></span><span className="nav-label">خدمة العملاء والإدارة</span></a>
+        <a className="nav-item" href="mailto:sekkago.app@gmail.com"><span className="nav-icon"><AppIcon name="support" size={19} /></span><span className="nav-label">خدمة العملاء</span></a>
         <button type="button" className="nav-item" onClick={onInvite}><span className="nav-icon"><AppIcon name="users" size={19} /></span><span className="nav-label">دعوة الأصدقاء</span></button>
         <div className="sidebar-info-links" aria-label="معلومات ومساعدة">
           <button type="button" onClick={() => onOpenInfo("terms")}>الشروط والأحكام</button>
@@ -72,6 +72,5 @@ export default function WorkspaceNavigation({
       <button type="button" className="sidebar-signout" onClick={onSignOut}><AppIcon name="logout" size={18} />تسجيل الخروج</button>
     </aside>
     {open && <button type="button" className="sidebar-scrim" onClick={onClose} aria-label="إغلاق القائمة" />}
-    <nav className="mobile-tabbar" aria-label="التنقل السريع">{items.map((item) => renderItem(item, true))}</nav>
   </>;
 }

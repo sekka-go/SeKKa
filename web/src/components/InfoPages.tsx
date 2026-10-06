@@ -48,7 +48,7 @@ export default function InfoPages({ page, onBack }: { page: InfoPageKey; onBack:
       <details><summary>كيف أبدأ مشوارًا جديدًا؟</summary><p>افتح «مشوار جديد»، وحدد نقاط الركوب والوصول والموعد والفئة، ثم راجع التفاصيل قبل التأكيد.</p></details>
       <details><summary>كيف أوثّق حسابي؟</summary><p>من حسابك افتح «فعّل حسابك الآن» وارفع المستندات المطلوبة. تظهر حالة كل مستند بعد إرساله للمراجعة.</p></details>
       <details><summary>كيف أستعيد كلمة السر؟</summary><p>من صفحة الدخول اختر «نسيت كلمة السر؟»، ثم افتح رابط بوت سِكّة في تيليجرام وشارك رقمك المسجل لاستلام رمز لمرة واحدة.</p></details>
-      <details><summary>كيف أتواصل مع الدعم؟</summary><p>استخدم «خدمة العملاء والإدارة» في القائمة الجانبية أو راسل sekkago.app@gmail.com.</p></details>
+      <details><summary>كيف أتواصل مع الدعم؟</summary><p>استخدم «خدمة العملاء» في القائمة الجانبية أو راسل sekkago.app@gmail.com.</p></details>
     </div> : <InfoDocumentContent page={page} />}
   </article>;
 }

@@ -45,9 +45,10 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
   color: #e2e8f0; background: rgba(148, 163, 184, .06); border: 1px solid rgba(148, 163, 184, .12); border-radius: .75rem;
   font-size: .84rem; font-weight: 800;
 }
-.workspace .sidebar-section-heading { padding: .35rem .8rem; color: #718096; font-size: .68rem; font-weight: 800; letter-spacing: .04em; }
+.workspace .sidebar-section-heading { padding: .35rem .75rem; color: #718096; font-size: .68rem; font-weight: 800; letter-spacing: .04em; }
 .workspace .sidebar-primary-nav { display: grid; gap: .2rem; }
-.workspace .sidebar-primary-nav .nav-item { min-height: 2.8rem; }
+.workspace .sidebar-primary-nav .nav-item, .workspace .sidebar-utilities > .nav-item { box-sizing: border-box; width: 100%; min-height: 2.8rem; gap: .7rem; padding-inline: .75rem; }
+.workspace .sidebar-primary-nav .nav-label, .workspace .sidebar-utilities > .nav-item .nav-label { flex: 1; min-width: 0; text-align: right; }
 .workspace .sidebar-utilities { gap: .15rem; margin-top: .85rem; padding-top: .65rem; }
 .workspace .sidebar-utilities .sidebar-section-heading { padding-top: .3rem; }
 .workspace .sidebar-info-links { display: grid; gap: .12rem; margin: .35rem .2rem 0; padding: .55rem .65rem 0; border-top: 1px solid rgba(148, 163, 184, .1); }
@@ -60,6 +61,9 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
 .workspace .account-avatar-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; }
 .workspace .account-avatar-actions input[type="file"] { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
 .workspace .account-avatar-note { color: var(--muted); font-size: .76rem; line-height: 1.55; }
+.workspace .page-heading-account { justify-content: center; text-align: center; }
+.workspace .page-heading-account > div { width: 100%; }
+.workspace .page-heading-account h1 { margin: 0; }
 .workspace .rider-profile-line { display: flex; align-items: center; gap: .65rem; min-width: 0; }
 .workspace .rider-profile-avatar { width: 2.35rem; height: 2.35rem; color: #111827; background: var(--yellow); border-radius: 50%; font-weight: 800; }
 
@@ -218,7 +222,6 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
 .workspace .notifications-error p { max-width: 24rem; margin: 0; color: var(--muted); font-size: .85rem; overflow-wrap: anywhere; }
 .workspace .notifications-error strong { font-size: 1rem; }
 
-.mobile-tabbar { display: none; direction: rtl; }
 .sidebar-scrim { background: rgba(0, 0, 0, .56); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
 .sidebar-close { width: 2.5rem; height: 2.5rem; border-radius: .75rem; }
 
@@ -231,16 +234,10 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
   .workspace .topbar { justify-content: space-between; gap: .75rem; min-height: 4.1rem; padding: .55rem 1rem; padding-top: max(.55rem, env(safe-area-inset-top)); }
   .topbar-brand-group { gap: .65rem; }
   .topbar-brand { width: 2rem; height: 2rem; }
-  .workspace .page-content { padding: 1.1rem 1rem calc(6.2rem + env(safe-area-inset-bottom)); }
+  .workspace .page-content { padding: 1.1rem 1rem calc(1.1rem + env(safe-area-inset-bottom)); }
   .page-heading { margin-bottom: 1.1rem; }
   .page-heading h1 { font-size: clamp(1.45rem, 6vw, 1.8rem); }
   .page-heading p { font-size: .9rem; }
-  .mobile-tabbar { position: fixed; inset: auto 0 0; z-index: 55; display: grid; grid-auto-columns: minmax(0, 1fr); grid-auto-flow: column; gap: .15rem; padding: .4rem .35rem max(.4rem, env(safe-area-inset-bottom)); background: rgba(30, 41, 59, .97); border-top: 1px solid var(--line); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
-  .mobile-tab { position: relative; display: flex; flex-direction: column; justify-content: center; gap: .12rem; min-width: 0; min-height: 3.3rem; padding: .3rem .1rem; border-radius: .65rem; text-align: center; }
-  .mobile-tab .nav-icon { flex-basis: auto; width: auto; }
-  .mobile-tab .nav-label { max-width: 100%; overflow: hidden; font-size: .66rem; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
-  .mobile-tab.nav-active::before { inset: 0 22% auto; width: auto; height: 2px; }
-  .mobile-tab .nav-count { position: absolute; top: .05rem; inset-inline-start: calc(50% + .5rem); min-width: 1.05rem; height: 1.05rem; padding-inline: .2rem; font-size: .58rem; line-height: 1.05rem; }
   .workspace .notifications-overlay { z-index: 90; }
   .workspace .notifications-drawer { max-height: calc(100dvh - 4.2rem - env(safe-area-inset-top)); }
   .admin-stats-grid, .admin-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
