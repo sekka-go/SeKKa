@@ -147,10 +147,10 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
   }, [inviteFriends]);
 
   const nav: WorkspaceNavItem[] = session.user.role === "rider"
-    ? [{ key: "home", label: "الرئيسية", icon: "home" }, { key: "booking", label: "مشوار جديد", icon: "plus" }, { key: "trips", label: "رحلاتي", icon: "trips" }, { key: "notifications", label: "الإشعارات", icon: "bell" }, { key: "account", label: "حسابي", icon: "user" }]
+    ? [{ key: "account", label: "حسابي", icon: "user" }, { key: "trips", label: "رحلاتي", icon: "trips" }, { key: "home", label: "الرئيسية", icon: "home" }, { key: "notifications", label: "الإشعارات", icon: "bell" }, { key: "booking", label: "مشوار جديد", icon: "plus" }]
     : session.user.role === "captain"
-      ? [{ key: "offers", label: "المسارات", icon: "route" }, { key: "captainTrips", label: "رحلاتي", icon: "trips" }, { key: "notifications", label: "الإشعارات", icon: "bell" }, { key: "account", label: "حسابي", icon: "user" }]
-      : [{ key: "admin", label: "نظرة عامة", icon: "chart" }, { key: "broadcast", label: "رسالة عامة", icon: "send" }, { key: "notifications", label: "الإشعارات", icon: "bell" }, { key: "account", label: "حسابي", icon: "settings" }];
+      ? [{ key: "account", label: "حسابي", icon: "user" }, { key: "captainTrips", label: "رحلاتي", icon: "trips" }, { key: "offers", label: "المسارات", icon: "route" }, { key: "notifications", label: "الإشعارات", icon: "bell" }]
+      : [{ key: "account", label: "حسابي", icon: "settings" }, { key: "notifications", label: "الإشعارات", icon: "bell" }, { key: "admin", label: "نظرة عامة", icon: "chart" }, { key: "broadcast", label: "رسالة عامة", icon: "send" }];
 
   const activateNav = (item: { key: NavKey }) => {
     setInfoPage(null);
