@@ -71,7 +71,6 @@ export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (sessio
         }
       }
       onSignedIn(session);
-      notify(mode === "register" ? "أهلًا بك في سِكّة. حسابك جاهز." : "تم تسجيل الدخول.", "success");
     } catch (cause) { setError(errorText(cause)); }
     finally { setBusy(false); }
   };
@@ -107,7 +106,7 @@ export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (sessio
   if (pendingRouteSetup) return <main className="auth-page">
     <header className="auth-page-header"><a href="/" aria-label="سِكّة، الرئيسية"><BrandLogo /></a></header>
     <section className="auth-page-content route-onboarding-content">
-      <RiderRoutePreferences token={pendingRouteSetup.token} notify={notify} onboarding onComplete={() => { onSignedIn(pendingRouteSetup); setPendingRouteSetup(null); notify("أهلًا بك في سِكّة. حسابك ونقطك المفضلة جاهزين.", "success"); }} />
+      <RiderRoutePreferences token={pendingRouteSetup.token} notify={notify} onboarding onComplete={() => { onSignedIn(pendingRouteSetup); setPendingRouteSetup(null); }} />
     </section>
   </main>;
 
@@ -162,3 +161,4 @@ export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (sessio
     {readingPage && <div className="auth-document-scrim" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setReadingPage(null); }}><section className="auth-document-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-document-title" dir="rtl"><header><h2 id="auth-document-title">{readingPage === "terms" ? "الشروط والأحكام" : "سياسة الخصوصية"}</h2><button type="button" onClick={() => setReadingPage(null)} aria-label="إغلاق">×</button></header><div className="auth-document-scroll" ref={readingPanel} onScroll={markReadIfAtEnd} onWheel={markReadIfAtEnd} onTouchEnd={markReadIfAtEnd}><InfoDocumentContent page={readingPage} /></div><footer><span>{(readingPage === "terms" ? readTerms : readPrivacy) ? "تمت القراءة" : "مرّر إلى نهاية المستند لتأكيد قراءته"}</span><button type="button" className="button button-primary" disabled={!(readingPage === "terms" ? readTerms : readPrivacy)} onClick={() => setReadingPage(null)}>تم</button></footer></section></div>}
   </main>;
 }
+
