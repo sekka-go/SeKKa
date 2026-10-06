@@ -1,6 +1,25 @@
+.brand-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: .6rem;
+  direction: rtl;
+}
+
+.brand-logo-mark {
+  display: block;
+  flex: 0 0 auto;
+  width: 2.65rem;
+  height: 2.65rem;
+  filter: drop-shadow(0 0 8px rgba(245, 189, 8, .12));
+}
+
 .brand-logo-copy {
   width: max-content;
 }
+
+.brand-logo-compact { justify-content: center; width: 100%; height: 100%; }
+.brand-logo-compact .brand-logo-mark { width: 84%; height: 84%; }
+.notification-avatar.is-brand .brand-logo { transform: none; }
 
 .brand-logo-copy small {
   display: flex;
@@ -11,10 +30,18 @@
 }
 
 @media (max-width: 560px) {
+  .brand-logo-mark { width: 2.3rem; height: 2.3rem; }
   .landing-header .brand-logo-copy small,
   .auth-page-header .brand-logo-copy small {
     font-size: .8rem;
   }
+}
+
+.workspace .topbar-brand .brand-logo-mark { width: 2.5rem; height: 2.5rem; }
+.notification-avatar.is-brand .brand-logo-mark { width: 3.25rem; height: 3.25rem; }
+@media (max-width: 560px) {
+  .workspace .topbar-brand .brand-logo-mark { width: 2.15rem; height: 2.15rem; }
+  .notification-avatar.is-brand .brand-logo-mark { width: 2.8rem; height: 2.8rem; }
 }
 
 .workspace .topbar-brand .brand-logo-copy small {
