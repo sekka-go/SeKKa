@@ -1775,7 +1775,8 @@ button { line-height: 1.45; }
 .workspace .account-card, .workspace .password-card, .workspace .onboarding-card { display: grid; align-content: start; gap: .65rem; min-width: 0; }
 .workspace .account-avatar { display: grid; place-items: center; width: 3.25rem; height: 3.25rem; color: #201b09; background: var(--yellow); border-radius: 50%; font-size: 1.35rem; font-weight: 800; }
 .workspace .account-card h2, .workspace .account-card p { margin: 0; }
-.workspace .account-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .35rem .75rem; padding-top: .65rem; border-top: 1px solid var(--line); }
+.workspace .account-meta { display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: .35rem .75rem; padding-top: .65rem; border-top: 1px solid var(--line); }
+.workspace .account-meta > * { min-width: 0; white-space: nowrap; }
 .workspace .notifications-panel { display: grid; gap: .7rem; }
 .workspace .notification-button-row { min-width: 0; border-bottom: 1px solid var(--line); }
 .workspace .notification-main-action { display: grid; grid-template-columns: auto minmax(0,1fr); align-items: stretch; gap: .75rem; width: 100%; min-width: 0; padding: .65rem 0; color: inherit; text-align: right; }
@@ -2214,8 +2215,7 @@ button { line-height: 1.45; }
   .workspace .notifications-header { margin-inline: -1rem; padding-inline: 1rem; }
   .workspace .notifications-empty { width: calc(100% + 2rem); margin-inline: -1rem; }
   .workspace .notification-list { gap: .8rem; padding-top: .85rem; }
-  .workspace.notifications-open .mobile-tabbar { z-index: 130; }
-  .workspace.notifications-open .notification-list { padding-bottom: calc(5rem + env(safe-area-inset-bottom)); }
+  .workspace.notifications-open .notification-list { padding-bottom: calc(1rem + env(safe-area-inset-bottom)); }
   .workspace .notification-avatar { width: 3.5rem; height: 3.5rem; flex-basis: 3.5rem; }
   .workspace .notification-avatar.is-brand .brand-logo { transform: scale(.42); }
   .workspace .notification-category-badge { inset-inline-end: calc(100% - 3.5rem); }
