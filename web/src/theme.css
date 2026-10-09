@@ -177,6 +177,9 @@ button, input, select, textarea { color-scheme: inherit; }
 .verification-privacy, .verification-date, .account-avatar-note,
 .info-document-content, .info-document-content p, .info-faq-list p,
 .sidebar-label, .profile-copy small) { color: var(--color-text-secondary); }
+.app-shell .workspace .verification-reminder .verification-reminder-copy,
+.app-shell .workspace .verification-reminder .verification-reminder-copy strong,
+.app-shell .workspace .verification-reminder .verification-reminder-copy p { color: #fff; }
 .app-shell :is(a, .auth-consent-links button, .auth-forgot-link, .text-action) { color: var(--color-accent-text); }
 .app-shell :is(.eyebrow, .heading-mark, .surface-icon, .aside-icon,
 .field-heading span, .category-option b, .package-option b,
