@@ -7,8 +7,8 @@ import { ApiError, api, type CaptainLine, type CaptainOffer, type CaptainProfile
 import type { MapPickMode, MapPoint } from "../MapPicker";
 import type { NavKey, Session, Toast } from "../types";
 import { AccountPanel, EmptyState, ErrorState, LoadingCard } from "../components/workspace-shared";
-export default function CaptainWorkspace({ session, section, notify }: {
-  session: Session; section: NavKey; notify: (text: string, tone?: Toast["tone"]) => void;
+export default function CaptainWorkspace({ session, section, setSection, notify }: {
+  session: Session; section: NavKey; setSection: (section: NavKey) => void; notify: (text: string, tone?: Toast["tone"]) => void;
 }) {
   const [profile, setProfile] = useState<CaptainProfile | null>(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
@@ -32,7 +32,6 @@ export default function CaptainWorkspace({ session, section, notify }: {
   const [assignedTripsError, setAssignedTripsError] = useState("");
   const [lines, setLines] = useState<CaptainLine[]>([]);
   const [demandGroups, setDemandGroups] = useState<{ id: number; trip_date: string; arrival_time: string; requests: { id: number; rider_name: string; pickup_label: string; dropoff_label: string; seats: number }[] }[]>([]);
-  const [publishOpen, setPublishOpen] = useState(false);
   const [origin, setOrigin] = useState<MapPoint | null>(null);
   const [destination, setDestination] = useState<MapPoint | null>(null);
   const [originSearch, setOriginSearch] = useState("");
@@ -44,6 +43,8 @@ export default function CaptainWorkspace({ session, section, notify }: {
   const [lineSeats, setLineSeats] = useState(3);
   const [linePrice, setLinePrice] = useState(0);
   const [linePaymentMethods, setLinePaymentMethods] = useState<string[]>(["cash"]);
+  const isOffersSection = section === "offers" || section === "publish";
+  const publishOpen = section === "publish";
 
   const loadProfile = useCallback(async () => {
     try {
@@ -73,9 +74,9 @@ export default function CaptainWorkspace({ session, section, notify }: {
     finally { setOffersLoaded(true); setOffersLoading(false); }
   }, [session.token]);
   useEffect(() => {
-    if (!profileLoaded || !profile || profile.verification_status !== "approved" || section !== "offers") return;
+    if (!profileLoaded || !profile || profile.verification_status !== "approved" || !isOffersSection) return;
     void refreshTrips();
-  }, [profileLoaded, profile?.verification_status, section, refreshTrips]);
+  }, [profileLoaded, profile?.verification_status, isOffersSection, refreshTrips]);
   const loadPublishedLines = useCallback(async () => {
     const [lineResult, demandResult] = await Promise.all([
       api<{ lines: CaptainLine[] }>("/captain/lines", { token: session.token }),
@@ -85,19 +86,19 @@ export default function CaptainWorkspace({ session, section, notify }: {
     setDemandGroups(demandResult.groups);
   }, [session.token]);
   useEffect(() => {
-    if (section !== "offers" || profile?.verification_status !== "approved") return;
+    if (!isOffersSection || profile?.verification_status !== "approved") return;
     void loadPublishedLines().catch((error) => notify(errorText(error), "error"));
-  }, [section, profile?.verification_status, loadPublishedLines, notify]);
+  }, [isOffersSection, profile?.verification_status, loadPublishedLines, notify]);
   useEffect(() => {
-    if (section !== "offers" || profile?.verification_status !== "approved") return;
+    if (!isOffersSection || profile?.verification_status !== "approved") return;
     const timer = window.setInterval(() => { void loadPublishedLines().catch(() => undefined); }, 30_000);
     return () => window.clearInterval(timer);
-  }, [section, profile?.verification_status, loadPublishedLines]);
+  }, [isOffersSection, profile?.verification_status, loadPublishedLines]);
   useEffect(() => {
-    if (!profileLoaded || !profile || profile.verification_status !== "approved" || section !== "offers") return;
+    if (!profileLoaded || !profile || profile.verification_status !== "approved" || !isOffersSection) return;
     const timer = window.setInterval(() => { void refreshTrips(); }, 30_000);
     return () => window.clearInterval(timer);
-  }, [profileLoaded, profile?.verification_status, section, refreshTrips]);
+  }, [profileLoaded, profile?.verification_status, isOffersSection, refreshTrips]);
 
   const saveProfile = async (event: FormEvent) => {
     event.preventDefault(); setBusy(true);
@@ -119,7 +120,7 @@ export default function CaptainWorkspace({ session, section, notify }: {
         intermediate_stops: [], arrival_time: lineArrival, service_days: lineDays, seats: lineSeats,
         price_per_seat: linePrice, payment_methods: linePaymentMethods,
       } });
-      setOrigin(null); setDestination(null); setOriginSearch(""); setDestinationSearch(""); setPublishOpen(false);
+      setOrigin(null); setDestination(null); setOriginSearch(""); setDestinationSearch(""); setSection("offers");
       notify("تم نشر مسارك. سنجمع طلبات الركاب المتشابهة تلقائيًا.", "success");
       await loadPublishedLines();
     } catch (error) { notify(errorText(error), "error"); }
@@ -189,9 +190,9 @@ export default function CaptainWorkspace({ session, section, notify }: {
   const openVerification = () => { window.dispatchEvent(new CustomEvent("sekka:navigate", { detail: "account" })); window.setTimeout(() => document.getElementById("verification-center")?.scrollIntoView({ behavior: "smooth", block: "start" }), 180); };
   if (!profile || profile.verification_status !== "approved" || profile.status === "suspended_grace_expired") return <div className="approval-state surface verification-required-banner" role="status"><span className="approval-icon">⌖</span><span className="eyebrow">خطوة قبل استقبال المشاوير</span><h2>{profile?.status === "suspended_grace_expired" ? "أكمل المستندات المؤجلة" : "وثّق حسابك لاستقبال المسارات"}</h2><p>{profile?.status === "suspended_grace_expired" ? "انتهت مهلة المستندات. ارفعها واطلب من الدعم إعادة تفعيل حسابك." : "أرسل مستندات الهوية والمركبة ووثّق رقم هاتفك. سنعرض المسارات بعد اكتمال المراجعة."}</p><button className="button button-primary button-small" onClick={openVerification}>وثّق حسابك الآن</button></div>;
   const loadOffers = () => refreshTrips();
-  if (section === "offers" && (!offersLoaded || offersLoading)) return <LoadingCard text="بندور على المسارات المناسبة لسيارتك…" />;
-  if (section === "offers" && offerError && !offers.length) return <ErrorState text={offerError} action="تحديث المسارات" onAction={() => void loadOffers()} />;
-  return <div className="captain-offers-page"><div className="offer-toolbar"><div><div className="online-pill"><i /> جاهز لاستقبال المسارات</div><p>انشر مسارك وسنطابقه مع طلبات الركاب القريبة.</p></div><div className="offer-actions"><button className="button button-outline button-small" onClick={() => void updateLocation()}>⌖ تحديث الموقع</button><button className="button button-primary button-small" onClick={() => setPublishOpen((open) => !open)}>{publishOpen ? "إغلاق النشر" : "＋ نشر مسار"}</button><button className="button button-outline button-small" onClick={() => { void loadOffers(); void loadPublishedLines(); }} disabled={offersLoading}>{offersLoading ? "جارٍ التحديث…" : "تحديث المسارات ↻"}</button></div></div>{offerError && <div className="inline-error" role="alert">{offerError}<button className="button button-primary button-small" onClick={openVerification}>وثّق حسابك الآن</button></div>}
+  if (isOffersSection && (!offersLoaded || offersLoading)) return <LoadingCard text="بندور على المسارات المناسبة لسيارتك…" />;
+  if (isOffersSection && offerError && !offers.length) return <ErrorState text={offerError} action="تحديث المسارات" onAction={() => void loadOffers()} />;
+  return <div className="captain-offers-page"><div className="offer-toolbar"><div><div className="online-pill"><i /> جاهز لاستقبال المسارات</div><p>انشر مسارك وسنطابقه مع طلبات الركاب القريبة.</p></div><div className="offer-actions"><button className="button button-outline button-small" onClick={() => void updateLocation()}>⌖ تحديث الموقع</button><button className="button button-primary button-small" onClick={() => setSection(publishOpen ? "offers" : "publish")}>{publishOpen ? "إغلاق النشر" : "＋ نشر مسار"}</button><button className="button button-outline button-small" onClick={() => { void loadOffers(); void loadPublishedLines(); }} disabled={offersLoading}>{offersLoading ? "جارٍ التحديث…" : "تحديث المسارات ↻"}</button></div></div>{offerError && <div className="inline-error" role="alert">{offerError}<button className="button button-primary button-small" onClick={openVerification}>وثّق حسابك الآن</button></div>}
     {publishOpen && <section className="surface onboarding-card"><div className="surface-heading"><div><span className="eyebrow">مسار جديد</span><h2>انشر خط سيرك</h2><p>ستظهر الرحلة للركاب ذوي الطلبات المشابهة.</p></div><span className="surface-icon">⌖</span></div><form className="form-stack" onSubmit={publishLine}>
       <LocationSearchField kind="pickup" title="نقطة البداية" value={originSearch} token={session.token} onChange={(value) => { setOriginSearch(value); setOrigin(null); }} onSelect={(point) => { setOrigin(point); setOriginSearch(point.label ?? ""); }} onChooseMap={() => { setLineMapTarget("pickup"); setLineMapOpen(true); }} onFocus={() => undefined} pointSelected={origin?.lat != null && origin.lng != null} />
       <LocationSearchField kind="dropoff" title="نقطة الوصول" value={destinationSearch} token={session.token} onChange={(value) => { setDestinationSearch(value); setDestination(null); }} onSelect={(point) => { setDestination(point); setDestinationSearch(point.label ?? ""); }} onChooseMap={() => { setLineMapTarget("dropoff"); setLineMapOpen(true); }} onFocus={() => undefined} pointSelected={destination?.lat != null && destination.lng != null} />

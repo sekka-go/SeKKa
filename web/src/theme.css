@@ -12,7 +12,7 @@
   --color-primary-text: #172033;
   --color-accent: #eab308;
   --color-accent-text: #fcd34d;
-  --color-border: rgba(148, 163, 184, .22);
+  --color-border: #64748b;
   --color-icon: #f5bd08;
   --color-success: #86efac;
   --color-warning: #fcd34d;
@@ -27,7 +27,7 @@
   --color-navigation-active: rgba(234, 179, 8, .12);
   --color-hover: rgba(148, 163, 184, .1);
   --color-selection: #f5bd08;
-  --color-focus: rgba(245, 189, 8, .52);
+  --color-focus: #f5bd08;
   --color-shadow: rgba(2, 6, 23, .28);
   --color-soft-accent: rgba(245, 189, 8, .09);
   --color-soft-cyan: rgba(103, 214, 212, .1);
@@ -66,7 +66,7 @@
   --color-primary-text: #172033;
   --color-accent: #8a6200;
   --color-accent-text: #805b00;
-  --color-border: #d3dce7;
+  --color-border: #7f8fa3;
   --color-icon: #8a6200;
   --color-success: #176534;
   --color-warning: #805300;
@@ -74,14 +74,14 @@
   --color-info: #155b83;
   --color-input-background: #f8fafc;
   --color-input-text: #17263d;
-  --color-placeholder: #66768a;
+  --color-placeholder: #5f6f82;
   --color-disabled: #586a80;
   --color-overlay: rgba(15, 23, 42, .48);
   --color-navigation-background: #ffffff;
   --color-navigation-active: #fff2c7;
   --color-hover: #edf2f7;
   --color-selection: #f5bd08;
-  --color-focus: rgba(138, 98, 0, .5);
+  --color-focus: #8a6200;
   --color-shadow: rgba(15, 23, 42, .09);
   --color-soft-accent: #fff8e3;
   --color-soft-cyan: #e7f5f4;
@@ -465,6 +465,43 @@ button, input, select, textarea { color-scheme: inherit; }
 :root[data-theme="light"] .app-shell .info-document-content,
 :root[data-theme="light"] .app-shell .info-document-content p,
 :root[data-theme="light"] .app-shell .info-faq-list p { color: var(--color-text-secondary); }
+
+/* Final accessibility and alignment pass for legacy surfaces. */
+.app-shell :is(.price-error, .admin-load-feedback, .inline-error) { color: var(--color-error); }
+.app-shell :is(.location-search-attribution, .map-data-caption) { color: var(--color-text-muted); }
+.app-shell .route-offer-top .status-chip { color: var(--color-warning); }
+.app-shell :is(.verification-deferred-heading > strong, .verification-intro-icon,
+.verification-finish.is-review .verification-finish-icon) { color: var(--color-warning); }
+.app-shell .verification-doc-icon { color: var(--color-icon); }
+.app-shell :is(.verification-intro-icon, .verification-finish.is-review .verification-finish-icon) {
+  background: var(--color-soft-accent);
+  border-color: color-mix(in srgb, var(--color-warning) 45%, var(--color-border));
+}
+.app-shell :is(.map-stop-list, .map-segments, .map-data-caption) {
+  color: var(--color-text-primary);
+  background: var(--color-surface-elevated);
+  border-color: var(--color-border);
+}
+.app-shell .map-stop-list li { color: var(--color-text-primary); }
+.app-shell .map-stop-list small { color: var(--color-text-secondary); }
+.workspace { grid-template-columns: minmax(0, 1fr) minmax(15rem, 17rem); }
+.app-shell :is(input:not([type="checkbox"]):not([type="radio"]), select) { min-height: 2.75rem; }
+.app-shell :is(input, select, textarea):focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.workspace .location-search-form input:focus,
+.route-preferences-card .location-search-form input:focus { outline-color: var(--color-focus); }
+.admin-control-panel { width: 100%; max-width: none; margin-inline: 0; padding-inline: 0; }
+.admin-control-panel .admin-field { min-height: 2.75rem; }
+
+:root[data-theme="light"] .app-shell :is(.verification-intro, .verification-finish) {
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+}
+:root[data-theme="light"] .app-shell :is(.verification-intro p, .verification-finish p) { color: var(--color-text-secondary); }
+:root[data-theme="light"] .app-shell .verification-status.is-pending { color: var(--color-warning); }
+:root[data-theme="light"] .app-shell .location-search-attribution { color: var(--color-text-muted); }
 
 @media (max-width: 560px) {
   .workspace .topbar-brand .brand-logo-mark { width: 2.15rem; height: 2.15rem; }
