@@ -75,7 +75,7 @@
   --color-input-background: #f8fafc;
   --color-input-text: #17263d;
   --color-placeholder: #66768a;
-  --color-disabled: #77869a;
+  --color-disabled: #586a80;
   --color-overlay: rgba(15, 23, 42, .48);
   --color-navigation-background: #ffffff;
   --color-navigation-active: #fff2c7;
@@ -178,8 +178,8 @@ button, input, select, textarea { color-scheme: inherit; }
 .info-document-content, .info-document-content p, .info-faq-list p,
 .sidebar-label, .profile-copy small) { color: var(--color-text-secondary); }
 .app-shell .workspace .verification-reminder .verification-reminder-copy,
-.app-shell .workspace .verification-reminder .verification-reminder-copy strong,
-.app-shell .workspace .verification-reminder .verification-reminder-copy p { color: #fff; }
+.app-shell .workspace .verification-reminder .verification-reminder-copy strong { color: var(--color-text-primary); }
+.app-shell .workspace .verification-reminder .verification-reminder-copy p { color: var(--color-text-secondary); }
 .app-shell :is(a, .auth-consent-links button, .auth-forgot-link, .text-action) { color: var(--color-accent-text); }
 .app-shell :is(.eyebrow, .heading-mark, .surface-icon, .aside-icon,
 .field-heading span, .category-option b, .package-option b,
@@ -371,6 +371,100 @@ button, input, select, textarea { color-scheme: inherit; }
 :root[data-theme="light"] .admin-control-panel > nav,
 :root[data-theme="light"] .admin-control-panel .admin-nav-group { background-color: var(--color-surface); }
 :root[data-theme="light"] .workspace .admin-control-panel > nav[aria-label="أقسام الإدارة"] button[aria-current="page"] { color: var(--color-accent-text); background: var(--color-navigation-active); }
+
+/* Explicit light palette for controls that retain dark-only colors in legacy component styles. */
+:root[data-theme="light"] .app-shell .workspace .verification-reminder {
+  color: var(--color-text-primary);
+  background: var(--color-soft-accent);
+  border-color: color-mix(in srgb, var(--color-accent) 38%, var(--color-border));
+}
+:root[data-theme="light"] .app-shell .workspace .verification-reminder .verification-reminder-copy,
+:root[data-theme="light"] .app-shell .workspace .verification-reminder .verification-reminder-copy strong { color: var(--color-text-primary); }
+:root[data-theme="light"] .app-shell .workspace .verification-reminder .verification-reminder-copy p { color: var(--color-text-secondary); }
+
+:root[data-theme="light"] .app-shell .admin-control-panel .admin-permissions-note {
+  color: var(--color-text-primary);
+  background: var(--color-surface-elevated);
+  border-color: var(--color-border);
+}
+:root[data-theme="light"] .app-shell .admin-control-panel .admin-permissions-note > span {
+  color: var(--color-accent-text);
+  background: var(--color-soft-accent);
+}
+:root[data-theme="light"] .app-shell .admin-control-panel .admin-permissions-note p { color: var(--color-text-secondary); }
+:root[data-theme="light"] .app-shell .admin-control-panel .admin-nav-group {
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+:root[data-theme="light"] .app-shell .admin-control-panel .admin-nav-group h3 { color: var(--color-text-secondary); }
+:root[data-theme="light"] .app-shell .admin-control-panel .admin-nav-group button {
+  color: var(--color-text-secondary);
+  background: transparent;
+  border-color: transparent;
+}
+:root[data-theme="light"] .app-shell .admin-control-panel .admin-nav-group button:hover,
+:root[data-theme="light"] .app-shell .admin-control-panel .admin-nav-group button:focus-visible {
+  color: var(--color-text-primary);
+  background: var(--color-hover);
+  border-color: var(--color-border);
+}
+:root[data-theme="light"] .app-shell .admin-control-panel .admin-nav-group button[aria-current="page"] {
+  color: var(--color-accent-text);
+  background: var(--color-navigation-active);
+  border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
+  box-shadow: inset -3px 0 var(--color-accent);
+}
+:root[data-theme="light"] .app-shell .admin-control-panel article .flex.flex-wrap.gap-2 > button:not(.admin-primary) {
+  color: var(--color-text-secondary);
+  background: var(--color-surface-elevated);
+  border-color: var(--color-border);
+}
+:root[data-theme="light"] .app-shell .admin-control-panel article .flex.flex-wrap.gap-2 > button:not(.admin-primary):hover:not(:disabled) {
+  color: var(--color-text-primary);
+  background: var(--color-hover);
+  border-color: var(--color-accent);
+}
+:root[data-theme="light"] .app-shell .admin-control-panel article .flex.flex-wrap.gap-2 > button.admin-text-error,
+:root[data-theme="light"] .app-shell .admin-control-panel article .flex.flex-wrap.gap-2 > button[class*="border-red"] {
+  color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 7%, var(--color-surface));
+  border-color: color-mix(in srgb, var(--color-error) 46%, var(--color-border));
+}
+:root[data-theme="light"] .app-shell .admin-control-panel article .flex.flex-wrap.gap-2 > button.admin-text-error:hover:not(:disabled),
+:root[data-theme="light"] .app-shell .admin-control-panel article .flex.flex-wrap.gap-2 > button[class*="border-red"]:hover:not(:disabled) {
+  color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 12%, var(--color-surface));
+  border-color: var(--color-error);
+}
+:root[data-theme="light"] .app-shell .admin-control-panel article .flex.flex-wrap.gap-2 > button:disabled { color: var(--color-disabled); }
+
+:root[data-theme="light"] .app-shell :is(.admin-load-feedback, .admin-load-status) {
+  color: var(--color-text-secondary);
+  background: var(--color-surface-elevated);
+  border-color: var(--color-border);
+}
+:root[data-theme="light"] .app-shell .admin-load-feedback { color: var(--color-error); background: color-mix(in srgb, var(--color-error) 7%, var(--color-surface)); border-color: color-mix(in srgb, var(--color-error) 35%, var(--color-border)); }
+:root[data-theme="light"] .app-shell .admin-load-feedback button { color: var(--color-accent-text); border-color: var(--color-border); }
+
+:root[data-theme="light"] .app-shell :is(.auth-consent, .auth-document-dialog, .verification-center,
+.verification-progress, .verification-phone-row, .verification-doc-card, .verification-wizard,
+.verification-intro, .verification-finish, .admin-secondary-details, .captain-settings-details) {
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+:root[data-theme="light"] .app-shell .auth-consent { background: var(--color-surface-elevated); }
+:root[data-theme="light"] .app-shell :is(.verification-warning, .verification-rejection, .admin-review-actions .button-quiet) { color: var(--color-error); }
+:root[data-theme="light"] .app-shell :is(.sidebar-section-heading, .connection-state.is-online, .admin-secondary-details > summary, .captain-settings-details > summary, .loading-card) { color: var(--color-text-secondary); }
+:root[data-theme="light"] .app-shell .auth-consent-check { color: var(--color-text-secondary); }
+:root[data-theme="light"] .app-shell .auth-consent-check.is-disabled { color: var(--color-disabled); }
+:root[data-theme="light"] .app-shell .info-document-content section { border-color: var(--color-border); }
+:root[data-theme="light"] .app-shell .info-document-content :is(.info-document-intro, h3),
+:root[data-theme="light"] .app-shell .info-faq-list summary { color: var(--color-text-primary); }
+:root[data-theme="light"] .app-shell .info-document-content,
+:root[data-theme="light"] .app-shell .info-document-content p,
+:root[data-theme="light"] .app-shell .info-faq-list p { color: var(--color-text-secondary); }
 
 @media (max-width: 560px) {
   .workspace .topbar-brand .brand-logo-mark { width: 2.15rem; height: 2.15rem; }
