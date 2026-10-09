@@ -1819,7 +1819,7 @@ button { line-height: 1.45; }
 .workspace .topbar { min-width: 0; }
 .workspace .topbar-brand-group { display: flex; align-items: center; gap: .7rem; min-width: 0; }
 .workspace .topbar-brand { color: var(--ink); }
-.workspace .topbar-brand .brand-logo-copy strong { color: #fff; font-size: 1.1rem; }
+.workspace .topbar-brand .brand-logo-copy strong { color: var(--color-text-primary); font-size: 1.1rem; }
 .workspace .topbar-brand .brand-logo-copy small { display: none; }
 .workspace .topbar-actions { gap: .7rem; }
 .workspace .connection-state { display: inline-flex; align-items: center; gap: .4rem; color: var(--muted); font-size: .78rem; white-space: nowrap; }

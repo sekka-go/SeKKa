@@ -300,15 +300,15 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
   margin: 0 0 1rem;
   padding: 1rem;
   color: #f8fafc;
-  background: linear-gradient(115deg, rgba(120, 53, 15, .34), rgba(30, 41, 59, .94));
+  background: #263449;
   border: 1px solid rgba(251, 191, 36, .52);
   border-radius: 1rem;
 }
 .workspace .verification-reminder.is-deferred { border-color: rgba(251, 146, 60, .58); }
 .verification-reminder-icon { display: grid; place-items: center; width: 2.5rem; height: 2.5rem; color: #111827; background: #fbbf24; border-radius: .8rem; font-weight: 900; }
 .verification-reminder-copy { min-width: 0; }
-.verification-reminder-copy strong { display: block; font-size: .96rem; }
-.verification-reminder-copy p { margin: .2rem 0 0; color: #cbd5e1; font-size: .84rem; line-height: 1.55; }
+.verification-reminder-copy strong { display: block; color: #f8fafc; font-size: .96rem; }
+.verification-reminder-copy p { margin: .2rem 0 0; color: #f8fafc; font-size: .84rem; line-height: 1.55; }
 .verification-reminder-actions { display: grid; grid-template-columns: auto auto; align-items: center; gap: .45rem; }
 .verification-reminder-actions .button { white-space: nowrap; }
 .verification-category { display: grid; gap: .7rem; }
