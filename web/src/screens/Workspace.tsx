@@ -11,10 +11,15 @@ import { NotificationsPanel } from "../components/workspace-shared";
 import VerificationReminder from "../components/VerificationReminder";
 import InfoPages, { type InfoPageKey } from "../components/InfoPages";
 import MessagesWorkspace from "./MessagesWorkspace";
+import ThemePreferenceCard, { type ThemePreference } from "../components/ThemePreferenceCard";
 function cairoHour() {
   return Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Africa/Cairo", hour: "2-digit", hourCycle: "h23" }).format(new Date()));
 }
-export default function Workspace({ session, onSignOut, notify }: { session: Session; onSignOut: () => void; notify: (text: string, tone?: Toast["tone"]) => void }) {
+export default function Workspace({ session, onSignOut, notify, themePreference, resolvedTheme, onThemePreferenceChange }: {
+  session: Session; onSignOut: () => void; notify: (text: string, tone?: Toast["tone"]) => void;
+  resolvedTheme: "light" | "dark";
+  themePreference: ThemePreference; onThemePreferenceChange: (value: ThemePreference) => void;
+}) {
   const initialSection: NavKey = session.user.role === "captain" ? "offers" : session.user.role === "admin" ? "admin" : "home";
   const [section, setSectionState] = useState<NavKey>(() => {
     const state = window.history.state as { sekkaWorkspace?: boolean; sekkaSection?: NavKey } | null;
@@ -188,6 +193,7 @@ export default function Workspace({ session, onSignOut, notify }: { session: Ses
     <main className="main-area">
       <header className="topbar" onClick={() => { if (notificationsOpen) closeNotifications(); }}><div className="topbar-brand-group"><button type="button" className="mobile-menu" onClick={() => setNavOpen(true)} aria-label="فتح القائمة"><AppIcon name="menu" /></button><button type="button" className="topbar-brand-home" onClick={() => { setSection(initialSection); setNavOpen(false); }} aria-label="العودة للرئيسية"><BrandLogo className="topbar-brand" /></button></div><div className="topbar-actions"><span className={`connection-state ${isOnline ? "is-online" : "is-offline"}`} role="status"><i />{isOnline ? "متصل" : "غير متصل"}</span><button type="button" className={`icon-button notification-bell ${notificationsOpen ? "is-open" : ""}`} onClick={(event) => { event.stopPropagation(); setNotificationsOpen((open) => !open); }} aria-expanded={notificationsOpen} aria-controls="sekka-notifications-drawer" aria-label={unread > 0 ? `الإشعارات، ${unread} غير مقروءة` : "الإشعارات"}><AppIcon name="bell" size={21} />{unread > 0 && <i />}</button></div></header>
       <div className="page-content">{infoPage ? <InfoPages page={infoPage} onBack={() => setInfoPage(null)} /> : <>{section !== "booking" && <div className={`page-heading ${section === "account" ? "page-heading-account" : ""}`}><div><h1>{title}</h1>{subtitle && <p>{subtitle}</p>}</div></div>}
+        {section === "account" && <ThemePreferenceCard value={themePreference} resolvedTheme={resolvedTheme} onChange={onThemePreferenceChange} />}
         {session.user.role !== "admin" && <VerificationReminder session={session} onOpen={openMissingVerification} visible={section !== "account" && !(session.user.role === "captain" && section === "offers")} />}
         {section === "messages" && <MessagesWorkspace session={session} notify={notify} />}
         {session.user.role === "rider" && section !== "messages" && <RiderWorkspace session={session} section={section} setSection={setSection} refreshNotifications={refreshNotifications} registerPoolRefresh={registerPoolRefresh} notify={notify} />}

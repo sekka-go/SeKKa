@@ -1,0 +1,376 @@
+/* Shared SeKKa color system. Every screen reads from these semantic tokens. */
+:root {
+  color-scheme: dark;
+  --color-scheme: dark;
+  --color-background: #0f172a;
+  --color-surface: #1e293b;
+  --color-surface-elevated: #263449;
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #cbd5e1;
+  --color-text-muted: #94a3b8;
+  --color-primary: #f5bd08;
+  --color-primary-text: #172033;
+  --color-accent: #eab308;
+  --color-accent-text: #fcd34d;
+  --color-border: rgba(148, 163, 184, .22);
+  --color-icon: #f5bd08;
+  --color-success: #86efac;
+  --color-warning: #fcd34d;
+  --color-error: #fca5a5;
+  --color-info: #7dd3fc;
+  --color-input-background: #111c30;
+  --color-input-text: #f8fafc;
+  --color-placeholder: #94a3b8;
+  --color-disabled: #64748b;
+  --color-overlay: rgba(2, 6, 23, .68);
+  --color-navigation-background: #111b2e;
+  --color-navigation-active: rgba(234, 179, 8, .12);
+  --color-hover: rgba(148, 163, 184, .1);
+  --color-selection: #f5bd08;
+  --color-focus: rgba(245, 189, 8, .52);
+  --color-shadow: rgba(2, 6, 23, .28);
+  --color-soft-accent: rgba(245, 189, 8, .09);
+  --color-soft-cyan: rgba(103, 214, 212, .1);
+  --ink: var(--color-text-primary);
+  --muted: var(--color-text-muted);
+  --line: var(--color-border);
+  --panel: var(--color-surface);
+  --panel-hi: var(--color-surface-elevated);
+  --yellow: var(--color-primary);
+  --yellow-deep: var(--color-accent-text);
+  --cyan: #67d6d4;
+  --danger: var(--color-error);
+  --success: var(--color-success);
+  --warning: var(--color-warning);
+  --info: var(--color-info);
+  --page-bg: var(--color-background);
+  --focus-ring: var(--color-focus);
+  --radius-card: 1rem;
+  --radius-control: .75rem;
+  --space-card: 1rem;
+  font-family: Tajawal, sans-serif;
+  color: var(--color-text-primary);
+  background: var(--color-background);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --color-scheme: light;
+  --color-background: #f2f5f9;
+  --color-surface: #ffffff;
+  --color-surface-elevated: #e8eef5;
+  --color-text-primary: #17263d;
+  --color-text-secondary: #3f5067;
+  --color-text-muted: #586a80;
+  --color-primary: #f5bd08;
+  --color-primary-text: #172033;
+  --color-accent: #8a6200;
+  --color-accent-text: #805b00;
+  --color-border: #d3dce7;
+  --color-icon: #8a6200;
+  --color-success: #176534;
+  --color-warning: #805300;
+  --color-error: #a12622;
+  --color-info: #155b83;
+  --color-input-background: #f8fafc;
+  --color-input-text: #17263d;
+  --color-placeholder: #66768a;
+  --color-disabled: #77869a;
+  --color-overlay: rgba(15, 23, 42, .48);
+  --color-navigation-background: #ffffff;
+  --color-navigation-active: #fff2c7;
+  --color-hover: #edf2f7;
+  --color-selection: #f5bd08;
+  --color-focus: rgba(138, 98, 0, .5);
+  --color-shadow: rgba(15, 23, 42, .09);
+  --color-soft-accent: #fff8e3;
+  --color-soft-cyan: #e7f5f4;
+  --cyan: #087b80;
+}
+
+html, body, #root { min-height: 100%; color: var(--color-text-primary); background: var(--color-background); }
+body, .app-shell { color: var(--color-text-primary); background: var(--color-background); }
+button, input, select, textarea { color-scheme: inherit; }
+::selection { color: var(--color-primary-text); background: var(--color-selection); }
+
+/* App frame and shared surfaces */
+.app-shell { min-height: 100vh; background: var(--color-background); }
+.workspace, .workspace .main-area, .workspace .page-content,
+.auth-page, .landing-page { color: var(--color-text-primary); background-color: var(--color-background); }
+.workspace .sidebar, .workspace .topbar, .workspace .mobile-tabbar,
+.auth-page-header, .landing-header {
+  color: var(--color-text-primary);
+  background: var(--color-navigation-background);
+  border-color: var(--color-border);
+  box-shadow: 0 1px 5px var(--color-shadow);
+}
+.workspace .sidebar { border-inline-start: 1px solid var(--color-border); }
+.workspace .topbar { -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+.workspace .sidebar-label, .workspace .sidebar-section-heading,
+.workspace .page-heading p, .workspace .connection-state.is-online { color: var(--color-text-muted); }
+.workspace .nav-item { color: var(--color-text-secondary); }
+.workspace .nav-item:hover { color: var(--color-text-primary); background: var(--color-hover); }
+.workspace .nav-item.nav-active { color: var(--color-text-primary); background: var(--color-navigation-active); }
+.workspace .nav-icon, .workspace .nav-item.nav-active .nav-icon { color: var(--color-icon); }
+.workspace .sidebar-profile, .workspace .sidebar-brand .sidebar-label { color: var(--color-text-secondary); background: var(--color-surface-elevated); border-color: var(--color-border); }
+.workspace .sidebar-info-links { border-color: var(--color-border); }
+.workspace .sidebar-info-links button { color: var(--color-text-secondary); }
+.workspace .sidebar-signout { color: var(--color-error); }
+.workspace .mobile-tabbar { border-top: 1px solid var(--color-border); }
+.workspace .mobile-tabbar .nav-item { color: var(--color-text-muted); }
+.workspace .mobile-tabbar .nav-item.nav-active { color: var(--color-text-primary); background: var(--color-navigation-active); }
+
+.app-shell :is(.surface, .auth-card, .landing-route-card, .welcome-banner,
+.metric-card, .group-summary, .offer-card, .route-offer-card, .commuter-board-card,
+.account-card, .password-card, .verification-center, .verification-wizard,
+.verification-doc-card, .verification-phone-row, .verification-intro,
+.verification-finish, .notifications-drawer, .notification-item, .notifications-empty,
+.messages-workspace, .messages-thread-list, .messages-chat-panel, .messages-empty,
+.admin-secondary-details, .captain-settings-details, .admin-control-panel article,
+.admin-control-panel > nav, .admin-nav-group, .settings-disclosure,
+.settings-disclosure > details, .soft-surface, .offer-toolbar, .booking-stepper,
+.help-card, .brand-confirm-dialog, .price-info-popover) {
+  color: var(--color-text-primary);
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+  box-shadow: 0 8px 24px var(--color-shadow);
+}
+.app-shell :is(.settings-disclosure, .settings-disclosure > details,
+.admin-summary-grid > div, .profile-data-grid > div, .route-point-choice-wrap,
+.map-points-readout > div, .category-option, .package-option, .segmented-control,
+.time-picker-control, .messages-composer, .messages-composer textarea) {
+  color: var(--color-text-primary);
+  background-color: var(--color-surface-elevated);
+  border-color: var(--color-border);
+}
+.app-shell :is(input, select, textarea, .form-stack input, .form-stack select,
+.admin-control-panel input, .admin-control-panel select, .admin-control-panel textarea,
+.admin-broadcast-form input, .admin-broadcast-form textarea,
+.location-search-field input, .verification-center input, .verification-center select,
+.verification-center textarea) {
+  color: var(--color-input-text);
+  background-color: var(--color-input-background);
+  border-color: var(--color-border);
+}
+.app-shell :is(input, select, textarea)::placeholder { color: var(--color-placeholder); opacity: 1; }
+.workspace .commuter-preferences-times input,
+.workspace .route-preferences-card .commuter-preferences-times input,
+.workspace .otp-row input,
+.workspace .admin-broadcast-form input,
+.workspace .admin-broadcast-form textarea,
+.workspace .category-select option {
+  color: var(--color-input-text);
+  color-scheme: var(--color-scheme);
+  background-color: var(--color-input-background);
+  border-color: var(--color-border);
+}
+.workspace .commuter-preferences-times input::placeholder,
+.workspace .otp-row input::placeholder,
+.workspace .admin-broadcast-form input::placeholder,
+.workspace .admin-broadcast-form textarea::placeholder { color: var(--color-placeholder); }
+.app-shell :is(h1, h2, h3, h4, h5, strong, summary, .page-heading h1,
+.brand-logo-copy strong, .welcome-copy h2, .notifications-header h2,
+.auth-reset-form > h2) { color: var(--color-text-primary); }
+.app-shell :is(p, small, label, legend, li, time, .muted-text, .auth-heading p,
+.auth-switch, .form-stack label, .admin-broadcast-form label,
+.verification-heading p, .verification-phone-row p, .verification-deferred p,
+.verification-privacy, .verification-date, .account-avatar-note,
+.info-document-content, .info-document-content p, .info-faq-list p,
+.sidebar-label, .profile-copy small) { color: var(--color-text-secondary); }
+.app-shell :is(a, .auth-consent-links button, .auth-forgot-link, .text-action) { color: var(--color-accent-text); }
+.app-shell :is(.eyebrow, .heading-mark, .surface-icon, .aside-icon,
+.field-heading span, .category-option b, .package-option b,
+.route-preferences-heading-copy strong, .nav-count, .admin-stat strong,
+.admin-summary-grid strong, .metric-card strong, .side-date-card > strong,
+.workspace .route-offer-price strong) { color: var(--color-accent-text); }
+.app-shell :is(.button-primary, .workspace .button-primary, .avatar,
+.route-point-choice-mark, .route-point-choice-status, .nav-count) {
+  color: var(--color-primary-text); background-color: var(--color-primary);
+}
+.app-shell :is(.button-outline, .button-quiet, .button-dark,
+.workspace .button-outline, .workspace .button-quiet, .workspace .button-dark) {
+  color: var(--color-text-secondary); background-color: var(--color-surface-elevated); border-color: var(--color-border);
+}
+.app-shell :is(.button-outline:hover:not(:disabled), .button-quiet:hover:not(:disabled),
+.button-dark:hover:not(:disabled)) { color: var(--color-text-primary); background-color: var(--color-hover); }
+.app-shell :is(.button-secondary, .workspace .button-secondary) {
+  color: var(--color-info); background-color: var(--color-soft-cyan); border-color: var(--color-border);
+}
+.app-shell :is(.button-primary:hover:not(:disabled), .workspace .button-primary:hover:not(:disabled)) { filter: brightness(.96); }
+.app-shell .landing-primary-cta { color: var(--color-primary-text) !important; background: var(--color-primary); border-color: var(--color-primary); }
+.app-shell .landing-primary-cta:hover { color: var(--color-primary-text) !important; background: var(--color-primary); filter: brightness(.96); }
+.app-shell :is(.button:disabled, input:disabled, select:disabled, textarea:disabled) { color: var(--color-disabled); }
+.app-shell :is(.category-option.selected, .package-option.selected, .date-chip.active,
+.nav-item.nav-active) { background-color: var(--color-navigation-active); }
+.app-shell :is(.status-active, .status-approved, .status-completed, .status-reached,
+.admin-status-pill.is-success, .verification-status.is-approved) {
+  color: var(--color-success); background: color-mix(in srgb, var(--color-success) 12%, var(--color-surface)); border-color: color-mix(in srgb, var(--color-success) 32%, var(--color-border));
+}
+.app-shell :is(.status-pending, .status-waiting, .status-scheduled, .status-needs_captain,
+.status-price_review, .admin-status-pill.is-warning, .verification-status.is-pending) {
+  color: var(--color-warning); background: color-mix(in srgb, var(--color-warning) 12%, var(--color-surface)); border-color: color-mix(in srgb, var(--color-warning) 32%, var(--color-border));
+}
+.app-shell :is(.status-rejected, .status-cancelled, .status-banned, .status-suspended,
+.status-suspended_grace_expired, .admin-status-pill.is-danger,
+.verification-status.is-rejected, .inline-error) {
+  color: var(--color-error); background: color-mix(in srgb, var(--color-error) 10%, var(--color-surface)); border-color: color-mix(in srgb, var(--color-error) 30%, var(--color-border));
+}
+.app-shell :is(.status-assigned, .status-in_progress, .admin-status-pill.is-info) {
+  color: var(--color-info); background: color-mix(in srgb, var(--color-info) 11%, var(--color-surface)); border-color: color-mix(in srgb, var(--color-info) 30%, var(--color-border));
+}
+.app-shell :is(.button-cancel-trip, .sidebar-signout) { color: var(--color-error); }
+.app-shell .sidebar-scrim, .auth-document-scrim,
+.workspace .notifications-overlay, .messages-overlay { background-color: var(--color-overlay); }
+.app-shell .auth-document-dialog { color: var(--color-text-primary); background: var(--color-surface-elevated); border-color: var(--color-border); box-shadow: 0 1.5rem 4rem var(--color-shadow); }
+.app-shell .auth-document-dialog :is(h2, h3, summary) { color: var(--color-text-primary); }
+.app-shell .auth-document-scroll { scrollbar-color: var(--color-disabled) var(--color-surface); }
+.app-shell .admin-control-panel { color: var(--color-text-primary); }
+.app-shell :is(.notifications-drawer, .notification-action-options,
+.messages-search-results, .dropdown-menu, .popover) {
+  color: var(--color-text-primary); background: var(--color-surface-elevated);
+  border-color: var(--color-border); box-shadow: 0 12px 32px var(--color-shadow);
+}
+.workspace .notifications-overlay { background: var(--color-overlay); }
+.workspace .notifications-drawer { background: var(--color-background); }
+.workspace .notifications-header { color: var(--color-text-primary); background: var(--color-navigation-background); border-color: var(--color-border); }
+.workspace .notifications-header h2 { color: var(--color-text-primary); }
+.workspace .notification-icon-action { color: var(--color-icon); background: var(--color-soft-accent); border-color: var(--color-border); }
+.workspace .notification-icon-action:disabled { color: var(--color-disabled); background: var(--color-surface-elevated); }
+.workspace .notification-item { background: var(--color-surface); border-color: var(--color-border); }
+.workspace .notification-item:hover { background: var(--color-surface-elevated); }
+.workspace .notification-item:active { background: var(--color-surface-elevated); }
+.workspace .notification-context { color: var(--color-accent-text); }
+.workspace .notification-edit-action { color: var(--color-primary-text); }
+.workspace .notification-action-options { background: var(--color-surface-elevated); border-color: var(--color-border); }
+.workspace .notification-action-options button:hover { background: var(--color-hover); }
+.workspace .notification-action-options button.is-danger { color: var(--color-error); }
+.workspace .notification-close { color: var(--color-text-primary); background: var(--color-hover); }
+.workspace .price-info-popover, .workspace .brand-confirm-dialog { color: var(--color-text-primary); background: var(--color-surface-elevated); border-color: var(--color-border); }
+.workspace .brand-modal-backdrop { background: var(--color-overlay); }
+.workspace .captain-offers-page > .offer-toolbar { color: var(--color-text-primary); background: var(--color-surface); border-color: var(--color-border); }
+.workspace .route-offer-facts > div,
+.workspace .profile-data-grid > div,
+.workspace .admin-summary-grid > div,
+.workspace .map-points-readout > div { background: var(--color-surface-elevated); border-color: var(--color-border); }
+.workspace .notification-avatar.is-brand { background: var(--color-navigation-background); }
+.workspace .notification-category-badge { border-color: var(--color-surface); }
+.workspace .notification-action-menu > summary:hover,
+.workspace .notification-action-menu[open] > summary { color: var(--color-accent-text); background: var(--color-hover); }
+.workspace .time-picker-control,
+.workspace .time-picker-control option,
+.workspace .category-select option { color: var(--color-input-text); color-scheme: var(--color-scheme); background: var(--color-input-background); }
+.app-shell .message-mine { color: var(--color-text-primary); background: var(--color-soft-accent); border-color: var(--color-border); }
+.app-shell .message-theirs { color: var(--color-text-primary); background: var(--color-surface-elevated); border-color: var(--color-border); }
+.app-shell .verification-progress { color: var(--color-text-primary); background: var(--color-surface-elevated); border-color: var(--color-border); }
+.app-shell .verification-progress-track { background: var(--color-border); }
+.app-shell .verification-progress-copy strong, .app-shell .verification-wizard-heading > strong { color: var(--color-accent-text); }
+.app-shell .verification-center :is(h1, h2, h3, h4, strong) { color: var(--color-text-primary); }
+.app-shell .verification-center :is(p, small, label) { color: var(--color-text-secondary); }
+.app-shell .verification-status.is-empty { color: var(--color-text-secondary); background: var(--color-surface-elevated); }
+.toast { color: var(--color-text-primary); background: var(--color-surface-elevated); border-color: var(--color-border); box-shadow: 0 12px 36px var(--color-shadow); }
+.toast-success { border-color: var(--color-success); }
+.toast-error { border-color: var(--color-error); }
+
+.theme-preference-card { display: grid; gap: 1.1rem; margin: 0 0 1rem; }
+.theme-preference-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.theme-preference-copy h2 { margin: .3rem 0; font-size: 1.08rem; }
+.theme-preference-copy p { margin: 0; color: var(--color-text-secondary); font-size: .88rem; }
+.theme-mode-toggle { display: grid; flex: 0 0 2.75rem; width: 2.75rem; height: 2.75rem; place-items: center; color: var(--color-primary-text); background: var(--color-primary); border: 1px solid var(--color-primary); border-radius: 50%; cursor: pointer; transition: transform .16s ease, filter .16s ease; }
+.theme-mode-toggle:hover { filter: brightness(.95); transform: rotate(-8deg); }
+.theme-mode-toggle:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3px; }
+.theme-mode-toggle svg { width: 1.3rem; height: 1.3rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.theme-preference-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .65rem; }
+.theme-preference-option {
+  display: flex; align-items: center; gap: .65rem; min-width: 0; padding: .75rem;
+  color: var(--color-text-secondary); text-align: right; background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border); border-radius: var(--radius-control); cursor: pointer;
+  transition: background-color .16s ease, border-color .16s ease, color .16s ease;
+}
+.theme-preference-option:hover { color: var(--color-text-primary); background: var(--color-hover); }
+.theme-preference-option.is-selected { color: var(--color-text-primary); background: var(--color-navigation-active); border-color: var(--color-accent); }
+.theme-choice-indicator { display: grid; flex: 0 0 1.05rem; width: 1.05rem; height: 1.05rem; place-items: center; border: 1.5px solid var(--color-text-muted); border-radius: 50%; }
+.theme-preference-option.is-selected .theme-choice-indicator { border-color: var(--color-accent); }
+.theme-preference-option.is-selected .theme-choice-indicator::after { width: .5rem; height: .5rem; content: ""; background: var(--color-accent); border-radius: 50%; }
+.theme-preference-option > span:last-child { display: grid; gap: .15rem; min-width: 0; }
+.theme-preference-option strong { font-size: .9rem; }
+.theme-preference-option small { color: var(--color-text-muted); font-size: .74rem; }
+
+/* Keep the shared palette direct and readable instead of stacking tinted gradients. */
+.app-shell :is(.workspace .rider-dashboard .welcome-banner,
+.workspace .welcome-banner, .workspace .soft-surface, .soft-surface,
+.workspace .notifications-drawer, .verification-intro, .verification-finish,
+.brand-confirm-dialog) {
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  background-image: none;
+  border-color: var(--color-border);
+  box-shadow: 0 8px 24px var(--color-shadow);
+}
+.app-shell :is(.auth-page, .landing-page) { background-image: none; }
+.app-shell :is(button:disabled, input:disabled, select:disabled, textarea:disabled),
+.app-shell .workspace :is(button:disabled, input:disabled, select:disabled, textarea:disabled) {
+  color: var(--color-disabled);
+  opacity: .8;
+}
+.app-shell .message-mine time { color: var(--color-text-secondary); }
+
+/* Admin tools use semantic classes so their dense forms also follow the active palette. */
+.admin-control-panel .admin-surface { background: var(--color-surface); border-color: var(--color-border); }
+.admin-control-panel .admin-surface-raised { background: var(--color-surface-elevated); }
+.admin-control-panel .admin-field { color: var(--color-input-text); background: var(--color-input-background); border-color: var(--color-border); }
+.admin-control-panel .admin-field:focus { border-color: var(--color-accent); outline: 2px solid var(--color-focus); outline-offset: 1px; }
+.admin-control-panel .admin-border { border-color: var(--color-border); }
+.admin-control-panel .admin-border-accent { border-color: var(--color-accent); }
+.admin-control-panel .admin-soft-border-accent { border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border)); }
+.admin-control-panel .admin-soft-accent { background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface)); }
+.admin-control-panel .admin-border-error { border-color: var(--color-error); }
+.admin-control-panel .admin-text-primary { color: var(--color-text-primary); }
+.admin-control-panel .admin-text-secondary { color: var(--color-text-secondary); }
+.admin-control-panel .admin-text-muted { color: var(--color-text-muted); }
+.admin-control-panel .admin-text-accent { color: var(--color-accent-text); }
+.admin-control-panel .admin-text-error { color: var(--color-error); }
+.admin-control-panel .admin-primary-bg { color: var(--color-primary-text); background: var(--color-primary); }
+.admin-control-panel .admin-primary-text { color: var(--color-primary-text); }
+
+/* The current route mark stays unchanged; its white road adapts with current text color. */
+.brand-logo-mark { color: var(--color-text-primary); }
+.splash-main-mark, .intro-logo-mark { color: var(--color-text-primary); }
+
+/* Light-specific treatments retain the original navy and gold hierarchy. */
+:root[data-theme="light"] .app-shell { background-image: none; }
+:root[data-theme="light"] .workspace .welcome-banner,
+:root[data-theme="light"] .workspace .metric-card,
+:root[data-theme="light"] .workspace .group-summary,
+:root[data-theme="light"] .workspace .notifications-drawer { background-color: var(--color-surface); }
+:root[data-theme="light"] .auth-page,
+:root[data-theme="light"] .landing-page { background: var(--color-background); }
+:root[data-theme="light"] .auth-card { background: var(--color-surface); border-color: var(--color-border); box-shadow: 0 18px 50px var(--color-shadow); }
+:root[data-theme="light"] .auth-journey-backdrop { opacity: .5; }
+:root[data-theme="light"] .auth-register-card .auth-heading h1 { color: var(--color-accent-text); }
+:root[data-theme="light"] .auth-page-header,
+:root[data-theme="light"] .landing-header { background: var(--color-background); box-shadow: none; }
+:root[data-theme="light"] .landing-route-card { background: var(--color-surface); border-color: var(--color-border); }
+:root[data-theme="light"] .landing-hero { color: var(--color-text-primary); }
+:root[data-theme="light"] .sikka-splash,
+:root[data-theme="light"] .intro-logo-screen {
+  color: var(--color-text-primary);
+  background: var(--color-background);
+}
+:root[data-theme="light"] .splash-content,
+:root[data-theme="light"] .splash-title-english,
+:root[data-theme="light"] .splash-title-arabic { color: var(--color-text-primary); }
+:root[data-theme="light"] .splash-tagline { color: var(--color-text-secondary); }
+:root[data-theme="light"] .splash-emblem { background: var(--color-surface); border-color: var(--color-border); box-shadow: 0 12px 32px var(--color-shadow); }
+:root[data-theme="light"] .intro-logo-mark { color: var(--color-text-primary); filter: drop-shadow(0 8px 18px var(--color-shadow)); }
+:root[data-theme="light"] .splash-main-mark { color: var(--color-text-primary); }
+:root[data-theme="light"] .splash-floating-mark { color: #263449; }
+:root[data-theme="light"] .admin-control-panel article,
+:root[data-theme="light"] .admin-control-panel > nav,
+:root[data-theme="light"] .admin-control-panel .admin-nav-group { background-color: var(--color-surface); }
+:root[data-theme="light"] .workspace .admin-control-panel > nav[aria-label="أقسام الإدارة"] button[aria-current="page"] { color: var(--color-accent-text); background: var(--color-navigation-active); }
+
+@media (max-width: 560px) {
+  .workspace .topbar-brand .brand-logo-mark { width: 2.15rem; height: 2.15rem; }
+  .notification-avatar.is-brand .brand-logo-mark { width: 2.8rem; height: 2.8rem; }
+  .theme-preference-options { grid-template-columns: 1fr; }
+}

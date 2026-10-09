@@ -6,8 +6,26 @@ import Workspace from "./screens/Workspace";
 import SikkaSplash from "./components/SikkaSplash";
 import SikkaMark from "./components/SikkaMark";
 import type { Session, Toast } from "./types";
+import type { ThemePreference } from "./components/ThemePreferenceCard";
+
+function readThemePreference(): ThemePreference {
+  try {
+    const stored = localStorage.getItem("sekka.theme");
+    return stored === "light" || stored === "dark" || stored === "system" ? stored : "system";
+  } catch {
+    return "system";
+  }
+}
+
+function resolveTheme(preference: ThemePreference): "light" | "dark" {
+  if (preference !== "system") return preference;
+  return window.matchMedia?.("(prefers-color-scheme: light)").matches ? "light" : "dark";
+}
+
 export default function App() {
   const [session, setSession] = useState<Session | null>(() => getStoredSession());
+  const [themePreference, setThemePreference] = useState<ThemePreference>(readThemePreference);
+  const resolvedTheme = resolveTheme(themePreference);
   const [toast, setToast] = useState<Toast | null>(null);
   const [introStage, setIntroStage] = useState<"mark" | "splash" | null>(() =>
     !getStoredSession() && window.location.pathname === "/" && !sessionStorage.getItem("sekka.intro-flow.v2") ? "mark" : null,
@@ -19,6 +37,20 @@ export default function App() {
     toastTimer.current = window.setTimeout(() => { setToast(null); toastTimer.current = null; }, 4200);
   }, []);
   useEffect(() => () => { if (toastTimer.current !== null) window.clearTimeout(toastTimer.current); }, []);
+  useEffect(() => {
+    const applyTheme = () => {
+      const theme = resolveTheme(themePreference);
+      document.documentElement.dataset.theme = theme;
+      try { localStorage.setItem("sekka.theme", themePreference); } catch { /* Keep the in-memory choice if storage is unavailable. */ }
+      const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+      if (themeColor) themeColor.content = theme === "light" ? "#f2f5f9" : "#0f172a";
+    };
+    applyTheme();
+    if (themePreference !== "system") return;
+    const media = window.matchMedia("(prefers-color-scheme: light)");
+    media.addEventListener("change", applyTheme);
+    return () => media.removeEventListener("change", applyTheme);
+  }, [themePreference]);
   useEffect(() => {
     if (introStage !== "mark") return;
     const timer = window.setTimeout(() => setIntroStage("splash"), 1650);
@@ -51,9 +83,9 @@ export default function App() {
     clearSession(); setSession(null);
   };
 
-  return <div className="app-shell" dir="rtl">
+  return <div className="app-shell" data-theme={resolvedTheme} dir="rtl">
     {toast && <div className={`toast toast-${toast.tone}`} role={toast.tone === "error" ? "alert" : "status"} aria-live={toast.tone === "error" ? "assertive" : "polite"}><span className="toast-icon" aria-hidden="true">{toast.tone === "success" ? "✓" : toast.tone === "error" ? "!" : "i"}</span><span className="toast-message">{toast.text}</span><button onClick={() => { setToast(null); if (toastTimer.current !== null) window.clearTimeout(toastTimer.current); toastTimer.current = null; }} aria-label="إغلاق">×</button></div>}
-    {session ? <Workspace session={session} onSignOut={signOut} notify={notify} /> : introStage ? null : window.location.pathname === "/login" || window.location.pathname === "/register" ? <AuthScreen onSignedIn={onSignedIn} notify={notify} /> : <LandingScreen />}
+    {session ? <Workspace session={session} onSignOut={signOut} notify={notify} themePreference={themePreference} resolvedTheme={resolvedTheme} onThemePreferenceChange={setThemePreference} /> : introStage ? null : window.location.pathname === "/login" || window.location.pathname === "/register" ? <AuthScreen onSignedIn={onSignedIn} notify={notify} /> : <LandingScreen />}
     {introStage === "mark" && <div className="intro-logo-screen" role="status" aria-label="سِكّة" aria-live="polite"><SikkaMark className="intro-logo-mark" /></div>}
     {introStage === "splash" && <SikkaSplash onComplete={completeIntro} />}
   </div>;
