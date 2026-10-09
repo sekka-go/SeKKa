@@ -22,6 +22,12 @@ function resolveTheme(preference: ThemePreference): "light" | "dark" {
   return window.matchMedia?.("(prefers-color-scheme: light)").matches ? "light" : "dark";
 }
 
+const protectedPagePaths = new Set([
+  "/admin", "/account", "/captain", "/captain/trips", "/publish",
+  "/search", "/trips", "/messages", "/notifications", "/broadcast",
+]);
+const currentPathname = () => window.location.pathname.replace(/\/+$/, "") || "/";
+
 export default function App() {
   const [session, setSession] = useState<Session | null>(() => getStoredSession());
   const [themePreference, setThemePreference] = useState<ThemePreference>(readThemePreference);
@@ -85,7 +91,7 @@ export default function App() {
 
   return <div className="app-shell" data-theme={resolvedTheme} dir="rtl">
     {toast && <div className={`toast toast-${toast.tone}`} role={toast.tone === "error" ? "alert" : "status"} aria-live={toast.tone === "error" ? "assertive" : "polite"}><span className="toast-icon" aria-hidden="true">{toast.tone === "success" ? "✓" : toast.tone === "error" ? "!" : "i"}</span><span className="toast-message">{toast.text}</span><button onClick={() => { setToast(null); if (toastTimer.current !== null) window.clearTimeout(toastTimer.current); toastTimer.current = null; }} aria-label="إغلاق">×</button></div>}
-    {session ? <Workspace session={session} onSignOut={signOut} notify={notify} themePreference={themePreference} resolvedTheme={resolvedTheme} onThemePreferenceChange={setThemePreference} /> : introStage ? null : window.location.pathname === "/login" || window.location.pathname === "/register" ? <AuthScreen onSignedIn={onSignedIn} notify={notify} /> : <LandingScreen />}
+    {session ? <Workspace session={session} onSignOut={signOut} notify={notify} themePreference={themePreference} resolvedTheme={resolvedTheme} onThemePreferenceChange={setThemePreference} /> : introStage ? null : currentPathname() === "/login" || currentPathname() === "/register" || protectedPagePaths.has(currentPathname()) ? <AuthScreen onSignedIn={onSignedIn} notify={notify} /> : <LandingScreen />}
     {introStage === "mark" && <div className="intro-logo-screen" role="status" aria-label="سِكّة" aria-live="polite"><SikkaMark className="intro-logo-mark" /></div>}
     {introStage === "splash" && <SikkaSplash onComplete={completeIntro} />}
   </div>;

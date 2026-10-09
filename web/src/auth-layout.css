@@ -11,7 +11,7 @@
 }
 
 .auth-register-card .auth-heading h1 {
-  color: var(--yellow);
+  color: var(--color-accent-text);
 }
 
 .auth-register-card .form-stack label.auth-consent-check {
@@ -180,7 +180,7 @@
 
   .auth-register-card .auth-heading h1 {
     margin: 0;
-    color: var(--yellow);
+    color: var(--color-accent-text);
   }
 
   .auth-register-card .auth-heading p {

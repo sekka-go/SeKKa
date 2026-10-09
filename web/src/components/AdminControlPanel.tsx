@@ -63,7 +63,7 @@ export default function AdminControlPanel({ session, notify }: { session: Sessio
     void load("verification", null).catch((e) => notify(errorText(e), "error"));
   };
   const allTrips = useMemo<Array<Row & { kind: string }>>(() => [...trips.daily_trips.map((x) => ({...x, kind:"daily"})), ...trips.pool_trips.map((x) => ({...x, kind:"pool"}))], [trips]);
-  return <section dir="rtl" className="admin-control-panel mx-auto w-full max-w-7xl space-y-5 px-4 py-5 text-right admin-text-primary sm:px-6" aria-busy={loading}>
+  return <section dir="rtl" className="admin-control-panel w-full space-y-5 py-5 text-right admin-text-primary" aria-busy={loading}>
     <header className="admin-panel-heading"><div><p className="text-sm font-bold admin-text-accent">SeKKa · تحكم آمن</p><h2 className="mt-1 text-2xl font-extrabold">مركز إدارة المنصة</h2><p className="mt-1 text-sm admin-text-secondary">كل تغيير حساس يُسجل مع سببه في سجل التدقيق.</p></div><button type="button" className="button button-outline button-small" onClick={() => void load().catch((e) => notify(errorText(e), "error"))}>تحديث البيانات</button></header>
     <aside className="admin-permissions-note"><span aria-hidden="true">▣</span><div><strong>صلاحيات إدارة محمية</strong><p>تظهر هذه الأدوات لحسابات الإدارة المخوّلة فقط، وتُراجع تغييراتها من سجل التدقيق.</p></div></aside>
     <nav aria-label="أقسام الإدارة" className="admin-nav-groups">{tabGroups.map((group) => <section className="admin-nav-group" key={group.label} aria-label={group.label}><h3>{group.label}</h3><div>{group.tabs.map(([id,label]) => <button key={id} type="button" aria-current={id === tab ? "page" : undefined} onClick={() => setTab(id)}>{label}</button>)}</div></section>)}</nav>

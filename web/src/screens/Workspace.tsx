@@ -15,6 +15,35 @@ import ThemePreferenceCard, { type ThemePreference } from "../components/ThemePr
 function cairoHour() {
   return Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Africa/Cairo", hour: "2-digit", hourCycle: "h23" }).format(new Date()));
 }
+
+function sectionAllowedForRole(section: NavKey, role: Session["user"]["role"]) {
+  if (section === "account") return true;
+  if (["admin", "broadcast"].includes(section)) return role === "admin";
+  if (["offers", "publish", "captainTrips"].includes(section)) return role === "captain";
+  if (section === "messages") return role === "rider" || role === "captain";
+  return role === "rider";
+}
+
+function sectionForPath(path: string, role: Session["user"]["role"]): NavKey | null {
+  const normalizedPath = path.replace(/\/+$/, "") || "/";
+  const routeSections: Record<string, NavKey> = {
+    "/account": "account", "/admin": "admin", "/broadcast": "broadcast",
+    "/captain": "offers", "/captain/trips": "captainTrips", "/publish": "publish",
+    "/search": "booking", "/trips": "trips", "/messages": "messages", "/notifications": "notifications",
+  };
+  const section = routeSections[normalizedPath];
+  return section && sectionAllowedForRole(section, role) ? section : null;
+}
+
+function pathForSection(section: NavKey) {
+  const sectionPaths: Record<NavKey, string> = {
+    home: "/", account: "/account", booking: "/search", trips: "/trips",
+    notifications: "/notifications", messages: "/messages", offers: "/captain",
+    publish: "/publish", captainTrips: "/captain/trips", admin: "/admin", broadcast: "/broadcast",
+  };
+  return sectionPaths[section];
+}
+
 export default function Workspace({ session, onSignOut, notify, themePreference, resolvedTheme, onThemePreferenceChange }: {
   session: Session; onSignOut: () => void; notify: (text: string, tone?: Toast["tone"]) => void;
   resolvedTheme: "light" | "dark";
@@ -23,11 +52,14 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
   const initialSection: NavKey = session.user.role === "captain" ? "offers" : session.user.role === "admin" ? "admin" : "home";
   const [section, setSectionState] = useState<NavKey>(() => {
     const state = window.history.state as { sekkaWorkspace?: boolean; sekkaSection?: NavKey } | null;
-    return state?.sekkaWorkspace && state.sekkaSection ? state.sekkaSection : initialSection;
+    const routeSection = sectionForPath(window.location.pathname, session.user.role);
+    if (routeSection) return routeSection;
+    if (state?.sekkaWorkspace && state.sekkaSection && sectionAllowedForRole(state.sekkaSection, session.user.role)) return state.sekkaSection;
+    return initialSection;
   });
   const [historyDepth, setHistoryDepth] = useState(() => {
-    const state = window.history.state as { sekkaWorkspace?: boolean; sekkaIndex?: number } | null;
-    return state?.sekkaWorkspace ? state.sekkaIndex ?? 0 : 0;
+    const state = window.history.state as { sekkaWorkspace?: boolean; sekkaIndex?: number; sekkaSection?: NavKey } | null;
+    return state?.sekkaWorkspace && state.sekkaSection && sectionAllowedForRole(state.sekkaSection, session.user.role) && state.sekkaSection === sectionForPath(window.location.pathname, session.user.role) ? state.sekkaIndex ?? 0 : 0;
   });
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notificationsLoaded, setNotificationsLoaded] = useState(false);
@@ -41,40 +73,54 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
   const [localHour, setLocalHour] = useState(cairoHour);
 
   const setSection = useCallback((next: NavKey, historyMode: "push" | "replace" = "push") => {
+    const safeNext = sectionAllowedForRole(next, session.user.role) ? next : initialSection;
+    const nextPath = pathForSection(safeNext);
     const current = window.history.state as { sekkaWorkspace?: boolean; sekkaSection?: NavKey; sekkaIndex?: number } | null;
-    if (current?.sekkaWorkspace && current.sekkaSection === next) {
-      setSectionState(next);
+    if (current?.sekkaWorkspace && current.sekkaSection === safeNext) {
+      if (window.location.pathname !== nextPath) window.history.replaceState(current, "", nextPath);
+      setSectionState(safeNext);
       return;
     }
     const currentIndex = current?.sekkaWorkspace ? current.sekkaIndex ?? historyDepth : historyDepth;
     const nextIndex = historyMode === "replace"
       ? currentIndex
       : currentIndex + 1;
-    const nextState = { ...current, sekkaWorkspace: true, sekkaSection: next, sekkaIndex: nextIndex };
-    if (historyMode === "replace") window.history.replaceState(nextState, "", window.location.href);
-    else window.history.pushState(nextState, "", window.location.href);
+    const nextState = { ...current, sekkaWorkspace: true, sekkaSection: safeNext, sekkaIndex: nextIndex };
+    if (historyMode === "replace") window.history.replaceState(nextState, "", nextPath);
+    else window.history.pushState(nextState, "", nextPath);
     setHistoryDepth(nextIndex);
-    setSectionState(next);
-  }, [historyDepth]);
+    setSectionState(safeNext);
+  }, [historyDepth, initialSection, session.user.role]);
 
   useEffect(() => {
     const current = window.history.state as { sekkaWorkspace?: boolean; sekkaSection?: NavKey; sekkaIndex?: number; sekkaGuard?: boolean } | null;
     if (!current?.sekkaWorkspace) {
       const base = { ...current, sekkaWorkspace: true, sekkaSection: section, sekkaIndex: 0 };
-      window.history.replaceState(base, "", window.location.href);
-      window.history.pushState({ ...base, sekkaGuard: true }, "", window.location.href);
-    } else if ((current.sekkaIndex ?? 0) === 0 && !current.sekkaGuard) {
-      window.history.pushState({ ...current, sekkaGuard: true }, "", window.location.href);
+      const path = pathForSection(section);
+      window.history.replaceState(base, "", path);
+      window.history.pushState({ ...base, sekkaGuard: true }, "", path);
+    } else {
+      const safeSection = sectionAllowedForRole(section, session.user.role) ? section : initialSection;
+      const path = pathForSection(safeSection);
+      const routeChanged = current.sekkaSection !== safeSection || window.location.pathname !== path;
+      const normalized = { ...current, sekkaWorkspace: true, sekkaSection: safeSection, sekkaIndex: routeChanged ? 0 : current.sekkaIndex ?? 0 };
+      if (routeChanged || current.sekkaIndex == null) window.history.replaceState(normalized, "", path);
+      if ((normalized.sekkaIndex ?? 0) === 0 && !current.sekkaGuard) {
+        window.history.pushState({ ...normalized, sekkaGuard: true }, "", path);
+      }
     }
 
     const onPopState = (event: PopStateEvent) => {
       const state = event.state as { sekkaWorkspace?: boolean; sekkaSection?: NavKey; sekkaIndex?: number; sekkaGuard?: boolean } | null;
       if (state?.sekkaWorkspace) {
-        const restored = state.sekkaSection ?? initialSection;
+        const requested = state.sekkaSection ?? initialSection;
+        const restored = sectionAllowedForRole(requested, session.user.role) ? requested : initialSection;
         const depth = state.sekkaIndex ?? 0;
         setSectionState(restored);
         setHistoryDepth(depth);
         setNavOpen(false);
+        const restoredPath = pathForSection(restored);
+        if (restored !== requested || window.location.pathname !== restoredPath) window.history.replaceState({ sekkaWorkspace: true, sekkaSection: restored, sekkaIndex: depth, sekkaGuard: state.sekkaGuard }, "", restoredPath);
         if (depth === 0 && !state.sekkaGuard) {
           window.setTimeout(() => {
             const latest = window.history.state as { sekkaWorkspace?: boolean; sekkaGuard?: boolean } | null;
@@ -89,11 +135,13 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
       setSectionState(initialSection);
       setHistoryDepth(0);
       setNavOpen(false);
-      window.history.pushState({ sekkaWorkspace: true, sekkaSection: initialSection, sekkaIndex: 0, sekkaGuard: true }, "", window.location.href);
+      const path = pathForSection(initialSection);
+      window.history.replaceState({ sekkaWorkspace: true, sekkaSection: initialSection, sekkaIndex: 0 }, "", path);
+      window.history.pushState({ sekkaWorkspace: true, sekkaSection: initialSection, sekkaIndex: 0, sekkaGuard: true }, "", path);
     };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
-  }, [initialSection]);
+  }, [initialSection, section, session.user.role]);
 
   useEffect(() => {
     const navigate = (event: Event) => setSection((event as CustomEvent<NavKey>).detail);
@@ -179,6 +227,7 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
     trips: ["رحلاتي", "كل مشاويرك ومجموعاتك في مكان واحد"], notifications: ["الإشعارات", "آخر التحديثات الخاصة بمشاويرك"], messages: ["الرسائل", "تواصل مع المشاركين في مشاويرك ومجموعاتك"],
     account: ["حسابي", ""], offers: ["المسارات المتاحة", "اختار المسار المناسب لسيارتك ومواعيدك"],
     captainTrips: ["رحلاتي", "المسارات المقبولة وخطوات تنفيذها"], admin: ["لوحة الإدارة", "متابعة المنصة وتوثيق الكباتن"],
+    publish: ["نشر مسار", "أضف خط سيرك ومواعيد تشغيله"],
     broadcast: ["رسالة عامة", "إرسال إعلان محفوظ إلى جميع مستخدمي سِكّة"],
   };
   const [title, subtitle] = titles[section];
@@ -189,7 +238,7 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
   }, [session.user.id, setSection]);
 
   return <div className={`workspace ${notificationsOpen ? "notifications-open" : ""}`}>
-    <WorkspaceNavigation items={nav} activeSection={section} notificationsOpen={notificationsOpen} unreadCount={unread} unreadMessageCount={unreadMessageCount} role={session.user.role} fullName={session.user.full_name} userId={session.user.id} token={session.token} open={navOpen} onSelect={activateNav} onClose={() => setNavOpen(false)} onAccount={() => { setInfoPage(null); setSection("account"); setNavOpen(false); }} onInvite={() => void inviteFriends()} onSignOut={onSignOut} onOpenInfo={(page) => { setInfoPage(page); setNotificationsOpen(false); setNavOpen(false); }} />
+    <WorkspaceNavigation items={nav} activeSection={section === "publish" ? "offers" : section} notificationsOpen={notificationsOpen} unreadCount={unread} unreadMessageCount={unreadMessageCount} role={session.user.role} fullName={session.user.full_name} userId={session.user.id} token={session.token} open={navOpen} onSelect={activateNav} onClose={() => setNavOpen(false)} onAccount={() => { setInfoPage(null); setSection("account"); setNavOpen(false); }} onInvite={() => void inviteFriends()} onSignOut={onSignOut} onOpenInfo={(page) => { setInfoPage(page); setNotificationsOpen(false); setNavOpen(false); }} />
     <main className="main-area">
       <header className="topbar" onClick={() => { if (notificationsOpen) closeNotifications(); }}><div className="topbar-brand-group"><button type="button" className="mobile-menu" onClick={() => setNavOpen(true)} aria-label="فتح القائمة"><AppIcon name="menu" /></button><button type="button" className="topbar-brand-home" onClick={() => { setSection(initialSection); setNavOpen(false); }} aria-label="العودة للرئيسية"><BrandLogo className="topbar-brand" /></button></div><div className="topbar-actions"><span className={`connection-state ${isOnline ? "is-online" : "is-offline"}`} role="status"><i />{isOnline ? "متصل" : "غير متصل"}</span><button type="button" className={`icon-button notification-bell ${notificationsOpen ? "is-open" : ""}`} onClick={(event) => { event.stopPropagation(); setNotificationsOpen((open) => !open); }} aria-expanded={notificationsOpen} aria-controls="sekka-notifications-drawer" aria-label={unread > 0 ? `الإشعارات، ${unread} غير مقروءة` : "الإشعارات"}><AppIcon name="bell" size={21} />{unread > 0 && <i />}</button></div></header>
       <div className="page-content">{infoPage ? <InfoPages page={infoPage} onBack={() => setInfoPage(null)} /> : <>{section !== "booking" && <div className={`page-heading ${section === "account" ? "page-heading-account" : ""}`}><div><h1>{title}</h1>{subtitle && <p>{subtitle}</p>}</div></div>}
@@ -197,7 +246,7 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
         {session.user.role !== "admin" && <VerificationReminder session={session} onOpen={openMissingVerification} visible={section !== "account" && !(session.user.role === "captain" && section === "offers")} />}
         {section === "messages" && <MessagesWorkspace session={session} notify={notify} />}
         {session.user.role === "rider" && section !== "messages" && <RiderWorkspace session={session} section={section} setSection={setSection} refreshNotifications={refreshNotifications} registerPoolRefresh={registerPoolRefresh} notify={notify} />}
-        {session.user.role === "captain" && section !== "messages" && <CaptainWorkspace session={session} section={section} notify={notify} />}
+        {session.user.role === "captain" && section !== "messages" && <CaptainWorkspace session={session} section={section} setSection={setSection} notify={notify} />}
         {session.user.role === "admin" && <AdminWorkspace session={session} section={section} refreshNotifications={refreshNotifications} notify={notify} />}</>}
       </div>
       {notificationsOpen && <NotificationsPanel items={notifications} token={session.token} onRefresh={refreshNotifications} onPoolChanged={session.user.role === "rider" ? () => riderPoolRefreshRef.current() : undefined} onEditGroup={session.user.role === "rider" ? editNotificationGroup : undefined} allowWaitActions={session.user.role === "rider"} notify={notify} isLoading={!notificationsLoaded} error={notificationsError} onClose={closeNotifications} />}
