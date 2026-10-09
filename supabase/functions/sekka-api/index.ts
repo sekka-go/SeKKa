@@ -31,6 +31,19 @@ function selectLocation(body: Json, prefix: "pickup" | "dropoff"): { lat: number
 }
 function clean(value: unknown): value is string { return typeof value === "string" && value.trim().length > 0; }
 function number(value: unknown): value is number { return typeof value === "number" && Number.isFinite(value); }
+function validIsoDate(value: unknown): value is string {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
+function cairoDateKey(date = new Date()): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Cairo", year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(date);
+  const part = (type: string) => parts.find((item) => item.type === type)?.value ?? "";
+  return `${part("year")}-${part("month")}-${part("day")}`;
+}
 function validPoint(lat: unknown, lng: unknown) { return number(lat) && lat >= -90 && lat <= 90 && number(lng) && lng >= -180 && lng <= 180; }
 function normalizeClock(value: unknown): string | null {
   if (typeof value !== "string") return null;
@@ -221,7 +234,9 @@ async function keyedDigest(value: string) {
 }
 function binaryReply(data: Uint8Array, contentType: string, origin = "") {
   const corsOrigin = origin === "http://localhost:5173" || origin === "https://sekka-go.pages.dev" || origin.endsWith(".sekka-go.pages.dev") ? origin : "null";
-  return new Response(data, { status: 200, headers: {
+  const body = new ArrayBuffer(data.byteLength);
+  new Uint8Array(body).set(data);
+  return new Response(body, { status: 200, headers: {
     "content-type": contentType, "content-disposition": "inline", "cache-control": "private, no-store",
     "x-content-type-options": "nosniff", "access-control-allow-origin": corsOrigin, "vary": "Origin", ...corsHeaders,
   } });
@@ -893,14 +908,14 @@ Deno.serve(async (req: Request) => {
       return reply({ place: data }, 200, origin);
     }
     if (req.method === "POST" && path === "/locations/search") {
-      const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      const gate = await requireRole(user, ["rider", "captain"], origin); if (gate) return gate;
       const query = clean(body.query) ? body.query.trim().replace(/\s+/g, " ") : "";
       if (query.length < 3 || query.length > 120) return error("اكتب من ٣ إلى ١٢٠ حرفًا للبحث عن العنوان.", 400, origin);
       if (!await takeLimit(`location-search:user:${user!.id}`, 20, 300)) return error("استخدم البحث بعد دقائق؛ عدد المحاولات كبير.", 429, origin);
       return reply({ suggestions: await searchGreaterCairo(query) }, 200, origin);
     }
     if (req.method === "POST" && path === "/locations/search/precise") {
-      const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      const gate = await requireRole(user, ["rider", "captain"], origin); if (gate) return gate;
       const query = clean(body.query) ? body.query.trim().replace(/\s+/g, " ") : "";
       if (query.length < 3 || query.length > 120) return error("اكتب من ٣ إلى ١٢٠ حرفًا للبحث عن العنوان.", 400, origin);
       if (!await takeLimit(`location-precise:user:${user!.id}`, 10, 300)) return error("استخدم البحث الدقيق بعد دقائق؛ عدد المحاولات كبير.", 429, origin);
@@ -1035,6 +1050,82 @@ Deno.serve(async (req: Request) => {
         return reply({ requests: rows }, 200, origin);
       }
     }
+    if (path === "/rider/demand-requests") {
+      const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      if (req.method === "POST") {
+        const activationGate = await requireVerificationActivation(user!, origin); if (activationGate) return activationGate;
+        if (!(["private_car", "hiace"].includes(String(body.vehicle_type_id))) || !validIsoDate(body.trip_date) || String(body.trip_date) < cairoDateKey() || normalizeClock(body.arrival_time) !== body.arrival_time || !clean(body.pickup_label) || !clean(body.dropoff_label) || !validPoint(body.pickup_lat, body.pickup_lng) || !validPoint(body.dropoff_lat, body.dropoff_lng) || !isGreaterCairoPoint(Number(body.pickup_lat), Number(body.pickup_lng)) || !isGreaterCairoPoint(Number(body.dropoff_lat), Number(body.dropoff_lng))) return error("راجع نوع المركبة والتاريخ والوقت ونقطتي الركوب والوصول داخل القاهرة الكبرى.", 400, origin);
+        const { data, error: createError } = await db.rpc("create_demand_request", { actor_id: user!.id, vehicle_id: body.vehicle_type_id, trip_on: body.trip_date, arrives: body.arrival_time, pickup_name: body.pickup_label.trim(), pickup_y: body.pickup_lat, pickup_x: body.pickup_lng, dropoff_name: body.dropoff_label.trim(), dropoff_y: body.dropoff_lat, dropoff_x: body.dropoff_lng, seat_count: Number(body.seats ?? 1) });
+        if (createError) {
+          if (createError.code === "42501") return error("يلزم توثيق الحساب ورقم الهاتف لإرسال طلب الرحلة.", 403, origin);
+          throw createError;
+        }
+        const request = Array.isArray(data) ? data[0] : data;
+        const [{ data: group }, { data: vehicle }] = await Promise.all([
+          db.from("demand_groups").select("id,status,captain_line_id").eq("id", request.demand_group_id).maybeSingle(),
+          db.from("vehicle_types").select("id,name_ar").eq("id", request.vehicle_type_id).maybeSingle(),
+        ]);
+        let line = null;
+        if (group?.captain_line_id) {
+          const { data: found } = await db.from("captain_lines").select("id,captain_user_id,origin_label,destination_label,arrival_time,seats,price_per_seat").eq("id", group.captain_line_id).maybeSingle();
+          const { data: captain } = found ? await db.from("users").select("full_name").eq("id", found.captain_user_id).maybeSingle() : { data: null };
+          line = found ? { id: found.id, origin_label: found.origin_label, destination_label: found.destination_label, arrival_time: found.arrival_time, seats: found.seats, price_per_seat: found.price_per_seat, captain_name: captain?.full_name ?? "الكابتن" } : null;
+        }
+        return reply({ request, demand_group: group, vehicle, line }, 201, origin);
+      }
+      if (req.method === "GET") {
+        const { data, error: queryError } = await db.from("demand_requests").select("*,demand_groups(status,captain_line_id)").eq("rider_user_id", user!.id).order("created_at", { ascending: false }).limit(50);
+        if (queryError) throw queryError;
+        const requests = [];
+        for (const item of data ?? []) {
+          const group = Array.isArray(item.demand_groups) ? item.demand_groups[0] : item.demand_groups;
+          let line = null;
+          if (group?.captain_line_id) {
+            const { data: found, error: lineError } = await db.from("captain_lines").select("id,captain_user_id,origin_label,destination_label,arrival_time,price_per_seat").eq("id", group.captain_line_id).maybeSingle();
+            if (lineError) throw lineError;
+            const { data: captain } = found ? await db.from("users").select("full_name").eq("id", found.captain_user_id).maybeSingle() : { data: null };
+            line = found ? { origin_label: found.origin_label, destination_label: found.destination_label, arrival_time: found.arrival_time, price_per_seat: found.price_per_seat, captain_name: captain?.full_name ?? "الكابتن" } : null;
+          }
+          requests.push({ ...item, demand_groups: group ?? null, line });
+        }
+        return reply({ requests }, 200, origin);
+      }
+    }
+    if (req.method === "POST" && path === "/rider/lines/search") {
+      const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      if (!(["private_car", "hiace"].includes(String(body.vehicle_type_id))) || !validIsoDate(body.trip_date) || String(body.trip_date) < cairoDateKey() || normalizeClock(body.arrival_time) !== body.arrival_time || !validPoint(body.pickup_lat, body.pickup_lng) || !validPoint(body.dropoff_lat, body.dropoff_lng) || !isGreaterCairoPoint(Number(body.pickup_lat), Number(body.pickup_lng)) || !isGreaterCairoPoint(Number(body.dropoff_lat), Number(body.dropoff_lng))) return error("راجع بيانات البحث عن المسار.", 400, origin);
+      const day = new Date(`${body.trip_date}T12:00:00Z`).getUTCDay();
+      const { data: config, error: configError } = await db.from("app_config").select("config_key,numeric_value").in("config_key", ["demand_route_radius_km", "demand_arrival_window_minutes"]);
+      if (configError) throw configError;
+      const radiusKm = Number(config?.find((item) => item.config_key === "demand_route_radius_km")?.numeric_value);
+      const arrivalWindow = Number(config?.find((item) => item.config_key === "demand_arrival_window_minutes")?.numeric_value);
+      if (!Number.isFinite(radiusKm) || !Number.isFinite(arrivalWindow)) return error("إعدادات البحث غير متاحة الآن.", 503, origin);
+      const { data: lines, error: searchError } = await db.from("captain_lines").select("id,vehicle_type_id,origin_label,origin_lat,origin_lng,destination_label,destination_lat,destination_lng,intermediate_stops,arrival_time,service_days,seats,price_per_seat,payment_methods,status").eq("status", "active").eq("vehicle_type_id", body.vehicle_type_id).contains("service_days", [day]).limit(100);
+      if (searchError) throw searchError;
+      const lineIds = (lines ?? []).map((line) => Number(line.id));
+      const usedSeats = new Map<number, number>();
+      if (lineIds.length) {
+        const { data: matchedGroups, error: matchedError } = await db.from("demand_groups").select("id,captain_line_id").in("captain_line_id", lineIds).eq("trip_date", body.trip_date).eq("status", "matched");
+        if (matchedError) throw matchedError;
+        const groupIds = (matchedGroups ?? []).map((group) => Number(group.id));
+        if (groupIds.length) {
+          const { data: requests, error: requestsError } = await db.from("demand_requests").select("demand_group_id,seats").in("demand_group_id", groupIds);
+          if (requestsError) throw requestsError;
+          const ownerByGroup = new Map((matchedGroups ?? []).map((group) => [Number(group.id), Number(group.captain_line_id)]));
+          for (const request of requests ?? []) { const lineId = ownerByGroup.get(Number(request.demand_group_id)); if (lineId) usedSeats.set(lineId, (usedSeats.get(lineId) ?? 0) + Number(request.seats)); }
+        }
+      }
+      const pickup = { lat: Number(body.pickup_lat), lng: Number(body.pickup_lng) }, dropoff = { lat: Number(body.dropoff_lat), lng: Number(body.dropoff_lng) };
+      const arrivalMinutes = Number(String(body.arrival_time).slice(0, 2)) * 60 + Number(String(body.arrival_time).slice(3, 5));
+      const matches = (lines ?? []).map((line) => {
+        const pickupDistanceKm = distanceKm(pickup, { lat: Number(line.origin_lat), lng: Number(line.origin_lng) });
+        const dropoffDistanceKm = distanceKm(dropoff, { lat: Number(line.destination_lat), lng: Number(line.destination_lng) });
+        const lineMinutes = Number(String(line.arrival_time).slice(0, 2)) * 60 + Number(String(line.arrival_time).slice(3, 5));
+        const timeDiff = Math.min(Math.abs(arrivalMinutes - lineMinutes), 1440 - Math.abs(arrivalMinutes - lineMinutes));
+        return { ...line, seats_available: Number(line.seats) - (usedSeats.get(Number(line.id)) ?? 0), pickup_distance_km: Math.round(pickupDistanceKm * 100) / 100, dropoff_distance_km: Math.round(dropoffDistanceKm * 100) / 100, arrival_difference_minutes: timeDiff };
+      }).filter((line) => line.seats_available > 0 && line.pickup_distance_km <= radiusKm && line.dropoff_distance_km <= radiusKm && line.arrival_difference_minutes <= arrivalWindow).sort((a, b) => a.pickup_distance_km + a.dropoff_distance_km - b.pickup_distance_km - b.dropoff_distance_km).slice(0, 20);
+      return reply({ lines: matches }, 200, origin);
+    }
     const dailyMatch = path.match(/^\/rider\/requests\/(\d+)\/match$/);
     if (req.method === "POST" && dailyMatch) {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
@@ -1159,23 +1250,7 @@ Deno.serve(async (req: Request) => {
     }
     if (req.method === "POST" && path === "/rider/pool/groups") {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
-      const activationGate = await requireVerificationActivation(user!, origin); if (activationGate) return activationGate;
-      const { category_id, package_type, service_dates, morning_departure, return_departure } = body;
-      const dates = validDates(service_dates, String(package_type));
-      if (!clean(category_id) || !dates || !/^\d{2}:\d{2}$/.test(String(morning_departure)) || !/^\d{2}:\d{2}$/.test(String(return_departure)) || String(return_departure) <= String(morning_departure)) return error("راجع الفئة والأيام ومواعيد الذهاب والعودة.", 400, origin);
-      let pickup, dropoff;
-      try { pickup = await selectLocation(body, "pickup"); dropoff = await selectLocation(body, "dropoff"); }
-      catch (err) { if (err instanceof ApiFailure) return error(err.message, err.status, origin); throw err; }
-      const { data: category } = await db.from("pool_categories").select("*").eq("id", category_id).maybeSingle();
-      if (!category) return error("فئة الرحلة غير موجودة.", 404, origin);
-      const initialMember = { id: 0, pickup_lat: pickup.lat, pickup_lng: pickup.lng, pickup_place_id: pickup.place_id, dropoff_lat: dropoff.lat, dropoff_lng: dropoff.lng, dropoff_place_id: dropoff.place_id, pickup_order: 0 };
-      let q; try { q = await quote([initialMember], category); }
-      catch (err) { if (err instanceof ApiFailure) return error(err.message, err.status, origin); return error("خدمة حساب المسار غير متاحة حاليًا.", 503, origin); }
-      const { data: group, error: ge } = await db.from("pool_groups").insert({ created_by_user_id: user!.id, category_id, package_type, service_dates: dates, morning_departure: morning_departure + ":00", return_departure: return_departure + ":00", route_distance_km: q.out.distanceKm, route_duration_min: q.out.durationMin, seat_day_fare: q.seatDayFare, route_geometry: q.geometry, status: "waiting" }).select().single();
-      if (ge) throw ge;
-      const { error: memberError } = await db.from("pool_members").insert({ group_id: group.id, rider_user_id: user!.id, pickup_lat: pickup.lat, pickup_lng: pickup.lng, pickup_place_id: pickup.place_id, dropoff_lat: dropoff.lat, dropoff_lng: dropoff.lng, dropoff_place_id: dropoff.place_id, seats_reserved: 1, status: "active", price_decision: "accepted", pickup_order: 0 });
-      if (memberError) throw memberError;
-      return reply({ ...(await groupView(group)), auto_matched: false }, 201, origin);
+      return error("لم يعد الراكب ينشئ مجموعة. أرسل طلب رحلة فرديًا، وسيتولى التطبيق تجميع الطلبات المتشابهة.", 410, origin);
     }
     const editGroupMatch = path.match(/^\/rider\/pool\/groups\/(\d+)$/);
     if (req.method === "PUT" && editGroupMatch) {
@@ -1650,6 +1725,57 @@ Deno.serve(async (req: Request) => {
 
     if (path.startsWith("/captain/")) {
       const gate = await requireRole(user, ["captain"], origin); if (gate) return gate;
+      if (path === "/captain/lines" && req.method === "GET") {
+        const { data, error: queryError } = await db.from("captain_lines").select("*").eq("captain_user_id", user!.id).order("created_at", { ascending: false });
+        if (queryError) throw queryError;
+        return reply({ lines: data ?? [] }, 200, origin);
+      }
+      if (path === "/captain/demand-groups" && req.method === "GET") {
+        const { data: lines, error: linesError } = await db.from("captain_lines").select("id,origin_label,destination_label").eq("captain_user_id", user!.id);
+        if (linesError) throw linesError;
+        const lineIds = (lines ?? []).map((line) => Number(line.id));
+        if (!lineIds.length) return reply({ groups: [] }, 200, origin);
+        const { data: groups, error: groupsError } = await db.from("demand_groups").select("id,captain_line_id,vehicle_type_id,trip_date,arrival_time,status").in("captain_line_id", lineIds).eq("status", "matched").order("trip_date").order("arrival_time");
+        if (groupsError) throw groupsError;
+        const groupIds = (groups ?? []).map((group) => Number(group.id));
+        if (!groupIds.length) return reply({ groups: [] }, 200, origin);
+        const { data: requests, error: requestsError } = await db.from("demand_requests").select("id,demand_group_id,rider_user_id,pickup_label,dropoff_label,seats,status").in("demand_group_id", groupIds).in("status", ["open", "matched"]);
+        if (requestsError) throw requestsError;
+        const riderIds = [...new Set((requests ?? []).map((request) => Number(request.rider_user_id)))];
+        const { data: riders, error: ridersError } = riderIds.length ? await db.from("users").select("id,full_name").in("id", riderIds) : { data: [], error: null };
+        if (ridersError) throw ridersError;
+        const riderNames = new Map((riders ?? []).map((rider) => [Number(rider.id), String(rider.full_name)]));
+        return reply({ groups: (groups ?? []).map((group) => ({ ...group, requests: (requests ?? []).filter((request) => Number(request.demand_group_id) === Number(group.id)).map((request) => ({ ...request, rider_name: riderNames.get(Number(request.rider_user_id)) ?? "راكب" })) })) }, 200, origin);
+      }
+      if (path === "/captain/lines" && req.method === "POST") {
+        const { data: profile, error: profileError } = await db.from("captain_profiles").select("vehicle_type_id,verification_status,status").eq("user_id", user!.id).maybeSingle();
+        if (profileError) throw profileError;
+        if (!profile || profile.verification_status !== "approved" || profile.status === "suspended_grace_expired" || !user!.verified_at) return error("يلزم اعتماد مستندات الكابتن وتوثيق الهاتف قبل نشر المسار.", 403, origin);
+        const activationGate = await requireVerificationActivation(user!, origin); if (activationGate) return activationGate;
+        const { data: vehicle, error: vehicleError } = await db.from("vehicle_types").select("capacity_max").eq("id", profile.vehicle_type_id).maybeSingle();
+        if (vehicleError) throw vehicleError;
+        const days = Array.isArray(body.service_days) ? body.service_days.map(Number) : [];
+        const methods = Array.isArray(body.payment_methods) ? body.payment_methods.map(String) : [];
+        const arrival = String(body.arrival_time ?? "");
+        if (!vehicle || String(body.vehicle_type_id) !== String(profile.vehicle_type_id) || !clean(body.origin_label) || !clean(body.destination_label) || !validPoint(body.origin_lat, body.origin_lng) || !validPoint(body.destination_lat, body.destination_lng) || !isGreaterCairoPoint(Number(body.origin_lat), Number(body.origin_lng)) || !isGreaterCairoPoint(Number(body.destination_lat), Number(body.destination_lng)) || !/^\d{2}:\d{2}$/.test(arrival) || !days.length || days.some((d) => !Number.isInteger(d) || d < 0 || d > 6) || new Set(days).size !== days.length || !Number.isInteger(Number(body.seats)) || Number(body.seats) < 1 || Number(body.seats) > Number(vehicle.capacity_max) || !number(body.price_per_seat) || body.price_per_seat < 0 || !methods.length || methods.some((m) => !["cash", "instapay", "wallet"].includes(m))) return error("راجع المسار والأيام والمقاعد والسعر وطريقة الدفع.", 400, origin);
+        const stops = Array.isArray(body.intermediate_stops) ? body.intermediate_stops.slice(0, 10) : [];
+        if (stops.some((stop) => !stop || typeof stop.label !== "string" || !validPoint(stop.lat, stop.lng) || !isGreaterCairoPoint(Number(stop.lat), Number(stop.lng)))) return error("تأكد أن كل المحطات داخل القاهرة الكبرى.", 400, origin);
+        const { data, error: createError } = await db.rpc("publish_captain_line", { actor_id: user!.id, vehicle_id: profile.vehicle_type_id, origin_name: body.origin_label.trim(), origin_y: body.origin_lat, origin_x: body.origin_lng, destination_name: body.destination_label.trim(), destination_y: body.destination_lat, destination_x: body.destination_lng, stops, arrival: `${arrival}:00`, days, seat_count: Number(body.seats), seat_price: body.price_per_seat, methods });
+        if (createError) {
+          if (createError.code === "42501") return error("يلزم اعتماد مستندات الكابتن وتوثيق الهاتف قبل نشر المسار.", 403, origin);
+          throw createError;
+        }
+        return reply({ line: Array.isArray(data) ? data[0] : data }, 201, origin);
+      }
+      const lineStatus = path.match(/^\/captain\/lines\/(\d+)\/status$/);
+      if (req.method === "PATCH" && lineStatus) {
+        const { data, error: updateError } = await db.rpc("set_captain_line_status", { actor_id: user!.id, line_id: Number(lineStatus[1]), next_status: body.status });
+        if (updateError) {
+          if (updateError.code === "42501") return error("المسار غير موجود أو لا تملك صلاحية تعديله.", 403, origin);
+          throw updateError;
+        }
+        return reply({ line: Array.isArray(data) ? data[0] : data }, 200, origin);
+      }
       if (req.method === "GET" && path === "/captain/profile") {
         const { data } = await db.from("captain_profiles").select("*").eq("user_id", user!.id).maybeSingle();
         return data ? reply({ profile: data }, 200, origin) : error("ملف الكابتن غير موجود.", 404, origin);

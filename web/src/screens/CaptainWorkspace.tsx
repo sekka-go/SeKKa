@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import MapPicker from "../components/MapPickerLoader";
+import LocationSearchField from "../components/LocationSearchField";
 import { categoryName, errorText, formatDate, money, statusLabel } from "../lib/formatters";
 import { useResolvedLocationPoints } from "../lib/use-location-addresses";
-import { ApiError, api, type CaptainOffer, type CaptainProfile, type PoolStop, type RouteGeometry } from "../api";
+import { ApiError, api, type CaptainLine, type CaptainOffer, type CaptainProfile, type PoolStop, type RouteGeometry } from "../api";
+import type { MapPickMode, MapPoint } from "../MapPicker";
 import type { NavKey, Session, Toast } from "../types";
 import { AccountPanel, EmptyState, ErrorState, LoadingCard } from "../components/workspace-shared";
 export default function CaptainWorkspace({ session, section, notify }: {
@@ -28,6 +30,20 @@ export default function CaptainWorkspace({ session, section, notify }: {
   const [assignedTripsLoaded, setAssignedTripsLoaded] = useState(false);
   const [assignedTripsLoading, setAssignedTripsLoading] = useState(false);
   const [assignedTripsError, setAssignedTripsError] = useState("");
+  const [lines, setLines] = useState<CaptainLine[]>([]);
+  const [demandGroups, setDemandGroups] = useState<{ id: number; trip_date: string; arrival_time: string; requests: { id: number; rider_name: string; pickup_label: string; dropoff_label: string; seats: number }[] }[]>([]);
+  const [publishOpen, setPublishOpen] = useState(false);
+  const [origin, setOrigin] = useState<MapPoint | null>(null);
+  const [destination, setDestination] = useState<MapPoint | null>(null);
+  const [originSearch, setOriginSearch] = useState("");
+  const [destinationSearch, setDestinationSearch] = useState("");
+  const [lineMapOpen, setLineMapOpen] = useState(false);
+  const [lineMapTarget, setLineMapTarget] = useState<MapPickMode>("pickup");
+  const [lineDays, setLineDays] = useState<number[]>([0, 1, 2, 3, 4]);
+  const [lineArrival, setLineArrival] = useState("08:00");
+  const [lineSeats, setLineSeats] = useState(3);
+  const [linePrice, setLinePrice] = useState(0);
+  const [linePaymentMethods, setLinePaymentMethods] = useState<string[]>(["cash"]);
 
   const loadProfile = useCallback(async () => {
     try {
@@ -60,6 +76,23 @@ export default function CaptainWorkspace({ session, section, notify }: {
     if (!profileLoaded || !profile || profile.verification_status !== "approved" || section !== "offers") return;
     void refreshTrips();
   }, [profileLoaded, profile?.verification_status, section, refreshTrips]);
+  const loadPublishedLines = useCallback(async () => {
+    const [lineResult, demandResult] = await Promise.all([
+      api<{ lines: CaptainLine[] }>("/captain/lines", { token: session.token }),
+      api<{ groups: typeof demandGroups }>("/captain/demand-groups", { token: session.token }),
+    ]);
+    setLines(lineResult.lines);
+    setDemandGroups(demandResult.groups);
+  }, [session.token]);
+  useEffect(() => {
+    if (section !== "offers" || profile?.verification_status !== "approved") return;
+    void loadPublishedLines().catch((error) => notify(errorText(error), "error"));
+  }, [section, profile?.verification_status, loadPublishedLines, notify]);
+  useEffect(() => {
+    if (section !== "offers" || profile?.verification_status !== "approved") return;
+    const timer = window.setInterval(() => { void loadPublishedLines().catch(() => undefined); }, 30_000);
+    return () => window.clearInterval(timer);
+  }, [section, profile?.verification_status, loadPublishedLines]);
   useEffect(() => {
     if (!profileLoaded || !profile || profile.verification_status !== "approved" || section !== "offers") return;
     const timer = window.setInterval(() => { void refreshTrips(); }, 30_000);
@@ -70,6 +103,26 @@ export default function CaptainWorkspace({ session, section, notify }: {
     event.preventDefault(); setBusy(true);
     try { const result = await api<{ profile: CaptainProfile }>("/captain/profile", { method: "POST", token: session.token, body: { vehicle_type_id: vehicle, license_number: license, vehicle_plate: plate } }); setProfile(result.profile); window.dispatchEvent(new Event("sekka:verification-refresh")); notify("تم حفظ بيانات المركبة. هتظهر للأدمن للمراجعة.", "success"); }
     catch (error) { notify(errorText(error), "error"); }
+    finally { setBusy(false); }
+  };
+  const publishLine = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!profile || origin?.lat == null || origin.lng == null || destination?.lat == null || destination.lng == null) {
+      notify("حدد نقطة البداية والنهاية من البحث أو الخريطة.", "error"); return;
+    }
+    setBusy(true);
+    try {
+      await api("/captain/lines", { method: "POST", token: session.token, body: {
+        vehicle_type_id: profile.vehicle_type_id,
+        origin_label: origin.label ?? originSearch, origin_lat: origin.lat, origin_lng: origin.lng,
+        destination_label: destination.label ?? destinationSearch, destination_lat: destination.lat, destination_lng: destination.lng,
+        intermediate_stops: [], arrival_time: lineArrival, service_days: lineDays, seats: lineSeats,
+        price_per_seat: linePrice, payment_methods: linePaymentMethods,
+      } });
+      setOrigin(null); setDestination(null); setOriginSearch(""); setDestinationSearch(""); setPublishOpen(false);
+      notify("تم نشر مسارك. سنجمع طلبات الركاب المتشابهة تلقائيًا.", "success");
+      await loadPublishedLines();
+    } catch (error) { notify(errorText(error), "error"); }
     finally { setBusy(false); }
   };
   const saveCapabilities = async () => {
@@ -138,7 +191,20 @@ export default function CaptainWorkspace({ session, section, notify }: {
   const loadOffers = () => refreshTrips();
   if (section === "offers" && (!offersLoaded || offersLoading)) return <LoadingCard text="بندور على المسارات المناسبة لسيارتك…" />;
   if (section === "offers" && offerError && !offers.length) return <ErrorState text={offerError} action="تحديث المسارات" onAction={() => void loadOffers()} />;
-  return <div className="captain-offers-page"><div className="offer-toolbar"><div><div className="online-pill"><i /> جاهز لاستقبال المسارات</div><p>موقعك الحالي يحدد المسارات القريبة منك.</p></div><div className="offer-actions"><button className="button button-outline button-small" onClick={() => void updateLocation()}>⌖ تحديث الموقع</button><button className="button button-primary button-small" onClick={() => void loadOffers()} disabled={offersLoading}>{offersLoading ? "جارٍ التحديث…" : "تحديث المسارات ↻"}</button></div></div>{offerError && <div className="inline-error" role="alert">{offerError}<button className="button button-primary button-small" onClick={openVerification}>وثّق حسابك الآن</button></div>}
+  return <div className="captain-offers-page"><div className="offer-toolbar"><div><div className="online-pill"><i /> جاهز لاستقبال المسارات</div><p>انشر مسارك وسنطابقه مع طلبات الركاب القريبة.</p></div><div className="offer-actions"><button className="button button-outline button-small" onClick={() => void updateLocation()}>⌖ تحديث الموقع</button><button className="button button-primary button-small" onClick={() => setPublishOpen((open) => !open)}>{publishOpen ? "إغلاق النشر" : "＋ نشر مسار"}</button><button className="button button-outline button-small" onClick={() => { void loadOffers(); void loadPublishedLines(); }} disabled={offersLoading}>{offersLoading ? "جارٍ التحديث…" : "تحديث المسارات ↻"}</button></div></div>{offerError && <div className="inline-error" role="alert">{offerError}<button className="button button-primary button-small" onClick={openVerification}>وثّق حسابك الآن</button></div>}
+    {publishOpen && <section className="surface onboarding-card"><div className="surface-heading"><div><span className="eyebrow">مسار جديد</span><h2>انشر خط سيرك</h2><p>ستظهر الرحلة للركاب ذوي الطلبات المشابهة.</p></div><span className="surface-icon">⌖</span></div><form className="form-stack" onSubmit={publishLine}>
+      <LocationSearchField kind="pickup" title="نقطة البداية" value={originSearch} token={session.token} onChange={(value) => { setOriginSearch(value); setOrigin(null); }} onSelect={(point) => { setOrigin(point); setOriginSearch(point.label ?? ""); }} onChooseMap={() => { setLineMapTarget("pickup"); setLineMapOpen(true); }} onFocus={() => undefined} pointSelected={origin?.lat != null && origin.lng != null} />
+      <LocationSearchField kind="dropoff" title="نقطة الوصول" value={destinationSearch} token={session.token} onChange={(value) => { setDestinationSearch(value); setDestination(null); }} onSelect={(point) => { setDestination(point); setDestinationSearch(point.label ?? ""); }} onChooseMap={() => { setLineMapTarget("dropoff"); setLineMapOpen(true); }} onFocus={() => undefined} pointSelected={destination?.lat != null && destination.lng != null} />
+      <label>وقت الوصول المتوقع<input type="time" value={lineArrival} onChange={(event) => setLineArrival(event.target.value)} required /></label>
+      <fieldset className="capability-list"><legend>أيام تشغيل المسار</legend>{[[0,"الأحد"],[1,"الاثنين"],[2,"الثلاثاء"],[3,"الأربعاء"],[4,"الخميس"],[5,"الجمعة"],[6,"السبت"]].map(([day,label]) => <label className="toggle-row" key={day}><input type="checkbox" checked={lineDays.includes(Number(day))} onChange={() => setLineDays((current) => current.includes(Number(day)) ? current.filter((item) => item !== Number(day)) : [...current, Number(day)])} /><span>{label}</span></label>)}</fieldset>
+      <label>المقاعد المتاحة<input type="number" min="1" max={profile?.vehicle_type_id === "hiace" ? 14 : 3} value={lineSeats} onChange={(event) => setLineSeats(Number(event.target.value))} required /></label>
+      <label>سعر المقعد<input type="number" min="0" step="0.5" value={linePrice} onChange={(event) => setLinePrice(Number(event.target.value))} required /></label>
+      <fieldset className="capability-list"><legend>طرق الدفع</legend>{[["cash","نقدًا"],["instapay","إنستاباي"],["wallet","محفظة إلكترونية"]].map(([method,label]) => <label className="toggle-row" key={method}><input type="checkbox" checked={linePaymentMethods.includes(method)} onChange={() => setLinePaymentMethods((current) => current.includes(method) ? current.filter((item) => item !== method) : [...current, method])} /><span>{label}</span></label>)}</fieldset>
+      {lineMapOpen && <section className="booking-map-panel" aria-label="تحديد مسار الرحلة"><div className="booking-map-toolbar"><p className="map-instruction">حدد {lineMapTarget === "pickup" ? "نقطة البداية" : "نقطة الوصول"} على الخريطة</p><button type="button" className="map-close-button" onClick={() => setLineMapOpen(false)}>×</button></div><div className="booking-map"><MapPicker pickup={origin} dropoff={destination} mode={lineMapTarget} restrictToGreaterCairo onPick={(mode, point) => { if (mode === "pickup") { setOrigin(point); setOriginSearch(point.label ?? "موقع محدد على الخريطة"); } else { setDestination(point); setDestinationSearch(point.label ?? "موقع محدد على الخريطة"); } setLineMapOpen(false); }} /></div></section>}
+      <button className="button button-primary button-small" disabled={busy || !lineDays.length}>{busy ? "جارٍ نشر المسار…" : "نشر المسار"}</button>
+    </form></section>}
+    {lines.length > 0 && <section className="surface admin-summary"><div className="section-title-row"><div><span className="eyebrow">مساراتك</span><h2>المسارات المنشورة</h2></div></div><div className="offer-grid">{lines.map((line) => <article className="surface offer-card" key={line.id}><span className={`status-chip status-${line.status}`}>{line.status === "active" ? "نشط" : line.status === "paused" ? "متوقف مؤقتًا" : "ملغي"}</span><h3>{line.origin_label} ← {line.destination_label}</h3><p>{line.vehicle_type_id === "hiace" ? "هاي إس" : "ملاكي"} · وصول {line.arrival_time.slice(0,5)} · {line.seats} مقاعد · {money(line.price_per_seat)}</p>{line.status !== "cancelled" && <button className="button button-outline button-small" onClick={async () => { try { await api(`/captain/lines/${line.id}/status`, { method: "PATCH", token: session.token, body: { status: line.status === "active" ? "paused" : "active" } }); await loadPublishedLines(); } catch (error) { notify(errorText(error), "error"); } }}>{line.status === "active" ? "إيقاف مؤقت" : "استئناف المسار"}</button>}</article>)}</div></section>}
+    {demandGroups.length > 0 && <section className="surface admin-summary"><div className="section-title-row"><div><span className="eyebrow">طلبات متشابهة</span><h2>الركاب المطابقون لمساراتك</h2><p>جمع التطبيق طلباتهم المتقاربة تلقائيًا.</p></div></div><div className="offer-grid">{demandGroups.map((group) => <article className="surface offer-card" key={group.id}><h3>رحلة {formatDate(group.trip_date)} · وصول {group.arrival_time.slice(0,5)}</h3>{group.requests.map((request) => <p key={request.id}><strong>{request.rider_name}</strong> · {request.pickup_label} ← {request.dropoff_label} · {request.seats} مقعد</p>)}</article>)}</div></section>}
     {selectedOffer && <section className="surface captain-offer-review" aria-labelledby="captain-offer-review-title"><div className="captain-offer-review-heading"><div><span className="eyebrow">مراجعة قبل القبول</span><h2 id="captain-offer-review-title">تأكيد المسار المتاح</h2></div><span className="status-chip status-needs_captain">بانتظار كابتن</span></div><div className="captain-offer-review-grid"><div><small>المجموعة</small><strong>#{selectedOffer.group_id}</strong></div><div><small>التاريخ والاتجاه</small><strong>{formatDate(selectedOffer.trip.service_date)} · {selectedOffer.trip.direction === "outbound" ? "ذهاب" : "عودة"}</strong></div><div><small>موعد الانطلاق</small><strong>{selectedOffer.trip.departure_at.slice(11, 16)}</strong></div><div><small>المسافة</small><strong>{selectedOffer.route_distance_km ?? "—"} كم</strong></div><div><small>الفئة</small><strong>{categoryName({ id: selectedOffer.category_id, speed_tier: selectedOffer.category_id.includes("saver") ? "saver" : "faster", has_ac: selectedOffer.category_id.includes("ac") ? 1 : 0, seats: selectedOffer.category_id.includes("saver") ? 4 : 3, base_fee: 0, rate_per_km: 0, rate_per_min: 0 })}</strong></div><div><small>سعر المقعد</small><strong>{money(selectedOffer.seat_day_fare)}</strong></div></div><MapPicker pickup={null} dropoff={null} mode="pickup" route={selectedOffer.route_geometry} routePlaces={offerStopPoints} onPick={() => undefined} /><div className="captain-offer-review-actions"><button type="button" className="button button-outline" onClick={() => setSelectedOfferId(null)} disabled={busy}>العودة لقائمة المسارات</button><button type="button" className="button button-primary" onClick={() => void acceptOffer(selectedOffer)} disabled={busy}>{busy ? "جارٍ قبول المسار…" : "تأكيد قبول المسار"}</button></div></section>}
     {offers.length ? <div className="offer-grid route-offer-grid">{[...offers].sort((a, b) => a.trip.departure_at.localeCompare(b.trip.departure_at) || a.trip.id - b.trip.id).map((offer) => {
       const category = categoryName({ id: offer.category_id, speed_tier: offer.category_id.includes("saver") ? "saver" : "faster", has_ac: offer.category_id.includes("ac") ? 1 : 0, seats: offer.category_id.includes("saver") ? 4 : 3, base_fee: 0, rate_per_km: 0, rate_per_min: 0 });
