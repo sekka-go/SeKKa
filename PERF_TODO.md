@@ -8,7 +8,7 @@
 - [x] Re-measure cold and repeat landing traces at mobile + Slow 4G + 4× CPU; protected routes remain unmeasured without a safe test login.
 - [x] Verify generated worker cache boundaries; authenticated API/user data caching was not added.
 - [x] Defer further query/cache dependencies; current search debounce/cancellation safeguards are present and code splitting/font loading were measured.
-- [ ] Keep changes on `perf-fix`; prepare a review branch/PR after final documentation and commit review.
+- [x] Keep changes on `perf-fix`; open review PR #102 without pushing to `main`.
 
 ## Deferred pending evidence
 
