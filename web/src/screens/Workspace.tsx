@@ -29,6 +29,7 @@ function sectionAllowedForRole(section: NavKey, role: Session["user"]["role"]) {
 
 function sectionForPath(path: string, role: Session["user"]["role"]): NavKey | null {
   const normalizedPath = path.replace(/\/+$/, "") || "/";
+  if (/^\/admin\/users\/\d+$/.test(normalizedPath)) return role === "admin" ? "adminUsers" : null;
   const routeSections: Record<string, NavKey> = {
     "/account": "account", "/settings": "settings", "/admin": "admin", "/admin/users": "adminUsers", "/admin/documents": "adminDocuments", "/admin/trips": "adminTrips", "/admin/complaints": "adminComplaints", "/admin/finance": "adminFinance", "/admin/finance/adjustment": "adminFinanceAdjustment", "/admin/pricing": "adminPricing", "/admin/audit": "adminAudit", "/broadcast": "broadcast",
     "/captain": "offers", "/captain/trips": "captainTrips", "/publish": "publish",
@@ -38,7 +39,11 @@ function sectionForPath(path: string, role: Session["user"]["role"]): NavKey | n
   return section && sectionAllowedForRole(section, role) ? section : null;
 }
 
-function pathForSection(section: NavKey) {
+function pathForSection(section: NavKey, preserveUserProfile = false) {
+  if (section === "adminUsers" && preserveUserProfile) {
+    const profileMatch = window.location.pathname.match(/^\/admin\/users\/\d+\/?$/);
+    if (profileMatch) return window.location.pathname.replace(/\/+$/, "");
+  }
   const sectionPaths: Record<NavKey, string> = {
     home: "/", account: "/account", settings: "/settings", booking: "/search", trips: "/trips",
     notifications: "/notifications", messages: "/messages", offers: "/captain",
@@ -100,12 +105,12 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
     const current = window.history.state as { sekkaWorkspace?: boolean; sekkaSection?: NavKey; sekkaIndex?: number; sekkaGuard?: boolean } | null;
     if (!current?.sekkaWorkspace) {
       const base = { ...current, sekkaWorkspace: true, sekkaSection: section, sekkaIndex: 0 };
-      const path = pathForSection(section);
+      const path = pathForSection(section, true);
       window.history.replaceState(base, "", path);
       window.history.pushState({ ...base, sekkaGuard: true }, "", path);
     } else {
       const safeSection = sectionAllowedForRole(section, session.user.role) ? section : initialSection;
-      const path = pathForSection(safeSection);
+      const path = pathForSection(safeSection, true);
       const routeChanged = current.sekkaSection !== safeSection || window.location.pathname !== path;
       const normalized = { ...current, sekkaWorkspace: true, sekkaSection: safeSection, sekkaIndex: routeChanged ? 0 : current.sekkaIndex ?? 0 };
       if (routeChanged || current.sekkaIndex == null) window.history.replaceState(normalized, "", path);
@@ -123,7 +128,7 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
         setSectionState(restored);
         setHistoryDepth(depth);
         setNavOpen(false);
-        const restoredPath = pathForSection(restored);
+        const restoredPath = pathForSection(restored, true);
         if (restored !== requested || window.location.pathname !== restoredPath) window.history.replaceState({ sekkaWorkspace: true, sekkaSection: restored, sekkaIndex: depth, sekkaGuard: state.sekkaGuard }, "", restoredPath);
         if (depth === 0 && !state.sekkaGuard) {
           window.setTimeout(() => {
