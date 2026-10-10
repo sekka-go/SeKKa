@@ -329,6 +329,50 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   box-shadow: 0 12px 32px var(--color-shadow);
 }
 .app-shell .user-actions-menu-list button { min-height: var(--touch-target-min); text-align: start; }
+.app-shell .user-actions-menu-list button.admin-user-delete-trigger {
+  color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 10%, var(--color-surface));
+  border-color: var(--color-danger);
+}
+.app-shell .admin-user-delete-confirm {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-control);
+  background: color-mix(in srgb, var(--color-danger) 7%, var(--color-surface));
+  color: var(--color-text);
+}
+.app-shell .admin-user-delete-confirm > strong,
+.app-shell .admin-user-delete-confirm > label { color: var(--color-danger); font-weight: 700; }
+.app-shell .admin-user-delete-confirm > p { margin: 0; color: var(--color-text-secondary); font-size: .8rem; line-height: 1.55; }
+.app-shell .admin-user-delete-confirm > textarea {
+  width: 100%;
+  min-height: 5rem;
+  padding: .65rem .75rem;
+  border: 1px solid var(--color-border);
+  border-radius: .65rem;
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  resize: vertical;
+}
+.app-shell .admin-user-delete-error { color: var(--color-danger); font-size: .8rem; }
+.app-shell .admin-user-delete-actions { display: flex; gap: var(--space-2); }
+.app-shell .admin-user-delete-actions > button { flex: 1; min-height: var(--touch-target-min); }
+.app-shell .admin-user-delete-actions > button:first-child {
+  border: 1px solid var(--color-border);
+  border-radius: .65rem;
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+}
+.app-shell .admin-user-delete-actions > .admin-user-delete-submit {
+  border: 1px solid var(--color-danger);
+  border-radius: .65rem;
+  background: var(--color-danger);
+  color: var(--color-on-danger, #fff);
+  font-weight: 700;
+}
+.app-shell .admin-user-delete-actions > .admin-user-delete-submit:disabled { opacity: .6; }
 .app-shell .user-actions-menu-list button.user-status-action[data-status="banned"],
 .app-shell .user-actions-menu-list button.user-status-action[data-status="suspended"] {
   color: var(--color-danger);
