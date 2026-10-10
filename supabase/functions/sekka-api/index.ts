@@ -4,21 +4,15 @@ import { routeWithOsrm, RoutingError } from "./routing.ts";
 import { dedupeLocationSuggestions, formatNominatimAddress, formatPhotonAddress, GREATER_CAIRO, isGreaterCairoPoint, normalizeLocationQuery, type LocationAddress, type LocationSuggestion, type NominatimResult, type PhotonProperties } from "./locations.ts";
 import { readJsonObjectBody, RequestBodyTooLargeError } from "./request-body.ts";
 import { activeMemberIdForRider } from "./group-view.ts";
+import { corsHeaders } from "./cors.ts";
 
 type Json = Record<string, unknown>;
 type User = { id: number; full_name: string; phone_number: string; role: "rider" | "captain" | "admin"; verified_at: string | null; created_at: string; account_status?: "active" | "suspended" | "banned" };
 const encoder = new TextEncoder();
-const corsHeaders = {
-  "Access-Control-Allow-Headers": "authorization, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-  "Access-Control-Max-Age": "86400",
-};
-
 function reply(data: unknown, status = 200, origin = "") {
-  const corsOrigin = origin === "http://localhost:5173" || origin === "https://sekka-go.pages.dev" || origin.endsWith(".sekka-go.pages.dev") ? origin : "null";
   return new Response(status === 204 ? null : JSON.stringify(data), {
     status,
-    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "access-control-allow-origin": corsOrigin, "vary": "Origin", ...corsHeaders },
+    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", ...corsHeaders(origin || null, Deno.env.get("SEKKA_ALLOWED_ORIGINS")) },
   });
 }
 function error(message: string, status = 400, origin = "") { return reply({ error: message }, status, origin); }
@@ -236,12 +230,11 @@ async function keyedDigest(value: string) {
   return hex(new Uint8Array(await crypto.subtle.sign("HMAC", key, encoder.encode(value))));
 }
 function binaryReply(data: Uint8Array, contentType: string, origin = "") {
-  const corsOrigin = origin === "http://localhost:5173" || origin === "https://sekka-go.pages.dev" || origin.endsWith(".sekka-go.pages.dev") ? origin : "null";
   const body = new ArrayBuffer(data.byteLength);
   new Uint8Array(body).set(data);
   return new Response(body, { status: 200, headers: {
     "content-type": contentType, "content-disposition": "inline", "cache-control": "private, no-store",
-    "x-content-type-options": "nosniff", "access-control-allow-origin": corsOrigin, "vary": "Origin", ...corsHeaders,
+    "x-content-type-options": "nosniff", ...corsHeaders(origin || null, Deno.env.get("SEKKA_ALLOWED_ORIGINS")),
   } });
 }
 function phoneCandidates(value: string) {
@@ -963,7 +956,7 @@ Deno.serve(async (req: Request) => {
       const phone = typeof body.phone_number === "string" ? phoneE164(body.phone_number) : null;
       const code = typeof body.code === "string" ? body.code.trim() : "";
       const nextPassword = typeof body.new_password === "string" ? body.new_password : "";
-      if (!phone || !/^\d{6}$/.test(code) || nextPassword.length < 8) return error("أدخل رقم الهاتف والرمز المكوّن من ٦ أرقام وكلمة سر من ٨ أحرف على الأقل.", 400, origin);
+      if (!phone || !/^\d{6}$/.test(code) || nextPassword.length < 8 || nextPassword.length > 128) return error("أدخل رقم الهاتف والرمز المكوّن من ٦ أرقام وكلمة سر من ٨ إلى ١٢٨ حرفًا.", 400, origin);
       const phoneHash = await keyedDigest(phone);
       const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
       if (!await takeLimit(`password-reset-complete:ip:${ip}`, 10, 900) || !await takeLimit(`password-reset-complete:phone:${phoneHash}`, 5, 900)) return error("محاولات كثيرة. ابدأ استعادة جديدة بعد قليل.", 429, origin);
@@ -996,9 +989,9 @@ Deno.serve(async (req: Request) => {
       if (!await takeLimit(`register:ip:${ip}`, 10, 3600) || !await takeLimit(`register:phone:${phone}`, 5, 3600)) {
         return error("تم إنشاء حسابات كثيرة مؤخرًا من هذا الجهاز أو الرقم. حاول بعد ساعة.", 429, origin);
       }
-      if (!clean(full_name) || !clean(phone_number) || !clean(password)) return error("لازم تكتب الاسم ورقم الهاتف وكلمة السر.", 400, origin);
+      if (!clean(full_name) || String(full_name).trim().length > 100 || !clean(phone_number) || String(phone_number).trim().length > 32 || !clean(password)) return error("بيانات الحساب غير صحيحة. تأكد من الاسم ورقم الهاتف وطول كلمة السر.", 400, origin);
       if (!["rider", "captain"].includes(String(role))) return error("نوع الحساب المطلوب مش متاح.", 400, origin);
-      if (String(password).length < 8) return error("كلمة السر لازم تكون ٨ أحرف على الأقل.", 400, origin);
+      if (String(password).length < 8 || String(password).length > 128) return error("كلمة السر لازم تكون من ٨ إلى ١٢٨ حرفًا.", 400, origin);
       if (body.accepted_terms !== true || body.terms_version !== "2026-10-05" || body.privacy_version !== "2026-10-05") return error("اقرأ الشروط وسياسة الخصوصية ووافق عليهما قبل إنشاء الحساب.", 400, origin);
       const { data: existing } = await db.from("users").select("id").eq("phone_number", String(phone_number).trim()).maybeSingle();
       if (existing) return error("الرقم ده مسجّل قبل كده.", 409, origin);
@@ -1008,6 +1001,7 @@ Deno.serve(async (req: Request) => {
     }
     if (req.method === "POST" && path === "/auth/login") {
       const phone = typeof body.phone_number === "string" ? body.phone_number.trim() : "";
+      if (phone.length > 32 || String(body.password ?? "").length > 128) return error("رقم الهاتف أو كلمة السر غير صحيحة.", 400, origin);
       const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
       if (!await takeLimit(`login:${ip}:${phone}`, 5, 900)) return error("محاولات كتير في وقت قصير. حاول تاني بعد شوية.", 429, origin);
       const { data: record } = await db.from("users").select("id,full_name,phone_number,password_hash,role,verified_at,created_at").eq("phone_number", phone).maybeSingle();
@@ -1031,7 +1025,7 @@ Deno.serve(async (req: Request) => {
         return reply({ success: true }, 200, origin);
       }
       if (req.method === "POST" && path === "/auth/change-password") {
-        if (!clean(body.current_password) || !clean(body.new_password) || String(body.new_password).length < 8) return error("بيانات كلمة السر غير صحيحة أو أقصر من ٨ أحرف.", 400, origin);
+        if (!clean(body.current_password) || String(body.current_password).length > 128 || !clean(body.new_password) || String(body.new_password).length < 8 || String(body.new_password).length > 128) return error("بيانات كلمة السر غير صحيحة. يجب أن تكون الجديدة من ٨ إلى ١٢٨ حرفًا.", 400, origin);
         if (!await takeLimit(`password:${user.id}`, 5, 900)) return error("محاولات كتير في وقت قصير. حاول تاني بعد شوية.", 429, origin);
         const { data: row } = await db.from("users").select("password_hash").eq("id", user.id).single();
         if (!row || typeof row.password_hash !== "string" || !await verifyPassword(String(body.current_password), row.password_hash)) return error("كلمة السر الحالية غير صحيحة.", 401, origin);
