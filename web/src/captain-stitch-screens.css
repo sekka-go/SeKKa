@@ -1,0 +1,154 @@
+/* Captain experience refresh: Stitch-inspired hierarchy with live SeKKa data and theme tokens. */
+.captain-workspace {
+  --captain-soft: color-mix(in srgb, var(--color-secondary) 9%, var(--color-surface));
+  --captain-soft-strong: color-mix(in srgb, var(--color-secondary) 15%, var(--color-surface));
+  color: var(--color-text-primary);
+}
+.captain-workspace .main-area { min-width: 0; background: var(--color-background); }
+.captain-workspace .page-content { width: min(100%, 78rem); padding: clamp(1rem, 3vw, 2.25rem); }
+.captain-workspace .page-heading { align-items: end; margin-block: 0 1.2rem; }
+.captain-workspace .page-heading h1 { margin: 0; font-size: clamp(1.55rem, 3vw, 2.1rem); letter-spacing: -.025em; }
+.captain-workspace .page-heading p { margin-block-start: .35rem; color: var(--color-text-secondary); }
+.captain-workspace .surface {
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 1.25rem;
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--color-text) 7%, transparent);
+}
+.captain-workspace .surface p, .captain-workspace .surface small,
+.captain-workspace .muted-text, .captain-workspace .section-toolbar p,
+.captain-workspace .offer-toolbar p { color: var(--color-text-secondary); }
+.captain-workspace .button { min-height: 2.75rem; border-radius: .8rem; font-weight: 750; }
+.captain-workspace .button-primary { color: var(--color-primary-text); }
+.captain-workspace input:not([type="checkbox"]):not([type="range"]),
+.captain-workspace select, .captain-workspace textarea {
+  min-height: 2.9rem; color: var(--color-text-primary); background: var(--color-surface-raised);
+  border: 1px solid var(--color-border); border-radius: .8rem;
+}
+.captain-workspace input::placeholder, .captain-workspace textarea::placeholder { color: var(--color-text-secondary); opacity: 1; }
+.captain-workspace .captain-stitch { display: grid; gap: 1rem; width: min(100%, 62rem); margin-inline: auto; padding-block-end: 1.2rem; }
+.captain-workspace .captain-welcome-panel {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(13rem, .45fr); align-items: center;
+  gap: 1rem; overflow: hidden; padding: clamp(1.2rem, 3vw, 2rem);
+  background: linear-gradient(120deg, var(--color-surface), var(--captain-soft));
+}
+.captain-workspace .captain-welcome-copy { min-width: 0; }
+.captain-workspace .captain-welcome-copy .eyebrow { color: var(--color-warning); font-weight: 800; }
+.captain-workspace .captain-welcome-copy h2 { margin: .4rem 0; font-size: clamp(1.55rem, 4vw, 2.35rem); line-height: 1.25; }
+.captain-workspace .captain-welcome-copy p { max-width: 38rem; margin: 0; line-height: 1.7; }
+.captain-workspace .captain-welcome-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-block-start: 1.1rem; }
+.captain-workspace .captain-welcome-actions .button { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; }
+.captain-workspace .captain-welcome-status {
+  display: grid; justify-items: start; gap: .6rem; min-height: 9rem; align-content: center;
+  padding: 1rem; border: 1px solid var(--color-border); border-radius: 1rem; background: var(--color-surface);
+}
+.captain-workspace .captain-status-mark, .captain-workspace .captain-overview-icon {
+  display: grid; place-items: center; width: 2.65rem; height: 2.65rem; border-radius: .85rem;
+  color: var(--color-secondary); background: var(--captain-soft-strong);
+}
+.captain-workspace .captain-welcome-status strong { font-size: .95rem; }
+.captain-workspace .captain-welcome-status small { line-height: 1.5; }
+.captain-workspace .captain-overview-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; }
+.captain-workspace .captain-overview-tile {
+  display: grid; grid-template-columns: 2.6rem minmax(0, 1fr); align-items: center; gap: .1rem .7rem;
+  min-width: 0; padding: .9rem 1rem; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 1rem;
+}
+.captain-workspace .captain-overview-icon { grid-row: span 3; }
+.captain-workspace .captain-overview-tile small, .captain-workspace .captain-overview-tile > span:last-child { color: var(--color-text-secondary); }
+.captain-workspace .captain-overview-tile strong { font-size: 1.45rem; line-height: 1.2; }
+.captain-workspace .captain-offer-toolbar { padding: .9rem 1rem; border: 1px solid var(--color-border); border-radius: 1rem; background: var(--color-surface); }
+.captain-workspace .offer-toolbar { margin: 0; }
+.captain-workspace .offer-toolbar > div:first-child { display: grid; gap: .25rem; }
+.captain-workspace .offer-toolbar p { margin: 0; }
+.captain-workspace .offer-toolbar .online-pill { color: var(--color-success); background: color-mix(in srgb, var(--color-success) 10%, var(--color-surface)); font-weight: 800; }
+.captain-workspace .offer-actions { display: flex; flex-wrap: wrap; gap: .45rem; }
+.captain-workspace .offer-card { gap: .85rem; padding: 1rem; }
+.captain-workspace .route-offer-card { background: linear-gradient(160deg, var(--color-surface), var(--captain-soft)); }
+.captain-workspace .route-offer-title h3 { margin-block: .25rem; }
+.captain-workspace .route-offer-facts > div, .captain-workspace .captain-offer-review-grid > div,
+.captain-workspace .profile-data-grid > div {
+  min-width: 0; padding: .8rem; border: 1px solid var(--color-border); border-radius: .85rem; background: var(--color-surface-raised);
+}
+.captain-workspace .route-offer-facts strong, .captain-workspace .captain-offer-review-grid strong,
+.captain-workspace .profile-data-grid strong { color: var(--color-text-primary); overflow-wrap: anywhere; }
+.captain-workspace .captain-account { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; width: min(100%, 62rem); margin-inline: auto; }
+.captain-workspace .account-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.captain-workspace .account-grid > * { min-width: 0; }
+.captain-workspace .account-grid .verification-center { grid-column: 1 / -1; }
+.captain-workspace .account-grid .account-card { align-content: start; }
+.captain-workspace .captain-profile-card { padding: clamp(1rem, 3vw, 1.5rem); }
+.captain-workspace .captain-profile-card .surface-heading { align-items: center; padding-block-end: 1rem; border-block-end: 1px solid var(--color-border); }
+.captain-workspace .captain-status-box { display: grid; justify-items: start; gap: .55rem; margin-block: 1rem; padding: 1rem; border-radius: .9rem; background: var(--captain-soft); }
+.captain-workspace .captain-status-box p { margin: 0; line-height: 1.65; }
+.captain-workspace .captain-settings-details { border: 1px solid var(--color-border); border-radius: 1rem; background: var(--color-surface); }
+.captain-workspace .captain-settings-details > summary { min-height: 4rem; padding: .85rem 1rem; }
+.captain-workspace .captain-preferences { padding: 0 1rem 1rem; }
+.captain-workspace .captain-preferences .capability-list { display: grid; gap: .45rem; }
+.captain-workspace .captain-preferences .toggle-row { padding: .7rem; border-radius: .75rem; background: var(--color-surface-raised); }
+.captain-workspace .captain-route-editor { padding: clamp(1rem, 3vw, 1.6rem); }
+.captain-workspace .captain-route-editor .surface-heading { margin-block-end: 1rem; padding-block-end: 1rem; border-block-end: 1px solid var(--color-border); }
+.captain-workspace .captain-route-editor .form-stack { gap: 1rem; }
+.captain-workspace .captain-route-editor fieldset { border: 1px solid var(--color-border); border-radius: .9rem; background: var(--color-surface-raised); }
+.captain-workspace .captain-route-editor legend, .captain-workspace .captain-route-editor .form-field-label { color: var(--color-text-primary); font-weight: 800; }
+.captain-workspace .captain-route-editor .service-days { grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr)); }
+.captain-workspace .captain-route-editor .toggle-row { min-width: 0; padding: .55rem; color: var(--color-text-primary); }
+.captain-workspace .captain-stitch-trips .section-toolbar { padding: 1rem; border: 1px solid var(--color-border); border-radius: 1rem; background: var(--color-surface); }
+.captain-workspace .captain-trip-detail { display: grid; gap: 1rem; padding: clamp(.8rem, 2.5vw, 1.3rem); }
+.captain-workspace .captain-trip-detail .map-picker { overflow: hidden; border-radius: 1rem; }
+.captain-workspace .captain-trip-detail .stop-list { display: grid; gap: .55rem; }
+.captain-workspace .captain-trip-detail .stop-row { display: grid; grid-template-columns: 1.1rem minmax(0, 1fr) auto; align-items: center; gap: .7rem; padding: .75rem; border: 1px solid var(--color-border); border-radius: .85rem; background: var(--color-surface-raised); }
+.captain-workspace .captain-trip-detail .stop-row > div { display: grid; gap: .2rem; min-width: 0; }
+.captain-workspace .captain-trip-detail .trip-actions { display: flex; flex-wrap: wrap; gap: .65rem; padding-block-start: .5rem; }
+.captain-workspace .captain-earnings-summary { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: clamp(1.1rem, 3vw, 1.7rem); background: linear-gradient(120deg, var(--color-surface), var(--captain-soft)); }
+.captain-workspace .captain-earnings-summary h2 { margin: .35rem 0; }
+.captain-workspace .captain-earnings-summary p { max-width: 38rem; margin: 0; line-height: 1.65; }
+.captain-workspace .captain-earnings-summary > strong { color: var(--color-success); font-size: clamp(1.45rem, 4vw, 2.2rem); white-space: nowrap; }
+.captain-workspace .captain-direct-payment-note { display: grid; grid-template-columns: 2.7rem minmax(0,1fr); gap: .8rem; align-items: center; padding: 1rem; border: 1px solid var(--color-border); border-radius: 1rem; background: var(--captain-soft); }
+.captain-workspace .captain-direct-payment-note p { margin: .2rem 0 0; line-height: 1.55; }
+.captain-workspace .captain-earnings-list { padding: clamp(.9rem, 2.5vw, 1.3rem); }
+.captain-workspace .captain-earnings-list > .section-title-row { margin-block-end: 1rem; }
+.captain-workspace .captain-earning-rows { display: grid; gap: .6rem; }
+.captain-workspace .captain-earning-row { display: grid; grid-template-columns: 2.6rem minmax(0,1fr) auto; gap: .75rem; align-items: center; padding: .8rem; border: 1px solid var(--color-border); border-radius: .9rem; background: var(--color-surface-raised); }
+.captain-workspace .captain-earning-icon { display: grid; width: 2.5rem; height: 2.5rem; place-items: center; color: var(--color-secondary); border-radius: .8rem; background: var(--captain-soft-strong); }
+.captain-workspace .captain-earning-trip { display: grid; gap: .25rem; min-width: 0; }
+.captain-workspace .captain-earning-trip small { overflow-wrap: anywhere; }
+.captain-workspace .captain-earning-amount { color: var(--color-text-primary); white-space: nowrap; }
+.captain-workspace .verification-required-banner { padding: clamp(1.2rem, 4vw, 2rem); background: linear-gradient(135deg, var(--color-surface), color-mix(in srgb, var(--color-warning) 12%, var(--color-surface))); }
+.captain-workspace .verification-required-banner p { max-width: 45rem; line-height: 1.75; }
+.captain-workspace .verification-center { padding: clamp(1rem, 3vw, 1.5rem); }
+.captain-workspace .verification-center .verification-document,
+.captain-workspace .verification-center .verification-doc-card { background: var(--color-surface-raised); border-color: var(--color-border); }
+.captain-workspace .account-panel, .captain-workspace .app-settings, .captain-workspace .messages-workspace { color: var(--color-text-primary); }
+.captain-workspace .notifications-panel { border-color: var(--color-border); background: var(--color-surface); }
+.captain-workspace .captain-stitch .empty-state { border: 1px dashed var(--color-border); border-radius: 1rem; background: var(--color-surface); }
+.auth-page.auth-captain-journey .auth-page-content, .auth-page.captain-onboarding .auth-page-content { width: min(100% - 2rem, 48rem); }
+.auth-page.auth-captain-journey .auth-card, .auth-page.captain-onboarding .signup-verification-flow { border: 1px solid var(--color-border); border-radius: 1.4rem; box-shadow: 0 18px 46px color-mix(in srgb, var(--color-text) 12%, transparent); }
+.auth-page.captain-onboarding .verification-progress-track { overflow: hidden; border-radius: 999px; }
+.auth-page.captain-onboarding .verification-wizard { padding: clamp(1rem, 3vw, 1.5rem); border: 1px solid var(--color-border); border-radius: 1rem; background: var(--color-surface-raised); }
+.auth-page.captain-onboarding .signup-vehicle-form { gap: 1rem; }
+.auth-page.captain-onboarding .verification-wizard-actions { flex-wrap: wrap; }
+.auth-page.captain-onboarding .verification-wizard-actions .button { flex: 1 1 auto; }
+@media (max-width: 760px) {
+  .captain-workspace .page-content { padding: 1rem .85rem 6rem; }
+  .captain-workspace .page-heading { margin-block-end: .9rem; }
+  .captain-workspace .captain-welcome-panel { grid-template-columns: 1fr; }
+  .captain-workspace .captain-welcome-status { grid-template-columns: 2.7rem minmax(0,1fr); min-height: 0; align-items: center; }
+  .captain-workspace .captain-welcome-status .captain-status-mark { grid-row: span 2; }
+  .captain-workspace .captain-overview-grid { gap: .5rem; }
+  .captain-workspace .captain-overview-tile { grid-template-columns: 1fr; justify-items: start; gap: .25rem; padding: .75rem; }
+  .captain-workspace .captain-overview-icon { width: 2.2rem; height: 2.2rem; grid-row: auto; }
+  .captain-workspace .captain-overview-tile strong { font-size: 1.25rem; }
+  .captain-workspace .captain-overview-tile > span:last-child { display: none; }
+  .captain-workspace .captain-offer-toolbar { align-items: stretch; }
+  .captain-workspace .offer-actions { width: 100%; }
+  .captain-workspace .offer-actions .button-primary { flex: 1; }
+  .captain-workspace .captain-trip-detail .stop-row { grid-template-columns: .8rem minmax(0,1fr); }
+  .captain-workspace .captain-trip-detail .stop-row > button,
+  .captain-workspace .captain-trip-detail .stop-row > .stop-done { grid-column: 2; justify-self: start; }
+  .captain-workspace .captain-trip-detail .trip-actions > .button { flex: 1 1 100%; }
+  .captain-workspace .captain-earning-row { grid-template-columns: 2.5rem minmax(0,1fr); }
+  .captain-workspace .captain-earning-amount { grid-column: 2; }
+  .captain-workspace .captain-earnings-summary { align-items: flex-start; flex-direction: column; }
+  .captain-workspace .account-grid { grid-template-columns: 1fr; }
+}
