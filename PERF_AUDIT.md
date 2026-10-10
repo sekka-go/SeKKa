@@ -57,7 +57,7 @@ The connected project's performance advisor reported six foreign keys without co
 - `pool_notification_mutes(group_id)`
 - `pool_notifications(actor_id)`
 
-It also reported 41 indexes unused in the advisor's observation window. They were left untouched: low-traffic or infrequent admin/retention paths can make valid indexes appear unused. The six missing-FK indexes are added in a new additive migration and were not applied directly to production.
+It also reported 41 indexes unused in the advisor's observation window. They were left untouched: low-traffic or infrequent admin/retention paths can make valid indexes appear unused. The six missing-FK indexes were added in an additive migration after this initial audit, then applied and verified on production after PR #102 merged.
 
 ### Authentication and route coverage limitation
 
@@ -103,3 +103,18 @@ The production browser cannot authenticate Captain or Rider flows without an aut
 ## Verification plan
 
 Verification previously completed for the public landing and login. In this follow-up, fresh unauthenticated production traces were captured; protected Captain/Admin/Search timing remains unmeasured because no authorized test account was available. Auth/RLS behavior was not changed. The earlier additive FK-index migration was applied to production; no new production database migration is planned here.
+
+### Follow-up changes and verified outcomes (2026-10-10)
+
+- `public/_headers` now gives content-hashed `/assets/*` files a one-year immutable browser lifetime, and keeps `/`, `/sw.js`, `/theme-preference.js`, and the manifest revalidated. Cloudflare Pages documents `_headers` as the mechanism for overriding static asset response headers ([documentation](https://developers.cloudflare.com/pages/configuration/headers/)); these source rules are copied into the build output. They will affect production only after this branch is published.
+- Service worker v7 caches the shared `/` shell plus offline page, manifest, and brand icons, and uses `/` as the fallback for offline navigations. Same-origin `/api/*`, third-party requests, protected route responses, and user data remain uncached. Local preview confirmed a protected route opens the shared shell while offline.
+- Captain preferences and profile are requested concurrently. A local deterministic test with 500 ms and 800 ms mocked delays reduced the startup request span from about 1.32 s to 0.81 s (about 38%). This validates the waterfall removal only; it is not production account telemetry. HTTP 503 now stays an error with a retry action, while 404 still means no profile exists.
+- Rider account and request-registration views no longer wait for unrelated dashboard data. The home view retains its welcome/booking actions while its requests load, and failures no longer render as a false empty state.
+- Remaining inline loading messages now use the shared `Loading` translation group. Arabic copy uses concise formal phrasing; local delayed-load copy and the eight-second slow-connection hint remain.
+- Final validation: build, lint, PWA checks, and all 217 server tests pass. Public lab LCP was measured before code changes as listed above. A post-change LCP retest was not collected; the follow-up changes primarily affect authenticated data waits and response caching, and authenticated production routes remain unmeasured without a test session.
+
+### Remaining limits
+
+- The landing H1 still has about 1.16–1.26 seconds of browser render delay in the production traces; TTFB is already under 90 ms. The bundle is below the 200 KiB gzip initial-JS target, but these changes do not directly improve the measured public LCP.
+- Login-to-home, real Search response time, Captain first-open time, INP, and a full Lighthouse PWA audit need a controlled authenticated account/session and repeatable device profile. Do not infer production route timings from the local Captain mocks.
+- Review Cloudflare account-level cache rules and Supabase compute sizing manually. No database schema or policy was changed in this follow-up.

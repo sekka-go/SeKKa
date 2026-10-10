@@ -125,7 +125,7 @@ export default function VerificationCenter({ session, notify }: { session: Sessi
     } catch (cause) { notify(errorText(cause), "error"); }
   };
 
-  if (loading && !snapshot) return <section id="verification-center" className="surface verification-center"><p>{t("جارٍ تحميل حالة التوثيق…")}</p></section>;
+  if (loading && !snapshot) return <section id="verification-center" className="surface verification-center"><p>{t("loading.verification")}</p></section>;
   if (!snapshot) return <section id="verification-center" className="surface verification-center"><h2>{t("توثيق الحساب")}</h2><p role="alert">{error || t("تعذر تحميل حالة المستندات.")}</p><button className="button button-outline" onClick={() => void refresh()}>{t("إعادة المحاولة")}</button></section>;
 
   const deferred = snapshot.requirements.captain_deferred;

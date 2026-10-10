@@ -260,7 +260,7 @@ export default function LocationSearchField({
         autoComplete="off"
       />
     </div>
-    {loading && <p className="location-search-message" role="status">{t("جاري البحث…")}</p>}
+    {loading && <p className="location-search-message" role="status">{t("loading.locationSearch")}</p>}
     {error && <p className="location-search-message" role="status">{error}</p>}
     {searchOpen && (showSavedPlaces && savedPlaces.length > 0 || suggestions.length > 0) && <ul className="location-search-results" aria-label={`نتائج ${title}`}>
       {showSavedPlaces && savedPlaces.length > 0 && <li className="location-search-saved-heading">{t("نقاطك المفضلة")}</li>}
@@ -272,7 +272,7 @@ export default function LocationSearchField({
       </li>)}
     </ul>}
     {searchOpen && value.trim().length >= 3 && <button type="button" className="location-search-precise" onMouseDown={(event) => event.preventDefault()} onClick={searchPrecisely} disabled={loading}>
-      {loading ? t("جارٍ البحث الدقيق…") : t("بحث دقيق بالعنوان")}
+      {loading ? t("loading.addressSearch") : t("بحث دقيق بالعنوان")}
     </button>}
   </div>;
 }

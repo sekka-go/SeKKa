@@ -124,7 +124,7 @@ export async function api<T>(path: string, options: { method?: string; body?: un
     return payload;
   } catch (cause) {
     if (cause instanceof ApiError) throw cause;
-    if (timedOut) throw new ApiError(408, t("تعذر التحميل، يرجى المحاولة مرة أخرى."));
+    if (timedOut) throw new ApiError(408, t("loading.failure"));
     if (options.signal?.aborted) throw cause;
     throw new ApiError(0, "تعذر الاتصال بالخادم. تأكد أنه يعمل ثم حاول مرة أخرى.");
   } finally {
