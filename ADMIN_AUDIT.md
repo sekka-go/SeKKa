@@ -40,7 +40,8 @@ The current aggregate handlers also have observability/performance problems: the
 | `/admin/documents` | Captain verification queue and signed document preview. |
 | `/admin/trips` | Daily trips and groups, grouped by their existing workflow states. |
 | `/admin/complaints` | Preserve current payment dispute feature under a clear label, until a distinct complaints product/data model is specified. |
-| `/admin/finance` | Read-only dues and ledger history; retain the explicit no-money-movement notice and separately confirm any adjustment action. |
+| `/admin/finance` | Read-only dues and ledger history; retain the explicit no-money-movement notice. |
+| `/admin/finance/adjustment` | Separate manual accounting-adjustment form with validation, confirmation, and server-side audit logging. |
 | `/admin/pricing` | Commission and pricing controls with explicit units, confirmation, and audit history. |
 | `/admin/audit` | Audit history with filters/pagination where supported. |
 
@@ -60,3 +61,18 @@ All links must support direct load, refresh, and browser back/forward. Route mat
 - The current users and audit endpoints lack a complete server-pagination/filter contract.
 - The analytics and pool endpoints need compact aggregate response contracts; do not derive summary counters from client-side full lists.
 - The configured workspace has no local Supabase/Docker environment. Database integration tests and before/after admin screenshots require a test database and an authorized admin test account; do not use production credentials or mutate production data for visual testing.
+
+## Implemented on `admin-restructure`
+
+- Replaced the composite admin page with `/admin` plus `/admin/users`, `/admin/documents`, `/admin/trips`, `/admin/complaints`, `/admin/finance`, `/admin/finance/adjustment`, `/admin/pricing`, and `/admin/audit`. The shared workspace router maps direct URLs and browser back/forward to the matching admin section. The admin panel is loaded as a separate lazy chunk.
+- The overview API now returns the field names consumed by the UI, uses exact count queries for user/captain/trip/group statuses, and no longer downloads every payment amount. Pool overview returns status totals; the finance summary walks pending ledger values by stable ID batches and returns only sums/counts. Neither endpoint returns group/trip/ledger lists to the browser. The open-dispute overview returns a bounded count and marks the 100-item cap as `100+`.
+- Overview numbers render zero only after a successful empty result; load failures stay visible with retry. Removed the duplicate dashboard refresh and 20-second document polling; overview refreshes at 60 seconds, and other sections use the single header refresh.
+- Users are loaded 25 at a time, with role/status filters and search applied in the API. List responses mask phone and license identifiers. Opening user details or a document preview is allowed only through the server-side super-admin gate and writes an audit log entry.
+- Finance and pricing are separate routes. Finance includes company/captain pending ledger totals and the accounting-only notice; ledger adjustments and pricing changes require validation, a reason, and confirmation.
+- No database schema migration is needed for these changes. The Edge Function source must still be deployed to Supabase separately from the Cloudflare Pages frontend. Do not deploy this Edge Function to production until its branch has been reviewed and verified against a staging/test database.
+
+## Verification and visual artifacts
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm test` (217 tests), `pnpm build`, `pnpm --filter web check:pwa`, and `deno task check:edge` pass for the implementation commit.
+- A visual before/after screenshot set was not generated: the attached desktop environment reports no free space on `C:`, and no isolated admin test account or staging session was available. The current production session was not used for data-bearing admin screenshots.
+- `supabase db reset` / `supabase test db` were not run because Docker is not available and this branch makes no schema migration.

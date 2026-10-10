@@ -42,6 +42,11 @@ function cairoDateKey(date = new Date()): string {
   return `${part("year")}-${part("month")}-${part("day")}`;
 }
 function validPoint(lat: unknown, lng: unknown) { return number(lat) && lat >= -90 && lat <= 90 && number(lng) && lng >= -180 && lng <= 180; }
+function maskAdminIdentifier(value: string | null | undefined) {
+  if (!value) return null;
+  const compact = value.replace(/\s/g, "");
+  return `••••${compact.slice(-4)}`;
+}
 function normalizeClock(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const match = /^(?:([01]\d|2[0-3]):([0-5]\d))(?:[:][0-5]\d(?:\.\d{1,6})?)?$/.exec(value);
@@ -2120,7 +2125,10 @@ Deno.serve(async (req: Request) => {
       const { data: users, error: usersError } = userIds.length ? await db.from("users").select("id,full_name,phone_number,role,verified_at").in("id", userIds) : { data: [], error: null };
       if (usersError) throw usersError;
       const usersById = new Map((users ?? []).map((row) => [row.id, row]));
-      return reply({ documents: (documents ?? []).map((row) => ({ ...row, document_label: verificationDocLabels[row.document_type] ?? row.document_type, user: usersById.get(row.user_id) ?? null })) }, 200, origin);
+      return reply({ documents: (documents ?? []).map((row) => {
+        const owner = usersById.get(row.user_id);
+        return { ...row, document_label: verificationDocLabels[row.document_type] ?? row.document_type, user: owner ? { ...owner, phone_number: maskAdminIdentifier(owner.phone_number) } : null };
+      }) }, 200, origin);
     }
     const adminVerificationFile = path.match(/^\/admin\/verifications\/(\d+)\/file$/);
     if (req.method === "GET" && adminVerificationFile) {
@@ -2129,6 +2137,7 @@ Deno.serve(async (req: Request) => {
       if (!document) return error("المستند غير موجود.", 404, origin);
       const { data: signed, error: signedError } = await db.storage.from("verification-documents").createSignedUrl(document.object_path, 60);
       if (signedError) throw signedError;
+      await writeAdminAudit(user!.id, "verification.document_viewed", "verification_document", String(adminVerificationFile[1]), null);
       return reply({ signed_url: signed.signedUrl, expires_in_seconds: 60 }, 200, origin);
     }
     const reviewVerification = path.match(/^\/admin\/verifications\/(\d+)\/review$/);
@@ -2143,22 +2152,34 @@ Deno.serve(async (req: Request) => {
       return reply({ document }, 200, origin);
     }
     if (req.method === "GET" && path === "/admin/users") {
-      const q = (url.searchParams.get("q") ?? "").trim().slice(0, 100);
+      const q = (url.searchParams.get("q") ?? "").trim().replace(/[^\p{L}\p{N}\s+\-]/gu, "").slice(0, 100);
       const role = url.searchParams.get("role");
-      const limit = Math.min(100, Math.max(1, Number(url.searchParams.get("limit") ?? 50) || 50));
-      const buildUserQuery = () => {
-        let query = db.from("users").select("id,full_name,phone_number,role,verified_at,created_at").order("created_at", { ascending: false }).limit(limit);
-        if (["rider", "captain", "admin"].includes(String(role))) query = query.eq("role", role);
-        return query;
-      };
-      const escapedQuery = q.replace(/[\\%_]/g, "\\$&");
-      const queries = q
-        ? await Promise.all([buildUserQuery().ilike("full_name", `%${escapedQuery}%`), buildUserQuery().ilike("phone_number", `%${escapedQuery}%`)])
-        : [await buildUserQuery()];
-      const queryError = queries.find((result) => result.error)?.error;
-      if (queryError) throw queryError;
-      const data = [...new Map(queries.flatMap((result) => result.data ?? []).map((item) => [item.id, item])).values()]
-        .sort((left, right) => Date.parse(right.created_at) - Date.parse(left.created_at)).slice(0, limit);
+      const requestedLimit = Number(url.searchParams.get("limit") ?? 25);
+      const offset = Number(url.searchParams.get("offset") ?? 0);
+      const status = url.searchParams.get("status") ?? "all";
+      if (!Number.isSafeInteger(requestedLimit) || requestedLimit < 1 || requestedLimit > 50 || !Number.isSafeInteger(offset) || offset < 0 || offset > 100_000 || !["all", "active", "suspended", "banned"].includes(status)) return error("إعدادات ترقيم المستخدمين غير صحيحة.", 400, origin);
+      let filteredControlIds: number[] | null = null;
+      if (status !== "all") {
+        let controlsQuery = db.from("admin_user_controls").select("user_id");
+        controlsQuery = status === "active" ? controlsQuery.neq("status", "active") : controlsQuery.eq("status", status);
+        const { data: filteredControls, error: filteredControlsError } = await controlsQuery;
+        if (filteredControlsError) throw filteredControlsError;
+        filteredControlIds = (filteredControls ?? []).map((item) => item.user_id);
+        if (status === "active" && filteredControlIds.length === 0) filteredControlIds = null;
+      }
+      let query = db.from("users").select("id,full_name,phone_number,role,verified_at,created_at", { count: "exact" }).order("created_at", { ascending: false }).range(offset, offset + requestedLimit - 1);
+      if (["rider", "captain", "admin"].includes(String(role))) query = query.eq("role", role);
+      if (filteredControlIds?.length) {
+        if (status === "active") query = query.not("id", "in", `(${filteredControlIds.join(",")})`);
+        else query = query.in("id", filteredControlIds);
+      } else if (["suspended", "banned"].includes(status)) {
+        return reply({ users: [], total: 0, offset, limit: requestedLimit, has_more: false }, 200, origin);
+      }
+      if (q) {
+        query = query.or(`full_name.ilike.%${q}%,phone_number.ilike.%${q}%`);
+      }
+      const { data, count: total, error: userQueryError } = await query;
+      if (userQueryError) throw userQueryError;
       const ids = (data ?? []).map((item) => item.id);
       const [controls, profiles] = await Promise.all([
         ids.length ? db.from("admin_user_controls").select("user_id,status,reason,updated_at").in("user_id", ids) : Promise.resolve({ data: [], error: null }),
@@ -2167,7 +2188,11 @@ Deno.serve(async (req: Request) => {
       if (controls.error || profiles.error) throw controls.error ?? profiles.error;
       const statusById = new Map((controls.data ?? []).map((item) => [item.user_id, item]));
       const profileById = new Map((profiles.data ?? []).map((item) => [item.user_id, item]));
-      return reply({ users: (data ?? []).map((item) => ({ ...item, account_status: statusById.get(item.id)?.status ?? "active", control: statusById.get(item.id) ?? null, captain: profileById.get(item.id) ?? null })) }, 200, origin);
+      const users = (data ?? []).map((item) => {
+        const captain = profileById.get(item.id);
+        return { ...item, phone_number: maskAdminIdentifier(item.phone_number), account_status: statusById.get(item.id)?.status ?? "active", control: statusById.get(item.id) ?? null, captain: captain ? { ...captain, license_number: maskAdminIdentifier(captain.license_number) } : null };
+      });
+      return reply({ users, total: total ?? 0, offset, limit: requestedLimit, has_more: (total ?? 0) > offset + users.length }, 200, origin);
     }
     const userStatusRoute = path.match(/^\/admin\/users\/(\d+)\/status$/);
     if (req.method === "PATCH" && userStatusRoute) {
@@ -2177,6 +2202,21 @@ Deno.serve(async (req: Request) => {
       return reply({ user_control: data }, 200, origin);
     }
     const userProfileRoute = path.match(/^\/admin\/users\/(\d+)$/);
+    if (req.method === "GET" && userProfileRoute) {
+      const targetUserId = Number(userProfileRoute[1]);
+      if (!Number.isSafeInteger(targetUserId) || targetUserId < 1) return error("رقم المستخدم غير صالح.", 400, origin);
+      const [target, controls, captain, documents] = await Promise.all([
+        db.from("users").select("id,full_name,phone_number,role,verified_at,created_at").eq("id", targetUserId).maybeSingle(),
+        db.from("admin_user_controls").select("status,reason,updated_at,updated_by_user_id").eq("user_id", targetUserId).maybeSingle(),
+        db.from("captain_profiles").select("vehicle_type_id,vehicle_plate,license_number,verification_status,status").eq("user_id", targetUserId).maybeSingle(),
+        db.from("user_verifications").select("id,document_type,status,rejection_reason,uploaded_at,reviewed_at").eq("user_id", targetUserId).order("uploaded_at", { ascending: false }).limit(20),
+      ]);
+      const queryError = target.error ?? controls.error ?? captain.error ?? documents.error;
+      if (queryError) throw queryError;
+      if (!target.data) return error("المستخدم غير موجود.", 404, origin);
+      await writeAdminAudit(user!.id, "user.details_viewed", "user", String(targetUserId), null);
+      return reply({ user: { ...target.data, account_status: controls.data?.status ?? "active", control: controls.data, captain: captain.data, verification_documents: documents.data ?? [] } }, 200, origin);
+    }
     if (req.method === "PATCH" && userProfileRoute) {
       if (!clean(body.reason) || body.reason.trim().length > 1000) return error("اكتب سبب تعديل الحساب.", 400, origin);
       const patch: Record<string, string> = {};
@@ -2193,11 +2233,12 @@ Deno.serve(async (req: Request) => {
       return reply({ user: data }, 200, origin);
     }
     if (req.method === "GET" && path === "/admin/trips") {
-      const [daily, pooled] = await Promise.all([
+      const [daily, pooled, groups] = await Promise.all([
         db.from("trips").select("id,status,started_at,completed_at,total_distance_km,total_amount,match_id").eq("status", "in_progress").order("started_at", { ascending: false }).limit(100),
         db.from("pool_trips").select("id,group_id,service_date,direction,departure_at,estimated_arrival_at,captain_user_id,status,group:pool_groups!inner(category_id,status,created_by_user_id)").in("status", ["scheduled", "assigned", "needs_captain"]).order("departure_at", { ascending: true }).limit(100),
+        db.from("pool_groups").select("id,category_id,package_type,service_dates,morning_departure,return_departure,status,route_distance_km,seat_day_fare,waiting_since").in("status", ["waiting", "minimum_met", "price_review", "needs_captain", "active"]).order("waiting_since", { ascending: true }).limit(100),
       ]);
-      if (daily.error || pooled.error) throw daily.error ?? pooled.error;
+      if (daily.error || pooled.error || groups.error) throw daily.error ?? pooled.error ?? groups.error;
       const matchIds = (daily.data ?? []).map((trip) => trip.match_id);
       const { data: matches, error: matchError } = matchIds.length ? await db.from("matches").select("id,captain_user_id,daily_commute_request_id").in("id", matchIds) : { data: [], error: null };
       if (matchError) throw matchError;
@@ -2210,7 +2251,7 @@ Deno.serve(async (req: Request) => {
         const match = matchById.get(trip.match_id);
         return { ...trip, captain_user_id: match?.captain_user_id ?? null, request: match ? requestById.get(match.daily_commute_request_id) ?? null : null };
       });
-      return reply({ daily_trips: dailyTrips, pool_trips: pooled.data ?? [] }, 200, origin);
+      return reply({ daily_trips: dailyTrips, pool_trips: pooled.data ?? [], pool_groups: groups.data ?? [] }, 200, origin);
     }
     const tripActionRoute = path.match(/^\/admin\/trips\/(daily|pool)\/(\d+)\/(cancel|captain)$/);
     if (req.method === "POST" && tripActionRoute) {
@@ -2299,6 +2340,7 @@ Deno.serve(async (req: Request) => {
         .filter(([, event]) => event.to_status === "disputed")
         .map(([paymentId, event]) => ({ ...event, payment: paymentById.get(paymentId), history: (history.data ?? []).filter((item) => item.payment_id === paymentId) }))
         .sort((left, right) => Date.parse(right.created_at) - Date.parse(left.created_at));
+      if (url.searchParams.get("summary") === "true") return reply({ total_count: disputes.length, capped: (events ?? []).length === 100 }, 200, origin);
       return reply({ disputes }, 200, origin);
     }
     if (req.method === "GET" && path === "/admin/settings") {
@@ -2522,22 +2564,75 @@ Deno.serve(async (req: Request) => {
       return reply({ event }, 200, origin);
     }
     if (req.method === "GET" && path === "/admin/analytics/overview") {
-      const names = ["users", "captain_profiles", "daily_commute_requests", "trips", "payments", "pool_groups", "pool_members", "pool_trips"];
-      const counts = await Promise.all(names.map(name => db!.from(name).select("id", { count: "exact", head: true })));
-      const amounts = await db.from("payments").select("amount");
-      if (counts.some(x => x.error) || amounts.error) throw new Error("analytics query failed");
-      const overview: Record<string, number> = Object.fromEntries(names.map((name, i) => [name, counts[i].count ?? 0]));
-      overview.confirmed_payment_amount = (amounts.data ?? []).reduce((sum, item) => sum + Number(item.amount), 0);
+      const count = (table: string, column?: string, value?: string) => {
+        let query = db!.from(table).select("id", { count: "exact", head: true });
+        if (column && value) query = query.eq(column, value);
+        return query;
+      };
+      const queries = await Promise.all([
+        count("users"), count("users", "role", "rider"), count("captain_profiles"),
+        count("captain_profiles", "verification_status", "pending"), count("captain_profiles", "verification_status", "approved"),
+        count("trips", "status", "in_progress"), count("pool_trips", "status", "in_progress"),
+        count("trips", "status", "completed"), count("pool_trips", "status", "completed"),
+        count("pool_groups", "status", "price_review"),
+      ]);
+      const failed = queries.map((result, index) => result.error ? { query: index, code: result.error.code, message: result.error.message } : null).filter(Boolean);
+      if (failed.length) {
+        console.error("[sekka-api] admin analytics queries failed", failed);
+        throw new Error("admin analytics queries failed");
+      }
+      const value = (index: number) => queries[index].count ?? 0;
+      const overview: Record<string, number> = {
+        total_users: value(0), total_riders: value(1), total_captains: value(2),
+        captains_pending_verification: value(3), captains_approved: value(4),
+        total_trips_in_progress: value(5) + value(6), total_trips_completed: value(7) + value(8),
+        pending_price_approvals: value(9),
+      };
       return reply({ overview }, 200, origin);
     }
     if (req.method === "GET" && path === "/admin/pool/overview") {
-      const [groups, ledgers, trips] = await Promise.all([
-        db.from("pool_groups").select("id,status,package_type,category_id,created_at,waiting_since,route_distance_km,seat_day_fare"),
-        db.from("pool_ledger").select("list_amount,rider_amount,company_share_amount,captain_share_amount,settlement_status"),
-        db.from("pool_trips").select("id,status"),
+      const countStatus = (status: string) => db.from("pool_groups").select("id", { count: "exact", head: true }).eq("status", status);
+      const [waiting, minimumMet, priceReview, needsCaptain, active] = await Promise.all([
+        countStatus("waiting"), countStatus("minimum_met"), countStatus("price_review"), countStatus("needs_captain"), countStatus("active"),
       ]);
-      if (groups.error || ledgers.error || trips.error) throw new Error("pool overview query failed");
-      return reply({ groups: groups.data ?? [], trips: trips.data ?? [], totals: { list_amount: (ledgers.data ?? []).reduce((sum, x) => sum + Number(x.list_amount), 0), rider_amount: (ledgers.data ?? []).reduce((sum, x) => sum + Number(x.rider_amount), 0), company_share_amount: (ledgers.data ?? []).reduce((sum, x) => sum + Number(x.company_share_amount), 0), captain_share_amount: (ledgers.data ?? []).reduce((sum, x) => sum + Number(x.captain_share_amount), 0), pending_settlements: (ledgers.data ?? []).filter(x => x.settlement_status === "pending").length } }, 200, origin);
+      const failed = [waiting, minimumMet, priceReview, needsCaptain, active].map((result, index) => result.error ? { query: index, code: result.error.code, message: result.error.message } : null).filter(Boolean);
+      if (failed.length) {
+        console.error("[sekka-api] admin pool overview queries failed", failed);
+        throw new Error("admin pool overview queries failed");
+      }
+      return reply({ overview: {
+        waiting_groups: (waiting.count ?? 0) + (minimumMet.count ?? 0),
+        price_review_groups: priceReview.count ?? 0,
+        needs_captain_groups: needsCaptain.count ?? 0,
+        active_groups: active.count ?? 0,
+      } }, 200, origin);
+    }
+    if (req.method === "GET" && path === "/admin/finance/summary") {
+      let lastId = 0;
+      let companyDue = 0;
+      let captainsDue = 0;
+      let pendingRows = 0;
+      while (true) {
+        const { data, error: ledgerError } = await db.from("pool_ledger")
+          .select("id,company_share_amount,captain_share_amount")
+          .eq("settlement_status", "pending")
+          .gt("id", lastId)
+          .order("id", { ascending: true })
+          .limit(1000);
+        if (ledgerError) {
+          console.error("[sekka-api] admin finance summary query failed", { code: ledgerError.code, message: ledgerError.message, lastId });
+          throw new Error("admin finance summary query failed");
+        }
+        for (const row of data ?? []) {
+          companyDue += Number(row.company_share_amount);
+          captainsDue += Number(row.captain_share_amount);
+        }
+        const received = data?.length ?? 0;
+        pendingRows += received;
+        if (received < 1000) break;
+        lastId = data?.[received - 1]?.id ?? lastId;
+      }
+      return reply({ company_due: companyDue, captains_due: captainsDue, pending_settlements: pendingRows }, 200, origin);
     }
     if (req.method === "GET" && path === "/captain/pool/preferences") {
       const gate = await requireRole(user, ["captain"], origin); if (gate) return gate;

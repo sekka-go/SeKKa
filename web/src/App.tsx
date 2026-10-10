@@ -21,7 +21,7 @@ function resolveTheme(preference: ThemePreference): "light" | "dark" {
 }
 
 const protectedPagePaths = new Set([
-  "/admin", "/account", "/captain", "/captain/trips", "/publish",
+  "/admin", "/admin/users", "/admin/documents", "/admin/trips", "/admin/complaints", "/admin/finance", "/admin/finance/adjustment", "/admin/pricing", "/admin/audit", "/account", "/captain", "/captain/trips", "/publish",
   "/search", "/trips", "/messages", "/notifications", "/broadcast",
 ]);
 const currentPathname = () => window.location.pathname.replace(/\/+$/, "") || "/";

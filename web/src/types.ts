@@ -2,7 +2,7 @@ import type { User } from "./api";
 
 export type Session = { token: string; user: User };
 export type Toast = { tone: "success" | "error" | "info"; text: string };
-export type NavKey = "home" | "booking" | "trips" | "notifications" | "messages" | "account" | "offers" | "publish" | "captainTrips" | "admin" | "broadcast";
+export type NavKey = "home" | "booking" | "trips" | "notifications" | "messages" | "account" | "offers" | "publish" | "captainTrips" | "admin" | "adminUsers" | "adminDocuments" | "adminTrips" | "adminComplaints" | "adminFinance" | "adminFinanceAdjustment" | "adminPricing" | "adminAudit" | "broadcast";
 export type RiderWorkspaceTrip = {
   id: number;
   groupId: number;
