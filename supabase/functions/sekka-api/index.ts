@@ -1,6 +1,9 @@
+// deno-lint-ignore no-import-prefix -- Supabase Edge Functions resolve npm: dependencies directly.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { routeWithOsrm, RoutingError } from "./routing.ts";
 import { dedupeLocationSuggestions, formatNominatimAddress, formatPhotonAddress, GREATER_CAIRO, isGreaterCairoPoint, normalizeLocationQuery, type LocationAddress, type LocationSuggestion, type NominatimResult, type PhotonProperties } from "./locations.ts";
+import { readJsonObjectBody, RequestBodyTooLargeError } from "./request-body.ts";
+import { activeMemberIdForRider } from "./group-view.ts";
 
 type Json = Record<string, unknown>;
 type User = { id: number; full_name: string; phone_number: string; role: "rider" | "captain" | "admin"; verified_at: string | null; created_at: string; account_status?: "active" | "suspended" | "banned" };
@@ -137,7 +140,7 @@ async function searchNominatimGreaterCairo(query: string): Promise<LocationSugge
   cacheWrite(cacheKey, unique);
   return unique;
 }
-async function searchGreaterCairo(query: string) {
+function searchGreaterCairo(query: string) {
   const cacheKey = `photon-search:${normalizeLocationQuery(query)}`;
   const cached = cacheRead<LocationSuggestion[]>(cacheKey);
   if (cached) return cached;
@@ -270,13 +273,6 @@ const apiKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? (() => {
 })();
 const db = url && apiKey ? createClient(url, apiKey, { auth: { persistSession: false, autoRefreshToken: false } }) : null;
 
-async function readBody(req: Request): Promise<Json> {
-  const text = await req.text();
-  if (text.length > 1_000_000) throw new Error("حجم الطلب أكبر من المسموح.");
-  if (!text) return {};
-  const value = JSON.parse(text);
-  return value && typeof value === "object" && !Array.isArray(value) ? value as Json : {};
-}
 function randomUrlToken(byteLength = 18) {
   const bytes = crypto.getRandomValues(new Uint8Array(byteLength));
   let binary = "";
@@ -451,7 +447,7 @@ async function getDirectMessageContactIds(userId: number): Promise<number[]> {
   if (contactsError) throw contactsError;
   return (data ?? []).map((row: { contact_user_id: number | string }) => Number(row.contact_user_id)).filter(Number.isSafeInteger);
 }
-async function requireRole(user: User | null, roles: User["role"][], origin: string) {
+function requireRole(user: User | null, roles: User["role"][], origin: string) {
   if (!user) return error("سجّل الدخول أولًا.", 401, origin);
   if (!roles.includes(user.role)) return error("ما عندكش صلاحية لتنفيذ الإجراء ده.", 403, origin);
   return null;
@@ -526,7 +522,7 @@ function validDates(value: unknown, type: string): string[] | null {
     const parsed = new Date(date + "T12:00:00Z");
     if (Number.isNaN(parsed.valueOf()) || parsed.toISOString().slice(0, 10) !== date || [5, 6].includes(parsed.getUTCDay())) return null;
     if (index > 0) {
-      let expected = new Date(dates[index - 1]! + "T12:00:00Z");
+      const expected = new Date(dates[index - 1]! + "T12:00:00Z");
       expected.setUTCDate(expected.getUTCDate() + 1);
       while ([5, 6].includes(expected.getUTCDay())) expected.setUTCDate(expected.getUTCDate() + 1);
       if (expected.toISOString().slice(0, 10) !== date) return null;
@@ -640,22 +636,28 @@ async function activateGroup(group: Json, members: Json[], category: Json, quote
 }
 async function groupView(group: Json) {
   const { current_rider_id: _currentRiderId, ...publicGroup } = group;
-  const [members, trips, subs] = await Promise.all([
+  const [members, trips] = await Promise.all([
     getMembers(Number(group.id), false),
     db!.from("pool_trips").select("*").eq("group_id", group.id).order("service_date").order("direction"),
-    db!.from("pool_members").select("id").eq("group_id", group.id).eq("status", "active"),
   ]);
-  const memberIds = (subs.data ?? []).map((m) => m.id);
   let subscription;
-  if (memberIds.length) {
-    const { data } = await db!.from("pool_subscriptions").select("amount_due,refund_amount,service_days,discount_rate").in("member_id", memberIds);
-    subscription = data?.find((s) => members.some((m: Json) => m.rider_user_id === Number(_currentRiderId) && memberIds.includes(m.id)));
+  const ownActiveMemberId = activeMemberIdForRider(
+    members as Array<{ id: number; rider_user_id: number; status: string }>,
+    Number(_currentRiderId),
+  );
+  if (ownActiveMemberId !== null) {
+    const { data, error: subscriptionError } = await db!.from("pool_subscriptions")
+      .select("amount_due,refund_amount,service_days,discount_rate")
+      .eq("member_id", ownActiveMemberId)
+      .maybeSingle();
+    if (subscriptionError) throw subscriptionError;
+    subscription = data ?? undefined;
   }
   return { group: { ...publicGroup, service_dates: JSON.stringify(group.service_dates), route_geometry: group.route_geometry }, members, trips: trips.data ?? [], ...(subscription ? { subscription } : {}) };
 }
 
 
-async function automaticMatch(request: Json, riderId: number) {
+async function automaticMatch(request: Json) {
   const requestId = Number(request.id);
   if (request.status === "matched") {
     const { data: existing } = await db!.from("matches").select("*").eq("daily_commute_request_id", requestId).maybeSingle();
@@ -692,7 +694,12 @@ Deno.serve(async (req: Request) => {
   let body: Json = {};
   const multipart = req.headers.get("content-type")?.toLowerCase().startsWith("multipart/form-data") === true;
   if (!["GET", "HEAD"].includes(req.method) && !multipart) {
-    try { body = await readBody(req); } catch { return error("بيانات الطلب غير صالحة.", 400, origin); }
+    try {
+      body = await readJsonObjectBody(req);
+    } catch (cause) {
+      if (cause instanceof RequestBodyTooLargeError) return error("حجم الطلب أكبر من المسموح.", 413, origin);
+      return error("بيانات الطلب غير صالحة.", 400, origin);
+    }
   }
   try {
     if (req.method === "POST" && path === "/webhooks/telegram") {
@@ -1042,7 +1049,7 @@ Deno.serve(async (req: Request) => {
         if (!clean(body.service_category_id) || !validPoint(body.pickup_lat, body.pickup_lng) || !validPoint(body.dropoff_lat, body.dropoff_lng)) return error("فئة الخدمة أو إحداثيات الرحلة غير صحيحة.", 400, origin);
         const { data: request, error: insertError } = await db.from("daily_commute_requests").insert({ rider_user_id: user!.id, service_category_id: body.service_category_id, pickup_lat: body.pickup_lat, pickup_lng: body.pickup_lng, dropoff_lat: body.dropoff_lat, dropoff_lng: body.dropoff_lng }).select().single();
         if (insertError) throw insertError;
-        const result = await automaticMatch(request, user!.id);
+        const result = await automaticMatch(request);
         return reply({ request: result.request, match: result.match }, 201, origin);
       }
       if (req.method === "GET") {
@@ -1139,7 +1146,7 @@ Deno.serve(async (req: Request) => {
       if (queryError) throw queryError;
       if (!request) return error("الطلب ده مش موجود.", 404, origin);
       if (Number(request.rider_user_id) !== user!.id) return error("الطلب ده مش بتاعك.", 403, origin);
-      const result = await automaticMatch(request, user!.id);
+      const result = await automaticMatch(request);
       if (result.not_open) return error("الطلب ده لم يعد مفتوحًا للمطابقة.", 409, origin);
       return reply({ request: result.request, match: result.match }, 200, origin);
     }
