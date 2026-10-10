@@ -4,7 +4,7 @@
 .app-shell .stitch-welcome-availability { display: inline-flex; align-items: center; gap: .4rem; padding: .4rem .65rem; border-radius: 999px; color: var(--color-text-secondary); background: var(--color-surface-raised); font-size: .74rem; }
 .app-shell .stitch-welcome-availability i { width: .5rem; height: .5rem; border-radius: 50%; background: var(--color-secondary); }
 .app-shell .stitch-language-toggle { min-height: 2.5rem; padding-inline: .8rem; border: 1px solid var(--color-border); border-radius: 999px; color: var(--color-text-primary); background: var(--color-surface); font-weight: 750; }
-.app-shell .stitch-welcome-page .landing-hero { grid-template-columns: minmax(0,1fr) minmax(14rem,.8fr); align-items: center; gap: clamp(1rem,4vw,3rem); min-height: 0; padding-block: clamp(1rem,4vw,2rem); }
+.app-shell .stitch-welcome-page .landing-hero { grid-template-columns: minmax(0,1fr) minmax(14rem,.8fr); align-items: center; gap: clamp(1rem,4vw,3rem); width: calc(100% + clamp(1rem,4vw,2rem) + clamp(1rem,4vw,2rem)); min-height: 0; margin-inline: calc(0rem - clamp(1rem,4vw,2rem)); padding: clamp(1rem,4vw,2rem); }
 .app-shell .stitch-welcome-page .landing-hero-copy { max-width: 40rem; }
 .app-shell .stitch-welcome-page .landing-hero-copy > p { max-width: 35rem; }
 .app-shell .stitch-welcome-page .landing-route-card { width: min(100%,25rem); aspect-ratio: .86; justify-self: center; border-radius: 2rem; }
@@ -198,7 +198,7 @@
   .app-shell .stitch-welcome-header { grid-template-columns: minmax(0,1fr) auto; }
   .app-shell .stitch-welcome-availability { display: none; }
   .app-shell .stitch-welcome-page .landing-hero { grid-template-columns: minmax(0,1fr); gap: .85rem; }
-  .app-shell .stitch-welcome-page .landing-route-card { width: min(100%,20rem); aspect-ratio: 1.12; }
+  .app-shell .stitch-welcome-page .landing-route-card { width: 70vw; max-width: none; aspect-ratio: 1.4; margin-inline: auto; }
   .app-shell .stitch-welcome-benefits { grid-template-columns: minmax(0,1fr); }
   .workspace .stitch-rider-flow { gap: .8rem; }
   .workspace .stitch-screen-header { grid-template-columns: 2.5rem minmax(0,1fr) 2.4rem; gap: .5rem; }
