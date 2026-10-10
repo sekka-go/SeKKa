@@ -569,3 +569,93 @@ button, input, select, textarea { color-scheme: inherit; }
   border-radius: var(--radius-card);
 }
 .workspace .notifications-workspace .notifications-loading { min-height: 8rem; color: var(--color-text-secondary); }
+
+/* Keep legacy location controls neutral in the Light theme across every role. */
+:root[data-theme="light"] .app-shell .workspace .location-search-field,
+:root[data-theme="light"] .app-shell .route-preferences-card .location-search-field {
+  color: var(--color-text-primary);
+  background: var(--color-surface-elevated);
+  border-color: var(--color-border);
+}
+:root[data-theme="light"] .app-shell .workspace .location-search-results button,
+:root[data-theme="light"] .app-shell .route-preferences-card .location-search-results button {
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+:root[data-theme="light"] .app-shell .workspace .location-search-heading strong,
+:root[data-theme="light"] .app-shell .workspace .location-search-form input {
+  color: var(--color-text-primary);
+}
+:root[data-theme="light"] .app-shell .workspace .sidebar-label,
+:root[data-theme="light"] .app-shell .workspace .breadcrumbs b {
+  color: var(--color-text-muted);
+}
+
+/* Replace legacy dark brown surfaces with the same neutral tokens used by the Light theme. */
+:root[data-theme="light"] .app-shell :is(
+  .workspace .admin-user-breakdown,
+  .workspace .admin-secondary-details,
+  .workspace .trip-extra-details,
+  .workspace .upcoming-card,
+  .workspace .captain-settings-details,
+  .workspace .category-select-trigger,
+  .workspace .category-select-options,
+  .workspace .saved-place-tools,
+  .workspace .saved-place-target,
+  .workspace .location-search-form input:read-only,
+  .landing-benefit-card,
+  .landing-bottom-cta
+) {
+  color: var(--color-text-primary);
+  background: var(--color-surface-elevated);
+  border-color: var(--color-border);
+}
+:root[data-theme="light"] .app-shell .workspace .category-select,
+:root[data-theme="light"] .app-shell .workspace .category-select option {
+  color: var(--color-input-text);
+  background: var(--color-input-background);
+  border-color: var(--color-border);
+}
+:root[data-theme="light"] .app-shell .workspace .saved-place-tools :is(button, input, select),
+:root[data-theme="light"] .app-shell .workspace .category-select-options button {
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+:root[data-theme="light"] .app-shell .workspace .saved-place-tools :is(button:hover, button[aria-pressed="true"], button[aria-selected="true"]),
+:root[data-theme="light"] .app-shell .workspace .category-select-options button[aria-selected="true"] {
+  color: var(--color-text-primary);
+  background: var(--color-navigation-active);
+}
+:root[data-theme="light"] .app-shell .workspace .saved-place-tools > summary small,
+:root[data-theme="light"] .app-shell .workspace .location-search-heading strong,
+:root[data-theme="light"] .app-shell .workspace .location-search-form input {
+  color: var(--color-text-primary);
+}
+:root[data-theme="light"] .app-shell .workspace .rider-dashboard .welcome-banner {
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+:root[data-theme="light"] .app-shell .landing-route-card {
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+:root[data-theme="light"] .app-shell :is(
+  .workspace .soft-surface,
+  .workspace .welcome-banner,
+  .workspace .notifications-drawer,
+  .workspace .booking-review,
+  .auth-story,
+  .auth-panel
+) {
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+:root[data-theme="light"] .app-shell :is(.map-picker, .map-canvas) {
+  background-color: var(--color-surface-elevated);
+  border-color: var(--color-border);
+}

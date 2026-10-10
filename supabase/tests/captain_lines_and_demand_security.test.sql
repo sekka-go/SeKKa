@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(31);
+SELECT plan(34);
 
 SELECT ok((SELECT relrowsecurity FROM pg_class WHERE oid = 'public.app_config'::regclass), 'app_config has RLS enabled');
 SELECT ok((SELECT relrowsecurity FROM pg_class WHERE oid = 'public.captain_lines'::regclass), 'captain_lines has RLS enabled');
@@ -20,13 +20,13 @@ SELECT ok(has_table_privilege('service_role', 'public.captain_lines', 'SELECT'),
 SELECT ok(has_table_privilege('service_role', 'public.demand_groups', 'SELECT'), 'service_role can read demand_groups');
 SELECT ok(has_table_privilege('service_role', 'public.demand_requests', 'SELECT'), 'service_role can read demand_requests');
 
-SELECT ok(has_function_privilege('service_role', 'public.publish_captain_line(integer,text,text,double precision,double precision,text,double precision,double precision,jsonb,time,smallint[],integer,numeric,text[])', 'EXECUTE'), 'service_role can publish a captain line');
-SELECT ok(NOT has_function_privilege('anon', 'public.publish_captain_line(integer,text,text,double precision,double precision,text,double precision,double precision,jsonb,time,smallint[],integer,numeric,text[])', 'EXECUTE'), 'anon cannot publish a captain line');
-SELECT ok(NOT has_function_privilege('authenticated', 'public.publish_captain_line(integer,text,text,double precision,double precision,text,double precision,double precision,jsonb,time,smallint[],integer,numeric,text[])', 'EXECUTE'), 'authenticated cannot publish a captain line directly');
+SELECT ok(has_function_privilege('service_role', 'public.publish_captain_line(integer,text,text,double precision,double precision,text,double precision,double precision,jsonb,time,smallint[],integer,numeric,text[],time)', 'EXECUTE'), 'service_role can publish a captain line with an optional return time');
+SELECT ok(NOT has_function_privilege('anon', 'public.publish_captain_line(integer,text,text,double precision,double precision,text,double precision,double precision,jsonb,time,smallint[],integer,numeric,text[],time)', 'EXECUTE'), 'anon cannot publish a captain line');
+SELECT ok(NOT has_function_privilege('authenticated', 'public.publish_captain_line(integer,text,text,double precision,double precision,text,double precision,double precision,jsonb,time,smallint[],integer,numeric,text[],time)', 'EXECUTE'), 'authenticated cannot publish a captain line directly');
 
-SELECT ok(has_function_privilege('service_role', 'public.create_demand_request(integer,text,date,time,text,double precision,double precision,text,double precision,double precision,integer)', 'EXECUTE'), 'service_role can register rider demand');
-SELECT ok(NOT has_function_privilege('anon', 'public.create_demand_request(integer,text,date,time,text,double precision,double precision,text,double precision,double precision,integer)', 'EXECUTE'), 'anon cannot register rider demand');
-SELECT ok(NOT has_function_privilege('authenticated', 'public.create_demand_request(integer,text,date,time,text,double precision,double precision,text,double precision,double precision,integer)', 'EXECUTE'), 'authenticated cannot register rider demand directly');
+SELECT ok(has_function_privilege('service_role', 'public.create_demand_request(integer,text,date,time,text,double precision,double precision,text,double precision,double precision,integer,time)', 'EXECUTE'), 'service_role can register rider demand with an optional return time');
+SELECT ok(NOT has_function_privilege('anon', 'public.create_demand_request(integer,text,date,time,text,double precision,double precision,text,double precision,double precision,integer,time)', 'EXECUTE'), 'anon cannot register rider demand');
+SELECT ok(NOT has_function_privilege('authenticated', 'public.create_demand_request(integer,text,date,time,text,double precision,double precision,text,double precision,double precision,integer,time)', 'EXECUTE'), 'authenticated cannot register rider demand directly');
 
 SELECT ok(has_function_privilege('service_role', 'public.set_captain_line_status(integer,integer,text)', 'EXECUTE'), 'service_role can change a captain line status');
 SELECT ok(NOT has_function_privilege('anon', 'public.set_captain_line_status(integer,integer,text)', 'EXECUTE'), 'anon cannot change a captain line status');
@@ -38,6 +38,9 @@ SELECT ok(NOT has_function_privilege('anon', 'public.sekka_match_after_demand_in
 SELECT ok(NOT has_function_privilege('authenticated', 'public.sekka_match_after_demand_insert()', 'EXECUTE'), 'authenticated cannot call the demand-matching trigger');
 SELECT ok(NOT has_function_privilege('anon', 'public.sekka_match_after_line_publish()', 'EXECUTE'), 'anon cannot call the line-matching trigger');
 SELECT ok(NOT has_function_privilege('authenticated', 'public.sekka_match_after_line_publish()', 'EXECUTE'), 'authenticated cannot call the line-matching trigger');
+SELECT ok(NOT has_function_privilege('anon', 'public.sekka_match_demand_group(integer)', 'EXECUTE'), 'anon cannot directly invoke demand matching');
+SELECT ok(NOT has_function_privilege('authenticated', 'public.sekka_match_demand_group(integer)', 'EXECUTE'), 'authenticated cannot directly invoke demand matching');
+SELECT ok(NOT has_function_privilege('service_role', 'public.sekka_match_demand_group(integer)', 'EXECUTE'), 'demand matching is restricted to database triggers');
 
 SELECT * FROM finish();
 ROLLBACK;

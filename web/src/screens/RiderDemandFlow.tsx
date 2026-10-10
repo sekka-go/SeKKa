@@ -14,6 +14,8 @@ type SearchLine = CaptainLine & {
   pickup_distance_km: number;
   dropoff_distance_km: number;
   arrival_difference_minutes: number;
+  return_arrival_time?: string | null;
+  matched_return?: boolean;
   captain_name?: string;
   captain_rating?: number | null;
   captain_rides?: number | null;
@@ -25,7 +27,7 @@ type SearchLine = CaptainLine & {
 type DemandResponse = {
   request: { id: number; status: string };
   demand_group: { id: number; status: string; captain_line_id: number | null } | null;
-  line: { id: number; origin_label: string; destination_label: string; arrival_time: string; price_per_seat: number; captain_name?: string } | null;
+  line: { id: number; origin_label: string; destination_label: string; arrival_time: string; return_arrival_time?: string | null; price_per_seat: number; captain_name?: string } | null;
 };
 type FlowScreen = "search" | "results" | "details" | "custom" | "confirmation";
 type SortMode = "soonest" | "price";
@@ -45,8 +47,9 @@ export default function RiderDemandFlow({ session, notify, onBack, onOpenRequest
   savedPlaces?: SavedPlace[];
 }) {
   const [vehicle, setVehicle] = useState<"private_car" | "hiace">("private_car");
-  const [tripDate, setTripDate] = useState(initialTripDate);
+  const tripDate = initialTripDate;
   const [arrivalTime, setArrivalTime] = useState(initialArrivalTime);
+  const [returnTime, setReturnTime] = useState("");
   const [seats, setSeats] = useState(1);
   const [pickup, setPickup] = useState<MapPoint | null>(initialPickup);
   const [dropoff, setDropoff] = useState<MapPoint | null>(initialDropoff);
@@ -74,7 +77,7 @@ export default function RiderDemandFlow({ session, notify, onBack, onOpenRequest
     setLoading(true); setSubmitted(null);
     try {
       const result = await api<{ lines: SearchLine[] }>("/rider/lines/search", { method: "POST", token: session.token, body: {
-        vehicle_type_id: vehicle, trip_date: tripDate, arrival_time: arrivalTime,
+        vehicle_type_id: vehicle, trip_date: tripDate, arrival_time: arrivalTime, return_arrival_time: returnTime || null,
         pickup_lat: pickup.lat, pickup_lng: pickup.lng, dropoff_lat: dropoff.lat, dropoff_lng: dropoff.lng, seats,
       } });
       setLines((result.lines ?? []).filter((line) => Number(line.seats_available) >= seats)); setSearched(true); setScreen("results");
@@ -88,7 +91,7 @@ export default function RiderDemandFlow({ session, notify, onBack, onOpenRequest
     setLoading(true);
     try {
       const result = await api<DemandResponse>("/rider/demand-requests", { method: "POST", token: session.token, body: {
-        vehicle_type_id: vehicle, trip_date: tripDate, arrival_time: arrivalTime,
+        vehicle_type_id: vehicle, trip_date: tripDate, arrival_time: arrivalTime, return_arrival_time: returnTime || null,
         pickup_label: pickup.label ?? pickupText, pickup_lat: pickup.lat, pickup_lng: pickup.lng,
         dropoff_label: dropoff.label ?? dropoffText, dropoff_lat: dropoff.lat, dropoff_lng: dropoff.lng, seats,
       } });
@@ -140,11 +143,12 @@ export default function RiderDemandFlow({ session, notify, onBack, onOpenRequest
         <form className="stitch-search-form" onSubmit={search}>
           <div className="stitch-location-stack">{routeInputs}</div>
           <div className="stitch-search-grid">
-            <label className="stitch-field"><span>{t("تاريخ الرحلة")}</span><input type="date" min={todayInCairo()} value={tripDate} onChange={(event) => setTripDate(event.target.value)} required /></label>
-            <label className="stitch-field"><span>{t("وقت الوصول")}</span><input type="time" value={arrivalTime} onChange={(event) => setArrivalTime(event.target.value)} required /></label>
+            <label className="stitch-field"><span>{t("وقت الذهاب")}</span><input type="time" value={arrivalTime} onChange={(event) => setArrivalTime(event.target.value)} required /></label>
+            <label className="stitch-field"><span>{t("وقت العودة")}</span><input type="time" value={returnTime} onChange={(event) => setReturnTime(event.target.value)} /></label>
             <label className="stitch-field"><span>{t("نوع المركبة")}</span><select value={vehicle} onChange={(event) => setVehicle(event.target.value as "private_car" | "hiace")}><option value="private_car">{t("ملاكي")}</option><option value="hiace">{t("هاي إس")}</option></select></label>
             <div className="stitch-seat-control"><span>{t("عدد المقاعد")}</span><div><button type="button" onClick={() => setSeatCount(seats - 1)} aria-label={t("تقليل المقاعد")}>−</button><strong>{seats}</strong><button type="button" onClick={() => setSeatCount(seats + 1)} aria-label={t("زيادة المقاعد")}>＋</button></div></div>
           </div>
+          <p className="stitch-auto-date">{t("تاريخ الرحلة تلقائيًا")}: {dateLabel}</p>
           <button type="button" className="stitch-map-toggle" onClick={() => setMapOpen((open) => !open)}><AppIcon name="map" size={18} />{mapOpen ? t("إخفاء الخريطة") : t("اختيار الموقع على الخريطة")} <span>{mapOpen ? "⌃" : "⌄"}</span></button>
           {mapOpen && <section className="stitch-map-panel" aria-label={t("اختيار الموقع على الخريطة")}><div className="stitch-map-target"><button type="button" className={mapTarget === "pickup" ? "is-selected" : ""} onClick={() => setMapTarget("pickup")}>{t("نقطة الركوب")}</button><button type="button" className={mapTarget === "dropoff" ? "is-selected" : ""} onClick={() => setMapTarget("dropoff")}>{t("نقطة الوصول")}</button></div><div className="booking-map"><MapPicker pickup={pickup} dropoff={dropoff} mode={mapTarget} restrictToGreaterCairo onPick={(mode, point) => { if (mode === "pickup") { setPickup(point); setPickupText(point.label ?? t("موقع محدد على الخريطة")); } else { setDropoff(point); setDropoffText(point.label ?? t("موقع محدد على الخريطة")); } setMapOpen(false); }} /></div></section>}
           <div className="stitch-payment-note"><span className="stitch-icon-circle"><AppIcon name="wallet" size={18} /></span><div><strong>{t("الدفع مباشرة للكابتن")}</strong><p>{t("سِكَّة لا تحتفظ بأموالك. اتفق مع الكابتن على الدفع نقدًا أو عبر InstaPay بعد الرحلة.")}</p></div></div>
@@ -155,14 +159,14 @@ export default function RiderDemandFlow({ session, notify, onBack, onOpenRequest
     </>}
 
     {screen === "results" && <>
-      <section className="stitch-route-summary surface"><div className="stitch-route-summary-icon">⌖</div><div><strong>{pickupText} <span>←</span> {dropoffText}</strong><small>{dateLabel} · {arrivalTime.slice(0, 5)} · {seats} {t("مقاعد")}</small></div><button type="button" onClick={() => setScreen("search")}>{t("تعديل")}</button></section>
+      <section className="stitch-route-summary surface"><div className="stitch-route-summary-icon">⌖</div><div><strong>{pickupText} <span>←</span> {dropoffText}</strong><small>{dateLabel} · {arrivalTime.slice(0, 5)}{returnTime ? ` · ${t("عودة")} ${returnTime.slice(0, 5)}` : ""} · {seats} {t("مقاعد")}</small></div><button type="button" onClick={() => setScreen("search")}>{t("تعديل")}</button></section>
       <div className="stitch-filter-row" role="group" aria-label={t("ترتيب المسارات")}><button className={sortMode === "soonest" ? "active" : ""} onClick={() => setSortMode("soonest")} type="button">● {t("الأقرب موعدًا")}</button><button className={sortMode === "price" ? "active" : ""} onClick={() => setSortMode("price")} type="button"><AppIcon name="wallet" size={16} /> {t("الأقل تكلفة")}</button><span>{sortedLines.length} {t("مسارات متاحة")}</span></div>
       {sortedLines.length ? <div className="stitch-results-list">{sortedLines.map((line, index) => <article className="stitch-result-card surface" key={line.id}>
         <div className="stitch-result-top"><div className="stitch-captain-avatar" aria-hidden="true">{(line.captain_name ?? t("كابتن")).slice(0, 1)}</div><div className="stitch-captain-copy"><strong>{line.captain_name ?? t("كابتن معتمد")}</strong><small>{line.captain_verified ? t("كابتن موثق") : t("مسار نشط")} · {line.vehicle_type_id === "hiace" ? t("هاي إس") : t("ملاكي")}</small></div><div className="stitch-fare"><strong>{money(Number(line.price_per_seat))}</strong><small>{t("ج.م / مقعد")}</small></div></div>
         <div className="stitch-vehicle-strip"><AppIcon name="car" size={17} /><span>{line.vehicle_type_id === "hiace" ? t("هاي إس") : t("سيارة ملاكي")}</span><span>{line.seats_available} {t("مقاعد متاحة")}</span></div>
         {routeTimeline(line.origin_label, line.destination_label)}
         <div className="stitch-line-tags"><span>{line.pickup_distance_km.toFixed(1)} {t("كم من نقطة الركوب")}</span><span>{line.dropoff_distance_km.toFixed(1)} {t("كم من نقطة الوصول")}</span>{line.women_only && <span>{t("رحلة مخصصة للسيدات")}</span>}{line.payment_methods.includes("instapay") && <span>InstaPay</span>}{line.payment_methods.includes("cash") && <span>{t("نقدًا")}</span>}</div>
-        <div className="stitch-result-times"><span><small>{t("موعد الوصول")}</small><strong>{line.arrival_time.slice(0, 5)}</strong></span><span><small>{t("فرق الوصول")}</small><strong>{line.arrival_difference_minutes > 0 ? `+${line.arrival_difference_minutes}` : line.arrival_difference_minutes} {t("دقيقة")}</strong></span></div>
+        <div className="stitch-result-times"><span><small>{t("موعد الوصول")}</small><strong>{line.arrival_time.slice(0, 5)}</strong></span>{returnTime && line.return_arrival_time && <span><small>{t("وقت العودة")}</small><strong>{line.return_arrival_time.slice(0, 5)}</strong></span>}<span><small>{t("فرق الوصول")}</small><strong>{line.arrival_difference_minutes > 0 ? `+${line.arrival_difference_minutes}` : line.arrival_difference_minutes} {t("دقيقة")}</strong></span></div>
         <div className="stitch-result-actions"><button className="button button-outline" type="button" onClick={() => notify(t("ستتوفر المحادثة بعد قبول طلب الرحلة."), "info")}><AppIcon name="messages" size={17} />{t("تواصل مع الكابتن")}</button><button className="button button-primary" type="button" onClick={() => { setSelectedLine(line); setScreen("details"); }}>{t("عرض التفاصيل")} <span aria-hidden="true">←</span></button></div>
         {index === 0 && <span className="stitch-match-label">{t("أفضل تطابق")}</span>}
       </article>)}</div> : <section className="stitch-no-results surface"><span className="stitch-no-results-icon">✦</span><div><h3>{t("لم نجد مسارًا مطابقًا الآن")}</h3><p>{t("سجّل طلبك، وسيجمعه نظام سِكَّة تلقائيًا مع الركاب المتجهين في نفس الاتجاه.")}</p></div><button className="button button-primary" type="button" onClick={() => setScreen("custom")}>{t("سجّل طلب رحلة مخصصة")} <span aria-hidden="true">←</span></button></section>}
@@ -171,7 +175,7 @@ export default function RiderDemandFlow({ session, notify, onBack, onOpenRequest
 
     {screen === "details" && selectedLine && <>
       <section className="stitch-trip-map surface"><div className="stitch-map-art" aria-label={t("خريطة المسار") }><span className="map-road road-one"/><span className="map-road road-two"/><span className="map-road road-three"/><span className="map-route-line"/><i className="map-pin-start">●</i><i className="map-pin-end">●</i><span className="map-car-marker"><AppIcon name="car" size={19} /></span><b>{t("مسار الرحلة")}</b></div><div className="stitch-map-summary"><span>{t("مسار مشترك معتمد")}</span><strong>{t("وقت الرحلة التقديري")}: ٤٠ {t("دقيقة")}</strong></div></section>
-      <section className="stitch-detail-card surface"><div className="stitch-section-heading"><div><span className="eyebrow">{t("تفاصيل خط السير")}</span><h3>{t("نقطة الركوب والوصول")}</h3></div><span className="stitch-status-dot">{t("متاح")}</span></div>{routeTimeline(selectedLine.origin_label, selectedLine.destination_label)}<div className="stitch-detail-facts"><span>{t("تاريخ الرحلة")}<strong>{dateLabel}</strong></span><span>{t("موعد الوصول") }<strong>{selectedLine.arrival_time.slice(0, 5)}</strong></span><span>{t("المقاعد المتاحة")}<strong>{selectedLine.seats_available}</strong></span><span>{t("نوع المركبة")}<strong>{selectedLine.vehicle_type_id === "hiace" ? t("هاي إس") : t("ملاكي")}</strong></span></div></section>
+      <section className="stitch-detail-card surface"><div className="stitch-section-heading"><div><span className="eyebrow">{t("تفاصيل خط السير")}</span><h3>{t("نقطة الركوب والوصول")}</h3></div><span className="stitch-status-dot">{t("متاح")}</span></div>{routeTimeline(selectedLine.origin_label, selectedLine.destination_label)}<div className="stitch-detail-facts"><span>{t("تاريخ الرحلة")}<strong>{dateLabel}</strong></span><span>{t("موعد الوصول") }<strong>{selectedLine.arrival_time.slice(0, 5)}</strong></span>{returnTime && selectedLine.return_arrival_time && <span>{t("وقت العودة")}<strong>{selectedLine.return_arrival_time.slice(0, 5)}</strong></span>}<span>{t("المقاعد المتاحة")}<strong>{selectedLine.seats_available}</strong></span><span>{t("نوع المركبة")}<strong>{selectedLine.vehicle_type_id === "hiace" ? t("هاي إس") : t("ملاكي")}</strong></span></div></section>
       <section className="stitch-detail-card surface"><div className="stitch-section-heading"><div><span className="eyebrow">{t("الكابتن والمركبة")}</span><h3>{selectedLine.captain_name ?? t("كابتن المسار")}</h3></div>{selectedLine.captain_verified && <span className="stitch-verified">✓ {t("موثق")}</span>}</div><p>{selectedLine.vehicle_model ?? (selectedLine.vehicle_type_id === "hiace" ? t("سيارة هاي إس") : t("سيارة ملاكي"))}{selectedLine.vehicle_plate ? ` · ${selectedLine.vehicle_plate}` : ""}</p>{selectedLine.captain_rating != null && <p className="stitch-rating">★ {selectedLine.captain_rating.toFixed(1)} · {selectedLine.captain_rides ?? 0} {t("رحلة مكتملة")}</p>}</section>
       <section className="stitch-payment-note"><span className="stitch-icon-circle"><AppIcon name="wallet" size={18} /></span><div><strong>{t("طريقة الدفع المباشرة")}</strong><p>{t("التكلفة التقديرية للمقعد")} · {money(Number(selectedLine.price_per_seat))} {t("ج.م")}. الدفع للكابتن مباشرة نقدًا أو بالتحويل.</p></div></section>
       <div className="stitch-auto-match-banner"><span className="stitch-icon-circle"><AppIcon name="users" size={18} /></span><div><strong>{t("مهم: عرض المسار لا يحجز مقعدًا")}</strong><p>{t("إرسال طلبك لا يحجز مقعدًا مباشرةً؛ سِكَّة تستخدم بيانات الرحلة لمطابقة الطلب تلقائيًا.")}</p></div></div>
@@ -183,7 +187,7 @@ export default function RiderDemandFlow({ session, notify, onBack, onOpenRequest
       <section className="stitch-search-card surface"><div className="stitch-card-title"><span className="stitch-icon-circle"><AppIcon name="route" size={20} /></span><div><strong>{t("تفاصيل طلبك")}</strong><small>{t("راجع البيانات قبل تسجيل الطلب")}</small></div></div><form className="stitch-search-form" onSubmit={(event) => void requestRide(event)}>
         <div className="stitch-location-stack">{routeInputs}</div>
         {mapOpen && <section className="stitch-map-panel" aria-label={t("اختيار الموقع على الخريطة")}><div className="stitch-map-target"><button type="button" className={mapTarget === "pickup" ? "is-selected" : ""} onClick={() => setMapTarget("pickup")}>{t("نقطة الركوب")}</button><button type="button" className={mapTarget === "dropoff" ? "is-selected" : ""} onClick={() => setMapTarget("dropoff")}>{t("نقطة الوصول")}</button></div><div className="booking-map"><MapPicker pickup={pickup} dropoff={dropoff} mode={mapTarget} restrictToGreaterCairo onPick={(mode, point) => { if (mode === "pickup") { setPickup(point); setPickupText(point.label ?? t("موقع محدد على الخريطة")); } else { setDropoff(point); setDropoffText(point.label ?? t("موقع محدد على الخريطة")); } setMapOpen(false); }} /></div></section>}
-        <div className="stitch-search-grid"><label className="stitch-field"><span>{t("تاريخ الرحلة")}</span><input type="date" min={todayInCairo()} value={tripDate} onChange={(event) => setTripDate(event.target.value)} required /></label><label className="stitch-field"><span>{t("وقت الوصول المطلوب")}</span><input type="time" value={arrivalTime} onChange={(event) => setArrivalTime(event.target.value)} required /></label><label className="stitch-field"><span>{t("نوع المركبة")}</span><select value={vehicle} onChange={(event) => setVehicle(event.target.value as "private_car" | "hiace")}><option value="private_car">{t("ملاكي")}</option><option value="hiace">{t("هاي إس")}</option></select></label><div className="stitch-seat-control"><span>{t("عدد المقاعد")}</span><div><button type="button" onClick={() => setSeatCount(seats - 1)} aria-label={t("تقليل المقاعد")}>−</button><strong>{seats}</strong><button type="button" onClick={() => setSeatCount(seats + 1)} aria-label={t("زيادة المقاعد")}>＋</button></div></div></div>
+        <div className="stitch-search-grid"><label className="stitch-field"><span>{t("وقت الذهاب")}</span><input type="time" value={arrivalTime} onChange={(event) => setArrivalTime(event.target.value)} required /></label><label className="stitch-field"><span>{t("وقت العودة")}</span><input type="time" value={returnTime} onChange={(event) => setReturnTime(event.target.value)} /></label><label className="stitch-field"><span>{t("نوع المركبة")}</span><select value={vehicle} onChange={(event) => setVehicle(event.target.value as "private_car" | "hiace")}><option value="private_car">{t("ملاكي")}</option><option value="hiace">{t("هاي إس")}</option></select></label><div className="stitch-seat-control"><span>{t("عدد المقاعد")}</span><div><button type="button" onClick={() => setSeatCount(seats - 1)} aria-label={t("تقليل المقاعد")}>−</button><strong>{seats}</strong><button type="button" onClick={() => setSeatCount(seats + 1)} aria-label={t("زيادة المقاعد")}>＋</button></div></div></div><p className="stitch-auto-date">{t("تاريخ الرحلة تلقائيًا")}: {dateLabel}</p>
         <div className="stitch-check-row"><span className="stitch-check-mark" aria-hidden="true">✓</span><span>{t("سيجمع التطبيق طلبك تلقائيًا مع الطلبات المشابهة")}</span></div>
         <div className="stitch-estimate-note"><AppIcon name="shield" size={18} /><p>{t("السعر الموصى به تقديري، والدفع يتم مباشرة بين الراكب والكابتن بعد تأكيد الرحلة.")}</p></div>
         <button className="button button-primary button-wide stitch-primary-cta" disabled={loading}>{loading ? t("جارٍ تسجيل الطلب…") : t("تسجيل الطلب للتجميع الآلي")} <span aria-hidden="true">✣</span></button>

@@ -1,7 +1,7 @@
 import { getDirection, getLanguage, t } from "../i18n/runtime";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import MapPicker from "../components/MapPickerLoader";
-import AppIcon from "../components/AppIcon";
+
 import type { MapPickMode, MapPoint } from "../MapPicker";
 import LocationSearchField from "../components/LocationSearchField";
 import TimePicker12h, { formatTime12h } from "../components/TimePicker12h";
@@ -10,7 +10,7 @@ import { categoryName, errorText, formatDate, money, statusLabel } from "../lib/
 import { isInsideGreaterCairo } from "../lib/greater-cairo";
 import { reverseGeocode } from "../lib/location-address";
 import { api, type Category, type GroupView, type RiderCommuterPreferences, type SavedPlace } from "../api";
-import { defaultDates, isServiceDay, serviceDatesFromStart, shiftDate, todayInCairo } from "../lib/booking-dates";
+import { defaultDates, isServiceDay, serviceDatesFromStart } from "../lib/booking-dates";
 import type { NavKey, Session, Toast } from "../types";
 import type { ThemePreference } from "../components/ThemePreferenceCard";
 import AppSettings from "../components/AppSettings";
@@ -30,11 +30,9 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
   const [categories, setCategories] = useState<Category[]>([]);
   const [savedPlaces, setSavedPlaces] = useState<SavedPlace[]>([]);
   const [groups, setGroups] = useState<GroupView[]>([]);
-  const [demandRequests, setDemandRequests] = useState<{ id: number; pickup_label: string; dropoff_label: string; trip_date: string; arrival_time: string; vehicle_type_id: string; status: string; demand_groups?: { status: string; captain_line_id: number | null } | null; line?: { origin_label: string; destination_label: string; arrival_time: string; price_per_seat: number; captain_name: string } | null }[]>([]);
+  const [demandRequests, setDemandRequests] = useState<{ id: number; pickup_label: string; dropoff_label: string; trip_date: string; arrival_time: string; return_arrival_time?: string | null; vehicle_type_id: string; status: string; demand_groups?: { status: string; captain_line_id: number | null } | null; line?: { origin_label: string; destination_label: string; arrival_time: string; return_arrival_time?: string | null; price_per_seat: number; captain_name: string } | null }[]>([]);
   const visibleGroups = groups.filter(({ group }) => !["cancelled", "canceled"].includes(group.status.trim().toLowerCase()));
   const [loading, setLoading] = useState(true);
-  const [quickRideDate, setQuickRideDate] = useState(() => shiftDate(todayInCairo(), 1));
-  const [quickArrivalTime, setQuickArrivalTime] = useState("08:00");
   const [initialLoadError, setInitialLoadError] = useState("");
   const pendingNotificationEdit = useRef<number | null>(null);
   const [selectedGroup, setSelectedGroup] = useState<number | null>(null);
@@ -381,13 +379,13 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
   const dataErrorBanner = initialLoadError ? <ErrorState title={t("تعذر تحديث بعض البيانات")} text={initialLoadError} action="إعادة المحاولة" onAction={() => void loadInitialData()} /> : null;
   const welcomeBanner = <section className="rider-hero"><div className="rider-hero-copy"><span className="eyebrow">{t("تنقّل أسرع بطريقة أذكى")}</span><h2>{t("مشوارك اليومي،")}<br /><em>{t("على سِكّة أسهل.")}</em></h2><p>{t("شارك الطريق مع ناس رايحة في نفس اتجاهك، وخلي كل مشوار أسهل.")}</p><div className="rider-hero-actions"><button type="button" className="button button-primary" onClick={() => openBooking("new")}>{t("ابحث عن رحلة")} <span aria-hidden="true">←</span></button><span className="rider-service-area"><i />{t("متاح في القاهرة والجيزة")}</span></div></div></section>;
 
-  const requestCards = <div className="rider-request-list">{demandRequests.map((request) => <article className="surface rider-request-card" key={request.id}><div className="rider-request-card-top"><span className={`status-chip status-${request.status}`}>{request.status === "matched" ? t("تم العثور على مسار") : request.status === "open" ? t("نبحث عن مسار") : request.status === "cancelled" ? t("ملغي") : t("منتهي")}</span><span>{request.vehicle_type_id === "hiace" ? t("هاي إس") : t("ملاكي")}</span><time>{formatDate(request.trip_date)} · {request.arrival_time.slice(0, 5)}</time></div><div className="rider-request-route"><span className="rider-route-timeline" aria-hidden="true"><i /><b /><i /></span><div><strong>{request.pickup_label}</strong><strong>{request.dropoff_label}</strong></div></div><p className="rider-request-note">{request.demand_groups?.status === "matched" ? t("جمع التطبيق طلبك مع طلبات مشابهة.") : t("سيجمع التطبيق الطلبات المتقاربة تلقائيًا.")}</p>{request.line && <div className="rider-match-summary"><strong>{t("المسار المطابق")}: {request.line.origin_label} ← {request.line.destination_label}</strong><span>{request.line.captain_name} · {t("· وصول")} {request.line.arrival_time.slice(0, 5)} · {money(Number(request.line.price_per_seat))} {t("للمقعد")}</span></div>}</article>)}</div>;
+  const requestCards = <div className="rider-request-list">{demandRequests.map((request) => <article className="surface rider-request-card" key={request.id}><div className="rider-request-card-top"><span className={`status-chip status-${request.status}`}>{request.status === "matched" ? t("تم العثور على مسار") : request.status === "open" ? t("نبحث عن مسار") : request.status === "cancelled" ? t("ملغي") : t("منتهي")}</span><span>{request.vehicle_type_id === "hiace" ? t("هاي إس") : t("ملاكي")}</span><time>{formatDate(request.trip_date)} · {request.arrival_time.slice(0, 5)}{request.return_arrival_time ? ` · ${t("عودة")} ${request.return_arrival_time.slice(0, 5)}` : ""}</time></div><div className="rider-request-route"><span className="rider-route-timeline" aria-hidden="true"><i /><b /><i /></span><div><strong>{request.pickup_label}</strong><strong>{request.dropoff_label}</strong></div></div><p className="rider-request-note">{request.demand_groups?.status === "matched" ? t("جمع التطبيق طلبك مع طلبات مشابهة.") : t("سيجمع التطبيق الطلبات المتقاربة تلقائيًا.")}</p>{request.line && <div className="rider-match-summary"><strong>{t("المسار المطابق")}: {request.line.origin_label} ← {request.line.destination_label}</strong><span>{request.line.captain_name} · {t("· وصول")} {request.line.arrival_time.slice(0, 5)}{request.return_arrival_time && request.line.return_arrival_time ? ` · ${t("عودة")} ${request.line.return_arrival_time.slice(0, 5)}` : ""} · {money(Number(request.line.price_per_seat))} {t("للمقعد")}</span></div>}</article>)}</div>;
 
   if (section === "account") return <div className="rider-account-experience">{dataErrorBanner}<section className="rider-profile-heading"><div><span className="eyebrow">{t("حسابك في سِكّة")}</span><h2>{t("الملف الشخصي والإعدادات")}</h2><p>{t("بياناتك وأماكنك المحفوظة وتفضيلات التطبيق في مكان واحد.")}</p></div></section><AccountPanel session={session} notify={notify} /><AppSettings session={session} themePreference={themePreference} resolvedTheme={resolvedTheme} onThemePreferenceChange={onThemePreferenceChange} notify={notify} /></div>;
 
   if (section === "requests") return <div className="rider-requests-page">{dataErrorBanner}<section className="rider-section-intro"><span className="eyebrow">{t("كل طلباتك في مكان واحد")}</span><h2>{t("طلبات رحلاتك")}</h2><p>{t("تابع حالة طلباتك والمسارات التي تم العثور عليها")}</p></section>{demandRequests.length ? requestCards : initialLoadError ? null : <EmptyState icon="⌖" title={t("مافيش طلبات رحلات لسه")} text="ابحث عن مسار مناسب، ولو مافيش هنسجل طلبك ونجمعه مع الطلبات المشابهة." action="ابحث عن رحلة" onAction={() => openBooking("new")} />}</div>;
 
-  if (section === "booking" && bookingMode !== "edit") return <><RiderDemandFlow session={session} notify={notify} onBack={() => setSection("home")} onOpenRequests={() => setSection("requests")} onRequestCreated={refreshDemandRequests} initialPickup={bookingPickup ?? pickup} initialDropoff={dropoff} initialTripDate={quickRideDate} initialArrivalTime={quickArrivalTime} savedPlaces={savedPlaces} />{dataErrorBanner}</>;
+  if (section === "booking" && bookingMode !== "edit") return <><RiderDemandFlow session={session} notify={notify} onBack={() => setSection("home")} onOpenRequests={() => setSection("requests")} onRequestCreated={refreshDemandRequests} initialPickup={bookingPickup ?? pickup} initialDropoff={dropoff} savedPlaces={savedPlaces} />{dataErrorBanner}</>;
   if (loading && section === "home") return <div className="dashboard-grid rider-dashboard"><section className="dashboard-main">{welcomeBanner}<LoadingCard text="loading.riderRequests" /></section></div>;
   if (loading && section === "trips") return <div className="trips-page">{dataErrorBanner}<div className="section-toolbar"><button className="button button-primary button-small" onClick={() => openBooking("new")}>{t("＋ ابحث عن مسار")}</button></div><LoadingCard text="loading.riderRequests" /></div>;
   if (loading) return <LoadingCard text="loading.general" />;

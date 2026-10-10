@@ -1527,5 +1527,9 @@
   "لا تحتاج إلى إنشاء مجموعة بنفسك. سنقارن طلبك بالطلبات المشابهة ونوصله بكابتن متاح عند توفر تطابق.": "You do not need to create a group. We will match your request with similar requests and a captain when one is available.",
   "سيجمع التطبيق طلبك تلقائيًا مع الطلبات المشابهة": "Your request will be matched automatically with similar requests",
   "متابعة الرحلة": "Track ride",
-  "تم تأكيد الرحلة": "Ride confirmed"
+  "تم تأكيد الرحلة": "Ride confirmed",
+  "تاريخ الرحلة تلقائيًا": "Ride date is set automatically",
+  "وقت الذهاب المتوقع": "Expected outbound arrival time",
+  "وقت العودة المتوقع (اختياري)": "Expected return arrival time (optional)",
+  "عودة": "Return"
 }
