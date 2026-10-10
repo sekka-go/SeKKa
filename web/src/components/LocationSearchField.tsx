@@ -1,6 +1,7 @@
 import { t } from "../i18n/runtime";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { api, type SavedPlace } from "../api";
+import { errorText } from "../lib/formatters";
 import { isInsideGreaterCairo } from "../lib/greater-cairo";
 import { addressParts, reverseGeocode, safeAddressLabel, type LocationSuggestion } from "../lib/location-address";
 import { useResolvedLocationPoints } from "../lib/use-location-addresses";
@@ -60,7 +61,7 @@ export default function LocationSearchField({
     const controller = new AbortController();
     activeSearch.current = controller;
     const isCoordinate = /^-?\d{1,3}(?:\.\d+)?\s*[,،]\s*-?\d{1,3}(?:\.\d+)?$/.test(query);
-    if (query.length < 3 || isCoordinate || query.startsWith("موقعي الحالي ·")) {
+    if (query.length < 3 || isCoordinate || query.startsWith(t("موقعي الحالي ·"))) {
       setSuggestions([]);
       setLoading(false);
       setError("");
@@ -94,7 +95,7 @@ export default function LocationSearchField({
         }
       }).catch((cause) => {
         if (currentRequest !== requestId.current) return;
-        setError(cause instanceof Error ? cause.message : "تعذر البحث الآن. حاول مرة أخرى.");
+        setError(cause instanceof Error ? errorText(cause) : t("تعذر البحث الآن. حاول مرة أخرى."));
         setSuggestions([]);
       }).finally(() => {
         if (currentRequest === requestId.current) setLoading(false);
@@ -135,7 +136,7 @@ export default function LocationSearchField({
             const address = await reverseGeocode(token, lat, lng);
             if (locationRequest === requestId.current) onSelect({ lat, lng, kind, label: address.label, primaryLabel: address.primary, secondaryLabel: address.secondary });
           } catch {
-            if (locationRequest === requestId.current) onSelect({ lat, lng, kind, label: "موقعي الحالي داخل القاهرة الكبرى", primaryLabel: "موقعي الحالي", secondaryLabel: "القاهرة الكبرى" });
+            if (locationRequest === requestId.current) onSelect({ lat, lng, kind, label: t("موقعي الحالي داخل القاهرة الكبرى"), primaryLabel: t("موقعي الحالي"), secondaryLabel: t("القاهرة الكبرى") });
           }
         }
         if (locationRequest === requestId.current) setLocating(false);
@@ -143,8 +144,8 @@ export default function LocationSearchField({
       (cause) => {
         if (locationRequest !== requestId.current) return;
         setError(cause.code === cause.PERMISSION_DENIED
-          ? "اسمح للتطبيق بالوصول لموقعك أو استخدم البحث النصي أو الخريطة."
-          : "تعذر تحديد موقعك الآن. حاول مرة أخرى أو استخدم البحث النصي أو الخريطة.");
+          ? t("اسمح للتطبيق بالوصول لموقعك أو استخدم البحث النصي أو الخريطة.")
+          : t("تعذر تحديد موقعك الآن. حاول مرة أخرى أو استخدم البحث النصي أو الخريطة."));
         setLocating(false);
       },
       { enableHighAccuracy: true, timeout: 15_000, maximumAge: 30_000 },
@@ -189,9 +190,9 @@ export default function LocationSearchField({
         return true;
       });
       setSuggestions(unique);
-      setError(unique.length ? "" : "ملقيناش عنوانًا أدق. اختار من الاقتراحات القريبة أو حدّد المكان على الخريطة.");
+      setError(unique.length ? "" : t("ملقيناش عنوانًا أدق. اختار من الاقتراحات القريبة أو حدّد المكان على الخريطة."));
     }).catch((cause) => {
-      if (currentRequest === requestId.current) setError(cause instanceof Error ? cause.message : "تعذر البحث الدقيق الآن. اختار من الاقتراحات الظاهرة.");
+      if (currentRequest === requestId.current) setError(cause instanceof Error ? errorText(cause) : t("تعذر البحث الدقيق الآن. اختار من الاقتراحات الظاهرة."));
     }).finally(() => {
       if (activeSearch.current === controller) activeSearch.current = null;
       if (currentRequest === requestId.current) setLoading(false);
@@ -201,7 +202,7 @@ export default function LocationSearchField({
     activeSearch.current?.abort();
     requestId.current++;
     skipNextSearch.current = true;
-    const address = safeAddressLabel(resolvedLabel || place.label) || "موقع محدد على الخريطة";
+    const address = safeAddressLabel(resolvedLabel || place.label) || t("موقع محدد على الخريطة");
     const parts = addressParts(address);
     onSelect({ lat: place.lat, lng: place.lng, kind, label: address, primaryLabel: parts.primary, secondaryLabel: parts.secondary });
     setSuggestions([]);
@@ -222,7 +223,7 @@ export default function LocationSearchField({
       <strong>{title}</strong>
       <span className={pointSelected ? "location-point-status is-selected" : "location-point-status"} title={pointSelected ? t("تم التحديد") : t("اختيار مطلوب")} aria-label={pointSelected ? t("تم تحديد الموقع") : t("يجب اختيار الموقع من النتائج")}>{pointSelected ? "✓" : "!"}</span>
       <button type="button" className="location-device-pin" onClick={useDeviceLocation} disabled={locating} aria-label={`استخدم موقعك الحالي لتحديد ${title}`} title={t("استخدم موقعي الحالي")}>{locating ? "…" : "⌖"}</button>
-      <button type="button" className="location-map-pin" onClick={() => { setShowSavedPlaces(false); onChooseMap(); }} aria-label={`اختيار ${title} من الخريطة`} title={t("اختيار من الخريطة")}>
+      <button type="button" className="location-map-pin" onClick={() => { setShowSavedPlaces(false); onChooseMap(); }} aria-label={`${t("اختر")} ${title} ${t("من الخريطة")}`} title={t("اختيار من الخريطة")}>
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z" /><path d="M9 3v15m6-12v15" />
         </svg>

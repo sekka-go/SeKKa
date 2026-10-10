@@ -51,7 +51,7 @@ export default function AdminWorkspace({ session, section, refreshNotifications,
         const result = await api<{ notified_users: number }>("/admin/notifications/broadcast", { method: "POST", token: session.token, body: { title, message, request_id: requestId } });
         setBroadcastTitle(""); setBroadcastMessage(""); setBroadcastRequestId("");
         await refreshNotifications();
-        notify(`تم إرسال الرسالة إلى ${result.notified_users} مستخدم.`, "success");
+        notify(`${t("تم إرسال الرسالة إلى")} ${result.notified_users} ${t(result.notified_users === 1 ? "مستخدم." : "مستخدمين.")}`, "success");
       } catch (error) { notify(errorText(error), "error"); }
       finally { setBroadcastBusy(false); }
     };
@@ -61,7 +61,7 @@ export default function AdminWorkspace({ session, section, refreshNotifications,
     const reason = window.prompt(t("اكتب سبب قرار توثيق الكابتن"));
     if (!reason?.trim()) return;
     setBusyId(captainId);
-    try { await api(`/admin/captains/${captainId}/verification`, { method: "POST", token: session.token, body: { status, reason: reason.trim() } }); await refresh(); notify(status === "approved" ? "تم توثيق الكابتن." : "تم رفض طلب التوثيق.", "success"); }
+    try { await api(`/admin/captains/${captainId}/verification`, { method: "POST", token: session.token, body: { status, reason: reason.trim() } }); await refresh(); notify(t(status === "approved" ? "تم توثيق الكابتن." : "تم رفض طلب التوثيق."), "success"); }
     catch (error) { notify(errorText(error), "error"); }
     finally { setBusyId(null); }
   };
