@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(34);
+SELECT plan(42);
 
 SELECT ok((SELECT relrowsecurity FROM pg_class WHERE oid = 'public.app_config'::regclass), 'app_config has RLS enabled');
 SELECT ok((SELECT relrowsecurity FROM pg_class WHERE oid = 'public.captain_lines'::regclass), 'captain_lines has RLS enabled');
@@ -41,6 +41,15 @@ SELECT ok(NOT has_function_privilege('authenticated', 'public.sekka_match_after_
 SELECT ok(NOT has_function_privilege('anon', 'public.sekka_match_demand_group(integer)', 'EXECUTE'), 'anon cannot directly invoke demand matching');
 SELECT ok(NOT has_function_privilege('authenticated', 'public.sekka_match_demand_group(integer)', 'EXECUTE'), 'authenticated cannot directly invoke demand matching');
 SELECT ok(NOT has_function_privilege('service_role', 'public.sekka_match_demand_group(integer)', 'EXECUTE'), 'demand matching is restricted to database triggers');
+
+SELECT is((SELECT capacity_max FROM public.vehicle_types WHERE id = 'private_car'), 4, 'private cars allow at most four passenger seats');
+SELECT is((SELECT capacity_max FROM public.vehicle_types WHERE id = 'hiace'), 14, 'HiAce allows at most fourteen passenger seats');
+SELECT ok((SELECT numeric_value BETWEEN 7 AND 11 FROM public.app_config WHERE config_key = 'captain_line_price_per_km'), 'captain line price per kilometer is configured within the permitted range');
+SELECT ok(EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'captain_lines' AND column_name = 'route_distance_km'), 'captain line distance is persisted by the backend');
+SELECT ok(EXISTS (SELECT 1 FROM pg_trigger WHERE tgrelid = 'public.captain_lines'::regclass AND tgname = 'trg_captain_line_pricing' AND NOT tgisinternal), 'database trigger derives line price from the configured rate');
+SELECT ok(has_function_privilege('service_role', 'public.publish_captain_line(integer,text,text,double precision,double precision,text,double precision,double precision,jsonb,time,smallint[],integer,double precision,text[],time)', 'EXECUTE'), 'service_role can publish with server-calculated route distance');
+SELECT ok(NOT has_function_privilege('anon', 'public.publish_captain_line(integer,text,text,double precision,double precision,text,double precision,double precision,jsonb,time,smallint[],integer,double precision,text[],time)', 'EXECUTE'), 'anon cannot publish with server-calculated route distance');
+SELECT ok(NOT has_function_privilege('authenticated', 'public.publish_captain_line(integer,text,text,double precision,double precision,text,double precision,double precision,jsonb,time,smallint[],integer,double precision,text[],time)', 'EXECUTE'), 'authenticated cannot invoke server-calculated pricing directly');
 
 SELECT * FROM finish();
 ROLLBACK;
