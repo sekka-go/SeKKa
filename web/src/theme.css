@@ -520,3 +520,52 @@ button, input, select, textarea { color-scheme: inherit; }
 .landing-header .brand-logo-copy { text-align: center; }
 
 .auth-page-header .brand-logo-copy { text-align: center; }
+
+/* Keep notifications in the workspace flow, like the messages screen. */
+.workspace .notifications-workspace {
+  width: min(100%, 64rem);
+  margin-inline: auto;
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+.workspace .notifications-workspace .notifications-page {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  width: 100%;
+  min-height: 0;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+.workspace .notifications-workspace .notifications-header {
+  position: static;
+  margin: 0;
+  padding: 0 0 .9rem;
+  background: transparent;
+}
+.workspace .notifications-workspace :is(.notification-list, .notifications-loading, .notifications-error, .notifications-empty) {
+  flex: initial;
+  min-height: 0;
+  width: 100%;
+  margin: 0;
+  overflow: visible;
+  background: transparent;
+}
+.workspace .notifications-workspace .notification-list {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  padding: 0;
+}
+.workspace .notifications-workspace .notifications-error,
+.workspace .notifications-workspace .notifications-empty {
+  min-height: 14rem;
+  padding: 1.5rem;
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+}
+.workspace .notifications-workspace .notifications-loading { min-height: 8rem; color: var(--color-text-secondary); }
