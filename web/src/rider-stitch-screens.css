@@ -43,7 +43,7 @@
 .workspace .stitch-rider-flow .location-search input { min-height: 3rem; padding-inline: .85rem; color: var(--color-text-primary); background: transparent; }
 .workspace .stitch-rider-flow .location-search input::placeholder { color: var(--color-text-secondary); opacity: 1; }
 .workspace .stitch-rider-flow .location-search-map-button { color: var(--color-secondary); }
-.workspace .stitch-swap-route { position: absolute; z-index: 2; inset-inline-start: .7rem; top: 50%; display: grid; width: 2.2rem; height: 2.2rem; place-items: center; border: 1px solid var(--color-border); border-radius: 50%; color: var(--color-secondary); background: var(--color-surface); font-size: 1.2rem; }
+.workspace .stitch-swap-route { position: relative; z-index: 2; justify-self: start; display: grid; width: 2.2rem; height: 2.2rem; margin-block: -.45rem; place-items: center; border: 1px solid var(--color-border); border-radius: 50%; color: var(--color-secondary); background: var(--color-surface); font-size: 1.2rem; }
 .workspace .stitch-search-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .7rem; }
 .workspace .stitch-auto-date { margin: -.25rem 0 0; color: var(--color-text-secondary); font-size: .78rem; }
 .workspace .stitch-field,.workspace .stitch-seat-control { display: grid; min-width: 0; gap: .35rem; color: var(--color-text-primary); font-size: .8rem; font-weight: 750; }
