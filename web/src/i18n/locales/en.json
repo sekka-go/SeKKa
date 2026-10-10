@@ -1556,5 +1556,6 @@
   "رحلة المجموعة": "Grouped ride",
   "لا توجد رحلات مكتملة حتى الآن": "No completed rides yet",
   "تحديث": "Refresh",
-  "سيظهر سجل الرحلات والمبالغ هنا بعد إتمام أول رحلة.": "Your ride and payment history will appear here after your first completed ride."
+  "سيظهر سجل الرحلات والمبالغ هنا بعد إتمام أول رحلة.": "Your ride and payment history will appear here after your first completed ride.",
+  "يُحسب سعر المقعد تلقائيًا من مسافة الطريق بسعر يحدده التطبيق بين 7 و11 جنيهًا للكيلومتر.": "The app calculates seat prices from road distance at a system-set rate of EGP 7–11 per kilometer."
 }
