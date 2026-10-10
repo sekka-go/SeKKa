@@ -140,9 +140,8 @@ function Pricing({row,token,pool=false,notify,reload}:{row:Row;token:string;pool
 }
 function AdminStatus({ status }: { status: string }) {
  const normalized = status.toLowerCase();
- const labels: Record<string,string> = { active:"نشط", approved:"معتمد", completed:"مكتملة", in_progress:"جارية", assigned:"مسندة", waiting:"بانتظار الركاب", pending:"قيد المراجعة", needs_captain:"بانتظار كابتن", price_review:"مراجعة السعر", rejected:"مرفوض", cancelled:"ملغاة", banned:"محظور", suspended:"موقوف" };
  const tone = ["active","approved","completed"].includes(normalized) ? "success" : ["rejected","cancelled","banned","suspended"].includes(normalized) ? "danger" : ["in_progress","assigned"].includes(normalized) ? "info" : "warning";
- return <span className={`admin-status-pill is-${tone}`}>{labels[normalized] ? t(labels[normalized]!) : status.replaceAll("_", " ")}</span>;
+ return <span className={`admin-status-pill is-${tone}`}>{statusLabel(normalized)}</span>;
 }
 function Empty({text}:{text:string}) { return <p className="rounded-xl border border-dashed admin-border p-8 text-center admin-text-secondary">{t(text)}</p>; }
 function VerificationQueue({documents,loading,loadError,session,notify,refresh,userId,onClearUserFilter}:{documents:Row[];loading:boolean;loadError:string;session:Session;notify:(text:string,tone?:Toast["tone"])=>void;refresh:()=>Promise<void>;userId:number|null;onClearUserFilter:()=>void}) {

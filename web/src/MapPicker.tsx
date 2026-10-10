@@ -199,7 +199,7 @@ export default function MapPicker({
       if (!validLine(line)) continue;
       const latLngs = line.coordinates.map(([lng, lat]) => [lat, lng] as L.LatLngExpression);
       L.polyline(latLngs, {
-        color: item.direction === "outbound" ? "#d9a900" : "#138e94",
+        color: getComputedStyle(document.documentElement).getPropertyValue(item.direction === "outbound" ? "--color-primary" : "--color-secondary").trim(),
         weight: 5,
         opacity: 0.88,
       }).addTo(layers);
