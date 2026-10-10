@@ -1394,5 +1394,26 @@
   "اكتب سبب حذف الحساب (حتى 1000 حرف).": "Enter a reason for deleting this account (up to 1,000 characters).",
   "أنه مشاويرك النشطة أو ألغها قبل حذف الحساب.": "Complete or cancel your active rides before deleting your account.",
   "الحساب غير موجود أو سبق حذفه.": "The account was not found or has already been deleted."
-}
+},
+  "على سِكّة أسهل.": "on an easier route.",
+  "شارك الطريق مع ناس رايحة في نفس اتجاهك، وخلي كل مشوار أسهل.": "Share the road with people going your way and make every ride easier.",
+  "متاح في القاهرة والجيزة": "Available in Cairo and Giza",
+  "أماكنك المعتادة": "Your usual places",
+  "ابدأ من مكانك المفضل": "Start from a favorite place",
+  "إدارة الأماكن": "Manage places",
+  "المنزل": "Home",
+  "العمل": "Work",
+  "مكان محفوظ": "Saved place",
+  "احفظ المنزل أو العمل لتبدأ البحث بسرعة في المرة القادمة.": "Save home or work to start your search faster next time.",
+  "إضافة مكان محفوظ": "Add a saved place",
+  "متابعة رحلتك": "Your ride updates",
+  "عرض الكل": "View all",
+  "عرض كل الطلبات": "View all requests",
+  "كل طلباتك في مكان واحد": "All your requests in one place",
+  "تابع حالة طلباتك والمسارات التي تم العثور عليها": "Track your requests and the lines we find for you",
+  "المسار المطابق": "Matched line",
+  "طلبات رحلاتك": "Your ride requests",
+  "طلباتي": "Requests",
+  "الوصول": "Arrival",
+  "مقاعد متاحة": "seats available"
 }
