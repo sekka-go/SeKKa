@@ -4,7 +4,6 @@ import "./styles.css";
 import "./product-system.css";
 import "./brand-lockup.css";
 import "./auth-layout.css";
-import "./splash.css";
 import "./theme.css";
 import App from "./App";
 import PwaNotice from "./components/PwaNotice";
@@ -21,3 +20,10 @@ createRoot(document.getElementById("root")!).render(
 );
 
 registerPwa();
+
+const brandFont = document.createElement("link");
+brandFont.rel = "stylesheet";
+brandFont.href = "https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap";
+brandFont.media = "print";
+brandFont.addEventListener("load", () => { brandFont.media = "all"; }, { once: true });
+document.head.append(brandFont);

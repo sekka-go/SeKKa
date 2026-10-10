@@ -84,7 +84,15 @@ export function EmptyState({ icon, title, text, action, onAction }: { icon: stri
 export function ErrorState({ title = "حصلت مشكلة في تحميل البيانات", text, action = "إعادة المحاولة", onAction }: { title?: string; text: string; action?: string; onAction: () => void }) {
   return <section className="surface error-state" role="alert"><span className="error-state-mark" aria-hidden="true">!</span><div><h3>{t(title)}</h3><p>{t(text)}</p></div><button className="button button-outline button-small" type="button" onClick={onAction}>{t(action)}</button></section>;
 }
-export function LoadingCard({ text }: { text: string }) { return <div className="surface loading-card"><span className="spinner" /><strong>{t(text)}</strong></div>; }
+export function LoadingCard({ text }: { text: string }) {
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    setSlow(false);
+    const timer = window.setTimeout(() => setSlow(true), 8_000);
+    return () => window.clearTimeout(timer);
+  }, [text]);
+  return <div className="surface loading-card" role="status" aria-live="polite"><span className="spinner" /><strong>{t(slow ? "الاتصال بطيء قليلاً، نشكرك على صبرك" : text)}</strong></div>;
+}
 
 type NotificationCategory = "ride" | "chat" | "rating" | "alert" | "system";
 function categoryFor(item: Notification): NotificationCategory {
