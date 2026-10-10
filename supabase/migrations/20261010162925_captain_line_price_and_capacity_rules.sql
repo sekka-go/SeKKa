@@ -22,7 +22,7 @@ SET route_distance_km = GREATEST(
     ),
     price_per_km = (SELECT numeric_value FROM public.app_config WHERE config_key = 'captain_line_price_per_km'),
     price_per_seat = ROUND(
-      GREATEST(0.01, public.sekka_geo_km(origin_lat, origin_lng, destination_lat, destination_lng))
+      GREATEST(0.01, public.sekka_geo_km(origin_lat, origin_lng, destination_lat, destination_lng))::numeric
         * (SELECT numeric_value FROM public.app_config WHERE config_key = 'captain_line_price_per_km'),
       2
     );
