@@ -2309,6 +2309,21 @@ button { line-height: 1.45; }
 .verification-wizard .verification-doc-card { grid-template-columns: minmax(0,1fr); }
 @media (max-width: 620px) { .verification-wizard-heading { align-items: flex-start; flex-direction: column; } .verification-finish { grid-template-columns: 1fr; justify-items: center; text-align: center; } .verification-finish-actions { width: 100%; flex-direction: column; } .verification-finish-actions .button { width: 100%; justify-content: center; } }
 @media (prefers-reduced-motion: reduce) { .verification-start-button,.verification-wizard-actions .button { transition: none; } }
+.signup-onboarding-page .auth-page-content { align-content: start; }
+.signup-onboarding-page .auth-page-header { justify-content: space-between; }
+.signup-onboarding-page .auth-page-header h1 { margin: 0; font-size: clamp(1.15rem, 4vw, 1.6rem); }
+.signup-verification-flow { width: min(100%, 48rem); }
+.signup-verification-flow .verification-wizard { width: 100%; }
+.signup-vehicle-form { width: 100%; }
+.signup-vehicle-form > p { margin: 0; line-height: 1.7; }
+.signup-grace-skip, .signup-explore-button { justify-content: center; min-height: 3rem; }
+.signup-explore-button { grid-column: 1 / -1; width: 100%; }
+.signup-verification-flow .verification-doc-card { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 620px) {
+  .signup-verification-flow { padding: 1rem; }
+  .signup-verification-flow .verification-wizard-actions { grid-template-columns: 1fr; }
+  .signup-verification-flow .verification-wizard-actions .button { width: 100%; }
+}
 
 /* Consistent disclosure controls for user settings across rider and captain views. */
 .settings-disclosure { min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: .9rem; background: rgba(0,0,0,.12); }

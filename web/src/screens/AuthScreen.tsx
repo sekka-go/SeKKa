@@ -8,6 +8,7 @@ import { errorText } from "../lib/formatters";
 import { api, type SavedPlace, type User } from "../api";
 import type { Session, Toast } from "../types";
 import { InfoDocumentContent, type InfoPageKey } from "../components/InfoPages";
+import SignupVerificationFlow from "../components/SignupVerificationFlow";
 
 const TERMS_VERSION = "2026-10-05";
 const PRIVACY_VERSION = "2026-10-05";
@@ -53,6 +54,7 @@ export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (sessio
   const [resetCode, setResetCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [pendingRouteSetup, setPendingRouteSetup] = useState<Session | null>(null);
+  const [pendingSignupVerification, setPendingSignupVerification] = useState<Session | null>(null);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setBusy(true); setError("");
@@ -63,11 +65,15 @@ export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (sessio
       }
       const result = await api<{ token: string; user: User }>("/auth/login", { method: "POST", body: { phone_number: phone.trim(), password } });
       const session = { token: result.token, user: result.user };
+      if (mode === "register") {
+        setPendingSignupVerification(session);
+        return;
+      }
       if (session.user.role === "rider") {
         let places: SavedPlace[] = [];
         try { places = (await api<{ places: SavedPlace[] }>("/rider/saved-places", { token: session.token })).places ?? []; }
-        catch { if (mode === "register") { setPendingRouteSetup(session); return; } }
-        if (mode === "register" || !places.some((place) => place.place_type === "home") || !places.some((place) => place.place_type === "work")) {
+        catch { setPendingRouteSetup(session); return; }
+        if (!places.some((place) => place.place_type === "home") || !places.some((place) => place.place_type === "work")) {
           setPendingRouteSetup(session);
           return;
         }
@@ -111,6 +117,15 @@ export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (sessio
       <RiderRoutePreferences token={pendingRouteSetup.token} notify={notify} onboarding onComplete={() => { onSignedIn(pendingRouteSetup); setPendingRouteSetup(null); notify(t("أهلًا بك في سِكّة. حسابك ونقطك المفضلة جاهزين."), "success"); }} />
     </section>
   </main>;
+
+  if (pendingSignupVerification) return <SignupVerificationFlow
+    session={pendingSignupVerification}
+    notify={notify}
+    onExplore={(session) => {
+      onSignedIn(session);
+      notify(t("أهلًا بك في سِكّة. حسابك جاهز للاستكشاف."), "success");
+    }}
+  />;
 
   return <main className={`auth-page ${mode === "login" ? "auth-login-page" : "auth-register-page"}`}>
     <AuthJourneyBackdrop />
