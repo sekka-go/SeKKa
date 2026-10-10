@@ -1,0 +1,234 @@
+/* SeKKa semantic design tokens and shared component surfaces. */
+:root {
+  --color-background: #0f172a;
+  --color-surface: #1e293b;
+  --color-surface-raised: #263449;
+  --color-border: #64748b;
+  --color-text: #f8fafc;
+  --color-text-muted: #cbd5e1;
+  --color-primary: #f5bd08;
+  --color-on-primary: #172033;
+  --color-secondary: #67d6d4;
+  --color-danger: #fca5a5;
+  --color-on-danger: #172033;
+  --color-success: #86efac;
+  --color-warning: #fcd34d;
+  --color-disabled: #94a3b8;
+  --color-focus-ring: #f5bd08;
+  --touch-target-min: 44px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  color-scheme: dark;
+  accent-color: var(--color-primary);
+}
+
+:root[data-theme="light"] {
+  --color-background: #f2f5f9;
+  --color-surface: #ffffff;
+  --color-surface-raised: #e8eef5;
+  --color-border: #7f8fa3;
+  --color-text: #17263d;
+  --color-text-muted: #3f5067;
+  --color-primary: #f5bd08;
+  --color-on-primary: #172033;
+  --color-secondary: #087b80;
+  --color-danger: #a12622;
+  --color-on-danger: #ffffff;
+  --color-success: #176534;
+  --color-warning: #805300;
+  --color-disabled: #586a80;
+  --color-focus-ring: #8a6200;
+  color-scheme: light;
+}
+
+:root {
+  --color-surface-elevated: var(--color-surface-raised);
+  --color-text-primary: var(--color-text);
+  --color-text-secondary: var(--color-text-muted);
+  --color-primary-text: var(--color-on-primary);
+  --color-accent: var(--color-secondary);
+  --color-accent-text: var(--color-secondary);
+  --color-icon: var(--color-secondary);
+  --color-error: var(--color-danger);
+  --color-focus: var(--color-focus-ring);
+  --ink: var(--color-text);
+  --muted: var(--color-text-muted);
+  --line: var(--color-border);
+  --panel: var(--color-surface);
+  --panel-hi: var(--color-surface-raised);
+  --yellow: var(--color-primary);
+  --yellow-deep: var(--color-secondary);
+  --danger: var(--color-danger);
+  --success: var(--color-success);
+  --warning: var(--color-warning);
+  --info: var(--color-secondary);
+  --page-bg: var(--color-background);
+  --focus-ring: var(--color-focus-ring);
+  --radius-card: 1rem;
+  --radius-control: .75rem;
+  --space-card: 1rem;
+  color: var(--color-text);
+  background: var(--color-background);
+}
+
+html, body, #root, .app-shell,
+.workspace, .workspace .main-area, .workspace .page-content,
+.auth-page, .landing-page {
+  color: var(--color-text);
+  background-color: var(--color-background);
+}
+
+button, input, select, textarea { color-scheme: inherit; accent-color: var(--color-primary); }
+button:focus-visible, a:focus-visible, summary:focus-visible,
+input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline-color: var(--color-focus-ring);
+}
+
+.app-shell :is(.surface, .auth-card, .landing-route-card, .welcome-banner,
+  .metric-card, .group-summary, .offer-card, .route-offer-card,
+  .commuter-board-card, .account-card, .password-card, .verification-center,
+  .verification-wizard, .verification-doc-card, .verification-phone-row,
+  .verification-intro, .verification-finish, .messages-workspace,
+  .messages-thread-list, .messages-chat-panel, .messages-empty,
+  .admin-secondary-details, .captain-settings-details, .admin-control-panel article,
+  .admin-control-panel > nav, .admin-nav-group, .settings-disclosure,
+  .settings-disclosure > details, .soft-surface, .offer-toolbar, .booking-stepper,
+  .help-card, .brand-confirm-dialog, .price-info-popover) {
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+.app-shell :is(.admin-summary-grid > div, .profile-data-grid > div,
+  .route-point-choice-wrap, .map-points-readout > div, .category-option,
+  .package-option, .segmented-control, .time-picker-control,
+  .messages-composer, .messages-composer textarea,
+  .workspace .sidebar-profile, .workspace .sidebar-brand .sidebar-label) {
+  color: var(--color-text);
+  background-color: var(--color-surface-raised);
+  border-color: var(--color-border);
+}
+
+.app-shell :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  color: var(--color-text);
+  background-color: var(--color-surface-raised);
+  border-color: var(--color-border);
+}
+.app-shell :is(input, textarea)::placeholder { color: var(--color-text-muted); opacity: 1; }
+.app-shell :is(p, small, label, legend, li, time, .muted-text,
+  .page-heading p, .account-avatar-note, .verification-privacy,
+  .verification-date, .profile-copy small, .sidebar-label) { color: var(--color-text-muted); }
+.app-shell :is(h1, h2, h3, h4, h5, strong, summary, .page-heading h1,
+  .brand-logo-copy strong, .welcome-copy h2, .notifications-header h2) { color: var(--color-text); }
+
+.app-shell .button {
+  min-height: var(--touch-target-min);
+  padding: .625rem 1rem;
+  color: var(--color-text);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+}
+.app-shell .button-primary {
+  color: var(--color-on-primary);
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.app-shell .button-secondary, .app-shell .button-outline {
+  color: var(--color-text);
+  background-color: transparent;
+  border-color: var(--color-border);
+}
+.app-shell .button-quiet, .app-shell .button-dark {
+  color: var(--color-text);
+  background-color: var(--color-surface-raised);
+  border-color: var(--color-border);
+}
+.app-shell :is(.button-danger, .button-cancel-trip, .is-danger) {
+  color: var(--color-danger);
+  background-color: color-mix(in srgb, var(--color-danger) 10%, var(--color-surface));
+  border-color: var(--color-danger);
+}
+.app-shell .button:disabled, .app-shell button:disabled {
+  color: var(--color-disabled);
+  cursor: not-allowed;
+}
+.app-shell .button-small { min-height: var(--touch-target-min); }
+.app-shell .icon-button { min-width: var(--touch-target-min); min-height: var(--touch-target-min); }
+
+.app-shell input[type="checkbox"], .app-shell input[type="radio"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: 0 0 1.25rem;
+  margin: 0;
+  accent-color: var(--color-primary);
+  vertical-align: middle;
+}
+.app-shell .toggle-row {
+  display: flex;
+  align-items: center;
+  min-height: var(--touch-target-min);
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+}
+.app-shell .service-days, .app-shell .payment-methods {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding: var(--space-2) 0;
+}
+.app-shell .service-days .toggle-row, .app-shell .payment-methods .toggle-row {
+  flex: 0 0 auto;
+  justify-content: center;
+  min-width: var(--touch-target-min);
+  padding-inline: var(--space-3);
+  background: var(--color-surface-raised);
+}
+.app-shell .service-days .toggle-row:has(input:checked),
+.app-shell .payment-methods .toggle-row:has(input:checked) {
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-primary) 20%, var(--color-surface));
+  border-color: var(--color-primary);
+}
+.app-shell .commuter-preferences-days {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(2.75rem, 1fr);
+  overflow-x: auto;
+}
+.app-shell .commuter-preferences-days label { min-height: var(--touch-target-min); }
+
+.app-shell .booking-form-surface .booking-review-actions,
+.app-shell .onboarding-card form > .button-primary {
+  position: sticky;
+  bottom: max(var(--space-3), env(safe-area-inset-bottom));
+  z-index: 5;
+}
+.app-shell .booking-form-surface .booking-review-actions {
+  padding: var(--space-2);
+  background: color-mix(in srgb, var(--color-background) 94%, transparent);
+  border-radius: var(--radius-control);
+  backdrop-filter: blur(10px);
+}
+
+.app-shell .sidebar, .app-shell .topbar, .app-shell .mobile-tabbar,
+.app-shell .auth-page-header, .app-shell .landing-header {
+  color: var(--color-text);
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+.app-shell .sidebar-signout { color: var(--color-danger); }
+.app-shell :is(.button-primary:hover:not(:disabled), .landing-primary-cta:hover) { filter: brightness(.96); }
+
+@media (max-width: 560px) {
+  .app-shell .admin-captain-row { gap: var(--space-2); }
+  .app-shell .service-days, .app-shell .payment-methods { margin-inline: calc(var(--space-2) * -1); padding-inline: var(--space-2); }
+}

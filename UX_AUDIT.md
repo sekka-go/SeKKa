@@ -1,6 +1,6 @@
 # UX audit — before redesign
 
-Baseline reviewed from the current React routes and screen components on 2026-10-10. The app is Arabic/RTL-first with persisted Light / Dark / System theme selection. Screenshot baseline: public landing screen at 390×844 in dark mode was captured in the browser session; the required light and system captures are pending the visual pass. Auth and authenticated routes depend on test/admin accounts and backend data, so those need a seeded session for full screenshot coverage.
+Baseline reviewed from the current React routes and screen components on 2026-10-10. The app is Arabic/RTL-first with persisted Light / Dark / System theme selection. Screenshot baseline captured at 390×844 in dark, light, and system color-scheme modes for the landing screen. The login screen is captured in auto mode. The PNGs are stored under `docs/ux-screenshots/`. Authenticated screens require seeded rider/captain/admin sessions and backend data, so complete role-specific screenshots need those accounts.
 
 ## Current screen map
 
@@ -51,3 +51,4 @@ Baseline reviewed from the current React routes and screen components on 2026-10
 ## Verification boundary
 
 No backend, auth, role authorization, or business rules are changed by this UX task. Authenticated screenshots and end-to-end role flows require seeded rider/captain/admin sessions; anonymous testing cannot establish those states.
+
