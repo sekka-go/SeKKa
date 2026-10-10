@@ -18,8 +18,8 @@
 
 ## Follow-up audit (2026-10-10)
 
-- [ ] Set immutable one-year caching for content-hashed `/assets/*`; keep HTML, `sw.js`, and `theme-preference.js` revalidated.
-- [ ] Cache only the shared root app shell and use it as the offline navigation fallback; never cache protected routes or API responses.
+- [x] Set immutable one-year caching for content-hashed `/assets/*`; keep HTML, `sw.js`, and `theme-preference.js` revalidated.
+- [x] Cache only the shared root app shell and use it as the offline navigation fallback; never cache protected routes or API responses.
 - [ ] Parallelize Captain profile/preferences startup requests and distinguish a missing profile (404) from a transient/API failure with a retry action.
 - [ ] Let Rider account and request-registration screens render without waiting for unrelated dashboard data; keep pending states from appearing as false empty states.
 - [ ] Verify the above in a local preview, including SW offline fallback, and re-run build, server tests, lint, and PWA checks.
