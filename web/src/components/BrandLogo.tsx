@@ -10,7 +10,7 @@ export default function BrandLogo({ compact = false, className = "" }: BrandLogo
   return (
     <span className={`brand-logo ${compact ? "brand-logo-compact" : ""} ${className}`.trim()}>
       <SikkaMark className="brand-logo-mark" />
-      {!compact && <span className="brand-logo-copy"><strong>{t("سِكَّة | SeKKa")}</strong><small><span>{t("معاك")}</span> <span>{t("في")}</span> <span>{t("السكة")}</span></small></span>}
+      {!compact && <span className="brand-logo-copy"><strong>{t("سِكَّة | SeKKa")}</strong><small>{t("معاك في السكة")}</small></span>}
     </span>
   );
 }
