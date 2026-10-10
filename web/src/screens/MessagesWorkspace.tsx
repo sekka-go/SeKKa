@@ -1,6 +1,7 @@
 import { getLanguage, t } from "../i18n/runtime";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { api, type Role } from "../api";
+import { errorText } from "../lib/formatters";
 import type { Session, Toast } from "../types";
 import AppIcon from "../components/AppIcon";
 import ProfileAvatar from "../components/ProfileAvatar";
@@ -40,7 +41,7 @@ export default function MessagesWorkspace({ session, notify }: { session: Sessio
       setContacts(people.contacts);
       setError("");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "تعذر تحميل الرسائل.");
+      setError(errorText(cause));
     } finally { setLoading(false); }
   }, [session.token]);
 
@@ -52,7 +53,7 @@ export default function MessagesWorkspace({ session, notify }: { session: Sessio
       await api(`/messages/conversations/${conversationId}/read`, { method: "POST", token: session.token });
       setConversations((current) => current.map((item) => item.id === conversationId ? { ...item, unread_count: 0 } : item));
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "تعذر تحميل المحادثة.");
+      setError(errorText(cause));
     } finally { setLoadingMessages(false); }
   }, [session.token]);
 
@@ -75,7 +76,7 @@ export default function MessagesWorkspace({ session, notify }: { session: Sessio
       await refreshConversations(true);
       setShowContacts(false);
       setSelectedId(result.conversation.id);
-    } catch (cause) { notify(cause instanceof Error ? cause.message : "تعذر بدء المحادثة.", "error"); }
+    } catch (cause) { notify(errorText(cause), "error"); }
   };
 
   const sendMessage = async (event: FormEvent) => {
@@ -87,7 +88,7 @@ export default function MessagesWorkspace({ session, notify }: { session: Sessio
       await api(`/messages/conversations/${selectedId}/messages`, { method: "POST", token: session.token, body: { body } });
       setDraft("");
       await Promise.all([refreshMessages(selectedId, true), refreshConversations(true)]);
-    } catch (cause) { notify(cause instanceof Error ? cause.message : "تعذر إرسال الرسالة.", "error"); }
+    } catch (cause) { notify(errorText(cause), "error"); }
     finally { setSending(false); }
   };
 

@@ -110,9 +110,9 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
           setPickup(pickupPoint); setDropoff(dropoffPoint); setPickupSearch(pickupAddress.label); setDropoffSearch(dropoffAddress.label);
         }).catch(() => {
           if (requestId !== editAddressRequest.current) return;
-          setPickup((point) => point ? { ...point, label: "موقع محدد على الخريطة", primaryLabel: "موقع محدد على الخريطة" } : point);
-          setDropoff((point) => point ? { ...point, label: "موقع محدد على الخريطة", primaryLabel: "موقع محدد على الخريطة" } : point);
-          setPickupSearch("موقع محدد على الخريطة"); setDropoffSearch("موقع محدد على الخريطة");
+          setPickup((point) => point ? { ...point, label: t("موقع محدد على الخريطة"), primaryLabel: t("موقع محدد على الخريطة") } : point);
+          setDropoff((point) => point ? { ...point, label: t("موقع محدد على الخريطة"), primaryLabel: t("موقع محدد على الخريطة") } : point);
+          setPickupSearch(t("موقع محدد على الخريطة")); setDropoffSearch(t("موقع محدد على الخريطة"));
         });
     }
     setSection("booking");
@@ -157,7 +157,7 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
       const field = document.querySelector<HTMLElement>(`.location-search-${firstMissing}`);
       field?.scrollIntoView({ behavior: "smooth", block: "center" });
       field?.querySelector<HTMLInputElement>("input")?.focus({ preventScroll: true });
-      notify(`اختار نقطة ${firstMissing === "pickup" ? "الركوب" : "النزول"} من نتائج البحث أو حددها بالدبوس قبل المتابعة.`, "error");
+      notify(t(firstMissing === "pickup" ? "اختار نقطة الركوب من نتائج البحث أو حددها بالدبوس قبل المتابعة." : "اختار نقطة النزول من نتائج البحث أو حددها بالدبوس قبل المتابعة."), "error");
       return;
     }
     if (!isInsideGreaterCairo(pickup!.lat!, pickup!.lng!) || !isInsideGreaterCairo(dropoff!.lat!, dropoff!.lng!)) { notify(t("المشاوير متاحة داخل القاهرة الكبرى فقط."), "error"); return; }
@@ -353,7 +353,7 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
   };
   const setMapPoint = (mode: MapPickMode, point: MapPoint) => {
     editAddressRequest.current++;
-    const label = "جارٍ تحديد العنوان…";
+    const label = t("جارٍ تحديد العنوان…");
     const requestId = ++mapAddressRequests.current[mode];
     const selected = { ...point, label, primaryLabel: label, secondaryLabel: "" };
     if (mode === "pickup") { setPickup(selected); setPickupSearch(label); }
@@ -366,7 +366,7 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
       else { setDropoff(resolved); setDropoffSearch(address.label); }
     }).catch(() => {
       if (requestId !== mapAddressRequests.current[mode]) return;
-      const fallback = { ...point, label: "موقع محدد على الخريطة", primaryLabel: "موقع محدد على الخريطة", secondaryLabel: "" };
+      const fallback = { ...point, label: t("موقع محدد على الخريطة"), primaryLabel: t("موقع محدد على الخريطة"), secondaryLabel: "" };
       if (mode === "pickup") { setPickup(fallback); setPickupSearch(fallback.label); }
       else { setDropoff(fallback); setDropoffSearch(fallback.label); }
     });
@@ -430,10 +430,10 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
               {categoryMenuOpen && <div className="category-select-options" id="category-options" role="listbox" aria-label={t("الفئات المتاحة")}>
                 {categories.map((category) => {
                   const quote = priceQuotes?.[category.id];
-                  const fare = quote ? money(quote[packageType]) : priceLoading ? "جارٍ حساب السعر…" : priceError ? "تعذر حساب السعر" : "السعر غير متاح";
+                  const fare = quote ? money(quote[packageType]) : priceLoading ? t("جارٍ حساب السعر…") : priceError ? t("تعذر حساب السعر") : t("السعر غير متاح");
                   const chosen = category.id === categoryId;
                   return <button type="button" key={category.id} role="option" aria-selected={chosen} className={chosen ? "category-select-option selected" : "category-select-option"} onClick={() => { setCategoryId(category.id); setCategoryMenuOpen(false); }}>
-                    <span><strong>{categoryName(category)}</strong><small>{category.seats}  {t("مقاعد ·")} {category.speed_tier === "faster" ? "Faster" : "Saver"}</small></span>
+                    <span><strong>{categoryName(category)}</strong><small>{category.seats}  {t("مقاعد ·")} {t(category.speed_tier === "faster" ? "أسرع" : "أوفر")}</small></span>
                     <b>{fare}</b>
                   </button>;
                 })}

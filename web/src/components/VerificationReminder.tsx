@@ -73,11 +73,11 @@ export default function VerificationReminder({ session, onOpen, visible = true }
     <span className="verification-reminder-icon" aria-hidden="true">!</span>
     <div className="verification-reminder-copy">
       <strong>{missing.deferred ? t("اقترب موعد استكمال ملف الكابتن") : t("أكمل بيانات التوثيق الناقصة")}</strong>
-      <p>{missing.deferred ? `المستند المطلوب: ${missing.label}. ارفعه قبل انتهاء المهلة.` : `المطلوب الآن: ${missing.label}. أكمل هذه الخطوة لمتابعة تفعيل حسابك.`}</p>
+      <p>{missing.deferred ? <>{t("المستند المطلوب:")} {t(missing.label)}. {t("ارفعه قبل انتهاء المهلة.")}</> : <>{t("المطلوب الآن:")} {t(missing.label)}. {t("أكمل هذه الخطوة لمتابعة تفعيل حسابك.")}</>}</p>
     </div>
     <div className="verification-reminder-actions">
       <button type="button" className="button button-primary button-small" onClick={() => onOpen(missing.target)}>
-        {missing.target === "phone" ? t("وثّق رقم الهاتف") : `أكمل ${missing.label}`}
+        {missing.target === "phone" ? t("وثّق رقم الهاتف") : `${t("أكمل")} ${t(missing.label)}`}
       </button>
       <button type="button" className="button button-quiet button-small" onClick={remindLater} aria-label={t("ذكّرني بعد أسبوع")}>{t("ذكّرني لاحقًا")}</button>
     </div>

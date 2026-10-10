@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { t } from "../i18n/runtime";
 import type { MapPoint } from "../MapPicker";
 import { reverseGeocode, type LocationAddress } from "./location-address";
 
@@ -20,7 +21,7 @@ export function useResolvedLocationPoints(token: string, points: MapPoint[]) {
     if (!unique.size) return () => { active = false; };
     void Promise.all([...unique].map(async ([key, point]) => {
       try { addressCache.set(key, await reverseGeocode(token, point.lat!, point.lng!)); }
-      catch { addressCache.set(key, { label: "عنوان قريب غير متاح", primary: "عنوان قريب غير متاح", secondary: "" }); }
+      catch { addressCache.set(key, { label: t("عنوان قريب غير متاح"), primary: t("عنوان قريب غير متاح"), secondary: "" }); }
     })).then(() => { if (active) setRevision((revision) => revision + 1); });
     return () => { active = false; };
   // The stable coordinate key avoids repeating lookups when callers rebuild point objects.
@@ -28,9 +29,9 @@ export function useResolvedLocationPoints(token: string, points: MapPoint[]) {
   }, [token, key]);
 
   return points.map((point) => {
-    if (typeof point.lat !== "number" || typeof point.lng !== "number") return { ...point, label: "الموقع غير متاح", primaryLabel: "الموقع غير متاح", secondaryLabel: "" };
+    if (typeof point.lat !== "number" || typeof point.lng !== "number") return { ...point, label: t("الموقع غير متاح"), primaryLabel: t("الموقع غير متاح"), secondaryLabel: "" };
     const address = addressCache.get(pointKey(point));
     return address ? { ...point, label: address.label, primaryLabel: address.primary, secondaryLabel: address.secondary }
-      : { ...point, label: point.label ?? "عنوان محدد على الخريطة", primaryLabel: point.primaryLabel ?? "جارٍ تحديد العنوان…", secondaryLabel: point.secondaryLabel ?? "" };
+      : { ...point, label: point.label ?? t("عنوان محدد على الخريطة"), primaryLabel: point.primaryLabel ?? t("جارٍ تحديد العنوان…"), secondaryLabel: point.secondaryLabel ?? "" };
   });
 }

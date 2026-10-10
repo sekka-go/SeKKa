@@ -59,9 +59,9 @@ export function GroupDetail({ view, categories, busy, action, notify: _notify, o
   </div><aside className="group-detail-side"><section className="surface action-card"><h3>{t("إدارة المشوار")}</h3>
       <div className="group-management-actions">
         {group.status === "waiting" && category && seats < category.seats && activeMembers.length < category.seats && <button className="button button-secondary" disabled={busy} onClick={() => action(group.id, "complete-seats")}>{t("احجز باقي المقاعد")}</button>}
-        {firstFutureDate && ["active", "minimum_met", "needs_captain"].includes(group.status) && <button className="button button-quiet" disabled={busy} onClick={() => setConfirmCancellation({ title: "إلغاء يوم الخدمة؟", message: `سيتم إلغاء رحلة ${formatDate(firstFutureDate)} وفق سياسة الإلغاء.`, action: `days/${firstFutureDate}/cancel` })}>{t("إلغاء يوم الخدمة")}</button>}
+        {firstFutureDate && ["active", "minimum_met", "needs_captain"].includes(group.status) && <button className="button button-quiet" disabled={busy} onClick={() => setConfirmCancellation({ title: t("إلغاء يوم الخدمة؟"), message: `${t("سيتم إلغاء رحلة")} ${formatDate(firstFutureDate)} ${t("وفق سياسة الإلغاء.")}`, action: `days/${firstFutureDate}/cancel` })}>{t("إلغاء يوم الخدمة")}</button>}
         {canEdit && <button className="button button-edit-trip" disabled={busy} onClick={onEdit}>{t("تعديل المشوار")}</button>}
-        {!(["cancelled", "completed"].includes(group.status)) && <button className="button button-cancel-trip" disabled={busy || canceling} onClick={() => setConfirmCancellation({ title: group.package_type === "daily" ? "إلغاء المشوار؟" : "إلغاء الباقة؟", message: group.package_type === "daily" ? "هل تريد إلغاء هذا المشوار؟ راجع سياسة الإلغاء قبل التأكيد." : "سيتم إلغاء الباقة مع احتساب الاسترداد المستحق وفق سياسة الإلغاء.", action: "cancel" })}>{canceling ? t("جارٍ الإلغاء…") : group.package_type === "daily" ? t("إلغاء المشوار") : t("إلغاء الباقة")}</button>}
+        {!(["cancelled", "completed"].includes(group.status)) && <button className="button button-cancel-trip" disabled={busy || canceling} onClick={() => setConfirmCancellation({ title: t(group.package_type === "daily" ? "إلغاء المشوار؟" : "إلغاء الباقة؟"), message: t(group.package_type === "daily" ? "هل تريد إلغاء هذا المشوار؟ راجع سياسة الإلغاء قبل التأكيد." : "سيتم إلغاء الباقة مع احتساب الاسترداد المستحق وفق سياسة الإلغاء."), action: "cancel" })}>{canceling ? t("جارٍ الإلغاء…") : group.package_type === "daily" ? t("إلغاء المشوار") : t("إلغاء الباقة")}</button>}
       </div>
 </section>
       {confirmCancellation && <div className="brand-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setConfirmCancellation(null); }}>
@@ -79,12 +79,12 @@ export function TripList({ trips, categories }: { trips: RiderWorkspaceTrip[]; c
   return <div className="surface trip-table"><div className="trip-table-head"><span>{t("المشوار")}</span><span>{t("التاريخ والوقت")}</span><span>{t("الفئة")}</span><span>{t("الحالة")}</span></div>{trips.map((trip) => <div className="trip-table-row" key={`${trip.groupId}-${trip.id}`}><div><span className={`trip-arrow ${trip.direction}`}>{trip.direction === "outbound" ? "↗" : "↙"}</span><strong>{t("مجموعة #")}{trip.groupId}</strong></div><div><strong>{formatDate(trip.service_date)}</strong><small>{trip.departure_at.slice(11, 16)}</small></div><span>{categoryName(categories.find((item) => item.id === trip.categoryId))}</span><span className={`status-chip status-${trip.status}`}>{statusLabel(trip.status)}</span></div>)}</div>;
 }
 export function EmptyState({ icon, title, text, action, onAction }: { icon: string; title: string; text: string; action?: string; onAction?: () => void }) {
-  return <div className="surface empty-state"><span className="empty-icon">{icon}</span><h3>{title}</h3><p>{text}</p>{action && onAction && <button className="button button-primary button-small" onClick={onAction}>{action} <span>←</span></button>}</div>;
+  return <div className="surface empty-state"><span className="empty-icon">{icon}</span><h3>{t(title)}</h3><p>{t(text)}</p>{action && onAction && <button className="button button-primary button-small" onClick={onAction}>{t(action)} <span>←</span></button>}</div>;
 }
 export function ErrorState({ title = "حصلت مشكلة في تحميل البيانات", text, action = "إعادة المحاولة", onAction }: { title?: string; text: string; action?: string; onAction: () => void }) {
-  return <section className="surface error-state" role="alert"><span className="error-state-mark" aria-hidden="true">!</span><div><h3>{title}</h3><p>{text}</p></div><button className="button button-outline button-small" type="button" onClick={onAction}>{action}</button></section>;
+  return <section className="surface error-state" role="alert"><span className="error-state-mark" aria-hidden="true">!</span><div><h3>{t(title)}</h3><p>{t(text)}</p></div><button className="button button-outline button-small" type="button" onClick={onAction}>{t(action)}</button></section>;
 }
-export function LoadingCard({ text }: { text: string }) { return <div className="surface loading-card"><span className="spinner" /><strong>{text}</strong></div>; }
+export function LoadingCard({ text }: { text: string }) { return <div className="surface loading-card"><span className="spinner" /><strong>{t(text)}</strong></div>; }
 
 type NotificationCategory = "ride" | "chat" | "rating" | "alert" | "system";
 function categoryFor(item: Notification): NotificationCategory {
@@ -100,7 +100,7 @@ function notificationCopy(item: Notification) {
   const key = item.event_key;
   const title = key.startsWith("broadcast:") ? "رسالة من إدارة سِكّة" : key.includes("price") ? "تحديث على سعر المشوار" : key.includes("captain") ? "تحديث الكابتن" : key.includes("wait") ? "المشوار ما زال في الانتظار" : key.includes("invite") ? "دعوة لمشوار" : key.includes("cancel") ? "إلغاء المشوار" : key.includes("delay") ? "تأخير في المشوار" : key.includes("chat") ? "رسالة جديدة" : key.includes("rating") ? "تقييم جديد" : "تحديث جديد على مشوارك";
   const message = typeof item.payload.message === "string" ? item.payload.message : key.includes("price") ? "راجع تفاصيل المشوار للاطلاع على السعر المحدّث." : key.includes("captain") ? "فيه تحديث بخصوص الكابتن ورحلتك." : key.includes("wait") ? "تابع حالة المشوار واختار الإجراء المناسب." : key.includes("invite") ? "راجع تفاصيل الدعوة ورد عليها من رحلاتك." : key.includes("chat") ? "بعتلك رسالة في محادثة المشوار." : key.includes("rating") ? "وصلك تقييم جديد على رحلتك." : "هنبلغك بأي تغيير جديد يخص مشوارك.";
-  return { title: typeof item.payload.title === "string" ? item.payload.title : t(title), message: typeof item.payload.message === "string" ? item.payload.message : t(message) };
+  return { title: typeof item.payload.title === "string" ? t(item.payload.title) : t(title), message: typeof item.payload.message === "string" ? t(item.payload.message) : t(message) };
 }
 function relativeNotificationTime(value: string) {
   const seconds = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 1000));
@@ -243,7 +243,7 @@ export function AccountPanel({ session, notify }: { session: Session; notify: (t
   };
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setBusy(true);
-    try { const result = await api<{ revoked_other_sessions: number }>("/auth/change-password", { method: "POST", token: session.token, body: { current_password: current, new_password: next } }); setCurrent(""); setNext(""); notify(`تم تحديث كلمة السر. تم إنهاء ${result.revoked_other_sessions} جلسة أخرى.`, "success"); }
+    try { const result = await api<{ revoked_other_sessions: number }>("/auth/change-password", { method: "POST", token: session.token, body: { current_password: current, new_password: next } }); setCurrent(""); setNext(""); const count = result.revoked_other_sessions; notify(`${t("تم تحديث كلمة السر.")} ${t("تم إنهاء")} ${count} ${t(count === 1 ? "جلسة أخرى." : "جلسات أخرى.")}`, "success"); }
     catch (error) { notify(errorText(error), "error"); }
     finally { setBusy(false); }
   };

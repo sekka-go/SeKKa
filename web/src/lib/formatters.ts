@@ -29,5 +29,5 @@ export function formatDate(value: string) {
 }
 
 export function errorText(error: unknown) {
-  return error instanceof Error ? error.message : "حصل خطأ غير متوقع.";
+  return t(error instanceof Error ? error.message : "حصل خطأ غير متوقع.");
 }

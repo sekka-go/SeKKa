@@ -137,9 +137,9 @@ export default function RiderRoutePreferences({ token, notify, onComplete, onboa
   const setPoint = (kind: MapPickMode, point: MapPoint) => {
     const requestId = ++addressRequests.current[kind];
     const parts = addressParts(point.label);
-    const selected = { ...point, kind, primaryLabel: point.primaryLabel ?? (point.label ? parts.primary : "جارٍ تحديد العنوان…"), secondaryLabel: point.secondaryLabel ?? parts.secondary };
+    const selected = { ...point, kind, primaryLabel: point.primaryLabel ?? (point.label ? parts.primary : t("جارٍ تحديد العنوان…")), secondaryLabel: point.secondaryLabel ?? parts.secondary };
     setRoute((current) => ({ ...current, [kind]: selected }));
-    setQuery((current) => ({ ...current, [kind]: selected.label ?? "جارٍ تحديد العنوان…" }));
+    setQuery((current) => ({ ...current, [kind]: selected.label ?? t("جارٍ تحديد العنوان…") }));
     setEditingPoint(null);
     if (point.label && hasPoint(point)) { void savePoint(kind, selected); return; }
     if (typeof point.lat !== "number" || typeof point.lng !== "number") return;
@@ -151,7 +151,7 @@ export default function RiderRoutePreferences({ token, notify, onComplete, onboa
       void savePoint(kind, resolved);
     }).catch(() => {
       if (requestId !== addressRequests.current[kind]) return;
-      const fallback = { ...point, kind, label: "موقع محدد على الخريطة", primaryLabel: "موقع محدد على الخريطة", secondaryLabel: "" };
+      const fallback = { ...point, kind, label: t("موقع محدد على الخريطة"), primaryLabel: t("موقع محدد على الخريطة"), secondaryLabel: "" };
       setRoute((current) => ({ ...current, [kind]: fallback }));
       setQuery((current) => ({ ...current, [kind]: fallback.label! }));
       void savePoint(kind, fallback);
@@ -186,9 +186,9 @@ export default function RiderRoutePreferences({ token, notify, onComplete, onboa
     try {
       const address = point.label ? { label: point.label } : await reverseGeocode(token, point.lat, point.lng);
       if (requestId !== frequentAddressRequest.current) return;
-      setPreferences((current) => ({ ...current, frequent_places: [...current.frequent_places, { label: address.label || "موقع محدد على الخريطة", lat: point.lat!, lng: point.lng! }].slice(0, 5) }));
+      setPreferences((current) => ({ ...current, frequent_places: [...current.frequent_places, { label: address.label || t("موقع محدد على الخريطة"), lat: point.lat!, lng: point.lng! }].slice(0, 5) }));
     } catch {
-      if (requestId === frequentAddressRequest.current) setPreferences((current) => ({ ...current, frequent_places: [...current.frequent_places, { label: "موقع محدد على الخريطة", lat: point.lat!, lng: point.lng! }].slice(0, 5) }));
+      if (requestId === frequentAddressRequest.current) setPreferences((current) => ({ ...current, frequent_places: [...current.frequent_places, { label: t("موقع محدد على الخريطة"), lat: point.lat!, lng: point.lng! }].slice(0, 5) }));
     }
     if (requestId === frequentAddressRequest.current) setFrequentQuery("");
   };

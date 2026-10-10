@@ -1818,7 +1818,9 @@ button { line-height: 1.45; }
 /* Application header and menu hierarchy. */
 .workspace .topbar { min-width: 0; }
 .workspace .topbar-brand-group { display: flex; align-items: center; gap: .7rem; min-width: 0; }
-.workspace .topbar-brand { color: var(--ink); }
+.workspace .topbar-brand-home { flex: 0 0 auto; }
+.workspace .topbar-brand { width: auto; height: auto; min-width: 0; flex: 0 1 auto; gap: .45rem; color: var(--ink); }
+.workspace .topbar-brand .brand-logo-mark { display: block; width: 2.2rem; height: 2.2rem; flex: 0 0 2.2rem; }
 .workspace .topbar-brand .brand-logo-copy strong { color: var(--color-text-primary); font-size: 1.1rem; }
 .workspace .topbar-brand .brand-logo-copy small { display: none; }
 .workspace .topbar-actions { gap: .7rem; }
@@ -1844,6 +1846,7 @@ button { line-height: 1.45; }
 @media (max-width: 400px) {
   .workspace .topbar { padding-inline: .7rem; }
   .workspace .topbar-brand-group { gap: .45rem; }
+  .workspace .topbar-brand .brand-logo-mark { width: 1.8rem; height: 1.8rem; flex-basis: 1.8rem; }
   .workspace .topbar-brand .brand-logo-copy strong { font-size: .95rem; }
   .workspace .connection-state { gap: .25rem; font-size: .65rem; }
   .workspace .topbar-actions { gap: .4rem; }

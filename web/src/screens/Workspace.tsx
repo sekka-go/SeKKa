@@ -197,7 +197,7 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
     };
   }, []);
   const inviteFriends = useCallback(async () => {
-    const invite = { title: "أطلب سِكّة", text: "شارك الطريق مع ناس رايحة في نفس اتجاهك.", url: window.location.origin };
+    const invite = { title: t("أطلب سِكّة"), text: t("شارك الطريق مع ناس رايحة في نفس اتجاهك."), url: window.location.origin };
     try {
       if (navigator.share) await navigator.share(invite);
       else if (navigator.clipboard) { await navigator.clipboard.writeText(invite.url); notify(t("تم نسخ رابط سِكّة للمشاركة."), "success"); }

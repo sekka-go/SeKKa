@@ -49,10 +49,10 @@ function validLine(line: RouteGeometry["outbound"] | undefined): line is NonNull
 function selectedSegments(route: RouteGeometry | null | undefined, direction?: RouteDirection) {
   const selected: Array<{ direction: RouteDirection; label: string; segments?: RouteSegment[] }> = [];
   if (!direction || direction === "outbound") {
-    selected.push({ direction: "outbound", label: "الذهاب", segments: route?.outbound_segments });
+    selected.push({ direction: "outbound", label: t("الذهاب"), segments: route?.outbound_segments });
   }
   if (!direction || direction === "return") {
-    selected.push({ direction: "return", label: "العودة", segments: route?.return_segments });
+    selected.push({ direction: "return", label: t("العودة"), segments: route?.return_segments });
   }
   return selected;
 }
@@ -177,7 +177,7 @@ export default function MapPicker({
         keyboard: true,
         draggable: !readOnly && routePlaces.length === 0,
       });
-      marker.bindTooltip([point.primaryLabel ?? point.label ?? (kind === "pickup" ? `ركوب · محطة ${sequence}` : `نزول · محطة ${sequence}`), point.secondaryLabel].filter(Boolean).join(" · "));
+      marker.bindTooltip([point.primaryLabel ?? point.label ?? (kind === "pickup" ? `${t("ركوب")} · ${t("محطة")} ${sequence}` : `${t("نزول")} · ${t("محطة")} ${sequence}`), point.secondaryLabel].filter(Boolean).join(" · "));
       if (!readOnly && routePlaces.length === 0) {
         marker.on("dragend", () => {
           const moved = marker.getLatLng();
