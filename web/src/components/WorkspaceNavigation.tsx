@@ -32,14 +32,14 @@ export default function WorkspaceNavigation({
   const roleLabel = t(role === "rider" ? "راكب" : role === "captain" ? "كابتن" : "مدير النظام");
   const sectionLabel = t(role === "rider" ? "مساحة الراكب" : role === "captain" ? "مساحة الكابتن" : "إدارة سِكَّة");
 
-  const renderItem = (item: WorkspaceNavItem) => {
+  const renderItem = (item: WorkspaceNavItem, placement: "sidebar" | "mobile" = "sidebar") => {
     const active = notificationsOpen ? item.key === "notifications" : activeSection === item.key;
     return <button
       key={item.key}
       type="button"
       aria-current={item.key !== "notifications" && active ? "page" : undefined}
       aria-expanded={item.key === "notifications" ? notificationsOpen : undefined}
-      className={`nav-item ${active ? "nav-active" : ""}`}
+      className={`nav-item ${placement === "mobile" ? "mobile-tab-item" : ""} ${active ? "nav-active" : ""}`}
       onClick={() => onSelect(item)}
     >
       <span className="nav-icon"><AppIcon name={item.icon} size={19} /></span>
@@ -76,6 +76,7 @@ export default function WorkspaceNavigation({
       </button>
       <button type="button" className="sidebar-signout" onClick={onSignOut}><AppIcon name="logout" size={18} />{t("تسجيل الخروج")}</button>
     </aside>
+    <nav className="mobile-tabbar" aria-label={t("التنقل الرئيسي")}>{items.map((item) => renderItem(item, "mobile"))}</nav>
     {open && <button type="button" className="sidebar-scrim" onClick={onClose} aria-label={t("إغلاق القائمة")} />}
   </>;
 }

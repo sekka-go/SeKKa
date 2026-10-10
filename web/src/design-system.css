@@ -155,7 +155,6 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 .app-shell .button:disabled, .app-shell button:disabled {
   color: var(--color-disabled);
   cursor: not-allowed;
-  opacity: .72;
 }
 .app-shell .button-small { min-height: var(--touch-target-min); }
 .app-shell .button-size-sm { padding: .5rem .75rem; font-size: .875rem; }
@@ -263,6 +262,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   background: var(--color-surface);
   border-color: var(--color-border);
 }
+.app-shell .mobile-tabbar { display: none; }
 .app-shell .sidebar-signout { color: var(--color-danger); }
 .app-shell :is(.button-primary:hover:not(:disabled), .landing-primary-cta:hover) { filter: brightness(.96); }
 .app-shell .welcome-actions { grid-template-columns: minmax(0, 1fr); }
@@ -343,4 +343,40 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 @media (max-width: 560px) {
   .app-shell .admin-captain-row { gap: var(--space-2); }
   .app-shell .service-days, .app-shell .payment-methods { margin-inline: calc(var(--space-2) * -1); padding-inline: var(--space-2); }
+}
+
+@media (max-width: 800px) {
+  .app-shell .mobile-tabbar {
+    position: fixed;
+    z-index: 45;
+    inset-inline: 0;
+    inset-block-end: 0;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 2px;
+    min-height: calc(3.75rem + env(safe-area-inset-bottom));
+    padding: .3rem .4rem max(.3rem, env(safe-area-inset-bottom));
+    background: var(--color-surface);
+    border-block-start: 1px solid var(--color-border);
+    box-shadow: 0 -6px 24px var(--color-shadow);
+  }
+  .app-shell .mobile-tabbar .nav-item {
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 2px;
+    min-width: 0;
+    min-height: var(--touch-target-min);
+    padding: .25rem .15rem;
+    border: 0;
+    border-radius: .75rem;
+    background: transparent;
+  }
+  .app-shell .mobile-tabbar .nav-item::before { display: none; }
+  .app-shell .mobile-tabbar .nav-icon { flex-basis: auto; width: auto; height: 1.35rem; }
+  .app-shell .mobile-tabbar .nav-label { max-width: 100%; overflow: hidden; font-size: .68rem; line-height: 1.15; text-overflow: ellipsis; white-space: nowrap; }
+  .app-shell .mobile-tabbar .nav-count { position: absolute; inset-block-start: 1px; inset-inline-end: calc(50% - 1.2rem); min-width: 1rem; font-size: .62rem; }
+  .app-shell .workspace .page-content { padding-block-end: calc(5rem + env(safe-area-inset-bottom)); }
+  .app-shell .mobile-menu { min-width: var(--touch-target-min); min-height: var(--touch-target-min); }
 }
