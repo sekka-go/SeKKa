@@ -28,12 +28,10 @@ function isNonEmptyString(value: unknown): value is string {
 // السر غلط، عشان محدش يقدر يكتشف وجود حساب من عدمه من الرد.
 const GENERIC_LOGIN_FAILURE = "رقم الهاتف أو كلمة السر غلط.";
 
-// (Phase 8) حد أدنى بسيط لطول كلمة السر الجديدة وقت change-password فقط —
-// register (Phase 2) مفيش فيه أي فحص قوة لكلمة السر أصلًا (قرار قديم مش
-// اتلمس هنا)، لكن مسار "تغيير" كلمة السر مكان منطقي لبدء فرض حد أدنى بدل ما
-// نسيبه من غير أي فحص. 8 مش قيمة نهائية/معيار أمان معتمد — Placeholder بسيط
-// زي باقي الـ Placeholders في المشروع، قابل للمراجعة في مرحلة لاحقة.
-const MIN_NEW_PASSWORD_LENGTH = 8;
+const MIN_PASSWORD_LENGTH = 8;
+const MAX_PASSWORD_LENGTH = 128;
+const MAX_FULL_NAME_LENGTH = 100;
+const MAX_PHONE_LENGTH = 32;
 
 // (Phase 9) حماية بسيطة من محاولات التخمين المتكررة (Brute-force) على
 // login وchange-password — القيد الأمني ده كان موثّق كفجوة مفتوحة من Phase
@@ -41,10 +39,24 @@ const MIN_NEW_PASSWORD_LENGTH = 8;
 // كلمة السر: Placeholder قابل للمراجعة، مش معيار نهائي).
 const LOGIN_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 const LOGIN_RATE_LIMIT_MAX = 5;
+const REGISTER_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const RATE_LIMIT_MESSAGE = "محاولات كتير في وقت قصير. حاول تاني بعد شوية.";
 
 export function createAuthRouter(db: DatabaseSync): Router {
   const router = Router();
+
+  const registerIpRateLimiter = createRateLimiter({
+    windowMs: REGISTER_RATE_LIMIT_WINDOW_MS,
+    max: 100,
+    keyFn: (req) => `ip:${req.ip ?? "unknown"}`,
+    message: "تم إنشاء حسابات كثيرة من هذا الاتصال. حاول بعد قليل.",
+  });
+  const registerPhoneRateLimiter = createRateLimiter({
+    windowMs: REGISTER_RATE_LIMIT_WINDOW_MS,
+    max: 5,
+    keyFn: (req) => `phone:${typeof req.body?.phone_number === "string" ? req.body.phone_number.trim() : ""}`,
+    message: "وصلت للحد المؤقت لإنشاء حساب بهذا الرقم. حاول بعد قليل.",
+  });
 
   // المفتاح = IP + رقم الهاتف المُرسَل (مش IP لوحده) — عشان مهاجم من IP
   // واحد يقدر يستهدف أكتر من رقم برضه يتحد لكل رقم على حدة، ومفيش حد واحد
@@ -69,15 +81,19 @@ export function createAuthRouter(db: DatabaseSync): Router {
     message: RATE_LIMIT_MESSAGE,
   });
 
-  router.post("/auth/register", (req, res) => {
+  router.post("/auth/register", registerIpRateLimiter, registerPhoneRateLimiter, (req, res) => {
     const { full_name, phone_number, password, role } = req.body ?? {};
 
     if (
       !isNonEmptyString(full_name) ||
       !isNonEmptyString(phone_number) ||
-      !isNonEmptyString(password)
+      !isNonEmptyString(password) ||
+      full_name.trim().length > MAX_FULL_NAME_LENGTH ||
+      phone_number.trim().length > MAX_PHONE_LENGTH ||
+      password.length < MIN_PASSWORD_LENGTH ||
+      password.length > MAX_PASSWORD_LENGTH
     ) {
-      res.status(400).json({ error: "لازم تكتب الاسم ورقم الهاتف وكلمة السر." });
+      res.status(400).json({ error: "بيانات الحساب غير صحيحة. تأكد من الاسم ورقم الهاتف وطول كلمة السر." });
       return;
     }
 
@@ -112,7 +128,7 @@ export function createAuthRouter(db: DatabaseSync): Router {
   router.post("/auth/login", loginRateLimiter, (req, res) => {
     const { phone_number, password } = req.body ?? {};
 
-    if (!isNonEmptyString(phone_number) || !isNonEmptyString(password)) {
+    if (!isNonEmptyString(phone_number) || !isNonEmptyString(password) || phone_number.length > MAX_PHONE_LENGTH || password.length > MAX_PASSWORD_LENGTH) {
       res.status(400).json({ error: GENERIC_LOGIN_FAILURE });
       return;
     }
@@ -151,15 +167,15 @@ export function createAuthRouter(db: DatabaseSync): Router {
   router.post("/auth/change-password", requireAuth(db), changePasswordRateLimiter, (req, res) => {
     const { current_password, new_password } = req.body ?? {};
 
-    if (!isNonEmptyString(current_password) || !isNonEmptyString(new_password)) {
+    if (!isNonEmptyString(current_password) || !isNonEmptyString(new_password) || current_password.length > MAX_PASSWORD_LENGTH || new_password.length > MAX_PASSWORD_LENGTH) {
       res.status(400).json({ error: "لازم تكتب كلمة السر الحالية والجديدة." });
       return;
     }
 
-    if (new_password.length < MIN_NEW_PASSWORD_LENGTH) {
+    if (new_password.length < MIN_PASSWORD_LENGTH) {
       res
         .status(400)
-        .json({ error: `كلمة السر الجديدة لازم تكون ${MIN_NEW_PASSWORD_LENGTH} حروف على الأقل.` });
+        .json({ error: `كلمة السر الجديدة لازم تكون ${MIN_PASSWORD_LENGTH} حروف على الأقل.` });
       return;
     }
 

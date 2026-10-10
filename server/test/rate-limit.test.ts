@@ -69,4 +69,22 @@ describe("createRateLimiter", () => {
     const afterWindow = await request(app).get("/ping");
     assert.equal(afterWindow.status, 200);
   });
+
+  it("keeps attacker-controlled unique keys within a configured memory bound", async () => {
+    const app = express();
+    const limiter = createRateLimiter({
+      windowMs: 60_000,
+      max: 1,
+      maxTrackedKeys: 2,
+      keyFn: (req) => String(req.query.who ?? "anon"),
+      message: "too many",
+    });
+    app.get("/ping", limiter, (_req, res) => res.status(200).json({ ok: true }));
+
+    assert.equal((await request(app).get("/ping?who=first")).status, 200);
+    assert.equal((await request(app).get("/ping?who=second")).status, 200);
+    assert.equal((await request(app).get("/ping?who=third")).status, 200);
+    // The limiter evicts its oldest entry at capacity; memory stays bounded.
+    assert.equal((await request(app).get("/ping?who=first")).status, 200);
+  });
 });

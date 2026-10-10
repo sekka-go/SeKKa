@@ -80,6 +80,29 @@ function createBody(morning = "07:30") {
 }
 
 describe("rider pool automatic matching", () => {
+  it("ignores client-supplied fare, total, owner and workflow state", async () => {
+    await startRoutingMock();
+    const db = freshMigratedDb();
+    const app = createApp(db);
+    const token = await createRider(app);
+    const sessionUser = await request(app).get("/api/auth/me").set("Authorization", `Bearer ${token}`);
+    const userId = sessionUser.body.user.id as number;
+
+    const response = await request(app).post("/api/rider/pool/groups")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ ...createBody(), seat_day_fare: 0, amount_due: 0, total: 0, created_by_user_id: userId + 1000, status: "active", route_distance_km: 0 });
+
+    assert.equal(response.status, 201);
+    assert.equal(response.body.group.status, "waiting");
+    assert.equal(response.body.group.seat_day_fare, null);
+    assert.equal(response.body.group.route_distance_km, 10);
+    const stored = db.prepare("SELECT created_by_user_id,status,route_distance_km FROM pool_groups WHERE id=?")
+      .get(response.body.group.id) as { created_by_user_id: number; status: string; route_distance_km: number };
+    assert.equal(stored.created_by_user_id, userId);
+    assert.equal(stored.status, "waiting");
+    assert.equal(stored.route_distance_km, 10);
+  });
+
   it("joins a compatible waiting route and activates it at the Faster minimum", async () => {
     await startRoutingMock();
     const db = freshMigratedDb();

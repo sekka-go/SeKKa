@@ -171,6 +171,31 @@ describe("GET /api/captain/profile", () => {
 });
 
 describe("OTP — /api/captain/verify/request + /confirm", () => {
+  it("limits OTP requests and failed OTP confirmations per captain", async () => {
+    const app = createApp(freshMigratedDb());
+    const token = await registerAndLogin(app, CAPTAIN);
+    const auth = { Authorization: `Bearer ${token}` };
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      let status = 0;
+      await captureLoggedOtp(async () => {
+        status = (await request(app).post("/api/captain/verify/request").set(auth)).status;
+      });
+      assert.equal(status, 200);
+    }
+    const fourthRequest = await request(app).post("/api/captain/verify/request").set(auth);
+    assert.equal(fourthRequest.status, 429);
+    assert.ok(fourthRequest.headers["retry-after"]);
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const response = await request(app).post("/api/captain/verify/confirm").set(auth).send({ otp: "000000" });
+      assert.equal(response.status, 401);
+    }
+    const sixthAttempt = await request(app).post("/api/captain/verify/confirm").set(auth).send({ otp: "000000" });
+    assert.equal(sixthAttempt.status, 429);
+    assert.ok(sixthAttempt.headers["retry-after"]);
+  });
+
   it("مسار كامل: طلب → تخزين Hash بس → تأكيد صح ينجح ويحدّث verified_at", async () => {
     const db = freshMigratedDb();
     const app = createApp(db);
