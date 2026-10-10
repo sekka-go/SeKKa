@@ -127,7 +127,7 @@ export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (sessio
     }}
   />;
 
-  return <main className={`auth-page ${mode === "login" ? "auth-login-page" : "auth-register-page"}`}>
+  return <main className={`auth-page ${mode === "login" ? "auth-login-page" : "auth-register-page"} ${mode === "register" && role === "captain" ? "auth-captain-journey" : ""}`}>
     <AuthJourneyBackdrop />
     <header className="auth-page-header"><a href="/"><BrandLogo /></a></header>
     <section className="auth-page-content">

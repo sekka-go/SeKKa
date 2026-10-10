@@ -145,7 +145,7 @@ export default function SignupVerificationFlow({ session, notify, onExplore }: {
     ? Math.max(0, Math.ceil((Date.parse(snapshot.grace_period_expires_at) - Date.now()) / 86_400_000))
     : null;
 
-  return <main className="auth-page signup-onboarding-page">
+  return <main className={`auth-page signup-onboarding-page ${snapshot.role === "captain" ? "captain-onboarding" : ""}`}>
     <header className="auth-page-header"><a href="/"><BrandLogo /></a><h1>{t("أهلًا بك في SeKKa")}</h1></header>
     <section className="auth-page-content">
       <section className="surface verification-center signup-verification-flow" aria-labelledby="signup-verification-title">

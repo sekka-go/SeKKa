@@ -9,6 +9,7 @@ import "./design-system.css";
 import "./splash.css";
 import "./rider-experience.css";
 import "./rider-stitch-screens.css";
+import "./captain-stitch-screens.css";
 import App from "./App";
 import PwaNotice from "./components/PwaNotice";
 import { registerPwa } from "./pwa";
