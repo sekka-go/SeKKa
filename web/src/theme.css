@@ -350,8 +350,22 @@ button, input, select, textarea { color-scheme: inherit; }
 :root[data-theme="light"] .auth-card { background: var(--color-surface); border-color: var(--color-border); box-shadow: 0 18px 50px var(--color-shadow); }
 :root[data-theme="light"] .auth-journey-backdrop { opacity: .5; }
 :root[data-theme="light"] .auth-register-card .auth-heading h1 { color: var(--color-accent-text); }
-:root[data-theme="light"] .auth-page-header,
-:root[data-theme="light"] .landing-header { background: var(--color-background); box-shadow: none; }
+:root[data-theme="light"] .app-shell .auth-page-header,
+:root[data-theme="light"] .app-shell .landing-header {
+  color: #f8fafc;
+  background: #111b2e;
+  border-color: #334155;
+  box-shadow: 0 1px 5px rgba(2, 6, 23, .28);
+}
+:root[data-theme="light"] .app-shell .auth-page-header .brand-logo-copy strong,
+:root[data-theme="light"] .app-shell .auth-page-header h1,
+:root[data-theme="light"] .app-shell .landing-header .brand-logo-copy strong {
+  color: #f8fafc;
+}
+:root[data-theme="light"] .app-shell .auth-page-header .brand-logo-copy small,
+:root[data-theme="light"] .app-shell .landing-header .brand-logo-copy small {
+  color: #cbd5e1;
+}
 :root[data-theme="light"] .landing-route-card { background: var(--color-surface); border-color: var(--color-border); }
 :root[data-theme="light"] .landing-hero { color: var(--color-text-primary); }
 :root[data-theme="light"] .sekka-splash,
