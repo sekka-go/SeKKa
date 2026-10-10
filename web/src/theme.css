@@ -508,3 +508,13 @@ button, input, select, textarea { color-scheme: inherit; }
   .notification-avatar.is-brand .brand-logo-mark { width: 2.8rem; height: 2.8rem; }
   .theme-preference-options { grid-template-columns: 1fr; }
 }
+
+/* Center the landing brand with its name and slogan above the route mark. */
+.landing-header { justify-content: center; }
+.landing-header .landing-brand { display: grid; place-items: center; text-align: center; }
+.landing-header .brand-logo {
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: .3rem;
+}
+.landing-header .brand-logo-copy { text-align: center; }
