@@ -4,7 +4,7 @@ import MapPicker from "./MapPickerLoader";
 import RiderRoutePreferences from "./RiderRoutePreferences";
 import VerificationCenter from "./VerificationCenter";
 import { categoryName, errorText, formatDate, money, statusLabel } from "../lib/formatters";
-import { api, deleteProfileAvatar, uploadProfileAvatar, type Category, type GroupView, type Notification } from "../api";
+import { api, clearSession, deleteProfileAvatar, uploadProfileAvatar, type Category, type GroupView, type Notification } from "../api";
 import BrandLogo from "../components/BrandLogo";
 import AppIcon from "./AppIcon";
 import ProfileAvatar from "./ProfileAvatar";
@@ -204,6 +204,7 @@ export function NotificationsPanel({ items, token, onRefresh, onPoolChanged, onE
 
 export function AccountPanel({ session, notify }: { session: Session; notify: (text: string, tone?: Toast["tone"]) => void }) {
   const [current, setCurrent] = useState(""); const [next, setNext] = useState(""); const [busy, setBusy] = useState(false);
+  const [deletePassword, setDeletePassword] = useState(""); const [deleting, setDeleting] = useState(false);
   const [avatarBusy, setAvatarBusy] = useState(false);
   const changeAvatar = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.currentTarget.files?.[0];
@@ -228,10 +229,22 @@ export function AccountPanel({ session, notify }: { session: Session; notify: (t
     catch (error) { notify(errorText(error), "error"); }
     finally { setBusy(false); }
   };
+  const deleteAccount = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!window.confirm(t("سيتم حذف بيانات الحساب الخاصة وإلغاء الجلسات. ستبقى السجلات المالية والتشغيلية مجهولة الهوية. هل تريد المتابعة؟"))) return;
+    setDeleting(true);
+    try {
+      await api("/account", { method: "DELETE", token: session.token, body: { current_password: deletePassword } });
+      clearSession();
+      window.location.replace("/");
+    } catch (error) { notify(errorText(error), "error"); }
+    finally { setDeleting(false); }
+  };
   return <div className="account-grid"><section className="surface account-card"><ProfileAvatar userId={session.user.id} token={session.token} name={session.user.full_name} className="account-avatar" /><span className="eyebrow">{t("بيانات الحساب")}</span><h2>{session.user.full_name}</h2><p>{session.user.phone_number}</p><span className="status-chip status-active">{session.user.role === "rider" ? t("راكب") : session.user.role === "captain" ? t("كابتن") : t("مدير النظام")}</span><div className="account-avatar-actions"><label className="button button-outline button-small">{avatarBusy ? t("جارٍ التحديث…") : t("اختيار صورة")}<input type="file" accept="image/jpeg,image/png,image/webp" onChange={changeAvatar} disabled={avatarBusy} /></label><button type="button" className="button button-quiet button-small" onClick={() => void removeAvatar()} disabled={avatarBusy}>{t("حذف الصورة")}</button></div><small className="account-avatar-note">{t("صورتك ظاهرة لمستخدمي سِكّة المسجلين فقط.")}</small><div className="account-meta"><span>{t("عضو منذ")}</span><strong>{new Intl.DateTimeFormat(getLanguage() === "ar" ? "ar-EG" : "en-EG", { day: "numeric", month: "long", year: "numeric" }).format(new Date(session.user.created_at ?? Date.now()))}</strong></div></section>
     {session.user.role !== "admin" && <VerificationCenter session={session} notify={notify} />}
     {session.user.role === "rider" && <RiderRoutePreferences token={session.token} notify={notify} />}
-    <details className="surface password-card settings-disclosure"><summary><span><span className="eyebrow">{t("الأمان والخصوصية")}</span><strong>{t("تغيير كلمة السر")}</strong><small>{t("تقدر تفتح القسم عند الحاجة.")}</small></span><span className="settings-disclosure-chevron" aria-hidden="true">⌄</span></summary><form className="form-stack" onSubmit={submit}><label>{t("كلمة السر الحالية")}<input type="password" value={current} onChange={(e) => setCurrent(e.target.value)} autoComplete="current-password" required /></label><label>{t("كلمة السر الجديدة")}<input type="password" value={next} onChange={(e) => setNext(e.target.value)} autoComplete="new-password" minLength={8} required /></label><button className="button button-primary button-small" disabled={busy}>{busy ? t("جاري التحديث…") : t("حفظ كلمة السر")}</button></form></details></div>;
+    <details className="surface password-card settings-disclosure"><summary><span><span className="eyebrow">{t("الأمان والخصوصية")}</span><strong>{t("تغيير كلمة السر")}</strong><small>{t("تقدر تفتح القسم عند الحاجة.")}</small></span><span className="settings-disclosure-chevron" aria-hidden="true">⌄</span></summary><form className="form-stack" onSubmit={submit}><label>{t("كلمة السر الحالية")}<input type="password" value={current} onChange={(e) => setCurrent(e.target.value)} autoComplete="current-password" required /></label><label>{t("كلمة السر الجديدة")}<input type="password" value={next} onChange={(e) => setNext(e.target.value)} autoComplete="new-password" minLength={8} required /></label><button className="button button-primary button-small" disabled={busy}>{busy ? t("جاري التحديث…") : t("حفظ كلمة السر")}</button></form></details>
+    <details className="surface password-card settings-disclosure account-delete-disclosure"><summary><span><span className="eyebrow">{t("حذف الحساب")}</span><strong>{t("حذف حسابي نهائيًا")}</strong><small>{t("احذف حسابك وبياناتك الشخصية من التطبيق.")}</small></span><span className="settings-disclosure-chevron" aria-hidden="true">⌄</span></summary><form className="form-stack" onSubmit={deleteAccount}><p className="account-delete-warning">{t("سيتم إنهاء الجلسات وحذف صورة الحساب ومستندات التوثيق وبيانات المواقع. ستظل السجلات المالية والتشغيلية محفوظة بصورة مجهولة لحماية سجل الرحلات والحقوق.")}</p><label>{t("كلمة السر الحالية للتأكيد")}<input type="password" value={deletePassword} onChange={(event) => setDeletePassword(event.target.value)} autoComplete="current-password" maxLength={128} required /></label><button type="submit" className="button button-danger button-small" disabled={deleting}>{deleting ? t("جارٍ حذف الحساب…") : t("حذف حسابي نهائيًا")}</button></form></details></div>;
 }
 
 
