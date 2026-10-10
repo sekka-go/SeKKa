@@ -193,7 +193,7 @@ export default function RiderRoutePreferences({ token, notify, onComplete, onboa
     if (requestId === frequentAddressRequest.current) setFrequentQuery("");
   };
   const title = onboarding ? "نحدد طريقك المعتاد" : "مشاويرك المفضلة";
-  if (loading) return <section className="surface route-preferences-card"><p role="status">{t("بنحمّل مشاويرك المفضلة…")}</p></section>;
+  if (loading) return <section className="surface route-preferences-card"><p role="status">{t("loading.favoriteRides")}</p></section>;
 
   return <details className="surface route-preferences-card settings-disclosure route-preferences-disclosure" aria-labelledby="route-preferences-title" open={onboarding}>
     <summary className="surface-heading"><span className="route-preferences-heading-copy">{onboarding && <span className="eyebrow">{t("خطوة إعداد الحساب")}</span>}<strong id="route-preferences-title">{title}</strong><small>{onboarding ? t("حدد نقطة الركوب والوصول المعتادتين لتظهر اقتراحات أقرب لخطك.") : t("احفظ طريقك المعتاد، وسنقترح عليك مشاوير تناسبك وتوفّر وقت البحث.")}</small></span><span className="route-preferences-heading-actions"><span className="surface-icon" aria-hidden="true">⌖</span><span className="settings-disclosure-chevron" aria-hidden="true">⌄</span></span></summary>

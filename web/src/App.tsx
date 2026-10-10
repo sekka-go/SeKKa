@@ -29,7 +29,7 @@ const AuthScreen = lazy(() => import("./screens/AuthScreen"));
 const Workspace = lazy(() => import("./screens/Workspace"));
 
 function RouteLoading() {
-  return <div className="route-chunk-loading" role="status" aria-live="polite"><span className="spinner" /><span>{t("جارٍ تحميل مساحة عملك…")}</span></div>;
+  return <div className="route-chunk-loading" role="status" aria-live="polite"><span className="spinner" /><span>{t("loading.general")}</span></div>;
 }
 
 export default function App() {

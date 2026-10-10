@@ -1,6 +1,7 @@
 const CACHE_PREFIX = "sekka-shell-";
-const CACHE_NAME = "sekka-shell-v6";
+const CACHE_NAME = "sekka-shell-v7";
 const APP_SHELL = [
+  "/",
   "/offline.html",
   "/manifest.webmanifest",
   "/brand/pwa-icon-192.png",
@@ -76,7 +77,7 @@ self.addEventListener("fetch", (event) => {
   if (request.mode === "navigate") {
     event.respondWith(fetch(request).catch(async () => {
       const cache = await caches.open(CACHE_NAME);
-      return (await cache.match("/offline.html")) ?? Response.error();
+      return (await cache.match("/")) ?? (await cache.match("/offline.html")) ?? Response.error();
     }));
     return;
   }

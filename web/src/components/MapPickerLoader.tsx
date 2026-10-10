@@ -6,7 +6,7 @@ const MapPicker = lazy(() => import("../MapPicker"));
 type MapPickerProps = ComponentProps<typeof MapPickerView>;
 
 export default function MapPickerLoader(props: MapPickerProps) {
-  return <Suspense fallback={<div className="map-canvas map-loading" role="status">{t("جاري تحميل الخريطة…")}</div>}>
+  return <Suspense fallback={<div className="map-canvas map-loading" role="status">{t("loading.map")}</div>}>
     <MapPicker {...props} />
   </Suspense>;
 }

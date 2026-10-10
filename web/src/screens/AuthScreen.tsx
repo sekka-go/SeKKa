@@ -139,7 +139,7 @@ export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (sessio
           </section>}
           {error && <div className="inline-error" role="alert">{error}</div>}
           {mode === "login" && error.includes("رقم الهاتف أو كلمة السر غلط") && <button type="button" className="auth-forgot-link" onClick={() => { setForgotStep("request"); setError(""); }}>{t("نسيت كلمة السر؟")}</button>}
-          <button className="button button-primary button-wide" disabled={busy}>{busy ? t("لحظة واحدة…") : mode === "login" ? t("دخول إلى حسابي") : t("إنشاء الحساب")}<span aria-hidden="true">←</span></button>
+          <button className="button button-primary button-wide" disabled={busy}>{busy ? mode === "login" ? t("loading.login") : t("لحظة واحدة…") : mode === "login" ? t("دخول إلى حسابي") : t("إنشاء الحساب")}<span aria-hidden="true">←</span></button>
         </form> : forgotStep === "request" ? <form className="form-stack auth-reset-form" onSubmit={requestReset}>
           <h2>{t("استعادة كلمة السر")}</h2><p>{t("أدخل رقم الهاتف المسجل، وسنجهز رابطًا آمنًا لبدء التحقق عبر بوت سِكّة في تيليجرام.")}</p>
           <label>{t("رقم الهاتف")}<input autoComplete="tel" type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="01xxxxxxxxx" required /></label>
