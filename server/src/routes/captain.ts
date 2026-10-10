@@ -13,6 +13,7 @@ import {
 } from "../db/otp-repository.js";
 import { generateOtp, hashOtp, isDevOtpLoggingAllowed, logOtpDevOnly, otpExpiryFromNow } from "../security/otp.js";
 import { requireAuth } from "../middleware/require-auth.js";
+import { createRateLimiter } from "../middleware/rate-limit.js";
 import {
   findTripStopsByTripId,
   findTripWithContextById,
@@ -67,10 +68,22 @@ function requireCaptainRole(db: DatabaseSync): RequestHandler {
 export function createCaptainRouter(db: DatabaseSync): Router {
   const router = Router();
   const guarded: RequestHandler[] = [requireAuth(db), requireCaptainRole(db)];
+  const otpRequestRateLimiter = createRateLimiter({
+    windowMs: 60 * 60 * 1000,
+    max: 3,
+    keyFn: (req) => `user:${req.auth!.userId}`,
+    message: "طلبت رموز تحقق كثيرة. حاول بعد قليل.",
+  });
+  const otpConfirmRateLimiter = createRateLimiter({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    keyFn: (req) => `user:${req.auth!.userId}`,
+    message: "محاولات تحقق كثيرة. حاول بعد قليل.",
+  });
 
   // POST /api/captain/verify/request — بيولّد OTP، يخزّن الـ Hash بس، وبيطبعه
   // في الـ Server console بدل SMS حقيقي (Dev-only، زي ما موثّق في otp.ts).
-  router.post("/captain/verify/request", ...guarded, (req, res) => {
+  router.post("/captain/verify/request", ...guarded, otpRequestRateLimiter, (req, res) => {
     if (!isDevOtpLoggingAllowed()) {
       res.status(503).json({ error: "خدمة إرسال رمز التحقق غير متاحة حاليًا." });
       return;
@@ -89,7 +102,7 @@ export function createCaptainRouter(db: DatabaseSync): Router {
 
   // POST /api/captain/verify/confirm — يتحقق من آخر OTP غير منتهي وغير
   // مستخدم لنفس المستخدم، ولو مطابق يحدّث verified_at.
-  router.post("/captain/verify/confirm", ...guarded, (req, res) => {
+  router.post("/captain/verify/confirm", ...guarded, otpConfirmRateLimiter, (req, res) => {
     const { otp } = req.body ?? {};
     if (!isNonEmptyString(otp)) {
       res.status(400).json({ error: GENERIC_OTP_FAILURE });

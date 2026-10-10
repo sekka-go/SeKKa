@@ -51,6 +51,19 @@ describe("POST /api/auth/register", () => {
     assert.equal(raw.includes("elite"), false);
   });
 
+  it("يرفض كلمات السر القصيرة أو الطويلة والحقول التي تتجاوز حدود الإدخال", async () => {
+    const app = createApp(freshMigratedDb());
+    for (const input of [
+      { ...RIDER, password: "short" },
+      { ...RIDER, password: "x".repeat(129) },
+      { ...RIDER, full_name: "x".repeat(101) },
+      { ...RIDER, phone_number: "1".repeat(33) },
+    ]) {
+      const response = await request(app).post("/api/auth/register").send(input);
+      assert.equal(response.status, 400);
+    }
+  });
+
   it("يرفض رقم هاتف مكرر برسالة عربية واضحة (مش رسالة SQL)", async () => {
     const app = createApp(freshMigratedDb());
     await request(app).post("/api/auth/register").send(RIDER);
