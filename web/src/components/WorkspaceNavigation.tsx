@@ -4,7 +4,6 @@ import type { NavKey } from "../types";
 import type { Role } from "../api";
 import type { InfoPageKey } from "./InfoPages";
 import ProfileAvatar from "./ProfileAvatar";
-import LanguageSelector from "./LanguageSelector";
 
 export type WorkspaceNavItem = { key: NavKey; label: string; icon: AppIconName };
 
@@ -56,7 +55,7 @@ export default function WorkspaceNavigation({
         <button type="button" className="sidebar-close" onClick={onClose} aria-label={t("إغلاق القائمة")}><AppIcon name="close" /></button>
       </div>
       <div className="sidebar-section-heading">{t("التنقل")}</div>
-      <nav className="sidebar-primary-nav" aria-label={t("التنقل الرئيسي")}>{items.map((item) => renderItem(item))}</nav>
+      <nav className="sidebar-primary-nav" aria-label={t("التنقل الرئيسي")}>{items.map((item) => renderItem(item))}{renderItem({ key: "settings", label: "إعدادات التطبيق", icon: "settings" })}</nav>
       <div className="sidebar-utilities">
         <div className="sidebar-section-heading">{t("تواصل ومساعدة")}</div>
         <a className="nav-item" href="mailto:sekkago.app@gmail.com"><span className="nav-icon"><AppIcon name="support" size={19} /></span><span className="nav-label">{t("خدمة العملاء")}</span></a>
@@ -66,7 +65,6 @@ export default function WorkspaceNavigation({
           <button type="button" onClick={() => onOpenInfo("privacy")}>{t("سياسة الخصوصية")}</button>
           <button type="button" onClick={() => onOpenInfo("faq")}>{t("الأسئلة الشائعة")}</button>
         </div>
-        <LanguageSelector compact />
       </div>
       <div className="sidebar-spacer" />
       <button type="button" className="sidebar-profile" onClick={onAccount}>

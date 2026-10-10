@@ -4,7 +4,6 @@ import MapPicker from "./MapPickerLoader";
 import RiderRoutePreferences from "./RiderRoutePreferences";
 import VerificationCenter from "./VerificationCenter";
 import { categoryName, errorText, formatDate, money, statusLabel } from "../lib/formatters";
-import { getConfiguredPushPublicKey, hasPushSubscription, subscribeToPush, unsubscribeFromPush } from "../lib/push";
 import { api, deleteProfileAvatar, uploadProfileAvatar, type Category, type GroupView, type Notification } from "../api";
 import BrandLogo from "../components/BrandLogo";
 import AppIcon from "./AppIcon";
@@ -140,38 +139,12 @@ function NotificationRow({ item, token }: { item: Notification; token: string })
   </div>;
 }
 
-function NotificationHeader({ isLoading, refreshing, onRefresh, onToggleSettings, onClose, settingsLabel, settingsDisabled }: { isLoading: boolean; refreshing: boolean; onRefresh: () => void; onToggleSettings: () => void; onClose: () => void; settingsLabel: string; settingsDisabled: boolean }) {
-  return <header className="notifications-header"><div><h2>{t("الإشعارات")}</h2></div><div className="notification-header-actions"><button type="button" className="notification-icon-action" onClick={onRefresh} disabled={isLoading || refreshing} aria-label={t("تحديث الإشعارات")} title={t("تحديث الإشعارات")}><AppIcon name="inbox" className={refreshing ? "is-spinning" : undefined} /></button><button type="button" className={`notification-icon-action ${settingsDisabled ? "is-unavailable" : ""}`} onClick={onToggleSettings} disabled={settingsDisabled} aria-label={settingsLabel} title={settingsLabel}><AppIcon name="bell" /></button><button type="button" className="notification-icon-action notification-close" onClick={onClose} aria-label={t("إغلاق الإشعارات")} title={t("إغلاق الإشعارات")}><AppIcon name="close" /></button></div></header>;
+function NotificationHeader({ isLoading, refreshing, onRefresh, onOpenSettings, onClose }: { isLoading: boolean; refreshing: boolean; onRefresh: () => void; onOpenSettings: () => void; onClose: () => void }) {
+  return <header className="notifications-header"><div><h2>{t("الإشعارات")}</h2></div><div className="notification-header-actions"><button type="button" className="notification-icon-action" onClick={onRefresh} disabled={isLoading || refreshing} aria-label={t("تحديث الإشعارات")} title={t("تحديث الإشعارات")}><AppIcon name="inbox" className={refreshing ? "is-spinning" : undefined} /></button><button type="button" className="notification-icon-action" onClick={onOpenSettings} aria-label={t("إعدادات التطبيق")} title={t("إعدادات التطبيق")}><AppIcon name="settings" /></button><button type="button" className="notification-icon-action notification-close" onClick={onClose} aria-label={t("إغلاق الإشعارات")} title={t("إغلاق الإشعارات")}><AppIcon name="close" /></button></div></header>;
 }
 
-export function NotificationsPanel({ items, token, onRefresh, onPoolChanged, onEditGroup, allowWaitActions = false, notify, isLoading = false, error = "", onClose }: { items: Notification[]; token: string; onRefresh: () => Promise<void>; onPoolChanged?: () => Promise<void>; onEditGroup?: (groupId: number) => void; allowWaitActions?: boolean; notify: (text: string, tone?: Toast["tone"]) => void; isLoading?: boolean; error?: string; onClose: () => void }) {
-  const [pushEnabled, setPushEnabled] = useState(false);
-  const [pushReady, setPushReady] = useState(false);
-  const [pushBusy, setPushBusy] = useState(false);
+export function NotificationsPanel({ items, token, onRefresh, onPoolChanged, onEditGroup, onOpenSettings, allowWaitActions = false, notify, isLoading = false, error = "", onClose }: { items: Notification[]; token: string; onRefresh: () => Promise<void>; onPoolChanged?: () => Promise<void>; onEditGroup?: (groupId: number) => void; onOpenSettings: () => void; allowWaitActions?: boolean; notify: (text: string, tone?: Toast["tone"]) => void; isLoading?: boolean; error?: string; onClose: () => void }) {
   const [refreshing, setRefreshing] = useState(false);
-  useEffect(() => {
-    let active = true;
-    void Promise.all([getConfiguredPushPublicKey(), hasPushSubscription()]).then(([publicKey, enabled]) => {
-      if (active) { setPushReady(Boolean(publicKey)); setPushEnabled(Boolean(publicKey) && enabled); }
-    }).catch(() => { if (active) setPushReady(false); });
-    return () => { active = false; };
-  }, []);
-
-  const togglePush = async () => {
-    setPushBusy(true);
-    try {
-      if (pushEnabled) {
-        await unsubscribeFromPush(token);
-        setPushEnabled(false);
-        notify(t("تم إيقاف إشعارات سِكّة على هذا الجهاز."), "success");
-      } else {
-        await subscribeToPush(token);
-        setPushEnabled(true);
-        notify(t("تم تفعيل إشعارات سِكّة على هذا الجهاز."), "success");
-      }
-    } catch (error) { notify(errorText(error), "error"); }
-    finally { setPushBusy(false); }
-  };
 
   const refresh = async () => {
     setRefreshing(true);
@@ -226,7 +199,7 @@ export function NotificationsPanel({ items, token, onRefresh, onPoolChanged, onE
       {isWaitNotice && options.length > 0 && <div className="notification-choice-actions"><span>{t("اختار ما يناسبك:")}</span>{options.includes("wait") && <button className="button button-outline button-small" onClick={() => void markRead(item)}>{t("الانتظار")}</button>}{options.includes("book_remaining_seats") && <button className="button button-secondary button-small" onClick={() => void waitAction(item, "complete-seats")}>{t("حجز باقي المقاعد")}</button>}{options.includes("cancel_free") && <button className="button button-quiet button-small" onClick={() => void waitAction(item, "cancel")}>{t("إلغاء مجاني")}</button>}</div>}
     </article>;
   };
-  return <div className="notifications-overlay" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><aside id="sekka-notifications-drawer" className="notifications-drawer" role="dialog" aria-modal="true" aria-label={t("الإشعارات")} onMouseDown={(event) => event.stopPropagation()}><section className="notifications-page"><NotificationHeader isLoading={isLoading} refreshing={refreshing} onRefresh={() => void refresh()} onToggleSettings={() => void togglePush()} onClose={onClose} settingsLabel={t(pushBusy ? "جارٍ تحديث إعدادات الإشعارات" : pushReady ? pushEnabled ? "إيقاف إشعارات هذا الجهاز" : "تفعيل إشعارات هذا الجهاز" : "إشعارات الجهاز غير مهيأة حاليًا")} settingsDisabled={!pushReady || pushBusy} />{isLoading ? <div className="notifications-loading" role="status"><span className="spinner" /><span>{t("loading.notifications")}</span></div> : error ? <div className="notifications-error" role="alert"><span className="error-state-mark" aria-hidden="true">!</span><strong>{t("تعذر تحميل الإشعارات")}</strong><p>{error}</p><button type="button" className="button button-outline button-small" onClick={() => void refresh()}>{t("إعادة المحاولة")}</button></div> : items.length ? <div className="notification-list">{groupedItems.map((group) => <section className="notification-feed-group" key={group.key}><h3>{group.label}</h3>{group.items.map(renderItem)}</section>)}</div> : <div className="notifications-empty"><span className="notifications-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg></span><h3>{t("لا توجد إشعارات حالياً")}</h3><p>{t("سنقوم بتبليغك بأي تحديثات جديدة تخص رحلاتك ومجموعاتك فور توفرها.")}</p></div>}</section></aside></div>;
+  return <div className="notifications-overlay" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><aside id="sekka-notifications-drawer" className="notifications-drawer" role="dialog" aria-modal="true" aria-label={t("الإشعارات")} onMouseDown={(event) => event.stopPropagation()}><section className="notifications-page"><NotificationHeader isLoading={isLoading} refreshing={refreshing} onRefresh={() => void refresh()} onOpenSettings={onOpenSettings} onClose={onClose} />{isLoading ? <div className="notifications-loading" role="status"><span className="spinner" /><span>{t("loading.notifications")}</span></div> : error ? <div className="notifications-error" role="alert"><span className="error-state-mark" aria-hidden="true">!</span><strong>{t("تعذر تحميل الإشعارات")}</strong><p>{error}</p><button type="button" className="button button-outline button-small" onClick={() => void refresh()}>{t("إعادة المحاولة")}</button></div> : items.length ? <div className="notification-list">{groupedItems.map((group) => <section className="notification-feed-group" key={group.key}><h3>{group.label}</h3>{group.items.map(renderItem)}</section>)}</div> : <div className="notifications-empty"><span className="notifications-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg></span><h3>{t("لا توجد إشعارات حالياً")}</h3><p>{t("سنقوم بتبليغك بأي تحديثات جديدة تخص رحلاتك ومجموعاتك فور توفرها.")}</p></div>}</section></aside></div>;
 }
 
 export function AccountPanel({ session, notify }: { session: Session; notify: (text: string, tone?: Toast["tone"]) => void }) {
