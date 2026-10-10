@@ -68,6 +68,8 @@ export default function App() {
       try { localStorage.setItem("sekka.theme", themePreference); } catch { /* Keep the in-memory choice if storage is unavailable. */ }
       const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
       if (themeColor) themeColor.content = getComputedStyle(document.documentElement).getPropertyValue("--color-background").trim();
+      const statusBarStyle = document.querySelector<HTMLMetaElement>("meta[name=\"apple-mobile-web-app-status-bar-style\"]");
+      if (statusBarStyle) statusBarStyle.content = theme === "light" ? "default" : "black";
     };
     applyTheme();
     if (themePreference !== "system") return;
