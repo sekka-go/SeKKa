@@ -27,6 +27,7 @@ const protectedPagePaths = new Set([
   "/search", "/trips", "/messages", "/notifications", "/broadcast",
 ]);
 const currentPathname = () => window.location.pathname.replace(/\/+$/, "") || "/";
+const isProtectedPath = (path: string) => protectedPagePaths.has(path) || /^\/admin\/users\/\d+$/.test(path);
 const introSessionKey = "sekka.intro-seen";
 function shouldShowIntro() {
   if (currentPathname() !== "/" || getStoredSession()) return false;
@@ -105,7 +106,7 @@ export default function App() {
     {introStage === "mark" && <div className="intro-logo-screen" aria-label="SeKKa" role="status"><SekkaMark className="intro-logo-mark" /></div>}
     {introStage === "splash" && <SekkaSplash onComplete={finishIntro} />}
     {toast && <div className={`toast toast-${toast.tone}`} role={toast.tone === "error" ? "alert" : "status"} aria-live={toast.tone === "error" ? "assertive" : "polite"}><span className="toast-icon" aria-hidden="true">{toast.tone === "success" ? "✓" : toast.tone === "error" ? "!" : "i"}</span><span className="toast-message">{toast.text}</span><button onClick={() => { setToast(null); if (toastTimer.current !== null) window.clearTimeout(toastTimer.current); toastTimer.current = null; }} aria-label={t("إغلاق")}>×</button></div>}
-    {session ? <RouteChunkBoundary><Suspense fallback={<RouteLoading />}><Workspace session={session} onSignOut={signOut} notify={notify} themePreference={themePreference} resolvedTheme={resolvedTheme} onThemePreferenceChange={setThemePreference} /></Suspense></RouteChunkBoundary> : currentPathname() === "/login" || currentPathname() === "/register" || protectedPagePaths.has(currentPathname()) ? <RouteChunkBoundary><Suspense fallback={<RouteLoading />}><AuthScreen onSignedIn={onSignedIn} notify={notify} /></Suspense></RouteChunkBoundary> : <LandingScreen />}
+    {session ? <RouteChunkBoundary><Suspense fallback={<RouteLoading />}><Workspace session={session} onSignOut={signOut} notify={notify} themePreference={themePreference} resolvedTheme={resolvedTheme} onThemePreferenceChange={setThemePreference} /></Suspense></RouteChunkBoundary> : currentPathname() === "/login" || currentPathname() === "/register" || isProtectedPath(currentPathname()) ? <RouteChunkBoundary><Suspense fallback={<RouteLoading />}><AuthScreen onSignedIn={onSignedIn} notify={notify} /></Suspense></RouteChunkBoundary> : <LandingScreen />}
   </div>;
 }
 

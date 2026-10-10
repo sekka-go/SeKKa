@@ -2271,14 +2271,137 @@ Deno.serve(async (req: Request) => {
       const [target, controls, captain, documents] = await Promise.all([
         db.from("users").select("id,full_name,phone_number,role,verified_at,created_at").eq("id", targetUserId).is("deleted_at", null).maybeSingle(),
         db.from("admin_user_controls").select("status,reason,updated_at,updated_by_user_id").eq("user_id", targetUserId).maybeSingle(),
-        db.from("captain_profiles").select("vehicle_type_id,vehicle_plate,license_number,verification_status,status").eq("user_id", targetUserId).maybeSingle(),
-        db.from("user_verifications").select("id,document_type,status,rejection_reason,uploaded_at,reviewed_at").eq("user_id", targetUserId).order("uploaded_at", { ascending: false }).limit(20),
+        db.from("captain_profiles").select("vehicle_type_id,vehicle_plate,license_number,verification_status,status,grace_period_expires_at").eq("user_id", targetUserId).maybeSingle(),
+        db.from("user_verifications").select("id,document_type,status,rejection_reason,uploaded_at,reviewed_at,reviewed_by").eq("user_id", targetUserId).order("uploaded_at", { ascending: false }).limit(20),
       ]);
       const queryError = target.error ?? controls.error ?? captain.error ?? documents.error;
       if (queryError) throw queryError;
       if (!target.data) return error("المستخدم غير موجود.", 404, origin);
+
+      const isRider = target.data.role === "rider";
+      const [membersResult, dailyRequestsResult, demandRequestsResult, savedPlacesResult, preferredRoutesResult, commuterPreferencesResult, captainLinesResult, captainPoolTripsResult, captainMatchesResult] = await Promise.all([
+        isRider ? db.from("pool_members").select("id,group_id,status,joined_at,cancelled_at,price_decision").eq("rider_user_id", targetUserId).order("joined_at", { ascending: false }).limit(500) : Promise.resolve({ data: [], error: null }),
+        isRider ? db.from("daily_commute_requests").select("id,status,created_at,requested_at").eq("rider_user_id", targetUserId).order("created_at", { ascending: false }).limit(500) : Promise.resolve({ data: [], error: null }),
+        isRider ? db.from("demand_requests").select("id,status,trip_date,arrival_time,pickup_label,dropoff_label,seats,created_at").eq("rider_user_id", targetUserId).order("created_at", { ascending: false }).limit(500) : Promise.resolve({ data: [], error: null }),
+        isRider ? db.from("rider_saved_places").select("place_type,label,updated_at").eq("user_id", targetUserId).order("updated_at", { ascending: false }).limit(100) : Promise.resolve({ data: [], error: null }),
+        isRider ? db.from("rider_preferred_routes").select("pickup_label,dropoff_label,updated_at").eq("user_id", targetUserId).maybeSingle() : Promise.resolve({ data: null, error: null }),
+        isRider ? db.from("rider_commuter_preferences").select("usual_days,usual_departure_time,usual_return_time,frequent_places,updated_at").eq("user_id", targetUserId).maybeSingle() : Promise.resolve({ data: null, error: null }),
+        !isRider && target.data.role === "captain" ? db.from("captain_lines").select("id,vehicle_type_id,origin_label,destination_label,arrival_time,service_days,seats,price_per_seat,payment_methods,women_only,status,created_at").eq("captain_user_id", targetUserId).order("created_at", { ascending: false }).limit(100) : Promise.resolve({ data: [], error: null }),
+        !isRider && target.data.role === "captain" ? db.from("pool_trips").select("id,group_id,service_date,direction,departure_at,status,completed_at").eq("captain_user_id", targetUserId).order("departure_at", { ascending: false }).limit(500) : Promise.resolve({ data: [], error: null }),
+        !isRider && target.data.role === "captain" ? db.from("matches").select("id,daily_commute_request_id,matched_at").eq("captain_user_id", targetUserId).order("matched_at", { ascending: false }).limit(500) : Promise.resolve({ data: [], error: null }),
+      ]);
+      const activityError = membersResult.error ?? dailyRequestsResult.error ?? demandRequestsResult.error ?? savedPlacesResult.error ?? preferredRoutesResult.error ?? commuterPreferencesResult.error ?? captainLinesResult.error ?? captainPoolTripsResult.error ?? captainMatchesResult.error;
+      if (activityError) throw activityError;
+
+      const poolMembers = membersResult.data ?? [];
+      const groupIds = [...new Set(poolMembers.map((item) => item.group_id))];
+      const groupTripsResult = groupIds.length
+        ? await db.from("pool_trips").select("id,group_id,service_date,direction,departure_at,status,completed_at").in("group_id", groupIds).order("departure_at", { ascending: false }).limit(1000)
+        : { data: [], error: null };
+      if (groupTripsResult.error) throw groupTripsResult.error;
+      const poolTrips = isRider
+        ? (groupTripsResult.data ?? []).filter((trip) => poolMembers.some((member) => {
+            if (member.group_id !== trip.group_id) return false;
+            const rawTripTime = String(trip.departure_at ?? trip.service_date ?? "");
+            const joinedAt = String(member.joined_at ?? "");
+            const cancelledAt = member.cancelled_at ? String(member.cancelled_at) : null;
+            if (rawTripTime.length === 10) return joinedAt.slice(0, 10) <= rawTripTime && (!cancelledAt || cancelledAt.slice(0, 10) >= rawTripTime);
+            const tripTime = Date.parse(rawTripTime);
+            const joinedTime = Date.parse(joinedAt);
+            const cancelledTime = cancelledAt ? Date.parse(cancelledAt) : Number.POSITIVE_INFINITY;
+            return Number.isFinite(tripTime) && Number.isFinite(joinedTime) && joinedTime <= tripTime && cancelledTime >= tripTime;
+          }))
+        : (captainPoolTripsResult.data ?? []);
+
+      const matchIds = (captainMatchesResult.data ?? []).map((item) => item.id);
+      const riderRequestIds = (dailyRequestsResult.data ?? []).map((item) => item.id);
+      const dailyMatchesResult = isRider && riderRequestIds.length
+        ? await db.from("matches").select("id,daily_commute_request_id,matched_at").in("daily_commute_request_id", riderRequestIds).order("matched_at", { ascending: false }).limit(1000)
+        : { data: [], error: null };
+      if (dailyMatchesResult.error) throw dailyMatchesResult.error;
+      const tripMatchIds = isRider ? (dailyMatchesResult.data ?? []).map((item) => item.id) : matchIds;
+      const dailyTripsResult = tripMatchIds.length
+        ? await db.from("trips").select("id,match_id,status,started_at,completed_at,total_distance_km,total_amount").in("match_id", tripMatchIds).order("started_at", { ascending: false }).limit(1000)
+        : { data: [], error: null };
+      if (dailyTripsResult.error) throw dailyTripsResult.error;
+
+      const memberIds = poolMembers.map((item) => item.id);
+      const poolTripIds = poolTrips.map((item) => item.id);
+      const [settlementsResult, paymentsResult, savedAuditResult] = await Promise.all([
+        isRider && memberIds.length
+          ? db.from("pool_ledger").select("id,trip_id,member_id,rider_amount,captain_share_amount,settlement_status,created_at").in("member_id", memberIds).order("created_at", { ascending: false }).limit(1000)
+          : !isRider && poolTripIds.length
+            ? db.from("pool_ledger").select("id,trip_id,member_id,rider_amount,captain_share_amount,settlement_status,created_at").in("trip_id", poolTripIds).order("created_at", { ascending: false }).limit(1000)
+            : Promise.resolve({ data: [], error: null }),
+        dailyTripsResult.data?.length
+          ? db.from("payments").select("id,trip_id,amount,reported_at,confirmed_at").in("trip_id", dailyTripsResult.data.map((item) => item.id)).order("confirmed_at", { ascending: false }).limit(1000)
+          : Promise.resolve({ data: [], error: null }),
+        db.from("admin_audit_logs").select("id,action,reason,created_at,actor_user_id").eq("resource_type", "user").eq("resource_id", String(targetUserId)).order("created_at", { ascending: false }).limit(50),
+      ]);
+      if (settlementsResult.error || paymentsResult.error || savedAuditResult.error) throw settlementsResult.error ?? paymentsResult.error ?? savedAuditResult.error;
+      const paymentRows = paymentsResult.data ?? [];
+      const paymentIds = paymentRows.map((item) => item.id);
+      const paymentEventsResult = paymentIds.length
+        ? await db.from("payment_status_events").select("payment_id,to_status,adjusted_amount,created_at").in("payment_id", paymentIds).order("created_at", { ascending: true }).limit(2000)
+        : { data: [], error: null };
+      if (paymentEventsResult.error) throw paymentEventsResult.error;
+      const latestPaymentEvent = new Map<number, { to_status: string; adjusted_amount: number | null }>();
+      for (const event of paymentEventsResult.data ?? []) latestPaymentEvent.set(event.payment_id, event);
+      const effectivePayments = paymentRows.map((item) => {
+        const event = latestPaymentEvent.get(item.id);
+        const status = event?.to_status ?? "confirmed";
+        return { id: item.id, trip_id: item.trip_id, amount: event && status === "adjusted" && event.adjusted_amount !== null ? event.adjusted_amount : item.amount, status, confirmed_at: item.confirmed_at, reported_at: item.reported_at };
+      });
+      const validPayments = effectivePayments.filter((item) => item.confirmed_at && ["confirmed", "resolved", "adjusted"].includes(item.status));
+      const settledRows = (settlementsResult.data ?? []).filter((item) => item.settlement_status === "settled");
+      const journeyRows = [...poolTrips.map((item) => ({ id: item.id, type: "pool", status: item.status, date: item.departure_at ?? item.service_date })), ...(dailyTripsResult.data ?? []).map((item) => ({ id: item.id, type: "daily", status: item.status, date: item.started_at ?? item.completed_at }))]
+        .sort((a, b) => String(b.date ?? "").localeCompare(String(a.date ?? "")));
+      const requestRows = [
+        ...(dailyRequestsResult.data ?? []).map((item) => ({ id: item.id, type: "daily", status: item.status, date: item.requested_at ?? item.created_at })),
+        ...(demandRequestsResult.data ?? []).map((item) => ({ id: item.id, type: "pool", status: item.status, date: item.created_at, trip_date: item.trip_date })),
+      ].sort((a, b) => String(b.date ?? "").localeCompare(String(a.date ?? "")));
+      const recentDocuments = (documents.data ?? []).map((document) => ({ ...document, document_label: verificationDocLabels[document.document_type] ?? document.document_type }));
+      const commuterPreferences = commuterPreferencesResult.data;
+      const frequentPlaces = Array.isArray(commuterPreferences?.frequent_places)
+        ? commuterPreferences.frequent_places.map((place: unknown) => typeof place === "object" && place !== null ? { label: clean((place as Record<string, unknown>).label) ? String((place as Record<string, unknown>).label).slice(0, 120) : "" } : null).filter((place): place is { label: string } => Boolean(place?.label))
+        : [];
       await writeAdminAudit(user!.id, "user.details_viewed", "user", String(targetUserId), null);
-      return reply({ user: { ...target.data, account_status: controls.data?.status ?? "active", control: controls.data, captain: captain.data, verification_documents: documents.data ?? [] } }, 200, origin);
+      return reply({ user: {
+        ...target.data,
+        account_status: controls.data?.status ?? "active",
+        control: controls.data,
+        captain: captain.data,
+        verification_documents: recentDocuments,
+        journey_summary: {
+          requests_total: (dailyRequestsResult.data?.length ?? 0) + (demandRequestsResult.data?.length ?? 0),
+          requests_cancelled: (dailyRequestsResult.data ?? []).filter((item) => item.status === "cancelled").length + (demandRequestsResult.data ?? []).filter((item) => item.status === "cancelled").length,
+          pool_memberships_total: poolMembers.length,
+          pool_memberships_cancelled: poolMembers.filter((item) => item.status === "cancelled").length,
+          journeys_completed: journeyRows.filter((item) => item.status === "completed").length,
+          journeys_cancelled: journeyRows.filter((item) => item.status === "cancelled").length,
+          history_truncated: poolMembers.length >= 500 || (dailyRequestsResult.data?.length ?? 0) >= 500 || (demandRequestsResult.data?.length ?? 0) >= 500 || poolTrips.length >= 500 || (dailyTripsResult.data?.length ?? 0) >= 1000 || journeyRows.length > 100 || requestRows.length > 100,
+        },
+        journey_history: journeyRows.slice(0, 100),
+        request_history: requestRows.slice(0, 100),
+        saved_places: savedPlacesResult.data ?? [],
+        preferred_route: preferredRoutesResult.data,
+        commuter_preferences: commuterPreferences ? { usual_days: commuterPreferences.usual_days, usual_departure_time: commuterPreferences.usual_departure_time, usual_return_time: commuterPreferences.usual_return_time, frequent_places: frequentPlaces, updated_at: commuterPreferences.updated_at } : null,
+        captain_lines: captainLinesResult.data ?? [],
+        financial_summary: {
+          confirmed_payments_total: validPayments.reduce((total, item) => total + Number(item.amount ?? 0), 0),
+          confirmed_payments_count: validPayments.length,
+          settled_ledger_total: settledRows.reduce((total, item) => total + Number(isRider ? item.rider_amount : item.captain_share_amount), 0),
+          settled_ledger_count: settledRows.length,
+          latest_payment_at: validPayments.map((item) => item.confirmed_at).filter(Boolean).sort().at(-1) ?? null,
+          latest_settlement_at: settledRows.map((item) => item.created_at).filter(Boolean).sort().at(-1) ?? null,
+          history_truncated: paymentRows.length >= 1000 || (settlementsResult.data?.length ?? 0) >= 1000 || (paymentEventsResult.data?.length ?? 0) >= 2000 || effectivePayments.length + settledRows.length > 100,
+        },
+        payment_history: [
+          ...effectivePayments.map((item) => ({ id: item.id, trip_id: item.trip_id, source: "daily", amount: Number(item.amount), status: item.status, created_at: item.confirmed_at ?? item.reported_at })),
+          ...settledRows.map((item) => ({ id: item.id, trip_id: item.trip_id, source: "pool", amount: Number(isRider ? item.rider_amount : item.captain_share_amount), status: "settled", created_at: item.created_at })),
+        ].sort((a, b) => String(b.created_at ?? "").localeCompare(String(a.created_at ?? ""))).slice(0, 100),
+        account_history: savedAuditResult.data ?? [],
+      } }, 200, origin);
     }
     if (req.method === "PATCH" && userProfileRoute) {
       if (!clean(body.reason) || body.reason.trim().length > 1000) return error("اكتب سبب تعديل الحساب.", 400, origin);
