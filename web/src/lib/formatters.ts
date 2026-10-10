@@ -20,7 +20,23 @@ export function statusLabel(status: string) {
     assigned: "أُسندت إليك", in_progress: "جارية", needs_captain_profile: "أكمل بياناتك",
     pending: "قيد المراجعة", approved: "موثّق", rejected: "مرفوض",
   };
-  return labels[status] ? t(labels[status]!) : status;
+  return labels[status] ? t(labels[status]!) : t(status.replaceAll("_", " "));
+}
+
+export function roleLabel(role: string) {
+  const labels: Record<string, string> = { rider: "راكب", captain: "كابتن", admin: "مدير النظام" };
+  return labels[role] ? t(labels[role]!) : t("مستخدم");
+}
+
+export function vehicleTypeLabel(type: string) {
+  const labels: Record<string, string> = { private_car: "سيارة ملاكي", hiace: "هاي إس" };
+  return labels[type] ? t(labels[type]!) : t("نوع مركبة غير معروف");
+}
+
+export function maskLastFour(value: string | null | undefined) {
+  if (!value) return t("غير متاح");
+  const digits = value.replace(/\s/g, "");
+  return digits.length <= 4 ? `••••${digits}` : `••••${digits.slice(-4)}`;
 }
 
 export function formatDate(value: string) {

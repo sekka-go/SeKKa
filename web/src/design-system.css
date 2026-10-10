@@ -155,6 +155,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 .app-shell .button:disabled, .app-shell button:disabled {
   color: var(--color-disabled);
   cursor: not-allowed;
+  opacity: .72;
 }
 .app-shell .button-small { min-height: var(--touch-target-min); }
 .app-shell .button-size-sm { padding: .5rem .75rem; font-size: .875rem; }
@@ -223,6 +224,25 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   overflow-x: auto;
 }
 .app-shell .commuter-preferences-days label { min-height: var(--touch-target-min); }
+.app-shell .number-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: fit-content;
+}
+.app-shell .number-stepper output {
+  display: grid;
+  place-items: center;
+  min-width: 3rem;
+  min-height: var(--touch-target-min);
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  font-weight: 700;
+}
+.app-shell .form-field { display: grid; gap: var(--space-2); }
+.app-shell .form-field-label { color: var(--color-text); font-weight: 700; }
 
 .app-shell .booking-form-surface .booking-review-actions,
 .app-shell .onboarding-card form > .button-primary {
@@ -262,6 +282,63 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   background: var(--color-primary);
   border-color: var(--color-primary);
 }
+.app-shell .admin-control-panel button:not(.user-actions-menu > summary) {
+  min-height: var(--touch-target-min);
+  padding: .55rem .85rem;
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+}
+.app-shell .admin-control-panel .admin-primary,
+.app-shell .admin-control-panel .admin-primary-bg {
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.app-shell .admin-control-panel .admin-text-error,
+.app-shell .admin-control-panel .admin-border-error { color: var(--color-danger); border-color: var(--color-danger); }
+.app-shell .user-actions-menu { position: relative; }
+.app-shell .user-actions-menu > summary {
+  display: grid;
+  place-items: center;
+  width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  cursor: pointer;
+  list-style: none;
+  font-size: 1.4rem;
+}
+.app-shell .user-actions-menu > summary::-webkit-details-marker { display: none; }
+.app-shell .user-actions-menu-list {
+  position: absolute;
+  z-index: 30;
+  inset-block-start: calc(100% + var(--space-2));
+  inset-inline-end: 0;
+  display: grid;
+  gap: var(--space-2);
+  width: min(17rem, calc(100vw - 2rem));
+  padding: var(--space-2);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  box-shadow: 0 12px 32px var(--color-shadow);
+}
+.app-shell .user-actions-menu-list button { min-height: var(--touch-target-min); text-align: start; }
+.app-shell .user-actions-menu-list button.user-status-action[data-status="banned"],
+.app-shell .user-actions-menu-list button.user-status-action[data-status="suspended"] {
+  color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 10%, var(--color-surface));
+  border-color: var(--color-danger);
+}
+.app-shell .admin-user-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.app-shell .admin-user-filters label { display: grid; gap: var(--space-2); }
+.app-shell .admin-percentage-field { display: flex; align-items: center; gap: var(--space-2); }
+.app-shell .admin-percentage-field input { flex: 1; min-width: 0; }
+@media (max-width: 560px) { .app-shell .admin-user-filters { grid-template-columns: 1fr; } }
 
 @media (max-width: 560px) {
   .app-shell .admin-captain-row { gap: var(--space-2); }

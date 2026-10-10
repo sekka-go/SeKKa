@@ -45,7 +45,7 @@ export default function CaptainWorkspace({ session, section, setSection, notify 
   const [lineDays, setLineDays] = useState<number[]>([0, 1, 2, 3, 4]);
   const [lineArrival, setLineArrival] = useState("08:00");
   const [lineSeats, setLineSeats] = useState(3);
-  const [linePrice, setLinePrice] = useState(0);
+  const [linePrice, setLinePrice] = useState("");
   const [linePaymentMethods, setLinePaymentMethods] = useState<string[]>(["cash"]);
   const isOffersSection = section === "offers" || section === "publish";
   const publishOpen = section === "publish";
@@ -124,7 +124,7 @@ export default function CaptainWorkspace({ session, section, setSection, notify 
         origin_label: origin.label ?? originSearch, origin_lat: origin.lat, origin_lng: origin.lng,
         destination_label: destination.label ?? destinationSearch, destination_lat: destination.lat, destination_lng: destination.lng,
         intermediate_stops: [], arrival_time: lineArrival, service_days: lineDays, seats: lineSeats,
-        price_per_seat: linePrice, payment_methods: linePaymentMethods,
+        price_per_seat: Number(linePrice), payment_methods: linePaymentMethods,
       } });
       setOrigin(null); setDestination(null); setOriginSearch(""); setDestinationSearch(""); setSection("offers");
       notify(t("تم نشر مسارك. سنجمع طلبات الركاب المتشابهة تلقائيًا."), "success");
@@ -203,8 +203,8 @@ export default function CaptainWorkspace({ session, section, setSection, notify 
       <LocationSearchField kind="dropoff" title={t("نقطة الوصول")} value={destinationSearch} token={session.token} onChange={(value) => { setDestinationSearch(value); setDestination(null); }} onSelect={(point) => { setDestination(point); setDestinationSearch(point.label ?? ""); }} onChooseMap={() => { setLineMapTarget("dropoff"); setLineMapOpen(true); }} onFocus={() => undefined} pointSelected={destination?.lat != null && destination.lng != null} />
       <label>{t("وقت الوصول المتوقع")}<input type="time" value={lineArrival} onChange={(event) => setLineArrival(event.target.value)} required /></label>
       <fieldset className="capability-list service-days"><legend>{t("أيام تشغيل المسار")}</legend>{[[0,"الأحد"],[1,"الاثنين"],[2,"الثلاثاء"],[3,"الأربعاء"],[4,"الخميس"],[5,"الجمعة"],[6,"السبت"]].map(([day,label]) => <label className="toggle-row" key={day}><input type="checkbox" checked={lineDays.includes(Number(day))} onChange={() => setLineDays((current) => current.includes(Number(day)) ? current.filter((item) => item !== Number(day)) : [...current, Number(day)])} /><span>{t(String(label))}</span></label>)}</fieldset>
-      <label>{t("المقاعد المتاحة")}<input type="number" min="1" max={profile?.vehicle_type_id === "hiace" ? 14 : 3} value={lineSeats} onChange={(event) => setLineSeats(Number(event.target.value))} required /></label>
-      <label>{t("سعر المقعد")}<input type="number" min="0" step="0.5" value={linePrice} onChange={(event) => setLinePrice(Number(event.target.value))} required /></label>
+      <div className="form-field"><span className="form-field-label">{t("المقاعد المتاحة")}</span><div className="number-stepper" role="group" aria-label={t("المقاعد المتاحة")}><Button type="button" variant="secondary" size="sm" aria-label={t("تقليل عدد المقاعد")} disabled={lineSeats <= 1} onClick={() => setLineSeats((seats) => Math.max(1, seats - 1))}>−</Button><output aria-live="polite">{lineSeats}</output><Button type="button" variant="secondary" size="sm" aria-label={t("زيادة عدد المقاعد")} disabled={lineSeats >= (profile?.vehicle_type_id === "hiace" ? 14 : 3)} onClick={() => setLineSeats((seats) => Math.min(profile?.vehicle_type_id === "hiace" ? 14 : 3, seats + 1))}>＋</Button></div></div>
+      <label>{t("سعر المقعد")}<input type="number" inputMode="decimal" min="0" step="0.5" value={linePrice} onChange={(event) => setLinePrice(event.target.value)} required aria-describedby="line-price-help" /><small id="line-price-help">{t("أدخل السعر بالجنيه لكل مقعد.")}</small></label>
       <fieldset className="capability-list payment-methods"><legend>{t("طرق الدفع")}</legend>{[["cash","نقدًا"],["instapay","إنستاباي"],["wallet","محفظة إلكترونية"]].map(([method,label]) => <label className="toggle-row" key={method}><input type="checkbox" checked={linePaymentMethods.includes(method)} onChange={() => setLinePaymentMethods((current) => current.includes(method) ? current.filter((item) => item !== method) : [...current, method])} /><span>{t(String(label))}</span></label>)}</fieldset>
       {lineMapOpen && <section className="booking-map-panel" aria-label={t("تحديد مسار الرحلة")}><div className="booking-map-toolbar"><p className="map-instruction">{t("حدد")} {lineMapTarget === "pickup" ? t("نقطة البداية") : t("نقطة الوصول")}  {t("على الخريطة")}</p><button type="button" className="map-close-button" onClick={() => setLineMapOpen(false)}>×</button></div><div className="booking-map"><MapPicker pickup={origin} dropoff={destination} mode={lineMapTarget} restrictToGreaterCairo onPick={(mode, point) => { if (mode === "pickup") { setOrigin(point); setOriginSearch(point.label ?? t("موقع محدد على الخريطة")); } else { setDestination(point); setDestinationSearch(point.label ?? t("موقع محدد على الخريطة")); } setLineMapOpen(false); }} /></div></section>}
       <button className="button button-primary button-small" disabled={busy || !lineDays.length}>{busy ? t("جارٍ نشر المسار…") : t("نشر المسار")}</button>
