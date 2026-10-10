@@ -518,3 +518,5 @@ button, input, select, textarea { color-scheme: inherit; }
   gap: .3rem;
 }
 .landing-header .brand-logo-copy { text-align: center; }
+
+.auth-page-header .brand-logo-copy { text-align: center; }
