@@ -329,6 +329,11 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   box-shadow: 0 12px 32px var(--color-shadow);
 }
 .app-shell .user-actions-menu-list button { min-height: var(--touch-target-min); text-align: start; }
+.app-shell .user-actions-menu-list button.admin-user-delete-trigger {
+  color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 10%, var(--color-surface));
+  border-color: var(--color-danger);
+}
 .app-shell .admin-user-delete-confirm {
   display: grid;
   gap: var(--space-2);
