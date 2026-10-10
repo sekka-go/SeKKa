@@ -52,3 +52,20 @@ Baseline reviewed from the current React routes and screen components on 2026-10
 
 No backend, auth, role authorization, or business rules are changed by this UX task. Authenticated screenshots and end-to-end role flows require seeded rider/captain/admin sessions; anonymous testing cannot establish those states.
 
+## Implemented changes and verification
+
+- Introduced shared semantic color tokens and common surfaces/controls for Light and Dark themes. Shared button states no longer lower disabled opacity, which was washing out labels. The mobile landing CTA now keeps its gold fill and dark text when shared button styles load later in the cascade.
+- Added a persistent bottom navigation on narrow screens. Rider tabs are Home, My Trips, Messages and Account; the new-ride action remains within Home. Captain tabs are Home, My Routes, My Trips, Messages and Account. Home is the initial captain section, while “My Routes” opens publishing.
+- Consolidated captain availability/location actions into compact icon controls, grouped service day/payment choices into consistent controls, added a seat stepper, and clarified the price field. Admin user row actions now sit in a menu with role/status filters, masked license tails, consistent labels and percent units.
+- Updated map route colors and browser theme-color metadata to read active semantic theme tokens. Status labels in admin reuse the shared localized formatter.
+- Checked the primary foreground and control token pairs against WCAG 2.1 AA: text/background contrast is 17.06:1 in Dark and 13.91:1 in Light; muted text/surface is 9.85:1 and 8.22:1; primary button text/fill is 9.42:1; borders/surfaces are 3.07:1 and 3.30:1 respectively. Text pairs exceed 4.5:1; borders exceed the 3:1 non-text threshold.
+- Arabic and English locale files both contain 1,171 flattened keys with no missing counterparts.
+- Captured after screenshots at 390×844 for dark, light, and system color-scheme modes under `docs/ux-screenshots/after-home-*.png`. The mobile CTA and route illustration were visually checked in Dark and Light.
+- Verification passed: `pnpm lint`, `pnpm typecheck`, `pnpm test` (217 passed, 0 failed), and `pnpm build`.
+
+## Remaining audit limits
+
+- Authenticated role pages cannot be visually exercised without seeded rider, captain and admin sessions. Existing server tests cover service/API behavior, but no UI end-to-end test dependency is installed; no dependency was added for this audit.
+- The repo still has legacy literal colors in older CSS bundles. Semantic tokens and shared high-specificity rules cover the audited shared controls and surfaces, and inline route/map colors now use tokens; a full CSS-by-CSS replacement should be handled screen-by-screen with authenticated visual coverage to avoid regressions.
+- Admin destructive/edit actions still use existing browser confirmation/prompt behavior. Replacing that interaction needs a dedicated dialog flow and was kept out of this pass to avoid changing operational behavior.
+
