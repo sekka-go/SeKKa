@@ -1,11 +1,14 @@
-import { t } from "../i18n/runtime";
+import { t, useLanguage } from "../i18n/runtime";
 import BrandLogo from "../components/BrandLogo";
 
 export default function LandingScreen() {
+  const { language, setLanguage } = useLanguage();
   return (
-    <main className="landing-page">
-      <header className="landing-header">
+    <main className="landing-page stitch-welcome-page">
+      <header className="landing-header stitch-welcome-header">
         <a className="landing-brand" href="/" aria-label={t("سِكَّة، الرئيسية")}><BrandLogo /></a>
+        <span className="stitch-welcome-availability"><i />{t("متاح في القاهرة والجيزة")}</span>
+        <button className="stitch-language-toggle" type="button" onClick={() => setLanguage(language === "ar" ? "en" : "ar")} aria-label={language === "ar" ? "Switch to English" : "التبديل إلى العربية"}>{language === "ar" ? "English" : "العربية"}</button>
       </header>
 
       <section className="landing-hero">
@@ -14,9 +17,10 @@ export default function LandingScreen() {
           <h1>{t("مشوارك اليومي،")}<br /><em>{t("على سِكَّة أسهل.")}</em></h1>
           <p>{t("شارك الطريق مع ناس رايحة في نفس اتجاهك، وخلي مشاويرك أسهل.")}</p>
           <div className="landing-hero-actions">
-            <a className="button landing-primary-cta" href="/login">{t("ابدأ رحلتك الآن")} <span aria-hidden="true">←</span></a>
+            <a className="button landing-primary-cta" href="/register">{t("ابدأ رحلتك الآن")} <span aria-hidden="true">←</span></a>
+            <a className="button stitch-welcome-login" href="/login">{t("تسجيل الدخول / لدي حساب بالفعل")}</a>
           </div>
-          <div className="landing-trust"><span className="landing-trust-dot" />{t("متاح في القاهرة والجيزة")}</div>
+          <div className="landing-trust"><span className="landing-trust-dot" />{t("رحلات مشتركة موثوقة في القاهرة الكبرى")}</div>
         </div>
 
         <div className="landing-route-card" aria-hidden="true">
@@ -43,6 +47,12 @@ export default function LandingScreen() {
             </g>
           </svg>
         </div>
+      </section>
+
+      <section className="stitch-welcome-benefits" aria-label={t("مميزات سِكّة")}>
+        <div><span aria-hidden="true">◉</span><strong>{t("ادفع مباشرة للكابتن")}</strong><p>{t("بدون محفظة أو عمولات وسيطة")}</p></div>
+        <div><span aria-hidden="true">⌁</span><strong>{t("تجميع ذكي للطلبات")}</strong><p>{t("نوصلك بركاب على نفس المسار")}</p></div>
+        <div><span aria-hidden="true">✓</span><strong>{t("ابدأ بدون توثيق البطاقة")}</strong><p>{t("توثيق الراكب اختياري")}</p></div>
       </section>
 
     </main>

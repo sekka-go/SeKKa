@@ -1156,7 +1156,7 @@ Deno.serve(async (req: Request) => {
       const radiusKm = Number(config?.find((item) => item.config_key === "demand_route_radius_km")?.numeric_value);
       const arrivalWindow = Number(config?.find((item) => item.config_key === "demand_arrival_window_minutes")?.numeric_value);
       if (!Number.isFinite(radiusKm) || !Number.isFinite(arrivalWindow)) return error("إعدادات البحث غير متاحة الآن.", 503, origin);
-      const { data: lines, error: searchError } = await db.from("captain_lines").select("id,vehicle_type_id,origin_label,origin_lat,origin_lng,destination_label,destination_lat,destination_lng,intermediate_stops,arrival_time,service_days,seats,price_per_seat,payment_methods,status").eq("status", "active").eq("vehicle_type_id", body.vehicle_type_id).contains("service_days", [day]).limit(100);
+      const { data: lines, error: searchError } = await db.from("captain_lines").select("id,captain_user_id,vehicle_type_id,origin_label,origin_lat,origin_lng,destination_label,destination_lat,destination_lng,intermediate_stops,arrival_time,service_days,seats,price_per_seat,payment_methods,women_only,status").eq("status", "active").eq("vehicle_type_id", body.vehicle_type_id).contains("service_days", [day]).limit(100);
       if (searchError) throw searchError;
       const lineIds = (lines ?? []).map((line) => Number(line.id));
       const usedSeats = new Map<number, number>();
@@ -1180,7 +1180,21 @@ Deno.serve(async (req: Request) => {
         const timeDiff = Math.min(Math.abs(arrivalMinutes - lineMinutes), 1440 - Math.abs(arrivalMinutes - lineMinutes));
         return { ...line, seats_available: Number(line.seats) - (usedSeats.get(Number(line.id)) ?? 0), pickup_distance_km: Math.round(pickupDistanceKm * 100) / 100, dropoff_distance_km: Math.round(dropoffDistanceKm * 100) / 100, arrival_difference_minutes: timeDiff };
       }).filter((line) => line.seats_available > 0 && line.pickup_distance_km <= radiusKm && line.dropoff_distance_km <= radiusKm && line.arrival_difference_minutes <= arrivalWindow).sort((a, b) => a.pickup_distance_km + a.dropoff_distance_km - b.pickup_distance_km - b.dropoff_distance_km).slice(0, 20);
-      return reply({ lines: matches }, 200, origin);
+      const captainIds = [...new Set(matches.map((line) => Number(line.captain_user_id)))];
+      const [captainsResult, captainProfilesResult] = captainIds.length ? await Promise.all([
+        db.from("users").select("id,full_name").in("id", captainIds),
+        db.from("captain_profiles").select("user_id,verification_status").in("user_id", captainIds),
+      ]) : [{ data: [], error: null }, { data: [], error: null }];
+      if (captainsResult.error) throw captainsResult.error;
+      if (captainProfilesResult.error) throw captainProfilesResult.error;
+      const captainNameById = new Map((captainsResult.data ?? []).map((captain) => [Number(captain.id), captain.full_name]));
+      const verifiedCaptainIds = new Set((captainProfilesResult.data ?? []).filter((profile) => profile.verification_status === "approved").map((profile) => Number(profile.user_id)));
+      const publicMatches = matches.map(({ captain_user_id, ...line }) => ({
+        ...line,
+        captain_name: captainNameById.get(Number(captain_user_id)) ?? "كابتن سِكّة",
+        captain_verified: verifiedCaptainIds.has(Number(captain_user_id)),
+      }));
+      return reply({ lines: publicMatches }, 200, origin);
     }
     const dailyMatch = path.match(/^\/rider\/requests\/(\d+)\/match$/);
     if (req.method === "POST" && dailyMatch) {

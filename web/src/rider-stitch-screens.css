@@ -1,0 +1,227 @@
+/* Complete SeKKa rider screen system, based on the supplied Stitch PRD. */
+.app-shell .stitch-welcome-page { display: grid; gap: 1.2rem; width: min(100%,72rem); min-height: 100dvh; margin-inline: auto; padding: max(1rem,env(safe-area-inset-top)) clamp(1rem,4vw,2rem) max(1.5rem,env(safe-area-inset-bottom)); }
+.app-shell .stitch-welcome-header { display: grid; grid-template-columns: minmax(0,1fr) auto auto; align-items: center; gap: .65rem; min-height: 4.2rem; border-block-end: 1px solid var(--color-border); }
+.app-shell .stitch-welcome-availability { display: inline-flex; align-items: center; gap: .4rem; padding: .4rem .65rem; border-radius: 999px; color: var(--color-text-secondary); background: var(--color-surface-raised); font-size: .74rem; }
+.app-shell .stitch-welcome-availability i { width: .5rem; height: .5rem; border-radius: 50%; background: var(--color-secondary); }
+.app-shell .stitch-language-toggle { min-height: 2.5rem; padding-inline: .8rem; border: 1px solid var(--color-border); border-radius: 999px; color: var(--color-text-primary); background: var(--color-surface); font-weight: 750; }
+.app-shell .stitch-welcome-page .landing-hero { grid-template-columns: minmax(0,1fr) minmax(14rem,.8fr); align-items: center; gap: clamp(1rem,4vw,3rem); min-height: 0; padding-block: clamp(1rem,4vw,2rem); }
+.app-shell .stitch-welcome-page .landing-hero-copy { max-width: 40rem; }
+.app-shell .stitch-welcome-page .landing-hero-copy > p { max-width: 35rem; }
+.app-shell .stitch-welcome-page .landing-route-card { width: min(100%,25rem); aspect-ratio: .86; justify-self: center; border-radius: 2rem; }
+.app-shell .stitch-welcome-page .landing-hero-actions { align-items: stretch; }
+.app-shell .stitch-welcome-page .landing-primary-cta,.app-shell .stitch-welcome-login { min-height: 3.2rem; border-radius: 999px; }
+.app-shell .stitch-welcome-login { display: inline-flex; align-items: center; justify-content: center; padding-inline: 1.2rem; border: 1px solid var(--color-border); color: var(--color-text-primary); background: var(--color-surface-raised); font-weight: 800; text-decoration: none; }
+.app-shell .stitch-welcome-benefits { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .75rem; padding: .8rem; border: 1px solid var(--color-border); border-radius: 1.25rem; background: var(--color-surface); box-shadow: 0 .5rem 1.3rem var(--color-shadow); }
+.app-shell .stitch-welcome-benefits > div { display: grid; grid-template-columns: 2.5rem minmax(0,1fr); align-items: center; column-gap: .65rem; padding: .7rem; border-radius: .9rem; background: var(--color-surface-raised); }
+.app-shell .stitch-welcome-benefits > div > span { grid-row: span 2; display: grid; width: 2.4rem; height: 2.4rem; place-items: center; border-radius: .75rem; color: var(--color-primary-text); background: var(--color-primary); font-size: 1.15rem; }
+.app-shell .stitch-welcome-benefits strong { font-size: .88rem; }
+.app-shell .stitch-welcome-benefits p { margin: .1rem 0 0; color: var(--color-text-secondary); font-size: .76rem; }
+.workspace .stitch-rider-flow {
+  --rider-soft: color-mix(in srgb, var(--color-info) 10%, var(--color-surface));
+  --rider-soft-strong: color-mix(in srgb, var(--color-info) 16%, var(--color-surface));
+  display: grid; gap: 1rem; width: min(100%, 58rem); margin-inline: auto; padding-block-end: 1.25rem;
+  color: var(--color-text-primary);
+}
+.workspace .stitch-screen-header { display: grid; grid-template-columns: 2.75rem minmax(0,1fr) 2.75rem; align-items: center; gap: .75rem; padding: .4rem 0 .9rem; border-block-end: 1px solid var(--color-border); }
+.workspace .stitch-screen-header h2 { margin: .14rem 0 .2rem; font-size: clamp(1.2rem,3vw,1.65rem); line-height: 1.35; }
+.workspace .stitch-screen-header p { margin: 0; color: var(--color-text-secondary); font-size: .88rem; line-height: 1.55; }
+.workspace .stitch-screen-header .eyebrow { color: var(--color-secondary); font-size: .72rem; font-weight: 800; }
+.workspace .stitch-back,.workspace .stitch-header-icon { display: grid; width: 2.65rem; height: 2.65rem; place-items: center; border: 1px solid var(--color-border); border-radius: 50%; color: var(--color-text-primary); background: var(--color-surface); }
+.workspace .stitch-back { font-size: 1.3rem; }
+.workspace .stitch-header-icon { color: var(--color-secondary); background: var(--rider-soft); }
+.workspace .stitch-search-card,.workspace .stitch-detail-card,.workspace .stitch-confirmation,.workspace .stitch-trip-map,.workspace .stitch-result-card,.workspace .stitch-route-summary { min-width: 0; padding: 1rem; border: 1px solid var(--color-border); border-radius: 1.2rem; background: var(--color-surface); box-shadow: 0 .4rem 1.2rem var(--color-shadow); }
+.workspace .stitch-card-title { display: flex; align-items: center; gap: .8rem; padding-block-end: .9rem; border-block-end: 1px solid var(--color-border); }
+.workspace .stitch-card-title > div,.workspace .stitch-auto-match-banner > div { display: grid; gap: .12rem; }
+.workspace .stitch-card-title strong { font-size: 1.03rem; }
+.workspace .stitch-card-title small { color: var(--color-text-secondary); }
+.workspace .stitch-icon-circle { display: grid; width: 2.55rem; height: 2.55rem; flex: 0 0 auto; place-items: center; border-radius: .85rem; color: var(--color-secondary); background: var(--rider-soft-strong); }
+.workspace .stitch-search-form { display: grid; gap: .9rem; padding-block-start: .9rem; }
+.workspace .stitch-location-stack { position: relative; display: grid; gap: .65rem; }
+.workspace .stitch-rider-flow .location-search { min-width: 0; }
+.workspace .stitch-rider-flow .location-search > label { display: block; margin-block-end: .32rem; color: var(--color-text-primary); font-size: .8rem; font-weight: 750; }
+.workspace .stitch-rider-flow .location-search-input-wrap { min-height: 3.25rem; border: 1px solid var(--color-border); border-radius: .9rem; background: var(--color-surface-raised); }
+.workspace .stitch-rider-flow .location-search input { min-height: 3rem; padding-inline: .85rem; color: var(--color-text-primary); background: transparent; }
+.workspace .stitch-rider-flow .location-search input::placeholder { color: var(--color-text-secondary); opacity: 1; }
+.workspace .stitch-rider-flow .location-search-map-button { color: var(--color-secondary); }
+.workspace .stitch-swap-route { position: absolute; z-index: 2; inset-inline-start: .7rem; top: 50%; display: grid; width: 2.2rem; height: 2.2rem; place-items: center; border: 1px solid var(--color-border); border-radius: 50%; color: var(--color-secondary); background: var(--color-surface); font-size: 1.2rem; }
+.workspace .stitch-search-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .7rem; }
+.workspace .stitch-field,.workspace .stitch-seat-control { display: grid; min-width: 0; gap: .35rem; color: var(--color-text-primary); font-size: .8rem; font-weight: 750; }
+.workspace .stitch-field input,.workspace .stitch-field select { width: 100%; min-width: 0; min-height: 3rem; padding: .6rem .75rem; border: 1px solid var(--color-border); border-radius: .8rem; color: var(--color-text-primary); background: var(--color-surface-raised); }
+.workspace .stitch-seat-control > div { display: flex; min-height: 3rem; align-items: center; justify-content: space-between; padding: .25rem; border: 1px solid var(--color-border); border-radius: .8rem; background: var(--color-surface-raised); }
+.workspace .stitch-seat-control button { display: grid; width: 2.35rem; height: 2.35rem; place-items: center; border: 0; border-radius: .7rem; color: var(--color-primary-text); background: var(--color-primary); font-size: 1.2rem; }
+.workspace .stitch-seat-control button:first-child { color: var(--color-text-primary); background: var(--color-surface); }
+.workspace .stitch-map-toggle { display: flex; min-height: 2.75rem; align-items: center; gap: .6rem; padding: .4rem .7rem; border: 1px solid var(--color-border); border-radius: .8rem; color: var(--color-secondary); background: var(--rider-soft); font-weight: 750; text-align: start; }
+.workspace .stitch-map-toggle span { margin-inline-start: auto; }
+.workspace .stitch-map-panel { display: grid; gap: .65rem; }
+.workspace .stitch-map-target { display: flex; gap: .5rem; }
+.workspace .stitch-map-target button { min-height: 2.5rem; padding-inline: .8rem; border: 1px solid var(--color-border); border-radius: 999px; color: var(--color-text-secondary); background: var(--color-surface-raised); }
+.workspace .stitch-map-target button.is-selected { border-color: var(--color-primary); color: var(--color-primary-text); background: var(--color-primary); }
+.workspace .stitch-map-panel .booking-map { min-height: 17rem; overflow: hidden; border-radius: 1rem; }
+.workspace .stitch-payment-note,.workspace .stitch-auto-match-banner,.workspace .stitch-estimate-note { display: flex; align-items: flex-start; gap: .75rem; padding: .85rem; border-radius: 1rem; color: var(--color-text-primary); background: var(--rider-soft); }
+.workspace .stitch-payment-note strong,.workspace .stitch-auto-match-banner strong { display: block; margin-block-end: .2rem; }
+.workspace .stitch-payment-note p,.workspace .stitch-auto-match-banner p,.workspace .stitch-estimate-note p { margin: 0; color: var(--color-text-secondary); font-size: .83rem; line-height: 1.65; }
+.workspace .stitch-primary-cta { min-height: 3.35rem; border-radius: 999px; font-size: .97rem; font-weight: 850; }
+.workspace .stitch-primary-cta > span { margin-inline-start: .35rem; font-size: 1.15rem; }
+.workspace .stitch-saved-places { display: grid; gap: .65rem; }
+.workspace .stitch-section-heading { display: flex; align-items: center; justify-content: space-between; gap: .7rem; }
+.workspace .stitch-section-heading h3 { margin: .15rem 0 0; font-size: 1.08rem; }
+.workspace .stitch-section-heading .eyebrow { color: var(--color-secondary); font-size: .74rem; font-weight: 800; }
+.workspace .stitch-place-chips { display: grid; grid-template-columns: repeat(auto-fit,minmax(9rem,1fr)); gap: .6rem; }
+.workspace .stitch-place-chips button { display: flex; min-width: 0; min-height: 3.1rem; align-items: center; gap: .55rem; padding: .55rem .7rem; border: 1px solid transparent; border-radius: .9rem; color: var(--color-text-primary); background: var(--rider-soft); text-align: start; }
+.workspace .stitch-place-chips button span { display: grid; width: 1.9rem; height: 1.9rem; flex: 0 0 auto; place-items: center; border-radius: 50%; color: var(--color-secondary); background: var(--color-surface); }
+.workspace .stitch-place-chips button strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.workspace .stitch-inline-empty { margin: 0; padding: .8rem; border: 1px dashed var(--color-border); border-radius: .8rem; color: var(--color-text-secondary); }
+.workspace .stitch-route-summary { display: grid; grid-template-columns: 2.5rem minmax(0,1fr) auto; align-items: center; gap: .7rem; padding: .8rem; background: var(--rider-soft); }
+.workspace .stitch-route-summary-icon { display: grid; width: 2.4rem; height: 2.4rem; place-items: center; border-radius: 50%; color: var(--color-secondary); background: var(--color-surface); }
+.workspace .stitch-route-summary > div:nth-child(2) { display: grid; min-width: 0; gap: .22rem; }
+.workspace .stitch-route-summary strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .88rem; }
+.workspace .stitch-route-summary strong span { color: var(--color-secondary); }
+.workspace .stitch-route-summary small { color: var(--color-text-secondary); }
+.workspace .stitch-route-summary > button { border: 0; color: var(--color-secondary); background: transparent; font-weight: 800; }
+.workspace .stitch-filter-row { display: flex; align-items: center; gap: .5rem; overflow-x: auto; padding-block-end: .15rem; }
+.workspace .stitch-filter-row button { display: inline-flex; min-height: 2.4rem; flex: 0 0 auto; align-items: center; gap: .4rem; padding-inline: .75rem; border: 1px solid var(--color-border); border-radius: 999px; color: var(--color-text-secondary); background: var(--color-surface); font-size: .78rem; font-weight: 750; }
+.workspace .stitch-filter-row button.active { border-color: var(--color-text-primary); color: var(--color-primary-text); background: var(--color-text-primary); }
+.workspace .stitch-filter-row > span { flex: 0 0 auto; margin-inline-start: auto; color: var(--color-text-secondary); font-size: .76rem; }
+.workspace .stitch-results-list { display: grid; gap: .8rem; }
+.workspace .stitch-result-card { position: relative; display: grid; gap: .7rem; padding: .9rem; }
+.workspace .stitch-result-top { display: grid; grid-template-columns: 2.8rem minmax(0,1fr) auto; align-items: center; gap: .65rem; }
+.workspace .stitch-captain-avatar { display: grid; width: 2.7rem; height: 2.7rem; place-items: center; border: 2px solid var(--color-surface); border-radius: 50%; color: var(--color-primary-text); background: var(--color-secondary); font-weight: 850; }
+.workspace .stitch-captain-copy { display: grid; min-width: 0; gap: .15rem; }
+.workspace .stitch-captain-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.workspace .stitch-captain-copy small,.workspace .stitch-fare small { color: var(--color-text-secondary); font-size: .74rem; }
+.workspace .stitch-fare { display: grid; justify-items: end; }
+.workspace .stitch-fare strong { color: var(--color-text-primary); font-size: 1.2rem; font-variant-numeric: tabular-nums; }
+.workspace .stitch-vehicle-strip { display: flex; min-height: 2.2rem; align-items: center; gap: .5rem; padding: .4rem .6rem; border-radius: .65rem; color: var(--color-text-secondary); background: var(--color-surface-raised); font-size: .78rem; }
+.workspace .stitch-vehicle-strip > span:last-child { margin-inline-start: auto; padding: .22rem .45rem; border-radius: 999px; color: var(--color-success); background: color-mix(in srgb,var(--color-success) 13%,var(--color-surface)); }
+.workspace .stitch-line-tags { display: flex; flex-wrap: wrap; gap: .35rem; }
+.workspace .stitch-line-tags > span { padding: .24rem .48rem; border-radius: 999px; color: var(--color-text-secondary); background: var(--color-surface-raised); font-size: .7rem; }
+.workspace .stitch-route-timeline { position: relative; display: grid; grid-template-columns: 1rem minmax(0,1fr); gap: .65rem; padding: .35rem 0; }
+.workspace .stitch-route-timeline > div { display: grid; gap: 1rem; }
+.workspace .stitch-route-timeline > div strong { overflow-wrap: anywhere; font-size: .9rem; }
+.workspace .stitch-route-rail { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding-block: .18rem; }
+.workspace .stitch-route-rail::before { position: absolute; top: .4rem; bottom: .4rem; width: 2px; content: ""; border-inline-start: 2px dashed var(--color-secondary); }
+.workspace .stitch-route-rail i,.workspace .stitch-route-rail b { z-index: 1; width: .7rem; height: .7rem; border: 2px solid var(--color-surface); border-radius: 50%; background: var(--color-secondary); box-shadow: 0 0 0 1px var(--color-secondary); }
+.workspace .stitch-route-rail b { background: var(--color-primary); box-shadow: 0 0 0 1px var(--color-primary); }
+.workspace .stitch-result-times { display: flex; justify-content: space-between; gap: .7rem; padding-block: .55rem; border-block: 1px solid var(--color-border); }
+.workspace .stitch-result-times span { display: grid; gap: .1rem; }
+.workspace .stitch-result-times small { color: var(--color-text-secondary); font-size: .72rem; }
+.workspace .stitch-result-times strong { font-size: .88rem; font-variant-numeric: tabular-nums; }
+.workspace .stitch-result-actions { display: grid; grid-template-columns: auto minmax(0,1fr); gap: .5rem; }
+.workspace .stitch-result-actions .button { min-height: 2.8rem; padding-inline: .75rem; }
+.workspace .stitch-match-label { position: absolute; inset-block-start: -.42rem; inset-inline-end: .8rem; padding: .2rem .55rem; border-radius: 0 0 .55rem .55rem; color: var(--color-primary-text); background: var(--color-primary); font-size: .68rem; font-weight: 850; }
+.workspace .stitch-no-results { display: grid; justify-items: start; gap: .5rem; padding: 1.1rem; }
+.workspace .stitch-no-results-icon { display: grid; width: 2.6rem; height: 2.6rem; place-items: center; border-radius: .8rem; color: var(--color-primary-text); background: var(--color-primary); }
+.workspace .stitch-no-results h3 { margin: 0; }
+.workspace .stitch-no-results p { margin: 0; color: var(--color-text-secondary); line-height: 1.6; }
+.workspace .stitch-custom-prompt { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .7rem; padding: .85rem; border: 1px solid var(--color-border); border-radius: 1rem; background: var(--rider-soft); }
+.workspace .stitch-custom-prompt p { margin: .18rem 0 0; color: var(--color-text-secondary); font-size: .82rem; }
+.workspace .stitch-custom-prompt .button { min-height: 2.55rem; }
+.workspace .stitch-trip-map { overflow: hidden; padding: 0; }
+.workspace .stitch-map-art { position: relative; min-height: 14rem; overflow: hidden; background: linear-gradient(145deg,var(--color-surface-raised),var(--rider-soft-strong)); }
+.workspace .stitch-map-art::before { position: absolute; inset: 0; content: ""; opacity: .58; background: linear-gradient(28deg,transparent 48%,var(--color-border) 49%,transparent 50%),linear-gradient(95deg,transparent 48%,var(--color-border) 49%,transparent 50%),linear-gradient(155deg,transparent 48%,var(--color-border) 49%,transparent 50%); background-size: 6rem 5rem,5rem 7rem,7rem 6rem; }
+.workspace .stitch-map-art .map-road { position: absolute; height: .45rem; border-radius: 99px; background: var(--color-surface); transform-origin: left center; box-shadow: 0 1px 5px var(--color-shadow); }
+.workspace .stitch-map-art .road-one { top: 72%; left: 8%; width: 85%; transform: rotate(-24deg); }
+.workspace .stitch-map-art .road-two { top: 65%; left: 34%; width: 45%; height: .22rem; background: var(--color-secondary); transform: rotate(-21deg); }
+.workspace .stitch-map-art .road-three { top: 30%; left: 14%; width: 66%; height: .18rem; transform: rotate(17deg); }
+.workspace .stitch-map-art .map-route-line { position: absolute; top: 28%; left: 22%; width: 57%; height: 47%; border: .28rem solid var(--color-secondary); border-inline-start-color: transparent; border-top-color: transparent; border-radius: 45% 40% 50% 55%; transform: rotate(-32deg); filter: drop-shadow(0 2px 5px var(--color-shadow)); }
+.workspace .stitch-map-art .map-pin-start,.workspace .stitch-map-art .map-pin-end { position: absolute; display: grid; width: 2rem; height: 2rem; place-items: center; border: 2px solid var(--color-surface); border-radius: 50%; color: var(--color-primary-text); background: var(--color-primary); font-style: normal; }
+.workspace .stitch-map-art .map-pin-start { inset-inline-start: 18%; bottom: 18%; }.workspace .stitch-map-art .map-pin-end { inset-inline-end: 18%; top: 15%; color: white; background: var(--color-secondary); }
+.workspace .stitch-map-art .map-car-marker { position: absolute; top: 48%; left: 53%; display: grid; width: 2.5rem; height: 2.5rem; place-items: center; border-radius: 50%; color: var(--color-primary); background: var(--color-background); box-shadow: 0 5px 16px var(--color-shadow); }
+.workspace .stitch-map-art > b { position: absolute; inset-block-start: .75rem; inset-inline-end: .75rem; padding: .35rem .6rem; border-radius: 99px; color: var(--color-text-primary); background: var(--color-surface); font-size: .75rem; }
+.workspace .stitch-map-summary { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem; padding: .7rem .9rem; color: var(--color-text-secondary); font-size: .78rem; }
+.workspace .stitch-detail-card { display: grid; gap: .8rem; }
+.workspace .stitch-detail-card > p { margin: 0; color: var(--color-text-secondary); }
+.workspace .stitch-status-dot,.workspace .stitch-verified { padding: .28rem .6rem; border-radius: 999px; color: var(--color-success); background: color-mix(in srgb,var(--color-success) 14%,var(--color-surface)); font-size: .74rem; font-weight: 800; }
+.workspace .stitch-detail-facts { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .55rem; }
+.workspace .stitch-detail-facts span { display: grid; gap: .2rem; padding: .65rem; border-radius: .7rem; color: var(--color-text-secondary); background: var(--color-surface-raised); font-size: .75rem; }
+.workspace .stitch-detail-facts strong { color: var(--color-text-primary); font-size: .88rem; }
+.workspace .stitch-rating { color: var(--color-warning) !important; }
+.workspace .stitch-screen-details > .stitch-primary-cta { position: sticky; z-index: 4; bottom: calc(4.8rem + env(safe-area-inset-bottom)); box-shadow: 0 .5rem 1.25rem var(--color-shadow); }
+.workspace .stitch-auto-match-banner { align-items: flex-start; border: 1px solid color-mix(in srgb,var(--color-secondary) 38%,var(--color-border)); }
+.workspace .stitch-check-row { display: flex; align-items: center; gap: .55rem; color: var(--color-text-primary); font-size: .84rem; }
+.workspace .stitch-check-row input { width: 1.15rem; height: 1.15rem; accent-color: var(--color-secondary); }
+.workspace .stitch-estimate-note { align-items: center; color: var(--color-secondary); }
+.workspace .stitch-confirmation { display: grid; justify-items: center; gap: .7rem; padding: clamp(1.2rem,5vw,2.4rem); text-align: center; }
+.workspace .stitch-confirmation-mark { display: grid; width: 4.4rem; height: 4.4rem; place-items: center; border-radius: 50%; color: var(--color-success); background: color-mix(in srgb,var(--color-success) 15%,var(--color-surface)); }
+.workspace .stitch-confirmation .eyebrow { color: var(--color-secondary); font-weight: 800; }
+.workspace .stitch-confirmation h3 { margin: 0; font-size: 1.4rem; }
+.workspace .stitch-confirmation > p { max-width: 33rem; margin: 0; color: var(--color-text-secondary); line-height: 1.7; }
+.workspace .stitch-confirmation-route { display: grid; width: 100%; gap: .35rem; margin-block: .4rem; padding: .85rem; border-radius: .9rem; background: var(--rider-soft); text-align: start; }
+.workspace .stitch-confirmation-route > span { color: var(--color-text-secondary); font-size: .8rem; }
+.workspace .stitch-confirmation .button-quiet { color: var(--color-text-secondary); }
+/* Home and profile use the same hierarchy as the supplied full-screen concepts. */
+.workspace.rider-home-active .page-heading { display: none; }
+.workspace .rider-home-experience { width: min(100%,64rem); margin-inline: auto; }
+.workspace .rider-home-experience .dashboard-main { gap: 1rem; }
+.workspace .rider-home-experience .rider-hero { min-height: 12rem; grid-template-columns: minmax(0,1fr) 11rem; padding: clamp(1rem,3vw,1.5rem); border-radius: 1.25rem; background: linear-gradient(125deg,var(--color-surface),var(--color-surface-raised)); box-shadow: 0 .45rem 1.2rem var(--color-shadow); }
+.workspace .rider-home-experience .rider-hero h2 { font-size: clamp(1.5rem,4vw,2.35rem); }
+.workspace .rider-home-experience .rider-hero-art { width: 10rem; border-radius: 1.1rem; }
+.workspace .stitch-home-search-card { display: grid; gap: .1rem; padding: 1rem; border: 1px solid var(--color-border); border-radius: 1.2rem; background: var(--color-surface); box-shadow: 0 .4rem 1rem var(--color-shadow); }
+.workspace .stitch-home-search-meta { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .65rem; }
+.workspace .stitch-home-search-note { display: flex; align-items: center; gap: .45rem; color: var(--color-secondary); font-size: .78rem; }
+.workspace .rider-home-experience .rider-shortcuts,.workspace .rider-home-experience .rider-home-requests { padding: .9rem; border: 1px solid var(--color-border); border-radius: 1.1rem; background: var(--color-surface); }
+.workspace .rider-account-experience .account-grid { grid-template-columns: repeat(2,minmax(0,1fr)); align-items: start; gap: .85rem; }
+.workspace .rider-account-experience .account-grid > .surface { border: 1px solid var(--color-border); border-radius: 1.1rem; background: var(--color-surface); box-shadow: 0 .3rem 1rem var(--color-shadow); }
+.workspace .rider-account-experience .account-card { grid-column: 1/-1; display: grid; grid-template-columns: 5rem minmax(0,1fr); align-items: center; column-gap: .9rem; }
+.workspace .rider-account-experience .account-card > .account-avatar { grid-row: span 4; width: 4.7rem; height: 4.7rem; }
+.workspace .rider-account-experience .account-avatar-actions,.workspace .rider-account-experience .account-avatar-note,.workspace .rider-account-experience .account-meta { grid-column: 1/-1; }
+.workspace .rider-requests-page { width: min(100%,58rem); margin-inline: auto; }
+.workspace .rider-trips-experience { width: min(100%,64rem); margin-inline: auto; }
+.workspace .stitch-live-trip { display: grid; grid-template-columns: minmax(0,1.05fr) minmax(0,1fr); overflow: hidden; padding: 0; border: 1px solid var(--color-border); border-radius: 1.2rem; background: var(--color-surface); box-shadow: 0 .4rem 1.1rem var(--color-shadow); }
+.workspace .stitch-live-trip-map { min-height: 19rem; background: var(--color-surface-raised); }
+.workspace .stitch-live-trip-map .map-canvas { min-height: 19rem; }
+.workspace .stitch-live-trip-content { display: grid; align-content: start; gap: .7rem; padding: 1rem; }
+.workspace .stitch-live-trip-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem; }
+.workspace .stitch-live-trip-heading > span { display: inline-flex; align-items: center; gap: .4rem; color: var(--color-secondary); font-size: .72rem; font-weight: 750; }
+.workspace .stitch-live-trip-heading > span i { width: .55rem; height: .55rem; border-radius: 50%; background: var(--color-secondary); box-shadow: 0 0 .5rem var(--color-secondary); }
+.workspace .stitch-live-trip-heading > strong { padding: .22rem .5rem; border-radius: 99px; color: var(--color-success); background: color-mix(in srgb,var(--color-success) 13%,var(--color-surface)); font-size: .75rem; }
+.workspace .stitch-live-trip-content h3 { margin: 0; font-size: 1.25rem; }
+.workspace .stitch-live-trip-content > p { margin: 0; color: var(--color-text-secondary); font-size: .85rem; }
+.workspace .stitch-live-progress { height: .45rem; overflow: hidden; border-radius: 99px; background: var(--color-surface-raised); }
+.workspace .stitch-live-progress span { display: block; height: 100%; border-radius: inherit; background: var(--color-secondary); transition: width .25s ease; }
+.workspace .stitch-live-stops { display: grid; gap: .55rem; }
+.workspace .stitch-live-stops > span { display: flex; align-items: center; gap: .5rem; color: var(--color-text-secondary); font-size: .82rem; }
+.workspace .stitch-live-stops > span.is-reached { color: var(--color-success); }
+.workspace .stitch-live-stops i { width: .7rem; height: .7rem; border: 2px solid var(--color-border); border-radius: 50%; background: var(--color-surface); }
+.workspace .stitch-live-stops .is-reached i { border-color: var(--color-secondary); background: var(--color-secondary); }
+.workspace .stitch-live-trip-content > small { color: var(--color-text-secondary); font-size: .7rem; line-height: 1.5; }
+.workspace .rider-profile-heading { margin-block-end: .85rem; padding: 1rem; border: 1px solid var(--color-border); border-radius: 1rem; background: var(--color-surface); }
+.workspace .rider-profile-heading .eyebrow { color: var(--color-secondary); font-size: .75rem; font-weight: 800; }
+.workspace .rider-profile-heading h2 { margin: .2rem 0; font-size: 1.35rem; }
+.workspace .rider-profile-heading p { margin: 0; color: var(--color-text-secondary); font-size: .85rem; }
+.workspace .rider-account-experience .app-settings-stack { display: grid; gap: .85rem; margin-block-start: .85rem; }
+.workspace .rider-account-experience .app-settings-section,.workspace .rider-account-experience .app-settings-notifications { padding: 1rem; border: 1px solid var(--color-border); border-radius: 1.1rem; background: var(--color-surface); box-shadow: 0 .3rem 1rem var(--color-shadow); }
+.workspace .rider-account-experience .app-settings-section-heading h2,.workspace .rider-account-experience .app-settings-notifications h2 { margin: 0; }
+.workspace .rider-account-experience .app-settings-section-heading p,.workspace .rider-account-experience .app-settings-notifications p { color: var(--color-text-secondary); }
+@media (max-width: 680px) {
+  .app-shell .stitch-welcome-page { gap: .8rem; }
+  .app-shell .stitch-welcome-header { grid-template-columns: minmax(0,1fr) auto; }
+  .app-shell .stitch-welcome-availability { display: none; }
+  .app-shell .stitch-welcome-page .landing-hero { grid-template-columns: minmax(0,1fr); gap: .85rem; }
+  .app-shell .stitch-welcome-page .landing-route-card { width: min(100%,20rem); aspect-ratio: 1.12; }
+  .app-shell .stitch-welcome-benefits { grid-template-columns: minmax(0,1fr); }
+  .workspace .stitch-rider-flow { gap: .8rem; }
+  .workspace .stitch-screen-header { grid-template-columns: 2.5rem minmax(0,1fr) 2.4rem; gap: .5rem; }
+  .workspace .stitch-back,.workspace .stitch-header-icon { width: 2.35rem; height: 2.35rem; }
+  .workspace .stitch-screen-header p { font-size: .8rem; }
+  .workspace .stitch-search-card,.workspace .stitch-detail-card,.workspace .stitch-confirmation,.workspace .stitch-result-card,.workspace .stitch-route-summary { padding: .8rem; border-radius: 1rem; }
+  .workspace .stitch-result-actions { grid-template-columns: 1fr; }
+  .workspace .stitch-result-actions .button { width: 100%; }
+  .workspace .stitch-no-results { justify-items: stretch; }
+  .workspace .stitch-detail-facts { gap: .4rem; }
+  .workspace .rider-home-experience .rider-hero { grid-template-columns: minmax(0,1fr) 5.6rem; min-height: 0; }
+  .workspace .rider-home-experience .rider-hero-art { width: 5.6rem; }
+  .workspace .rider-home-experience .rider-hero-actions { flex-direction: column; align-items: flex-start; gap: .65rem; }
+  .workspace .stitch-home-search-meta { grid-template-columns: minmax(0,1fr); }
+  .workspace .rider-account-experience .account-grid { grid-template-columns: minmax(0,1fr); }
+  .workspace .rider-account-experience .account-card { grid-column: auto; }
+  .workspace .stitch-live-trip { grid-template-columns: minmax(0,1fr); }
+  .workspace .stitch-live-trip-map,.workspace .stitch-live-trip-map .map-canvas { min-height: 14rem; }
+}
+@media (max-width: 390px) {
+  .workspace .stitch-search-grid { grid-template-columns: minmax(0,1fr); }
+  .workspace .stitch-route-summary { grid-template-columns: 2.2rem minmax(0,1fr); }
+  .workspace .stitch-route-summary > button { grid-column: 2; justify-self: start; }
+  .workspace .stitch-filter-row > span { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .workspace .stitch-rider-flow * { scroll-behavior: auto !important; transition-duration: .01ms !important; } }
