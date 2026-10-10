@@ -1,3 +1,4 @@
+import { t } from "../i18n/runtime";
 import { useEffect, useRef, useState } from "react";
 import MapPicker from "./MapPickerLoader";
 import type { MapPickMode, MapPoint } from "../MapPicker";
@@ -159,18 +160,18 @@ export default function RiderRoutePreferences({ token, notify, onComplete, onboa
 
   const save = async () => {
     if (onboarding && (!hasPoint(route.pickup) || !hasPoint(route.dropoff))) {
-      setError("حدد نقطة الركوب المفضلة ونقطة الوصول المفضلة أولًا.");
+      setError(t("حدد نقطة الركوب المفضلة ونقطة الوصول المفضلة أولًا."));
       return;
     }
     if (!preferences.usual_days.length || !preferences.usual_departure_time || !preferences.usual_return_time || preferences.usual_return_time <= preferences.usual_departure_time) {
-      setError("حدد يومًا واحدًا على الأقل وتأكد أن وقت العودة بعد وقت الذهاب.");
+      setError(t("حدد يومًا واحدًا على الأقل وتأكد أن وقت العودة بعد وقت الذهاب."));
       return;
     }
     setSaving(true); setError("");
     try {
       const savedPreferences = await api<{ preferences: RiderCommuterPreferences }>("/rider/commuter-preferences", { method: "PUT", token, body: preferences });
       window.dispatchEvent(new CustomEvent<RiderCommuterPreferences>("sekka:rider-commuter-preferences", { detail: savedPreferences.preferences }));
-      if (!onboarding) notify("تم تحديث نقاطك المفضلة.", "success");
+      if (!onboarding) notify(t("تم تحديث نقاطك المفضلة."), "success");
       onComplete?.();
     } catch (cause) {
       setError(errorText(cause));
@@ -192,46 +193,46 @@ export default function RiderRoutePreferences({ token, notify, onComplete, onboa
     if (requestId === frequentAddressRequest.current) setFrequentQuery("");
   };
   const title = onboarding ? "نحدد طريقك المعتاد" : "مشاويرك المفضلة";
-  if (loading) return <section className="surface route-preferences-card"><p role="status">بنحمّل مشاويرك المفضلة…</p></section>;
+  if (loading) return <section className="surface route-preferences-card"><p role="status">{t("بنحمّل مشاويرك المفضلة…")}</p></section>;
 
   return <details className="surface route-preferences-card settings-disclosure route-preferences-disclosure" aria-labelledby="route-preferences-title" open={onboarding}>
-    <summary className="surface-heading"><span className="route-preferences-heading-copy">{onboarding && <span className="eyebrow">خطوة إعداد الحساب</span>}<strong id="route-preferences-title">{title}</strong><small>{onboarding ? "حدد نقطة الركوب والوصول المعتادتين لتظهر اقتراحات أقرب لخطك." : "احفظ طريقك المعتاد، وسنقترح عليك مشاوير تناسبك وتوفّر وقت البحث."}</small></span><span className="route-preferences-heading-actions"><span className="surface-icon" aria-hidden="true">⌖</span><span className="settings-disclosure-chevron" aria-hidden="true">⌄</span></span></summary>
+    <summary className="surface-heading"><span className="route-preferences-heading-copy">{onboarding && <span className="eyebrow">{t("خطوة إعداد الحساب")}</span>}<strong id="route-preferences-title">{title}</strong><small>{onboarding ? t("حدد نقطة الركوب والوصول المعتادتين لتظهر اقتراحات أقرب لخطك.") : t("احفظ طريقك المعتاد، وسنقترح عليك مشاوير تناسبك وتوفّر وقت البحث.")}</small></span><span className="route-preferences-heading-actions"><span className="surface-icon" aria-hidden="true">⌖</span><span className="settings-disclosure-chevron" aria-hidden="true">⌄</span></span></summary>
     <div className="route-preferences-content">
     <details className="settings-disclosure route-point-disclosure" open={onboarding}>
-      <summary><span><strong>نقطة الركوب والوصول</strong><small>اختر النقطتين اللتين تسلكهما غالبًا</small></span><span className="settings-disclosure-chevron" aria-hidden="true">⌄</span></summary>
+      <summary><span><strong>{t("نقطة الركوب والوصول")}</strong><small>{t("اختر النقطتين اللتين تسلكهما غالبًا")}</small></span><span className="settings-disclosure-chevron" aria-hidden="true">⌄</span></summary>
       <div className="settings-disclosure-panel">
         <div className="route-point-choices">{(["pickup", "dropoff"] as const).map((kind) => {
           const point = pointFor(kind);
           const label = kind === "pickup" ? "نقطة الركوب" : "نقطة الوصول";
           return <div className={`route-point-choice-wrap ${kind === "dropoff" ? "is-dropoff" : ""}`} key={kind}>
             <button type="button" className="route-point-choice" aria-expanded={editingPoint === kind} disabled={savingPoint === kind} onClick={() => { setEditingPoint((current) => current === kind ? null : kind); setQuery((current) => ({ ...current, [kind]: point?.label ?? "" })); }}>
-              <span className="route-point-choice-mark" aria-hidden="true">{kind === "pickup" ? "١" : "٢"}</span>
-              <span><strong>{label}</strong><small>{hasPoint(point) ? point.primaryLabel || point.label : "اضغط لاختيار النقطة"}</small>{hasPoint(point) && point.secondaryLabel && <small>{point.secondaryLabel}</small>}</span>
+              <span className="route-point-choice-mark" aria-hidden="true">{kind === "pickup" ? t("١") : t("٢")}</span>
+              <span><strong>{label}</strong><small>{hasPoint(point) ? point.primaryLabel || point.label : t("اضغط لاختيار النقطة")}</small>{hasPoint(point) && point.secondaryLabel && <small>{point.secondaryLabel}</small>}</span>
               <span className="route-point-choice-status" aria-hidden="true">{hasPoint(point) ? "✓" : "+"}</span>
             </button>
             {hasPoint(point) && <button type="button" className="route-point-delete" aria-label={`حذف ${label} المفضلة`} title={`حذف ${label}`} disabled={savingPoint === kind} onClick={() => void deletePoint(kind)}>{savingPoint === kind ? "…" : "×"}</button>}
           </div>;
         })}</div>
-        {editingPoint && <div className="route-point-editor"><LocationSearchField kind={editingPoint} title={editingPoint === "pickup" ? "نقطة الركوب المفضلة" : "نقطة الوصول المفضلة"} value={query[editingPoint]} token={token}
+        {editingPoint && <div className="route-point-editor"><LocationSearchField kind={editingPoint} title={editingPoint === "pickup" ? t("نقطة الركوب المفضلة") : t("نقطة الوصول المفضلة")} value={query[editingPoint]} token={token}
           onChange={(value) => { addressRequests.current[editingPoint]++; setQuery((current) => ({ ...current, [editingPoint]: value })); }}
           onSelect={(point) => { const kind = editingPoint; setPoint(kind, point); }} onChooseMap={() => { setMapTarget(editingPoint); setMapOpen(true); }} onFocus={() => undefined} pointSelected={hasPoint(pointFor(editingPoint))} />
-          {savingPoint === editingPoint && <small role="status">جارٍ حفظ النقطة…</small>}
+          {savingPoint === editingPoint && <small role="status">{t("جارٍ حفظ النقطة…")}</small>}
         </div>}
-        <small className="location-search-attribution">بيانات الأماكن © OpenStreetMap contributors</small>
+        <small className="location-search-attribution">{t("بيانات الأماكن © OpenStreetMap contributors")}</small>
       </div>
     </details>
     <details className="settings-disclosure commuter-disclosure" open={onboarding}>
-      <summary><span><strong>أيام ومواعيد مشوارك المعتاد</strong><small>تقدر تغيّرها وقت ما تحب</small></span><span className="settings-disclosure-chevron" aria-hidden="true">⌄</span></summary>
-      <fieldset className="commuter-preferences-schedule"><legend className="visually-hidden">أيام ومواعيد مشوارك المعتاد</legend><div className="commuter-preferences-days">{WEEK_DAYS.map((day, index) => <label key={day} className={preferences.usual_days.includes(index) ? "selected" : ""}><input type="checkbox" checked={preferences.usual_days.includes(index)} onChange={(event) => setPreferences((current) => ({ ...current, usual_days: event.target.checked ? [...current.usual_days, index].sort() : current.usual_days.filter((value) => value !== index) }))} />{day}</label>)}</div><div className="commuter-preferences-times"><TimePicker12h label="وقت الذهاب المعتاد" value={preferences.usual_departure_time.slice(0, 5)} onChange={(value) => setPreferences((current) => ({ ...current, usual_departure_time: value }))} /><TimePicker12h label="وقت العودة المعتاد" value={preferences.usual_return_time.slice(0, 5)} onChange={(value) => setPreferences((current) => ({ ...current, usual_return_time: value }))} /></div></fieldset>
+      <summary><span><strong>{t("أيام ومواعيد مشوارك المعتاد")}</strong><small>{t("تقدر تغيّرها وقت ما تحب")}</small></span><span className="settings-disclosure-chevron" aria-hidden="true">⌄</span></summary>
+      <fieldset className="commuter-preferences-schedule"><legend className="visually-hidden">{t("أيام ومواعيد مشوارك المعتاد")}</legend><div className="commuter-preferences-days">{WEEK_DAYS.map((day, index) => <label key={day} className={preferences.usual_days.includes(index) ? "selected" : ""}><input type="checkbox" checked={preferences.usual_days.includes(index)} onChange={(event) => setPreferences((current) => ({ ...current, usual_days: event.target.checked ? [...current.usual_days, index].sort() : current.usual_days.filter((value) => value !== index) }))} />{day}</label>)}</div><div className="commuter-preferences-times"><TimePicker12h label="وقت الذهاب المعتاد" value={preferences.usual_departure_time.slice(0, 5)} onChange={(value) => setPreferences((current) => ({ ...current, usual_departure_time: value }))} /><TimePicker12h label="وقت العودة المعتاد" value={preferences.usual_return_time.slice(0, 5)} onChange={(value) => setPreferences((current) => ({ ...current, usual_return_time: value }))} /></div></fieldset>
     </details>
     <details className="settings-disclosure frequent-disclosure" open={onboarding}>
-      <summary><span><strong>أماكن بتتردد عليها</strong><small>اختياري · لحد ٥ أماكن داخل القاهرة الكبرى</small></span><span className="settings-disclosure-chevron" aria-hidden="true">⌄</span></summary>
-      <div className="commuter-preferences-frequent"><LocationSearchField kind="pickup" title="أضف مكانًا متكررًا" value={frequentQuery} token={token} onChange={(value) => { frequentAddressRequest.current++; setFrequentQuery(value); }} onSelect={addFrequentPlace} onChooseMap={() => setFrequentMapOpen(true)} onFocus={() => undefined} pointSelected={false} /><div className="commuter-preferences-place-list">{resolvedFrequentPlaces.map((place) => <span key={`${place.lat}:${place.lng}`}>{place.label}<button type="button" onClick={() => setPreferences((current) => ({ ...current, frequent_places: current.frequent_places.filter((item) => item.lat !== place.lat || item.lng !== place.lng) }))} aria-label={`حذف ${place.label}`}>×</button></span>)}</div></div>
+      <summary><span><strong>{t("أماكن بتتردد عليها")}</strong><small>{t("اختياري · لحد ٥ أماكن داخل القاهرة الكبرى")}</small></span><span className="settings-disclosure-chevron" aria-hidden="true">⌄</span></summary>
+      <div className="commuter-preferences-frequent"><LocationSearchField kind="pickup" title={t("أضف مكانًا متكررًا")} value={frequentQuery} token={token} onChange={(value) => { frequentAddressRequest.current++; setFrequentQuery(value); }} onSelect={addFrequentPlace} onChooseMap={() => setFrequentMapOpen(true)} onFocus={() => undefined} pointSelected={false} /><div className="commuter-preferences-place-list">{resolvedFrequentPlaces.map((place) => <span key={`${place.lat}:${place.lng}`}>{place.label}<button type="button" onClick={() => setPreferences((current) => ({ ...current, frequent_places: current.frequent_places.filter((item) => item.lat !== place.lat || item.lng !== place.lng) }))} aria-label={`حذف ${place.label}`}>×</button></span>)}</div></div>
     </details>
-    {frequentMapOpen && <section className="booking-map-panel" aria-label="إضافة مكان متكرر من الخريطة"><div className="booking-map-toolbar"><p className="map-instruction">حدد مكانًا متكررًا داخل القاهرة الكبرى.</p><button type="button" className="map-close-button" onClick={() => setFrequentMapOpen(false)} aria-label="إغلاق الخريطة">×</button></div><div className="booking-map"><MapPicker pickup={null} dropoff={null} mode="pickup" restrictToGreaterCairo onOutsidePick={() => setError("اختار نقطة داخل القاهرة الكبرى فقط.")} onPick={(_kind, point) => { addFrequentPlace(point); setFrequentMapOpen(false); }} /></div></section>}
-    {mapOpen && <section className="booking-map-panel" aria-label="اختيار النقطة المفضلة من الخريطة"><div className="booking-map-toolbar"><p className="map-instruction">حدد {mapTarget === "pickup" ? "نقطة الركوب المفضلة" : "نقطة الوصول المفضلة"} على الخريطة.</p><button type="button" className="map-close-button" onClick={() => setMapOpen(false)} aria-label="إغلاق الخريطة">×</button></div><div className="booking-map"><MapPicker pickup={route.pickup} dropoff={route.dropoff} mode={mapTarget} restrictToGreaterCairo onOutsidePick={() => setError("اختار نقطة داخل القاهرة الكبرى فقط.")} onPick={(kind, point) => { setPoint(kind, point); setMapOpen(false); }} /></div></section>}
+    {frequentMapOpen && <section className="booking-map-panel" aria-label={t("إضافة مكان متكرر من الخريطة")}><div className="booking-map-toolbar"><p className="map-instruction">{t("حدد مكانًا متكررًا داخل القاهرة الكبرى.")}</p><button type="button" className="map-close-button" onClick={() => setFrequentMapOpen(false)} aria-label={t("إغلاق الخريطة")}>×</button></div><div className="booking-map"><MapPicker pickup={null} dropoff={null} mode="pickup" restrictToGreaterCairo onOutsidePick={() => setError(t("اختار نقطة داخل القاهرة الكبرى فقط."))} onPick={(_kind, point) => { addFrequentPlace(point); setFrequentMapOpen(false); }} /></div></section>}
+    {mapOpen && <section className="booking-map-panel" aria-label={t("اختيار النقطة المفضلة من الخريطة")}><div className="booking-map-toolbar"><p className="map-instruction">{t("حدد")} {mapTarget === "pickup" ? t("نقطة الركوب المفضلة") : t("نقطة الوصول المفضلة")}  {t("على الخريطة.")}</p><button type="button" className="map-close-button" onClick={() => setMapOpen(false)} aria-label={t("إغلاق الخريطة")}>×</button></div><div className="booking-map"><MapPicker pickup={route.pickup} dropoff={route.dropoff} mode={mapTarget} restrictToGreaterCairo onOutsidePick={() => setError(t("اختار نقطة داخل القاهرة الكبرى فقط."))} onPick={(kind, point) => { setPoint(kind, point); setMapOpen(false); }} /></div></section>}
     {error && <p className="inline-error" role="alert">{error}</p>}
-    <div className="route-preferences-footer"><small>{onboarding ? "تُحفظ كل نقطة فور اختيارها. احفظ الأيام والمواعيد والأماكن للمتابعة." : "النقاط تحفظ فور اختيارها. احفظ الأيام والمواعيد والأماكن عند تعديلها."}</small><button type="button" className="button button-primary button-small" onClick={() => void save()} disabled={saving || (onboarding && (!hasPoint(route.pickup) || !hasPoint(route.dropoff)))}>{saving ? "جارٍ حفظ التفضيلات…" : onboarding ? "حفظ التفضيلات والمتابعة" : "حفظ التفضيلات"}</button></div>
+    <div className="route-preferences-footer"><small>{onboarding ? t("تُحفظ كل نقطة فور اختيارها. احفظ الأيام والمواعيد والأماكن للمتابعة.") : t("النقاط تحفظ فور اختيارها. احفظ الأيام والمواعيد والأماكن عند تعديلها.")}</small><button type="button" className="button button-primary button-small" onClick={() => void save()} disabled={saving || (onboarding && (!hasPoint(route.pickup) || !hasPoint(route.dropoff)))}>{saving ? t("جارٍ حفظ التفضيلات…") : onboarding ? t("حفظ التفضيلات والمتابعة") : t("حفظ التفضيلات")}</button></div>
     </div>
   </details>;
 }

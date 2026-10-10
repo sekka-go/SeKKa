@@ -1,3 +1,4 @@
+import { getDirection, t } from "../i18n/runtime";
 export type InfoPageKey = "terms" | "privacy" | "faq";
 
 const documents: Record<Exclude<InfoPageKey, "faq">, { title: string; intro: string; sections: Array<[string, string]> }> = {
@@ -29,26 +30,26 @@ const documents: Record<Exclude<InfoPageKey, "faq">, { title: string; intro: str
 
 export function InfoDocumentContent({ page }: { page: Exclude<InfoPageKey, "faq"> }) {
   const document = documents[page];
-  return <div className="info-document-content" dir="rtl">
-    <p className="info-document-intro">{document.intro}</p>
+  return <div className="info-document-content" dir={getDirection()}>
+    <p className="info-document-intro">{t(document.intro)}</p>
     {document.sections.map(([heading, content]) => <section key={heading}>
-      <h3>{heading}</h3><p>{content}</p>
+      <h3>{t(heading)}</h3><p>{t(content)}</p>
     </section>)}
   </div>;
 }
 
 export default function InfoPages({ page, onBack }: { page: InfoPageKey; onBack: () => void }) {
-  const title = page === "faq" ? "الأسئلة الشائعة" : documents[page].title;
-  return <article className="surface info-page" dir="rtl">
+  const title = t(page === "faq" ? "الأسئلة الشائعة" : documents[page].title);
+  return <article className="surface info-page" dir={getDirection()}>
     <header className="info-page-header">
-      <button className="button button-outline" type="button" onClick={onBack}>رجوع ←</button>
-      <div><span className="eyebrow">مركز المساعدة</span><h2>{title}</h2></div>
+      <button className="button button-outline" type="button" onClick={onBack}>{t("رجوع ←")}</button>
+      <div><span className="eyebrow">{t("مركز المساعدة")}</span><h2>{title}</h2></div>
     </header>
     {page === "faq" ? <div className="info-faq-list">
-      <details><summary>كيف أبدأ مشوارًا جديدًا؟</summary><p>افتح «مشوار جديد»، وحدد نقاط الركوب والوصول والموعد والفئة، ثم راجع التفاصيل قبل التأكيد.</p></details>
-      <details><summary>كيف أوثّق حسابي؟</summary><p>من حسابك افتح «فعّل حسابك الآن» وارفع المستندات المطلوبة. تظهر حالة كل مستند بعد إرساله للمراجعة.</p></details>
-      <details><summary>كيف أستعيد كلمة السر؟</summary><p>من صفحة الدخول اختر «نسيت كلمة السر؟»، ثم افتح رابط بوت سِكّة في تيليجرام وشارك رقمك المسجل لاستلام رمز لمرة واحدة.</p></details>
-      <details><summary>كيف أتواصل مع الدعم؟</summary><p>استخدم «خدمة العملاء» في القائمة الجانبية أو راسل sekkago.app@gmail.com.</p></details>
+      <details><summary>{t("كيف أبدأ مشوارًا جديدًا؟")}</summary><p>{t("افتح «مشوار جديد»، وحدد نقاط الركوب والوصول والموعد والفئة، ثم راجع التفاصيل قبل التأكيد.")}</p></details>
+      <details><summary>{t("كيف أوثّق حسابي؟")}</summary><p>{t("من حسابك افتح «فعّل حسابك الآن» وارفع المستندات المطلوبة. تظهر حالة كل مستند بعد إرساله للمراجعة.")}</p></details>
+      <details><summary>{t("كيف أستعيد كلمة السر؟")}</summary><p>{t("من صفحة الدخول اختر «نسيت كلمة السر؟»، ثم افتح رابط بوت سِكّة في تيليجرام وشارك رقمك المسجل لاستلام رمز لمرة واحدة.")}</p></details>
+      <details><summary>{t("كيف أتواصل مع الدعم؟")}</summary><p>{t("استخدم «خدمة العملاء» في القائمة الجانبية أو راسل sekkago.app@gmail.com.")}</p></details>
     </div> : <InfoDocumentContent page={page} />}
   </article>;
 }

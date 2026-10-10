@@ -1,3 +1,4 @@
+import { t } from "../i18n/runtime";
 import { useCallback, useEffect, useRef, useState } from "react";
 import BrandLogo from "../components/BrandLogo";
 import AppIcon from "../components/AppIcon";
@@ -12,6 +13,7 @@ import VerificationReminder from "../components/VerificationReminder";
 import InfoPages, { type InfoPageKey } from "../components/InfoPages";
 import MessagesWorkspace from "./MessagesWorkspace";
 import ThemePreferenceCard, { type ThemePreference } from "../components/ThemePreferenceCard";
+import LanguageSelector from "../components/LanguageSelector";
 function cairoHour() {
   return Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Africa/Cairo", hour: "2-digit", hourCycle: "h23" }).format(new Date()));
 }
@@ -151,7 +153,7 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
   const refreshNotifications = useCallback(async () => {
     setNotificationsError("");
     try { const result = await api<{ notifications: Notification[] }>("/pool/notifications", { token: session.token }); setNotifications(result.notifications); }
-    catch (error) { setNotificationsError(error instanceof Error ? error.message : "تعذر تحميل الإشعارات. حاول مرة أخرى."); }
+    catch (error) { setNotificationsError(t(error instanceof Error ? error.message : "تعذر تحميل الإشعارات. حاول مرة أخرى.")); }
     finally { setNotificationsLoaded(true); }
   }, [session.token]);
   const registerPoolRefresh = useCallback((refresh: () => Promise<void>) => { riderPoolRefreshRef.current = refresh; }, []);
@@ -198,8 +200,8 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
     const invite = { title: "أطلب سِكّة", text: "شارك الطريق مع ناس رايحة في نفس اتجاهك.", url: window.location.origin };
     try {
       if (navigator.share) await navigator.share(invite);
-      else if (navigator.clipboard) { await navigator.clipboard.writeText(invite.url); notify("تم نسخ رابط سِكّة للمشاركة.", "success"); }
-      else notify("شارك رابط التطبيق مع أصدقائك.", "info");
+      else if (navigator.clipboard) { await navigator.clipboard.writeText(invite.url); notify(t("تم نسخ رابط سِكّة للمشاركة."), "success"); }
+      else notify(t("شارك رابط التطبيق مع أصدقائك."), "info");
     } catch { /* تجاهل إغلاق نافذة المشاركة من المستخدم */ }
     setNavOpen(false);
   }, [notify]);
@@ -240,9 +242,9 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
   return <div className={`workspace ${notificationsOpen ? "notifications-open" : ""}`}>
     <WorkspaceNavigation items={nav} activeSection={section === "publish" ? "offers" : section} notificationsOpen={notificationsOpen} unreadCount={unread} unreadMessageCount={unreadMessageCount} role={session.user.role} fullName={session.user.full_name} userId={session.user.id} token={session.token} open={navOpen} onSelect={activateNav} onClose={() => setNavOpen(false)} onAccount={() => { setInfoPage(null); setSection("account"); setNavOpen(false); }} onInvite={() => void inviteFriends()} onSignOut={onSignOut} onOpenInfo={(page) => { setInfoPage(page); setNotificationsOpen(false); setNavOpen(false); }} />
     <main className="main-area">
-      <header className="topbar" onClick={() => { if (notificationsOpen) closeNotifications(); }}><div className="topbar-brand-group"><button type="button" className="mobile-menu" onClick={() => setNavOpen(true)} aria-label="فتح القائمة"><AppIcon name="menu" /></button><button type="button" className="topbar-brand-home" onClick={() => { setSection(initialSection); setNavOpen(false); }} aria-label="العودة للرئيسية"><BrandLogo className="topbar-brand" /></button></div><div className="topbar-actions"><span className={`connection-state ${isOnline ? "is-online" : "is-offline"}`} role="status"><i />{isOnline ? "متصل" : "غير متصل"}</span><button type="button" className={`icon-button notification-bell ${notificationsOpen ? "is-open" : ""}`} onClick={(event) => { event.stopPropagation(); setNotificationsOpen((open) => !open); }} aria-expanded={notificationsOpen} aria-controls="sekka-notifications-drawer" aria-label={unread > 0 ? `الإشعارات، ${unread} غير مقروءة` : "الإشعارات"}><AppIcon name="bell" size={21} />{unread > 0 && <i />}</button></div></header>
-      <div className="page-content">{infoPage ? <InfoPages page={infoPage} onBack={() => setInfoPage(null)} /> : <>{section !== "booking" && <div className={`page-heading ${section === "account" ? "page-heading-account" : ""}`}><div><h1>{title}</h1>{subtitle && <p>{subtitle}</p>}</div></div>}
-        {section === "account" && <ThemePreferenceCard value={themePreference} resolvedTheme={resolvedTheme} onChange={onThemePreferenceChange} />}
+      <header className="topbar" onClick={() => { if (notificationsOpen) closeNotifications(); }}><div className="topbar-brand-group"><button type="button" className="mobile-menu" onClick={() => setNavOpen(true)} aria-label={t("فتح القائمة")}><AppIcon name="menu" /></button><button type="button" className="topbar-brand-home" onClick={() => { setSection(initialSection); setNavOpen(false); }} aria-label={t("العودة للرئيسية")}><BrandLogo className="topbar-brand" /></button></div><div className="topbar-actions"><span className={`connection-state ${isOnline ? "is-online" : "is-offline"}`} role="status"><i />{isOnline ? t("متصل") : t("غير متصل")}</span><button type="button" className={`icon-button notification-bell ${notificationsOpen ? "is-open" : ""}`} onClick={(event) => { event.stopPropagation(); setNotificationsOpen((open) => !open); }} aria-expanded={notificationsOpen} aria-controls="sekka-notifications-drawer" aria-label={unread > 0 ? `${t("الإشعارات")} · ${unread} ${t("غير مقروءة")}` : t("الإشعارات")}><AppIcon name="bell" size={21} />{unread > 0 && <i />}</button></div></header>
+      <div className="page-content">{infoPage ? <InfoPages page={infoPage} onBack={() => setInfoPage(null)} /> : <>{section !== "booking" && <div className={`page-heading ${section === "account" ? "page-heading-account" : ""}`}><div><h1>{t(title)}</h1>{subtitle && <p>{t(subtitle)}</p>}</div></div>}
+        {section === "account" && <div className="account-settings-stack"><ThemePreferenceCard value={themePreference} resolvedTheme={resolvedTheme} onChange={onThemePreferenceChange} /><LanguageSelector /></div>}
         {session.user.role !== "admin" && <VerificationReminder session={session} onOpen={openMissingVerification} visible={section !== "account" && !(session.user.role === "captain" && section === "offers")} />}
         {section === "messages" && <MessagesWorkspace session={session} notify={notify} />}
         {session.user.role === "rider" && section !== "messages" && <RiderWorkspace session={session} section={section} setSection={setSection} refreshNotifications={refreshNotifications} registerPoolRefresh={registerPoolRefresh} notify={notify} />}

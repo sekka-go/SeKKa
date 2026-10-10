@@ -304,12 +304,17 @@ async function telegramRequest(method: string, payload: Json) {
   if (!response.ok || result.ok !== true) throw new ApiFailure("تعذر الاتصال بخدمة التحقق. حاول لاحقًا.", 502);
   return result;
 }
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 async function handleTelegramVerificationWebhook(body: Json, origin: string) {
-  const update = body as Record<string, any>;
-  const message = update.message as Record<string, any> | undefined;
-  if (!message || !Number.isInteger(message.from?.id) || !Number.isInteger(message.chat?.id)) return reply({ ok: true }, 200, origin);
-  const chatId = Number(message.chat.id), telegramUserId = Number(message.from.id);
+  const message = isRecord(body.message) ? body.message : null;
+  const from = message && isRecord(message.from) ? message.from : null;
+  const chat = message && isRecord(message.chat) ? message.chat : null;
+  if (!message || !from || !chat || !Number.isSafeInteger(from.id) || !Number.isSafeInteger(chat.id)) return reply({ ok: true }, 200, origin);
+  const chatId = chat.id as number, telegramUserId = from.id as number;
   const text = typeof message.text === "string" ? message.text : "";
+  const contact = isRecord(message.contact) ? message.contact : null;
   const resetStart = /^\/start\s+reset_([A-Za-z0-9_-]{20,32})$/.exec(text);
   if (resetStart) {
     const tokenHash = await digest(resetStart[1]);
@@ -328,17 +333,17 @@ async function handleTelegramVerificationWebhook(body: Json, origin: string) {
     });
     return reply({ ok: true }, 200, origin);
   }
-  if (message.contact && Number(message.contact.user_id) === telegramUserId) {
+  if (contact && contact.user_id === telegramUserId) {
     const { data: resetChallenges, error: resetError } = await db!.from("telegram_password_reset_challenges").select("token_hash,phone_hash,attempts").eq("telegram_user_id", telegramUserId).eq("status", "waiting_contact").gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false }).limit(1);
     if (resetError) throw resetError;
     const resetChallenge = resetChallenges?.[0];
     if (resetChallenge) {
-      const contact = phoneE164(String(message.contact.phone_number ?? ""));
-      if (!contact || await keyedDigest(contact) !== resetChallenge.phone_hash) {
+      const phone = phoneE164(typeof contact.phone_number === "string" ? contact.phone_number : "");
+      if (!phone || await keyedDigest(phone) !== resetChallenge.phone_hash) {
         await telegramRequest("sendMessage", { chat_id: chatId, text: "رقم الهاتف لا يطابق الرقم المستخدم في الطلب. أرسل رقمك المسجل أو ابدأ طلبًا جديدًا.", reply_markup: { remove_keyboard: true } });
         return reply({ ok: true }, 200, origin);
       }
-      const candidates = phoneCandidates(contact);
+      const candidates = phoneCandidates(phone);
       const { data: account, error: accountError } = await db!.from("users").select("id,phone_number").in("phone_number", candidates).maybeSingle();
       if (accountError) throw accountError;
       if (!account) {
@@ -373,7 +378,7 @@ async function handleTelegramVerificationWebhook(body: Json, origin: string) {
     });
     return reply({ ok: true }, 200, origin);
   }
-  if (message.contact && Number(message.contact.user_id) === telegramUserId) {
+  if (contact && contact.user_id === telegramUserId) {
     const { data: challenges, error: challengeError } = await db!.from("telegram_phone_verification_challenges").select("token_hash,user_id").eq("telegram_user_id", telegramUserId).eq("status", "waiting_contact").gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false }).limit(1);
     if (challengeError) throw challengeError;
     const challenge = challenges?.[0];
@@ -386,7 +391,8 @@ async function handleTelegramVerificationWebhook(body: Json, origin: string) {
       db!.from("telegram_phone_verification_challenges").select("telegram_user_id").eq("token_hash", challenge.token_hash).maybeSingle(),
     ]);
     if (userError || challengeUpdateError) throw userError ?? challengeUpdateError;
-    if (!target || sender?.telegram_user_id !== telegramUserId || phoneE164(String(message.contact.phone_number ?? "")) !== phoneE164(target.phone_number)) {
+    const phone = phoneE164(typeof contact.phone_number === "string" ? contact.phone_number : "");
+    if (!target || sender?.telegram_user_id !== telegramUserId || phone !== phoneE164(target.phone_number)) {
       await telegramRequest("sendMessage", { chat_id: chatId, text: "الرقم المرسل لا يطابق الرقم المسجّل في سِكّة. أرسل جهة اتصال رقمك المسجّل وحاول مرة أخرى.", reply_markup: { remove_keyboard: true } });
       return reply({ ok: true }, 200, origin);
     }

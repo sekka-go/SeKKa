@@ -1,3 +1,4 @@
+import { t } from "../i18n/runtime";
 import { useEffect, useRef, useState } from "react";
 import { PWA_UPDATE_EVENT } from "../pwa";
 
@@ -78,24 +79,24 @@ export default function PwaNotice() {
     <aside className="pwa-notice-wrap" aria-live="polite" aria-atomic="true">
       {!online ? (
         <div className="pwa-notice" role="status">
-          <span><strong>الاتصال غير متاح</strong><small>يمكنك استخدام الصفحة المحفوظة، لكن الحجز ومتابعة الرحلات يحتاجان إلى الإنترنت.</small></span>
-          <button type="button" onClick={() => window.location.reload()}>إعادة المحاولة</button>
+          <span><strong>{t("الاتصال غير متاح")}</strong><small>{t("يمكنك استخدام الصفحة المحفوظة، لكن الحجز ومتابعة الرحلات يحتاجان إلى الإنترنت.")}</small></span>
+          <button type="button" onClick={() => window.location.reload()}>{t("إعادة المحاولة")}</button>
         </div>
       ) : updateAvailable ? (
         <div className="pwa-notice" role="status">
-          <span><strong>تحديث سِكّة جاهز</strong><small>حدّث التطبيق لتحصل على الإصلاحات الجديدة.</small></span>
-          <button type="button" onClick={() => void applyUpdate()}>تحديث</button>
+          <span><strong>{t("تحديث سِكّة جاهز")}</strong><small>{t("حدّث التطبيق لتحصل على الإصلاحات الجديدة.")}</small></span>
+          <button type="button" onClick={() => void applyUpdate()}>{t("تحديث")}</button>
         </div>
       ) : installPrompt ? (
         <div className="pwa-notice" role="status">
-          <span><strong>ثبّت سِكّة على جهازك</strong><small>افتح التطبيق بسرعة من الشاشة الرئيسية.</small></span>
-          <button type="button" onClick={() => void installApp()}>تثبيت</button>
-          <button className="pwa-dismiss" type="button" aria-label="إخفاء رسالة التثبيت" onClick={() => setInstallPrompt(null)}>×</button>
+          <span><strong>{t("ثبّت سِكّة على جهازك")}</strong><small>{t("افتح التطبيق بسرعة من الشاشة الرئيسية.")}</small></span>
+          <button type="button" onClick={() => void installApp()}>{t("تثبيت")}</button>
+          <button className="pwa-dismiss" type="button" aria-label={t("إخفاء رسالة التثبيت")} onClick={() => setInstallPrompt(null)}>×</button>
         </div>
       ) : showIosHint ? (
         <div className="pwa-notice" role="status">
-          <span><strong>أضف سِكّة إلى الشاشة الرئيسية</strong><small>اضغط «مشاركة» في المتصفح، ثم اختر «إضافة إلى الشاشة الرئيسية».</small></span>
-          <button className="pwa-dismiss" type="button" aria-label="إخفاء تعليمات التثبيت" onClick={() => setShowIosHint(false)}>×</button>
+          <span><strong>{t("أضف سِكّة إلى الشاشة الرئيسية")}</strong><small>{t("اضغط «مشاركة» في المتصفح، ثم اختر «إضافة إلى الشاشة الرئيسية».")}</small></span>
+          <button className="pwa-dismiss" type="button" aria-label={t("إخفاء تعليمات التثبيت")} onClick={() => setShowIosHint(false)}>×</button>
         </div>
       ) : null}
     </aside>

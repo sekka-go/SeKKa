@@ -1,3 +1,4 @@
+import { t } from "../i18n/runtime";
 export type ThemePreference = "light" | "dark" | "system";
 
 const choices: Array<{ value: ThemePreference; label: string; detail: string }> = [
@@ -15,15 +16,15 @@ export default function ThemePreferenceCard({ value, resolvedTheme, onChange }: 
   return <section className="surface theme-preference-card" aria-labelledby="theme-preference-title">
     <div className="theme-preference-heading">
       <div className="theme-preference-copy">
-        <span className="eyebrow">مظهر التطبيق</span>
-        <h2 id="theme-preference-title">اختار الألوان المناسبة لك</h2>
-        <p>تقدر تغيّرها في أي وقت، وهيتطبق اختيارك على كل الشاشات.</p>
+        <span className="eyebrow">{t("مظهر التطبيق")}</span>
+        <h2 id="theme-preference-title">{t("اختار الألوان المناسبة لك")}</h2>
+        <p>{t("تقدر تغيّرها في أي وقت، وهيتطبق اختيارك على كل الشاشات.")}</p>
       </div>
       <button
         type="button"
         className="theme-mode-toggle"
-        aria-label={`التبديل إلى الوضع ${nextTheme === "light" ? "الفاتح" : "الداكن"}`}
-        title="التبديل يدويًا عن وضع الجهاز"
+        aria-label={`${t("التبديل إلى الوضع")} ${t(nextTheme === "light" ? "الفاتح" : "الداكن")}`}
+        title={t("التبديل يدويًا عن وضع الجهاز")}
         onClick={() => onChange(nextTheme)}
       >
         {nextTheme === "light" ? <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" /></svg>
@@ -40,7 +41,7 @@ export default function ThemePreferenceCard({ value, resolvedTheme, onChange }: 
         onClick={() => onChange(choice.value)}
       >
         <span className="theme-choice-indicator" aria-hidden="true" />
-        <span><strong>{choice.label}</strong><small>{choice.detail}</small></span>
+        <span><strong>{t(choice.label)}</strong><small>{t(choice.detail)}</small></span>
       </button>)}
     </div>
   </section>;

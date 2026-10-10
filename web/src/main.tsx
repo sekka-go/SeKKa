@@ -9,13 +9,14 @@ import "./theme.css";
 import App from "./App";
 import PwaNotice from "./components/PwaNotice";
 import { registerPwa } from "./pwa";
+import { LanguageProvider } from "./i18n/runtime";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <>
+    <LanguageProvider>
       <App />
       <PwaNotice />
-    </>
+    </LanguageProvider>
   </StrictMode>,
 );
 
