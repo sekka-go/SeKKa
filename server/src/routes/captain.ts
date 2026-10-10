@@ -11,7 +11,7 @@ import {
   createOtpChallenge,
   findLatestActiveOtpChallenge,
 } from "../db/otp-repository.js";
-import { generateOtp, hashOtp, logOtpDevOnly, otpExpiryFromNow } from "../security/otp.js";
+import { generateOtp, hashOtp, isDevOtpLoggingAllowed, logOtpDevOnly, otpExpiryFromNow } from "../security/otp.js";
 import { requireAuth } from "../middleware/require-auth.js";
 import {
   findTripStopsByTripId,
@@ -71,6 +71,10 @@ export function createCaptainRouter(db: DatabaseSync): Router {
   // POST /api/captain/verify/request — بيولّد OTP، يخزّن الـ Hash بس، وبيطبعه
   // في الـ Server console بدل SMS حقيقي (Dev-only، زي ما موثّق في otp.ts).
   router.post("/captain/verify/request", ...guarded, (req, res) => {
+    if (!isDevOtpLoggingAllowed()) {
+      res.status(503).json({ error: "خدمة إرسال رمز التحقق غير متاحة حاليًا." });
+      return;
+    }
     const user = findUserById(db, req.auth!.userId)!;
     const otp = generateOtp();
     const expiresAt = otpExpiryFromNow().toISOString();

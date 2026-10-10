@@ -1,6 +1,9 @@
+// deno-lint-ignore no-import-prefix -- Supabase Edge Functions resolve npm: dependencies directly.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { routeWithOsrm, RoutingError } from "./routing.ts";
 import { dedupeLocationSuggestions, formatNominatimAddress, formatPhotonAddress, GREATER_CAIRO, isGreaterCairoPoint, normalizeLocationQuery, type LocationAddress, type LocationSuggestion, type NominatimResult, type PhotonProperties } from "./locations.ts";
+import { readJsonObjectBody, RequestBodyTooLargeError } from "./request-body.ts";
+import { activeMemberIdForRider } from "./group-view.ts";
 
 type Json = Record<string, unknown>;
 type User = { id: number; full_name: string; phone_number: string; role: "rider" | "captain" | "admin"; verified_at: string | null; created_at: string; account_status?: "active" | "suspended" | "banned" };
@@ -137,7 +140,7 @@ async function searchNominatimGreaterCairo(query: string): Promise<LocationSugge
   cacheWrite(cacheKey, unique);
   return unique;
 }
-async function searchGreaterCairo(query: string) {
+function searchGreaterCairo(query: string) {
   const cacheKey = `photon-search:${normalizeLocationQuery(query)}`;
   const cached = cacheRead<LocationSuggestion[]>(cacheKey);
   if (cached) return cached;
@@ -270,13 +273,6 @@ const apiKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? (() => {
 })();
 const db = url && apiKey ? createClient(url, apiKey, { auth: { persistSession: false, autoRefreshToken: false } }) : null;
 
-async function readBody(req: Request): Promise<Json> {
-  const text = await req.text();
-  if (text.length > 1_000_000) throw new Error("حجم الطلب أكبر من المسموح.");
-  if (!text) return {};
-  const value = JSON.parse(text);
-  return value && typeof value === "object" && !Array.isArray(value) ? value as Json : {};
-}
 function randomUrlToken(byteLength = 18) {
   const bytes = crypto.getRandomValues(new Uint8Array(byteLength));
   let binary = "";
@@ -304,12 +300,17 @@ async function telegramRequest(method: string, payload: Json) {
   if (!response.ok || result.ok !== true) throw new ApiFailure("تعذر الاتصال بخدمة التحقق. حاول لاحقًا.", 502);
   return result;
 }
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 async function handleTelegramVerificationWebhook(body: Json, origin: string) {
-  const update = body as Record<string, any>;
-  const message = update.message as Record<string, any> | undefined;
-  if (!message || !Number.isInteger(message.from?.id) || !Number.isInteger(message.chat?.id)) return reply({ ok: true }, 200, origin);
-  const chatId = Number(message.chat.id), telegramUserId = Number(message.from.id);
+  const message = isRecord(body.message) ? body.message : null;
+  const from = message && isRecord(message.from) ? message.from : null;
+  const chat = message && isRecord(message.chat) ? message.chat : null;
+  if (!message || !from || !chat || !Number.isSafeInteger(from.id) || !Number.isSafeInteger(chat.id)) return reply({ ok: true }, 200, origin);
+  const chatId = chat.id as number, telegramUserId = from.id as number;
   const text = typeof message.text === "string" ? message.text : "";
+  const contact = isRecord(message.contact) ? message.contact : null;
   const resetStart = /^\/start\s+reset_([A-Za-z0-9_-]{20,32})$/.exec(text);
   if (resetStart) {
     const tokenHash = await digest(resetStart[1]);
@@ -328,17 +329,17 @@ async function handleTelegramVerificationWebhook(body: Json, origin: string) {
     });
     return reply({ ok: true }, 200, origin);
   }
-  if (message.contact && Number(message.contact.user_id) === telegramUserId) {
+  if (contact && contact.user_id === telegramUserId) {
     const { data: resetChallenges, error: resetError } = await db!.from("telegram_password_reset_challenges").select("token_hash,phone_hash,attempts").eq("telegram_user_id", telegramUserId).eq("status", "waiting_contact").gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false }).limit(1);
     if (resetError) throw resetError;
     const resetChallenge = resetChallenges?.[0];
     if (resetChallenge) {
-      const contact = phoneE164(String(message.contact.phone_number ?? ""));
-      if (!contact || await keyedDigest(contact) !== resetChallenge.phone_hash) {
+      const phone = phoneE164(typeof contact.phone_number === "string" ? contact.phone_number : "");
+      if (!phone || await keyedDigest(phone) !== resetChallenge.phone_hash) {
         await telegramRequest("sendMessage", { chat_id: chatId, text: "رقم الهاتف لا يطابق الرقم المستخدم في الطلب. أرسل رقمك المسجل أو ابدأ طلبًا جديدًا.", reply_markup: { remove_keyboard: true } });
         return reply({ ok: true }, 200, origin);
       }
-      const candidates = phoneCandidates(contact);
+      const candidates = phoneCandidates(phone);
       const { data: account, error: accountError } = await db!.from("users").select("id,phone_number").in("phone_number", candidates).maybeSingle();
       if (accountError) throw accountError;
       if (!account) {
@@ -373,7 +374,7 @@ async function handleTelegramVerificationWebhook(body: Json, origin: string) {
     });
     return reply({ ok: true }, 200, origin);
   }
-  if (message.contact && Number(message.contact.user_id) === telegramUserId) {
+  if (contact && contact.user_id === telegramUserId) {
     const { data: challenges, error: challengeError } = await db!.from("telegram_phone_verification_challenges").select("token_hash,user_id").eq("telegram_user_id", telegramUserId).eq("status", "waiting_contact").gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false }).limit(1);
     if (challengeError) throw challengeError;
     const challenge = challenges?.[0];
@@ -386,7 +387,8 @@ async function handleTelegramVerificationWebhook(body: Json, origin: string) {
       db!.from("telegram_phone_verification_challenges").select("telegram_user_id").eq("token_hash", challenge.token_hash).maybeSingle(),
     ]);
     if (userError || challengeUpdateError) throw userError ?? challengeUpdateError;
-    if (!target || sender?.telegram_user_id !== telegramUserId || phoneE164(String(message.contact.phone_number ?? "")) !== phoneE164(target.phone_number)) {
+    const phone = phoneE164(typeof contact.phone_number === "string" ? contact.phone_number : "");
+    if (!target || sender?.telegram_user_id !== telegramUserId || phone !== phoneE164(target.phone_number)) {
       await telegramRequest("sendMessage", { chat_id: chatId, text: "الرقم المرسل لا يطابق الرقم المسجّل في سِكّة. أرسل جهة اتصال رقمك المسجّل وحاول مرة أخرى.", reply_markup: { remove_keyboard: true } });
       return reply({ ok: true }, 200, origin);
     }
@@ -445,7 +447,7 @@ async function getDirectMessageContactIds(userId: number): Promise<number[]> {
   if (contactsError) throw contactsError;
   return (data ?? []).map((row: { contact_user_id: number | string }) => Number(row.contact_user_id)).filter(Number.isSafeInteger);
 }
-async function requireRole(user: User | null, roles: User["role"][], origin: string) {
+function requireRole(user: User | null, roles: User["role"][], origin: string) {
   if (!user) return error("سجّل الدخول أولًا.", 401, origin);
   if (!roles.includes(user.role)) return error("ما عندكش صلاحية لتنفيذ الإجراء ده.", 403, origin);
   return null;
@@ -520,7 +522,7 @@ function validDates(value: unknown, type: string): string[] | null {
     const parsed = new Date(date + "T12:00:00Z");
     if (Number.isNaN(parsed.valueOf()) || parsed.toISOString().slice(0, 10) !== date || [5, 6].includes(parsed.getUTCDay())) return null;
     if (index > 0) {
-      let expected = new Date(dates[index - 1]! + "T12:00:00Z");
+      const expected = new Date(dates[index - 1]! + "T12:00:00Z");
       expected.setUTCDate(expected.getUTCDate() + 1);
       while ([5, 6].includes(expected.getUTCDay())) expected.setUTCDate(expected.getUTCDate() + 1);
       if (expected.toISOString().slice(0, 10) !== date) return null;
@@ -634,22 +636,28 @@ async function activateGroup(group: Json, members: Json[], category: Json, quote
 }
 async function groupView(group: Json) {
   const { current_rider_id: _currentRiderId, ...publicGroup } = group;
-  const [members, trips, subs] = await Promise.all([
+  const [members, trips] = await Promise.all([
     getMembers(Number(group.id), false),
     db!.from("pool_trips").select("*").eq("group_id", group.id).order("service_date").order("direction"),
-    db!.from("pool_members").select("id").eq("group_id", group.id).eq("status", "active"),
   ]);
-  const memberIds = (subs.data ?? []).map((m) => m.id);
   let subscription;
-  if (memberIds.length) {
-    const { data } = await db!.from("pool_subscriptions").select("amount_due,refund_amount,service_days,discount_rate").in("member_id", memberIds);
-    subscription = data?.find((s) => members.some((m: Json) => m.rider_user_id === Number(_currentRiderId) && memberIds.includes(m.id)));
+  const ownActiveMemberId = activeMemberIdForRider(
+    members as Array<{ id: number; rider_user_id: number; status: string }>,
+    Number(_currentRiderId),
+  );
+  if (ownActiveMemberId !== null) {
+    const { data, error: subscriptionError } = await db!.from("pool_subscriptions")
+      .select("amount_due,refund_amount,service_days,discount_rate")
+      .eq("member_id", ownActiveMemberId)
+      .maybeSingle();
+    if (subscriptionError) throw subscriptionError;
+    subscription = data ?? undefined;
   }
   return { group: { ...publicGroup, service_dates: JSON.stringify(group.service_dates), route_geometry: group.route_geometry }, members, trips: trips.data ?? [], ...(subscription ? { subscription } : {}) };
 }
 
 
-async function automaticMatch(request: Json, riderId: number) {
+async function automaticMatch(request: Json) {
   const requestId = Number(request.id);
   if (request.status === "matched") {
     const { data: existing } = await db!.from("matches").select("*").eq("daily_commute_request_id", requestId).maybeSingle();
@@ -686,7 +694,12 @@ Deno.serve(async (req: Request) => {
   let body: Json = {};
   const multipart = req.headers.get("content-type")?.toLowerCase().startsWith("multipart/form-data") === true;
   if (!["GET", "HEAD"].includes(req.method) && !multipart) {
-    try { body = await readBody(req); } catch { return error("بيانات الطلب غير صالحة.", 400, origin); }
+    try {
+      body = await readJsonObjectBody(req);
+    } catch (cause) {
+      if (cause instanceof RequestBodyTooLargeError) return error("حجم الطلب أكبر من المسموح.", 413, origin);
+      return error("بيانات الطلب غير صالحة.", 400, origin);
+    }
   }
   try {
     if (req.method === "POST" && path === "/webhooks/telegram") {
@@ -1036,7 +1049,7 @@ Deno.serve(async (req: Request) => {
         if (!clean(body.service_category_id) || !validPoint(body.pickup_lat, body.pickup_lng) || !validPoint(body.dropoff_lat, body.dropoff_lng)) return error("فئة الخدمة أو إحداثيات الرحلة غير صحيحة.", 400, origin);
         const { data: request, error: insertError } = await db.from("daily_commute_requests").insert({ rider_user_id: user!.id, service_category_id: body.service_category_id, pickup_lat: body.pickup_lat, pickup_lng: body.pickup_lng, dropoff_lat: body.dropoff_lat, dropoff_lng: body.dropoff_lng }).select().single();
         if (insertError) throw insertError;
-        const result = await automaticMatch(request, user!.id);
+        const result = await automaticMatch(request);
         return reply({ request: result.request, match: result.match }, 201, origin);
       }
       if (req.method === "GET") {
@@ -1133,7 +1146,7 @@ Deno.serve(async (req: Request) => {
       if (queryError) throw queryError;
       if (!request) return error("الطلب ده مش موجود.", 404, origin);
       if (Number(request.rider_user_id) !== user!.id) return error("الطلب ده مش بتاعك.", 403, origin);
-      const result = await automaticMatch(request, user!.id);
+      const result = await automaticMatch(request);
       if (result.not_open) return error("الطلب ده لم يعد مفتوحًا للمطابقة.", 409, origin);
       return reply({ request: result.request, match: result.match }, 200, origin);
     }

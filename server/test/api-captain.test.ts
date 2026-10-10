@@ -231,9 +231,11 @@ describe("OTP — /api/captain/verify/request + /confirm", () => {
     const app = createApp(freshMigratedDb());
     const token = await registerAndLogin(app, CAPTAIN);
 
-    await request(app)
-      .post("/api/captain/verify/request")
-      .set("Authorization", `Bearer ${token}`);
+    await captureLoggedOtp(async () => {
+      await request(app)
+        .post("/api/captain/verify/request")
+        .set("Authorization", `Bearer ${token}`);
+    });
 
     const res = await request(app)
       .post("/api/captain/verify/confirm")

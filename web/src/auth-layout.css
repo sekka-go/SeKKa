@@ -34,7 +34,7 @@
 }
 
 .auth-login-card .auth-heading {
-  text-align: right;
+  text-align: start;
 }
 
 .auth-login-card .auth-heading h1 {
@@ -54,7 +54,7 @@
 .auth-login-card .form-stack label {
   gap: 8px;
   align-items: stretch;
-  text-align: right;
+  text-align: start;
 }
 
 .auth-login-card .form-stack input {

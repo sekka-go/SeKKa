@@ -33,14 +33,21 @@ export function otpExpiryFromNow(): Date {
   return new Date(Date.now() + OTP_TTL_MS);
 }
 
+export function isDevOtpLoggingAllowed(environment = process.env.NODE_ENV): boolean {
+  return environment !== "production";
+}
+
 /**
  * Dev-only fallback: بيطبع الـ OTP في الـ Server console بدل ما يبعته SMS
  * حقيقي (مفيش SMS Gateway مدفوع متاح). غير مستخدمة في أي Route في هذه
  * المرحلة — موجودة كأداة جاهزة لمرحلة Captain Onboarding.
  */
 export function logOtpDevOnly(phoneNumber: string, otp: string): void {
+  if (!isDevOtpLoggingAllowed()) return;
+  const visibleSuffix = phoneNumber.replace(/\D/g, "").slice(-4);
+  const maskedPhone = visibleSuffix ? `••••${visibleSuffix}` : "رقم مخفي";
   // eslint-disable-next-line no-console
   console.log(
-    `[sekka-server][DEV-ONLY، مش SMS حقيقي] OTP لـ ${phoneNumber}: ${otp} (صالح 5 دقائق)`,
+    `[sekka-server][DEV-ONLY، مش SMS حقيقي] OTP لـ ${maskedPhone}: ${otp} (صالح 5 دقائق)`,
   );
 }

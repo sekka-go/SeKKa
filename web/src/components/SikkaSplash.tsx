@@ -1,3 +1,4 @@
+import { t } from "../i18n/runtime";
 import { useEffect, useMemo, useState } from "react";
 import SikkaMark from "./SikkaMark";
 
@@ -23,7 +24,7 @@ export default function SikkaSplash({ onComplete }: { onComplete: () => void }) 
     return () => { window.clearInterval(titleTimer); window.clearTimeout(closeTimer); window.clearTimeout(finishTimer); };
   }, [onComplete]);
 
-  return <div className={`sikka-splash ${closing ? "is-closing" : ""}`} role="status" aria-label="جاري فتح سِكّة">
+  return <div className={`sikka-splash ${closing ? "is-closing" : ""}`} role="status" aria-label={t("جاري فتح سِكّة")}>
     <div className="splash-atmosphere" aria-hidden="true"><i /><i /><i /></div>
     <div className="splash-track" aria-hidden="true" />
     <div className="splash-floating-marks" aria-hidden="true">{marks.map((mark, index) => <SikkaMark key={index} className={`splash-floating-mark ${mark.glow ? "has-glow" : ""}`} style={{
@@ -34,9 +35,9 @@ export default function SikkaSplash({ onComplete }: { onComplete: () => void }) 
       <div className="splash-emblem"><SikkaMark className="splash-main-mark" /></div>
       <div className={`splash-title ${arabicTitle ? "is-arabic" : "is-english"}`} aria-live="polite">
         <span className="splash-title-english" lang="en">Sikka</span>
-        <span className="splash-title-arabic" lang="ar" dir="rtl">سِكّة</span>
+        <span className="splash-title-arabic" lang="ar" dir="rtl">{t("سِكّة")}</span>
       </div>
-      <p className="splash-tagline">طريقك أسهل مع سِكّة</p>
+      <p className="splash-tagline">{t("طريقك أسهل مع سِكّة")}</p>
       <div className="splash-loading" aria-hidden="true"><i /></div>
     </div>
     <span className="splash-corner-brand" aria-hidden="true">SeKKa</span>

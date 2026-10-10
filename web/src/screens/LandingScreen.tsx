@@ -1,21 +1,22 @@
+import { t } from "../i18n/runtime";
 import BrandLogo from "../components/BrandLogo";
 
 export default function LandingScreen() {
   return (
     <main className="landing-page">
       <header className="landing-header">
-        <a className="landing-brand" href="/" aria-label="سِكَّة، الرئيسية"><BrandLogo /></a>
+        <a className="landing-brand" href="/" aria-label={t("سِكَّة، الرئيسية")}><BrandLogo /></a>
       </header>
 
       <section className="landing-hero">
         <div className="landing-hero-copy">
-          <span className="eyebrow">تنقّل أسرع بطريقة أذكى</span>
-          <h1>مشوارك اليومي،<br /><em>على سِكَّة أسهل.</em></h1>
-          <p>شارك الطريق مع ناس رايحة في نفس اتجاهك، وخلي مشاويرك أسهل.</p>
+          <span className="eyebrow">{t("تنقّل أسرع بطريقة أذكى")}</span>
+          <h1>{t("مشوارك اليومي،")}<br /><em>{t("على سِكَّة أسهل.")}</em></h1>
+          <p>{t("شارك الطريق مع ناس رايحة في نفس اتجاهك، وخلي مشاويرك أسهل.")}</p>
           <div className="landing-hero-actions">
-            <a className="button landing-primary-cta" href="/login">ابدأ رحلتك الآن <span aria-hidden="true">←</span></a>
+            <a className="button landing-primary-cta" href="/login">{t("ابدأ رحلتك الآن")} <span aria-hidden="true">←</span></a>
           </div>
-          <div className="landing-trust"><span className="landing-trust-dot" />متاح في القاهرة والجيزة</div>
+          <div className="landing-trust"><span className="landing-trust-dot" />{t("متاح في القاهرة والجيزة")}</div>
         </div>
 
         <div className="landing-route-card" aria-hidden="true">

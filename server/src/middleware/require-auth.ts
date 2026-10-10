@@ -11,9 +11,11 @@ export interface AuthContext {
 
 // توسيع Express.Request عشان الـ Routes اللاحقة تقدر تقرأ req.auth بأمان بعد
 // requireAuth، من غير الحاجة لـ `as any` في كل مكان.
-declare module "express-serve-static-core" {
-  interface Request {
-    auth?: AuthContext;
+declare global {
+  namespace Express {
+    interface Request {
+      auth?: AuthContext;
+    }
   }
 }
 
