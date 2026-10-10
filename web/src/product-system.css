@@ -230,9 +230,9 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
 
 @media (max-width: 800px) {
   .workspace { display: block; min-height: 100dvh; }
-  .workspace .sidebar { position: fixed; inset-block: 0; inset-inline-start: 0; inset-inline-end: auto; z-index: 70; width: min(19rem, 86vw); height: 100dvh; padding-top: max(1rem, env(safe-area-inset-top)); padding-bottom: max(1rem, env(safe-area-inset-bottom)); border-inline-start: 0; border-inline-end: 1px solid var(--line); transform: translateX(-105%); transition: transform .2s ease; }
+  .workspace .sidebar { position: fixed; inset-block: 0; inset-inline-start: 0; inset-inline-end: auto; z-index: 100; width: min(19rem, 86vw); height: 100dvh; overflow-y: auto; overscroll-behavior: contain; padding-top: max(1rem, env(safe-area-inset-top)); padding-bottom: max(1rem, env(safe-area-inset-bottom)); border-inline-start: 0; border-inline-end: 1px solid var(--line); transform: translateX(-105%); transition: transform .2s ease; }
   .workspace .sidebar.sidebar-open { transform: translateX(0); }
-  .sidebar-scrim { z-index: 65; }
+  .sidebar-scrim { z-index: 95; }
   .sidebar-close, .mobile-menu { display: inline-grid; place-items: center; width: 2.7rem; height: 2.7rem; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: .8rem; }
   .workspace .topbar { justify-content: space-between; gap: .75rem; min-height: 4.1rem; padding: .55rem 1rem; padding-top: max(.55rem, env(safe-area-inset-top)); }
   .topbar-brand-group { gap: .65rem; }

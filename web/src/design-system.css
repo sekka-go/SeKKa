@@ -335,6 +335,20 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   background: color-mix(in srgb, var(--color-danger) 10%, var(--color-surface));
   border-color: var(--color-danger);
 }
+@media (max-width: 800px) {
+  .app-shell .admin-control-panel article:has(> .user-actions-menu) { align-items: flex-start; }
+  .app-shell .admin-control-panel article:has(> .user-actions-menu) > div { flex: 1 1 12rem; min-width: 0; }
+  .app-shell .admin-control-panel .user-actions-menu { flex: 0 0 100%; width: 100%; min-width: 0; }
+  .app-shell .user-actions-menu > summary { margin-inline-start: auto; }
+  .app-shell .user-actions-menu-list {
+    position: static;
+    width: 100%;
+    max-height: min(50dvh, 24rem);
+    overflow-y: auto;
+    margin-top: var(--space-2);
+    box-shadow: none;
+  }
+}
 .app-shell .admin-user-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
 .app-shell .admin-user-filters label { display: grid; gap: var(--space-2); }
 .app-shell .admin-percentage-field { display: flex; align-items: center; gap: var(--space-2); }
