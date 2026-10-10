@@ -2,12 +2,12 @@
 .workspace.rider-home-active .page-heading, .workspace.rider-requests-active .page-heading { display: none; }
 .workspace .rider-home-experience .dashboard-main { gap: 1.35rem; }
 .workspace .rider-hero {
-  position: relative; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(13rem, .8fr); align-items: center;
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr); align-items: center;
   min-height: 19rem; overflow: hidden; padding: clamp(1.25rem, 4vw, 2.25rem); border: 1px solid var(--color-border);
   border-radius: 1.5rem; color: var(--color-text-primary); background: linear-gradient(125deg, var(--color-surface) 0%, var(--color-surface-elevated) 100%);
   box-shadow: 0 1rem 2.5rem var(--color-shadow);
 }
-.workspace .rider-hero-copy { position: relative; z-index: 1; max-width: 38rem; }
+.workspace .rider-hero-copy { position: relative; z-index: 1; max-width: 50rem; }
 .workspace .rider-hero .eyebrow, .workspace .rider-section-intro .eyebrow, .workspace .rider-section-heading .eyebrow { color: var(--color-accent-text); font-size: .84rem; font-weight: 800; }
 .workspace .rider-hero h2 { margin: .55rem 0 .75rem; font-size: clamp(1.9rem, 5vw, 3.25rem); line-height: 1.2; letter-spacing: -.035em; }
 .workspace .rider-hero h2 em { color: var(--color-accent-text); font-style: normal; }
@@ -16,14 +16,6 @@
 .workspace .rider-hero-actions .button { min-height: 3.15rem; padding-inline: 1.35rem; }
 .workspace .rider-service-area { display: inline-flex; align-items: center; gap: .5rem; color: var(--color-text-secondary); font-size: .86rem; }
 .workspace .rider-service-area i { width: .58rem; height: .58rem; border-radius: 50%; background: var(--color-info); box-shadow: 0 0 .8rem color-mix(in srgb, var(--color-info) 55%, transparent); }
-.workspace .rider-hero-art { position: relative; justify-self: end; width: min(100%, 19rem); aspect-ratio: 1.08; overflow: hidden; border: 1px solid var(--color-border); border-radius: 2rem; background: color-mix(in srgb, var(--color-surface) 78%, var(--color-info)); }
-.workspace .rider-map-grid { position: absolute; inset: 10%; opacity: .45; background: linear-gradient(90deg, transparent 48%, var(--color-border) 49%, transparent 50%), linear-gradient(0deg, transparent 48%, var(--color-border) 49%, transparent 50%); background-size: 3.8rem 3.1rem; mask-image: radial-gradient(ellipse, #000 18%, transparent 74%); }
-.workspace .rider-map-route { position: absolute; inset: 16% 20%; transform: rotate(-12deg); border: .5rem solid transparent; border-inline-start-color: var(--color-info); border-bottom-color: var(--color-info); border-radius: 45% 35% 42% 55%; filter: drop-shadow(0 0 .8rem color-mix(in srgb, var(--color-info) 55%, transparent)); }
-.workspace .rider-map-route::after { position: absolute; inset: .18rem; content: ""; border: .17rem dashed var(--color-surface); border-inline-start-color: transparent; border-radius: inherit; }
-.workspace .rider-route-start, .workspace .rider-route-end { position: absolute; z-index: 1; width: 1.2rem; height: 1.2rem; border: .28rem solid var(--color-surface); border-radius: 50%; background: var(--color-primary); box-shadow: 0 0 0 .18rem var(--color-primary); }
-.workspace .rider-route-start { inset-inline-start: -.63rem; bottom: 5%; }
-.workspace .rider-route-end { inset-inline-end: -.63rem; top: 3%; background: var(--color-info); box-shadow: 0 0 0 .18rem var(--color-info); }
-.workspace .rider-route-car { position: absolute; z-index: 2; inset-inline-start: 42%; top: 47%; display: grid; width: 2.6rem; height: 2.6rem; place-items: center; border: 1px solid var(--color-border); border-radius: .8rem; color: var(--color-primary-text); background: var(--color-primary); transform: rotate(12deg); box-shadow: 0 .5rem 1.2rem var(--color-shadow); }
 .workspace .rider-shortcuts, .workspace .rider-home-requests, .workspace .rider-requests-page, .workspace .rider-section-intro { min-width: 0; }
 .workspace .rider-section-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: .8rem; }
 .workspace .rider-section-heading h2, .workspace .rider-section-intro h2 { margin: .15rem 0 0; font-size: 1.28rem; }
@@ -71,17 +63,13 @@
 .workspace .rider-booking-experience .form-stack > label, .workspace .rider-booking-experience .time-row label { color: var(--color-text-primary); font-weight: 700; }
 .workspace .rider-account-experience .surface { border-color: var(--color-border); }
 @media (max-width: 700px) {
-  .workspace .rider-hero { grid-template-columns: minmax(0,1fr) 7rem; min-height: 0; gap: .3rem; padding: 1.1rem; border-radius: 1.1rem; }
+  .workspace .rider-hero { min-height: 0; gap: .3rem; padding: 1.1rem; border-radius: 1.1rem; }
   .workspace .rider-hero h2 { font-size: clamp(1.55rem, 7vw, 2.3rem); }
   .workspace .rider-hero-copy > p { font-size: .9rem; }
-  .workspace .rider-hero-art { width: 7rem; border-radius: 1.2rem; }
-  .workspace .rider-map-route { border-width: .3rem; }
-  .workspace .rider-route-car { width: 1.9rem; height: 1.9rem; }
 }
 @media (max-width: 460px) {
   .workspace .rider-hero { grid-template-columns: minmax(0,1fr); }
-  .workspace .rider-hero-art { position: absolute; inset-inline-end: -.8rem; bottom: -.9rem; width: 6rem; opacity: .4; }
-  .workspace .rider-hero-copy { padding-inline-end: 1rem; }
+  .workspace .rider-hero-copy { padding-inline: 0; }
   .workspace .rider-hero-actions { align-items: flex-start; flex-direction: column; gap: .65rem; }
   .workspace .rider-section-heading { align-items: flex-start; }
   .workspace .rider-request-card { padding: .85rem; }
