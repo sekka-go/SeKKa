@@ -20,7 +20,7 @@ function cairoHour() {
 
 function sectionAllowedForRole(section: NavKey, role: Session["user"]["role"]) {
   if (section === "account") return true;
-  if (["admin", "broadcast"].includes(section)) return role === "admin";
+  if (["admin", "adminUsers", "adminDocuments", "adminTrips", "adminComplaints", "adminFinance", "adminFinanceAdjustment", "adminPricing", "adminAudit", "broadcast"].includes(section)) return role === "admin";
   if (["offers", "publish", "captainTrips"].includes(section)) return role === "captain";
   if (section === "messages") return role === "rider" || role === "captain";
   return role === "rider";
@@ -29,7 +29,7 @@ function sectionAllowedForRole(section: NavKey, role: Session["user"]["role"]) {
 function sectionForPath(path: string, role: Session["user"]["role"]): NavKey | null {
   const normalizedPath = path.replace(/\/+$/, "") || "/";
   const routeSections: Record<string, NavKey> = {
-    "/account": "account", "/admin": "admin", "/broadcast": "broadcast",
+    "/account": "account", "/admin": "admin", "/admin/users": "adminUsers", "/admin/documents": "adminDocuments", "/admin/trips": "adminTrips", "/admin/complaints": "adminComplaints", "/admin/finance": "adminFinance", "/admin/finance/adjustment": "adminFinanceAdjustment", "/admin/pricing": "adminPricing", "/admin/audit": "adminAudit", "/broadcast": "broadcast",
     "/captain": "offers", "/captain/trips": "captainTrips", "/publish": "publish",
     "/search": "booking", "/trips": "trips", "/messages": "messages", "/notifications": "notifications",
   };
@@ -41,7 +41,7 @@ function pathForSection(section: NavKey) {
   const sectionPaths: Record<NavKey, string> = {
     home: "/", account: "/account", booking: "/search", trips: "/trips",
     notifications: "/notifications", messages: "/messages", offers: "/captain",
-    publish: "/publish", captainTrips: "/captain/trips", admin: "/admin", broadcast: "/broadcast",
+    publish: "/publish", captainTrips: "/captain/trips", admin: "/admin", adminUsers: "/admin/users", adminDocuments: "/admin/documents", adminTrips: "/admin/trips", adminComplaints: "/admin/complaints", adminFinance: "/admin/finance", adminFinanceAdjustment: "/admin/finance/adjustment", adminPricing: "/admin/pricing", adminAudit: "/admin/audit", broadcast: "/broadcast",
   };
   return sectionPaths[section];
 }
@@ -212,9 +212,9 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
   }, [inviteFriends]);
 
   const nav: WorkspaceNavItem[] = session.user.role === "rider"
-    ? [{ key: "home", label: "الرئيسية", icon: "home" }, { key: "account", label: "حسابي", icon: "user" }, { key: "trips", label: "رحلاتي", icon: "trips" }, { key: "messages", label: "الرسائل", icon: "messages" }, { key: "booking", label: "مشوار جديد", icon: "plus" }]
+    ? [{ key: "home", label: "الرئيسية", icon: "home" }, { key: "trips", label: "رحلاتي", icon: "trips" }, { key: "messages", label: "الرسائل", icon: "messages" }, { key: "account", label: "حسابي", icon: "user" }]
     : session.user.role === "captain"
-      ? [{ key: "account", label: "حسابي", icon: "user" }, { key: "captainTrips", label: "رحلاتي", icon: "trips" }, { key: "offers", label: "المسارات", icon: "route" }, { key: "messages", label: "الرسائل", icon: "messages" }]
+      ? [{ key: "offers", label: "الرئيسية", icon: "home" }, { key: "publish", label: "مساراتي", icon: "route" }, { key: "captainTrips", label: "رحلاتي", icon: "trips" }, { key: "messages", label: "الرسائل", icon: "messages" }, { key: "account", label: "حسابي", icon: "user" }]
       : [{ key: "account", label: "حسابي", icon: "settings" }, { key: "admin", label: "نظرة عامة", icon: "chart" }, { key: "broadcast", label: "رسالة عامة", icon: "send" }];
 
   const activateNav = (item: { key: NavKey }) => {
@@ -230,6 +230,10 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
     account: ["حسابي", ""], offers: ["المسارات المتاحة", "اختار المسار المناسب لسيارتك ومواعيدك"],
     captainTrips: ["رحلاتي", "المسارات المقبولة وخطوات تنفيذها"], admin: ["لوحة الإدارة", "متابعة المنصة وتوثيق الكباتن"],
     publish: ["نشر مسار", "أضف خط سيرك ومواعيد تشغيله"],
+    adminUsers: ["المستخدمون", "بحث وإدارة حسابات الركاب والكباتن"], adminDocuments: ["مراجعة المستندات", "طلبات توثيق الكباتن"],
+    adminTrips: ["الرحلات والمجموعات", "متابعة حالات التشغيل الحالية"], adminComplaints: ["الاعتراضات", "مراجعة الاعتراضات على الدفعات"],
+    adminFinance: ["المالية والدفتر", "قيود حسابية ومتابعة المستحقات"], adminFinanceAdjustment: ["إضافة تسوية دفترية", "أدخل بيانات التسوية وراجعها قبل الحفظ"], adminPricing: ["التسعير والعمولة", "إعداد رسوم المسارات وفئات المجموعات"],
+    adminAudit: ["سجل التدقيق", "مراجعة تغييرات الإدارة"],
     broadcast: ["رسالة عامة", "إرسال إعلان محفوظ إلى جميع مستخدمي سِكّة"],
   };
   const [title, subtitle] = titles[section];
@@ -240,10 +244,10 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
   }, [session.user.id, setSection]);
 
   return <div className={`workspace ${notificationsOpen ? "notifications-open" : ""}`}>
-    <WorkspaceNavigation items={nav} activeSection={section === "publish" ? "offers" : section} notificationsOpen={notificationsOpen} unreadCount={unread} unreadMessageCount={unreadMessageCount} role={session.user.role} fullName={session.user.full_name} userId={session.user.id} token={session.token} open={navOpen} onSelect={activateNav} onClose={() => setNavOpen(false)} onAccount={() => { setInfoPage(null); setSection("account"); setNavOpen(false); }} onInvite={() => void inviteFriends()} onSignOut={onSignOut} onOpenInfo={(page) => { setInfoPage(page); setNotificationsOpen(false); setNavOpen(false); }} />
+    <WorkspaceNavigation items={nav} activeSection={section} notificationsOpen={notificationsOpen} unreadCount={unread} unreadMessageCount={unreadMessageCount} role={session.user.role} fullName={session.user.full_name} userId={session.user.id} token={session.token} open={navOpen} onSelect={activateNav} onClose={() => setNavOpen(false)} onAccount={() => { setInfoPage(null); setSection("account"); setNavOpen(false); }} onInvite={() => void inviteFriends()} onSignOut={onSignOut} onOpenInfo={(page) => { setInfoPage(page); setNotificationsOpen(false); setNavOpen(false); }} />
     <main className="main-area">
       <header className="topbar" onClick={() => { if (notificationsOpen) closeNotifications(); }}><div className="topbar-brand-group"><button type="button" className="mobile-menu" onClick={() => setNavOpen(true)} aria-label={t("فتح القائمة")}><AppIcon name="menu" /></button><button type="button" className="topbar-brand-home" onClick={() => { setSection(initialSection); setNavOpen(false); }} aria-label={t("العودة للرئيسية")}><BrandLogo className="topbar-brand" /></button></div><div className="topbar-actions"><span className={`connection-state ${isOnline ? "is-online" : "is-offline"}`} role="status"><i />{isOnline ? t("متصل") : t("غير متصل")}</span><button type="button" className={`icon-button notification-bell ${notificationsOpen ? "is-open" : ""}`} onClick={(event) => { event.stopPropagation(); setNotificationsOpen((open) => !open); }} aria-expanded={notificationsOpen} aria-controls="sekka-notifications-drawer" aria-label={unread > 0 ? `${t("الإشعارات")} · ${unread} ${t("غير مقروءة")}` : t("الإشعارات")}><AppIcon name="bell" size={21} />{unread > 0 && <i />}</button></div></header>
-      <div className="page-content">{infoPage ? <InfoPages page={infoPage} onBack={() => setInfoPage(null)} /> : <>{section !== "booking" && <div className={`page-heading ${section === "account" ? "page-heading-account" : ""}`}><div><h1>{t(title)}</h1>{subtitle && <p>{t(subtitle)}</p>}</div></div>}
+      <div className="page-content">{infoPage ? <InfoPages page={infoPage} onBack={() => setInfoPage(null)} /> : <>{section !== "booking" && <div className={`page-heading ${section === "account" ? "page-heading-account" : ""}`}><div><h1>{t(title)}</h1>{subtitle && <p>{t(subtitle)}</p>}</div>{session.user.role === "admin" && section.startsWith("admin") && section !== "admin" && <button type="button" className="button button-outline button-small" onClick={() => setSection("admin")}>{t("العودة للملخص")}</button>}</div>}
         {section === "account" && <div className="account-settings-stack"><ThemePreferenceCard value={themePreference} resolvedTheme={resolvedTheme} onChange={onThemePreferenceChange} /><LanguageSelector /></div>}
         {session.user.role !== "admin" && <VerificationReminder session={session} onOpen={openMissingVerification} visible={section !== "account" && !(session.user.role === "captain" && section === "offers")} />}
         {section === "messages" && <MessagesWorkspace session={session} notify={notify} />}

@@ -1,0 +1,382 @@
+/* SeKKa semantic design tokens and shared component surfaces. */
+:root {
+  --color-background: #0f172a;
+  --color-surface: #1e293b;
+  --color-surface-raised: #263449;
+  --color-border: #64748b;
+  --color-text: #f8fafc;
+  --color-text-muted: #cbd5e1;
+  --color-primary: #f5bd08;
+  --color-on-primary: #172033;
+  --color-secondary: #67d6d4;
+  --color-danger: #fca5a5;
+  --color-on-danger: #172033;
+  --color-success: #86efac;
+  --color-warning: #fcd34d;
+  --color-disabled: #94a3b8;
+  --color-focus-ring: #f5bd08;
+  --touch-target-min: 44px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  color-scheme: dark;
+  accent-color: var(--color-primary);
+}
+
+:root[data-theme="light"] {
+  --color-background: #f2f5f9;
+  --color-surface: #ffffff;
+  --color-surface-raised: #e8eef5;
+  --color-border: #7f8fa3;
+  --color-text: #17263d;
+  --color-text-muted: #3f5067;
+  --color-primary: #f5bd08;
+  --color-on-primary: #172033;
+  --color-secondary: #087b80;
+  --color-danger: #a12622;
+  --color-on-danger: #ffffff;
+  --color-success: #176534;
+  --color-warning: #805300;
+  --color-disabled: #586a80;
+  --color-focus-ring: #8a6200;
+  color-scheme: light;
+}
+
+:root {
+  --color-surface-elevated: var(--color-surface-raised);
+  --color-text-primary: var(--color-text);
+  --color-text-secondary: var(--color-text-muted);
+  --color-primary-text: var(--color-on-primary);
+  --color-accent: var(--color-secondary);
+  --color-accent-text: var(--color-secondary);
+  --color-icon: var(--color-secondary);
+  --color-error: var(--color-danger);
+  --color-focus: var(--color-focus-ring);
+  --ink: var(--color-text);
+  --muted: var(--color-text-muted);
+  --line: var(--color-border);
+  --panel: var(--color-surface);
+  --panel-hi: var(--color-surface-raised);
+  --yellow: var(--color-primary);
+  --yellow-deep: var(--color-secondary);
+  --danger: var(--color-danger);
+  --success: var(--color-success);
+  --warning: var(--color-warning);
+  --info: var(--color-secondary);
+  --page-bg: var(--color-background);
+  --focus-ring: var(--color-focus-ring);
+  --radius-card: 1rem;
+  --radius-control: .75rem;
+  --space-card: 1rem;
+  color: var(--color-text);
+  background: var(--color-background);
+}
+
+html, body, #root, .app-shell,
+.workspace, .workspace .main-area, .workspace .page-content,
+.auth-page, .landing-page {
+  color: var(--color-text);
+  background-color: var(--color-background);
+}
+
+button, input, select, textarea { color-scheme: inherit; accent-color: var(--color-primary); }
+button:focus-visible, a:focus-visible, summary:focus-visible,
+input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline-color: var(--color-focus-ring);
+}
+
+.app-shell :is(.surface, .auth-card, .landing-route-card, .welcome-banner,
+  .metric-card, .group-summary, .offer-card, .route-offer-card,
+  .commuter-board-card, .account-card, .password-card, .verification-center,
+  .verification-wizard, .verification-doc-card, .verification-phone-row,
+  .verification-intro, .verification-finish, .messages-workspace,
+  .messages-thread-list, .messages-chat-panel, .messages-empty,
+  .admin-secondary-details, .captain-settings-details, .admin-control-panel article,
+  .admin-control-panel > nav, .admin-nav-group, .settings-disclosure,
+  .settings-disclosure > details, .soft-surface, .offer-toolbar, .booking-stepper,
+  .help-card, .brand-confirm-dialog, .price-info-popover) {
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+.app-shell :is(.admin-summary-grid > div, .profile-data-grid > div,
+  .route-point-choice-wrap, .map-points-readout > div, .category-option,
+  .package-option, .segmented-control, .time-picker-control,
+  .messages-composer, .messages-composer textarea,
+  .workspace .sidebar-profile, .workspace .sidebar-brand .sidebar-label) {
+  color: var(--color-text);
+  background-color: var(--color-surface-raised);
+  border-color: var(--color-border);
+}
+
+.app-shell :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  color: var(--color-text);
+  background-color: var(--color-surface-raised);
+  border-color: var(--color-border);
+}
+.app-shell :is(input, textarea)::placeholder { color: var(--color-text-muted); opacity: 1; }
+.app-shell :is(p, small, label, legend, li, time, .muted-text,
+  .page-heading p, .account-avatar-note, .verification-privacy,
+  .verification-date, .profile-copy small, .sidebar-label) { color: var(--color-text-muted); }
+.app-shell :is(h1, h2, h3, h4, h5, strong, summary, .page-heading h1,
+  .brand-logo-copy strong, .welcome-copy h2, .notifications-header h2) { color: var(--color-text); }
+
+.app-shell .button {
+  min-height: var(--touch-target-min);
+  padding: .625rem 1rem;
+  color: var(--color-text);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+}
+.app-shell .button-primary {
+  color: var(--color-on-primary);
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.app-shell .button-secondary, .app-shell .button-outline {
+  color: var(--color-text);
+  background-color: transparent;
+  border-color: var(--color-border);
+}
+.app-shell .button-quiet, .app-shell .button-dark {
+  color: var(--color-text);
+  background-color: var(--color-surface-raised);
+  border-color: var(--color-border);
+}
+.app-shell :is(.button-danger, .button-cancel-trip, .is-danger) {
+  color: var(--color-danger);
+  background-color: color-mix(in srgb, var(--color-danger) 10%, var(--color-surface));
+  border-color: var(--color-danger);
+}
+.app-shell .button:disabled, .app-shell button:disabled {
+  color: var(--color-disabled);
+  cursor: not-allowed;
+}
+.app-shell .button-small { min-height: var(--touch-target-min); }
+.app-shell .button-size-sm { padding: .5rem .75rem; font-size: .875rem; }
+.app-shell .button-size-lg { min-height: 52px; padding: .75rem 1.25rem; font-size: 1.05rem; }
+.app-shell .icon-button { min-width: var(--touch-target-min); min-height: var(--touch-target-min); }
+.app-shell .button-icon {
+  width: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+  padding: 0;
+}
+.app-shell .button-ghost { border-color: transparent; }
+.app-shell .button-spinner {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-inline-end-color: transparent;
+  border-radius: 50%;
+  animation: button-spin .7s linear infinite;
+}
+@keyframes button-spin { to { transform: rotate(360deg); } }
+
+.app-shell input[type="checkbox"], .app-shell input[type="radio"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: 0 0 1.25rem;
+  margin: 0;
+  accent-color: var(--color-primary);
+  vertical-align: middle;
+}
+.app-shell .toggle-row {
+  display: flex;
+  align-items: center;
+  min-height: var(--touch-target-min);
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+}
+.app-shell .service-days, .app-shell .payment-methods {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding: var(--space-2) 0;
+}
+.app-shell .service-days .toggle-row, .app-shell .payment-methods .toggle-row {
+  flex: 0 0 auto;
+  justify-content: center;
+  min-width: var(--touch-target-min);
+  padding-inline: var(--space-3);
+  background: var(--color-surface-raised);
+}
+.app-shell .service-days .toggle-row:has(input:checked),
+.app-shell .payment-methods .toggle-row:has(input:checked) {
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-primary) 20%, var(--color-surface));
+  border-color: var(--color-primary);
+}
+.app-shell .commuter-preferences-days {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(2.75rem, 1fr);
+  overflow-x: auto;
+}
+.app-shell .commuter-preferences-days label { min-height: var(--touch-target-min); }
+.app-shell .number-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: fit-content;
+}
+.app-shell .number-stepper output {
+  display: grid;
+  place-items: center;
+  min-width: 3rem;
+  min-height: var(--touch-target-min);
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  font-weight: 700;
+}
+.app-shell .form-field { display: grid; gap: var(--space-2); }
+.app-shell .form-field-label { color: var(--color-text); font-weight: 700; }
+
+.app-shell .booking-form-surface .booking-review-actions,
+.app-shell .onboarding-card form > .button-primary {
+  position: sticky;
+  bottom: max(var(--space-3), env(safe-area-inset-bottom));
+  z-index: 5;
+}
+.app-shell .booking-form-surface .booking-review-actions {
+  padding: var(--space-2);
+  background: color-mix(in srgb, var(--color-background) 94%, transparent);
+  border-radius: var(--radius-control);
+  backdrop-filter: blur(10px);
+}
+
+.app-shell .sidebar, .app-shell .topbar, .app-shell .mobile-tabbar,
+.app-shell .auth-page-header, .app-shell .landing-header {
+  color: var(--color-text);
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+.app-shell .mobile-tabbar { display: none; }
+.app-shell .sidebar-signout { color: var(--color-danger); }
+.app-shell :is(.button-primary:hover:not(:disabled), .landing-primary-cta:hover) { filter: brightness(.96); }
+.app-shell .welcome-actions { grid-template-columns: minmax(0, 1fr); }
+.app-shell .welcome-actions > .button { width: min(100%, 18rem); }
+.app-shell .admin-nav-group > div { display: flex; gap: var(--space-2); overflow-x: auto; }
+.app-shell .admin-nav-group button {
+  min-height: var(--touch-target-min);
+  padding: .55rem .85rem;
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.app-shell .admin-nav-group button[aria-current="page"] {
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.app-shell .admin-control-panel button:not(.user-actions-menu > summary) {
+  min-height: var(--touch-target-min);
+  padding: .55rem .85rem;
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+}
+.app-shell .admin-control-panel .admin-primary,
+.app-shell .admin-control-panel .admin-primary-bg {
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.app-shell .admin-control-panel .admin-text-error,
+.app-shell .admin-control-panel .admin-border-error { color: var(--color-danger); border-color: var(--color-danger); }
+.app-shell .user-actions-menu { position: relative; }
+.app-shell .user-actions-menu > summary {
+  display: grid;
+  place-items: center;
+  width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  cursor: pointer;
+  list-style: none;
+  font-size: 1.4rem;
+}
+.app-shell .user-actions-menu > summary::-webkit-details-marker { display: none; }
+.app-shell .user-actions-menu-list {
+  position: absolute;
+  z-index: 30;
+  inset-block-start: calc(100% + var(--space-2));
+  inset-inline-end: 0;
+  display: grid;
+  gap: var(--space-2);
+  width: min(17rem, calc(100vw - 2rem));
+  padding: var(--space-2);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  box-shadow: 0 12px 32px var(--color-shadow);
+}
+.app-shell .user-actions-menu-list button { min-height: var(--touch-target-min); text-align: start; }
+.app-shell .user-actions-menu-list button.user-status-action[data-status="banned"],
+.app-shell .user-actions-menu-list button.user-status-action[data-status="suspended"] {
+  color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 10%, var(--color-surface));
+  border-color: var(--color-danger);
+}
+.app-shell .admin-user-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.app-shell .admin-user-filters label { display: grid; gap: var(--space-2); }
+.app-shell .admin-percentage-field { display: flex; align-items: center; gap: var(--space-2); }
+.app-shell .admin-percentage-field input { flex: 1; min-width: 0; }
+@media (max-width: 560px) { .app-shell .admin-user-filters { grid-template-columns: 1fr; } }
+
+@media (max-width: 560px) {
+  .app-shell .admin-captain-row { gap: var(--space-2); }
+  .app-shell .service-days, .app-shell .payment-methods { margin-inline: calc(var(--space-2) * -1); padding-inline: var(--space-2); }
+}
+
+@media (max-width: 800px) {
+  .app-shell .mobile-tabbar {
+    position: fixed;
+    z-index: 45;
+    inset-inline: 0;
+    inset-block-end: 0;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 2px;
+    min-height: calc(3.75rem + env(safe-area-inset-bottom));
+    padding: .3rem .4rem max(.3rem, env(safe-area-inset-bottom));
+    background: var(--color-surface);
+    border-block-start: 1px solid var(--color-border);
+    box-shadow: 0 -6px 24px var(--color-shadow);
+  }
+  .app-shell .mobile-tabbar .nav-item {
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 2px;
+    min-width: 0;
+    min-height: var(--touch-target-min);
+    padding: .25rem .15rem;
+    border: 0;
+    border-radius: .75rem;
+    background: transparent;
+  }
+  .app-shell .mobile-tabbar .nav-item::before { display: none; }
+  .app-shell .mobile-tabbar .nav-icon { flex-basis: auto; width: auto; height: 1.35rem; }
+  .app-shell .mobile-tabbar .nav-label { max-width: 100%; overflow: hidden; font-size: .68rem; line-height: 1.15; text-overflow: ellipsis; white-space: nowrap; }
+  .app-shell .mobile-tabbar .nav-count { position: absolute; inset-block-start: 1px; inset-inline-end: calc(50% - 1.2rem); min-width: 1rem; font-size: .62rem; }
+  .app-shell .workspace .page-content { padding-block-end: calc(5rem + env(safe-area-inset-bottom)); }
+  .app-shell .mobile-menu { min-width: var(--touch-target-min); min-height: var(--touch-target-min); }
+}

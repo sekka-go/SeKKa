@@ -15,12 +15,30 @@ export function categoryName(category?: Category | null) {
 
 export function statusLabel(status: string) {
   const labels: Record<string, string> = {
-    waiting: "بانتظار ركاب", minimum_met: "اكتمل الحد الأدنى", active: "نشطة", price_review: "موافقة على السعر",
+    waiting: "بانتظار ركاب", minimum_met: "اكتمل الحد الأدنى", active: "نشط", price_review: "موافقة على السعر",
     needs_captain: "بانتظار كابتن", cancelled: "ملغاة", completed: "مكتملة", scheduled: "مجدولة",
     assigned: "أُسندت إليك", in_progress: "جارية", needs_captain_profile: "أكمل بياناتك",
-    pending: "قيد المراجعة", approved: "موثّق", rejected: "مرفوض",
+    pending: "قيد المراجعة", approved: "موثّق", rejected: "مرفوض", paused: "متوقف مؤقتًا",
+    banned: "محظور", suspended: "موقوف", open: "مفتوح", matched: "تم العثور على مسار",
+    expired: "منتهي", awaiting_confirmation: "بانتظار التأكيد", left: "غادر المجموعة",
   };
-  return labels[status] ? t(labels[status]!) : status;
+  return labels[status] ? t(labels[status]!) : t(status.replaceAll("_", " "));
+}
+
+export function roleLabel(role: string) {
+  const labels: Record<string, string> = { rider: "راكب", captain: "كابتن", admin: "مدير النظام" };
+  return labels[role] ? t(labels[role]!) : t("مستخدم");
+}
+
+export function vehicleTypeLabel(type: string) {
+  const labels: Record<string, string> = { private_car: "ملاكي", hiace: "هاي إس" };
+  return labels[type] ? t(labels[type]!) : t("نوع مركبة غير معروف");
+}
+
+export function maskLastFour(value: string | null | undefined) {
+  if (!value) return t("غير متاح");
+  const digits = value.replace(/\s/g, "");
+  return digits.length <= 4 ? `••••${digits}` : `••••${digits.slice(-4)}`;
 }
 
 export function formatDate(value: string) {

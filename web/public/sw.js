@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "sekka-shell-";
-const CACHE_NAME = "sekka-shell-v7";
+const CACHE_NAME = "sekka-shell-v8";
 const APP_SHELL = [
   "/",
   "/offline.html",

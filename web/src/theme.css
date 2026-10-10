@@ -200,8 +200,8 @@ button, input, select, textarea { color-scheme: inherit; }
   color: var(--color-info); background-color: var(--color-soft-cyan); border-color: var(--color-border);
 }
 .app-shell :is(.button-primary:hover:not(:disabled), .workspace .button-primary:hover:not(:disabled)) { filter: brightness(.96); }
-.app-shell .landing-primary-cta { color: var(--color-primary-text) !important; background: var(--color-primary); border-color: var(--color-primary); }
-.app-shell .landing-primary-cta:hover { color: var(--color-primary-text) !important; background: var(--color-primary); filter: brightness(.96); }
+.app-shell .button.landing-primary-cta { color: var(--color-primary-text) !important; background: var(--color-primary); border-color: var(--color-primary); }
+.app-shell .button.landing-primary-cta:hover { color: var(--color-primary-text) !important; background: var(--color-primary); filter: brightness(.96); }
 .app-shell :is(.button:disabled, input:disabled, select:disabled, textarea:disabled) { color: var(--color-disabled); }
 .app-shell :is(.category-option.selected, .package-option.selected, .date-chip.active,
 .nav-item.nav-active) { background-color: var(--color-navigation-active); }
@@ -354,7 +354,7 @@ button, input, select, textarea { color-scheme: inherit; }
 :root[data-theme="light"] .landing-header { background: var(--color-background); box-shadow: none; }
 :root[data-theme="light"] .landing-route-card { background: var(--color-surface); border-color: var(--color-border); }
 :root[data-theme="light"] .landing-hero { color: var(--color-text-primary); }
-:root[data-theme="light"] .sikka-splash,
+:root[data-theme="light"] .sekka-splash,
 :root[data-theme="light"] .intro-logo-screen {
   color: var(--color-text-primary);
   background: var(--color-background);

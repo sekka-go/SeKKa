@@ -5,6 +5,7 @@ import "./product-system.css";
 import "./brand-lockup.css";
 import "./auth-layout.css";
 import "./theme.css";
+import "./design-system.css";
 import App from "./App";
 import PwaNotice from "./components/PwaNotice";
 import { registerPwa } from "./pwa";

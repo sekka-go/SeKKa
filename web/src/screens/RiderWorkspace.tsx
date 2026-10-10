@@ -1,4 +1,5 @@
 import { t } from "../i18n/runtime";
+import Button from "../components/Button";
 import { getDirection } from "../i18n/runtime";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import MapPicker from "../components/MapPickerLoader";
@@ -373,7 +374,7 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
   };
 
   const dataErrorBanner = initialLoadError ? <ErrorState title={t("تعذر تحديث بعض البيانات")} text={initialLoadError} action="إعادة المحاولة" onAction={() => void loadInitialData()} /> : null;
-  const welcomeBanner = <div className="welcome-banner"><div className="welcome-copy"><span className="eyebrow">{t("سِكّة أقرب لك")}</span><h2>{t("طريقك أسهل مع")} <em>{t("سِكَّة.")}</em></h2><div className="welcome-actions"><button className="button button-dark" onClick={() => openBooking("new")}>{t("ابحث عن رحلة")}</button><button className="button button-primary" onClick={() => openBooking("new")}>{t("سجّل طلبك")}</button></div></div><div className="welcome-illustration"><div className="sun-orbit" /><div className="route-art"><span /><i /><i /><i /><b /></div><div className="mini-car">▰</div></div></div>;
+  const welcomeBanner = <div className="welcome-banner"><div className="welcome-copy"><span className="eyebrow">{t("سِكّة أقرب لك")}</span><h2>{t("طريقك أسهل مع")} <em>{t("سِكَّة.")}</em></h2><div className="welcome-actions"><Button variant="primary" onClick={() => openBooking("new")}>{t("مشوار جديد")}</Button></div></div><div className="welcome-illustration"><div className="sun-orbit" /><div className="route-art"><span /><i /><i /><i /><b /></div><div className="mini-car">▰</div></div></div>;
 
   if (section === "account") return <>{dataErrorBanner}<AccountPanel session={session} notify={notify} /></>;
 

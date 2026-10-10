@@ -21,7 +21,7 @@ function resolveTheme(preference: ThemePreference): "light" | "dark" {
 }
 
 const protectedPagePaths = new Set([
-  "/admin", "/account", "/captain", "/captain/trips", "/publish",
+  "/admin", "/admin/users", "/admin/documents", "/admin/trips", "/admin/complaints", "/admin/finance", "/admin/finance/adjustment", "/admin/pricing", "/admin/audit", "/account", "/captain", "/captain/trips", "/publish",
   "/search", "/trips", "/messages", "/notifications", "/broadcast",
 ]);
 const currentPathname = () => window.location.pathname.replace(/\/+$/, "") || "/";
@@ -51,7 +51,7 @@ export default function App() {
       document.documentElement.dataset.theme = theme;
       try { localStorage.setItem("sekka.theme", themePreference); } catch { /* Keep the in-memory choice if storage is unavailable. */ }
       const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-      if (themeColor) themeColor.content = theme === "light" ? "#f2f5f9" : "#0f172a";
+      if (themeColor) themeColor.content = getComputedStyle(document.documentElement).getPropertyValue("--color-background").trim();
     };
     applyTheme();
     if (themePreference !== "system") return;
