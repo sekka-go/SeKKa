@@ -471,7 +471,7 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
   .auth-document-scroll { height: 60vh; }
 }
 
-.account-settings-stack, .app-settings-stack { display: grid; gap: 1rem; }
+.app-settings-stack { display: grid; gap: 1rem; }
 .app-settings-section { display: grid; gap: 1rem; }
 .app-settings-section-heading { display: grid; gap: .25rem; }
 .app-settings-section-heading h2, .app-settings-notifications h2 { margin: 0; color: var(--color-text-primary); font-size: 1.05rem; font-weight: 800; }
@@ -485,16 +485,12 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
 .language-selector { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 4rem; padding: .85rem 1rem; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-card); font-weight: 700; }
 .language-selector > span { font-size: .9rem; }
 .language-selector select { min-width: 9rem; min-height: 2.75rem; padding: .55rem .75rem; color: var(--ink); background: var(--page-bg); border: 1px solid var(--line); border-radius: .7rem; font: inherit; font-size: .86rem; }
-.sidebar .language-selector { min-height: 3.25rem; padding: .55rem .7rem; background: rgba(148,163,184,.045); border-radius: .75rem; font-size: .78rem; }
-.sidebar .language-selector select { min-width: 6.5rem; min-height: 2.25rem; padding: .35rem .5rem; font-size: .78rem; }
 .app-shell[dir="ltr"] .admin-control-panel { text-align: start; }
 @media (max-width: 560px) {
   .language-selector { align-items: stretch; flex-direction: column; }
   .language-selector select { width: 100%; }
   .app-settings-notifications { align-items: stretch; flex-direction: column; }
   .app-settings-notifications > .button { width: 100%; }
-  .sidebar .language-selector { flex-direction: row; }
-  .sidebar .language-selector select { width: auto; }
 }
 
 @media (max-width: 800px) {
