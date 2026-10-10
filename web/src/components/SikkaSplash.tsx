@@ -34,7 +34,7 @@ export default function SikkaSplash({ onComplete }: { onComplete: () => void }) 
     <div className="splash-content">
       <div className="splash-emblem"><SikkaMark className="splash-main-mark" /></div>
       <div className={`splash-title ${arabicTitle ? "is-arabic" : "is-english"}`} aria-live="polite">
-        <span className="splash-title-english" lang="en">Sikka</span>
+        <span className="splash-title-english" lang="en">SeKKa</span>
         <span className="splash-title-arabic" lang="ar" dir="rtl">{t("سِكّة")}</span>
       </div>
       <p className="splash-tagline">{t("طريقك أسهل مع سِكّة")}</p>
