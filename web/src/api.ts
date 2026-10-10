@@ -1,3 +1,5 @@
+import { t } from "./i18n/runtime";
+
 export type Role = "rider" | "captain" | "admin";
 export interface User { id: number; full_name: string; phone_number: string; role: Role; verified_at: string | null; created_at?: string }
 export interface Category {
@@ -93,7 +95,13 @@ export class ApiError extends Error {
   constructor(status: number, message: string) { super(message); this.status = status; }
 }
 
-export async function api<T>(path: string, options: { method?: string; body?: unknown; token?: string | null; signal?: AbortSignal } = {}): Promise<T> {
+export async function api<T>(path: string, options: { method?: string; body?: unknown; token?: string | null; signal?: AbortSignal; timeoutMs?: number } = {}): Promise<T> {
+  const controller = new AbortController();
+  let timedOut = false;
+  const forwardAbort = () => controller.abort(options.signal?.reason);
+  if (options.signal?.aborted) forwardAbort();
+  else options.signal?.addEventListener("abort", forwardAbort, { once: true });
+  const timeout = window.setTimeout(() => { timedOut = true; controller.abort(); }, Math.max(1, options.timeoutMs ?? 15_000));
   const headers: Record<string, string> = { Accept: "application/json" };
   if (options.body !== undefined) headers["Content-Type"] = "application/json";
   if (options.token) headers.Authorization = `Bearer ${options.token}`;
@@ -104,15 +112,25 @@ export async function api<T>(path: string, options: { method?: string; body?: un
     response = await fetch(`${API_BASE_URL}/api${path}`, {
       method: options.method ?? "GET", headers,
       ...(options.body !== undefined ? { body: JSON.stringify(options.body) } : {}),
-      ...(options.signal ? { signal: options.signal } : {}),
+      signal: controller.signal,
     });
+    let payload: { error?: string } & T;
+    try { payload = await response.json() as { error?: string } & T; }
+    catch (cause) {
+      if (timedOut || controller.signal.aborted) throw cause;
+      payload = {} as { error?: string } & T;
+    }
+    if (!response.ok) throw new ApiError(response.status, payload.error ?? "حصل خطأ غير متوقع. حاول مرة أخرى.");
+    return payload;
   } catch (cause) {
+    if (cause instanceof ApiError) throw cause;
+    if (timedOut) throw new ApiError(408, t("تعذر التحميل، يرجى المحاولة مرة أخرى."));
     if (options.signal?.aborted) throw cause;
     throw new ApiError(0, "تعذر الاتصال بالخادم. تأكد أنه يعمل ثم حاول مرة أخرى.");
+  } finally {
+    window.clearTimeout(timeout);
+    options.signal?.removeEventListener("abort", forwardAbort);
   }
-  const payload = await response.json().catch(() => ({})) as { error?: string } & T;
-  if (!response.ok) throw new ApiError(response.status, payload.error ?? "حصل خطأ غير متوقع. حاول مرة أخرى.");
-  return payload;
 }
 
 export async function uploadVerificationDocument(token: string, documentType: VerificationDocumentType, file: File): Promise<{ document: VerificationDocument }> {

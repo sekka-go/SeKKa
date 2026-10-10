@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /account
+Disallow: /captain
+Disallow: /publish
+Disallow: /search
+Disallow: /trips
+Disallow: /messages
+Disallow: /notifications
+Disallow: /broadcast

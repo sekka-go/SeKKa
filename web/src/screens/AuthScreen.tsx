@@ -106,7 +106,7 @@ export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (sessio
   };
 
   if (pendingRouteSetup) return <main className="auth-page">
-    <header className="auth-page-header"><a href="/" aria-label={t("سِكّة، الرئيسية")}><BrandLogo /></a></header>
+    <header className="auth-page-header"><a href="/"><BrandLogo /></a></header>
     <section className="auth-page-content route-onboarding-content">
       <RiderRoutePreferences token={pendingRouteSetup.token} notify={notify} onboarding onComplete={() => { onSignedIn(pendingRouteSetup); setPendingRouteSetup(null); notify(t("أهلًا بك في سِكّة. حسابك ونقطك المفضلة جاهزين."), "success"); }} />
     </section>
@@ -114,7 +114,7 @@ export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (sessio
 
   return <main className={`auth-page ${mode === "login" ? "auth-login-page" : "auth-register-page"}`}>
     <AuthJourneyBackdrop />
-    <header className="auth-page-header"><a href="/" aria-label={t("سِكّة، الرئيسية")}><BrandLogo /></a></header>
+    <header className="auth-page-header"><a href="/"><BrandLogo /></a></header>
     <section className="auth-page-content">
       <div className={`auth-card auth-page-card ${mode === "login" ? "auth-login-card" : "auth-register-card"}`}>
         <div className="auth-tabs"><span className="active" aria-current="page">{mode === "login" ? t("تسجيل الدخول") : t("حساب جديد")}</span></div>
