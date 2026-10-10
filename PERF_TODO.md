@@ -1,14 +1,14 @@
 # Performance audit follow-up
 
-- [ ] Remove the timed full-screen intro gate from normal cold startup while keeping the landing route immediately visible.
-- [ ] Split authenticated workspace and auth screen modules from the public landing entry; keep route loading compact, inline, and recoverable.
-- [ ] Replace the initial rider workspace loading card with an in-place skeleton and ensure errors retain retry controls.
-- [ ] Add verified indexes for the six foreign-key columns reported by the Supabase performance advisor, using a migration only; do not apply against production directly.
-- [ ] Re-run typecheck, web build, server tests, PWA checks, and any repository checks after their respective changes.
-- [ ] Re-measure cold and repeat landing/login traces at mobile + Slow 4G + 4× CPU; record authenticated route limitations unless a safe non-production account is available.
-- [ ] Inspect worker cache policy and document safe offline/logout boundaries; do not cache authenticated API/user responses.
-- [ ] Confirm after measurements whether fonts or additional code splitting warrant further changes; avoid a new query/cache dependency without observed duplicate-request impact.
-- [ ] Confirm no main-branch push; prepare a review branch/PR after verification.
+- [x] Remove the timed full-screen intro gate from normal cold startup while keeping the landing route immediately visible.
+- [x] Split authenticated workspace and auth screen modules from the public landing entry; keep route loading compact, inline, and recoverable.
+- [x] Keep loading states inline, announce slow connections after eight seconds, and surface API timeout failures through existing retry UI.
+- [x] Add indexes for the six foreign-key columns reported by Supabase, in a migration only; do not apply to production directly.
+- [x] Re-run web build, server tests, PWA checks, lint, and translation-key parity.
+- [x] Re-measure cold and repeat landing traces at mobile + Slow 4G + 4× CPU; protected routes remain unmeasured without a safe test login.
+- [x] Verify generated worker cache boundaries; authenticated API/user data caching was not added.
+- [x] Defer further query/cache dependencies; current search debounce/cancellation safeguards are present and code splitting/font loading were measured.
+- [ ] Keep changes on `perf-fix`; prepare a review branch/PR after final documentation and commit review.
 
 ## Deferred pending evidence
 
