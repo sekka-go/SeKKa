@@ -354,7 +354,7 @@ button, input, select, textarea { color-scheme: inherit; }
 :root[data-theme="light"] .landing-header { background: var(--color-background); box-shadow: none; }
 :root[data-theme="light"] .landing-route-card { background: var(--color-surface); border-color: var(--color-border); }
 :root[data-theme="light"] .landing-hero { color: var(--color-text-primary); }
-:root[data-theme="light"] .sikka-splash,
+:root[data-theme="light"] .sekka-splash,
 :root[data-theme="light"] .intro-logo-screen {
   color: var(--color-text-primary);
   background: var(--color-background);

@@ -75,7 +75,7 @@
 - `supabase/functions/sekka-api/request-body.ts` و`request-body_test.ts` — قارئ جسم JSON محدود واختباراته.
 - `supabase/functions/sekka-api/group-view.ts` و`group-view_test.ts` — اختيار عضوية الراكب النشط واختبار العزل.
 - `web/src/i18n/locales/en.json` — تصحيحات الإنجليزية من المرحلة السابقة.
-- `docs/audit/SIKKA_FULL_AUDIT_REPORT.md` — تحديث هذا التقرير.
+- `docs/audit/sekka-full-audit-report.md` — تحديث هذا التقرير.
 
 **تقييم الجاهزية:** غير جاهز لإعلان خلوّ المخاطر أو إطلاق تغييرات قاعدة البيانات. الإصلاحان البرمجيان اجتازا اختبارات وحدات وDeno check، لكن خطر سعة المجموعة/الكتابة الجزئية، وسباق مراجعة الدفعات، وتكرار migrations، وفعالية RLS، ومسارات المراجعة الإدارية لا تزال غير محسومة تنفيذيًا. يلزم تشغيل Supabase مع Docker على قاعدة مؤقتة، إضافة اختبارات pgTAP وتزامن، ومقارنة سجل migrations المعتمد. لم يحدث نشر أو دمج أو تغيير إنتاجي.
 
@@ -166,6 +166,6 @@
 ## الملفات التي تغيرت
 
 - `web/src/i18n/locales/en.json` — تصحيح نصوص الإنجليزية.
-- `docs/audit/SIKKA_FULL_AUDIT_REPORT.md` — هذا التقرير.
+- `docs/audit/sekka-full-audit-report.md` — هذا التقرير.
 
 لم أعدّل SQL أو API في هذه الجولة؛ يلزم تشغيل Supabase محليًا ومقارنة migration history قبل تغيير قواعد الإنتاج.

@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-export default function SikkaMark({ className = "", style }: { className?: string; style?: CSSProperties }) {
+export default function SekkaMark({ className = "", style }: { className?: string; style?: CSSProperties }) {
   return <svg className={className} style={style} viewBox="0 0 512 512" fill="none" aria-hidden="true" focusable="false">
     <path d="M142 389C221 368 319 347 357 313C399 273 279 254 210 225C141 196 231 166 356 145" stroke="currentColor" strokeWidth="15" strokeLinecap="round" />
     <path d="M138 408C235 384 340 360 382 320C429 274 293 239 227 210C177 188 274 158 364 137" stroke="var(--color-secondary)" strokeOpacity=".72" strokeWidth="5" strokeLinecap="round" />
