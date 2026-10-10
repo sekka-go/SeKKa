@@ -335,6 +335,15 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   background: color-mix(in srgb, var(--color-danger) 10%, var(--color-surface));
   border-color: var(--color-danger);
 }
+.app-shell .account-delete-disclosure .account-delete-warning {
+  margin: 0;
+  border-inline-start: 3px solid var(--color-danger);
+  border-radius: .5rem;
+  padding: .75rem 1rem;
+  color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 8%, var(--color-surface));
+  line-height: 1.7;
+}
 @media (max-width: 800px) {
   .app-shell .admin-control-panel article:has(> .user-actions-menu) { align-items: flex-start; }
   .app-shell .admin-control-panel article:has(> .user-actions-menu) > div { flex: 1 1 12rem; min-width: 0; }

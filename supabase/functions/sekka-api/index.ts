@@ -434,7 +434,7 @@ async function authenticate(req: Request): Promise<User | null> {
   const tokenHash = await digest(raw);
   const { data: session, error: queryError } = await db!.from("sessions").select("user_id,expires_at,revoked_at").eq("token_hash", tokenHash).maybeSingle();
   if (queryError || !session || session.revoked_at || Date.parse(session.expires_at) <= Date.now()) return null;
-  const { data: user, error: userError } = await db!.from("users").select("id,full_name,phone_number,role,verified_at,created_at").eq("id", session.user_id).maybeSingle();
+  const { data: user, error: userError } = await db!.from("users").select("id,full_name,phone_number,role,verified_at,created_at").eq("id", session.user_id).is("deleted_at", null).maybeSingle();
   if (userError || !user) return null;
   const { data: controls, error: controlsError } = await db!.from("admin_user_controls").select("status").eq("user_id", user.id).maybeSingle();
   if (controlsError) throw controlsError;
@@ -463,6 +463,32 @@ async function writeAdminAudit(actorId: number, action: string, resourceType: st
     p_reason: reason, p_before: before, p_after: after,
   });
   if (auditError) throw auditError;
+}
+async function deleteAccountData(actorId: number, targetId: number, reason: string | null) {
+  const [{ data: profile, error: profileError }, { data: documents, error: documentsError }] = await Promise.all([
+    db!.from("users").select("avatar_path").eq("id", targetId).is("deleted_at", null).maybeSingle(),
+    db!.from("user_verifications").select("object_path").eq("user_id", targetId),
+  ]);
+  if (profileError || documentsError) throw profileError ?? documentsError;
+  if (!profile) throw new Error("account not found or already deleted");
+  const paths = (documents ?? []).map((document) => document.object_path).filter((path): path is string => typeof path === "string" && path.length > 0);
+  const { data, error: deletionError } = await db!.rpc("sekka_delete_account_v1", {
+    p_actor_user_id: actorId, p_target_user_id: targetId, p_reason: reason,
+  });
+  if (deletionError) throw deletionError;
+  // Commit the account redaction first. A policy rejection must never remove
+  // verification files from an account that was not actually deleted.
+  const cleanupErrors: string[] = [];
+  if (paths.length) {
+    const { error: storageError } = await db!.storage.from("verification-documents").remove(paths);
+    if (storageError) cleanupErrors.push(storageError.message);
+  }
+  if (profile.avatar_path) {
+    const { error: avatarError } = await db!.storage.from("avatars").remove([profile.avatar_path]);
+    if (avatarError) cleanupErrors.push(avatarError.message);
+  }
+  if (cleanupErrors.length) console.error("account deletion storage cleanup failed", { targetId, errors: cleanupErrors });
+  return data;
 }
 async function notifyUser(userId: number, groupId: number | null, eventKey: string, payload: Json = {}) {
   if (groupId !== null) {
@@ -721,7 +747,7 @@ Deno.serve(async (req: Request) => {
       if (e) throw e; return reply({ categories: data }, 200, origin);
     }
     const user = await authenticate(req);
-    if (user && user.account_status !== "active" && path !== "/auth/logout") return error("الحساب موقوف حاليًا. تواصل مع خدمة العملاء للمساعدة.", 403, origin);
+    if (user && user.account_status !== "active" && path !== "/auth/logout" && !(req.method === "DELETE" && path === "/account")) return error("الحساب موقوف حاليًا. تواصل مع خدمة العملاء للمساعدة.", 403, origin);
     const avatarRoute = path.match(/^\/profile\/(\d+)\/avatar$/);
     if (req.method === "GET" && avatarRoute) {
       if (!user) return error("سجّل الدخول لعرض الصور الشخصية.", 401, origin);
@@ -1009,7 +1035,7 @@ Deno.serve(async (req: Request) => {
       if (phone.length > 32 || String(body.password ?? "").length > 128) return error("رقم الهاتف أو كلمة السر غير صحيحة.", 400, origin);
       const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
       if (!await takeLimit(`login:${ip}:${phone}`, 5, 900)) return error("محاولات كتير في وقت قصير. حاول تاني بعد شوية.", 429, origin);
-      const { data: record } = await db.from("users").select("id,full_name,phone_number,password_hash,role,verified_at,created_at").eq("phone_number", phone).maybeSingle();
+      const { data: record } = await db.from("users").select("id,full_name,phone_number,password_hash,role,verified_at,created_at").eq("phone_number", phone).is("deleted_at", null).maybeSingle();
       const valid = record ? await verifyPassword(String(body.password ?? ""), record.password_hash) : await verifyPassword(String(body.password ?? ""), "pbkdf2$310000$00000000000000000000000000000000$0000000000000000000000000000000000000000000000000000000000000000");
       if (!record || !valid) return error("رقم الهاتف أو كلمة السر غلط.", 401, origin);
       const { data: accountControl, error: controlError } = await db.from("admin_user_controls").select("status").eq("user_id", record.id).maybeSingle();
@@ -1039,6 +1065,24 @@ Deno.serve(async (req: Request) => {
         await db.from("sessions").update({ revoked_at: new Date().toISOString() }).eq("user_id", user.id).neq("token_hash", await digest(req.headers.get("authorization")!.replace(/^Bearer\s+/i, "")));
         return reply({ success: true, revoked_other_sessions: 1 }, 200, origin);
       }
+    }
+
+    if (req.method === "DELETE" && path === "/account") {
+      if (!user) return error("سجّل الدخول أولًا.", 401, origin);
+      if (!clean(body.current_password) || String(body.current_password).length > 128) return error("أدخل كلمة السر الحالية لتأكيد حذف الحساب.", 400, origin);
+      if (!await takeLimit(`account-delete:${user.id}`, 3, 3600)) return error("محاولات حذف كثيرة. حاول مرة أخرى بعد قليل.", 429, origin);
+      const { data: credentials, error: credentialError } = await db.from("users").select("password_hash").eq("id", user.id).is("deleted_at", null).maybeSingle();
+      if (credentialError) throw credentialError;
+      if (!credentials || !await verifyPassword(String(body.current_password), credentials.password_hash)) return error("كلمة السر الحالية غير صحيحة.", 401, origin);
+      try { await deleteAccountData(user.id, user.id, null); }
+      catch (deletionError) {
+        const message = deletionError instanceof Error ? deletionError.message : "";
+        if (message.includes("finish or cancel active trips")) return error("أنه مشاويرك النشطة أو ألغها قبل حذف الحساب.", 409, origin);
+        if (message.includes("protected super administrator")) return error("لا يمكن حذف حساب مسؤول النظام المحمي.", 403, origin);
+        if (message.includes("account not found")) return error("الحساب غير موجود أو سبق حذفه.", 404, origin);
+        throw deletionError;
+      }
+      return reply({ success: true }, 200, origin);
     }
 
     if (path === "/rider/requests") {
@@ -1573,7 +1617,7 @@ Deno.serve(async (req: Request) => {
       if (user.role === "admin") return reply({ contacts: [] }, 200, origin);
       const contactIds = await getDirectMessageContactIds(user.id);
       if (!contactIds.length) return reply({ contacts: [] }, 200, origin);
-      const { data: contacts, error: contactsError } = await db.from("users").select("id,full_name,role,avatar_path").in("id", contactIds).order("full_name");
+      const { data: contacts, error: contactsError } = await db.from("users").select("id,full_name,role,avatar_path").in("id", contactIds).is("deleted_at", null).order("full_name");
       if (contactsError) throw contactsError;
       return reply({ contacts: contacts ?? [] }, 200, origin);
     }
@@ -1587,7 +1631,7 @@ Deno.serve(async (req: Request) => {
       const conversationRows = rows ?? [];
       const otherUserIds = [...new Set(conversationRows.map((row) => Number(row.participant_low_id) === user.id ? Number(row.participant_high_id) : Number(row.participant_low_id)))];
       const { data: contacts, error: usersError } = otherUserIds.length
-        ? await db.from("users").select("id,full_name,role,avatar_path").in("id", otherUserIds)
+        ? await db.from("users").select("id,full_name,role,avatar_path").in("id", otherUserIds).is("deleted_at", null)
         : { data: [], error: null };
       if (usersError) throw usersError;
       const byId = new Map((contacts ?? []).map((contact) => [Number(contact.id), contact]));
@@ -1603,6 +1647,9 @@ Deno.serve(async (req: Request) => {
       const recipientId = Number(body.recipient_user_id);
       if (!Number.isSafeInteger(recipientId) || recipientId < 1 || recipientId === user.id) return error("اختار مستخدمًا صحيحًا لبدء المحادثة.", 400, origin);
       if (user.role === "admin" || !(await getDirectMessageContactIds(user.id)).includes(recipientId)) return error("يمكنك مراسلة مستخدم شاركك رحلة أو مجموعة فقط.", 403, origin);
+      const { data: recipient, error: recipientError } = await db.from("users").select("id").eq("id", recipientId).is("deleted_at", null).maybeSingle();
+      if (recipientError) throw recipientError;
+      if (!recipient) return error("المستخدم غير موجود.", 404, origin);
       const participantLowId = Math.min(user.id, recipientId), participantHighId = Math.max(user.id, recipientId);
       const { data: existing, error: lookupError } = await db.from("message_conversations").select("id").eq("participant_low_id", participantLowId).eq("participant_high_id", participantHighId).maybeSingle();
       if (lookupError) throw lookupError;
@@ -2167,7 +2214,7 @@ Deno.serve(async (req: Request) => {
         filteredControlIds = (filteredControls ?? []).map((item) => item.user_id);
         if (status === "active" && filteredControlIds.length === 0) filteredControlIds = null;
       }
-      let query = db.from("users").select("id,full_name,phone_number,role,verified_at,created_at", { count: "exact" }).order("created_at", { ascending: false }).range(offset, offset + requestedLimit - 1);
+      let query = db.from("users").select("id,full_name,phone_number,role,verified_at,created_at", { count: "exact" }).is("deleted_at", null).order("created_at", { ascending: false }).range(offset, offset + requestedLimit - 1);
       if (["rider", "captain", "admin"].includes(String(role))) query = query.eq("role", role);
       if (filteredControlIds?.length) {
         if (status === "active") query = query.not("id", "in", `(${filteredControlIds.join(",")})`);
@@ -2202,11 +2249,27 @@ Deno.serve(async (req: Request) => {
       return reply({ user_control: data }, 200, origin);
     }
     const userProfileRoute = path.match(/^\/admin\/users\/(\d+)$/);
+    if (req.method === "DELETE" && userProfileRoute) {
+      const targetUserId = Number(userProfileRoute[1]);
+      const reason = clean(body.reason) ? body.reason.trim() : "";
+      if (!Number.isSafeInteger(targetUserId) || targetUserId < 1) return error("رقم المستخدم غير صالح.", 400, origin);
+      if (targetUserId === user!.id) return error("لا يمكن حذف حساب المسؤول الذي ينفذ الإجراء.", 409, origin);
+      if (!reason || reason.length > 1000) return error("اكتب سبب حذف الحساب (حتى 1000 حرف).", 400, origin);
+      try { await deleteAccountData(user!.id, targetUserId, reason); }
+      catch (deletionError) {
+        const message = deletionError instanceof Error ? deletionError.message : "";
+        if (message.includes("finish or cancel active trips")) return error("لا يمكن الحذف أثناء وجود مشوار نشط. أنهِه أو ألغِه أولًا.", 409, origin);
+        if (message.includes("protected super administrator")) return error("لا يمكن حذف حساب مسؤول النظام المحمي.", 403, origin);
+        if (message.includes("target account not found")) return error("المستخدم غير موجود أو سبق حذفه.", 404, origin);
+        throw deletionError;
+      }
+      return reply({ success: true }, 200, origin);
+    }
     if (req.method === "GET" && userProfileRoute) {
       const targetUserId = Number(userProfileRoute[1]);
       if (!Number.isSafeInteger(targetUserId) || targetUserId < 1) return error("رقم المستخدم غير صالح.", 400, origin);
       const [target, controls, captain, documents] = await Promise.all([
-        db.from("users").select("id,full_name,phone_number,role,verified_at,created_at").eq("id", targetUserId).maybeSingle(),
+        db.from("users").select("id,full_name,phone_number,role,verified_at,created_at").eq("id", targetUserId).is("deleted_at", null).maybeSingle(),
         db.from("admin_user_controls").select("status,reason,updated_at,updated_by_user_id").eq("user_id", targetUserId).maybeSingle(),
         db.from("captain_profiles").select("vehicle_type_id,vehicle_plate,license_number,verification_status,status").eq("user_id", targetUserId).maybeSingle(),
         db.from("user_verifications").select("id,document_type,status,rejection_reason,uploaded_at,reviewed_at").eq("user_id", targetUserId).order("uploaded_at", { ascending: false }).limit(20),
@@ -2452,7 +2515,7 @@ Deno.serve(async (req: Request) => {
       const requestKey = `broadcast:${requestId}`;
       let offset = 0, recipientCount = 0;
       while (true) {
-        const { data: recipients, error: recipientsError } = await db.from("users").select("id").order("id", { ascending: true }).range(offset, offset + 999);
+        const { data: recipients, error: recipientsError } = await db.from("users").select("id").is("deleted_at", null).order("id", { ascending: true }).range(offset, offset + 999);
         if (recipientsError) throw recipientsError;
         if (!recipients?.length) break;
         const rows = recipients.map(({ id }) => ({ user_id: id, group_id: null, type: "system", event_key: requestKey, payload: { title, message } }));

@@ -1313,6 +1313,26 @@
     "استلمنا طلب توثيق الكابتن": "We received your Captain verification request",
     "ستراجع الإدارة المستندات الأساسية. يمكنك استخدام التطبيق الآن، ولن تظهر لك المسارات قبل اكتمال الموافقة.": "The team will review your required documents. You can use the app now; lines will appear after your application is approved.",
     "يمكنك استخدام التطبيق الآن وإضافة بطاقة الهوية لاحقًا من صفحة التوثيق.": "You can use the app now and add your ID card later from the verification page.",
-    "مستنداتك خاصة، ولا يطّلع عليها إلا فريق التوثيق المخوّل.": "Your documents are private and visible only to the authorized verification team."
-  }
+    "مستنداتك خاصة، ولا يطّلع عليها إلا فريق التوثيق المخوّل.": "Your documents are private and visible only to the authorized verification team.",
+  "سيتم حذف بيانات الحساب الشخصية ومستندات التوثيق وإلغاء جلساته. السجلات المالية والتشغيلية ستبقى مجهولة الهوية.": "The account personal data and verification documents will be deleted, and its sessions revoked. Financial and operational records will remain anonymized.",
+  "تم حذف الحساب والاحتفاظ بالسجلات المطلوبة بصورة مجهولة.": "The account was deleted; required records were retained in anonymized form.",
+  "سيتم حذف بيانات الحساب الخاصة وإلغاء الجلسات. ستبقى السجلات المالية والتشغيلية مجهولة الهوية. هل تريد المتابعة؟": "Your private account data will be deleted and all sessions signed out. Financial and operational records will remain anonymized. Continue?",
+  "جارٍ حذف الحساب…": "Deleting account…",
+  "سيتم إنهاء الجلسات وحذف صورة الحساب ومستندات التوثيق وبيانات المواقع. ستظل السجلات المالية والتشغيلية محفوظة بصورة مجهولة لحماية سجل الرحلات والحقوق.": "This signs out all sessions and deletes your avatar, verification documents, and location data. Financial and operational records remain anonymized to protect trip history and legal rights.",
+  "كلمة السر الحالية للتأكيد": "Current password to confirm",
+  "سبب حذف الحساب": "Reason for account deletion",
+  "تأكيد حذف الحساب؟": "Confirm account deletion?",
+  "حذف الحساب": "Delete account",
+  "احذف حسابك وبياناتك الشخصية من التطبيق.": "Delete your account and personal information from the app.",
+  "حذف حسابي نهائيًا": "Delete my account permanently",
+  "لا يمكن حذف حساب المسؤول المحمي.": "The protected administrator account cannot be deleted.",
+  "لا يمكن الحذف أثناء وجود مشوار نشط. أنهِه أو ألغِه أولًا.": "An active ride prevents account deletion. Complete or cancel it first.",
+  "المستخدم غير موجود أو سبق حذفه.": "The user was not found or has already been deleted.",
+  "محاولات حذف كثيرة. حاول مرة أخرى بعد قليل.": "Too many deletion attempts. Try again later.",
+  "أدخل كلمة السر الحالية لتأكيد حذف الحساب.": "Enter your current password to confirm account deletion.",
+  "لا يمكن حذف حساب المسؤول الذي ينفذ الإجراء.": "An administrator cannot delete the account currently performing the action.",
+  "اكتب سبب حذف الحساب (حتى 1000 حرف).": "Enter a reason for deleting this account (up to 1,000 characters).",
+  "أنه مشاويرك النشطة أو ألغها قبل حذف الحساب.": "Complete or cancel your active rides before deleting your account.",
+  "الحساب غير موجود أو سبق حذفه.": "The account was not found or has already been deleted."
+}
 }
