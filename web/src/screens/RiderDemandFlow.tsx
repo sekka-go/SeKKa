@@ -21,18 +21,19 @@ type DemandResponse = {
   line: { id: number; origin_label: string; destination_label: string; arrival_time: string; price_per_seat: number } | null;
 };
 
-export default function RiderDemandFlow({ session, notify, onBack, onRequestCreated }: {
+export default function RiderDemandFlow({ session, notify, onBack, onRequestCreated, initialPickup = null }: {
   session: Session;
   notify: (text: string, tone?: Toast["tone"]) => void;
   onBack: () => void;
   onRequestCreated: () => Promise<void>;
+  initialPickup?: MapPoint | null;
 }) {
   const [vehicle, setVehicle] = useState<"private_car" | "hiace">("private_car");
   const [tripDate, setTripDate] = useState(() => shiftDate(todayInCairo(), 1));
   const [arrivalTime, setArrivalTime] = useState("08:00");
-  const [pickup, setPickup] = useState<MapPoint | null>(null);
+  const [pickup, setPickup] = useState<MapPoint | null>(initialPickup);
   const [dropoff, setDropoff] = useState<MapPoint | null>(null);
-  const [pickupText, setPickupText] = useState("");
+  const [pickupText, setPickupText] = useState(initialPickup?.label ?? "");
   const [dropoffText, setDropoffText] = useState("");
   const [mapOpen, setMapOpen] = useState(false);
   const [mapTarget, setMapTarget] = useState<MapPickMode>("pickup");
@@ -73,7 +74,7 @@ export default function RiderDemandFlow({ session, notify, onBack, onRequestCrea
     finally { setLoading(false); }
   };
 
-  return <div className="booking-layout">
+  return <div className="booking-layout rider-booking-experience">
     <section className="surface booking-form-surface">
       <div className="surface-heading"><div><span className="eyebrow">{t("طلب رحلة")}</span><h2>{t("ابحث عن مسار مناسب")}</h2><p>{t("لو ما لقيناش مسارًا مناسبًا، نسجل طلبك ونجمعه مع الطلبات القريبة والمتشابهة.")}</p></div><span className="surface-icon">⌖</span></div>
         {submitted ? <section className="booking-review" role="status"><div className="booking-review-heading"><div><span className="eyebrow">{t("تم تسجيل طلبك")}</span><h3>{submitted.line ? t("وجدنا مسارًا مناسبًا") : t("هنبحث لك عن مشوار")}</h3></div><span className="status-chip status-waiting">{submitted.line ? t("تمت المطابقة") : t("بانتظار المطابقة")}</span></div><p>{submitted.line ? <>{submitted.line.origin_label} ← {submitted.line.destination_label} · {t("وصول")} {submitted.line.arrival_time.slice(0,5)}</> : t("سيجمع التطبيق طلبك مع طلبات الركاب المتشابهة، ويربطها بمسار مناسب عند توفره.")}</p><button type="button" className="button button-outline" onClick={() => { setSubmitted(null); setSearched(false); setLines([]); }}>{t("طلب رحلة أخرى")}</button></section> : <>
@@ -85,7 +86,7 @@ export default function RiderDemandFlow({ session, notify, onBack, onRequestCrea
           {mapOpen && <section className="booking-map-panel" aria-label={t("تحديد الموقع على الخريطة")}><div className="booking-map-toolbar"><p className="map-instruction">{t("حدد")} {mapTarget === "pickup" ? t("نقطة الركوب") : t("نقطة الوصول")}</p><button type="button" className="map-close-button" onClick={() => setMapOpen(false)}>×</button></div><div className="booking-map"><MapPicker pickup={pickup} dropoff={dropoff} mode={mapTarget} restrictToGreaterCairo onPick={(mode, point) => { if (mode === "pickup") { setPickup(point); setPickupText(point.label ?? t("موقع محدد على الخريطة")); } else { setDropoff(point); setDropoffText(point.label ?? t("موقع محدد على الخريطة")); } setMapOpen(false); }} /></div></section>}
           <button className="button button-primary button-wide" disabled={loading}>{loading ? t("loading.search") : t("ابحث عن مسار")}</button>
         </form>
-        {searched && <section className="group-list trips-group-list" aria-live="polite">{lines.length ? <><div className="section-title-row"><div><h3>{t("مسارات مناسبة")}</h3><p>{t("سجّل طلبك وسيجمعه التطبيق مع الطلبات المشابهة.")}</p></div><span className="section-count">{lines.length}</span></div>{lines.map((line) => <article className="surface offer-card" key={line.id}><h3>{line.origin_label} ← {line.destination_label}</h3><p>{line.vehicle_type_id === "hiace" ? t("هاي إس") : t("ملاكي")} · {line.arrival_time.slice(0,5)} · {line.seats_available}  {t("مقاعد متاحة ·")} {line.price_per_seat.toLocaleString(getLanguage() === "ar" ? "ar-EG" : "en-EG")}  {t("جنيه للمقعد")}</p></article>)}<button className="button button-primary button-wide" disabled={loading} onClick={() => void requestRide()}>{loading ? t("جارٍ تسجيل الطلب…") : t("سجّل طلب الرحلة")}</button></> : <article className="surface empty-state"><span className="empty-state-icon">⌖</span><h3>{t("مافيش مسار مناسب حاليًا")}</h3><p>{t("سجّل طلبك، والتطبيق هيجمعه مع الطلبات المشابهة تلقائيًا.")}</p><button className="button button-primary button-small" disabled={loading} onClick={() => void requestRide()}>{loading ? t("جارٍ تسجيل الطلب…") : t("سجّل طلب الرحلة")}</button></article>}</section>}
+        {searched && <section className="group-list trips-group-list" aria-live="polite">{lines.length ? <><div className="section-title-row"><div><h3>{t("مسارات مناسبة")}</h3><p>{t("سجّل طلبك وسيجمعه التطبيق مع الطلبات المشابهة.")}</p></div><span className="section-count">{lines.length}</span></div>{lines.map((line) => <article className="surface rider-result-card" key={line.id}><div className="rider-result-route"><span className="rider-route-timeline" aria-hidden="true"><i /><b /><i /></span><div><strong>{line.origin_label}</strong><strong>{line.destination_label}</strong></div></div><div className="rider-result-meta"><span>{line.vehicle_type_id === "hiace" ? t("هاي إس") : t("ملاكي")}</span><span>{t("الوصول")} {line.arrival_time.slice(0,5)}</span><span>{line.seats_available} {t("مقاعد متاحة")}</span><span>{line.price_per_seat.toLocaleString(getLanguage() === "ar" ? "ar-EG" : "en-EG")} {t("جنيه للمقعد")}</span></div></article>)}<button className="button button-primary button-wide" disabled={loading} onClick={() => void requestRide()}>{loading ? t("جارٍ تسجيل الطلب…") : t("سجّل طلب الرحلة")}</button></> : <article className="surface empty-state"><span className="empty-state-icon">⌖</span><h3>{t("مافيش مسار مناسب حاليًا")}</h3><p>{t("سجّل طلبك، والتطبيق هيجمعه مع الطلبات المشابهة تلقائيًا.")}</p><button className="button button-primary button-small" disabled={loading} onClick={() => void requestRide()}>{loading ? t("جارٍ تسجيل الطلب…") : t("سجّل طلب الرحلة")}</button></article>}</section>}
       </>}
       <button type="button" className="button button-quiet button-small" onClick={onBack}>{t("رجوع")}</button>
     </section>

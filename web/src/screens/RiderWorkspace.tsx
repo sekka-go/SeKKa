@@ -1,5 +1,4 @@
 import { t } from "../i18n/runtime";
-import Button from "../components/Button";
 import { getDirection } from "../i18n/runtime";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import MapPicker from "../components/MapPickerLoader";
@@ -36,6 +35,7 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
   const [selectedGroup, setSelectedGroup] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [bookingMode, setBookingMode] = useState<"new" | "join" | "edit">("new");
+  const [bookingPickup, setBookingPickup] = useState<MapPoint | null>(null);
   const [editingGroupId, setEditingGroupId] = useState<number | null>(null);
   const [bookingStep, setBookingStep] = useState<"route" | "price" | "review">("route");
   const [priceInfoOpen, setPriceInfoOpen] = useState(false);
@@ -65,11 +65,11 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
     return priceLoading ? "جارٍ حساب الأسعار…" : priceError ? "تعذر حساب السعر" : "السعر بعد تحديد الفئة";
   };
 
-  const openBooking = (mode: "new" | "join", prefill?: { groupId: number; pickup: MapPoint; dropoff: MapPoint }) => {
+  const openBooking = (mode: "new" | "join", prefill?: { groupId: number; pickup: MapPoint; dropoff: MapPoint }, savedPickup?: SavedPlace) => {
     editAddressRequest.current++;
     setBookingMode(mode);
     setEditingGroupId(null);
-    if (mode === "new") { setCategoryId(""); setPackageType("daily"); setDates(defaultDates("daily")); }
+    if (mode === "new") { setCategoryId(""); setPackageType("daily"); setDates(defaultDates("daily")); setBookingPickup(savedPickup ? { lat: savedPickup.lat, lng: savedPickup.lng, label: savedPickup.label, primaryLabel: savedPickup.label, kind: "pickup" } : null); }
     if (mode === "join") {
       setInviteCode(prefill ? String(prefill.groupId) : "");
       setPickup(prefill?.pickup ?? null); setDropoff(prefill?.dropoff ?? null);
@@ -374,11 +374,15 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
   };
 
   const dataErrorBanner = initialLoadError ? <ErrorState title={t("تعذر تحديث بعض البيانات")} text={initialLoadError} action="إعادة المحاولة" onAction={() => void loadInitialData()} /> : null;
-  const welcomeBanner = <div className="welcome-banner"><div className="welcome-copy"><span className="eyebrow">{t("سِكّة أقرب لك")}</span><h2>{t("طريقك أسهل مع")} <em>{t("سِكَّة.")}</em></h2><div className="welcome-actions"><Button variant="primary" onClick={() => openBooking("new")}>{t("مشوار جديد")}</Button></div></div><div className="welcome-illustration"><div className="sun-orbit" /><div className="route-art"><span /><i /><i /><i /><b /></div><div className="mini-car">▰</div></div></div>;
+  const welcomeBanner = <section className="rider-hero"><div className="rider-hero-copy"><span className="eyebrow">{t("تنقّل أسرع بطريقة أذكى")}</span><h2>{t("مشوارك اليومي،")}<br /><em>{t("على سِكّة أسهل.")}</em></h2><p>{t("شارك الطريق مع ناس رايحة في نفس اتجاهك، وخلي كل مشوار أسهل.")}</p><div className="rider-hero-actions"><button type="button" className="button button-primary" onClick={() => openBooking("new")}>{t("ابحث عن رحلة")} <span aria-hidden="true">←</span></button><span className="rider-service-area"><i />{t("متاح في القاهرة والجيزة")}</span></div></div><div className="rider-hero-art" aria-hidden="true"><div className="rider-map-grid" /><div className="rider-map-route"><span className="rider-route-start" /><span className="rider-route-car">▰</span><span className="rider-route-end" /></div></div></section>;
 
-  if (section === "account") return <>{dataErrorBanner}<AccountPanel session={session} notify={notify} /></>;
+  const requestCards = <div className="rider-request-list">{demandRequests.map((request) => <article className="surface rider-request-card" key={request.id}><div className="rider-request-card-top"><span className={`status-chip status-${request.status}`}>{request.status === "matched" ? t("تم العثور على مسار") : request.status === "open" ? t("نبحث عن مسار") : request.status === "cancelled" ? t("ملغي") : t("منتهي")}</span><span>{request.vehicle_type_id === "hiace" ? t("هاي إس") : t("ملاكي")}</span><time>{formatDate(request.trip_date)} · {request.arrival_time.slice(0, 5)}</time></div><div className="rider-request-route"><span className="rider-route-timeline" aria-hidden="true"><i /><b /><i /></span><div><strong>{request.pickup_label}</strong><strong>{request.dropoff_label}</strong></div></div><p className="rider-request-note">{request.demand_groups?.status === "matched" ? t("جمع التطبيق طلبك مع طلبات مشابهة.") : t("سيجمع التطبيق الطلبات المتقاربة تلقائيًا.")}</p>{request.line && <div className="rider-match-summary"><strong>{t("المسار المطابق")}: {request.line.origin_label} ← {request.line.destination_label}</strong><span>{request.line.captain_name} · {t("· وصول")} {request.line.arrival_time.slice(0, 5)} · {money(Number(request.line.price_per_seat))} {t("للمقعد")}</span></div>}</article>)}</div>;
 
-  if (section === "booking" && bookingMode !== "edit") return <><RiderDemandFlow session={session} notify={notify} onBack={() => setSection("home")} onRequestCreated={refreshDemandRequests} />{dataErrorBanner}</>;
+  if (section === "account") return <div className="rider-account-experience">{dataErrorBanner}<AccountPanel session={session} notify={notify} /></div>;
+
+  if (section === "requests") return <div className="rider-requests-page">{dataErrorBanner}<section className="rider-section-intro"><span className="eyebrow">{t("كل طلباتك في مكان واحد")}</span><h2>{t("طلبات رحلاتك")}</h2><p>{t("تابع حالة طلباتك والمسارات التي تم العثور عليها")}</p></section>{demandRequests.length ? requestCards : initialLoadError ? null : <EmptyState icon="⌖" title={t("مافيش طلبات رحلات لسه")} text="ابحث عن مسار مناسب، ولو مافيش هنسجل طلبك ونجمعه مع الطلبات المشابهة." action="ابحث عن رحلة" onAction={() => openBooking("new")} />}</div>;
+
+  if (section === "booking" && bookingMode !== "edit") return <><RiderDemandFlow session={session} notify={notify} onBack={() => setSection("home")} onRequestCreated={refreshDemandRequests} initialPickup={bookingPickup} />{dataErrorBanner}</>;
   if (loading && section === "home") return <div className="dashboard-grid rider-dashboard"><section className="dashboard-main">{welcomeBanner}<LoadingCard text="loading.riderRequests" /></section></div>;
   if (loading && section === "trips") return <div className="trips-page">{dataErrorBanner}<div className="section-toolbar"><button className="button button-primary button-small" onClick={() => openBooking("new")}>{t("＋ ابحث عن مسار")}</button></div><LoadingCard text="loading.riderRequests" /></div>;
   if (loading) return <LoadingCard text="loading.general" />;
@@ -481,7 +485,7 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
   </div>;
 
   const allTrips = visibleGroups.flatMap((view) => view.trips.map((trip) => ({ ...trip, groupId: view.group.id, categoryId: view.group.category_id, fare: view.group.seat_day_fare })));
-  if (section === "trips") return <div className="trips-page">
+  if (section === "trips") return <div className="trips-page rider-trips-experience">
     {dataErrorBanner}
     <div className="section-toolbar"><button className="button button-primary button-small" onClick={() => openBooking("new")}>{t("＋ ابحث عن مسار")}</button></div>
     {selectedGroup && selected ? <><button className="button button-quiet button-small trips-back-to-groups" onClick={() => setSelectedGroup(null)}>{t("→ رجوع لمجموعاتي")}</button><GroupDetail view={selected} categories={categories} busy={submitting} action={groupAction} notify={notify} onEdit={() => startEditingGroup(selected)} currentUserId={session.user.id} token={session.token} /></> : visibleGroups.length ? <section className="group-list trips-group-list" aria-label={t("مجموعات مشاويرك")}>{visibleGroups.map((view) => <GroupSummary key={view.group.id} view={view} categories={categories} onClick={() => setSelectedGroup(view.group.id)} />)}</section> : null}
@@ -489,11 +493,13 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
     {visibleGroups.length > 1 && selectedGroup && <div className="group-switcher">{visibleGroups.map((view) => <button key={view.group.id} className={view.group.id === selectedGroup ? "group-chip active" : "group-chip"} onClick={() => setSelectedGroup(view.group.id)}>{t("مجموعة #")}{view.group.id} · {statusLabel(view.group.status)}</button>)}</div>}
   </div>;
 
-  return <div className="dashboard-grid rider-dashboard">
+  return <div className="dashboard-grid rider-dashboard rider-home-experience">
     <section className="dashboard-main">{dataErrorBanner}
       {welcomeBanner}
-      <div className="section-title-row rider-trips-heading"><h2>{t("طلبات رحلاتك")}</h2><button className="button button-outline button-small" onClick={() => openBooking("new")}>{t("＋ ابحث عن رحلة")}</button></div>
-      {demandRequests.length ? <div className="group-list">{demandRequests.slice(0, 3).map((request) => <article className="surface offer-card" key={request.id}><div className="route-offer-top"><span className={`status-chip status-${request.status}`}>{request.status === "matched" ? t("تم العثور على مسار") : request.status === "open" ? t("نبحث عن مسار") : request.status === "cancelled" ? t("ملغي") : t("منتهي")}</span><time>{formatDate(request.trip_date)} · {request.arrival_time.slice(0,5)}</time></div><h3>{request.pickup_label} ← {request.dropoff_label}</h3><p>{request.vehicle_type_id === "hiace" ? t("هاي إس") : t("ملاكي")} · {request.demand_groups?.status === "matched" ? t("جمع التطبيق طلبك مع طلبات مشابهة.") : t("سيجمع التطبيق الطلبات المتقاربة تلقائيًا.")}</p>{request.line && <p><strong>{request.line.captain_name}</strong> · {request.line.origin_label} ← {request.line.destination_label}  {t("· وصول")} {request.line.arrival_time.slice(0,5)} · {money(Number(request.line.price_per_seat))}  {t("للمقعد")}</p>}</article>)}</div> : initialLoadError ? null : <EmptyState icon="⌖" title={t("مافيش طلبات رحلات لسه")} text="ابحث عن مسار مناسب، ولو مافيش هنسجل طلبك ونجمعه مع الطلبات المشابهة." action="ابحث عن رحلة" onAction={() => openBooking("new")} />}
+      <section className="rider-shortcuts"><div className="rider-section-heading"><div><span className="eyebrow">{t("أماكنك المعتادة")}</span><h2>{t("ابدأ من مكانك المفضل")}</h2></div><button type="button" className="text-action" onClick={() => setSection("account")}>{t("إدارة الأماكن")}</button></div>{savedPlaces.length ? <div className="rider-place-list">{savedPlaces.map((place) => <button type="button" className="rider-place-chip" key={`${place.place_type}-${place.label}`} onClick={() => openBooking("new", undefined, place)}><span className="rider-place-icon">{place.place_type === "home" ? "⌂" : place.place_type === "work" ? "▦" : "⌖"}</span><span><small>{place.place_type === "home" ? t("المنزل") : place.place_type === "work" ? t("العمل") : t("مكان محفوظ")}</small><strong>{place.label}</strong></span><b aria-hidden="true">←</b></button>)}</div> : <div className="rider-saved-empty"><span aria-hidden="true">⌖</span><p>{t("احفظ المنزل أو العمل لتبدأ البحث بسرعة في المرة القادمة.")}</p><button type="button" className="button button-outline button-small" onClick={() => setSection("account")}>{t("إضافة مكان محفوظ")}</button></div>}</section>
+      <section className="rider-home-requests"><div className="rider-section-heading"><div><span className="eyebrow">{t("متابعة رحلتك")}</span><h2>{t("طلبات رحلاتك")}</h2></div><button className="text-action" type="button" onClick={() => setSection("requests")}>{t("عرض الكل")} {demandRequests.length > 0 && <b>{demandRequests.length}</b>}</button></div>
+        {demandRequests.length ? <>{requestCards}<button type="button" className="button button-outline button-small rider-view-all" onClick={() => setSection("requests")}>{t("عرض كل الطلبات")}</button></> : initialLoadError ? null : <EmptyState icon="⌖" title={t("مافيش طلبات رحلات لسه")} text="ابحث عن مسار مناسب، ولو مافيش هنسجل طلبك ونجمعه مع الطلبات المشابهة." action="ابحث عن رحلة" onAction={() => openBooking("new")} />}
+      </section>
     </section>
   </div>;
 }
