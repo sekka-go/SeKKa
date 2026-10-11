@@ -1,14 +1,14 @@
-import { t, useLanguage } from "../i18n/runtime";
+import { t } from "../i18n/runtime";
 import BrandLogo from "../components/BrandLogo";
+import PublicLanguageToggle from "../components/PublicLanguageToggle";
 
 export default function LandingScreen() {
-  const { language, setLanguage } = useLanguage();
   return (
     <main className="landing-page stitch-welcome-page">
       <header className="landing-header stitch-welcome-header">
         <a className="landing-brand" href="/" aria-label={t("سِكَّة، الرئيسية")}><BrandLogo /></a>
         <span className="stitch-welcome-availability"><i />{t("متاح في القاهرة والجيزة")}</span>
-        <button className="stitch-language-toggle" type="button" onClick={() => setLanguage(language === "ar" ? "en" : "ar")} aria-label={language === "ar" ? "Switch to English" : "التبديل إلى العربية"}>{language === "ar" ? "English" : "العربية"}</button>
+        <PublicLanguageToggle />
       </header>
 
       <section className="landing-hero">
