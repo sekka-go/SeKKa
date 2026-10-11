@@ -3,6 +3,7 @@ import { api, uploadVerificationDocument, type VerificationDocument, type Verifi
 import { errorText } from "../lib/formatters";
 import { t } from "../i18n/runtime";
 import BrandLogo from "./BrandLogo";
+import PublicLanguageToggle from "./PublicLanguageToggle";
 import type { Session, Toast } from "../types";
 
 type Snapshot = {
@@ -139,14 +140,14 @@ export default function SignupVerificationFlow({ session, notify, onExplore }: {
   };
 
   if (loading && !snapshot) return <main className="auth-page"><section className="auth-page-content"><section className="surface verification-center"><p>{t("loading.verification")}</p></section></section></main>;
-  if (!snapshot) return <main className="auth-page"><header className="auth-page-header" /><section className="auth-page-content"><section className="surface verification-center"><h1>{t("تجهيز توثيق الحساب")}</h1><p role="alert">{error || t("تعذر تحميل حالة المستندات.")}</p><button className="button button-outline" onClick={() => { setLoading(true); void refresh(); }}>{t("إعادة المحاولة")}</button><button className="button button-primary" onClick={() => onExplore(session)}>{t("استكشف سكة الآن")}</button></section></section></main>;
+  if (!snapshot) return <main className="auth-page"><header className="auth-page-header"><a href="/"><BrandLogo /></a><PublicLanguageToggle /></header><section className="auth-page-content"><section className="surface verification-center"><h1>{t("تجهيز توثيق الحساب")}</h1><p role="alert">{error || t("تعذر تحميل حالة المستندات.")}</p><button className="button button-outline" onClick={() => { setLoading(true); void refresh(); }}>{t("إعادة المحاولة")}</button><button className="button button-primary" onClick={() => onExplore(session)}>{t("استكشف سكة الآن")}</button></section></section></main>;
 
   const graceDays = snapshot.grace_period_expires_at
     ? Math.max(0, Math.ceil((Date.parse(snapshot.grace_period_expires_at) - Date.now()) / 86_400_000))
     : null;
 
   return <main className={`auth-page signup-onboarding-page ${snapshot.role === "captain" ? "captain-onboarding" : ""}`}>
-    <header className="auth-page-header"><a href="/"><BrandLogo /></a><h1>{t("أهلًا بك في SeKKa")}</h1></header>
+    <header className="auth-page-header"><a href="/"><BrandLogo /></a><h1>{t("أهلًا بك في SeKKa")}</h1><PublicLanguageToggle /></header>
     <section className="auth-page-content">
       <section className="surface verification-center signup-verification-flow" aria-labelledby="signup-verification-title">
         <header className="verification-heading"><div><span className="eyebrow">{t("خطوة بخطوة")}</span><h2 id="signup-verification-title">{complete ? t("حسابك جاهز للاستكشاف") : t("تجهيز حسابك")}</h2></div></header>
@@ -158,9 +159,9 @@ export default function SignupVerificationFlow({ session, notify, onExplore }: {
             <div className="verification-wizard-heading"><h3>{currentStep.kind === "vehicle" ? t("بيانات المركبة") : currentStep.kind === "phone" ? t("توثيق رقم الهاتف") : t(snapshot.requirements.labels[currentStep.type] ?? currentStep.type)}</h3></div>
             {currentStep.kind === "vehicle" && <form className="form-stack signup-vehicle-form" onSubmit={(event) => void saveVehicle(event)}>
               <p>{t("سجّل بيانات المركبة لبدء مراجعة طلب الكابتن. تبدأ مهلة المستندات المؤجلة بعد إنشاء ملف المركبة.")}</p>
-              <label>{t("نوع المركبة")}<select value={vehicle} onChange={(event) => setVehicle(event.target.value)}><option value="private_car">{t("سيارة خاصة")}</option><option value="hiace">{t("هاي إس")}</option></select></label>
-              <label>{t("رقم الرخصة")}<input value={license} onChange={(event) => setLicense(event.target.value)} autoComplete="off" required /></label>
-              <label>{t("رقم اللوحة")}<input value={plate} onChange={(event) => setPlate(event.target.value)} autoComplete="off" required /></label>
+              <label htmlFor="signup-vehicle-type">{t("نوع المركبة")}<select id="signup-vehicle-type" name="vehicle_type" value={vehicle} onChange={(event) => setVehicle(event.target.value)}><option value="private_car">{t("سيارة خاصة")}</option><option value="hiace">{t("هاي إس")}</option></select></label>
+              <label htmlFor="signup-license-number">{t("رقم الرخصة")}<input id="signup-license-number" name="license_number" value={license} onChange={(event) => setLicense(event.target.value)} autoComplete="off" required /></label>
+              <label htmlFor="signup-plate-number">{t("رقم اللوحة")}<input id="signup-plate-number" name="plate_number" value={plate} onChange={(event) => setPlate(event.target.value)} autoComplete="off" required /></label>
               <button className="button button-primary" disabled={busy}>{busy ? t("لحظة واحدة…") : t("حفظ ومتابعة")}</button>
             </form>}
             {currentStep.kind === "phone" && <article className="verification-phone-row"><div><strong>{t("توثيق رقم الهاتف")}</strong><p>{snapshot.phone_verified ? t("تم توثيق الرقم المسجّل في الحساب.") : snapshot.telegram_enabled ? t("تحقق مجاني عبر تيليجرام بمشاركة رقمك من حسابك نفسه.") : t("خدمة تيليجرام غير مهيأة حاليًا. يمكنك استكمال تجهيز الحساب والتحقق لاحقًا.")}</p></div><div className="verification-phone-actions">{snapshot.phone_verified ? <span className="verification-status is-approved">{t("موثّق ✓")}</span> : <button className="button button-primary button-small" onClick={() => void verifyPhone()} disabled={!snapshot.telegram_enabled}>{t("وثّق رقمك الآن")}</button>}</div></article>}

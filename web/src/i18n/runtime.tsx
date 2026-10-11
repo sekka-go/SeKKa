@@ -33,10 +33,16 @@ function detectLanguage(): Language {
   return "ar";
 }
 
-function flattenCatalog(catalog: Catalog, output: Record<string, string> = {}) {
+function flattenCatalog(catalog: Catalog, output: Record<string, string> = {}, parentPath = "") {
   for (const [key, value] of Object.entries(catalog)) {
-    if (typeof value === "string") output[key] = value;
-    else if (value && typeof value === "object" && !Array.isArray(value)) flattenCatalog(value as Catalog, output);
+    const path = parentPath ? `${parentPath}.${key}` : key;
+    if (typeof value === "string") {
+      // Keep legacy source-text lookups while also supporting explicit namespace paths.
+      output[key] = value;
+      output[path] = value;
+    } else if (value && typeof value === "object" && !Array.isArray(value)) {
+      flattenCatalog(value as Catalog, output, path);
+    }
   }
   return output;
 }
