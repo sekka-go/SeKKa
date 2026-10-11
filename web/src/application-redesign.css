@@ -292,7 +292,7 @@ button, a, input, select, textarea, summary { -webkit-tap-highlight-color: trans
   align-items: center;
   text-align: start;
 }
-.app-shell .landing-header .brand-logo { width: auto; height: auto; justify-content: flex-start; gap: .45rem; }
+.app-shell .landing-header .brand-logo { flex-direction: row; width: auto; height: auto; justify-content: flex-start; gap: .45rem; }
 .app-shell .landing-header .brand-logo-copy { text-align: start; }
 .app-shell .landing-header .brand-logo-copy small { justify-content: flex-start; }
 .landing-page .landing-hero { max-width: 78rem; margin-inline: auto; }
