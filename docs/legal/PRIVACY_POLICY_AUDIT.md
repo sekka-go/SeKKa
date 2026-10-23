@@ -78,3 +78,10 @@ This is issue spotting, not a legal determination. The texts and rules applicabl
 - The configured Supabase project is active and healthy. Its migration history ends at `20261010185858`; the new `policy_acceptances` table and `sekka_register_with_policy_acceptance_v1` RPC are absent.
 - The deployed `sekka-api` function is version 55. Do not deploy the changed signup handler independently; it requires the absent migration.
 - No Supabase development branches were available. No schema, data, secrets, or functions were changed during this follow-up.
+
+## Owner clarification and wording update — 24 October 2026
+
+- The project owner confirmed that the application is not currently registered as a company or legal entity and instructed that no entity name, registration number, address, or unverified contact details be invented.
+- Updated Arabic and English Terms and Privacy drafts now state this status directly. They identify `sekkago.app@gmail.com` only as an address currently displayed in the app and explicitly say its ownership and monitoring are unconfirmed; the FAQ wording follows the same disclosure.
+- The drafts remain drafts and do not claim legal compliance. Before final public-policy publication, the owner must identify the legally responsible operator and confirm a monitored rights/contact channel, and counsel must review the applicable operator, transport, and privacy requirements.
+- No policies, database migrations, production data, GitHub PRs, or deployments were published or changed as part of this wording update.

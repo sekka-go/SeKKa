@@ -30,14 +30,11 @@ BEGIN
   VALUES ('Audit fixture captain', '01199990001', 'test-only-hash', 'captain', now())
   RETURNING id INTO captain_id;
 
-  INSERT INTO public.vehicle_types(id, name_ar, capacity_max)
-  VALUES ('audit_test_vehicle', 'مركبة اختبار', 4);
-
   INSERT INTO public.captain_profiles(user_id, vehicle_type_id, license_number, vehicle_plate, verification_status)
-  VALUES (captain_id, 'audit_test_vehicle', 'test-license', 'test-plate', 'approved');
+  VALUES (captain_id, 'private_car', 'test-license', 'test-plate', 'approved');
 
   SELECT * INTO line_row FROM public.publish_captain_line(
-    captain_id, 'audit_test_vehicle', 'Hidden origin label', 30.0, 31.0,
+    captain_id, 'private_car', 'Hidden origin label', 30.0, 31.0,
     'Hidden destination label', 30.1, 31.2, '[]'::jsonb, '08:00'::time,
     ARRAY[1]::smallint[], 4, 12.50, ARRAY['cash']::text[]
   );
@@ -70,7 +67,7 @@ BEGIN
   RETURNING id INTO rider_id;
 
   SELECT * INTO request_row FROM public.create_demand_request(
-    rider_id, 'audit_test_vehicle', (now() AT TIME ZONE 'Africa/Cairo')::date, '09:00'::time,
+    rider_id, 'private_car', (now() AT TIME ZONE 'Africa/Cairo')::date, '09:00'::time,
     'Hidden pickup label', 30.2, 31.3, 'Hidden dropoff label', 30.3, 31.4, 1
   );
 
