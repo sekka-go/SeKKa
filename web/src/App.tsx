@@ -7,6 +7,10 @@ import SekkaSplash from "./components/SekkaSplash";
 import type { Session, Toast } from "./types";
 import type { ThemePreference } from "./components/ThemePreferenceCard";
 import { t, useLanguage } from "./i18n/runtime";
+import InfoPages from "./components/InfoPages";
+import type { InfoPageKey } from "./components/InfoPages";
+import BrandLogo from "./components/BrandLogo";
+import PublicLanguageToggle from "./components/PublicLanguageToggle";
 
 function readThemePreference(): ThemePreference {
   try {
@@ -27,6 +31,7 @@ const protectedPagePaths = new Set([
   "/search", "/trips", "/messages", "/notifications", "/broadcast",
 ]);
 const currentPathname = () => window.location.pathname.replace(/\/+$/, "") || "/";
+const publicPolicyPath = (path: string): Exclude<InfoPageKey, "faq"> | null => path === "/terms" ? "terms" : path === "/privacy" ? "privacy" : null;
 const isProtectedPath = (path: string) => protectedPagePaths.has(path) || /^\/admin\/users\/\d+$/.test(path);
 const introSessionKey = "sekka.intro-seen";
 function shouldShowIntro() {
@@ -103,12 +108,13 @@ export default function App() {
     try { window.sessionStorage.setItem(introSessionKey, "true"); } catch { /* The intro can still complete when storage is unavailable. */ }
     setIntroStage(null);
   }, []);
+  const policyPage = publicPolicyPath(currentPathname());
 
   return <div className="app-shell" data-theme={resolvedTheme} dir={direction}>
     {introStage === "mark" && <div className="intro-logo-screen" aria-label="SeKKa" role="status"><SekkaMark className="intro-logo-mark" /></div>}
     {introStage === "splash" && <SekkaSplash onComplete={finishIntro} />}
     {toast && <div className={`toast toast-${toast.tone}`} role={toast.tone === "error" ? "alert" : "status"} aria-live={toast.tone === "error" ? "assertive" : "polite"}><span className="toast-icon" aria-hidden="true">{toast.tone === "success" ? "✓" : toast.tone === "error" ? "!" : "i"}</span><span className="toast-message">{toast.text}</span><button onClick={() => { setToast(null); if (toastTimer.current !== null) window.clearTimeout(toastTimer.current); toastTimer.current = null; }} aria-label={t("إغلاق")}>×</button></div>}
-    {session ? <RouteChunkBoundary><Suspense fallback={<RouteLoading />}><Workspace session={session} onSignOut={signOut} notify={notify} themePreference={themePreference} resolvedTheme={resolvedTheme} onThemePreferenceChange={setThemePreference} /></Suspense></RouteChunkBoundary> : currentPathname() === "/login" || currentPathname() === "/register" || isProtectedPath(currentPathname()) ? <RouteChunkBoundary><Suspense fallback={<RouteLoading />}><AuthScreen onSignedIn={onSignedIn} notify={notify} /></Suspense></RouteChunkBoundary> : <LandingScreen />}
+    {policyPage ? <main className="public-policy-page"><header><a href="/" aria-label="SeKKa"><BrandLogo /></a><PublicLanguageToggle /></header><InfoPages page={policyPage} onBack={() => { window.location.assign("/"); }} /></main> : session ? <RouteChunkBoundary><Suspense fallback={<RouteLoading />}><Workspace session={session} onSignOut={signOut} notify={notify} themePreference={themePreference} resolvedTheme={resolvedTheme} onThemePreferenceChange={setThemePreference} /></Suspense></RouteChunkBoundary> : currentPathname() === "/login" || currentPathname() === "/register" || isProtectedPath(currentPathname()) ? <RouteChunkBoundary><Suspense fallback={<RouteLoading />}><AuthScreen onSignedIn={onSignedIn} notify={notify} /></Suspense></RouteChunkBoundary> : <LandingScreen />}
   </div>;
 }
 

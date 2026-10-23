@@ -1,4 +1,5 @@
 import { getDirection, getLanguage, t } from "../i18n/runtime";
+import AppIcon from "../components/AppIcon";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import MapPicker from "../components/MapPickerLoader";
 
@@ -504,6 +505,11 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
   return <div className="dashboard-grid rider-dashboard rider-home-experience">
     <section className="dashboard-main">{dataErrorBanner}
       {welcomeBanner}
+      <section className="rider-overview-strip" aria-label={t("ملخص مشاويرك")}>
+        <button type="button" onClick={() => setSection("trips")}><span className="rider-overview-icon"><AppIcon name="trips" size={18} /></span><span><small>{t("مجموعاتك")}</small><strong>{visibleGroups.length}</strong></span></button>
+        <button type="button" onClick={() => setSection("requests")}><span className="rider-overview-icon"><AppIcon name="inbox" size={18} /></span><span><small>{t("طلبات نشطة")}</small><strong>{demandRequests.filter(({ status }) => status === "open" || status === "matched").length}</strong></span></button>
+        <button type="button" onClick={() => setSection("trips")}><span className="rider-overview-icon"><AppIcon name="calendar" size={18} /></span><span><small>{t("مواعيد الرحلات")}</small><strong>{allTrips.length}</strong></span></button>
+      </section>
       <section className="rider-shortcuts"><div className="rider-section-heading"><div><span className="eyebrow">{t("أماكنك المعتادة")}</span><h2>{t("ابدأ من مكانك المفضل")}</h2></div><button type="button" className="text-action" onClick={() => setSection("account")}>{t("إدارة الأماكن")}</button></div>{savedPlaces.length ? <div className="rider-place-list">{savedPlaces.map((place) => <button type="button" className="rider-place-chip" key={`${place.place_type}-${place.label}`} onClick={() => openBooking("new", undefined, place)}><span className="rider-place-icon">{place.place_type === "home" ? "⌂" : place.place_type === "work" ? "▦" : "⌖"}</span><span><small>{place.place_type === "home" ? t("المنزل") : place.place_type === "work" ? t("العمل") : t("مكان محفوظ")}</small><strong>{place.label}</strong></span><b aria-hidden="true">←</b></button>)}</div> : <div className="rider-saved-empty"><span aria-hidden="true">⌖</span><p>{t("احفظ المنزل أو العمل لتبدأ البحث بسرعة في المرة القادمة.")}</p><button type="button" className="button button-outline button-small" onClick={() => setSection("account")}>{t("إضافة مكان محفوظ")}</button></div>}</section>
       <section className="rider-home-requests"><div className="rider-section-heading"><div><span className="eyebrow">{t("متابعة رحلتك")}</span><h2>{t("طلبات رحلاتك")}</h2></div><button className="text-action" type="button" onClick={() => setSection("requests")}>{t("عرض الكل")} {demandRequests.length > 0 && <b>{demandRequests.length}</b>}</button></div>
         {demandRequests.length ? <>{requestCards}<button type="button" className="button button-outline button-small rider-view-all" onClick={() => setSection("requests")}>{t("عرض كل الطلبات")}</button></> : initialLoadError ? null : <EmptyState icon="⌖" title={t("مافيش طلبات رحلات لسه")} text="ابحث عن مسار مناسب، ولو مافيش هنسجل طلبك ونجمعه مع الطلبات المشابهة." action="ابحث عن رحلة" onAction={() => openBooking("new")} />}

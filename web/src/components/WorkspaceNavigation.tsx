@@ -4,6 +4,7 @@ import type { NavKey } from "../types";
 import type { Role } from "../api";
 import type { InfoPageKey } from "./InfoPages";
 import ProfileAvatar from "./ProfileAvatar";
+import BrandLogo from "./BrandLogo";
 
 export type WorkspaceNavItem = { key: NavKey; label: string; icon: AppIconName };
 
@@ -51,7 +52,7 @@ export default function WorkspaceNavigation({
   return <>
     <aside className={`sidebar ${open ? "sidebar-open" : ""}`} aria-label={t("القائمة الرئيسية")}>
       <div className="sidebar-brand">
-        <div className="sidebar-label">{sectionLabel}</div>
+        <div className="sidebar-brand-lockup"><BrandLogo className="sidebar-brand-logo" /><div className="sidebar-label">{sectionLabel}</div></div>
         <button type="button" className="sidebar-close" onClick={onClose} aria-label={t("إغلاق القائمة")}><AppIcon name="close" /></button>
       </div>
       <div className="sidebar-section-heading">{t("التنقل")}</div>

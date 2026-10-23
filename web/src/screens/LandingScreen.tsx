@@ -55,6 +55,15 @@ export default function LandingScreen() {
         <div><span aria-hidden="true">✓</span><strong>{t("ابدأ بدون توثيق البطاقة")}</strong><p>{t("توثيق الراكب اختياري")}</p></div>
       </section>
 
+      <section className="landing-how-it-works" aria-label={t("كيف تعمل سِكّة")}>
+        <div className="landing-how-heading"><span className="eyebrow">{t("خطوات بسيطة")}</span><h2>{t("من البحث إلى مشوار واضح")}</h2></div>
+        <div className="landing-how-grid">
+          <article><span>١</span><div><strong>{t("حدد طريقك ومواعيدك")}</strong><p>{t("اختر نقطتي الركوب والوصول ومواعيد الذهاب والعودة.")}</p></div></article>
+          <article><span>٢</span><div><strong>{t("راجع المسارات المناسبة")}</strong><p>{t("قارن المسارات المتاحة وسعر المقعد قبل تأكيد الطلب.")}</p></div></article>
+          <article><span>٣</span><div><strong>{t("اتفق مباشرة مع الكابتن")}</strong><p>{t("تابع مجموعتك ورحلاتك من حسابك، والدفع يتم مباشرة للكابتن.")}</p></div></article>
+        </div>
+      </section>
+
     </main>
   );
 }
