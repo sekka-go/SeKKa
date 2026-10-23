@@ -466,6 +466,10 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
 .workspace .sidebar-info-links button { width: 100%; padding: .48rem .55rem; color: #94a3b8; background: transparent; border: 0; border-radius: .55rem; text-align: start; font: inherit; font-size: .78rem; cursor: pointer; }
 .workspace .sidebar-info-links button:hover, .workspace .sidebar-info-links button:focus-visible { color: var(--color-accent-text); background: rgba(245,158,11,.08); outline: none; }
 .info-page { display: grid; gap: 1.2rem; padding: clamp(1rem, 3vw, 1.5rem); }
+.public-policy-page { width: min(920px, calc(100% - 2rem)); margin: clamp(1rem, 4vw, 3rem) auto; display: grid; gap: 1rem; }
+.public-policy-page > header { display: flex; align-items: center; justify-content: space-between; min-height: 3.5rem; }
+.public-policy-page .info-document-content { max-width: 78ch; }
+.info-document-meta { color: var(--color-text-muted); font-size: .82rem; }
 .info-page-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--line); }
 .info-page-header h2 { margin: .25rem 0 0; }
 .info-page-header .button { flex: 0 0 auto; }

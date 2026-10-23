@@ -21,6 +21,39 @@ const messageDateLabel = (value: string) => new Intl.DateTimeFormat(getLanguage(
   weekday: "short", month: "short", day: "numeric",
 }).format(new Date(value));
 
+function useVisiblePolling(callback: (() => Promise<void>) | null, intervalMs: number, runImmediately = true) {
+  useEffect(() => {
+    if (!callback) return;
+    let timer = 0;
+    let running = false;
+    let disposed = false;
+    const schedule = () => {
+      window.clearTimeout(timer);
+      if (!disposed && document.visibilityState === "visible") {
+        timer = window.setTimeout(() => { void run(); }, intervalMs);
+      }
+    };
+    const run = async () => {
+      if (disposed || running || document.visibilityState !== "visible") return;
+      running = true;
+      try { await callback(); }
+      finally { running = false; schedule(); }
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") void run();
+      else window.clearTimeout(timer);
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    if (runImmediately) void run();
+    else schedule();
+    return () => {
+      disposed = true;
+      window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [callback, intervalMs]);
+}
+
 export default function MessagesWorkspace({ session, notify }: { session: Session; notify: (text: string, tone?: Toast["tone"]) => void }) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [contacts, setContacts] = useState<Person[]>([]);
@@ -38,28 +71,31 @@ export default function MessagesWorkspace({ session, notify }: { session: Sessio
   const bottomRef = useRef<HTMLDivElement>(null);
   const selected = conversations.find((item) => item.id === selectedId) ?? null;
 
-  const refreshConversations = useCallback(async (quiet = false) => {
+  const refreshConversations = useCallback(async (quiet = false, includeContacts = true) => {
     if (!quiet) setLoading(true);
     try {
       const [inbox, people] = await Promise.all([
         api<{ conversations: Conversation[] }>("/messages/conversations", { token: session.token }),
-        api<{ contacts: Person[] }>("/messages/contacts", { token: session.token }),
+        includeContacts ? api<{ contacts: Person[] }>("/messages/contacts", { token: session.token }) : Promise.resolve(null),
       ]);
       setConversations(inbox.conversations);
-      setContacts(people.contacts);
+      if (people) setContacts(people.contacts);
       setError("");
     } catch (cause) {
       setError(errorText(cause));
     } finally { setLoading(false); }
   }, [session.token]);
 
-  const refreshMessages = useCallback(async (conversationId: number, quiet = false) => {
+  const refreshMessages = useCallback(async (conversationId: number, quiet = false, markRead = true) => {
     if (!quiet) setLoadingMessages(true);
     try {
       const result = await api<{ messages: Message[] }>(`/messages/conversations/${conversationId}/messages`, { token: session.token });
       setMessages(result.messages);
-      await api(`/messages/conversations/${conversationId}/read`, { method: "POST", token: session.token });
-      setConversations((current) => current.map((item) => item.id === conversationId ? { ...item, unread_count: 0 } : item));
+      const hasUnreadIncoming = result.messages.some((message) => message.sender_user_id !== session.user.id && message.read_at === null);
+      if (markRead || hasUnreadIncoming) {
+        await api(`/messages/conversations/${conversationId}/read`, { method: "POST", token: session.token });
+        setConversations((current) => current.map((item) => item.id === conversationId ? { ...item, unread_count: 0 } : item));
+      }
       setError("");
     } catch (cause) {
       setError(errorText(cause));
@@ -68,15 +104,12 @@ export default function MessagesWorkspace({ session, notify }: { session: Sessio
 
   useEffect(() => { void refreshConversations(); }, [refreshConversations]);
   useEffect(() => {
-    const timer = window.setInterval(() => { void refreshConversations(true); }, 8000);
-    return () => window.clearInterval(timer);
-  }, [refreshConversations]);
-  useEffect(() => {
-    if (selectedId === null) { setMessages([]); return; }
-    void refreshMessages(selectedId);
-    const timer = window.setInterval(() => { void refreshMessages(selectedId, true); }, 3500);
-    return () => window.clearInterval(timer);
-  }, [selectedId, refreshMessages]);
+    if (selectedId === null) setMessages([]);
+  }, [selectedId]);
+  const pollConversations = useCallback(() => refreshConversations(true, false), [refreshConversations]);
+  const pollMessages = useCallback(() => selectedId === null ? Promise.resolve() : refreshMessages(selectedId, true, false), [refreshMessages, selectedId]);
+  useVisiblePolling(pollConversations, 20_000, false);
+  useVisiblePolling(selectedId === null ? null : pollMessages, 10_000);
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [messages.length, selectedId]);
 
   const startConversation = async (person: Person) => {

@@ -6,6 +6,32 @@
     "تعذر تحميل الشاشة. تحقق من اتصالك وحاول مرة أخرى.": "This screen could not load. Check your connection and try again.",
     "سِكّة": "SeKKa"
   },
+  "ActionableStates": {
+    "تم رفض الملف. راجع بيانات المركبة والرخصة، ثم اطلب من الدعم مراجعة قرار التوثيق.": "Your captain profile was rejected. Review your vehicle and license details, then ask support to review the verification decision.",
+    "طلب مراجعة توثيق حساب الكابتن": "Request a captain verification review",
+    "تواصل مع الدعم لمراجعة القرار": "Contact support to review the decision",
+    "توقف استقبال الرحلات بعد انتهاء المهلة. ارفع المستندين ثم تواصل مع الدعم لإعادة التفعيل.": "Ride offers are paused because the document grace period ended. Upload both documents, then contact support to request reactivation.",
+    "طلب إعادة تفعيل حساب الكابتن": "Request captain account reactivation",
+    "تواصل مع الدعم بعد رفع المستندات": "Contact support after uploading documents",
+    "تنقّل يومي أوضح وأسهل": "A clearer, easier daily commute",
+    "مشوارك يتظبط على سِكّة": "Your daily ride, on a clearer route",
+    "رحلات متكررة، مواعيد واضحة، واتفاق مباشر بين الراكب والكابتن.": "Recurring rides, clear schedules, and direct arrangements between passengers and captains.",
+    "السعر واضح قبل تأكيد الرحلة": "See the seat price before confirming",
+    "بياناتك ومستنداتك محمية": "Your details and documents stay protected",
+    "كيف تعمل سِكّة": "How SeKKa works",
+    "خطوات بسيطة": "A few simple steps",
+    "من البحث إلى مشوار واضح": "From search to a clear ride plan",
+    "حدد طريقك ومواعيدك": "Choose your route and schedule",
+    "اختر نقطتي الركوب والوصول ومواعيد الذهاب والعودة.": "Choose your pickup, destination, and outbound and return times.",
+    "راجع المسارات المناسبة": "Review matching routes",
+    "قارن المسارات المتاحة وسعر المقعد قبل تأكيد الطلب.": "Compare available routes and the seat price before confirming.",
+    "اتفق مباشرة مع الكابتن": "Coordinate directly with your captain",
+    "تابع مجموعتك ورحلاتك من حسابك، والدفع يتم مباشرة للكابتن.": "Track your groups and rides in your account. Payment goes directly to the captain.",
+    "ملخص مشاويرك": "Your ride summary",
+    "مجموعاتك": "Your groups",
+    "طلبات نشطة": "Active requests",
+    "مواعيد الرحلات": "Ride schedule"
+  },
   "Loading": {
     "loading.login": "Signing you in…",
     "loading.search": "Searching for the best results…",
@@ -221,7 +247,7 @@
       "كيف أستعيد كلمة السر؟": "How do I recover my password?",
       "من صفحة الدخول اختر «نسيت كلمة السر؟»، ثم افتح رابط بوت سِكّة في تيليجرام وشارك رقمك المسجل لاستلام رمز لمرة واحدة.": "From the login page, choose “Forgot your password?”, then open the SeKKa bot link on Telegram and share your registered number to receive a one-time code.",
       "كيف أتواصل مع الدعم؟": "How do I contact support?",
-      "استخدم «خدمة العملاء» في القائمة الجانبية أو راسل sekkago.app@gmail.com.": "Use “Customer Service” in the side menu or email sekkago.app@gmail.com."
+      "استخدم أدوات الإبلاغ داخل التطبيق. البريد sekkago.app@gmail.com ظاهر حاليًا، لكن لم يتم تأكيد ملكيته أو مراقبته كقناة دعم.": "Use the in-app reporting tools. The email sekkago.app@gmail.com currently appears in the app, but its ownership and monitoring as a support channel have not been confirmed."
     },
     "LanguageSelector": {
       "العربية": "Arabic"
@@ -596,6 +622,8 @@
       "إخفاء كلمة السر": "Hide password",
       "إظهار كلمة السر": "Show password",
       "قبل إنشاء حسابك": "Before creating your account",
+      "أوافق على الشروط والأحكام.": "I agree to the Terms and Conditions.",
+      "قرأت إشعار الخصوصية وأفهم ممارسات البيانات الموضحة فيه.": "I have read the Privacy Notice and understand the data practices it describes.",
       "اقرأ المستندين بالتمرير إلى نهايتهما، ثم أكّد موافقتك.": "Read both documents by scrolling to the end, then confirm your agreement.",
       "اقرأ ": "Read",
       "الشروط والأحكام": "Terms and Conditions",

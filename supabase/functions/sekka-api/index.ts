@@ -1045,12 +1045,22 @@ Deno.serve(async (req: Request) => {
       if (!clean(full_name) || String(full_name).trim().length > 100 || !clean(phone_number) || String(phone_number).trim().length > 32 || !clean(password)) return error("بيانات الحساب غير صحيحة. تأكد من الاسم ورقم الهاتف وطول كلمة السر.", 400, origin);
       if (!["rider", "captain"].includes(String(role))) return error("نوع الحساب المطلوب مش متاح.", 400, origin);
       if (String(password).length < 8 || String(password).length > 128) return error("كلمة السر لازم تكون من ٨ إلى ١٢٨ حرفًا.", 400, origin);
-      if (body.accepted_terms !== true || body.terms_version !== "2026-10-05" || body.privacy_version !== "2026-10-05") return error("اقرأ الشروط وسياسة الخصوصية ووافق عليهما قبل إنشاء الحساب.", 400, origin);
+      if (body.accepted_terms !== true || body.acknowledged_privacy !== true || body.terms_version !== "2026-10-24" || body.privacy_version !== "2026-10-24" || !["ar", "en"].includes(String(body.policy_locale))) return error("اقرأ الشروط وإشعار الخصوصية، ثم وافق على الشروط قبل إنشاء الحساب.", 400, origin);
+      const policyLocale = String(body.policy_locale) as "ar" | "en";
       const { data: existing } = await db.from("users").select("id").eq("phone_number", String(phone_number).trim()).maybeSingle();
       if (existing) return error("الرقم ده مسجّل قبل كده.", 409, origin);
-      const { data, error: e } = await db.from("users").insert({ full_name: String(full_name).trim(), phone_number: String(phone_number).trim(), password_hash: await hashPassword(String(password)), role, terms_accepted_at: new Date().toISOString(), terms_version: "2026-10-05", privacy_version: "2026-10-05" }).select("id,full_name,phone_number,role,verified_at,created_at").single();
-      if (e) return error("تعذر إنشاء الحساب؛ تأكد أن رقم الهاتف غير مسجل.", 409, origin);
-      return reply({ user: data }, 201, origin);
+      const { data, error: registerError } = await db.rpc("sekka_register_with_policy_acceptance_v1", {
+        p_full_name: String(full_name).trim(), p_phone_number: String(phone_number).trim(),
+        p_password_hash: await hashPassword(String(password)), p_role: String(role), p_policy_locale: policyLocale,
+      });
+      if (registerError) {
+        if (registerError.code === "23505") return error("الرقم ده مسجّل قبل كده.", 409, origin);
+        if (registerError.code === "22023") return error("بيانات الحساب أو اللغة غير صالحة.", 400, origin);
+        return error("تعذر إنشاء الحساب وحفظ سجل الموافقة. حاول مرة أخرى.", 503, origin);
+      }
+      const createdUser = Array.isArray(data) ? data[0] : null;
+      if (!createdUser) return error("تعذر تأكيد إنشاء الحساب. حاول مرة أخرى.", 503, origin);
+      return reply({ user: createdUser }, 201, origin);
     }
     if (req.method === "POST" && path === "/auth/login") {
       const phone = typeof body.phone_number === "string" ? body.phone_number.trim() : "";

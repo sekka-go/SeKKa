@@ -28,7 +28,7 @@ SeKKa is served over HTTPS by Cloudflare Pages and has an Arabic RTL web app man
 
 ## Verification checklist
 
-- CI runs `npm run check:pwa`, `npm run lint`, and `npm run build` for pull requests.
+- CI installs from the root `pnpm-lock.yaml` and runs `pnpm --filter web check:pwa`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build` for pull requests and pushes to `main`.
 - In Chrome or Edge, confirm Install appears after the production preview is eligible and launches in a standalone window.
 - On iOS Safari, use Share → Add to Home Screen and confirm the SeKKa icon and Arabic title.
 - After the first online load, switch offline and navigate/reload: the branded offline page should appear.

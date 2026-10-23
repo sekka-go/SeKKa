@@ -1,4 +1,4 @@
-import { t } from "../i18n/runtime";
+import { getLanguage, t } from "../i18n/runtime";
 import { getDirection } from "../i18n/runtime";
 import { useRef, useState, type FormEvent } from "react";
 import BrandLogo from "../components/BrandLogo";
@@ -11,8 +11,8 @@ import { InfoDocumentContent, type InfoPageKey } from "../components/InfoPages";
 import SignupVerificationFlow from "../components/SignupVerificationFlow";
 import PublicLanguageToggle from "../components/PublicLanguageToggle";
 
-const TERMS_VERSION = "2026-10-05";
-const PRIVACY_VERSION = "2026-10-05";
+const TERMS_VERSION = "2026-10-24";
+const PRIVACY_VERSION = "2026-10-24";
 
 function AuthJourneyBackdrop() {
   return <div className="auth-journey-backdrop" aria-hidden="true">
@@ -45,7 +45,8 @@ export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (sessio
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [accepted, setAccepted] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [acknowledgedPrivacy, setAcknowledgedPrivacy] = useState(false);
   const [readTerms, setReadTerms] = useState(false);
   const [readPrivacy, setReadPrivacy] = useState(false);
   const [readingPage, setReadingPage] = useState<Exclude<InfoPageKey, "faq"> | null>(null);
@@ -61,8 +62,8 @@ export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (sessio
     event.preventDefault(); setBusy(true); setError("");
     try {
       if (mode === "register") {
-        if (!accepted || !readTerms || !readPrivacy) throw new Error("اقرأ الشروط وسياسة الخصوصية ووافق عليهما قبل إنشاء الحساب.");
-        await api("/auth/register", { method: "POST", body: { full_name: fullName.trim(), phone_number: phone.trim(), password, role, accepted_terms: true, terms_version: TERMS_VERSION, privacy_version: PRIVACY_VERSION } });
+        if (!acceptedTerms || !acknowledgedPrivacy || !readTerms || !readPrivacy) throw new Error("اقرأ الشروط وسياسة الخصوصية قبل إنشاء الحساب، ووافق على الشروط.");
+        await api("/auth/register", { method: "POST", body: { full_name: fullName.trim(), phone_number: phone.trim(), password, role, accepted_terms: true, acknowledged_privacy: true, terms_version: TERMS_VERSION, privacy_version: PRIVACY_VERSION, policy_locale: getLanguage() } });
       }
       const result = await api<{ token: string; user: User }>("/auth/login", { method: "POST", body: { phone_number: phone.trim(), password } });
       const session = { token: result.token, user: result.user };
@@ -132,6 +133,11 @@ export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (sessio
     <AuthJourneyBackdrop />
     <header className="auth-page-header"><a href="/"><BrandLogo /></a><PublicLanguageToggle /></header>
     <section className="auth-page-content">
+      <aside className="auth-visual-panel">
+        <div className="auth-visual-copy"><span className="auth-visual-kicker"><AppIcon name="route" size={16} />{t("تنقّل يومي أوضح وأسهل")}</span><h2>{t("مشوارك يتظبط على سِكّة")}</h2><p>{t("رحلات متكررة، مواعيد واضحة، واتفاق مباشر بين الراكب والكابتن.")}</p></div>
+        <div className="auth-visual-route" aria-hidden="true"><svg viewBox="0 0 420 176" fill="none"><path d="M24 36h96l34 28h68l30-36h142M10 136h96l30-28h86l46 28h138"/><path d="M47 11v50m121-36v71m130-78v57m69 18v47"/><path className="auth-route-path" d="M40 135c61 0 70-48 125-48s67 36 118 22 63-53 112-62"/><circle cx="40" cy="135" r="9"/><circle cx="395" cy="47" r="9"/><rect x="205" y="77" width="28" height="18" rx="6"/></svg></div>
+        <div className="auth-visual-promises"><span><AppIcon name="check" size={16} />{t("السعر واضح قبل تأكيد الرحلة")}</span><span><AppIcon name="calendar" size={16} />{t("الدفع مباشرة للكابتن")}</span><span><AppIcon name="shield" size={16} />{t("بياناتك ومستنداتك محمية")}</span></div>
+      </aside>
       <div className={`auth-card auth-page-card ${mode === "login" ? "auth-login-card" : "auth-register-card"}`}>
         <div className="auth-tabs"><span className="active" aria-current="page">{mode === "login" ? t("تسجيل الدخول") : t("حساب جديد")}</span></div>
         <div className="auth-heading">
@@ -151,10 +157,11 @@ export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (sessio
             <strong id="auth-consent-title">{t("قبل إنشاء حسابك")}</strong>
             <p>{t("اقرأ المستندين بالتمرير إلى نهايتهما، ثم أكّد موافقتك.")}</p>
             <div className="auth-consent-links"><button type="button" onClick={() => setReadingPage("terms")}>{readTerms ? "✓ " : t("اقرأ ")}{t("الشروط والأحكام")}</button><button type="button" onClick={() => setReadingPage("privacy")}>{readPrivacy ? "✓ " : t("اقرأ ")}{t("سياسة الخصوصية")}</button></div>
-            <label className={`auth-consent-check ${!readTerms || !readPrivacy ? "is-disabled" : ""}`}><input id="auth-terms-consent" name="accepted_terms" type="checkbox" checked={accepted} disabled={!readTerms || !readPrivacy} onChange={(event) => setAccepted(event.target.checked)} required /><span>{t("قرأت الشروط وسياسة الخصوصية وأوافق عليهما.")}</span></label>
+            <label className={`auth-consent-check ${!readTerms ? "is-disabled" : ""}`}><input id="auth-terms-consent" name="accepted_terms" type="checkbox" checked={acceptedTerms} disabled={!readTerms} onChange={(event) => setAcceptedTerms(event.target.checked)} required /><span>{t("أوافق على الشروط والأحكام.")}</span></label>
+            <label className={`auth-consent-check ${!readPrivacy ? "is-disabled" : ""}`}><input id="auth-privacy-acknowledgement" name="acknowledged_privacy" type="checkbox" checked={acknowledgedPrivacy} disabled={!readPrivacy} onChange={(event) => setAcknowledgedPrivacy(event.target.checked)} required /><span>{t("قرأت إشعار الخصوصية وأفهم ممارسات البيانات الموضحة فيه.")}</span></label>
           </section>}
           {error && <div className="inline-error" role="alert">{error}</div>}
-          {mode === "login" && error.includes("رقم الهاتف أو كلمة السر غلط") && <button type="button" className="auth-forgot-link" onClick={() => { setForgotStep("request"); setError(""); }}>{t("نسيت كلمة السر؟")}</button>}
+          {mode === "login" && <button type="button" className="auth-forgot-link" onClick={() => { setForgotStep("request"); setError(""); }}>{t("نسيت كلمة السر؟")}</button>}
           <button className="button button-primary button-wide" disabled={busy}>{busy ? mode === "login" ? t("loading.login") : t("لحظة واحدة…") : mode === "login" ? t("دخول إلى حسابي") : t("إنشاء الحساب")}<span aria-hidden="true">←</span></button>
         </form> : forgotStep === "request" ? <form className="form-stack auth-reset-form" onSubmit={requestReset}>
           <h2>{t("استعادة كلمة السر")}</h2><p>{t("أدخل رقم الهاتف المسجل، وسنجهز رابطًا آمنًا لبدء التحقق عبر بوت سِكّة في تيليجرام.")}</p>

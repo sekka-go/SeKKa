@@ -1,0 +1,11 @@
+# SHA-256 baseline; generated 2026-10-23; paths relative to repository root.
+ebd9c24b8b6db5d382e8cc5670059afec09557a1958f946e3b6315ca29db1761  web/public/brand/pwa-icon-192.png
+f6c436c7b6ee3d46e88868f59e0715c1b9b16b4fe585f9ca7881b19700f13114  web/public/brand/pwa-icon-512.png
+6570a102f33d3b02b245ab71e23321d4f2ead5432b3ffc152e6a342c43cbecc3  web/public/manifest.webmanifest
+333013adaf8c465426ae89e9f329089e16806c9121d027c956ccda17b1f036c1  web/index.html
+ece1e2c97c8dd77e4f62cf8364f13bb0f9cc57e1504bde7e02b5baa07784705d  web/src/components/BrandLogo.tsx
+5f52cbbe5d5a37c9ef84ab8618796a398831e6ac4378f6ae649250dcef85d396  web/src/components/SekkaMark.tsx
+150911a5efce15ddd00568bd5001fd172e0228a2b2ceae475d95bd207cd884f6  web/src/components/SekkaSplash.tsx
+74c0c811cbbdc208c56d6188d5fa2b6f5833c2707b4dc4cd3280bb3c9cd1f125  web/src/brand-lockup.css
+c167f63ee0b21d13f1e2f8dff1c65524ec690da3c65098c262b840319e7585bc  web/src/splash.css
+97bb6c72c52b521a391143a14d1b231d47ac7c803bb268cf76e0e78b9f4d9572  web/scripts/generate-pwa-icons.mjs
