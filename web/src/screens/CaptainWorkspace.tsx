@@ -6,7 +6,8 @@ import MapPicker from "../components/MapPickerLoader";
 import LocationSearchField from "../components/LocationSearchField";
 import { categoryName, errorText, formatDate, money, statusLabel } from "../lib/formatters";
 import { useResolvedLocationPoints } from "../lib/use-location-addresses";
-import { subscribeToDeviceLocation } from "../lib/device-location";
+import { getRecentDeviceLocation, subscribeToDeviceLocation } from "../lib/device-location";
+import { sameData, useSilentRefresh } from "../lib/use-silent-refresh";
 import { ApiError, api, type CaptainLine, type CaptainOffer, type CaptainProfile, type PoolStop, type RouteGeometry } from "../api";
 import type { MapPickMode, MapPoint } from "../MapPicker";
 import type { NavKey, Session, Toast } from "../types";
@@ -24,9 +25,11 @@ export default function CaptainWorkspace({ session, section, setSection, notify,
   const [tiers, setTiers] = useState<string[]>(["faster", "saver"]);
   const [radius, setRadius] = useState(4);
   const [offers, setOffers] = useState<CaptainOffer[]>([]);
+  const offersRef = useRef<CaptainOffer[]>([]);
   const [selectedOfferId, setSelectedOfferId] = useState<number | null>(null);
   const [visibleOfferMap, setVisibleOfferMap] = useState<number | null>(null);
   const [myTrips, setMyTrips] = useState<{ trip: { id: number; group_id: number; service_date: string; direction: string; departure_at: string; status: string; captain_user_id: number | null }; stops: PoolStop[]; route: RouteGeometry | null }[]>([]);
+  const myTripsRef = useRef<typeof myTrips>([]);
   const [selectedTrip, setSelectedTrip] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [offerError, setOfferError] = useState("");
@@ -41,8 +44,10 @@ export default function CaptainWorkspace({ session, section, setSection, notify,
   const [earningsLoaded, setEarningsLoaded] = useState(false);
   const [earningsError, setEarningsError] = useState("");
   const [lines, setLines] = useState<CaptainLine[]>([]);
+  const linesRef = useRef<CaptainLine[]>([]);
   const [publishedLinesLoaded, setPublishedLinesLoaded] = useState(false);
   const [demandGroups, setDemandGroups] = useState<{ id: number; captain_line_id: number; trip_date: string; arrival_time: string; return_arrival_time?: string | null; requests: { id: number; rider_name: string; pickup_label: string; dropoff_label: string; seats: number }[] }[]>([]);
+  const demandGroupsRef = useRef<typeof demandGroups>([]);
   const [origin, setOrigin] = useState<MapPoint | null>(null);
   const [destination, setDestination] = useState<MapPoint | null>(null);
   const [originSearch, setOriginSearch] = useState("");
@@ -82,43 +87,39 @@ export default function CaptainWorkspace({ session, section, setSection, notify,
   }, [session.token, notify]);
   useEffect(() => { void loadProfile(); }, [loadProfile]);
 
-  const refreshTrips = useCallback(async () => {
-    setOffersLoading(true);
-    setOfferError("");
+  const refreshTrips = useCallback(async (quiet = false, signal?: AbortSignal) => {
+    if (!quiet) { setOffersLoading(true); setOfferError(""); }
     try {
       // Pool trip ownership is exposed through the accepted offers already cached in the active dashboard.
-      const result = await api<{ offers: CaptainOffer[] }>("/captain/pool/offers", { token: session.token });
-      setOffers(result.offers ?? []);
-    } catch (error) { setOfferError(errorText(error)); }
-    finally { setOffersLoaded(true); setOffersLoading(false); }
+      const result = await api<{ offers: CaptainOffer[] }>("/captain/pool/offers", { token: session.token, signal, etag: true });
+      const next = result.offers ?? []; const changed = !sameData(offersRef.current, next);
+      if (changed) { offersRef.current = next; setOffers(next); }
+      return changed;
+    } catch (error) { if (!quiet) setOfferError(errorText(error)); return false; }
+    finally { setOffersLoaded(true); if (!quiet) setOffersLoading(false); }
   }, [session.token]);
   useEffect(() => {
     if (!profileLoaded || !profile || profile.verification_status !== "approved" || !isCaptainRequestsSection) return;
-    void refreshTrips();
-  }, [profileLoaded, profile?.verification_status, isCaptainRequestsSection, refreshTrips]);
-  const loadPublishedLines = useCallback(async () => {
+    void refreshTrips(offersLoaded);
+  }, [profileLoaded, profile?.verification_status, isCaptainRequestsSection, offersLoaded, refreshTrips]);
+  const loadPublishedLines = useCallback(async (signal?: AbortSignal) => {
     const [lineResult, demandResult] = await Promise.all([
-      api<{ lines: CaptainLine[] }>("/captain/lines", { token: session.token }),
-      api<{ groups: typeof demandGroups }>("/captain/demand-groups", { token: session.token }),
+      api<{ lines: CaptainLine[] }>("/captain/lines", { token: session.token, signal, etag: true }),
+      api<{ groups: typeof demandGroups }>("/captain/demand-groups", { token: session.token, signal, etag: true }),
     ]);
-    setLines(lineResult.lines);
-    setDemandGroups(demandResult.groups);
+    const nextLines = lineResult.lines ?? [], nextGroups = demandResult.groups ?? [];
+    const changed = !sameData(linesRef.current, nextLines) || !sameData(demandGroupsRef.current, nextGroups);
+    if (!sameData(linesRef.current, nextLines)) { linesRef.current = nextLines; setLines(nextLines); }
+    if (!sameData(demandGroupsRef.current, nextGroups)) { demandGroupsRef.current = nextGroups; setDemandGroups(nextGroups); }
     setPublishedLinesLoaded(true);
+    return changed;
   }, [session.token]);
   useEffect(() => {
     if (!isLineManagementSection || profile?.verification_status !== "approved") return;
     void loadPublishedLines().catch((error) => { setPublishedLinesLoaded(true); notify(errorText(error), "error"); });
   }, [isLineManagementSection, profile?.verification_status, loadPublishedLines, notify]);
-  useEffect(() => {
-    if (!isLineManagementSection || profile?.verification_status !== "approved") return;
-    const timer = window.setInterval(() => { void loadPublishedLines().catch(() => undefined); }, 30_000);
-    return () => window.clearInterval(timer);
-  }, [isLineManagementSection, profile?.verification_status, loadPublishedLines]);
-  useEffect(() => {
-    if (!profileLoaded || !profile || profile.verification_status !== "approved" || !isCaptainRequestsSection) return;
-    const timer = window.setInterval(() => { void refreshTrips(); }, 30_000);
-    return () => window.clearInterval(timer);
-  }, [profileLoaded, profile?.verification_status, isCaptainRequestsSection, refreshTrips]);
+  useSilentRefresh(loadPublishedLines, { enabled: isLineManagementSection && profile?.verification_status === "approved", intervalMs: 20_000 });
+  useSilentRefresh((signal) => refreshTrips(true, signal), { enabled: profileLoaded && Boolean(profile?.verification_status === "approved") && isCaptainRequestsSection, intervalMs: 20_000 });
   useEffect(() => {
     if (!profileLoaded) return;
     if (section === "offers" && profile?.verification_status === "approved") {
@@ -204,46 +205,48 @@ export default function CaptainWorkspace({ session, section, setSection, notify,
     let active = true;
     let syncInFlight = false;
     const syncLocation = (location: { lat: number; lng: number; updatedAt: number } | null) => {
-      if (!active || !location || Date.now() - location.updatedAt > 60_000) return;
+      if (!active || document.visibilityState === "hidden" || !location || Date.now() - location.updatedAt > 60_000) return;
       const previous = lastLocationSync.current;
       const movedMeters = previous ? Math.hypot((location.lat - previous.lat) * 111_000, (location.lng - previous.lng) * 111_000 * Math.cos(location.lat * Math.PI / 180)) : Infinity;
       const elapsed = previous ? Date.now() - previous.at : Infinity;
       if (syncInFlight || (previous && (elapsed < 30_000 || (movedMeters < 100 && elapsed < 5 * 60_000)))) return;
       syncInFlight = true;
       void api<{ profile: CaptainProfile }>("/captain/location", { method: "POST", token: session.token, body: { current_lat: location.lat, current_lng: location.lng } })
-        .then((result) => { if (active) { lastLocationSync.current = { lat: location.lat, lng: location.lng, at: Date.now() }; setProfile(result.profile); } })
+        .then((result) => { if (active) { lastLocationSync.current = { lat: location.lat, lng: location.lng, at: Date.now() }; setProfile((current) => sameData(current, result.profile) ? current : result.profile); } })
         .catch(() => undefined)
         .finally(() => { syncInFlight = false; });
     };
     const unsubscribe = subscribeToDeviceLocation(syncLocation);
+    const onVisibilityChange = () => { if (document.visibilityState === "visible") syncLocation(getRecentDeviceLocation()); };
+    document.addEventListener("visibilitychange", onVisibilityChange);
     return () => {
       active = false;
       unsubscribe();
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, [profile?.verification_status, profile?.status, session.token]);
   const acceptOffer = async (offer: CaptainOffer) => {
     setBusy(true);
-    try { await api(`/captain/pool/trips/${offer.trip.id}/accept`, { method: "POST", token: session.token }); setOffers((current) => current.filter((item) => item.trip.id !== offer.trip.id)); setSelectedOfferId(null); notify(t("تم قبول المسار. هتلاقي تفاصيله في رحلاتي."), "success"); await refreshTrips(); }
+    try { await api(`/captain/pool/trips/${offer.trip.id}/accept`, { method: "POST", token: session.token }); setOffers((current) => { const next = current.filter((item) => item.trip.id !== offer.trip.id); offersRef.current = next; return next; }); setSelectedOfferId(null); notify(t("تم قبول المسار. هتلاقي تفاصيله في رحلاتي."), "success"); await refreshTrips(); }
     catch (error) { notify(errorText(error), "error"); }
     finally { setBusy(false); }
   };
-  const loadAssignedTrips = useCallback(async () => {
-    setAssignedTripsLoading(true);
-    setAssignedTripsError("");
+  const loadAssignedTrips = useCallback(async (quiet = false, signal?: AbortSignal) => {
+    if (!quiet) { setAssignedTripsLoading(true); setAssignedTripsError(""); }
     try {
-      const result = await api<{ trips: { trip: { id: number; group_id: number; service_date: string; direction: string; departure_at: string; status: string; captain_user_id: number | null; route_geometry: RouteGeometry | null }; stops: PoolStop[] }[] }>("/captain/pool/trips", { token: session.token });
-      setMyTrips(result.trips.map((item) => ({ trip: item.trip, stops: item.stops, route: item.trip.route_geometry })));
+      const result = await api<{ trips: { trip: { id: number; group_id: number; service_date: string; direction: string; departure_at: string; status: string; captain_user_id: number | null; route_geometry: RouteGeometry | null }; stops: PoolStop[] }[] }>("/captain/pool/trips", { token: session.token, signal, etag: true });
+      const next = result.trips.map((item) => ({ trip: item.trip, stops: item.stops, route: item.trip.route_geometry }));
+      const changed = !sameData(myTripsRef.current, next);
+      if (changed) { myTripsRef.current = next; setMyTrips(next); }
+      return changed;
     } catch (error) {
-      setAssignedTripsError(errorText(error));
-      throw error;
-    } finally { setAssignedTripsLoaded(true); setAssignedTripsLoading(false); }
+      if (!quiet) setAssignedTripsError(errorText(error));
+      if (!quiet) throw error;
+      return false;
+    } finally { setAssignedTripsLoaded(true); if (!quiet) setAssignedTripsLoading(false); }
   }, [session.token]);
-  useEffect(() => { if (section === "captainTrips" || section === "offers") void loadAssignedTrips().catch((error) => notify(errorText(error), "error")); }, [section, loadAssignedTrips, notify]);
-  useEffect(() => {
-    if (section !== "captainTrips") return;
-    const timer = window.setInterval(() => { void loadAssignedTrips().catch((error) => notify(errorText(error), "error")); }, 30_000);
-    return () => window.clearInterval(timer);
-  }, [section, loadAssignedTrips, notify]);
+  useEffect(() => { if (section === "captainTrips" || section === "offers") void loadAssignedTrips(assignedTripsLoaded).catch((error) => notify(errorText(error), "error")); }, [section, loadAssignedTrips, assignedTripsLoaded, notify]);
+  useSilentRefresh((signal) => loadAssignedTrips(true, signal), { enabled: section === "captainTrips" || section === "offers", intervalMs: 20_000 });
   const selected = myTrips.find((item) => item.trip.id === selectedTrip) ?? null;
   const selectedStopPoints = useResolvedLocationPoints(session.token, selected?.stops.map((stop) => ({ lat: stop.lat, lng: stop.lng, kind: stop.stop_type, sequence: stop.sequence })) ?? []);
   const selectedOffer = offers.find((offer) => offer.trip.id === selectedOfferId) ?? null;

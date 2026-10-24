@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { api, uploadVerificationDocument, type VerificationDocument, type VerificationDocumentType } from "../api";
 import { errorText } from "../lib/formatters";
+import { sameData, useSilentRefresh } from "../lib/use-silent-refresh";
 import { t } from "../i18n/runtime";
 import BrandLogo from "./BrandLogo";
 import PublicLanguageToggle from "./PublicLanguageToggle";
@@ -33,6 +34,7 @@ export default function SignupVerificationFlow({ session, notify, onExplore }: {
   onExplore: (session: Session) => void;
 }) {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
+  const snapshotRef = useRef<Snapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeStep, setActiveStep] = useState(0);
@@ -45,26 +47,22 @@ export default function SignupVerificationFlow({ session, notify, onExplore }: {
   const [plate, setPlate] = useState("");
   const docs = useMemo(() => new Map((snapshot?.documents ?? []).map((doc) => [doc.document_type, doc])), [snapshot]);
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (quiet = false, signal?: AbortSignal) => {
     try {
-      const result = await api<Snapshot>("/verification", { token: session.token });
-      setSnapshot(result);
-      setError("");
+      const result = await api<Snapshot>("/verification", { token: session.token, signal, etag: true });
+      if (!sameData(snapshotRef.current, result)) { snapshotRef.current = result; setSnapshot(result); }
+      if (!quiet) setError("");
       return result;
     } catch (cause) {
-      setError(errorText(cause));
+      if (!quiet) setError(errorText(cause));
       return null;
     } finally {
-      setLoading(false);
+      if (!quiet) setLoading(false);
     }
   }, [session.token]);
 
   useEffect(() => { void refresh(); }, [refresh]);
-  useEffect(() => {
-    if (!telegramUrl || snapshot?.phone_verified) return;
-    const timer = window.setInterval(() => { void refresh(); }, 5_000);
-    return () => window.clearInterval(timer);
-  }, [telegramUrl, snapshot?.phone_verified, refresh]);
+  useSilentRefresh(async (signal) => { const previous = snapshotRef.current; const next = await refresh(true, signal); return Boolean(next && !sameData(previous, next)); }, { enabled: Boolean(telegramUrl && !snapshot?.phone_verified), intervalMs: 20_000 });
 
   const steps = useMemo<Step[]>(() => {
     if (!snapshot) return [];

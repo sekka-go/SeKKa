@@ -72,6 +72,7 @@ const USER_KEY = "sekka.session.user";
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.DEV ? "" : "https://uorxfakceqnhxqnaawdy.supabase.co/functions/v1/sekka-api")).replace(/\/+$/, "");
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
   ?? "sb_publishable__gh8lr-A5tr5Q9CMi7YIuw_yrRFwgJl";
+const etagCache = new Map<string, { etag: string; payload: unknown }>();
 
 export function getStoredSession(): { token: string; user: User } | null {
   try {
@@ -102,7 +103,7 @@ function isCloudflarePagesPreview(): boolean {
   return hostname.endsWith(".sekka-go.pages.dev") && hostname !== "sekka-go.pages.dev";
 }
 
-export async function api<T>(path: string, options: { method?: string; body?: unknown; token?: string | null; signal?: AbortSignal; timeoutMs?: number } = {}): Promise<T> {
+export async function api<T>(path: string, options: { method?: string; body?: unknown; token?: string | null; signal?: AbortSignal; timeoutMs?: number; etag?: boolean } = {}): Promise<T> {
   const controller = new AbortController();
   let timedOut = false;
   const forwardAbort = () => controller.abort(options.signal?.reason);
@@ -113,6 +114,9 @@ export async function api<T>(path: string, options: { method?: string; body?: un
   if (options.body !== undefined) headers["Content-Type"] = "application/json";
   if (options.token) headers.Authorization = `Bearer ${options.token}`;
   if (API_BASE_URL) headers.apikey = SUPABASE_PUBLISHABLE_KEY;
+  const cacheKey = `${options.token ?? "public"}:${path}`;
+  const cached = options.etag ? etagCache.get(cacheKey) : undefined;
+  if (cached) headers["If-None-Match"] = cached.etag;
 
   let response: Response;
   try {
@@ -121,6 +125,15 @@ export async function api<T>(path: string, options: { method?: string; body?: un
       ...(options.body !== undefined ? { body: JSON.stringify(options.body) } : {}),
       signal: controller.signal,
     });
+    if (response.status === 304 && cached) return cached.payload as T;
+    if (response.status === 304) {
+      delete headers["If-None-Match"];
+      response = await fetch(`${API_BASE_URL}/api${path}`, {
+        method: options.method ?? "GET", headers,
+        ...(options.body !== undefined ? { body: JSON.stringify(options.body) } : {}),
+        signal: controller.signal,
+      });
+    }
     let payload: { error?: string } & T;
     try { payload = await response.json() as { error?: string } & T; }
     catch (cause) {
@@ -128,6 +141,11 @@ export async function api<T>(path: string, options: { method?: string; body?: un
       payload = {} as { error?: string } & T;
     }
     if (!response.ok) throw new ApiError(response.status, payload.error ?? "حصل خطأ غير متوقع. حاول مرة أخرى.");
+    const etag = options.etag ? response.headers.get("ETag") : null;
+    if (etag) {
+      etagCache.set(cacheKey, { etag, payload });
+      if (etagCache.size > 200) etagCache.delete(etagCache.keys().next().value!);
+    }
     return payload;
   } catch (cause) {
     if (cause instanceof ApiError) throw cause;

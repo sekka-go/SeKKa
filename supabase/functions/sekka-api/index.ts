@@ -9,11 +9,19 @@ import { corsHeaders } from "./cors.ts";
 type Json = Record<string, unknown>;
 type User = { id: number; full_name: string; phone_number: string; role: "rider" | "captain" | "admin"; verified_at: string | null; created_at: string; account_status?: "active" | "suspended" | "banned" };
 const encoder = new TextEncoder();
-function reply(data: unknown, status = 200, origin = "") {
-  return new Response(status === 204 ? null : JSON.stringify(data), {
-    status,
-    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", ...corsHeaders(origin || null, Deno.env.get("SEKKA_ALLOWED_ORIGINS")) },
-  });
+async function reply(data: unknown, status = 200, origin = "", req?: Request) {
+  const body = status === 204 ? null : JSON.stringify(data);
+  const headers = new Headers({ "content-type": "application/json; charset=utf-8", "cache-control": "no-store", ...corsHeaders(origin || null, Deno.env.get("SEKKA_ALLOWED_ORIGINS")) });
+  if (status === 200 && req?.method === "GET" && body !== null) {
+    const digest = await crypto.subtle.digest("SHA-256", encoder.encode(body));
+    const etag = `"${Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("")}"`;
+    headers.set("ETag", etag);
+    headers.set("Cache-Control", "private, no-cache, must-revalidate");
+    if (req.headers.get("if-none-match")?.split(",").map((value) => value.trim()).includes(etag)) {
+      return new Response(null, { status: 304, headers });
+    }
+  }
+  return new Response(body, { status, headers });
 }
 function error(message: string, status = 400, origin = "") { return reply({ error: message }, status, origin); }
 class ApiFailure extends Error { constructor(message: string, readonly status: number) { super(message); } }
@@ -834,7 +842,7 @@ Deno.serve(async (req: Request) => {
         verification_status: profile?.verification_status ?? null,
         grace_period_expires_at: profile?.grace_period_expires_at ?? null,
         requirements: { rider: verificationDocuments.rider, captain_immediate: verificationDocuments.captainImmediate, captain_deferred: verificationDocuments.captainDeferred, labels: verificationDocLabels },
-      }, 200, origin);
+      }, 200, origin, req);
     }
     if (req.method === "POST" && path === "/verification/phone/telegram") {
       const gate = await requireRole(user, ["rider", "captain"], origin); if (gate) return gate;
@@ -1165,20 +1173,27 @@ Deno.serve(async (req: Request) => {
       if (req.method === "GET") {
         const { data, error: queryError } = await db.from("demand_requests").select("*,demand_groups(status,captain_line_id)").eq("rider_user_id", user!.id).order("created_at", { ascending: false }).limit(50);
         if (queryError) throw queryError;
-        const requests = [];
-        for (const item of data ?? []) {
+        const rows = data ?? [];
+        const lineIds = [...new Set(rows.map((item) => Array.isArray(item.demand_groups) ? item.demand_groups[0]?.captain_line_id : item.demand_groups?.captain_line_id).filter((id): id is number => Number.isSafeInteger(id)))];
+        const { data: lines, error: linesError } = lineIds.length
+          ? await db.from("captain_lines").select("id,captain_user_id,origin_label,origin_lat,origin_lng,destination_label,destination_lat,destination_lng,arrival_time,return_arrival_time,price_per_seat").in("id", lineIds)
+          : { data: [], error: null };
+        if (linesError) throw linesError;
+        const captainIds = [...new Set((lines ?? []).map((line) => Number(line.captain_user_id)))];
+        const { data: captains, error: captainsError } = captainIds.length
+          ? await db.from("users").select("id,full_name").in("id", captainIds)
+          : { data: [], error: null };
+        if (captainsError) throw captainsError;
+        const linesById = new Map((lines ?? []).map((line) => [Number(line.id), line]));
+        const captainsById = new Map((captains ?? []).map((captain) => [Number(captain.id), captain.full_name]));
+        const requests = rows.map((item) => {
           const group = Array.isArray(item.demand_groups) ? item.demand_groups[0] : item.demand_groups;
-          let line = null;
-          if (group?.captain_line_id) {
-            const { data: found, error: lineError } = await db.from("captain_lines").select("id,captain_user_id,origin_label,origin_lat,origin_lng,destination_label,destination_lat,destination_lng,arrival_time,return_arrival_time,price_per_seat").eq("id", group.captain_line_id).maybeSingle();
-            if (lineError) throw lineError;
-            const { data: captain } = found ? await db.from("users").select("full_name").eq("id", found.captain_user_id).maybeSingle() : { data: null };
-            const oriented = found ? orientCaptainLineForRider(found, Number(item.pickup_lat), Number(item.pickup_lng)) : null;
-            line = oriented ? { origin_label: oriented.origin_label, destination_label: oriented.destination_label, arrival_time: oriented.arrival_time, return_arrival_time: oriented.return_arrival_time, price_per_seat: oriented.price_per_seat, captain_name: captain?.full_name ?? "الكابتن" } : null;
-          }
-          requests.push({ ...item, demand_groups: group ?? null, line });
-        }
-        return reply({ requests }, 200, origin);
+          const found = group?.captain_line_id ? linesById.get(Number(group.captain_line_id)) : null;
+          const oriented = found ? orientCaptainLineForRider(found, Number(item.pickup_lat), Number(item.pickup_lng)) : null;
+          const line = oriented ? { origin_label: oriented.origin_label, destination_label: oriented.destination_label, arrival_time: oriented.arrival_time, return_arrival_time: oriented.return_arrival_time, price_per_seat: oriented.price_per_seat, captain_name: captainsById.get(Number(found!.captain_user_id)) ?? "الكابتن" } : null;
+          return { ...item, demand_groups: group ?? null, line };
+        });
+        return reply({ requests }, 200, origin, req);
       }
     }
     if (req.method === "GET" && path === "/rider/lines/discover") {
@@ -1234,7 +1249,7 @@ Deno.serve(async (req: Request) => {
       if (profilesResult.error) throw profilesResult.error;
       const captainNames = new Map((captainsResult.data ?? []).map((captain) => [Number(captain.id), captain.full_name]));
       const verifiedCaptains = new Set((profilesResult.data ?? []).filter((profile) => profile.verification_status === "approved").map((profile) => Number(profile.user_id)));
-      return reply({ lines: matches.map(({ captain_user_id, ...line }) => ({ ...line, captain_name: captainNames.get(captain_user_id) ?? "كابتن سِكّة", captain_verified: verifiedCaptains.has(captain_user_id) })) }, 200, origin);
+      return reply({ lines: matches.map(({ captain_user_id, ...line }) => ({ ...line, captain_name: captainNames.get(captain_user_id) ?? "كابتن سِكّة", captain_verified: verifiedCaptains.has(captain_user_id) })) }, 200, origin, req);
     }
     if (req.method === "POST" && path === "/rider/lines/search") {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
@@ -1397,12 +1412,35 @@ Deno.serve(async (req: Request) => {
       const { data: memberships, error: me } = await db.from("pool_members").select("group_id").eq("rider_user_id", user!.id).in("status", ["active", "awaiting_confirmation"]);
       if (me) throw me;
       const ids = [...new Set((memberships ?? []).map((m) => m.group_id))];
-      if (!ids.length) return reply({ groups: [] }, 200, origin);
+      if (!ids.length) return reply({ groups: [] }, 200, origin, req);
       const { data: groups, error: ge } = await db.from("pool_groups").select("*").in("id", ids).order("created_at", { ascending: false });
       if (ge) throw ge;
-      const views = [];
-      for (const g of groups ?? []) views.push(await groupView({ ...g, current_rider_id: user!.id }));
-      return reply({ groups: views }, 200, origin);
+      const groupIds = (groups ?? []).map((group) => Number(group.id));
+      if (!groupIds.length) return reply({ groups: [] }, 200, origin, req);
+      const [{ data: groupMembers, error: membersError }, { data: trips, error: tripsError }] = await Promise.all([
+        db.from("pool_members").select("*").in("group_id", groupIds).order("pickup_order").order("id"),
+        db.from("pool_trips").select("*").in("group_id", groupIds).order("service_date").order("direction"),
+      ]);
+      if (membersError || tripsError) throw membersError ?? tripsError;
+      const membersByGroup = new Map<number, typeof groupMembers>();
+      for (const member of groupMembers ?? []) { const list = membersByGroup.get(Number(member.group_id)) ?? []; list.push(member); membersByGroup.set(Number(member.group_id), list); }
+      const tripsByGroup = new Map<number, typeof trips>();
+      for (const trip of trips ?? []) { const list = tripsByGroup.get(Number(trip.group_id)) ?? []; list.push(trip); tripsByGroup.set(Number(trip.group_id), list); }
+      const ownActiveMemberIds = (groupMembers ?? []).filter((member) => Number(member.rider_user_id) === user!.id && member.status === "active").map((member) => Number(member.id));
+      const { data: subscriptions, error: subscriptionsError } = ownActiveMemberIds.length
+        ? await db.from("pool_subscriptions").select("member_id,amount_due,refund_amount,service_days,discount_rate").in("member_id", ownActiveMemberIds)
+        : { data: [], error: null };
+      if (subscriptionsError) throw subscriptionsError;
+      const subscriptionsByMember = new Map((subscriptions ?? []).map((subscription) => [Number(subscription.member_id), subscription]));
+      const views = (groups ?? []).map((group) => {
+        const members = membersByGroup.get(Number(group.id)) ?? [];
+        const ownMemberId = activeMemberIdForRider(members as Array<{ id: number; rider_user_id: number; status: string }>, user!.id);
+        const { current_rider_id: _currentRiderId, ...publicGroup } = { ...group, current_rider_id: user!.id };
+        const subscriptionRow = ownMemberId === null ? undefined : subscriptionsByMember.get(ownMemberId);
+        const subscription = subscriptionRow ? { amount_due: subscriptionRow.amount_due, refund_amount: subscriptionRow.refund_amount, service_days: subscriptionRow.service_days, discount_rate: subscriptionRow.discount_rate } : undefined;
+        return { group: { ...publicGroup, service_dates: JSON.stringify(group.service_dates), route_geometry: group.route_geometry }, members, trips: tripsByGroup.get(Number(group.id)) ?? [], ...(subscription ? { subscription } : {}) };
+      });
+      return reply({ groups: views }, 200, origin, req);
     }
     if (req.method === "POST" && path === "/rider/pool/discover") {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
@@ -1788,7 +1826,7 @@ Deno.serve(async (req: Request) => {
         const contact = byId.get(otherUserId);
         return contact ? [{ ...row, other_user: contact, unread_count: Number(row.participant_low_id) === user.id ? row.unread_low : row.unread_high }] : [];
       });
-      return reply({ conversations, unread_total: conversations.reduce((sum, row) => sum + Number(row.unread_count), 0) }, 200, origin);
+      return reply({ conversations, unread_total: conversations.reduce((sum, row) => sum + Number(row.unread_count), 0) }, 200, origin, req);
     }
     if (req.method === "POST" && path === "/messages/conversations") {
       if (!user) return error("سجّل الدخول أولًا.", 401, origin);
@@ -1825,7 +1863,7 @@ Deno.serve(async (req: Request) => {
       if (beforeId !== null) query = query.lt("id", beforeId);
       const { data: messages, error: messagesError } = await query.order("id", { ascending: false }).limit(100);
       if (messagesError) throw messagesError;
-      return reply({ messages: (messages ?? []).reverse(), has_older: (messages ?? []).length === 100 }, 200, origin);
+      return reply({ messages: (messages ?? []).reverse(), has_older: (messages ?? []).length === 100 }, 200, origin, req);
     }
     const directMessageRead = path.match(/^\/messages\/conversations\/(\d+)\/read$/);
     if (req.method === "POST" && directMessageRead) {
@@ -1854,7 +1892,7 @@ Deno.serve(async (req: Request) => {
     if (req.method === "GET" && path === "/pool/notifications") {
       if (!user) return error("سجّل الدخول أولًا.", 401, origin);
       const { data, error: e } = await db.from("pool_notifications").select("*").eq("user_id", user.id).is("deleted_at", null).order("id", { ascending: false }).limit(100);
-      if (e) throw e; return reply({ notifications: data }, 200, origin);
+      if (e) throw e; return reply({ notifications: data }, 200, origin, req);
     }
     const readNotice = path.match(/^\/pool\/notifications\/(\d+)\/read$/);
     if (req.method === "POST" && readNotice && user) {
@@ -1935,24 +1973,24 @@ Deno.serve(async (req: Request) => {
       if (path === "/captain/lines" && req.method === "GET") {
         const { data, error: queryError } = await db.from("captain_lines").select("*").eq("captain_user_id", user!.id).order("created_at", { ascending: false });
         if (queryError) throw queryError;
-        return reply({ lines: data ?? [] }, 200, origin);
+        return reply({ lines: data ?? [] }, 200, origin, req);
       }
       if (path === "/captain/demand-groups" && req.method === "GET") {
         const { data: lines, error: linesError } = await db.from("captain_lines").select("id,origin_label,destination_label").eq("captain_user_id", user!.id);
         if (linesError) throw linesError;
         const lineIds = (lines ?? []).map((line) => Number(line.id));
-        if (!lineIds.length) return reply({ groups: [] }, 200, origin);
+        if (!lineIds.length) return reply({ groups: [] }, 200, origin, req);
         const { data: groups, error: groupsError } = await db.from("demand_groups").select("id,captain_line_id,vehicle_type_id,trip_date,arrival_time,return_arrival_time,status").in("captain_line_id", lineIds).eq("status", "matched").order("trip_date").order("arrival_time");
         if (groupsError) throw groupsError;
         const groupIds = (groups ?? []).map((group) => Number(group.id));
-        if (!groupIds.length) return reply({ groups: [] }, 200, origin);
+        if (!groupIds.length) return reply({ groups: [] }, 200, origin, req);
         const { data: requests, error: requestsError } = await db.from("demand_requests").select("id,demand_group_id,rider_user_id,pickup_label,dropoff_label,seats,status").in("demand_group_id", groupIds).in("status", ["open", "matched"]);
         if (requestsError) throw requestsError;
         const riderIds = [...new Set((requests ?? []).map((request) => Number(request.rider_user_id)))];
         const { data: riders, error: ridersError } = riderIds.length ? await db.from("users").select("id,full_name").in("id", riderIds) : { data: [], error: null };
         if (ridersError) throw ridersError;
         const riderNames = new Map((riders ?? []).map((rider) => [Number(rider.id), String(rider.full_name)]));
-        return reply({ groups: (groups ?? []).map((group) => ({ ...group, requests: (requests ?? []).filter((request) => Number(request.demand_group_id) === Number(group.id)).map((request) => ({ ...request, rider_name: riderNames.get(Number(request.rider_user_id)) ?? "راكب" })) })) }, 200, origin);
+        return reply({ groups: (groups ?? []).map((group) => ({ ...group, requests: (requests ?? []).filter((request) => Number(request.demand_group_id) === Number(group.id)).map((request) => ({ ...request, rider_name: riderNames.get(Number(request.rider_user_id)) ?? "راكب" })) })) }, 200, origin, req);
       }
       if (req.method === "GET" && path === "/captain/pool/preferences") {
         const [stats, capabilities] = await Promise.all([
@@ -2129,23 +2167,37 @@ Deno.serve(async (req: Request) => {
           db.from("pool_captain_stats").select("*").eq("captain_user_id", user!.id).maybeSingle(),
         ]);
         if (capabilityError || statsError) throw capabilityError ?? statsError;
-        if (!capability || profile.current_lat == null || profile.current_lng == null) return reply({ offers: [] }, 200, origin);
+        if (!capability || profile.current_lat == null || profile.current_lng == null) return reply({ offers: [] }, 200, origin, req);
         const { data: trips, error: tripsError } = await db.from("pool_trips").select("*").in("status", ["scheduled", "needs_captain"]).is("captain_user_id", null).gte("departure_at", new Date().toISOString()).order("departure_at").limit(100);
         if (tripsError) throw tripsError;
+        const groupIds = [...new Set((trips ?? []).map((trip) => Number(trip.group_id)))];
+        if (!groupIds.length) return reply({ offers: [] }, 200, origin, req);
+        const { data: groups, error: groupsError } = await db.from("pool_groups").select("*").in("id", groupIds);
+        if (groupsError) throw groupsError;
+        const groupsById = new Map((groups ?? []).map((group) => [Number(group.id), group]));
+        const categoryIds = [...new Set((groups ?? []).map((group) => String(group.category_id)))];
+        const [{ data: categories, error: categoriesError }, { data: members, error: membersError }] = await Promise.all([
+          categoryIds.length ? db.from("pool_categories").select("*").in("id", categoryIds) : Promise.resolve({ data: [], error: null }),
+          db.from("pool_members").select("*").in("group_id", groupIds).eq("status", "active").order("pickup_order"),
+        ]);
+        if (categoriesError || membersError) throw categoriesError ?? membersError;
+        const categoriesById = new Map((categories ?? []).map((category) => [String(category.id), category]));
+        const membersByGroup = new Map<number, typeof members>();
+        for (const member of members ?? []) {
+          const id = Number(member.group_id), current = membersByGroup.get(id) ?? [];
+          current.push(member); membersByGroup.set(id, current);
+        }
         const offers = [];
         for (const trip of trips ?? []) {
-          const { data: group, error: groupError } = await db.from("pool_groups").select("*").eq("id", trip.group_id).maybeSingle();
-          if (groupError) throw groupError;
-          const { data: category, error: categoryError } = group ? await db.from("pool_categories").select("*").eq("id", group.category_id).maybeSingle() : { data: null, error: null };
-          if (categoryError) throw categoryError;
-          const { data: members, error: membersError } = group ? await db.from("pool_members").select("*").eq("group_id", group.id).eq("status", "active").order("pickup_order") : { data: [], error: null };
-          if (membersError) throw membersError;
-          const first = members?.[0];
+          const group = groupsById.get(Number(trip.group_id));
+          const category = group ? categoriesById.get(String(group.category_id)) : null;
+          const groupMembers = membersByGroup.get(Number(trip.group_id)) ?? [];
+          const first = groupMembers[0];
           if (!group || !category || !first || group.status !== "active") continue;
           if ((category.speed_tier === "faster" && !capability.accepts_faster) || (category.speed_tier === "saver" && !capability.accepts_saver) || Number(category.has_ac) !== Number(capability.has_ac)) continue;
           const effective = Math.max(4, Number(stats?.search_radius_km ?? 4) - Number(stats?.absences ?? 0));
           if (distanceKm({ lat: profile.current_lat, lng: profile.current_lng }, { lat: first.pickup_lat, lng: first.pickup_lng }) > effective) continue;
-          const stops = routePoints(members, trip.direction).map((stop, index) => ({
+          const stops = routePoints(groupMembers, trip.direction).map((stop, index) => ({
             id: index + 1,
             member_id: Number(stop.member_id),
             stop_type: stop.stop_type,
@@ -2157,7 +2209,7 @@ Deno.serve(async (req: Request) => {
           }));
           offers.push({ group_id: group.id, category_id: group.category_id, package_type: group.package_type, route_distance_km: group.route_distance_km, seat_day_fare: group.seat_day_fare, route_geometry: group.route_geometry, trip: { ...trip, stops } });
         }
-        return reply({ offers }, 200, origin);
+        return reply({ offers }, 200, origin, req);
       }
 
       const poolTripDetail = path.match(/^\/captain\/pool\/trips\/(\d+)$/);
@@ -2191,13 +2243,21 @@ Deno.serve(async (req: Request) => {
 
       if (req.method === "GET" && path === "/captain/pool/trips") {
         const { data: trips } = await db.from("pool_trips").select("*").eq("captain_user_id", user!.id).in("status", ["assigned", "in_progress"]).order("departure_at");
-        const out = [];
-        for (const trip of trips ?? []) {
-          const { data: stops } = await db.from("pool_trip_stops").select("*").eq("trip_id", trip.id).order("sequence");
-          const { data: group } = await db.from("pool_groups").select("id,route_geometry").eq("id", trip.group_id).single();
-          out.push({ trip: { ...trip, group_id: group?.id, route_geometry: group?.route_geometry }, stops: stops ?? [] });
-        }
-        return reply({ trips: out }, 200, origin);
+        const tripIds = (trips ?? []).map((trip) => Number(trip.id));
+        const groupIds = [...new Set((trips ?? []).map((trip) => Number(trip.group_id)))];
+        const [{ data: stops, error: stopsError }, { data: groups, error: groupsError }] = await Promise.all([
+          tripIds.length ? db.from("pool_trip_stops").select("*").in("trip_id", tripIds).order("sequence") : Promise.resolve({ data: [], error: null }),
+          groupIds.length ? db.from("pool_groups").select("id,route_geometry").in("id", groupIds) : Promise.resolve({ data: [], error: null }),
+        ]);
+        if (stopsError || groupsError) throw stopsError ?? groupsError;
+        const groupsById = new Map((groups ?? []).map((group) => [Number(group.id), group]));
+        const stopsByTrip = new Map<number, typeof stops>();
+        for (const stop of stops ?? []) { const list = stopsByTrip.get(Number(stop.trip_id)) ?? []; list.push(stop); stopsByTrip.set(Number(stop.trip_id), list); }
+        const out = (trips ?? []).map((trip) => {
+          const group = groupsById.get(Number(trip.group_id));
+          return { trip: { ...trip, group_id: group?.id, route_geometry: group?.route_geometry }, stops: stopsByTrip.get(Number(trip.id)) ?? [] };
+        });
+        return reply({ trips: out }, 200, origin, req);
       }
 
       const reorder = path.match(/^\/captain\/pool\/groups\/(\d+)\/reorder$/);
@@ -2740,6 +2800,15 @@ Deno.serve(async (req: Request) => {
       const { data: events, error: eventError } = await db.from("payment_status_events").select("id,payment_id,from_status,to_status,actor_user_id,reason,adjusted_amount,created_at").eq("to_status", "disputed").order("created_at", { ascending: false }).order("id", { ascending: false }).limit(100);
       if (eventError) throw eventError;
       const paymentIds = [...new Set((events ?? []).map((event) => event.payment_id))];
+      if (url.searchParams.get("summary") === "true") {
+        const { data: latestEvents, error: latestError } = paymentIds.length
+          ? await db.from("payment_status_events").select("payment_id,to_status").in("payment_id", paymentIds).order("created_at", { ascending: false }).order("id", { ascending: false })
+          : { data: [], error: null };
+        if (latestError) throw latestError;
+        const latestByPayment = new Map<number, string>();
+        for (const event of latestEvents ?? []) if (!latestByPayment.has(Number(event.payment_id))) latestByPayment.set(Number(event.payment_id), String(event.to_status));
+        return reply({ total_count: [...latestByPayment.values()].filter((status) => status === "disputed").length, capped: (events ?? []).length === 100 }, 200, origin, req);
+      }
       const [payments, history] = await Promise.all([
         paymentIds.length ? db.from("payments").select("id,trip_id,amount,reported_by_user_id,reported_at").in("id", paymentIds) : Promise.resolve({ data: [], error: null }),
         paymentIds.length ? db.from("payment_status_events").select("id,payment_id,from_status,to_status,actor_user_id,reason,adjusted_amount,created_at").in("payment_id", paymentIds).order("created_at", { ascending: false }).order("id", { ascending: false }) : Promise.resolve({ data: [], error: null }),
@@ -2752,7 +2821,6 @@ Deno.serve(async (req: Request) => {
         .filter(([, event]) => event.to_status === "disputed")
         .map(([paymentId, event]) => ({ ...event, payment: paymentById.get(paymentId), history: (history.data ?? []).filter((item) => item.payment_id === paymentId) }))
         .sort((left, right) => Date.parse(right.created_at) - Date.parse(left.created_at));
-      if (url.searchParams.get("summary") === "true") return reply({ total_count: disputes.length, capped: (events ?? []).length === 100 }, 200, origin);
       return reply({ disputes }, 200, origin);
     }
     if (req.method === "GET" && path === "/admin/settings") {
@@ -3000,7 +3068,7 @@ Deno.serve(async (req: Request) => {
         total_trips_in_progress: value(5) + value(6), total_trips_completed: value(7) + value(8),
         pending_price_approvals: value(9),
       };
-      return reply({ overview }, 200, origin);
+      return reply({ overview }, 200, origin, req);
     }
     if (req.method === "GET" && path === "/admin/pool/overview") {
       const countStatus = (status: string) => db.from("pool_groups").select("id", { count: "exact", head: true }).eq("status", status);
@@ -3017,7 +3085,7 @@ Deno.serve(async (req: Request) => {
         price_review_groups: priceReview.count ?? 0,
         needs_captain_groups: needsCaptain.count ?? 0,
         active_groups: active.count ?? 0,
-      } }, 200, origin);
+      } }, 200, origin, req);
     }
     if (req.method === "GET" && path === "/admin/finance/summary") {
       let lastId = 0;

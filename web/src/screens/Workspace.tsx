@@ -16,6 +16,7 @@ import MessagesWorkspace from "./MessagesWorkspace";
 import type { ThemePreference } from "../components/ThemePreferenceCard";
 import AppSettings from "../components/AppSettings";
 import { startPermissionAwareDeviceLocation } from "../lib/device-location";
+import { sameData, useSilentRefresh } from "../lib/use-silent-refresh";
 function cairoHour() {
   return Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Africa/Cairo", hour: "2-digit", hourCycle: "h23" }).format(new Date()));
 }
@@ -76,6 +77,7 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
     return state?.sekkaWorkspace && state.sekkaSection && sectionAllowedForRole(state.sekkaSection, session.user.role) && state.sekkaSection === sectionForPath(window.location.pathname, session.user.role) ? state.sekkaIndex ?? 0 : 0;
   });
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const notificationsRef = useRef<Notification[]>([]);
   const [notificationsLoaded, setNotificationsLoaded] = useState(false);
   const [notificationsError, setNotificationsError] = useState("");
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
@@ -167,10 +169,12 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
     window.addEventListener("sekka:navigate", navigate);
     return () => window.removeEventListener("sekka:navigate", navigate);
   }, [setSection]);
-  const refreshNotifications = useCallback(async () => {
-    setNotificationsError("");
-    try { const result = await api<{ notifications: Notification[] }>("/pool/notifications", { token: session.token }); setNotifications(result.notifications); }
-    catch (error) { setNotificationsError(t(error instanceof Error ? error.message : "تعذر تحميل الإشعارات. حاول مرة أخرى.")); }
+  const refreshNotifications = useCallback(async (quiet = false, signal?: AbortSignal): Promise<void> => {
+    if (!quiet) setNotificationsError("");
+    try {
+      const result = await api<{ notifications: Notification[] }>("/pool/notifications", { token: session.token, signal, etag: true });
+      if (!sameData(notificationsRef.current, result.notifications)) { notificationsRef.current = result.notifications; setNotifications(result.notifications); }
+    } catch (error) { if (!quiet) setNotificationsError(t(error instanceof Error ? error.message : "تعذر تحميل الإشعارات. حاول مرة أخرى.")); }
     finally { setNotificationsLoaded(true); }
   }, [session.token]);
   const registerPoolRefresh = useCallback((refresh: () => Promise<void>) => { riderPoolRefreshRef.current = refresh; }, []);
@@ -216,18 +220,20 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
     const timer = window.setInterval(() => setLocalHour(cairoHour()), 60_000);
     return () => window.clearInterval(timer);
   }, []);
-  useEffect(() => {
-    const timer = window.setInterval(() => { void refreshNotifications(); }, 30_000);
-    return () => window.clearInterval(timer);
-  }, [refreshNotifications]);
-  const refreshUnreadMessages = useCallback(async () => {
-    if (session.user.role === "admin" || sectionRef.current === "messages") return;
+  useSilentRefresh((signal) => refreshNotifications(true, signal), { intervalMs: 20_000 });
+  const unreadCountRef = useRef(0);
+  const refreshUnreadMessages = useCallback(async (signal?: AbortSignal) => {
+    if (session.user.role === "admin" || sectionRef.current === "messages") return false;
     try {
-      const result = await api<{ unread_total: number }>("/messages/conversations", { token: session.token });
+      const result = await api<{ unread_total: number }>("/messages/conversations", { token: session.token, signal, etag: true });
+      if (unreadCountRef.current === result.unread_total) return false;
+      unreadCountRef.current = result.unread_total;
       setUnreadMessageCount(result.unread_total);
-    } catch { /* يظل شريط التنقل متاحًا حتى لو تعذر تحديث العدد */ }
+      return true;
+    } catch { return false; /* يظل شريط التنقل متاحًا حتى لو تعذر تحديث العدد */ }
   }, [session.token, session.user.role]);
-  useEffect(() => { void refreshUnreadMessages(); const timer = window.setInterval(() => { void refreshUnreadMessages(); }, 30_000); return () => window.clearInterval(timer); }, [refreshUnreadMessages]);
+  useEffect(() => { void refreshUnreadMessages(); }, [refreshUnreadMessages]);
+  useSilentRefresh(refreshUnreadMessages, { enabled: session.user.role !== "admin", intervalMs: 20_000 });
   useEffect(() => {
     const updateConnection = () => setIsOnline(navigator.onLine);
     window.addEventListener("online", updateConnection);

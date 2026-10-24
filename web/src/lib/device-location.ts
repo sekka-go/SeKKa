@@ -47,6 +47,7 @@ export function startPermissionAwareDeviceLocation() {
   const updatePermission = () => {
     if (!active) return;
     if (permission?.state === "granted") {
+      if (document.visibilityState === "hidden") { stopWatching(); return; }
       if (watchId !== null) return;
       watchId = navigator.geolocation.watchPosition(rememberDeviceLocation, () => undefined, {
         enableHighAccuracy: false,
@@ -63,6 +64,7 @@ export function startPermissionAwareDeviceLocation() {
     if (!active) return;
     permission = status;
     permission.addEventListener("change", updatePermission);
+    document.addEventListener("visibilitychange", updatePermission);
     updatePermission();
   }).catch(() => undefined);
 
@@ -70,6 +72,7 @@ export function startPermissionAwareDeviceLocation() {
     active = false;
     stopWatching();
     permission?.removeEventListener("change", updatePermission);
+    document.removeEventListener("visibilitychange", updatePermission);
     publish(null);
   };
 }

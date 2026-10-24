@@ -1,8 +1,9 @@
 import { t } from "../i18n/runtime";
 import Button from "../components/Button";
-import { lazy, Suspense, useCallback, useEffect, useState, type FormEvent } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { api } from "../api";
 import { errorText } from "../lib/formatters";
+import { sameData, useSilentRefresh } from "../lib/use-silent-refresh";
 import type { NavKey, Session, Toast } from "../types";
 import { AccountPanel, ErrorState, LoadingCard } from "../components/workspace-shared";
 
@@ -12,12 +13,15 @@ type PoolOverview = Record<string, number>;
 const adminSections = new Set<NavKey>(["adminUsers", "adminDocuments", "adminTrips", "adminComplaints", "adminFinance", "adminFinanceAdjustment", "adminPricing", "adminAudit"]);
 
 export default function AdminWorkspace({ session, section, refreshNotifications, notify, onInitialReady }: {
-  session: Session; section: NavKey; refreshNotifications: () => Promise<void>; notify: (text: string, tone?: Toast["tone"]) => void;
+  session: Session; section: NavKey; refreshNotifications: (quiet?: boolean, signal?: AbortSignal) => Promise<void>; notify: (text: string, tone?: Toast["tone"]) => void;
   onInitialReady: () => void;
 }) {
   const [overview, setOverview] = useState<Overview | null>(null);
+  const overviewRef = useRef<Overview | null>(null);
   const [poolOverview, setPoolOverview] = useState<PoolOverview | null>(null);
+  const poolOverviewRef = useRef<PoolOverview | null>(null);
   const [disputesCapped, setDisputesCapped] = useState(false);
+  const disputesCappedRef = useRef(false);
   const [dashboardLoading, setDashboardLoading] = useState(false);
   const [dashboardError, setDashboardError] = useState("");
   const [dashboardInitialLoadComplete, setDashboardInitialLoadComplete] = useState(false);
@@ -27,33 +31,33 @@ export default function AdminWorkspace({ session, section, refreshNotifications,
   const [broadcastBusy, setBroadcastBusy] = useState(false);
   const [broadcastRequestId, setBroadcastRequestId] = useState("");
 
-  const refresh = useCallback(async () => {
-    setDashboardLoading(true);
-    setDashboardError("");
+  const refresh = useCallback(async (quiet = false, signal?: AbortSignal) => {
+    if (!quiet) { setDashboardLoading(true); setDashboardError(""); }
     try {
       const [stats, pool, disputes] = await Promise.all([
-        api<{ overview: Overview }>("/admin/analytics/overview", { token: session.token }),
-        api<{ overview: PoolOverview }>("/admin/pool/overview", { token: session.token }),
-        api<{ total_count: number; capped: boolean }>("/admin/disputes?summary=true", { token: session.token }),
+        api<{ overview: Overview }>("/admin/analytics/overview", { token: session.token, signal, etag: true }),
+        api<{ overview: PoolOverview }>("/admin/pool/overview", { token: session.token, signal, etag: true }),
+        api<{ total_count: number; capped: boolean }>("/admin/disputes?summary=true", { token: session.token, signal, etag: true }),
       ]);
-      setOverview({ ...stats.overview, disputes_awaiting_admin: disputes.total_count });
-      setDisputesCapped(disputes.capped);
-      setPoolOverview(pool.overview);
-      setLastUpdated(Date.now());
+      const nextOverview = { ...stats.overview, disputes_awaiting_admin: disputes.total_count };
+      const changed = !sameData(overviewRef.current, nextOverview) || !sameData(poolOverviewRef.current, pool.overview) || disputesCappedRef.current !== disputes.capped;
+      overviewRef.current = nextOverview; poolOverviewRef.current = pool.overview; disputesCappedRef.current = disputes.capped;
+      setOverview((current) => sameData(current, nextOverview) ? current : nextOverview);
+      setDisputesCapped((current) => current === disputes.capped ? current : disputes.capped);
+      setPoolOverview((current) => sameData(current, pool.overview) ? current : pool.overview);
+      if (!quiet) setLastUpdated(Date.now());
+      return changed;
     } catch (error) {
-      setDashboardError(errorText(error));
+      if (!quiet) setDashboardError(errorText(error));
+      return false;
     } finally {
-      setDashboardLoading(false);
+      if (!quiet) setDashboardLoading(false);
       setDashboardInitialLoadComplete(true);
     }
   }, [session.token]);
-  useEffect(() => { if (section === "admin") void refresh(); }, [section, refresh]);
+  useEffect(() => { if (section === "admin") void refresh(overviewRef.current !== null); }, [section, refresh]);
   useEffect(() => { if (section === "admin" && dashboardInitialLoadComplete) onInitialReady(); }, [section, dashboardInitialLoadComplete, onInitialReady]);
-  useEffect(() => {
-    if (section !== "admin") return;
-    const timer = window.setInterval(() => { void refresh(); }, 60_000);
-    return () => window.clearInterval(timer);
-  }, [section, refresh]);
+  useSilentRefresh((signal) => refresh(true, signal), { enabled: section === "admin", intervalMs: 60_000 });
 
   if (section === "account") return <AccountPanel session={session} notify={notify} />;
   if (section === "broadcast") {

@@ -5,6 +5,7 @@ import { errorText } from "../lib/formatters";
 import type { Session, Toast } from "../types";
 import AppIcon from "../components/AppIcon";
 import ProfileAvatar from "../components/ProfileAvatar";
+import { sameData, useSilentRefresh } from "../lib/use-silent-refresh";
 
 type Person = { id: number; full_name: string; role: Role; avatar_path?: string | null };
 type Message = { id: number; conversation_id: number; sender_user_id: number; body: string; created_at: string; read_at: string | null };
@@ -21,43 +22,12 @@ const messageDateLabel = (value: string) => new Intl.DateTimeFormat(getLanguage(
   weekday: "short", month: "short", day: "numeric",
 }).format(new Date(value));
 
-function useVisiblePolling(callback: (() => Promise<void>) | null, intervalMs: number, runImmediately = true) {
-  useEffect(() => {
-    if (!callback) return;
-    let timer = 0;
-    let running = false;
-    let disposed = false;
-    const schedule = () => {
-      window.clearTimeout(timer);
-      if (!disposed && document.visibilityState === "visible") {
-        timer = window.setTimeout(() => { void run(); }, intervalMs);
-      }
-    };
-    const run = async () => {
-      if (disposed || running || document.visibilityState !== "visible") return;
-      running = true;
-      try { await callback(); }
-      finally { running = false; schedule(); }
-    };
-    const onVisibilityChange = () => {
-      if (document.visibilityState === "visible") void run();
-      else window.clearTimeout(timer);
-    };
-    document.addEventListener("visibilitychange", onVisibilityChange);
-    if (runImmediately) void run();
-    else schedule();
-    return () => {
-      disposed = true;
-      window.clearTimeout(timer);
-      document.removeEventListener("visibilitychange", onVisibilityChange);
-    };
-  }, [callback, intervalMs]);
-}
-
 export default function MessagesWorkspace({ session, notify, onUnreadCountChange }: { session: Session; notify: (text: string, tone?: Toast["tone"]) => void; onUnreadCountChange: (count: number) => void }) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const conversationsRef = useRef<Conversation[]>([]);
   const [contacts, setContacts] = useState<Person[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
+  const messagesRef = useRef<Message[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [showContacts, setShowContacts] = useState(false);
   const [draft, setDraft] = useState("");
@@ -69,49 +39,68 @@ export default function MessagesWorkspace({ session, notify, onUnreadCountChange
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const autoScrollRef = useRef(true);
   const selected = conversations.find((item) => item.id === selectedId) ?? null;
 
-  const refreshConversations = useCallback(async (quiet = false, includeContacts = true) => {
+  const refreshConversations = useCallback(async (quiet = false, includeContacts = true, signal?: AbortSignal) => {
     if (!quiet) setLoading(true);
     try {
       const [inbox, people] = await Promise.all([
-        api<{ conversations: Conversation[]; unread_total: number }>("/messages/conversations", { token: session.token }),
-        includeContacts ? api<{ contacts: Person[] }>("/messages/contacts", { token: session.token }) : Promise.resolve(null),
+        api<{ conversations: Conversation[]; unread_total: number }>("/messages/conversations", { token: session.token, signal, etag: true }),
+        includeContacts ? api<{ contacts: Person[] }>("/messages/contacts", { token: session.token, signal, etag: true }) : Promise.resolve(null),
       ]);
-      setConversations(inbox.conversations);
+      const changed = !sameData(conversationsRef.current, inbox.conversations);
+      if (changed) { conversationsRef.current = inbox.conversations; setConversations(inbox.conversations); }
       onUnreadCountChange(inbox.unread_total);
-      if (people) setContacts(people.contacts);
-      setError("");
+      if (people && !sameData(contactsRef.current, people.contacts)) { contactsRef.current = people.contacts; setContacts(people.contacts); }
+      if (!quiet) setError("");
+      return changed;
     } catch (cause) {
-      setError(errorText(cause));
-    } finally { setLoading(false); }
+      if (!quiet) setError(errorText(cause));
+      return false;
+    } finally { if (!quiet) setLoading(false); }
   }, [onUnreadCountChange, session.token]);
 
-  const refreshMessages = useCallback(async (conversationId: number, quiet = false, markRead = true) => {
+  const refreshMessages = useCallback(async (conversationId: number, quiet = false, markRead = true, signal?: AbortSignal) => {
     if (!quiet) setLoadingMessages(true);
     try {
-      const result = await api<{ messages: Message[] }>(`/messages/conversations/${conversationId}/messages`, { token: session.token });
-      setMessages(result.messages);
+      const result = await api<{ messages: Message[] }>(`/messages/conversations/${conversationId}/messages`, { token: session.token, signal, etag: true });
+      const changed = !sameData(messagesRef.current, result.messages);
+      autoScrollRef.current = !quiet;
+      if (changed) { messagesRef.current = result.messages; setMessages(result.messages); }
       const hasUnreadIncoming = result.messages.some((message) => message.sender_user_id !== session.user.id && message.read_at === null);
       if (markRead || hasUnreadIncoming) {
         await api(`/messages/conversations/${conversationId}/read`, { method: "POST", token: session.token });
-        setConversations((current) => current.map((item) => item.id === conversationId ? { ...item, unread_count: 0 } : item));
+        setConversations((current) => {
+          let changed = false;
+          const next = current.map((item) => {
+            if (item.id !== conversationId || item.unread_count === 0) return item;
+            changed = true;
+            return { ...item, unread_count: 0 };
+          });
+          if (changed) conversationsRef.current = next;
+          return changed ? next : current;
+        });
       }
-      setError("");
+      if (!quiet) setError("");
+      return changed;
     } catch (cause) {
-      setError(errorText(cause));
-    } finally { setLoadingMessages(false); }
+      if (!quiet) setError(errorText(cause));
+      return false;
+    } finally { if (!quiet) setLoadingMessages(false); }
   }, [session.token]);
 
   useEffect(() => { void refreshConversations(); }, [refreshConversations]);
   useEffect(() => {
-    if (selectedId === null) setMessages([]);
-  }, [selectedId]);
-  const pollConversations = useCallback(() => refreshConversations(true, false), [refreshConversations]);
-  const pollMessages = useCallback(() => selectedId === null ? Promise.resolve() : refreshMessages(selectedId, true, false), [refreshMessages, selectedId]);
-  useVisiblePolling(pollConversations, 20_000, false);
-  useVisiblePolling(selectedId === null ? null : pollMessages, 10_000);
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [messages.length, selectedId]);
+    if (selectedId === null) { messagesRef.current = []; setMessages([]); }
+    else { autoScrollRef.current = true; void refreshMessages(selectedId); }
+  }, [selectedId, refreshMessages]);
+  const contactsRef = useRef<Person[]>([]);
+  const pollConversations = useCallback((signal: AbortSignal) => refreshConversations(true, false, signal), [refreshConversations]);
+  const pollMessages = useCallback((signal: AbortSignal) => selectedId === null ? Promise.resolve(false) : refreshMessages(selectedId, true, false, signal), [refreshMessages, selectedId]);
+  useSilentRefresh(pollConversations, { intervalMs: 20_000 });
+  useSilentRefresh(selectedId === null ? null : pollMessages, { enabled: selectedId !== null, intervalMs: 10_000, minIntervalMs: 10_000 });
+  useEffect(() => { if (autoScrollRef.current) { bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); autoScrollRef.current = false; } }, [messages.length, selectedId]);
 
   const startConversation = async (person: Person) => {
     try {
@@ -133,7 +122,7 @@ export default function MessagesWorkspace({ session, notify, onUnreadCountChange
     try {
       await api(`/messages/conversations/${selectedId}/messages`, { method: "POST", token: session.token, body: { body } });
       setDraft("");
-      await Promise.all([refreshMessages(selectedId, true), refreshConversations(true)]);
+      await Promise.all([refreshMessages(selectedId), refreshConversations(true)]);
     } catch (cause) { notify(errorText(cause), "error"); }
     finally { setSending(false); }
   };
