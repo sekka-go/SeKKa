@@ -1,6 +1,6 @@
-import { createContext, useCallback, useContext, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import arabicMessages from "./locales/ar.json";
-import englishMessages from "./locales/en.json";
+import SekkaSplash from "../components/SekkaSplash";
 
 export type Language = "ar" | "en";
 export type Direction = "rtl" | "ltr";
@@ -14,6 +14,11 @@ type LanguageContextValue = {
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 let activeLanguage: Language = "ar";
+const applicationNames: Record<Language, string> = { ar: "سِكّة", en: "SeKKa" };
+
+function applicationName(language: Language) {
+  return applicationNames[language];
+}
 
 function isLanguage(value: string | null): value is Language {
   return value === "ar" || value === "en";
@@ -47,10 +52,30 @@ function flattenCatalog(catalog: Catalog, output: Record<string, string> = {}, p
   return output;
 }
 
-const messagesByLanguage: Record<Language, Record<string, string>> = {
+const messagesByLanguage: Partial<Record<Language, Record<string, string>>> = {
   ar: flattenCatalog(arabicMessages as Catalog),
-  en: flattenCatalog(englishMessages as Catalog),
 };
+let englishCatalogPromise: Promise<Record<string, string>> | null = null;
+
+function loadCatalog(language: Language): Promise<Record<string, string>> {
+  if (messagesByLanguage[language]) return Promise.resolve(messagesByLanguage[language]!);
+  if (language === "en") {
+    englishCatalogPromise ??= import("./locales/en.json").then(({ default: catalog }) => {
+      const messages = flattenCatalog(catalog as Catalog);
+      messagesByLanguage.en = messages;
+      return messages;
+    }).catch((error: unknown) => {
+      englishCatalogPromise = null;
+      throw error;
+    });
+    return englishCatalogPromise;
+  }
+  return Promise.resolve(messagesByLanguage.ar!);
+}
+
+function activateLanguage(language: Language) {
+  activeLanguage = language;
+}
 
 export function getLanguage(): Language {
   return activeLanguage;
@@ -61,28 +86,56 @@ export function getDirection(): Direction {
 }
 
 export function t(sourceText: string): string {
-  return messagesByLanguage[activeLanguage][sourceText] ?? sourceText;
+  if (sourceText === "اسم التطبيق") return applicationName(activeLanguage);
+  return messagesByLanguage[activeLanguage]?.[sourceText] ?? sourceText;
 }
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>(detectLanguage);
-  activeLanguage = language;
+  const [catalogReady, setCatalogReady] = useState(() => language === "ar");
+  const languageRequest = useRef(0);
   const direction: Direction = language === "ar" ? "rtl" : "ltr";
 
+  useEffect(() => {
+    let mounted = true;
+    void loadCatalog(language).then(() => {
+      if (!mounted) return;
+      activateLanguage(language);
+      setCatalogReady(true);
+    }).catch(() => {
+      if (!mounted) return;
+      activateLanguage("ar");
+      setLanguageState("ar");
+      setCatalogReady(true);
+    });
+    return () => { mounted = false; };
+  }, [language]);
+
   const setLanguage = useCallback((nextLanguage: Language) => {
-    activeLanguage = nextLanguage;
-    setLanguageState(nextLanguage);
+    const request = ++languageRequest.current;
+    void loadCatalog(nextLanguage).then(() => {
+      if (request !== languageRequest.current) return;
+      activateLanguage(nextLanguage);
+      setLanguageState(nextLanguage);
+    }).catch(() => undefined);
   }, []);
 
   useLayoutEffect(() => {
     document.documentElement.lang = language;
     document.documentElement.dir = direction;
     document.documentElement.dataset.language = language;
+    document.title = language === "ar" ? "سِكَّة | SeKKa" : "SeKKa | With you on the road";
     try { localStorage.setItem("sekka.language", language); } catch { /* Preserve the in-memory choice. */ }
   }, [language, direction]);
 
   const value = useMemo(() => ({ language, direction, setLanguage }), [language, direction, setLanguage]);
-  return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
+  return <LanguageContext.Provider value={value}>
+    {catalogReady ? children : <SekkaSplash
+      title={applicationName(language)}
+      tagline={language === "ar" ? "طريقك أسهل مع سِكّة" : "Your route, made easier"}
+      accessibleLabel={language === "ar" ? "جاري فتح سِكّة" : "Opening SeKKa"}
+    />}
+  </LanguageContext.Provider>;
 }
 
 export function useLanguage() {

@@ -13,8 +13,8 @@
     "minimal-ui"
   ],
   "orientation": "portrait-primary",
-  "theme_color": "#f2f5f9",
-  "background_color": "#f2f5f9",
+  "theme_color": "#101827",
+  "background_color": "#101827",
   "categories": [
     "travel",
     "transportation"

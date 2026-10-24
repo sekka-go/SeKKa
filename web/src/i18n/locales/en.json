@@ -4,6 +4,8 @@
     "إغلاق": "Close",
     "الاتصال بطيء قليلاً، نشكرك على صبرك": "Your connection is a little slow. Thanks for your patience.",
     "تعذر تحميل الشاشة. تحقق من اتصالك وحاول مرة أخرى.": "This screen could not load. Check your connection and try again.",
+    "جاري فتح سِكّة": "Opening SeKKa",
+    "طريقك أسهل مع سِكّة": "Your route, made easier",
     "سِكّة": "SeKKa"
   },
   "ActionableStates": {
@@ -332,7 +334,7 @@
     "SekkaSplash": {
       "جاري فتح سِكّة": "Opening SeKKa",
       "سِكّة": "SeKKa",
-      "طريقك أسهل مع سِكّة": "Your way is easier with SeKKa"
+      "طريقك أسهل مع سِكّة": "Your route, made easier"
     },
     "ThemePreferenceCard": {
       "مظهر التطبيق": "App appearance",
