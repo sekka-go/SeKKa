@@ -477,7 +477,7 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
 
   if (section === "account") return <div className="rider-account-experience">{dataErrorBanner}<section className="rider-profile-heading"><div><span className="eyebrow">{t("حسابك في سِكّة")}</span><h2>{t("الملف الشخصي والإعدادات")}</h2><p>{t("إدارة بيانات حسابك وأماكنك المحفوظة.")}</p></div></section><AccountPanel session={session} notify={notify} /></div>;
 
-  if (section === "requests") return <div className="rider-requests-page">{dataErrorBanner}<section className="rider-section-intro"><span className="eyebrow">{t("كل طلباتك في مكان واحد")}</span><h2>{t("طلبات رحلاتك")}</h2><p>{t("تابع حالة طلباتك والمسارات التي تم العثور عليها")}</p></section>{demandRequests.length ? requestCards : initialLoadError ? null : <EmptyState icon="⌖" title={t("مافيش طلبات رحلات لسه")} text="ابحث عن مسار مناسب، ولو مافيش هنسجل طلبك ونجمعه مع الطلبات المشابهة." action="ابحث عن رحلة" onAction={() => openBooking("new")} />}</div>;
+  if (section === "requests") return <div className="rider-requests-page">{dataErrorBanner}<section className="rider-section-intro"><span className="eyebrow">{t("طلبات أنشأتها بعد البحث")}</span><h2>{t("طلباتي")}</h2><p>{t("هنا تتابع الطلبات التي سجلتها عندما لم تجد رحلة منشورة مناسبة. إذا تطابقت مع رحلة أو طلبات مشابهة ستظهر لك آخر التحديثات هنا.")}</p></section>{demandRequests.length ? requestCards : initialLoadError ? null : <EmptyState icon="inbox" title={t("لم تسجل طلب رحلة بعد")} text={t("طلباتك تظهر هنا بعد البحث عن الرحلات المنشورة وعدم العثور على رحلة مناسبة ثم تسجيل طلبك.")} action="اكتشف الرحلات المتاحة" onAction={() => setSection("trips")} />}</div>;
 
   if (section === "booking" && bookingMode !== "edit") return <><RiderDemandFlow session={session} notify={notify} onBack={() => setSection("home")} onOpenRequests={() => setSection("requests")} onRequestCreated={refreshDemandRequests} initialPickup={bookingPickup ?? pickup} initialDropoff={dropoff} initialTripDate={bookingTripDate} initialArrivalTime={bookingArrivalTime} initialReturnArrivalTime={bookingReturnArrivalTime} savedPlaces={savedPlaces} />{dataErrorBanner}</>;
   if (loading && section === "home") return <div className="dashboard-grid rider-dashboard"><section className="dashboard-main">{welcomeBanner}<LoadingCard text="loading.riderRequests" /></section></div>;
@@ -583,8 +583,8 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
 
   const allTrips = visibleGroups.flatMap((view) => view.trips.map((trip) => ({ ...trip, groupId: view.group.id, categoryId: view.group.category_id, fare: view.group.seat_day_fare })));
   const riderTripTabs = <div className="rider-trip-tabs" role="group" aria-label={t("نوع الرحلات")}>
-    <button type="button" aria-pressed={riderTripsTab === "discover"} className={riderTripsTab === "discover" ? "is-active" : ""} onClick={() => { setSelectedGroup(null); setRiderTripsTab("discover"); }}>{t("رحلات الكباتن")}</button>
-    <button type="button" aria-pressed={riderTripsTab === "myTrips"} className={riderTripsTab === "myTrips" ? "is-active" : ""} onClick={() => setRiderTripsTab("myTrips")}>{t("رحلاتي")}</button>
+    <button type="button" aria-pressed={riderTripsTab === "discover"} className={riderTripsTab === "discover" ? "is-active" : ""} onClick={() => { setSelectedGroup(null); setRiderTripsTab("discover"); }}>{t("الرحلات المتاحة")}</button>
+    <button type="button" aria-pressed={riderTripsTab === "myTrips"} className={riderTripsTab === "myTrips" ? "is-active" : ""} onClick={() => setRiderTripsTab("myTrips")}>{t("رحلاتي المجدولة")}</button>
   </div>;
   if (section === "trips" && riderTripsTab === "myTrips") return <div className="trips-page rider-trips-experience">
     {riderTripTabs}
@@ -594,6 +594,7 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
   if (section === "trips") return <div className="trips-page rider-trips-experience">
     {dataErrorBanner}
     {riderTripTabs}
+    <section className="rider-section-intro"><span className="eyebrow">{t("رحلات منشورة من الكباتن")}</span><h2>{t("الرحلات المتاحة")}</h2><p>{t("ابحث عن رحلة منشورة تناسب نقطة انطلاقك ووصولك. إذا لم تجد رحلة مناسبة، يمكنك تسجيل طلبك ليظهر في طلباتي.")}</p></section>
     <section className="rider-trip-discovery surface">
       <div className="rider-trip-discovery-fields">
         <LocationSearchField kind="pickup" title={t("نقطة الانطلاق")} value={tripOriginSearch} token={session.token} savedPlaces={savedPlaces} onChange={(value) => { tripOriginSource.current = value ? "manual" : null; setTripOriginSearch(value); setTripOrigin(null); }} onSelect={(point) => { tripOriginSource.current = "manual"; setTripOrigin(point); setTripOriginSearch(point.label ?? ""); }} onChooseMap={() => { setTripMapTarget("pickup"); setTripMapOpen(true); }} onFocus={() => undefined} pointSelected={hasSelectedPoint(tripOrigin)} />
@@ -605,7 +606,7 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
     {tripOffersLoading && <LoadingCard text="جارٍ البحث عن رحلات مناسبة…" />}
     {tripOffersError && <ErrorState title={t("تعذر تحميل الرحلات")} text={tripOffersError} action="إعادة المحاولة" onAction={() => setTripSearchNonce((value) => value + 1)} />}
     {!tripOffersLoading && !tripOffersError && (tripOffers.length ? <section className="rider-trip-offer-list" aria-label={t("الرحلات المناسبة")}>
-      <div className="rider-section-heading"><div><span className="eyebrow">{t("رحلات منشورة من الكباتن")}</span><h2>{t("الرحلات المناسبة لك")}</h2></div><span className="section-count">{tripOffers.length}</span></div>
+      <div className="rider-section-heading"><div><span className="eyebrow">{t("رحلات الكباتن المطابقة لبحثك")}</span><h2>{t("الرحلات المناسبة لك")}</h2></div><span className="section-count">{tripOffers.length}</span></div>
       {tripOffers.map((line) => <article className="surface rider-trip-offer" key={line.id}>
         <div className="rider-trip-offer-top"><span className="rider-trip-offer-captain"><AppIcon name="user" size={16} />{line.captain_name}{line.captain_verified && <b aria-label={t("كابتن موثق")}>✓</b>}</span><span>{line.vehicle_type_id === "hiace" ? t("هاي إس") : t("ملاكي")}</span></div>
         <div className="rider-trip-offer-route"><span><i /><b />{line.origin_label}</span><span><i />{line.destination_label}</span></div>
@@ -613,15 +614,15 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
         <small className="rider-trip-distance">{t("نقطة انطلاقك تبعد")} {line.pickup_distance_km} {t("كم")}{tripDestination && ` · ${t("نقطة وصولك تبعد")} ${line.dropoff_distance_km} ${t("كم")}`}</small>
         <button type="button" className="button button-primary rider-trip-offer-action" onClick={() => openCaptainOffer(line)}>{t("ابحث عن رحلة على هذا المسار")} <span aria-hidden="true">←</span></button>
       </article>)}
-    </section> : <EmptyState icon="route" title={tripOrigin ? t("مفيش رحلات مناسبة لنقطة الانطلاق دي") : t("حدد نقطة انطلاق لعرض الرحلات")} text={tripOrigin ? t("جرب نقطة وصول مختلفة أو غيّر نقطة انطلاقك لنعرض رحلات أقرب.") : t("لو وافقت على استخدام موقعك هنقترح الرحلات القريبة، أو اختار مكان الانطلاق يدويًا.")} />)}
+    </section> : <EmptyState icon="route" title={tripOrigin ? t("لم نجد رحلة منشورة تناسب بحثك") : t("حدد نقطة انطلاق لعرض الرحلات")} text={tripOrigin ? t("غيّر نقطة الانطلاق أو الوصول وحاول البحث مرة أخرى. وإذا لم تجد رحلة مناسبة، سجّل طلبًا ليظهر في صفحة طلباتي.") : t("لو وافقت على استخدام موقعك هنقترح الرحلات القريبة، أو اختار مكان الانطلاق يدويًا.")} action={tripOrigin ? "سجّل طلب رحلة" : undefined} onAction={tripOrigin ? () => { openBooking("new"); setPickup(tripOrigin); setPickupSearch(tripOrigin.label ?? ""); setDropoff(tripDestination); setDropoffSearch(tripDestination?.label ?? ""); } : undefined} />)}
   </div>;
   return <div className="dashboard-grid rider-dashboard rider-home-experience">
     <section className="dashboard-main">{dataErrorBanner}
       {welcomeBanner}
       <section className="rider-overview-strip" aria-label={t("ملخص مشاويرك")}>
-        <button type="button" onClick={() => setSection("trips")}><span className="rider-overview-icon"><AppIcon name="trips" size={18} /></span><span><small>{t("مجموعاتك")}</small><strong>{visibleGroups.length}</strong></span></button>
+        <button type="button" onClick={() => { setRiderTripsTab("myTrips"); setSection("trips"); }}><span className="rider-overview-icon"><AppIcon name="trips" size={18} /></span><span><small>{t("رحلاتي المجدولة")}</small><strong>{visibleGroups.length}</strong></span></button>
         <button type="button" onClick={() => setSection("requests")}><span className="rider-overview-icon"><AppIcon name="inbox" size={18} /></span><span><small>{t("طلبات نشطة")}</small><strong>{demandRequests.filter(({ status }) => status === "open" || status === "matched").length}</strong></span></button>
-        <button type="button" onClick={() => setSection("trips")}><span className="rider-overview-icon"><AppIcon name="calendar" size={18} /></span><span><small>{t("مواعيد الرحلات")}</small><strong>{allTrips.length}</strong></span></button>
+        <button type="button" onClick={() => { setRiderTripsTab("myTrips"); setSection("trips"); }}><span className="rider-overview-icon"><AppIcon name="calendar" size={18} /></span><span><small>{t("مواعيد رحلاتي")}</small><strong>{allTrips.length}</strong></span></button>
       </section>
       <section className="rider-shortcuts"><div className="rider-section-heading"><div><span className="eyebrow">{t("أماكنك المعتادة")}</span><h2>{t("ابدأ من مكانك المفضل")}</h2></div><button type="button" className="text-action" onClick={() => setSection("account")}>{t("إدارة الأماكن")}</button></div>{savedPlaces.length ? <div className="rider-place-list">{savedPlaces.map((place) => <button type="button" className="rider-place-chip" key={`${place.place_type}-${place.label}`} onClick={() => openBooking("new", undefined, place)}><span className="rider-place-icon">{place.place_type === "home" ? "⌂" : place.place_type === "work" ? "▦" : "⌖"}</span><span><small>{place.place_type === "home" ? t("المنزل") : place.place_type === "work" ? t("العمل") : t("مكان محفوظ")}</small><strong>{place.label}</strong></span><b aria-hidden="true">←</b></button>)}</div> : <div className="rider-saved-empty"><span aria-hidden="true">⌖</span><p>{t("احفظ المنزل أو العمل لتبدأ البحث بسرعة في المرة القادمة.")}</p><button type="button" className="button button-outline button-small" onClick={() => setSection("account")}>{t("إضافة مكان محفوظ")}</button></div>}</section>
       <section className="rider-home-discovery-carousel" aria-label={t("عروض وتنبيهات واقتراحات") } aria-live="polite">
