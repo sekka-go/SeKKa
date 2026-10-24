@@ -84,7 +84,8 @@ export default function App() {
       const theme = resolveTheme(themePreference);
       document.documentElement.dataset.theme = theme;
       try { localStorage.setItem("sekka.theme", themePreference); } catch { /* Keep the in-memory choice if storage is unavailable. */ }
-      const background = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();
+      const styles = getComputedStyle(document.documentElement);
+      const background = styles.getPropertyValue("--color-background").trim() || styles.getPropertyValue("--bg").trim();
       const currentThemeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
       const nextThemeColor = document.createElement("meta");
       nextThemeColor.name = "theme-color";
