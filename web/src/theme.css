@@ -335,10 +335,6 @@ button, input, select, textarea { color-scheme: inherit; }
 .admin-control-panel .admin-primary-bg { color: var(--color-primary-text); background: var(--color-primary); }
 .admin-control-panel .admin-primary-text { color: var(--color-primary-text); }
 
-/* The current route mark stays unchanged; its white road adapts with current text color. */
-.brand-logo-mark { color: var(--color-text-primary); }
-.splash-main-mark { color: var(--color-text-primary); }
-
 /* Light-specific treatments retain the original navy and gold hierarchy. */
 :root[data-theme="light"] .app-shell { background-image: none; }
 :root[data-theme="light"] .workspace .welcome-banner,

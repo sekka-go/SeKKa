@@ -30,6 +30,12 @@ for (const expected of [192, 512]) {
 }
 
 await readFile(path.join(root, "public/brand/favicon.svg"));
+const markFile = path.join(root, "public/brand/sekka-mark.png");
+const markMetadata = await sharp(markFile).metadata();
+assert.equal(markMetadata.width, 512, "shared SeKKa logo mark must be a 512px PNG");
+assert.equal(markMetadata.height, 512, "shared SeKKa logo mark must be a 512px PNG");
+const { data: markPixels } = await sharp(markFile).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+assert.equal(markPixels[3], 0, "shared SeKKa logo mark must keep transparent corners around its rounded tile");
 for (const file of ["favicon-32.png", "favicon-48.png", "apple-touch-icon-180.png", "sekka-badge.png", "sekka-share.png"]) {
   await readFile(path.join(root, "public/brand", file));
 }
@@ -44,7 +50,8 @@ assert.ok(worker.includes('url.origin !== self.location.origin'), "service worke
 assert.ok(worker.includes('url.pathname === "/api"'), "service worker must bypass API requests");
 assert.ok(worker.includes('  "/",'), "service worker app shell must cache the shared root document");
 assert.ok(worker.includes('cache.match("/")'), "offline navigations must fall back to the shared app shell");
-assert.ok(worker.includes('sekka-shell-v11'), "service worker icon cache must be revised after replacing assets");
+assert.ok(worker.includes('sekka-shell-v12'), "service worker icon cache must be revised after replacing assets");
+assert.ok(worker.includes('"/brand/sekka-mark.png"'), "service worker app shell must cache the shared logo mark");
 const headers = await readFile(path.join(root, "public/_headers"), "utf8");
 assert.match(headers, /\/assets\/\*[\s\S]*?Cache-Control: public, max-age=31536000, immutable/, "hashed assets must have immutable caching");
 assert.match(headers, /\/sw\.js[\s\S]*?Cache-Control: no-cache/, "service worker updates must be revalidated");

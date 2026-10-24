@@ -1,7 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <g transform="translate(-31 -27) scale(1.12)">
-    <path id="sekka-mark-route" d="M142 389C221 368 319 347 357 313C399 273 279 254 210 225C141 196 231 166 356 145" fill="none" stroke="var(--brand-green, #2d6a4f)" stroke-width="14" stroke-linecap="round" />
-    <circle id="sekka-mark-dot" cx="361" cy="106" r="10" fill="var(--brand-green, #2d6a4f)" />
-    <circle id="sekka-mark-dot" cx="143.5" cy="355.5" r="10" fill="var(--brand-green, #2d6a4f)" />
-  </g>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><image href="./sekka-logo-source.png" width="512" height="512" preserveAspectRatio="none"/></svg>

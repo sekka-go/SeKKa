@@ -10,7 +10,8 @@
   flex: 0 0 auto;
   width: 2.65rem;
   height: 2.65rem;
-  filter: drop-shadow(0 0 8px rgba(245, 189, 8, .12));
+  object-fit: contain;
+  filter: drop-shadow(0 2px 5px rgba(2, 6, 23, .12));
 }
 
 .brand-logo-copy {

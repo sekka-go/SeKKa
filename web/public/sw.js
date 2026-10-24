@@ -1,10 +1,11 @@
 const CACHE_PREFIX = "sekka-shell-";
-const CACHE_NAME = "sekka-shell-v11";
+const CACHE_NAME = "sekka-shell-v12";
 const APP_SHELL = [
   "/",
   "/offline.html",
   "/manifest.webmanifest",
   "/brand/sekka-mark.svg",
+  "/brand/sekka-mark.png",
   "/brand/favicon.svg",
   "/brand/favicon-32.png",
   "/brand/favicon-48.png",
