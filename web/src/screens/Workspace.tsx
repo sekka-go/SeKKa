@@ -253,7 +253,7 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
   }, [inviteFriends]);
 
   const nav: WorkspaceNavItem[] = session.user.role === "rider"
-    ? [{ key: "home", label: "الرئيسية", icon: "home" }, { key: "trips", label: "رحلاتي", icon: "trips" }, { key: "requests", label: "طلباتي", icon: "inbox" }, { key: "messages", label: "الرسائل", icon: "messages" }, { key: "account", label: "حسابي", icon: "user" }]
+    ? [{ key: "home", label: "الرئيسية", icon: "home" }, { key: "trips", label: "الرحلات", icon: "trips" }, { key: "requests", label: "طلباتي", icon: "inbox" }, { key: "messages", label: "الرسائل", icon: "messages" }, { key: "account", label: "حسابي", icon: "user" }]
     : session.user.role === "captain"
       ? [{ key: "offers", label: "الرئيسية", icon: "home" }, { key: "publish", label: "مساراتي", icon: "route" }, { key: "captainRequests", label: "الطلبات", icon: "inbox" }, { key: "captainTrips", label: "رحلاتي", icon: "trips" }, { key: "captainEarnings", label: "أرباحي", icon: "wallet" }, { key: "messages", label: "الرسائل", icon: "messages" }, { key: "account", label: "حسابي", icon: "user" }]
       : [{ key: "account", label: "حسابي", icon: "settings" }, { key: "admin", label: "نظرة عامة", icon: "chart" }, { key: "broadcast", label: "رسالة عامة", icon: "send" }];
@@ -270,7 +270,7 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
   };
   const titles: Record<NavKey, [string, string]> = {
     home: [localHour >= 17 ? "مساء الخير" : "صباح الخير", "مشوارك اليوم يبدأ من هنا"], booking: ["خطط لمشوارك", "اختار أيامك ونقاطك، وإحنا نرتّب الباقي"],
-    trips: ["رحلاتي", "كل مشاويرك ومجموعاتك في مكان واحد"], requests: ["طلبات رحلاتك", "تابع حالة طلباتك والمسارات التي تم العثور عليها"], notifications: ["الإشعارات", "آخر التحديثات الخاصة بمشاويرك"], messages: ["الرسائل", "تواصل مع المشاركين في مشاويرك ومجموعاتك"],
+    trips: ["الرحلات", "اكتشف رحلات الكباتن المناسبة لنقطتي انطلاقك ووصولك"], requests: ["طلبات رحلاتك", "تابع حالة طلباتك والمسارات التي تم العثور عليها"], notifications: ["الإشعارات", "آخر التحديثات الخاصة بمشاويرك"], messages: ["الرسائل", "تواصل مع المشاركين في مشاويرك ومجموعاتك"],
     account: ["حسابي", ""], settings: ["إعدادات التطبيق", "تحكم في مظهر التطبيق ولغته وإشعارات هذا الجهاز."], offers: ["المسارات المتاحة", "اختار المسار المناسب لسيارتك ومواعيدك"],
     captainRequests: ["الطلبات", "الطلبات المناسبة لخطوط سيرك"], captainTrips: ["رحلاتي", "المسارات المقبولة وخطوات تنفيذها"], captainEarnings: ["الأرباح والسجل", "الرحلات المكتملة والمبالغ المسجلة"], admin: ["لوحة الإدارة", "متابعة المنصة وتوثيق الكباتن"],
     publish: ["نشر مسار", "أضف خط سيرك ومواعيد تشغيله"],

@@ -1,4 +1,4 @@
-import { getDirection, getLanguage, t } from "../i18n/runtime";
+import { getDirection, t } from "../i18n/runtime";
 import AppIcon from "../components/AppIcon";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import MapPicker from "../components/MapPickerLoader";
@@ -7,20 +7,33 @@ import type { MapPickMode, MapPoint } from "../MapPicker";
 import LocationSearchField from "../components/LocationSearchField";
 import TimePicker12h, { formatTime12h } from "../components/TimePicker12h";
 import RiderDemandFlow from "./RiderDemandFlow";
-import { categoryName, errorText, formatDate, money, statusLabel } from "../lib/formatters";
+import { categoryName, errorText, formatDate, money } from "../lib/formatters";
 import { isInsideGreaterCairo } from "../lib/greater-cairo";
 import { reverseGeocode } from "../lib/location-address";
+import { subscribeToDeviceLocation } from "../lib/device-location";
 import { api, type Category, type GroupView, type RiderCommuterPreferences, type SavedPlace } from "../api";
-import { defaultDates, isServiceDay, serviceDatesFromStart } from "../lib/booking-dates";
+import { defaultDates, isServiceDay, serviceDatesFromStart, shiftDate, todayInCairo } from "../lib/booking-dates";
 import type { NavKey, Session, Toast } from "../types";
 import {
-  AccountPanel, EmptyState, ErrorState, GroupDetail, GroupSummary, LoadingCard,
-  TripList,
+  AccountPanel, EmptyState, ErrorState, GroupDetail, GroupSummary, LoadingCard, TripList,
 } from "../components/workspace-shared";
 
 const hasSelectedPoint = (point: MapPoint | null) =>
   typeof point?.lat === "number" && Number.isFinite(point.lat) &&
   typeof point?.lng === "number" && Number.isFinite(point.lng);
+type RiderLineOffer = {
+  id: number; vehicle_type_id: "private_car" | "hiace"; origin_label: string; origin_lat: number; origin_lng: number;
+  destination_label: string; destination_lat: number; destination_lng: number; arrival_time: string; service_days: number[];
+  seats: number; price_per_seat: number; pickup_distance_km: number; dropoff_distance_km: number; captain_name: string; captain_verified: boolean;
+};
+const nextServiceDate = (days: number[]) => {
+  const today = todayInCairo();
+  for (let offset = 1; offset <= 7; offset++) {
+    const date = shiftDate(today, offset);
+    if (days.includes(new Date(`${date}T12:00:00Z`).getUTCDay())) return date;
+  }
+  return defaultDates("daily")[0];
+};
 export default function RiderWorkspace({ session, section, setSection, refreshNotifications, registerPoolRefresh, notify, onInitialReady }: {
   session: Session; section: NavKey; setSection: (section: NavKey, historyMode?: "push" | "replace") => void;
   refreshNotifications: () => Promise<void>; registerPoolRefresh: (refresh: () => Promise<void>) => void; notify: (text: string, tone?: Toast["tone"]) => void;
@@ -28,16 +41,33 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
 }) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [savedPlaces, setSavedPlaces] = useState<SavedPlace[]>([]);
+  const [tripOrigin, setTripOrigin] = useState<MapPoint | null>(null);
+  const [tripDestination, setTripDestination] = useState<MapPoint | null>(null);
+  const [tripOriginSearch, setTripOriginSearch] = useState("");
+  const [tripDestinationSearch, setTripDestinationSearch] = useState("");
+  const [tripOffers, setTripOffers] = useState<RiderLineOffer[]>([]);
+  const [tripOffersLoading, setTripOffersLoading] = useState(false);
+  const [tripOffersError, setTripOffersError] = useState("");
+  const [tripSearchNonce, setTripSearchNonce] = useState(0);
+  const [tripMapOpen, setTripMapOpen] = useState(false);
+  const [tripMapTarget, setTripMapTarget] = useState<MapPickMode>("pickup");
+  const [homeSlide, setHomeSlide] = useState(0);
+  const tripOriginSource = useRef<"device" | "saved" | "manual" | null>(null);
   const [groups, setGroups] = useState<GroupView[]>([]);
   const [demandRequests, setDemandRequests] = useState<{ id: number; pickup_label: string; dropoff_label: string; trip_date: string; arrival_time: string; return_arrival_time?: string | null; vehicle_type_id: string; status: string; demand_groups?: { status: string; captain_line_id: number | null } | null; line?: { origin_label: string; destination_label: string; arrival_time: string; return_arrival_time?: string | null; price_per_seat: number; captain_name: string } | null }[]>([]);
   const visibleGroups = groups.filter(({ group }) => !["cancelled", "canceled"].includes(group.status.trim().toLowerCase()));
+  const [selectedGroup, setSelectedGroup] = useState<number | null>(null);
+  const [riderTripsTab, setRiderTripsTab] = useState<"discover" | "myTrips">("discover");
+  const selected = visibleGroups.find((view) => view.group.id === selectedGroup) ?? null;
   const [loading, setLoading] = useState(true);
   const [initialLoadError, setInitialLoadError] = useState("");
   const pendingNotificationEdit = useRef<number | null>(null);
-  const [selectedGroup, setSelectedGroup] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [bookingMode, setBookingMode] = useState<"new" | "join" | "edit">("new");
   const [bookingPickup, setBookingPickup] = useState<MapPoint | null>(null);
+  const [bookingTripDate, setBookingTripDate] = useState(() => defaultDates("daily")[0] ?? "");
+  const [bookingArrivalTime, setBookingArrivalTime] = useState("08:00");
+  const [bookingReturnArrivalTime, setBookingReturnArrivalTime] = useState("");
   const [editingGroupId, setEditingGroupId] = useState<number | null>(null);
   const [bookingStep, setBookingStep] = useState<"route" | "price" | "review">("route");
   const [priceInfoOpen, setPriceInfoOpen] = useState(false);
@@ -60,7 +90,6 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
   const mapAddressRequests = useRef<Record<MapPickMode, number>>({ pickup: 0, dropoff: 0 });
   const editAddressRequest = useRef(0);
   const selectedCategory = categories.find((item) => item.id === categoryId) ?? null;
-  const selected = visibleGroups.find((view) => view.group.id === selectedGroup) ?? null;
   const priceLabel = (type: "daily" | "weekly" | "monthly", selectedCategoryId = categoryId) => {
     const selectedQuote = selectedCategoryId ? priceQuotes?.[selectedCategoryId] : null;
     if (selectedQuote) return money(selectedQuote[type]);
@@ -71,7 +100,7 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
     editAddressRequest.current++;
     setBookingMode(mode);
     setEditingGroupId(null);
-    if (mode === "new") { setCategoryId(""); setPackageType("daily"); setDates(defaultDates("daily")); setBookingPickup(savedPickup ? { lat: savedPickup.lat, lng: savedPickup.lng, label: savedPickup.label, primaryLabel: savedPickup.label, kind: "pickup" } : null); }
+    if (mode === "new") { setCategoryId(""); setPackageType("daily"); setDates(defaultDates("daily")); setBookingTripDate(defaultDates("daily")[0] ?? ""); setBookingArrivalTime("08:00"); setBookingReturnArrivalTime(""); setBookingPickup(savedPickup ? { lat: savedPickup.lat, lng: savedPickup.lng, label: savedPickup.label, primaryLabel: savedPickup.label, kind: "pickup" } : null); }
     if (mode === "join") {
       setInviteCode(prefill ? String(prefill.groupId) : "");
       setPickup(prefill?.pickup ?? null); setDropoff(prefill?.dropoff ?? null);
@@ -80,6 +109,14 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
     setBookingStep("route");
     setPriceInfoOpen(false);
     setSection("booking");
+  };
+  const openCaptainOffer = (line: RiderLineOffer) => {
+    const origin = { lat: line.origin_lat, lng: line.origin_lng, label: line.origin_label, primaryLabel: line.origin_label, kind: "pickup" as const };
+    const destination = { lat: line.destination_lat, lng: line.destination_lng, label: line.destination_label, primaryLabel: line.destination_label, kind: "dropoff" as const };
+    setBookingMode("new"); setEditingGroupId(null); setCategoryId(""); setPackageType("daily"); setDates(defaultDates("daily"));
+    setBookingTripDate(nextServiceDate(line.service_days)); setBookingArrivalTime(line.arrival_time.slice(0, 5)); setBookingReturnArrivalTime("");
+    setBookingPickup(origin); setPickup(origin); setDropoff(destination); setPickupSearch(line.origin_label); setDropoffSearch(line.destination_label);
+    setSection("booking"); window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const startEditingGroup = (view: GroupView) => {
@@ -204,6 +241,54 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
     const result = await api<{ requests: typeof demandRequests }>("/rider/demand-requests", { token: session.token });
     setDemandRequests(result.requests ?? []);
   }, [session.token]);
+  useEffect(() => subscribeToDeviceLocation((location) => {
+    if (!location) {
+      if (tripOriginSource.current !== "device") return;
+      tripOriginSource.current = null;
+      const home = savedPlaces.find((place) => place.place_type === "home") ?? savedPlaces[0];
+      setTripOrigin(home ? { lat: home.lat, lng: home.lng, label: home.label, primaryLabel: home.label, kind: "pickup" } : null);
+      setTripOriginSearch(home?.label ?? "");
+      if (home) tripOriginSource.current = "saved";
+      return;
+    }
+    if (tripOriginSource.current === "manual") return;
+    tripOriginSource.current = "device";
+    const label = t("موقعي الحالي");
+    setTripOrigin({ lat: location.lat, lng: location.lng, label, primaryLabel: label, kind: "pickup" });
+    setTripOriginSearch(label);
+  }), [savedPlaces]);
+  useEffect(() => {
+    if (tripOriginSource.current || !savedPlaces.length) return;
+    const home = savedPlaces.find((place) => place.place_type === "home") ?? savedPlaces[0];
+    if (!home) return;
+    tripOriginSource.current = "saved";
+    setTripOrigin({ lat: home.lat, lng: home.lng, label: home.label, primaryLabel: home.label, kind: "pickup" });
+    setTripOriginSearch(home.label);
+  }, [savedPlaces]);
+  useEffect(() => {
+    if (section !== "home" && section !== "trips") return;
+    if (tripOrigin?.lat == null || tripOrigin.lng == null) { setTripOffers([]); setTripOffersError(""); setTripOffersLoading(false); return; }
+    if (!isInsideGreaterCairo(tripOrigin.lat, tripOrigin.lng) || (tripDestination?.lat != null && tripDestination.lng != null && !isInsideGreaterCairo(tripDestination.lat, tripDestination.lng))) {
+      setTripOffers([]); setTripOffersError(t("المشاوير متاحة داخل القاهرة الكبرى فقط.")); setTripOffersLoading(false); return;
+    }
+    let active = true;
+    setTripOffersLoading(true);
+    setTripOffersError("");
+    const params = new URLSearchParams({ pickup_lat: String(tripOrigin.lat), pickup_lng: String(tripOrigin.lng) });
+    if (tripDestination?.lat != null && tripDestination.lng != null) {
+      params.set("dropoff_lat", String(tripDestination.lat)); params.set("dropoff_lng", String(tripDestination.lng));
+    }
+    void api<{ lines: RiderLineOffer[] }>(`/rider/lines/discover?${params.toString()}`, { token: session.token })
+      .then((result) => { if (active) setTripOffers(result.lines ?? []); })
+      .catch((error) => { if (active) setTripOffersError(errorText(error)); })
+      .finally(() => { if (active) setTripOffersLoading(false); });
+    return () => { active = false; };
+  }, [section, tripOrigin?.lat, tripOrigin?.lng, tripDestination?.lat, tripDestination?.lng, tripSearchNonce, session.token]);
+  useEffect(() => {
+    if (section !== "home") return;
+    const timer = window.setInterval(() => setHomeSlide((current) => (current + 1) % 3), 6500);
+    return () => window.clearInterval(timer);
+  }, [section]);
   const loadInitialData = useCallback(async () => {
     setLoading(true);
     setInitialLoadError("");
@@ -316,7 +401,7 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
         pickup_lat: pickup.lat, pickup_lng: pickup.lng, dropoff_lat: dropoff.lat, dropoff_lng: dropoff.lng,
       } });
       await refreshGroups(); await refreshNotifications();
-      setBookingMode("new"); setEditingGroupId(null); setSelectedGroup(null); setSection("trips", "replace"); setPickup(null); setDropoff(null);
+      setBookingMode("new"); setEditingGroupId(null); setSelectedGroup(null); setRiderTripsTab("myTrips"); setSection("trips", "replace"); setPickup(null); setDropoff(null);
       notify(editing ? "تم تعديل المشوار." : "تم إنشاء المجموعة. شارك رقمها مع الركاب اللي رايحين نفس اتجاهك.", "success");
     } catch (error) { notify(errorText(error), "error"); }
     finally { setSubmitting(false); }
@@ -331,7 +416,7 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
     try {
       const result = await api<{ group: { id: number } }>(`/rider/pool/groups/${Number(inviteCode)}/join`, { method: "POST", token: session.token,
         body: { pickup_lat: pickup.lat, pickup_lng: pickup.lng, dropoff_lat: dropoff.lat, dropoff_lng: dropoff.lng } });
-      await refreshGroups(); setSelectedGroup(result.group.id); setSection("trips", "replace"); setPickup(null); setDropoff(null); setInviteCode("");
+      await refreshGroups(); setSelectedGroup(result.group.id); setRiderTripsTab("myTrips"); setSection("trips", "replace"); setPickup(null); setDropoff(null); setInviteCode("");
       notify(t("انضممت للمجموعة بنجاح."), "success");
     } catch (error) { notify(errorText(error), "error"); }
     finally { setSubmitting(false); }
@@ -378,6 +463,15 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
 
   const dataErrorBanner = initialLoadError ? <ErrorState title={t("تعذر تحديث بعض البيانات")} text={initialLoadError} action="إعادة المحاولة" onAction={() => void loadInitialData()} /> : null;
   const welcomeBanner = <section className="rider-hero"><div className="rider-hero-copy"><span className="eyebrow">{t("تنقّل أسرع بطريقة أذكى")}</span><h2>{t("مشوارك اليومي،")}<br /><em>{t("على سِكّة أسهل.")}</em></h2><p>{t("شارك الطريق مع ناس رايحة في نفس اتجاهك، وخلي كل مشوار أسهل.")}</p><div className="rider-hero-actions"><button type="button" className="button button-primary" onClick={() => openBooking("new")}>{t("ابحث عن رحلة")} <span aria-hidden="true">←</span></button><span className="rider-service-area"><i />{t("متاح في القاهرة والجيزة")}</span></div></div></section>;
+  const activeRequests = demandRequests.filter(({ status }) => status === "open" || status === "matched");
+  const nearestOffer = tripOffers[0];
+  const favoritePlace = savedPlaces.find((place) => place.place_type === "home") ?? savedPlaces[0];
+  const homePromoSlides = [
+    { icon: "route" as const, eyebrow: t("ترشيح قريب منك"), title: nearestOffer ? `${nearestOffer.origin_label} ← ${nearestOffer.destination_label}` : t("رحلات تناسب نقطة انطلاقك"), body: nearestOffer ? `${t("مع")} ${nearestOffer.captain_name} · ${t("للمقعد")} ${money(Number(nearestOffer.price_per_seat))} ${t("ج.م")}` : tripOffersLoading ? t("جارٍ البحث عن رحلات قريبة من موقعك.") : t("حدد نقطة انطلاقك لتظهر لك الرحلات المنشورة القريبة."), action: t("اكتشف الرحلات"), onAction: () => setSection("trips") },
+    { icon: "inbox" as const, eyebrow: t("تنبيه طلباتك"), title: activeRequests.length ? t("عندك طلبات قيد المتابعة") : t("تابع طلبات رحلاتك"), body: activeRequests.length ? `${activeRequests.length} ${t("طلبات نشطة، وسنخبرك عند العثور على رحلة مناسبة.")}` : t("احتفظ بطلبات رحلاتك وتابع تحديثاتها من مكان واحد."), action: activeRequests.length ? t("عرض طلباتي") : t("ابدأ طلب رحلة"), onAction: () => activeRequests.length ? setSection("requests") : openBooking("new") },
+    { icon: "home" as const, eyebrow: t("اقتراح لك"), title: favoritePlace ? `${t("ابدأ من مكانك المعتاد")}: ${favoritePlace.label}` : t("احفظ أماكنك المعتادة"), body: favoritePlace ? t("اختار مكانك المحفوظ وابدأ البحث عن رحلة أسرع.") : t("إضافة المنزل أو العمل تسهّل عليك تحديد نقطة الانطلاق كل مرة."), action: favoritePlace ? t("ابحث من هذا المكان") : t("إضافة مكان محفوظ"), onAction: () => favoritePlace ? openBooking("new", undefined, favoritePlace) : setSection("account") },
+  ];
+  const selectedPromo = homePromoSlides[homeSlide % homePromoSlides.length]!;
 
   const requestCards = <div className="rider-request-list">{demandRequests.map((request) => <article className="surface rider-request-card" key={request.id}><div className="rider-request-card-top"><span className={`status-chip status-${request.status}`}>{request.status === "matched" ? t("تم العثور على مسار") : request.status === "open" ? t("نبحث عن مسار") : request.status === "cancelled" ? t("ملغي") : t("منتهي")}</span><span>{request.vehicle_type_id === "hiace" ? t("هاي إس") : t("ملاكي")}</span><time>{formatDate(request.trip_date)} · {request.arrival_time.slice(0, 5)}{request.return_arrival_time ? ` · ${t("عودة")} ${request.return_arrival_time.slice(0, 5)}` : ""}</time></div><div className="rider-request-route"><span className="rider-route-timeline" aria-hidden="true"><i /><b /><i /></span><div><strong>{request.pickup_label}</strong><strong>{request.dropoff_label}</strong></div></div><p className="rider-request-note">{request.demand_groups?.status === "matched" ? t("جمع التطبيق طلبك مع طلبات مشابهة.") : t("سيجمع التطبيق الطلبات المتقاربة تلقائيًا.")}</p>{request.line && <div className="rider-match-summary"><strong>{t("المسار المطابق")}: {request.line.origin_label} ← {request.line.destination_label}</strong><span>{request.line.captain_name} · {t("· وصول")} {request.line.arrival_time.slice(0, 5)}{request.return_arrival_time && request.line.return_arrival_time ? ` · ${t("عودة")} ${request.line.return_arrival_time.slice(0, 5)}` : ""} · {money(Number(request.line.price_per_seat))} {t("للمقعد")}</span></div>}</article>)}</div>;
 
@@ -385,9 +479,9 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
 
   if (section === "requests") return <div className="rider-requests-page">{dataErrorBanner}<section className="rider-section-intro"><span className="eyebrow">{t("كل طلباتك في مكان واحد")}</span><h2>{t("طلبات رحلاتك")}</h2><p>{t("تابع حالة طلباتك والمسارات التي تم العثور عليها")}</p></section>{demandRequests.length ? requestCards : initialLoadError ? null : <EmptyState icon="⌖" title={t("مافيش طلبات رحلات لسه")} text="ابحث عن مسار مناسب، ولو مافيش هنسجل طلبك ونجمعه مع الطلبات المشابهة." action="ابحث عن رحلة" onAction={() => openBooking("new")} />}</div>;
 
-  if (section === "booking" && bookingMode !== "edit") return <><RiderDemandFlow session={session} notify={notify} onBack={() => setSection("home")} onOpenRequests={() => setSection("requests")} onRequestCreated={refreshDemandRequests} initialPickup={bookingPickup ?? pickup} initialDropoff={dropoff} savedPlaces={savedPlaces} />{dataErrorBanner}</>;
+  if (section === "booking" && bookingMode !== "edit") return <><RiderDemandFlow session={session} notify={notify} onBack={() => setSection("home")} onOpenRequests={() => setSection("requests")} onRequestCreated={refreshDemandRequests} initialPickup={bookingPickup ?? pickup} initialDropoff={dropoff} initialTripDate={bookingTripDate} initialArrivalTime={bookingArrivalTime} initialReturnArrivalTime={bookingReturnArrivalTime} savedPlaces={savedPlaces} />{dataErrorBanner}</>;
   if (loading && section === "home") return <div className="dashboard-grid rider-dashboard"><section className="dashboard-main">{welcomeBanner}<LoadingCard text="loading.riderRequests" /></section></div>;
-  if (loading && section === "trips") return <div className="trips-page">{dataErrorBanner}<div className="section-toolbar"><button className="button button-primary button-small" onClick={() => openBooking("new")}>{t("＋ ابحث عن مسار")}</button></div><LoadingCard text="loading.riderRequests" /></div>;
+  if (loading && section === "trips") return <div className="trips-page">{dataErrorBanner}<LoadingCard text="loading.riderRequests" /></div>;
   if (loading) return <LoadingCard text="loading.general" />;
   if (section === "booking") return <div className="booking-layout">{dataErrorBanner}
     <section className="surface booking-form-surface">
@@ -488,19 +582,39 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
   </div>;
 
   const allTrips = visibleGroups.flatMap((view) => view.trips.map((trip) => ({ ...trip, groupId: view.group.id, categoryId: view.group.category_id, fare: view.group.seat_day_fare })));
-  const liveTrip = selected?.trips.find((trip) => !["completed", "cancelled", "canceled"].includes(trip.status));
-  const liveTripMember = selected?.members.find((member) => member.status === "active");
-  const liveTripStops = liveTrip?.stops ?? [];
-  const reachedStops = liveTripStops.filter((stop) => Boolean(stop.reached_at)).length;
-  const liveProgress = liveTripStops.length ? Math.round((reachedStops / liveTripStops.length) * 100) : 0;
+  const riderTripTabs = <div className="rider-trip-tabs" role="group" aria-label={t("نوع الرحلات")}>
+    <button type="button" aria-pressed={riderTripsTab === "discover"} className={riderTripsTab === "discover" ? "is-active" : ""} onClick={() => { setSelectedGroup(null); setRiderTripsTab("discover"); }}>{t("رحلات الكباتن")}</button>
+    <button type="button" aria-pressed={riderTripsTab === "myTrips"} className={riderTripsTab === "myTrips" ? "is-active" : ""} onClick={() => setRiderTripsTab("myTrips")}>{t("رحلاتي")}</button>
+  </div>;
+  if (section === "trips" && riderTripsTab === "myTrips") return <div className="trips-page rider-trips-experience">
+    {riderTripTabs}
+    {selected ? <><button type="button" className="button button-quiet button-small trips-back-to-groups" onClick={() => setSelectedGroup(null)}>{t("→ رجوع لمجموعاتي")}</button><GroupDetail view={selected} categories={categories} busy={submitting} action={groupAction} notify={notify} onEdit={() => startEditingGroup(selected)} currentUserId={session.user.id} token={session.token} /></> : visibleGroups.length ? <section className="group-list trips-group-list" aria-label={t("مجموعات مشاويرك")}>{visibleGroups.map((view) => <GroupSummary key={view.group.id} view={view} categories={categories} onClick={() => setSelectedGroup(view.group.id)} />)}</section> : <EmptyState icon="trips" title={t("لسه مفيش رحلات مجدولة")} text={t("بعد إرسال طلب رحلة أو الانضمام لمجموعة ستظهر رحلاتك هنا.")} action="اكتشف رحلات الكباتن" onAction={() => setRiderTripsTab("discover")} />}
+    {allTrips.length > 0 && <section className="all-trips-section"><div className="section-title-row"><div><h2>{t("مواعيد رحلاتك")}</h2><p>{t("كل مواعيد الذهاب والعودة لرحلاتك")}</p></div><span className="section-count">{allTrips.length}</span></div><TripList trips={allTrips} categories={categories} /></section>}
+  </div>;
   if (section === "trips") return <div className="trips-page rider-trips-experience">
     {dataErrorBanner}
-    <div className="section-toolbar"><button className="button button-primary button-small" onClick={() => openBooking("new")}>{t("＋ ابحث عن مسار")}</button></div>
-    {selectedGroup && selected ? <><button className="button button-quiet button-small trips-back-to-groups" onClick={() => setSelectedGroup(null)}>{t("→ رجوع لمجموعاتي")}</button>{liveTrip && <section className="stitch-live-trip surface" aria-label={t("متابعة الرحلة")}><div className="stitch-live-trip-map"><MapPicker pickup={liveTripMember?.pickup_lat != null && liveTripMember.pickup_lng != null ? { lat: liveTripMember.pickup_lat, lng: liveTripMember.pickup_lng, kind: "pickup", label: t("نقطة الركوب") } : null} dropoff={liveTripMember?.dropoff_lat != null && liveTripMember.dropoff_lng != null ? { lat: liveTripMember.dropoff_lat, lng: liveTripMember.dropoff_lng, kind: "dropoff", label: t("نقطة الوصول") } : null} mode="pickup" route={selected.group.route_geometry} readOnly onPick={() => undefined} /></div><div className="stitch-live-trip-content"><div className="stitch-live-trip-heading"><span><i />{t("تحديث حالة الرحلة كل ٣٠ ثانية")}</span><strong>{statusLabel(liveTrip.status)}</strong></div><h3>{t("متابعة رحلتك")}</h3><p>{formatDate(liveTrip.service_date)} · {liveTrip.departure_at.slice(11, 16)}{liveTrip.estimated_arrival_at ? ` · ${t("وصول متوقع")} ${new Date(liveTrip.estimated_arrival_at).toLocaleTimeString(getLanguage() === "ar" ? "ar-EG" : "en-EG", { hour: "2-digit", minute: "2-digit" })}` : ""}</p><div className="stitch-live-progress"><span style={{ width: `${liveProgress}%` }} /></div><div className="stitch-live-stops">{liveTripStops.length ? liveTripStops.map((stop) => <span key={stop.id} className={stop.reached_at ? "is-reached" : ""}><i />{stop.stop_type === "pickup" ? t("نقطة الركوب") : t("نقطة النزول")}</span>) : <span><i />{t("تم تأكيد الرحلة")}</span>}</div><small>{t("يعرض هذا القسم حالة الرحلة وآخر نقاط التوقف المسجلة، ولا يعرض موقعًا مباشرًا للمركبة.")}</small></div></section>}<GroupDetail view={selected} categories={categories} busy={submitting} action={groupAction} notify={notify} onEdit={() => startEditingGroup(selected)} currentUserId={session.user.id} token={session.token} /></> : visibleGroups.length ? <section className="group-list trips-group-list" aria-label={t("مجموعات مشاويرك")}>{visibleGroups.map((view) => <GroupSummary key={view.group.id} view={view} categories={categories} onClick={() => setSelectedGroup(view.group.id)} />)}</section> : null}
-    {allTrips.length ? <section className="all-trips-section"><div className="section-title-row"><div><h2>{t("مواعيد رحلاتك")}</h2><p>{t("كل مواعيد الذهاب والعودة لرحلاتك")}</p></div><span className="section-count">{allTrips.length}</span></div><TripList trips={allTrips} categories={categories} /></section> : initialLoadError ? null : <EmptyState icon="↗" title={t("لسه مفيش رحلات مجدولة")} text={visibleGroups.length ? "ستظهر مواعيد رحلاتك هنا بعد تفعيلها." : "لما يتطابق طلبك مع مسار كابتن هتلاقي تفاصيله هنا."} />}
-    {visibleGroups.length > 1 && selectedGroup && <div className="group-switcher">{visibleGroups.map((view) => <button key={view.group.id} className={view.group.id === selectedGroup ? "group-chip active" : "group-chip"} onClick={() => setSelectedGroup(view.group.id)}>{t("مجموعة #")}{view.group.id} · {statusLabel(view.group.status)}</button>)}</div>}
+    {riderTripTabs}
+    <section className="rider-trip-discovery surface">
+      <div className="rider-trip-discovery-fields">
+        <LocationSearchField kind="pickup" title={t("نقطة الانطلاق")} value={tripOriginSearch} token={session.token} savedPlaces={savedPlaces} onChange={(value) => { tripOriginSource.current = value ? "manual" : null; setTripOriginSearch(value); setTripOrigin(null); }} onSelect={(point) => { tripOriginSource.current = "manual"; setTripOrigin(point); setTripOriginSearch(point.label ?? ""); }} onChooseMap={() => { setTripMapTarget("pickup"); setTripMapOpen(true); }} onFocus={() => undefined} pointSelected={hasSelectedPoint(tripOrigin)} />
+        <LocationSearchField kind="dropoff" title={t("نقطة الوصول (اختياري)")} value={tripDestinationSearch} token={session.token} savedPlaces={savedPlaces} onChange={(value) => { setTripDestinationSearch(value); setTripDestination(null); }} onSelect={(point) => { setTripDestination(point); setTripDestinationSearch(point.label ?? ""); }} onChooseMap={() => { setTripMapTarget("dropoff"); setTripMapOpen(true); }} onFocus={() => undefined} pointSelected={hasSelectedPoint(tripDestination)} />
+      </div>
+      <div className="rider-trip-discovery-actions"><span>{tripOriginSource.current === "device" ? t("نعرض الرحلات القريبة من موقعك الحالي.") : t("حدد نقطة الانطلاق أو اختر مكانًا محفوظًا.")}</span><button type="button" className="button button-primary" disabled={!hasSelectedPoint(tripOrigin) || tripOffersLoading} onClick={() => setTripSearchNonce((value) => value + 1)}>{tripOffersLoading ? t("جارٍ البحث عن رحلات مناسبة…") : t("＋ ابحث عن رحلة")}</button></div>
+      {tripMapOpen && <div className="booking-map"><div className="booking-map-toolbar"><p className="map-instruction">{t("حدد نقطة الانطلاق أو الوصول على الخريطة")}</p><button type="button" className="map-close-button" onClick={() => setTripMapOpen(false)} aria-label={t("إغلاق الخريطة")}>×</button></div><MapPicker pickup={tripOrigin} dropoff={tripDestination} mode={tripMapTarget} restrictToGreaterCairo onOutsidePick={() => notify(t("اختار نقطة داخل القاهرة الكبرى فقط."), "error")} onPick={(mode, point) => { if (mode === "pickup") { tripOriginSource.current = "manual"; setTripOrigin(point); setTripOriginSearch(point.label ?? ""); } else { setTripDestination(point); setTripDestinationSearch(point.label ?? ""); } setTripMapOpen(false); }} /></div>}
+    </section>
+    {tripOffersLoading && <LoadingCard text="جارٍ البحث عن رحلات مناسبة…" />}
+    {tripOffersError && <ErrorState title={t("تعذر تحميل الرحلات")} text={tripOffersError} action="إعادة المحاولة" onAction={() => setTripSearchNonce((value) => value + 1)} />}
+    {!tripOffersLoading && !tripOffersError && (tripOffers.length ? <section className="rider-trip-offer-list" aria-label={t("الرحلات المناسبة")}>
+      <div className="rider-section-heading"><div><span className="eyebrow">{t("رحلات منشورة من الكباتن")}</span><h2>{t("الرحلات المناسبة لك")}</h2></div><span className="section-count">{tripOffers.length}</span></div>
+      {tripOffers.map((line) => <article className="surface rider-trip-offer" key={line.id}>
+        <div className="rider-trip-offer-top"><span className="rider-trip-offer-captain"><AppIcon name="user" size={16} />{line.captain_name}{line.captain_verified && <b aria-label={t("كابتن موثق")}>✓</b>}</span><span>{line.vehicle_type_id === "hiace" ? t("هاي إس") : t("ملاكي")}</span></div>
+        <div className="rider-trip-offer-route"><span><i /><b />{line.origin_label}</span><span><i />{line.destination_label}</span></div>
+        <div className="rider-trip-offer-meta"><span>{t("وقت الانطلاق")} · {line.arrival_time.slice(0, 5)}</span><span>{line.seats} {t("مقاعد")}</span><strong>{money(Number(line.price_per_seat))} {t("للمقعد")}</strong></div>
+        <small className="rider-trip-distance">{t("نقطة انطلاقك تبعد")} {line.pickup_distance_km} {t("كم")}{tripDestination && ` · ${t("نقطة وصولك تبعد")} ${line.dropoff_distance_km} ${t("كم")}`}</small>
+        <button type="button" className="button button-primary rider-trip-offer-action" onClick={() => openCaptainOffer(line)}>{t("ابحث عن رحلة على هذا المسار")} <span aria-hidden="true">←</span></button>
+      </article>)}
+    </section> : <EmptyState icon="route" title={tripOrigin ? t("مفيش رحلات مناسبة لنقطة الانطلاق دي") : t("حدد نقطة انطلاق لعرض الرحلات")} text={tripOrigin ? t("جرب نقطة وصول مختلفة أو غيّر نقطة انطلاقك لنعرض رحلات أقرب.") : t("لو وافقت على استخدام موقعك هنقترح الرحلات القريبة، أو اختار مكان الانطلاق يدويًا.")} />)}
   </div>;
-
   return <div className="dashboard-grid rider-dashboard rider-home-experience">
     <section className="dashboard-main">{dataErrorBanner}
       {welcomeBanner}
@@ -510,8 +624,10 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
         <button type="button" onClick={() => setSection("trips")}><span className="rider-overview-icon"><AppIcon name="calendar" size={18} /></span><span><small>{t("مواعيد الرحلات")}</small><strong>{allTrips.length}</strong></span></button>
       </section>
       <section className="rider-shortcuts"><div className="rider-section-heading"><div><span className="eyebrow">{t("أماكنك المعتادة")}</span><h2>{t("ابدأ من مكانك المفضل")}</h2></div><button type="button" className="text-action" onClick={() => setSection("account")}>{t("إدارة الأماكن")}</button></div>{savedPlaces.length ? <div className="rider-place-list">{savedPlaces.map((place) => <button type="button" className="rider-place-chip" key={`${place.place_type}-${place.label}`} onClick={() => openBooking("new", undefined, place)}><span className="rider-place-icon">{place.place_type === "home" ? "⌂" : place.place_type === "work" ? "▦" : "⌖"}</span><span><small>{place.place_type === "home" ? t("المنزل") : place.place_type === "work" ? t("العمل") : t("مكان محفوظ")}</small><strong>{place.label}</strong></span><b aria-hidden="true">←</b></button>)}</div> : <div className="rider-saved-empty"><span aria-hidden="true">⌖</span><p>{t("احفظ المنزل أو العمل لتبدأ البحث بسرعة في المرة القادمة.")}</p><button type="button" className="button button-outline button-small" onClick={() => setSection("account")}>{t("إضافة مكان محفوظ")}</button></div>}</section>
-      <section className="rider-home-requests"><div className="rider-section-heading"><div><span className="eyebrow">{t("متابعة رحلتك")}</span><h2>{t("طلبات رحلاتك")}</h2></div><button className="text-action" type="button" onClick={() => setSection("requests")}>{t("عرض الكل")} {demandRequests.length > 0 && <b>{demandRequests.length}</b>}</button></div>
-        {demandRequests.length ? <>{requestCards}<button type="button" className="button button-outline button-small rider-view-all" onClick={() => setSection("requests")}>{t("عرض كل الطلبات")}</button></> : initialLoadError ? null : <EmptyState icon="⌖" title={t("مافيش طلبات رحلات لسه")} text="ابحث عن مسار مناسب، ولو مافيش هنسجل طلبك ونجمعه مع الطلبات المشابهة." action="ابحث عن رحلة" onAction={() => openBooking("new")} />}
+      <section className="rider-home-discovery-carousel" aria-label={t("عروض وتنبيهات واقتراحات") } aria-live="polite">
+        <div className="rider-promo-mark"><AppIcon name={selectedPromo.icon} size={21} /><span>{selectedPromo.eyebrow}</span><i /></div>
+        <div className="rider-promo-content" key={homeSlide}><h2>{selectedPromo.title}</h2><p>{selectedPromo.body}</p><button type="button" className="button button-primary" onClick={selectedPromo.onAction}>{selectedPromo.action}<span aria-hidden="true"> ←</span></button></div>
+        <div className="rider-promo-pagination" role="group" aria-label={t("شرائح الاقتراحات")}>{homePromoSlides.map((slide, index) => <button type="button" key={slide.eyebrow} className={homeSlide === index ? "is-active" : ""} aria-label={`${t("اقتراح")} ${index + 1}`} aria-pressed={homeSlide === index} onClick={() => setHomeSlide(index)} />)}</div>
       </section>
     </section>
   </div>;

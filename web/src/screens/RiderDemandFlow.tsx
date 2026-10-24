@@ -34,7 +34,7 @@ type SortMode = "soonest" | "price";
 
 const initialDate = () => shiftDate(todayInCairo(), 1);
 
-export default function RiderDemandFlow({ session, notify, onBack, onOpenRequests, onRequestCreated, initialPickup = null, initialDropoff = null, initialTripDate = initialDate(), initialArrivalTime = "08:00", savedPlaces = [] }: {
+export default function RiderDemandFlow({ session, notify, onBack, onOpenRequests, onRequestCreated, initialPickup = null, initialDropoff = null, initialTripDate = initialDate(), initialArrivalTime = "08:00", initialReturnArrivalTime = "", savedPlaces = [] }: {
   session: Session;
   notify: (text: string, tone?: Toast["tone"]) => void;
   onBack: () => void;
@@ -44,12 +44,13 @@ export default function RiderDemandFlow({ session, notify, onBack, onOpenRequest
   initialDropoff?: MapPoint | null;
   initialTripDate?: string;
   initialArrivalTime?: string;
+  initialReturnArrivalTime?: string;
   savedPlaces?: SavedPlace[];
 }) {
   const [vehicle, setVehicle] = useState<"private_car" | "hiace">("private_car");
   const tripDate = initialTripDate;
   const [arrivalTime, setArrivalTime] = useState(initialArrivalTime);
-  const [returnTime, setReturnTime] = useState("");
+  const [returnTime, setReturnTime] = useState(initialReturnArrivalTime);
   const [seats, setSeats] = useState(1);
   const [pickup, setPickup] = useState<MapPoint | null>(initialPickup);
   const [dropoff, setDropoff] = useState<MapPoint | null>(initialDropoff);

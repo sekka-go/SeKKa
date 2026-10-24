@@ -1181,6 +1181,61 @@ Deno.serve(async (req: Request) => {
         return reply({ requests }, 200, origin);
       }
     }
+    if (req.method === "GET" && path === "/rider/lines/discover") {
+      const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      const pickupLat = Number(url.searchParams.get("pickup_lat")), pickupLng = Number(url.searchParams.get("pickup_lng"));
+      const hasDropoffLat = url.searchParams.has("dropoff_lat"), hasDropoffLng = url.searchParams.has("dropoff_lng");
+      const hasDropoff = hasDropoffLat && hasDropoffLng;
+      if (!validPoint(pickupLat, pickupLng) || !isGreaterCairoPoint(pickupLat, pickupLng) || (hasDropoffLat !== hasDropoffLng)) return error("اختر نقطة انطلاق صحيحة داخل القاهرة الكبرى.", 400, origin);
+      const dropoffLat = hasDropoff ? Number(url.searchParams.get("dropoff_lat")) : null;
+      const dropoffLng = hasDropoff ? Number(url.searchParams.get("dropoff_lng")) : null;
+      if (hasDropoff && (!validPoint(dropoffLat, dropoffLng) || !isGreaterCairoPoint(dropoffLat!, dropoffLng!))) return error("اختر نقطة وصول صحيحة داخل القاهرة الكبرى.", 400, origin);
+      const { data: config, error: configError } = await db.from("app_config").select("numeric_value").eq("config_key", "demand_route_radius_km").maybeSingle();
+      if (configError) throw configError;
+      const radiusKm = Number(config?.numeric_value);
+      if (!Number.isFinite(radiusKm) || radiusKm <= 0) return error("إعدادات البحث غير متاحة الآن.", 503, origin);
+      const { data: lines, error: linesError } = await db.from("captain_lines")
+        .select("id,captain_user_id,vehicle_type_id,origin_label,origin_lat,origin_lng,destination_label,destination_lat,destination_lng,intermediate_stops,arrival_time,return_arrival_time,service_days,seats,price_per_seat,status")
+        .eq("status", "active").order("created_at", { ascending: false }).limit(200);
+      if (linesError) throw linesError;
+      const pickup = { lat: pickupLat, lng: pickupLng };
+      const dropoff = hasDropoff ? { lat: dropoffLat!, lng: dropoffLng! } : null;
+      const matches = (lines ?? []).flatMap((line) => {
+        const start = { lat: Number(line.origin_lat), lng: Number(line.origin_lng) };
+        const end = { lat: Number(line.destination_lat), lng: Number(line.destination_lng) };
+        const outboundPickup = distanceKm(pickup, start), outboundDropoff = dropoff ? distanceKm(dropoff, end) : 0;
+        const reversePickup = line.return_arrival_time ? distanceKm(pickup, end) : Number.POSITIVE_INFINITY;
+        const reverseDropoff = dropoff && line.return_arrival_time ? distanceKm(dropoff, start) : 0;
+        const outboundMatch = outboundPickup <= radiusKm && outboundDropoff <= radiusKm;
+        const reverseMatch = reversePickup <= radiusKm && reverseDropoff <= radiusKm;
+        if (!outboundMatch && !reverseMatch) return [];
+        const reversed = !outboundMatch && reverseMatch;
+        return [{
+          id: Number(line.id), vehicle_type_id: line.vehicle_type_id,
+          origin_label: reversed ? line.destination_label : line.origin_label,
+          origin_lat: reversed ? line.destination_lat : line.origin_lat,
+          origin_lng: reversed ? line.destination_lng : line.origin_lng,
+          destination_label: reversed ? line.origin_label : line.destination_label,
+          destination_lat: reversed ? line.origin_lat : line.destination_lat,
+          destination_lng: reversed ? line.origin_lng : line.destination_lng,
+          arrival_time: reversed ? line.return_arrival_time : line.arrival_time,
+          service_days: line.service_days, seats: line.seats, price_per_seat: line.price_per_seat,
+          pickup_distance_km: Math.round((reversed ? reversePickup : outboundPickup) * 100) / 100,
+          dropoff_distance_km: Math.round((reversed ? reverseDropoff : outboundDropoff) * 100) / 100,
+          captain_user_id: Number(line.captain_user_id),
+        }];
+      }).sort((a, b) => a.pickup_distance_km + a.dropoff_distance_km - b.pickup_distance_km - b.dropoff_distance_km).slice(0, 30);
+      const captainIds = [...new Set(matches.map((line) => line.captain_user_id))];
+      const [captainsResult, profilesResult] = captainIds.length ? await Promise.all([
+        db.from("users").select("id,full_name").in("id", captainIds),
+        db.from("captain_profiles").select("user_id,verification_status").in("user_id", captainIds),
+      ]) : [{ data: [], error: null }, { data: [], error: null }];
+      if (captainsResult.error) throw captainsResult.error;
+      if (profilesResult.error) throw profilesResult.error;
+      const captainNames = new Map((captainsResult.data ?? []).map((captain) => [Number(captain.id), captain.full_name]));
+      const verifiedCaptains = new Set((profilesResult.data ?? []).filter((profile) => profile.verification_status === "approved").map((profile) => Number(profile.user_id)));
+      return reply({ lines: matches.map(({ captain_user_id, ...line }) => ({ ...line, captain_name: captainNames.get(captain_user_id) ?? "كابتن سِكّة", captain_verified: verifiedCaptains.has(captain_user_id) })) }, 200, origin);
+    }
     if (req.method === "POST" && path === "/rider/lines/search") {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
       if (!(["private_car", "hiace"].includes(String(body.vehicle_type_id))) || !validIsoDate(body.trip_date) || String(body.trip_date) < cairoDateKey() || normalizeClock(body.arrival_time) !== body.arrival_time || (body.return_arrival_time != null && normalizeClock(body.return_arrival_time) !== body.return_arrival_time) || !validPoint(body.pickup_lat, body.pickup_lng) || !validPoint(body.dropoff_lat, body.dropoff_lng) || !isGreaterCairoPoint(Number(body.pickup_lat), Number(body.pickup_lng)) || !isGreaterCairoPoint(Number(body.dropoff_lat), Number(body.dropoff_lng))) return error("راجع بيانات البحث عن المسار.", 400, origin);

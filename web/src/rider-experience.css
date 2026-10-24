@@ -55,7 +55,41 @@
 .workspace .rider-requests-page { display: grid; gap: 1rem; }
 .workspace .rider-section-intro { padding: 1.15rem 1.25rem; border: 1px solid var(--color-border); border-radius: 1rem; background: var(--color-surface-elevated); }
 .workspace .rider-section-intro p { margin: .35rem 0 0; color: var(--color-text-secondary); }
+.workspace .rider-trip-tabs { display: flex; gap: .35rem; width: fit-content; max-width: 100%; padding: .25rem; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); }
+.workspace .rider-trip-tabs button { min-height: 2.35rem; padding: .45rem .9rem; border: 1px solid transparent; border-radius: 999px; color: var(--color-text-secondary); background: transparent; font: inherit; font-size: .78rem; font-weight: 750; cursor: pointer; }
+.workspace .rider-trip-tabs button.is-active { color: var(--color-primary-text); background: var(--color-primary); box-shadow: 0 .25rem .65rem var(--color-shadow); }
 .workspace .rider-trips-experience .trips-group-list, .workspace .rider-trips-experience .all-trips-section { margin-top: .5rem; }
+.workspace .rider-trip-discovery { display: grid; gap: .85rem; padding: 1rem; border: 1px solid var(--color-border); border-radius: 1.1rem; background: var(--color-surface); box-shadow: 0 .35rem 1rem var(--color-shadow); }
+.workspace .rider-trip-discovery-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .8rem; }
+.workspace .rider-trip-discovery-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .7rem; }
+.workspace .rider-trip-discovery-actions > span { color: var(--color-text-secondary); font-size: .8rem; }
+.workspace .rider-trip-offer-list { display: grid; gap: .75rem; }
+.workspace .rider-trip-offer-list > .rider-section-heading { margin: .25rem 0 0; }
+.workspace .rider-trip-offer { display: grid; gap: .8rem; padding: 1rem; border: 1px solid var(--color-border); border-radius: 1.1rem; background: var(--color-surface); box-shadow: 0 .3rem .9rem var(--color-shadow); }
+.workspace .rider-trip-offer-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem; color: var(--color-text-secondary); font-size: .8rem; }
+.workspace .rider-trip-offer-captain { display: inline-flex; align-items: center; gap: .4rem; color: var(--color-text-primary); font-weight: 750; }
+.workspace .rider-trip-offer-captain > b { display: grid; width: 1.1rem; height: 1.1rem; place-items: center; border-radius: 50%; color: var(--color-primary-text); background: var(--color-primary); font-size: .68rem; }
+.workspace .rider-trip-offer-route { display: grid; gap: .65rem; padding: .85rem; border-radius: .9rem; color: var(--color-text-primary); background: var(--color-surface-raised); }
+.workspace .rider-trip-offer-route > span { display: flex; align-items: center; gap: .65rem; min-width: 0; overflow-wrap: anywhere; font-weight: 700; }
+.workspace .rider-trip-offer-route i { flex: 0 0 .65rem; width: .65rem; height: .65rem; border: 2px solid var(--color-surface); border-radius: 50%; background: var(--color-info); box-shadow: 0 0 0 1px var(--color-info); }
+.workspace .rider-trip-offer-route b { width: 1px; height: .8rem; margin-inline-start: -.34rem; margin-inline-end: -.34rem; background: var(--color-border); }
+.workspace .rider-trip-offer-route > span + span i { background: var(--color-primary); box-shadow: 0 0 0 1px var(--color-primary); }
+.workspace .rider-trip-offer-meta { display: flex; flex-wrap: wrap; align-items: center; gap: .55rem; color: var(--color-text-secondary); font-size: .8rem; }
+.workspace .rider-trip-offer-meta strong { margin-inline-start: auto; color: var(--color-accent-text); font-size: 1rem; }
+.workspace .rider-trip-distance { color: var(--color-text-muted); font-size: .75rem; }
+.workspace .rider-trip-offer-action { justify-self: start; }
+.workspace .rider-home-discovery-carousel { position: relative; display: grid; grid-template-columns: auto minmax(0,1fr); align-items: start; gap: .7rem 1rem; min-height: 11rem; overflow: hidden; padding: 1rem; border: 1px solid color-mix(in srgb,var(--color-primary) 28%,var(--color-border)); border-radius: 1.15rem; background: linear-gradient(125deg,var(--color-surface),color-mix(in srgb,var(--color-primary) 8%,var(--color-surface))); box-shadow: 0 .35rem 1.1rem var(--color-shadow); }
+.workspace .rider-promo-mark { display: grid; justify-items: center; gap: .4rem; color: var(--color-accent-text); }
+.workspace .rider-promo-mark > span { max-width: 7rem; color: var(--color-text-muted); font-size: .68rem; font-weight: 750; text-align: center; }
+.workspace .rider-promo-mark > i { width: .5rem; height: .5rem; border-radius: 50%; background: var(--color-primary); box-shadow: 0 0 .6rem color-mix(in srgb,var(--color-primary) 55%,transparent); }
+.workspace .rider-promo-content { display: grid; align-content: start; justify-items: start; gap: .45rem; min-width: 0; animation: rider-promo-enter .55s cubic-bezier(.2,.75,.25,1) both; }
+.workspace .rider-promo-content h2 { margin: 0; color: var(--color-text-primary); font-size: clamp(1rem,2.5vw,1.25rem); overflow-wrap: anywhere; }
+.workspace .rider-promo-content p { margin: 0 0 .2rem; color: var(--color-text-secondary); font-size: .85rem; line-height: 1.6; }
+.workspace .rider-promo-content .button { min-height: 2.35rem; padding: .45rem .8rem; font-size: .78rem; }
+.workspace .rider-promo-pagination { position: absolute; inset-inline-end: 1rem; bottom: 1.1rem; display: flex; gap: .35rem; }
+.workspace .rider-promo-pagination button { width: .5rem; height: .5rem; padding: 0; border: 0; border-radius: 99px; background: var(--color-border); transition: width .25s ease,background-color .25s ease; cursor: pointer; }
+.workspace .rider-promo-pagination button.is-active { width: 1.3rem; background: var(--color-primary); }
+@keyframes rider-promo-enter { from { opacity: 0; transform: translateY(.5rem); } to { opacity: 1; transform: translateY(0); } }
 .workspace .rider-booking-experience .booking-form-surface { border-radius: 1.35rem; }
 .workspace .rider-booking-experience .surface-heading { padding-bottom: 1rem; border-bottom: 1px solid var(--color-border); }
 .workspace .rider-booking-experience .surface-heading h2 { font-size: clamp(1.4rem, 4vw, 1.85rem); }
@@ -63,6 +97,12 @@
 .workspace .rider-booking-experience .form-stack > label, .workspace .rider-booking-experience .time-row label { color: var(--color-text-primary); font-weight: 700; }
 .workspace .rider-account-experience .surface { border-color: var(--color-border); }
 @media (max-width: 700px) {
+  .workspace .rider-trip-discovery-fields { grid-template-columns: minmax(0,1fr); }
+  .workspace .rider-trip-discovery-actions { align-items: stretch; }
+  .workspace .rider-trip-discovery-actions > button { width: 100%; }
+  .workspace .rider-home-discovery-carousel { min-height: 12rem; gap: .65rem; padding: .85rem; }
+  .workspace .rider-promo-mark > span { max-width: 5rem; }
+  .workspace .rider-promo-pagination { inset-inline-end: .9rem; bottom: .9rem; }
   .workspace .rider-hero { min-height: 0; gap: .3rem; padding: 1.1rem; border-radius: 1.1rem; }
   .workspace .rider-hero h2 { font-size: clamp(1.55rem, 7vw, 2.3rem); }
   .workspace .rider-hero-copy > p { font-size: .9rem; }
