@@ -45,7 +45,7 @@
 @keyframes refresh-car-drive {
   0% { transform: translateX(110vw); }
   30% { transform: translateX(18vw); }
-  55% { transform: translateX(5vw); }
+  55% { transform: translateX(15vw); }
   100% { transform: translateX(-115vw); }
 }
 @keyframes refresh-road-flow { to { transform: translateX(2rem); } }
