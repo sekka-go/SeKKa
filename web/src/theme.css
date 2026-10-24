@@ -701,3 +701,132 @@ button, input, select, textarea { color-scheme: inherit; }
   font-size: .9rem;
   line-height: 1.6;
 }
+
+/* Keep the mobile Light theme light even in legacy components with fixed dark colors. */
+@media (max-width: 800px) {
+  :root[data-theme="light"] .app-shell .workspace .topbar,
+  :root[data-theme="light"] .app-shell .workspace .sidebar,
+  :root[data-theme="light"] .app-shell :is(.auth-page-header, .landing-header) {
+    color: var(--color-text-primary);
+    background: var(--color-navigation-background);
+    border-color: var(--color-border);
+    box-shadow: 0 1px 5px var(--color-shadow);
+  }
+
+  :root[data-theme="light"] .app-shell .workspace .topbar :is(.brand-logo-copy strong, .connection-state, .icon-button),
+  :root[data-theme="light"] .app-shell .workspace .sidebar :is(.sidebar-label, .nav-item, .sidebar-brand .sidebar-label),
+  :root[data-theme="light"] .app-shell :is(.auth-page-header, .landing-header) .brand-logo-copy :is(strong, small) {
+    color: var(--color-text-secondary);
+  }
+
+  :root[data-theme="light"] .app-shell .workspace .topbar .icon-button {
+    border-color: var(--color-border);
+  }
+
+  :root[data-theme="light"] .app-shell .workspace .topbar .icon-button:is(:hover, .is-open),
+  :root[data-theme="light"] .app-shell .workspace .sidebar .nav-item:is(:hover, .nav-active) {
+    color: var(--color-accent-text);
+    background: var(--color-navigation-active);
+    border-color: var(--color-border);
+  }
+
+  :root[data-theme="light"] .app-shell :is(
+    .workspace .surface,
+    .workspace .soft-surface,
+    .workspace .welcome-banner,
+    .workspace .metric-card,
+    .workspace .group-summary,
+    .workspace .notifications-drawer,
+    .workspace .booking-review,
+    .workspace .route-preferences-card,
+    .workspace .segmented-control,
+    .workspace .package-option,
+    .workspace .tier-helper,
+    .workspace .info-note,
+    .workspace .form-footnote,
+    .workspace .location-search-field,
+    .workspace .location-search-results button,
+    .workspace .route-preferences-card .location-search-field,
+    .workspace .route-preferences-card .location-search-results button,
+    .workspace .route-preferences-card .commuter-preferences-frequent .location-search-field,
+    .workspace .route-offer-card,
+    .workspace .commuter-board-card,
+    .workspace .captain-offers-page .offer-toolbar,
+    .workspace .captain-offers-page > .offer-toolbar,
+    .workspace .admin-control-panel > nav,
+    .workspace .admin-control-panel article,
+    .workspace .admin-nav-group,
+    .workspace .admin-secondary-details,
+    .workspace .captain-settings-details,
+    .workspace .help-card,
+    .workspace .route-preferences-card .time-picker-control,
+    .workspace .time-picker-control,
+    .workspace .route-offer-timeline,
+    .workspace .location-saved-place,
+    .workspace .map-points-readout > div,
+    .workspace .profile-data-grid > div,
+    .workspace .admin-summary-grid > div,
+    .workspace .captain-offer-review-grid > div,
+    .workspace .notification-action-options,
+    .workspace .notification-avatar.is-brand,
+    .workspace .toast,
+    .auth-card,
+    .auth-document-dialog,
+    .auth-consent,
+    .info-faq-list details,
+    .messages-contact-picker,
+    .messages-composer,
+    .message-theirs
+  ) {
+    color: var(--color-text-primary);
+    background-color: var(--color-surface);
+    border-color: var(--color-border);
+  }
+
+  :root[data-theme="light"] .app-shell :is(.workspace .surface, .workspace .route-offer-card, .workspace .commuter-board-card, .auth-card, .auth-document-dialog) {
+    box-shadow: 0 4px 16px var(--color-shadow);
+  }
+
+  :root[data-theme="light"] .app-shell :is(
+    .workspace input:not([type="checkbox"]):not([type="radio"]),
+    .workspace select,
+    .workspace textarea,
+    .workspace .admin-control-panel input,
+    .workspace .admin-control-panel select,
+    .workspace .admin-control-panel textarea,
+    .workspace .admin-broadcast-form input,
+    .workspace .admin-broadcast-form textarea,
+    .workspace .route-preferences-card .commuter-preferences-times input,
+    .workspace .commuter-preferences-times input,
+    .workspace .time-picker-control,
+    .workspace .time-picker-control option,
+    .workspace .category-select option,
+    .messages-composer textarea
+  ) {
+    color: var(--color-input-text);
+    color-scheme: light;
+    background: var(--color-input-background);
+    border-color: var(--color-border);
+  }
+
+  :root[data-theme="light"] .app-shell :is(
+    .workspace .button-dark,
+    .workspace .button-outline,
+    .workspace .button-quiet,
+    .workspace .notification-action-options button
+  ) {
+    color: var(--color-text-primary);
+    background: var(--color-surface-elevated);
+    border-color: var(--color-border);
+  }
+
+  :root[data-theme="light"] .app-shell .workspace .button-cancel-trip {
+    color: var(--color-error);
+    background: color-mix(in srgb, var(--color-error) 7%, var(--color-surface));
+    border-color: color-mix(in srgb, var(--color-error) 38%, var(--color-border));
+  }
+
+  :root[data-theme="light"] .app-shell :is(.workspace .page-heading p, .workspace .loading-card, .workspace .admin-secondary-details > summary, .workspace .captain-settings-details > summary) {
+    color: var(--color-text-secondary);
+  }
+}
