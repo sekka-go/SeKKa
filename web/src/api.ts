@@ -61,7 +61,8 @@ export type VerificationDocumentType = "national_id_front" | "national_id_back" 
 export type VerificationDocument = { id: number; document_type: VerificationDocumentType; status: "pending" | "approved" | "rejected"; rejection_reason: string | null; uploaded_at: string; reviewed_at: string | null };
 export interface CaptainOffer { group_id: number; category_id: string; package_type: string; route_distance_km: number | null; seat_day_fare: number | null; route_geometry: RouteGeometry | null; trip: PoolTrip }
 export interface CaptainLine {
-  id: number; vehicle_type_id: "private_car" | "hiace"; origin_label: string; destination_label: string;
+  id: number; vehicle_type_id: "private_car" | "hiace"; origin_label: string; origin_lat: number; origin_lng: number; destination_label: string; destination_lat: number; destination_lng: number;
+  intermediate_stops: Array<{ label: string; lat: number; lng: number }>;
   arrival_time: string; return_arrival_time?: string | null; service_days: number[]; seats: number; route_distance_km: number; price_per_km: number; price_per_seat: number;
   payment_methods: string[]; status: "active" | "paused" | "cancelled";
 }

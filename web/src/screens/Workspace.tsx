@@ -24,7 +24,7 @@ function sectionAllowedForRole(section: NavKey, role: Session["user"]["role"]) {
   if (section === "account" || section === "settings") return true;
   if (section === "notifications") return true;
   if (["admin", "adminUsers", "adminDocuments", "adminTrips", "adminComplaints", "adminFinance", "adminFinanceAdjustment", "adminPricing", "adminAudit", "broadcast"].includes(section)) return role === "admin";
-  if (["offers", "publish", "captainTrips", "captainEarnings"].includes(section)) return role === "captain";
+  if (["offers", "publish", "captainRequests", "captainTrips", "captainEarnings"].includes(section)) return role === "captain";
   if (section === "messages") return role === "rider" || role === "captain";
   if (section === "requests") return role === "rider";
   return role === "rider";
@@ -35,7 +35,7 @@ function sectionForPath(path: string, role: Session["user"]["role"]): NavKey | n
   if (/^\/admin\/users\/\d+$/.test(normalizedPath)) return role === "admin" ? "adminUsers" : null;
   const routeSections: Record<string, NavKey> = {
     "/account": "account", "/settings": "settings", "/admin": "admin", "/admin/users": "adminUsers", "/admin/documents": "adminDocuments", "/admin/trips": "adminTrips", "/admin/complaints": "adminComplaints", "/admin/finance": "adminFinance", "/admin/finance/adjustment": "adminFinanceAdjustment", "/admin/pricing": "adminPricing", "/admin/audit": "adminAudit", "/broadcast": "broadcast",
-    "/captain": "offers", "/captain/trips": "captainTrips", "/captain/earnings": "captainEarnings", "/publish": "publish",
+    "/captain": "offers", "/captain/requests": "captainRequests", "/captain/trips": "captainTrips", "/captain/earnings": "captainEarnings", "/publish": "publish",
     "/search": "booking", "/trips": "trips", "/requests": "requests", "/messages": "messages", "/notifications": "notifications",
   };
   const section = routeSections[normalizedPath];
@@ -50,7 +50,7 @@ function pathForSection(section: NavKey, preserveUserProfile = false) {
   const sectionPaths: Record<NavKey, string> = {
     home: "/", account: "/account", settings: "/settings", booking: "/search", trips: "/trips", requests: "/requests",
     notifications: "/notifications", messages: "/messages", offers: "/captain",
-    publish: "/publish", captainTrips: "/captain/trips", captainEarnings: "/captain/earnings", admin: "/admin", adminUsers: "/admin/users", adminDocuments: "/admin/documents", adminTrips: "/admin/trips", adminComplaints: "/admin/complaints", adminFinance: "/admin/finance", adminFinanceAdjustment: "/admin/finance/adjustment", adminPricing: "/admin/pricing", adminAudit: "/admin/audit", broadcast: "/broadcast",
+    publish: "/publish", captainRequests: "/captain/requests", captainTrips: "/captain/trips", captainEarnings: "/captain/earnings", admin: "/admin", adminUsers: "/admin/users", adminDocuments: "/admin/documents", adminTrips: "/admin/trips", adminComplaints: "/admin/complaints", adminFinance: "/admin/finance", adminFinanceAdjustment: "/admin/finance/adjustment", adminPricing: "/admin/pricing", adminAudit: "/admin/audit", broadcast: "/broadcast",
   };
   return sectionPaths[section];
 }
@@ -255,7 +255,7 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
   const nav: WorkspaceNavItem[] = session.user.role === "rider"
     ? [{ key: "home", label: "الرئيسية", icon: "home" }, { key: "trips", label: "رحلاتي", icon: "trips" }, { key: "requests", label: "طلباتي", icon: "inbox" }, { key: "messages", label: "الرسائل", icon: "messages" }, { key: "account", label: "حسابي", icon: "user" }]
     : session.user.role === "captain"
-      ? [{ key: "offers", label: "الرئيسية", icon: "home" }, { key: "publish", label: "مساراتي", icon: "route" }, { key: "captainTrips", label: "رحلاتي", icon: "trips" }, { key: "captainEarnings", label: "سجل الرحلات", icon: "wallet" }, { key: "messages", label: "الرسائل", icon: "messages" }, { key: "account", label: "حسابي", icon: "user" }]
+      ? [{ key: "offers", label: "الرئيسية", icon: "home" }, { key: "publish", label: "مساراتي", icon: "route" }, { key: "captainRequests", label: "الطلبات", icon: "inbox" }, { key: "captainTrips", label: "رحلاتي", icon: "trips" }, { key: "captainEarnings", label: "أرباحي", icon: "wallet" }, { key: "messages", label: "الرسائل", icon: "messages" }, { key: "account", label: "حسابي", icon: "user" }]
       : [{ key: "account", label: "حسابي", icon: "settings" }, { key: "admin", label: "نظرة عامة", icon: "chart" }, { key: "broadcast", label: "رسالة عامة", icon: "send" }];
 
   const activateNav = (item: { key: NavKey }) => {
@@ -272,7 +272,7 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
     home: [localHour >= 17 ? "مساء الخير" : "صباح الخير", "مشوارك اليوم يبدأ من هنا"], booking: ["خطط لمشوارك", "اختار أيامك ونقاطك، وإحنا نرتّب الباقي"],
     trips: ["رحلاتي", "كل مشاويرك ومجموعاتك في مكان واحد"], requests: ["طلبات رحلاتك", "تابع حالة طلباتك والمسارات التي تم العثور عليها"], notifications: ["الإشعارات", "آخر التحديثات الخاصة بمشاويرك"], messages: ["الرسائل", "تواصل مع المشاركين في مشاويرك ومجموعاتك"],
     account: ["حسابي", ""], settings: ["إعدادات التطبيق", "تحكم في مظهر التطبيق ولغته وإشعارات هذا الجهاز."], offers: ["المسارات المتاحة", "اختار المسار المناسب لسيارتك ومواعيدك"],
-    captainTrips: ["رحلاتي", "المسارات المقبولة وخطوات تنفيذها"], captainEarnings: ["الأرباح والسجل", "الرحلات المكتملة والمبالغ المسجلة"], admin: ["لوحة الإدارة", "متابعة المنصة وتوثيق الكباتن"],
+    captainRequests: ["الطلبات", "الطلبات المناسبة لخطوط سيرك"], captainTrips: ["رحلاتي", "المسارات المقبولة وخطوات تنفيذها"], captainEarnings: ["الأرباح والسجل", "الرحلات المكتملة والمبالغ المسجلة"], admin: ["لوحة الإدارة", "متابعة المنصة وتوثيق الكباتن"],
     publish: ["نشر مسار", "أضف خط سيرك ومواعيد تشغيله"],
     adminUsers: ["المستخدمون", "بحث وإدارة حسابات الركاب والكباتن"], adminDocuments: ["مراجعة المستندات", "طلبات توثيق الكباتن"],
     adminTrips: ["الرحلات والمجموعات", "متابعة حالات التشغيل الحالية"], adminComplaints: ["الاعتراضات", "مراجعة الاعتراضات على الدفعات"],

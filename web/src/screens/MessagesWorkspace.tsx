@@ -157,10 +157,6 @@ export default function MessagesWorkspace({ session, notify, onUnreadCountChange
   return <section className="messages-experience messages-workspace surface" aria-label={t("الرسائل")} dir={getDirection()}>
     <aside className={`messages-inbox ${selected ? "has-selection" : ""}`} aria-label={t("messages.inbox") }>
       <div className="messages-inbox-heading">
-        <div className="messages-inbox-title">
-          <span className="messages-heading-icon"><AppIcon name="messages" size={20} /></span>
-          <div><h2>{t("messages.inboxTitle")}</h2><p>{t("messages.inboxSubtitle")}</p></div>
-        </div>
         <button className="button button-primary messages-new-button" type="button" onClick={() => { setShowContacts((value) => !value); setContactQuery(""); }} aria-expanded={showContacts}>
           <AppIcon name={showContacts ? "close" : "plus"} size={17} /><span>{showContacts ? t("messages.closePicker") : t("messages.newMessage")}</span>
         </button>

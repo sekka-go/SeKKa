@@ -87,7 +87,14 @@
 .captain-workspace .captain-preferences .capability-list { display: grid; gap: .45rem; }
 .captain-workspace .captain-preferences .toggle-row { padding: .7rem; border-radius: .75rem; background: var(--color-surface-raised); }
 .captain-workspace .captain-route-editor { padding: clamp(1rem, 3vw, 1.6rem); }
-.captain-workspace .captain-route-editor .surface-heading { margin-block-end: 1rem; padding-block-end: 1rem; border-block-end: 1px solid var(--color-border); }
+.captain-workspace .captain-new-line-summary { display: flex; align-items: center; gap: .85rem; cursor: pointer; list-style: none; }
+.captain-workspace .captain-new-line-summary::-webkit-details-marker { display: none; }
+.captain-workspace .captain-new-line-summary > span:nth-child(2) { display: grid; flex: 1; gap: .3rem; }
+.captain-workspace .captain-new-line-summary > span:nth-child(2) strong { color: var(--color-text-primary); font-size: 1.15rem; }
+.captain-workspace .captain-new-line-summary > span:nth-child(2) small { color: var(--color-text-secondary); line-height: 1.5; }
+.captain-workspace .captain-new-line-summary > svg { transition: transform .2s ease; }
+.captain-workspace .captain-route-editor[open] .captain-new-line-summary { margin-block-end: 1rem; padding-block-end: 1rem; border-block-end: 1px solid var(--color-border); }
+.captain-workspace .captain-route-editor[open] .captain-new-line-summary > svg { transform: rotate(90deg); }
 .captain-workspace .captain-route-editor .form-stack { gap: 1rem; }
 .captain-workspace .captain-route-editor fieldset { border: 1px solid var(--color-border); border-radius: .9rem; background: var(--color-surface-raised); }
 .captain-workspace .captain-route-editor legend, .captain-workspace .captain-route-editor .form-field-label { color: var(--color-text-primary); font-weight: 800; }
@@ -96,6 +103,9 @@
 .captain-workspace .captain-intermediate-stops { display: grid; gap: .75rem; }
 .captain-workspace .captain-intermediate-stop { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: .5rem; }
 .captain-workspace .captain-intermediate-stop .button { min-height: 2.75rem; }
+.captain-workspace .captain-line-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.captain-workspace .captain-line-actions small { flex-basis: 100%; color: var(--color-text-secondary); }
+.captain-workspace .captain-requests-panel { margin-block-start: 1rem; }
 .captain-workspace .captain-stitch-trips .section-toolbar { padding: 1rem; border: 1px solid var(--color-border); border-radius: 1rem; background: var(--color-surface); }
 .captain-workspace .captain-trip-detail { display: grid; gap: 1rem; padding: clamp(.8rem, 2.5vw, 1.3rem); }
 .captain-workspace .captain-trip-detail .map-picker { overflow: hidden; border-radius: 1rem; }

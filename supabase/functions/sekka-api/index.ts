@@ -1951,11 +1951,57 @@ Deno.serve(async (req: Request) => {
         }
         return reply({ line: Array.isArray(data) ? data[0] : data }, 201, origin);
       }
+      const lineEdit = path.match(/^\/captain\/lines\/(\d+)$/);
+      if (req.method === "PUT" && lineEdit) {
+        const { data: profile, error: profileError } = await db.from("captain_profiles").select("vehicle_type_id,verification_status,status").eq("user_id", user!.id).maybeSingle();
+        if (profileError) throw profileError;
+        if (!profile || profile.verification_status !== "approved" || profile.status === "suspended_grace_expired" || !user!.verified_at) return error("يلزم اعتماد مستندات الكابتن وتوثيق الهاتف قبل تعديل المسار.", 403, origin);
+        const activationGate = await requireVerificationActivation(user!, origin); if (activationGate) return activationGate;
+        const { data: vehicle, error: vehicleError } = await db.from("vehicle_types").select("capacity_max").eq("id", profile.vehicle_type_id).maybeSingle();
+        if (vehicleError) throw vehicleError;
+        const days = Array.isArray(body.service_days) ? body.service_days.map(Number) : [];
+        const methods = Array.isArray(body.payment_methods) ? body.payment_methods.map(String) : [];
+        const arrival = String(body.arrival_time ?? "");
+        const returnArrival = body.return_arrival_time == null || body.return_arrival_time === "" ? null : String(body.return_arrival_time);
+        const maxSeats = profile.vehicle_type_id === "private_car" ? 4 : profile.vehicle_type_id === "hiace" ? 14 : 0;
+        if (!vehicle || maxSeats === 0 || Number(vehicle.capacity_max) < maxSeats || String(body.vehicle_type_id) !== String(profile.vehicle_type_id) || !clean(body.origin_label) || !clean(body.destination_label) || !validPoint(body.origin_lat, body.origin_lng) || !validPoint(body.destination_lat, body.destination_lng) || !isGreaterCairoPoint(Number(body.origin_lat), Number(body.origin_lng)) || !isGreaterCairoPoint(Number(body.destination_lat), Number(body.destination_lng)) || !/^\d{2}:\d{2}$/.test(arrival) || (returnArrival != null && !/^\d{2}:\d{2}$/.test(returnArrival)) || !days.length || days.some((d) => !Number.isInteger(d) || d < 0 || d > 6) || new Set(days).size !== days.length || !Number.isInteger(Number(body.seats)) || Number(body.seats) < 1 || Number(body.seats) > maxSeats || !methods.length || methods.some((m) => !["cash", "instapay", "wallet"].includes(m))) return error("راجع المسار والأيام والمقاعد وطريقة الدفع.", 400, origin);
+        if (body.intermediate_stops != null && !Array.isArray(body.intermediate_stops)) return error("بيانات المحطات الوسيطة غير صحيحة.", 400, origin);
+        const stops = Array.isArray(body.intermediate_stops) ? body.intermediate_stops : [];
+        const seatPrice = Number(body.price_per_seat);
+        if (stops.length > 10) return error("يمكن إضافة 10 محطات وسيطة كحد أقصى.", 400, origin);
+        if (!Number.isFinite(seatPrice) || seatPrice < 0.01 || seatPrice > 99_999_999.99) return error("أدخل سعرًا صحيحًا للمقعد أكبر من صفر.", 400, origin);
+        if (stops.some((stop) => !stop || typeof stop.label !== "string" || !clean(stop.label) || !validPoint(stop.lat, stop.lng) || !isGreaterCairoPoint(Number(stop.lat), Number(stop.lng)))) return error("تأكد أن كل المحطات داخل القاهرة الكبرى.", 400, origin);
+        let routeDistanceKm: number;
+        try {
+          const routePoints = [
+            { lat: Number(body.origin_lat), lng: Number(body.origin_lng) },
+            ...stops.map((stop) => ({ lat: Number(stop.lat), lng: Number(stop.lng) })),
+            { lat: Number(body.destination_lat), lng: Number(body.destination_lng) },
+          ];
+          routeDistanceKm = (await roadRoute(routePoints)).distanceKm;
+        } catch {
+          return error("تعذر حساب مسافة المسار الآن. حاول مرة أخرى.", 503, origin);
+        }
+        const { data, error: updateError } = await db.rpc("update_captain_line", {
+          actor_id: user!.id, line_id: Number(lineEdit[1]), vehicle_id: profile.vehicle_type_id,
+          origin_name: body.origin_label.trim(), origin_y: body.origin_lat, origin_x: body.origin_lng,
+          destination_name: body.destination_label.trim(), destination_y: body.destination_lat, destination_x: body.destination_lng,
+          stops, arrival: `${arrival}:00`, return_arrives: returnArrival ? `${returnArrival}:00` : null,
+          days, seat_count: Number(body.seats), route_km: routeDistanceKm, seat_price: seatPrice, methods,
+        });
+        if (updateError) {
+          if (updateError.code === "42501") return error("المسار غير موجود أو لا تملك صلاحية تعديله.", 403, origin);
+          if (updateError.code === "55000") return error("لا يمكن تعديل المسار بعد انضمام راكب.", 409, origin);
+          throw updateError;
+        }
+        return reply({ line: Array.isArray(data) ? data[0] : data }, 200, origin);
+      }
       const lineStatus = path.match(/^\/captain\/lines\/(\d+)\/status$/);
       if (req.method === "PATCH" && lineStatus) {
         const { data, error: updateError } = await db.rpc("set_captain_line_status", { actor_id: user!.id, line_id: Number(lineStatus[1]), next_status: body.status });
         if (updateError) {
           if (updateError.code === "42501") return error("المسار غير موجود أو لا تملك صلاحية تعديله.", 403, origin);
+          if (updateError.code === "55000") return error("لا يمكن إلغاء المسار بعد انضمام راكب.", 409, origin);
           throw updateError;
         }
         return reply({ line: Array.isArray(data) ? data[0] : data }, 200, origin);

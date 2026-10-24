@@ -145,8 +145,8 @@
   .messages-conversation-list, .messages-contact-picker { max-height: calc(100dvh - 22rem); }
 }
 @media (max-width: 420px) {
-  .messages-inbox-heading { align-items: flex-start; flex-direction: column; }
-  .messages-new-button { align-self: stretch; }
+  .messages-inbox-heading { align-items: center; justify-content: flex-end; }
+  .messages-new-button { align-self: auto; }
   .messages-thread-heading { gap: .5rem; padding-inline: .65rem; }
   .messages-thread-heading .messages-avatar { width: 2.4rem; height: 2.4rem; flex-basis: 2.4rem; }
   .messages-message-group { max-width: 90%; }

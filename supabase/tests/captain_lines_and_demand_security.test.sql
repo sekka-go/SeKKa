@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(45);
+SELECT plan(48);
 
 SELECT ok((SELECT relrowsecurity FROM pg_class WHERE oid = 'public.app_config'::regclass), 'app_config has RLS enabled');
 SELECT ok((SELECT relrowsecurity FROM pg_class WHERE oid = 'public.captain_lines'::regclass), 'captain_lines has RLS enabled');
@@ -53,6 +53,9 @@ SELECT ok(NOT has_function_privilege('authenticated', 'public.publish_captain_li
 SELECT ok(has_function_privilege('service_role', 'public.publish_captain_line(integer,text,text,double precision,double precision,text,double precision,double precision,jsonb,time,smallint[],integer,double precision,numeric,text[],time)', 'EXECUTE'), 'service_role can publish a captain-priced line with route stops');
 SELECT ok(NOT has_function_privilege('anon', 'public.publish_captain_line(integer,text,text,double precision,double precision,text,double precision,double precision,jsonb,time,smallint[],integer,double precision,numeric,text[],time)', 'EXECUTE'), 'anon cannot publish a captain-priced line');
 SELECT ok(NOT has_function_privilege('authenticated', 'public.publish_captain_line(integer,text,text,double precision,double precision,text,double precision,double precision,jsonb,time,smallint[],integer,double precision,numeric,text[],time)', 'EXECUTE'), 'authenticated cannot publish a captain-priced line directly');
+SELECT ok(has_function_privilege('service_role', 'public.update_captain_line(integer,integer,text,text,double precision,double precision,text,double precision,double precision,jsonb,time,time,smallint[],integer,double precision,numeric,text[])', 'EXECUTE'), 'service_role can update a captain line before rider match');
+SELECT ok(NOT has_function_privilege('anon', 'public.update_captain_line(integer,integer,text,text,double precision,double precision,text,double precision,double precision,jsonb,time,time,smallint[],integer,double precision,numeric,text[])', 'EXECUTE'), 'anon cannot update a captain line');
+SELECT ok(NOT has_function_privilege('authenticated', 'public.update_captain_line(integer,integer,text,text,double precision,double precision,text,double precision,double precision,jsonb,time,time,smallint[],integer,double precision,numeric,text[])', 'EXECUTE'), 'authenticated cannot update a captain line directly');
 
 SELECT * FROM finish();
 ROLLBACK;
