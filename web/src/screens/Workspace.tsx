@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import BrandLogo from "../components/BrandLogo";
 import AppIcon from "../components/AppIcon";
 import WorkspaceNavigation, { type WorkspaceNavItem } from "../components/WorkspaceNavigation";
+import PushPermissionPrompt from "../components/PushPermissionPrompt";
 import { api, type Notification, type VerificationDocumentType } from "../api";
 import type { NavKey, Session, Toast } from "../types";
 import RiderWorkspace from "./RiderWorkspace";
@@ -285,16 +286,21 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
     <WorkspaceNavigation items={nav} activeSection={section} notificationsOpen={notificationsOpen} unreadCount={unread} unreadMessageCount={unreadMessageCount} role={session.user.role} fullName={session.user.full_name} userId={session.user.id} token={session.token} open={navOpen} onSelect={activateNav} onClose={() => setNavOpen(false)} onAccount={() => { setInfoPage(null); setSection("account"); setNavOpen(false); }} onInvite={() => void inviteFriends()} onSignOut={onSignOut} onOpenInfo={(page) => { setInfoPage(page); setSection(initialSection); setNavOpen(false); }} />
     <main className="main-area">
       <header className="topbar"><div className="topbar-brand-group"><button type="button" className="mobile-menu" onClick={() => setNavOpen(true)} aria-label={t("فتح القائمة")}><AppIcon name="menu" /></button><button type="button" className="topbar-brand-home" onClick={() => { setSection(initialSection); setNavOpen(false); }} aria-label={t("العودة للرئيسية")}><BrandLogo className="topbar-brand" /></button></div><div className="topbar-actions"><span className={`connection-state ${isOnline ? "is-online" : "is-offline"}`} role="status"><i />{isOnline ? t("متصل") : t("غير متصل")}</span><button type="button" className={`icon-button notification-bell ${notificationsOpen ? "is-open" : ""}`} onClick={openNotifications} aria-expanded={notificationsOpen} aria-controls="sekka-notifications-panel" aria-label={unread > 0 ? `${t("الإشعارات")} · ${unread} ${t("غير مقروءة")}` : t("الإشعارات")}><AppIcon name="bell" size={21} />{unread > 0 && <i />}</button></div></header>
-      <div className="page-content">{infoPage ? <InfoPages page={infoPage} onBack={() => setInfoPage(null)} /> : <>{section !== "booking" && section !== "notifications" && <div className={`page-heading ${section === "account" ? "page-heading-account" : ""}`}><div><h1>{t(title)}</h1>{subtitle && <p>{t(subtitle)}</p>}</div>{session.user.role === "admin" && section.startsWith("admin") && section !== "admin" && <button type="button" className="button button-outline button-small" onClick={() => setSection("admin")}>{t("العودة للملخص")}</button>}</div>}
-        {section === "settings" && <AppSettings session={session} themePreference={themePreference} resolvedTheme={resolvedTheme} onThemePreferenceChange={onThemePreferenceChange} notify={notify} />}
-        {session.user.role !== "admin" && <VerificationReminder session={session} onOpen={openMissingVerification} visible={section !== "account" && section !== "settings" && section !== "notifications" && !(session.user.role === "captain" && section === "offers")} />}
-        {section === "messages" && <MessagesWorkspace session={session} notify={notify} onUnreadCountChange={setUnreadMessageCount} />}
-        {session.user.role === "rider" && section !== "messages" && section !== "settings" && section !== "notifications" && <RiderWorkspace session={session} section={section} setSection={setSection} refreshNotifications={refreshNotifications} registerPoolRefresh={registerPoolRefresh} notify={notify} themePreference={themePreference} resolvedTheme={resolvedTheme} onThemePreferenceChange={onThemePreferenceChange} onInitialReady={onHomeReady} />}
-        {session.user.role === "captain" && section !== "messages" && section !== "settings" && section !== "notifications" && <CaptainWorkspace session={session} section={section} setSection={setSection} notify={notify} onInitialReady={onHomeReady} />}
-        {session.user.role === "admin" && section !== "settings" && section !== "notifications" && <AdminWorkspace session={session} section={section} refreshNotifications={refreshNotifications} notify={notify} onInitialReady={onHomeReady} />}
-        {notificationsOpen && <NotificationsPanel items={notifications} token={session.token} onRefresh={refreshNotifications} onPoolChanged={session.user.role === "rider" ? () => riderPoolRefreshRef.current() : undefined} onEditGroup={session.user.role === "rider" ? editNotificationGroup : undefined} allowWaitActions={session.user.role === "rider"} notify={notify} isLoading={!notificationsLoaded} error={notificationsError} onOpenSettings={() => setSection("settings")} onClose={closeNotifications} />}</>}
-      </div>
-    </main>
+      <div className="page-content">
+        {infoPage ? <InfoPages page={infoPage} onBack={() => setInfoPage(null)} /> : (
+          <>
+            {section !== "booking" && section !== "notifications" && <div className={`page-heading ${section === "account" ? "page-heading-account" : ""}`}><div><h1>{t(title)}</h1>{subtitle && <p>{t(subtitle)}</p>}</div>{session.user.role === "admin" && section.startsWith("admin") && section !== "admin" && <button type="button" className="button button-outline button-small" onClick={() => setSection("admin")}>{t("العودة للملخص")}</button>}</div>}
+            {section === initialSection && <PushPermissionPrompt session={session} notify={notify} />}
+            {section === "settings" && <AppSettings session={session} themePreference={themePreference} resolvedTheme={resolvedTheme} onThemePreferenceChange={onThemePreferenceChange} notify={notify} />}
+            {session.user.role !== "admin" && <VerificationReminder session={session} onOpen={openMissingVerification} visible={section !== "account" && section !== "settings" && section !== "notifications" && !(session.user.role === "captain" && section === "offers")} />}
+            {section === "messages" && <MessagesWorkspace session={session} notify={notify} onUnreadCountChange={setUnreadMessageCount} />}
+            {session.user.role === "rider" && section !== "messages" && section !== "settings" && section !== "notifications" && <RiderWorkspace session={session} section={section} setSection={setSection} refreshNotifications={refreshNotifications} registerPoolRefresh={registerPoolRefresh} notify={notify} themePreference={themePreference} resolvedTheme={resolvedTheme} onThemePreferenceChange={onThemePreferenceChange} onInitialReady={onHomeReady} />}
+            {session.user.role === "captain" && section !== "messages" && section !== "settings" && section !== "notifications" && <CaptainWorkspace session={session} section={section} setSection={setSection} notify={notify} onInitialReady={onHomeReady} />}
+            {session.user.role === "admin" && section !== "settings" && section !== "notifications" && <AdminWorkspace session={session} section={section} refreshNotifications={refreshNotifications} notify={notify} onInitialReady={onHomeReady} />}
+            {notificationsOpen && <NotificationsPanel items={notifications} token={session.token} onRefresh={refreshNotifications} onPoolChanged={session.user.role === "rider" ? () => riderPoolRefreshRef.current() : undefined} onEditGroup={session.user.role === "rider" ? editNotificationGroup : undefined} allowWaitActions={session.user.role === "rider"} notify={notify} isLoading={!notificationsLoaded} error={notificationsError} onOpenSettings={() => setSection("settings")} onClose={closeNotifications} />}
+          </>
+        )}
+      </div>    </main>
   </div>;
 }
 
