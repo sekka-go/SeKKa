@@ -609,7 +609,7 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
   </div>;
   if (section === "trips") return <div className="trips-page rider-trips-experience">
     {dataErrorBanner}
-    <section className="rider-section-intro"><span className="eyebrow">{t("رحلات منشورة من الكباتن")}</span><h2>{t("الرحلات المتاحة")}</h2><p>{t("نعرض الرحلات المنشورة القريبة من نقطة انطلاقك تلقائيًا. افتح التفاصيل لإرسال طلب الانضمام، وتابع الطلبات التي تنشئها من صفحة طلباتي.")}</p></section>
+
     {tripOffersLoading && <LoadingCard text="جارٍ البحث عن رحلات مناسبة…" />}
     {tripOffersError && <ErrorState title={t("تعذر تحميل الرحلات")} text={tripOffersError} action="إعادة المحاولة" onAction={() => { tripOffersLoadedRef.current = false; setTripSearchNonce((value) => value + 1); }} />}
     {!tripOffersLoading && !tripOffersError && (tripOffers.length ? <section className="rider-trip-offer-list" aria-label={t("الرحلات المناسبة")}>
