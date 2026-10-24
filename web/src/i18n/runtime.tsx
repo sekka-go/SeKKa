@@ -156,7 +156,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       title={applicationName(language)}
       tagline={language === "ar" ? "طريقك أسهل مع سِكّة" : "Your route, made easier"}
       accessibleLabel={language === "ar" ? "جاري فتح سِكّة" : "Opening SeKKa"}
-      variant={isRefreshNavigation() ? "refresh" : "brand"}
+      variant="refresh"
     />}
   </LanguageContext.Provider>;
 }
