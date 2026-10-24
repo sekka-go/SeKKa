@@ -694,7 +694,8 @@ button { line-height: 1.45; }
 .workspace .sidebar-brand { border-color: var(--line); }
 .workspace .nav-item { color: var(--muted); }
 .workspace .nav-item.nav-active, .workspace .nav-item:hover { color: var(--ink); background: #242014; }
-.workspace .nav-icon, .workspace .heading-mark, .workspace .empty-icon, .workspace .aside-icon, .workspace .surface-icon { color: var(--color-accent-text); }
+.workspace .nav-icon { color: var(--icon-fg); background: var(--icon-chip-bg); }
+.workspace .heading-mark, .workspace .empty-icon, .workspace .aside-icon, .workspace .surface-icon { color: var(--color-accent-text); }
 .workspace .help-card { color: var(--muted); background: #242014; border-color: var(--line); }
 .workspace .help-card strong, .workspace .sidebar-profile, .workspace .breadcrumbs strong { color: var(--ink); }
 .workspace .help-card button { color: var(--color-accent-text); }
@@ -958,7 +959,7 @@ button { line-height: 1.45; }
   background: rgba(255, 210, 31, .08);
   border-radius: .55rem;
 }
-.workspace .nav-active .nav-icon { color: var(--color-accent-text); background: rgba(255, 210, 31, .16); }
+.workspace .nav-active .nav-icon { color: var(--icon-fg-active); background: var(--icon-chip-bg-active); }
 .workspace .nav-count {
   min-width: 1.35rem;
   padding: .08rem .35rem;

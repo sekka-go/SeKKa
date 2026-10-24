@@ -30,7 +30,23 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <script src="/theme-preference.js"></script>
+    <script>
+      (() => {
+        let preference = "system";
+        try {
+          const saved = localStorage.getItem("sekka.theme");
+          if (saved === "light" || saved === "dark" || saved === "system") preference = saved;
+        } catch { /* Use the system preference when storage is unavailable. */ }
+        const isDark = preference === "dark" || (preference === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.dataset.theme = isDark ? "dark" : "light";
+        const oldThemeColor = document.querySelector('meta[name="theme-color"]');
+        const themeColor = document.createElement("meta");
+        themeColor.name = "theme-color";
+        themeColor.content = isDark ? "#090d16" : "#f8f9ff";
+        if (oldThemeColor) oldThemeColor.replaceWith(themeColor);
+        else document.head.append(themeColor);
+      })();
+    </script>
     <title>سِكَّة | SeKKa</title>
   </head>
   <body>

@@ -78,12 +78,12 @@
   --color-disabled: #586a80;
   --color-overlay: rgba(15, 23, 42, .48);
   --color-navigation-background: #ffffff;
-  --color-navigation-active: #fff2c7;
+  --color-navigation-active: #d1fae5;
   --color-hover: #edf2f7;
   --color-selection: #f5bd08;
   --color-focus: #8a6200;
   --color-shadow: rgba(15, 23, 42, .09);
-  --color-soft-accent: #fff8e3;
+  --color-soft-accent: #ecfdf5;
   --color-soft-cyan: #e7f5f4;
   --cyan: #087b80;
 }

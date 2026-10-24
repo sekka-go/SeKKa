@@ -22,7 +22,7 @@ function readThemePreference(): ThemePreference {
 
 function resolveTheme(preference: ThemePreference): "light" | "dark" {
   if (preference !== "system") return preference;
-  return window.matchMedia?.("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
 const protectedPagePaths = new Set([
@@ -75,14 +75,19 @@ export default function App() {
       const theme = resolveTheme(themePreference);
       document.documentElement.dataset.theme = theme;
       try { localStorage.setItem("sekka.theme", themePreference); } catch { /* Keep the in-memory choice if storage is unavailable. */ }
-      const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-      if (themeColor) themeColor.content = getComputedStyle(document.documentElement).getPropertyValue("--color-background").trim();
+      const background = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();
+      const currentThemeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+      const nextThemeColor = document.createElement("meta");
+      nextThemeColor.name = "theme-color";
+      nextThemeColor.content = background;
+      if (currentThemeColor) currentThemeColor.replaceWith(nextThemeColor);
+      else document.head.append(nextThemeColor);
       const statusBarStyle = document.querySelector<HTMLMetaElement>("meta[name=\"apple-mobile-web-app-status-bar-style\"]");
       if (statusBarStyle) statusBarStyle.content = theme === "light" ? "default" : "black";
     };
     applyTheme();
     if (themePreference !== "system") return;
-    const media = window.matchMedia("(prefers-color-scheme: light)");
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
     media.addEventListener("change", applyTheme);
     return () => media.removeEventListener("change", applyTheme);
   }, [themePreference]);

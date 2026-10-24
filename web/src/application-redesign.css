@@ -63,11 +63,11 @@
   --color-disabled: #52657c;
   --color-overlay: rgb(15 23 42 / 52%);
   --color-navigation-background: rgb(255 255 255 / 96%);
-  --color-navigation-active: #fff1c2;
+  --color-navigation-active: #d1fae5;
   --color-hover: #edf2f7;
   --color-focus: #805b00;
   --color-shadow: rgb(23 38 61 / 9%);
-  --color-soft-accent: #fff8e3;
+  --color-soft-accent: #ecfdf5;
   --color-soft-cyan: #e8f5f4;
 }
 

@@ -1,5 +1,5 @@
 /* Stitch-informed screen composition and SeKKa design tokens.
-   Keep product behavior and the approved BrandLogo/SekkaMark untouched. */
+   Keep product behavior and preserve the header logo's existing appearance. */
 :root {
   --color-background: #090d16;
   --color-surface: #0f172a;
@@ -51,6 +51,18 @@
   --radius-card: 1.25rem;
   --radius-control: .85rem;
   --space-card: 1.15rem;
+  --bg: var(--color-background);
+  --surface: var(--color-surface);
+  --icon-chip-bg: rgba(255, 210, 31, .08);
+  --icon-fg: var(--color-icon);
+  --icon-chip-bg-active: rgba(255, 210, 31, .16);
+  --icon-fg-active: var(--color-accent-text);
+  --online-bg: color-mix(in srgb, var(--color-success) 12%, var(--color-surface));
+  --online-fg: var(--color-success);
+  --online-dot: var(--color-success);
+  --splash-accent: #7ee8b0;
+  --splash-line-soft: color-mix(in srgb, #7ee8b0 40%, transparent);
+  --splash-ring: color-mix(in srgb, #7ee8b0 10%, transparent);
   font-family: Tajawal, "Plus Jakarta Sans", "Segoe UI", sans-serif;
 }
 
@@ -58,8 +70,8 @@
   color-scheme: light;
   --color-background: #f8f9ff;
   --color-surface: #ffffff;
-  --color-surface-elevated: #eff4ff;
-  --color-surface-raised: #e5eeff;
+  --color-surface-elevated: #f0f7f3;
+  --color-surface-raised: #e7f2eb;
   --color-text: #0b1c30;
   --color-text-primary: #0b1c30;
   --color-text-secondary: #475569;
@@ -83,15 +95,22 @@
   --color-overlay: rgb(15 23 42 / 44%);
   --color-navigation-background: #ffffff;
   --color-navigation-active: #d1fae5;
-  --color-hover: #eff4ff;
+  --color-hover: #eaf4ee;
   --color-selection: #10b981;
   --color-focus: #047857;
   --color-shadow: rgb(15 23 42 / 7%);
   --color-soft-accent: #ecfdf5;
-  --color-soft-cyan: #eff4ff;
+  --color-soft-cyan: #e7f5f4;
   --yellow: #10b981;
   --yellow-deep: #047857;
   --cyan: #047857;
+  --icon-chip-bg: #2d6a4f;
+  --icon-fg: #ffffff;
+  --icon-chip-bg-active: #1b4332;
+  --icon-fg-active: #ffffff;
+  --splash-accent: #2d6a4f;
+  --splash-line-soft: color-mix(in srgb, #2d6a4f 40%, transparent);
+  --splash-ring: color-mix(in srgb, #2d6a4f 10%, transparent);
 }
 
 html, body, #root, .app-shell { background: var(--color-background); color: var(--color-text-primary); }
@@ -315,6 +334,29 @@ body { font-family: Tajawal, "Plus Jakarta Sans", "Segoe UI", sans-serif; }
 @media (prefers-reduced-motion: reduce) {
   .rider-overview-strip > button, .workspace .admin-overview-kpi { transition: none; }
 }
+
+/* Theme-bound logo, navigation chips, online state, and settings surfaces. */
+.workspace .sidebar,
+.workspace .mobile-tabbar { background: var(--bg); }
+.workspace .nav-icon {
+  color: var(--icon-fg);
+  background: var(--icon-chip-bg);
+}
+.workspace .nav-item.nav-active .nav-icon {
+  color: var(--icon-fg-active);
+  background: var(--icon-chip-bg-active);
+}
+.workspace .sidebar-primary-nav .nav-item.nav-active .nav-icon { color: var(--icon-fg-active); }
+.workspace .connection-state.is-online {
+  color: var(--online-fg);
+  background: var(--online-bg);
+}
+.workspace .connection-state.is-online i {
+  background: var(--online-dot);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--online-dot) 14%, transparent);
+}
+.app-settings-stack { background: var(--bg); }
+.app-settings-section { background: var(--surface); }
 
 /* Registration scrolls as one document on phones so consent and submit remain reachable. */
 @media (max-width: 560px) {
