@@ -62,6 +62,9 @@ export default function App() {
   const [sessionCheckTimedOut, setSessionCheckTimedOut] = useState(false);
   const [refreshSplashVisible, setRefreshSplashVisible] = useState(() => isRefresh && Boolean(getStoredSession()));
   const [refreshSplashExiting, setRefreshSplashExiting] = useState(false);
+  const refreshSplashActive = refreshSplashVisible || refreshSplashExiting || sessionCheckPending && !sessionCheckTimedOut;
+  const refreshSplashActiveRef = useRef(refreshSplashActive);
+  refreshSplashActiveRef.current = refreshSplashActive;
   const markCaptainHomeReady = useCallback(() => {
     if (!sessionCheckPending && refreshSplashVisible) setRefreshSplashExiting(true);
   }, [sessionCheckPending, refreshSplashVisible]);
@@ -112,7 +115,7 @@ export default function App() {
         await loadAuthScreen().catch(() => undefined);
         if (!active) return;
         clearSession(); setSession(null); notify(t("انتهت جلستك، سجّل الدخول مرة أخرى."), "info");
-        setRefreshSplashExiting(true);
+        if (refreshSplashActiveRef.current) setRefreshSplashExiting(true);
       }
     }).finally(() => {
       if (!active) return;
@@ -121,8 +124,19 @@ export default function App() {
         setSessionCheckPending(false);
         setSessionCheckTimedOut(false);
         const captainHomeRefresh = session.user.role === "captain" && ["/", "/captain"].includes(currentPathname());
-        setRefreshSplashVisible(captainHomeRefresh && !authRejected);
-        if (!authRejected) setRefreshSplashExiting(false);
+        if (authRejected) {
+          setRefreshSplashVisible(false);
+          if (!refreshSplashActiveRef.current) setRefreshSplashExiting(false);
+        } else if (captainHomeRefresh) {
+          setRefreshSplashVisible(true);
+          setRefreshSplashExiting(false);
+        } else if (refreshSplashActiveRef.current) {
+          setRefreshSplashVisible(true);
+          setRefreshSplashExiting(true);
+        } else {
+          setRefreshSplashVisible(false);
+          setRefreshSplashExiting(false);
+        }
       };
       finish();
     });
@@ -150,7 +164,6 @@ export default function App() {
   };
 
   const policyPage = publicPolicyPath(currentPathname());
-  const refreshSplashActive = refreshSplashVisible || refreshSplashExiting || sessionCheckPending && !sessionCheckTimedOut;
   const handleRefreshSplashAnimationEnd = (event: AnimationEvent<HTMLDivElement>) => {
     if (event.target !== event.currentTarget || event.animationName !== "refresh-splash-exit") return;
     setRefreshSplashVisible(false);
