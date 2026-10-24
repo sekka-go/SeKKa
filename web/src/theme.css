@@ -368,15 +368,10 @@ button, input, select, textarea { color-scheme: inherit; }
 }
 :root[data-theme="light"] .landing-route-card { background: var(--color-surface); border-color: var(--color-border); }
 :root[data-theme="light"] .landing-hero { color: var(--color-text-primary); }
-:root[data-theme="light"] .sekka-splash,
 :root[data-theme="light"] .intro-logo-screen {
   color: var(--color-text-primary);
   background: var(--color-background);
 }
-:root[data-theme="light"] .splash-content,
-:root[data-theme="light"] .splash-title-english,
-:root[data-theme="light"] .splash-title-arabic { color: var(--color-text-primary); }
-:root[data-theme="light"] .splash-tagline { color: var(--color-text-secondary); }
 :root[data-theme="light"] .splash-emblem { background: var(--color-surface); border-color: var(--color-border); box-shadow: 0 12px 32px var(--color-shadow); }
 :root[data-theme="light"] .intro-logo-mark { color: var(--color-text-primary); filter: drop-shadow(0 8px 18px var(--color-shadow)); }
 :root[data-theme="light"] .splash-main-mark { color: var(--color-text-primary); }
