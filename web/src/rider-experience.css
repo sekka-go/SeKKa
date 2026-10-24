@@ -33,6 +33,14 @@
 .workspace .rider-saved-empty > span { color: var(--color-info); font-size: 1.5rem; }
 .workspace .rider-saved-empty p { flex: 1 1 14rem; margin: 0; line-height: 1.6; }
 .workspace .rider-request-list { display: grid; gap: .75rem; }
+.workspace .rider-request-overview { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .65rem; }
+.workspace .rider-request-overview > div { display: grid; gap: .35rem; padding: .8rem .9rem; border: 1px solid var(--color-border); border-radius: .95rem; background: var(--color-surface); }
+.workspace .rider-request-overview span { color: var(--color-text-secondary); font-size: .76rem; }
+.workspace .rider-request-overview strong { color: var(--color-accent-text); font-size: 1.25rem; }
+.workspace .rider-request-filters { display: flex; gap: .45rem; overflow-x: auto; padding: .1rem 0 .35rem; scrollbar-width: thin; }
+.workspace .rider-request-filters button { display: inline-flex; flex: 0 0 auto; align-items: center; gap: .45rem; min-height: 2.45rem; padding: .45rem .7rem; border: 1px solid var(--color-border); border-radius: 999px; color: var(--color-text-secondary); background: var(--color-surface); font: inherit; font-size: .78rem; font-weight: 700; cursor: pointer; }
+.workspace .rider-request-filters button.is-active { border-color: var(--color-primary); color: var(--color-primary-text); background: var(--color-primary); }
+.workspace .rider-request-filters button span { display: grid; min-width: 1.25rem; height: 1.25rem; padding-inline: .25rem; place-items: center; border-radius: 99px; background: color-mix(in srgb,var(--color-text-primary) 10%,transparent); font-size: .68rem; }
 .workspace .rider-request-card { padding: 1rem; border: 1px solid var(--color-border); border-radius: 1.1rem; background: var(--color-surface); }
 .workspace .rider-request-card-top { display: flex; flex-wrap: wrap; align-items: center; gap: .55rem; color: var(--color-text-secondary); font-size: .82rem; }
 .workspace .rider-request-card-top time { margin-inline-start: auto; }
@@ -55,9 +63,13 @@
 .workspace .rider-requests-page { display: grid; gap: 1rem; }
 .workspace .rider-section-intro { padding: 1.15rem 1.25rem; border: 1px solid var(--color-border); border-radius: 1rem; background: var(--color-surface-elevated); }
 .workspace .rider-section-intro p { margin: .35rem 0 0; color: var(--color-text-secondary); }
-.workspace .rider-trip-tabs { display: flex; gap: .35rem; width: fit-content; max-width: 100%; padding: .25rem; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); }
-.workspace .rider-trip-tabs button { min-height: 2.35rem; padding: .45rem .9rem; border: 1px solid transparent; border-radius: 999px; color: var(--color-text-secondary); background: transparent; font: inherit; font-size: .78rem; font-weight: 750; cursor: pointer; }
-.workspace .rider-trip-tabs button.is-active { color: var(--color-primary-text); background: var(--color-primary); box-shadow: 0 .25rem .65rem var(--color-shadow); }
+.workspace .rider-trip-tabs { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .45rem; width: 100%; max-width: 42rem; padding: .3rem; border: 1px solid var(--color-border); border-radius: 1rem; background: var(--color-surface); }
+.workspace .rider-trip-tabs button { display: flex; min-width: 0; min-height: 3.5rem; align-items: center; justify-content: space-between; gap: .5rem; padding: .5rem .7rem; border: 1px solid transparent; border-radius: .75rem; color: var(--color-text-secondary); background: transparent; font: inherit; font-size: .78rem; font-weight: 750; text-align: start; cursor: pointer; }
+.workspace .rider-trip-tabs button > span { display: grid; gap: .12rem; }
+.workspace .rider-trip-tabs button small { color: var(--color-text-muted); font-size: .67rem; font-weight: 550; }
+.workspace .rider-trip-tabs button > b { display: grid; min-width: 1.65rem; height: 1.65rem; padding-inline: .2rem; place-items: center; border-radius: 99px; color: var(--color-accent-text); background: var(--color-soft-accent); font-size: .72rem; }
+.workspace .rider-trip-tabs button.is-active { border-color: color-mix(in srgb,var(--color-primary) 35%,var(--color-border)); color: var(--color-accent-text); background: color-mix(in srgb,var(--color-primary) 10%,var(--color-surface)); box-shadow: 0 .25rem .65rem var(--color-shadow); }
+.workspace .rider-trip-tabs button.is-active small { color: var(--color-accent-text); }
 .workspace .rider-trips-experience .trips-group-list, .workspace .rider-trips-experience .all-trips-section { margin-top: .5rem; }
 .workspace .rider-trip-discovery { display: grid; gap: .85rem; padding: 1rem; border: 1px solid var(--color-border); border-radius: 1.1rem; background: var(--color-surface); box-shadow: 0 .35rem 1rem var(--color-shadow); }
 .workspace .rider-trip-discovery-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .8rem; }
