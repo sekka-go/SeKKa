@@ -93,6 +93,9 @@
 .captain-workspace .captain-route-editor legend, .captain-workspace .captain-route-editor .form-field-label { color: var(--color-text-primary); font-weight: 800; }
 .captain-workspace .captain-route-editor .service-days { grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr)); }
 .captain-workspace .captain-route-editor .toggle-row { min-width: 0; padding: .55rem; color: var(--color-text-primary); }
+.captain-workspace .captain-intermediate-stops { display: grid; gap: .75rem; }
+.captain-workspace .captain-intermediate-stop { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: .5rem; }
+.captain-workspace .captain-intermediate-stop .button { min-height: 2.75rem; }
 .captain-workspace .captain-stitch-trips .section-toolbar { padding: 1rem; border: 1px solid var(--color-border); border-radius: 1rem; background: var(--color-surface); }
 .captain-workspace .captain-trip-detail { display: grid; gap: 1rem; padding: clamp(.8rem, 2.5vw, 1.3rem); }
 .captain-workspace .captain-trip-detail .map-picker { overflow: hidden; border-radius: 1rem; }

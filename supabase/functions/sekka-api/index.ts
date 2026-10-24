@@ -1927,8 +1927,11 @@ Deno.serve(async (req: Request) => {
         const returnArrival = body.return_arrival_time == null || body.return_arrival_time === "" ? null : String(body.return_arrival_time);
         const maxSeats = profile.vehicle_type_id === "private_car" ? 4 : profile.vehicle_type_id === "hiace" ? 14 : 0;
         if (!vehicle || maxSeats === 0 || Number(vehicle.capacity_max) < maxSeats || String(body.vehicle_type_id) !== String(profile.vehicle_type_id) || !clean(body.origin_label) || !clean(body.destination_label) || !validPoint(body.origin_lat, body.origin_lng) || !validPoint(body.destination_lat, body.destination_lng) || !isGreaterCairoPoint(Number(body.origin_lat), Number(body.origin_lng)) || !isGreaterCairoPoint(Number(body.destination_lat), Number(body.destination_lng)) || !/^\d{2}:\d{2}$/.test(arrival) || (returnArrival != null && !/^\d{2}:\d{2}$/.test(returnArrival)) || !days.length || days.some((d) => !Number.isInteger(d) || d < 0 || d > 6) || new Set(days).size !== days.length || !Number.isInteger(Number(body.seats)) || Number(body.seats) < 1 || Number(body.seats) > maxSeats || !methods.length || methods.some((m) => !["cash", "instapay", "wallet"].includes(m))) return error("راجع المسار والأيام والمقاعد وطريقة الدفع.", 400, origin);
-        const stops = Array.isArray(body.intermediate_stops) ? body.intermediate_stops.slice(0, 10) : [];
-        if (stops.some((stop) => !stop || typeof stop.label !== "string" || !validPoint(stop.lat, stop.lng) || !isGreaterCairoPoint(Number(stop.lat), Number(stop.lng)))) return error("تأكد أن كل المحطات داخل القاهرة الكبرى.", 400, origin);
+        const stops = Array.isArray(body.intermediate_stops) ? body.intermediate_stops : [];
+        const seatPrice = Number(body.price_per_seat);
+        if (stops.length > 10) return error("يمكن إضافة 10 محطات وسيطة كحد أقصى.", 400, origin);
+        if (!Number.isFinite(seatPrice) || seatPrice < 0.01 || seatPrice > 99_999_999.99) return error("أدخل سعرًا صحيحًا للمقعد أكبر من صفر.", 400, origin);
+        if (stops.some((stop) => !stop || typeof stop.label !== "string" || !clean(stop.label) || !validPoint(stop.lat, stop.lng) || !isGreaterCairoPoint(Number(stop.lat), Number(stop.lng)))) return error("تأكد أن كل المحطات داخل القاهرة الكبرى.", 400, origin);
         let routeDistanceKm: number;
         try {
           const routePoints = [
@@ -1940,7 +1943,7 @@ Deno.serve(async (req: Request) => {
         } catch {
           return error("تعذر حساب مسافة المسار الآن. حاول مرة أخرى.", 503, origin);
         }
-        const { data, error: createError } = await db.rpc("publish_captain_line", { actor_id: user!.id, vehicle_id: profile.vehicle_type_id, origin_name: body.origin_label.trim(), origin_y: body.origin_lat, origin_x: body.origin_lng, destination_name: body.destination_label.trim(), destination_y: body.destination_lat, destination_x: body.destination_lng, stops, arrival: `${arrival}:00`, return_arrives: returnArrival ? `${returnArrival}:00` : null, days, seat_count: Number(body.seats), route_km: routeDistanceKm, methods });
+        const { data, error: createError } = await db.rpc("publish_captain_line", { actor_id: user!.id, vehicle_id: profile.vehicle_type_id, origin_name: body.origin_label.trim(), origin_y: body.origin_lat, origin_x: body.origin_lng, destination_name: body.destination_label.trim(), destination_y: body.destination_lat, destination_x: body.destination_lng, stops, arrival: `${arrival}:00`, return_arrives: returnArrival ? `${returnArrival}:00` : null, days, seat_count: Number(body.seats), route_km: routeDistanceKm, seat_price: seatPrice, methods });
         if (createError) {
           if (createError.code === "42501") return error("يلزم اعتماد مستندات الكابتن وتوثيق الهاتف قبل نشر المسار.", 403, origin);
           throw createError;
