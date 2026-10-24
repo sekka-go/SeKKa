@@ -230,6 +230,36 @@ body { font-family: Tajawal, "Plus Jakarta Sans", "Segoe UI", sans-serif; }
 .workspace .mobile-tabbar .nav-active .nav-icon { color: var(--color-accent-text); }
 .workspace .mobile-tab-item .nav-label { max-width: 100%; font-size: .68rem; }
 
+/* Keep primary navigation within thumb reach while the page content scrolls. */
+@media (max-width: 800px) {
+  .app-shell .workspace .mobile-tabbar {
+    position: fixed;
+    z-index: 45;
+    inset-inline: 0;
+    inset-block-end: 0;
+    width: auto;
+    min-height: calc(4.35rem + env(safe-area-inset-bottom));
+    padding-block-end: max(.45rem, env(safe-area-inset-bottom));
+  }
+  .app-shell .workspace .mobile-tabbar .nav-item {
+    transition: color .18s ease, background-color .18s ease, box-shadow .18s ease, transform .18s ease;
+  }
+  .app-shell .workspace .mobile-tabbar .nav-item:active { transform: scale(.96); }
+  .app-shell .workspace .mobile-tabbar .nav-item.nav-active {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--brand-green) 16%, transparent);
+  }
+  .app-shell .workspace .mobile-tabbar .nav-item:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-shell .workspace .mobile-tabbar .nav-item { transition: none; }
+  .app-shell .workspace .mobile-tabbar .nav-item:active,
+  .app-shell .workspace .mobile-tabbar .nav-item.nav-active { transform: none; }
+}
+
 /* Rider home becomes a live trip dashboard, while actions still call existing data flows. */
 .workspace .rider-home-experience { width: min(100%, 72rem); }
 .workspace .rider-home-experience .dashboard-main { gap: 1rem; }
