@@ -150,16 +150,7 @@ body { font-family: Tajawal, "Plus Jakarta Sans", "Segoe UI", sans-serif; }
 .stitch-welcome-page .landing-primary-cta { padding-inline: 1.35rem; background: var(--color-primary); box-shadow: 0 10px 22px color-mix(in srgb, var(--color-primary) 20%, transparent); }
 .stitch-welcome-page .stitch-welcome-login-link { width: fit-content; padding: .55rem .25rem; color: var(--color-text-primary); font-weight: 700; text-underline-offset: .2em; }
 .stitch-welcome-page .landing-trust { margin-top: 1.1rem; color: var(--color-text-muted); }
-.stitch-welcome-page .landing-route-card { width: min(100%, 33rem); aspect-ratio: 1.18; padding: clamp(1rem, 3vw, 2rem); border: 1px solid var(--color-border); border-radius: 2rem; background: linear-gradient(145deg, var(--color-surface), var(--color-surface-elevated)); box-shadow: 0 1.5rem 4rem var(--color-shadow); }
-.stitch-welcome-page .landing-route-illustration { width: 100%; height: 100%; }
-.landing-map-street { stroke: color-mix(in srgb, var(--color-text-muted) 35%, transparent); }
-.landing-route-edge { stroke: color-mix(in srgb, var(--color-primary) 22%, var(--color-surface)); }
-.landing-route-surface { stroke: var(--color-primary); }
-.landing-route-centerline { stroke: #fff; }
-.landing-route-stop-ring { stroke: #f59e0b; }
-.landing-route-pin-start path { fill: #10b981; }
-.landing-route-pin-end path { fill: #047857; }
-.landing-route-pin circle { fill: #fff; }
+.stitch-welcome-page .landing-story { width: min(100%, 33rem); aspect-ratio: 1.18; padding: .85rem; border-radius: 2rem; }
 .stitch-welcome-page .stitch-welcome-benefits { width: min(100%, 82rem); align-self: center; gap: .8rem; padding: .85rem; border: 1px solid var(--color-border); border-radius: 1.4rem; background: var(--color-surface); }
 .stitch-welcome-page .stitch-welcome-benefits > div { min-height: 5rem; padding: .85rem; border-radius: 1rem; background: var(--color-surface-elevated); }
 .stitch-welcome-page .stitch-welcome-benefits > div > span { color: #fff; background: var(--color-accent); border-radius: .85rem; }
@@ -301,7 +292,7 @@ body { font-family: Tajawal, "Plus Jakarta Sans", "Segoe UI", sans-serif; }
   .stitch-welcome-page .landing-hero-actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); width: 100%; margin-top: .8rem; }
   .stitch-welcome-page .landing-hero-actions .button { min-width: 0; padding-inline: .7rem; font-size: .84rem; }
   .stitch-welcome-page .landing-trust { margin-top: .65rem; font-size: .82rem; }
-  .stitch-welcome-page .landing-route-card { width: min(100%, 25rem); aspect-ratio: 1.75; padding: .5rem; border-radius: 1.3rem; }
+  .stitch-welcome-page .landing-story { width: min(100%, 25rem); aspect-ratio: 1.45; padding: .5rem; border-radius: 1.3rem; }
   .stitch-welcome-page .stitch-welcome-benefits { grid-template-columns: minmax(0, 1fr); gap: .45rem; padding: .5rem; border-radius: 1.1rem; }
   .stitch-welcome-page .stitch-welcome-benefits > div { min-height: 3.8rem; padding: .55rem; }
   .stitch-welcome-page .stitch-welcome-benefits > div > span { width: 2.1rem; height: 2.1rem; }

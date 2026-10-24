@@ -1,11 +1,20 @@
 const CACHE_PREFIX = "sekka-shell-";
-const CACHE_NAME = "sekka-shell-v10";
+const CACHE_NAME = "sekka-shell-v11";
 const APP_SHELL = [
   "/",
   "/offline.html",
   "/manifest.webmanifest",
+  "/brand/sekka-mark.svg",
+  "/brand/favicon.svg",
+  "/brand/favicon-32.png",
+  "/brand/favicon-48.png",
+  "/brand/apple-touch-icon-180.png",
   "/brand/pwa-icon-192.png",
   "/brand/pwa-icon-512.png",
+  "/brand/pwa-icon-192-maskable.png",
+  "/brand/pwa-icon-512-maskable.png",
+  "/brand/sekka-badge.png",
+  "/brand/sekka-share.png",
 ];
 
 self.addEventListener("install", (event) => {
@@ -37,7 +46,7 @@ self.addEventListener("push", (event) => {
   const options = {
     body: typeof message.body === "string" ? message.body : "افتح التطبيق لمراجعة آخر تحديث.",
     icon: "/brand/pwa-icon-192.png",
-    badge: "/brand/pwa-icon-192.png",
+    badge: "/brand/sekka-badge.png",
     data: { url: typeof message.url === "string" ? message.url : "/" },
     dir: "rtl",
     lang: "ar",

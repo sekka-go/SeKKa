@@ -331,11 +331,6 @@
       "حفظ التفضيلات والمتابعة": "Save preferences and continue",
       "حفظ التفضيلات": "Save preferences"
     },
-    "SekkaSplash": {
-      "جاري فتح سِكّة": "Opening SeKKa",
-      "سِكّة": "SeKKa",
-      "طريقك أسهل مع سِكّة": "Your route, made easier"
-    },
     "ThemePreferenceCard": {
       "مظهر التطبيق": "App appearance",
       "اختار الألوان المناسبة لك": "Choose the colors that suit you",
@@ -1623,5 +1618,10 @@
     "enterToSend": "Enter to send · Shift + Enter for a new line",
     "sending": "Sending…",
     "send": "Send"
-  }
+  },
+  "كل صباح، هل ستأتي الرحلة؟ وكم ستكلف؟": "Every morning, will the ride come—and what will it cost?",
+  "كابتن يسلك الطريق نفسه ومقاعده فارغة.": "A captain drives the same road with empty seats.",
+  "مسار وموعد ومقاعد متاحة، على سِكّة واحدة.": "One SeKKa line sets route, time, and available seats.",
+  "شاركوا الرحلة والحديث والتكلفة.": "Share the ride, conversation, and cost together.",
+  "صل في موعدك. طريقك أسهل مع سِكّة.": "Arrive on time. Your route, made easier."
 }

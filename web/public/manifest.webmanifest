@@ -15,6 +15,10 @@
   "orientation": "portrait-primary",
   "theme_color": "#f8f9ff",
   "background_color": "#f8f9ff",
+  "color_scheme_dark": {
+    "background_color": "#090d16",
+    "theme_color": "#090d16"
+  },
   "categories": [
     "travel",
     "transportation"
@@ -25,13 +29,25 @@
       "src": "/brand/pwa-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/brand/pwa-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/pwa-icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/brand/pwa-icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

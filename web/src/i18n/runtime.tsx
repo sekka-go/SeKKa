@@ -1,6 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import arabicMessages from "./locales/ar.json";
-import SekkaSplash from "../components/SekkaSplash";
 
 export type Language = "ar" | "en";
 export type Direction = "rtl" | "ltr";
@@ -9,6 +8,7 @@ type Catalog = Record<string, unknown>;
 type LanguageContextValue = {
   language: Language;
   direction: Direction;
+  catalogReady: boolean;
   setLanguage: (language: Language) => void;
 };
 
@@ -91,6 +91,10 @@ export function getDirection(): Direction {
   return activeLanguage === "ar" ? "rtl" : "ltr";
 }
 
+export function getApplicationName(language: Language): string {
+  return applicationName(language);
+}
+
 export function t(sourceText: string): string {
   if (sourceText === "اسم التطبيق") return applicationName(activeLanguage);
   return messagesByLanguage[activeLanguage]?.[sourceText] ?? sourceText;
@@ -104,33 +108,17 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    let minimumSplashTimer: number | null = null;
-    const startedAt = performance.now();
-    const finishAfterReadableSplash = (finish: () => void) => {
-      const minimumDuration = isRefreshNavigation() ? 0 : 2200;
-      const remaining = Math.max(0, minimumDuration - (performance.now() - startedAt));
-      minimumSplashTimer = window.setTimeout(() => {
-        if (mounted) finish();
-      }, remaining);
-    };
     void loadCatalog(language).then(() => {
       if (!mounted) return;
-      finishAfterReadableSplash(() => {
-        activateLanguage(language);
-        setCatalogReady(true);
-      });
+      activateLanguage(language);
+      setCatalogReady(true);
     }).catch(() => {
       if (!mounted) return;
-      finishAfterReadableSplash(() => {
-        activateLanguage("ar");
-        setLanguageState("ar");
-        setCatalogReady(true);
-      });
+      activateLanguage("ar");
+      setLanguageState("ar");
+      setCatalogReady(true);
     });
-    return () => {
-      mounted = false;
-      if (minimumSplashTimer !== null) window.clearTimeout(minimumSplashTimer);
-    };
+    return () => { mounted = false; };
   }, [language]);
 
   const setLanguage = useCallback((nextLanguage: Language) => {
@@ -150,14 +138,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     try { localStorage.setItem("sekka.language", language); } catch { /* Preserve the in-memory choice. */ }
   }, [language, direction]);
 
-  const value = useMemo(() => ({ language, direction, setLanguage }), [language, direction, setLanguage]);
+  const value = useMemo(() => ({ language, direction, catalogReady, setLanguage }), [language, direction, catalogReady, setLanguage]);
   return <LanguageContext.Provider value={value}>
-    {catalogReady ? children : <SekkaSplash
-      title={applicationName(language)}
-      tagline={language === "ar" ? "طريقك أسهل مع سِكّة" : "Your route, made easier"}
-      accessibleLabel={language === "ar" ? "جاري فتح سِكّة" : "Opening SeKKa"}
-      variant="refresh"
-    />}
+    {children}
   </LanguageContext.Provider>;
 }
 

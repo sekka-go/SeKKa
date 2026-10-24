@@ -53,11 +53,12 @@ function pathForSection(section: NavKey, preserveUserProfile = false) {
   return sectionPaths[section];
 }
 
-export default function Workspace({ session, onSignOut, notify, themePreference, resolvedTheme, onThemePreferenceChange, onHomeReady }: {
+export default function Workspace({ session, onSignOut, notify, themePreference, resolvedTheme, onThemePreferenceChange, onHomeReady, onStartupReady }: {
   session: Session; onSignOut: () => void; notify: (text: string, tone?: Toast["tone"]) => void;
   resolvedTheme: "light" | "dark";
   themePreference: ThemePreference; onThemePreferenceChange: (value: ThemePreference) => void;
   onHomeReady: () => void;
+  onStartupReady: () => void;
 }) {
   const initialSection: NavKey = session.user.role === "captain" ? "offers" : session.user.role === "admin" ? "admin" : "home";
   const [section, setSectionState] = useState<NavKey>(() => {
@@ -85,6 +86,8 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
   const [localHour, setLocalHour] = useState(cairoHour);
   const sectionRef = useRef(section);
   sectionRef.current = section;
+
+  useEffect(() => { onStartupReady(); }, [onStartupReady]);
 
   const setSection = useCallback((next: NavKey, historyMode: "push" | "replace" = "push") => {
     const safeNext = sectionAllowedForRole(next, session.user.role) ? next : initialSection;

@@ -87,7 +87,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   outline-color: var(--color-focus-ring);
 }
 
-.app-shell :is(.surface, .auth-card, .landing-route-card, .welcome-banner,
+.app-shell :is(.surface, .auth-card, .welcome-banner,
   .metric-card, .group-summary, .offer-card, .route-offer-card,
   .commuter-board-card, .account-card, .password-card, .verification-center,
   .verification-wizard, .verification-doc-card, .verification-phone-row,

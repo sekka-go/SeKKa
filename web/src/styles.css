@@ -259,22 +259,6 @@ button { line-height: 1.45; }
 .landing-secondary-cta { color: var(--muted); font-size: .9rem; text-decoration: none; }
 .landing-trust { display: flex; align-items: center; gap: .5rem; margin-top: 2rem; color: var(--muted); font-size: .82rem; }
 .landing-trust-dot { width: .55rem; height: .55rem; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 1rem rgba(158,232,230,.7); }
-.landing-route-card { position: relative; width: min(100%, 26rem); justify-self: center; padding: 1.5rem; background: linear-gradient(150deg, rgba(48,42,29,.96), rgba(36,32,20,.82)); border: 1px solid rgba(255,210,31,.2); box-shadow: 0 2rem 6rem rgba(0,0,0,.25); }
-.landing-route-top, .landing-route-bottom { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-.landing-route-top { color: var(--ink); font-weight: 700; }
-.landing-route-status { padding: .3rem .55rem; color: var(--cyan); background: rgba(158,232,230,.09); font-size: .72rem; font-weight: 500; }
-.landing-route-map { position: relative; display: flex; justify-content: space-between; align-items: center; height: 10rem; margin: 1rem .5rem .4rem; }
-.landing-route-line { position: absolute; right: 1.2rem; left: 1.2rem; border-top: 2px dashed rgba(243,236,217,.45); }
-.landing-route-point { z-index: 1; display: grid; place-items: center; width: 2.6rem; height: 2.6rem; color: #201b09; border: .3rem solid #3a3425; border-radius: 50%; font-weight: 800; }
-.landing-route-start { background: var(--yellow); box-shadow: 0 0 0 1px var(--yellow); }
-.landing-route-end { background: var(--cyan); box-shadow: 0 0 0 1px var(--cyan); }
-.landing-route-labels { display: flex; justify-content: space-between; gap: 1rem; }
-.landing-route-labels > span { display: grid; gap: .35rem; }
-.landing-route-labels small { color: var(--muted); font-size: .72rem; }
-.landing-route-labels strong { font-size: .9rem; }
-.landing-route-divider { margin: 1.25rem 0 .9rem; border-top: 1px solid var(--line); }
-.landing-route-bottom { color: var(--muted); font-size: .82rem; }
-.landing-route-spark { color: var(--color-accent-text); font-size: 1.25rem; }
 .landing-benefits, .landing-how { max-width: 88rem; margin: auto; padding: 4.5rem clamp(1.25rem, 7vw, 7rem); }
 .landing-benefits { border-top: 1px solid var(--line); }
 .landing-section-heading { max-width: 39rem; margin-bottom: 2rem; }
@@ -315,7 +299,6 @@ button { line-height: 1.45; }
   .landing-nav { order: 3; width: 100%; justify-content: center; padding-top: .5rem; }
   .landing-hero { grid-template-columns: 1fr; gap: 2.5rem; min-height: 0; padding-top: 3.5rem; padding-bottom: 3.5rem; }
   .landing-hero-copy { max-width: 42rem; }
-  .landing-route-card { justify-self: stretch; width: 100%; max-width: 34rem; }
   .landing-benefit-grid { grid-template-columns: 1fr; }
   .landing-benefit-card { min-height: 0; }
   .landing-how { grid-template-columns: 1fr; gap: 0; }
@@ -356,48 +339,28 @@ button { line-height: 1.45; }
 .landing-hero-actions { margin-top: 1.5rem; }
 .landing-primary-cta { min-height: 3.4rem; padding-inline: 1.5rem; }
 .landing-trust { margin-top: 1.4rem; }
-.landing-route-card { display: grid; place-items: center; width: min(100%, 30rem); aspect-ratio: 1.25; height: auto; padding: .75rem; overflow: hidden; border-radius: 1.75rem; background: linear-gradient(145deg, var(--color-surface-elevated), var(--color-surface) 72%); box-shadow: 0 1.5rem 4rem var(--color-shadow); }
-.landing-route-illustration { display: block; width: 100%; height: 100%; overflow: visible; }
-.landing-map-street { stroke: var(--color-border); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; opacity: .8; }
-.landing-route-edge { stroke: color-mix(in srgb, var(--cyan) 48%, var(--color-surface)); stroke-width: 20; stroke-linecap: round; stroke-linejoin: round; }
-.landing-route-surface { stroke: var(--color-text-primary); stroke-width: 12; stroke-linecap: round; stroke-linejoin: round; }
-.landing-route-centerline { stroke: var(--color-primary); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 3 9; animation: landing-route-flow 1.6s linear infinite; }
-.landing-route-stop-ring { fill: var(--color-surface); stroke: var(--color-primary); stroke-width: 2; animation: landing-point-pulse 2.8s ease-in-out infinite; }
-.landing-route-stop { fill: var(--color-primary); }
-.landing-route-pin path { stroke: var(--color-surface); stroke-width: 2; }
-.landing-route-pin-start path { fill: var(--color-primary); }
-.landing-route-pin-start circle { fill: var(--color-primary-text); }
-.landing-route-pin-end path { fill: var(--cyan); }
-.landing-route-pin-end circle { fill: var(--color-background); }
-.landing-route-car { filter: drop-shadow(0 3px 5px var(--color-shadow)); animation: landing-car-bob 2.4s ease-in-out infinite; }
-.landing-car-body { fill: var(--color-primary); stroke: var(--color-surface); stroke-width: 2; stroke-linejoin: round; }
-.landing-car-window { fill: var(--color-surface); }
-.landing-car-wheel { stroke: var(--color-text-primary); stroke-width: 4; stroke-linecap: round; }
-@keyframes landing-route-flow {
-  to { stroke-dashoffset: -26px; }
-}
-@keyframes landing-point-pulse {
-  0%, 100% { transform: scale(1); filter: brightness(1); }
-  50% { transform: scale(1.1); filter: brightness(1.18); }
-}
-@keyframes landing-car-bob {
-  0%, 100% { translate: 0 0; }
-  50% { translate: 0 -3px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .landing-route-car,
-  .landing-route-centerline,
-  .landing-route-stop-ring { animation: none; }
-}
+.landing-story { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: .35rem; width: min(100%, 30rem); aspect-ratio: 1.25; justify-self: center; padding: .75rem; overflow: hidden; border: 1px solid var(--color-border); border-radius: 1.75rem; background: linear-gradient(145deg, var(--color-surface-elevated), var(--color-surface) 72%); box-shadow: 0 1.5rem 4rem var(--color-shadow); touch-action: pan-y; }
+.landing-story-stage { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-height: 0; gap: .3rem; text-align: center; }
+.landing-story-art { display: block; width: 100%; height: 100%; min-height: 0; object-fit: contain; animation: landing-story-enter 360ms ease-out both; }
+.landing-story-caption { display: grid; min-height: 2.8em; place-items: center; margin: 0; color: var(--color-text-primary); font-size: clamp(.95rem, 1.7vw, 1.1rem); font-weight: 750; line-height: 1.4; }
+.landing-story-dots { display: flex; justify-content: center; align-items: center; gap: .5rem; min-height: 1.6rem; }
+.landing-story-dots button { width: .55rem; height: .55rem; padding: 0; border: 0; border-radius: 99px; background: var(--color-border); cursor: pointer; transition: width 180ms ease, background-color 180ms ease; }
+.landing-story-dots button.is-active { width: 1.4rem; background: var(--brand-green); }
+.landing-story-dots button:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 3px; }
+.landing-story-dots button[aria-current="true"] { box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-green) 16%, transparent); }
+.landing-story-stage[data-direction="rtl"] .landing-story-art { animation-name: landing-story-enter-rtl; }
+@keyframes landing-story-enter { from { opacity: .45; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes landing-story-enter-rtl { from { opacity: .45; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+@media (prefers-reduced-motion: reduce) { .landing-story-art, .landing-story-dots button { animation: none; transition: none; } }
 .landing-footer { width: 100%; justify-content: center; margin-top: auto; }
 @media (max-width: 800px) {
   .landing-header { padding-block: 1rem; }
   .landing-hero { gap: 2rem; padding-top: 2.5rem; padding-bottom: 2rem; }
-  .landing-route-card { justify-self: center; width: min(72vw, 18rem); max-width: 18rem; }
+  .landing-story { justify-self: center; width: min(100%, 25rem); aspect-ratio: 1.35; }
 }
 @media (max-width: 560px) {
   .landing-hero h1 { font-size: clamp(2.7rem, 11vw, 3.5rem); }
-  .landing-route-card { width: min(64vw, 14rem); max-width: 14rem; }
+  .landing-story { width: min(100%, 23rem); aspect-ratio: 1.4; }
   .landing-footer { padding-block: 1rem; }
 }
 
@@ -550,7 +513,7 @@ button { line-height: 1.45; }
     justify-content: center;
   }
   .landing-trust { margin-top: 1.4rem; font-size: .9rem; }
-  .landing-route-card { width: min(64vw, 16rem); max-width: 16rem; }
+  .landing-story { width: min(100%, 23rem); aspect-ratio: 1.4; }
 
   .auth-page {
     padding: 0 .75rem 1.25rem;

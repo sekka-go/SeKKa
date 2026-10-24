@@ -1,6 +1,6 @@
 import { getLanguage, t } from "../i18n/runtime";
 import { getDirection } from "../i18n/runtime";
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import BrandLogo from "../components/BrandLogo";
 import AppIcon from "../components/AppIcon";
 import RiderRoutePreferences from "../components/RiderRoutePreferences";
@@ -36,7 +36,7 @@ function AuthJourneyBackdrop() {
   </div>;
 }
 
-export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (session: Session) => void; notify: (text: string, tone?: Toast["tone"]) => void }) {
+export default function AuthScreen({ onSignedIn, notify, onStartupReady }: { onSignedIn: (session: Session) => void; notify: (text: string, tone?: Toast["tone"]) => void; onStartupReady: () => void }) {
   const mode = window.location.pathname === "/register" ? "register" : "login";
   const [role, setRole] = useState<"rider" | "captain">("rider");
   const [fullName, setFullName] = useState("");
@@ -57,6 +57,8 @@ export default function AuthScreen({ onSignedIn, notify }: { onSignedIn: (sessio
   const [newPassword, setNewPassword] = useState("");
   const [pendingRouteSetup, setPendingRouteSetup] = useState<Session | null>(null);
   const [pendingSignupVerification, setPendingSignupVerification] = useState<Session | null>(null);
+
+  useEffect(() => { onStartupReady(); }, [onStartupReady]);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setBusy(true); setError("");

@@ -296,7 +296,7 @@ button, a, input, select, textarea, summary { -webkit-tap-highlight-color: trans
 .app-shell .landing-header .brand-logo-copy { text-align: start; }
 .app-shell .landing-header .brand-logo-copy small { justify-content: flex-start; }
 .landing-page .landing-hero { max-width: 78rem; margin-inline: auto; }
-.landing-page .landing-feature-card, .landing-page .landing-route-card { border-color: var(--color-border); border-radius: 1.2rem; box-shadow: 0 8px 24px var(--color-shadow); }
+.landing-page .landing-feature-card { border-color: var(--color-border); border-radius: 1.2rem; box-shadow: 0 8px 24px var(--color-shadow); }
 .landing-page .landing-hero-art { display: none; }
 .toast { z-index: 100; border-radius: 1rem; box-shadow: 0 18px 44px var(--color-shadow); }
 

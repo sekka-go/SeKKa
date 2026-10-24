@@ -1,11 +1,12 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState, type AnimationEvent } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, useSyncExternalStore, type AnimationEvent } from "react";
 import { ApiError, api, clearSession, getStoredSession, storeSession, type User } from "./api";
 import LandingScreen from "./screens/LandingScreen";
 import RouteChunkBoundary from "./components/RouteChunkBoundary";
 import SekkaSplash from "./components/SekkaSplash";
 import type { Session, Toast } from "./types";
 import type { ThemePreference } from "./components/ThemePreferenceCard";
-import { isRefreshNavigation, t, useLanguage } from "./i18n/runtime";
+import { getApplicationName, t, useLanguage } from "./i18n/runtime";
+import { finishStartupSplash, isStartupSplashActive, subscribeToStartupSplash } from "./lib/startupSplash";
 import InfoPages from "./components/InfoPages";
 import type { InfoPageKey } from "./components/InfoPages";
 import BrandLogo from "./components/BrandLogo";
@@ -50,25 +51,31 @@ const loadAuthScreen = () => import("./screens/AuthScreen");
 const AuthScreen = lazy(loadAuthScreen);
 const Workspace = lazy(() => import("./screens/Workspace"));
 
-function RouteLoading() {
+function RouteLoading({ skeleton = false }: { skeleton?: boolean }) {
+  if (skeleton) return <div className="startup-home-skeleton" role="status" aria-label={t("جاري تحميل الصفحة الرئيسية")}><span /><span /><span /><span /></div>;
   return <div className="route-chunk-loading" role="status" aria-label={t("loading.general")}><span className="spinner" /></div>;
 }
 
 export default function App() {
-  const { direction } = useLanguage();
-  const isRefresh = isRefreshNavigation();
+  const { direction, language, catalogReady } = useLanguage();
   const [session, setSession] = useState<Session | null>(() => getStoredSession());
   const [sessionCheckPending, setSessionCheckPending] = useState(() => Boolean(getStoredSession()));
   const [sessionCheckTimedOut, setSessionCheckTimedOut] = useState(false);
-  const [refreshSplashVisible, setRefreshSplashVisible] = useState(() => isRefresh && Boolean(getStoredSession()));
-  const [refreshSplashExiting, setRefreshSplashExiting] = useState(false);
-  const refreshSplashActive = refreshSplashVisible || refreshSplashExiting || sessionCheckPending && !sessionCheckTimedOut;
-  const refreshSplashActiveRef = useRef(refreshSplashActive);
-  refreshSplashActiveRef.current = refreshSplashActive;
-  const markHomeReady = useCallback(() => {
-    if (!sessionCheckPending && refreshSplashVisible) setRefreshSplashExiting(true);
-  }, [sessionCheckPending, refreshSplashVisible]);
   const [showWelcome] = useState(() => currentPathname() === "/" && !getStoredSession() && !hasSeenWelcome());
+  const policyPage = publicPolicyPath(currentPathname());
+  const initialLanding = !getStoredSession() && currentPathname() === "/" && showWelcome;
+  const initialPageIsSync = Boolean(policyPage || initialLanding);
+  const [initialRouteReady, setInitialRouteReady] = useState(initialPageIsSync);
+  const [initialHomeReadyRole, setInitialHomeReadyRole] = useState<User["role"] | null>(null);
+  const [minimumSplashElapsed, setMinimumSplashElapsed] = useState(false);
+  const [splashDeadlinePassed, setSplashDeadlinePassed] = useState(false);
+  const [splashExiting, setSplashExiting] = useState(false);
+  const startupSplashActive = useSyncExternalStore(subscribeToStartupSplash, isStartupSplashActive, isStartupSplashActive);
+  const primaryHomeExpected = Boolean(session && (currentPathname() === "/" || session.user.role === "captain" && currentPathname() === "/captain" || session.user.role === "admin" && currentPathname() === "/admin"));
+  const startupReady = catalogReady && !sessionCheckPending && initialRouteReady && (!primaryHomeExpected || initialHomeReadyRole === session?.user.role);
+  const startupFallback = splashDeadlinePassed && !startupReady;
+  const markInitialRouteReady = useCallback(() => setInitialRouteReady(true), []);
+  const markHomeReady = useCallback(() => setInitialHomeReadyRole(session?.user.role ?? null), [session?.user.role]);
   const [themePreference, setThemePreference] = useState<ThemePreference>(readThemePreference);
   const resolvedTheme = resolveTheme(themePreference);
   const [toast, setToast] = useState<Toast | null>(null);
@@ -79,6 +86,14 @@ export default function App() {
     toastTimer.current = window.setTimeout(() => { setToast(null); toastTimer.current = null; }, 4200);
   }, []);
   useEffect(() => () => { if (toastTimer.current !== null) window.clearTimeout(toastTimer.current); }, []);
+  useEffect(() => {
+    const minimum = window.setTimeout(() => setMinimumSplashElapsed(true), 2200);
+    const deadline = window.setTimeout(() => setSplashDeadlinePassed(true), 2800);
+    return () => { window.clearTimeout(minimum); window.clearTimeout(deadline); };
+  }, []);
+  useEffect(() => {
+    if (startupSplashActive && !splashExiting && (minimumSplashElapsed && startupReady || splashDeadlinePassed)) setSplashExiting(true);
+  }, [minimumSplashElapsed, splashDeadlinePassed, splashExiting, startupReady, startupSplashActive]);
   useEffect(() => {
     const applyTheme = () => {
       const theme = resolveTheme(themePreference);
@@ -104,7 +119,6 @@ export default function App() {
   useEffect(() => {
     if (!session) return;
     let active = true;
-    let authRejected = false;
     api<{ user: User }>("/auth/me", { token: session.token }).then(({ user }) => {
       if (!active) return;
       const next = { ...session, user };
@@ -112,35 +126,14 @@ export default function App() {
     }).catch(async (error) => {
       if (!active) return;
       if (error instanceof ApiError && error.status === 401) {
-        authRejected = true;
         await loadAuthScreen().catch(() => undefined);
         if (!active) return;
         clearSession(); setSession(null); notify(t("انتهت جلستك، سجّل الدخول مرة أخرى."), "info");
-        if (refreshSplashActiveRef.current) setRefreshSplashExiting(true);
       }
     }).finally(() => {
       if (!active) return;
-      const finish = () => {
-        if (!active) return;
-        setSessionCheckPending(false);
-        setSessionCheckTimedOut(false);
-        const path = currentPathname();
-        const primaryHomeRefresh = path === "/" || session.user.role === "captain" && path === "/captain" || session.user.role === "admin" && path === "/admin";
-        if (authRejected) {
-          setRefreshSplashVisible(false);
-          if (!refreshSplashActiveRef.current) setRefreshSplashExiting(false);
-        } else if (primaryHomeRefresh) {
-          setRefreshSplashVisible(true);
-          setRefreshSplashExiting(false);
-        } else if (refreshSplashActiveRef.current) {
-          setRefreshSplashVisible(true);
-          setRefreshSplashExiting(true);
-        } else {
-          setRefreshSplashVisible(false);
-          setRefreshSplashExiting(false);
-        }
-      };
-      finish();
+      setSessionCheckPending(false);
+      setSessionCheckTimedOut(false);
     });
     return () => { active = false; };
   }, [session?.token]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -149,8 +142,7 @@ export default function App() {
     if (!session || !sessionCheckPending) return;
     const timeout = window.setTimeout(() => {
       setSessionCheckTimedOut(true);
-      setRefreshSplashExiting(true);
-    }, isRefresh ? 1500 : 4000);
+    }, 4000);
     return () => window.clearTimeout(timeout);
   }, [session?.token, sessionCheckPending]);
 
@@ -165,18 +157,16 @@ export default function App() {
     clearSession(); setSession(null);
   };
 
-  const policyPage = publicPolicyPath(currentPathname());
-  const handleRefreshSplashAnimationEnd = (event: AnimationEvent<HTMLDivElement>) => {
-    if (event.target !== event.currentTarget || event.animationName !== "refresh-splash-exit") return;
-    setRefreshSplashVisible(false);
-    setRefreshSplashExiting(false);
+  const handleStartupSplashAnimationEnd = (event: AnimationEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget || event.animationName !== "startup-splash-exit") return;
+    finishStartupSplash();
   };
 
-  return <div className={`app-shell${refreshSplashActive ? " is-refresh-splash-active" : ""}`} data-theme={resolvedTheme} dir={direction}>
-    {refreshSplashActive && <SekkaSplash title={t("اسم التطبيق")} tagline={t("طريقك أسهل مع سِكّة")} accessibleLabel={t("جاري فتح سِكّة")} variant="refresh" exiting={refreshSplashExiting} onAnimationEnd={handleRefreshSplashAnimationEnd} />}
-    {sessionCheckPending && sessionCheckTimedOut && <div className="startup-home-skeleton" role="status" aria-label={t("جاري تحميل الصفحة الرئيسية")}><span /><span /><span /><span /></div>}
+  return <div className={`app-shell${startupSplashActive ? " is-startup-splash-active" : ""}`} data-theme={resolvedTheme} dir={direction}>
+    {startupSplashActive && <SekkaSplash title={getApplicationName(language)} tagline={t("طريقك أسهل مع سِكّة")} accessibleLabel={t("جاري فتح سِكّة")} exiting={splashExiting} onAnimationEnd={handleStartupSplashAnimationEnd} />}
+    {!startupSplashActive && (sessionCheckPending && sessionCheckTimedOut || startupFallback) && <div className="startup-home-skeleton" role="status" aria-label={t("جاري تحميل الصفحة الرئيسية")}><span /><span /><span /><span /></div>}
     {toast && <div className={`toast toast-${toast.tone}`} role={toast.tone === "error" ? "alert" : "status"} aria-live={toast.tone === "error" ? "assertive" : "polite"}><span className="toast-icon" aria-hidden="true">{toast.tone === "success" ? "✓" : toast.tone === "error" ? "!" : "i"}</span><span className="toast-message">{toast.text}</span><button onClick={() => { setToast(null); if (toastTimer.current !== null) window.clearTimeout(toastTimer.current); toastTimer.current = null; }} aria-label={t("إغلاق")}>×</button></div>}
-    {policyPage ? <main className="public-policy-page"><header><a href="/" aria-label="SeKKa"><BrandLogo /></a><PublicLanguageToggle /></header><InfoPages page={policyPage} onBack={() => { window.location.assign("/"); }} /></main> : session ? <RouteChunkBoundary><Suspense fallback={<RouteLoading />}><Workspace session={session} onSignOut={signOut} notify={notify} themePreference={themePreference} resolvedTheme={resolvedTheme} onThemePreferenceChange={setThemePreference} onHomeReady={markHomeReady} /></Suspense></RouteChunkBoundary> : currentPathname() === "/login" || currentPathname() === "/register" || isProtectedPath(currentPathname()) || !showWelcome ? <RouteChunkBoundary><Suspense fallback={<RouteLoading />}><AuthScreen onSignedIn={onSignedIn} notify={notify} /></Suspense></RouteChunkBoundary> : <LandingScreen />}
+    {policyPage ? <main className="public-policy-page"><header><a href="/" aria-label="SeKKa"><BrandLogo /></a><PublicLanguageToggle /></header><InfoPages page={policyPage} onBack={() => { window.location.assign("/"); }} /></main> : session ? <RouteChunkBoundary><Suspense fallback={<RouteLoading skeleton={startupFallback} />}><Workspace session={session} onSignOut={signOut} notify={notify} themePreference={themePreference} resolvedTheme={resolvedTheme} onThemePreferenceChange={setThemePreference} onHomeReady={markHomeReady} onStartupReady={markInitialRouteReady} /></Suspense></RouteChunkBoundary> : currentPathname() === "/login" || currentPathname() === "/register" || isProtectedPath(currentPathname()) || !showWelcome ? <RouteChunkBoundary><Suspense fallback={<RouteLoading skeleton={startupFallback} />}><AuthScreen onSignedIn={onSignedIn} notify={notify} onStartupReady={markInitialRouteReady} /></Suspense></RouteChunkBoundary> : <LandingScreen />}
   </div>;
 }
 

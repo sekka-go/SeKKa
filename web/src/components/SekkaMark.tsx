@@ -1,13 +1,24 @@
 import type { CSSProperties } from "react";
+import markSource from "../brand/sekka-mark.svg?raw";
 
-export default function SekkaMark({ className = "", style, variant = "header" }: { className?: string; style?: CSSProperties; variant?: "header" | "splash" }) {
-  const splash = variant === "splash";
-  return <svg className={className} style={style} viewBox="0 0 512 512" fill="none" aria-hidden="true" focusable="false">
-    <path d="M142 389C221 368 319 347 357 313C399 273 279 254 210 225C141 196 231 166 356 145" stroke="currentColor" strokeWidth="15" strokeLinecap="round" />
-    <path d="M138 408C235 384 340 360 382 320C429 274 293 239 227 210C177 188 274 158 364 137" stroke={splash ? "var(--splash-line-soft)" : "var(--color-secondary)"} strokeOpacity={splash ? undefined : ".72"} strokeWidth="5" strokeLinecap="round" />
-    <path d="M361 70C341.1 70 325 86.1 325 106C325 131.3 361 158 361 158C361 158 397 131.3 397 106C397 86.1 380.9 70 361 70Z" fill={splash ? "var(--splash-accent)" : "var(--color-primary)"} />
-    <circle cx="361" cy="103" r="11" fill={splash ? "var(--bg)" : "var(--color-background)"} />
-    <path d="M143.5 323C125.6 323 111 337.6 111 355.5C111 378.5 143.5 402 143.5 402C143.5 402 176 378.5 176 355.5C176 337.6 161.4 323 143.5 323Z" fill={splash ? "var(--splash-accent)" : "var(--color-primary)"} />
-    <circle cx="143.5" cy="353" r="10" fill={splash ? "var(--bg)" : "var(--color-background)"} />
+const viewBox = markSource.match(/viewBox="([^"]+)"/)?.[1] ?? "0 0 512 512";
+const transform = markSource.match(/<g transform="([^"]+)"/)?.[1] ?? "";
+const route = markSource.match(/<path id="sekka-mark-route"[^>]*d="([^"]+)"/)?.[1];
+if (!route) throw new Error("The SeKKa mark source SVG is missing its route path.");
+const dots = [...markSource.matchAll(/<circle id="sekka-mark-dot" cx="([^"]+)" cy="([^"]+)"/g)]
+  .map(([, cx, cy]) => ({ cx, cy }));
+
+export default function SekkaMark({ className = "", style }: { className?: string; style?: CSSProperties }) {
+  return <svg className={className} style={style} viewBox={viewBox} fill="none" aria-hidden="true" focusable="false">
+    <g transform={transform}>
+      <path d={route} stroke="var(--color-background)" strokeWidth="27" strokeLinecap="round" />
+      <path d={route} stroke="var(--color-text-primary)" strokeWidth="21" strokeLinecap="round" />
+      <path d={route} stroke="var(--brand-green)" strokeWidth="14" strokeLinecap="round" />
+      {dots.map((dot) => <g key={`${dot.cx}-${dot.cy}`}>
+        <circle cx={dot.cx} cy={dot.cy} r="17" fill="var(--color-background)" />
+        <circle cx={dot.cx} cy={dot.cy} r="14" fill="var(--color-text-primary)" />
+        <circle cx={dot.cx} cy={dot.cy} r="10" fill="var(--brand-green)" />
+      </g>)}
+    </g>
   </svg>;
 }

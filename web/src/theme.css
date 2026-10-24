@@ -120,7 +120,7 @@ button, input, select, textarea { color-scheme: inherit; }
 .workspace .mobile-tabbar .nav-item { color: var(--color-text-muted); }
 .workspace .mobile-tabbar .nav-item.nav-active { color: var(--color-text-primary); background: var(--color-navigation-active); }
 
-.app-shell :is(.surface, .auth-card, .landing-route-card, .welcome-banner,
+.app-shell :is(.surface, .auth-card, .welcome-banner,
 .metric-card, .group-summary, .offer-card, .route-offer-card, .commuter-board-card,
 .account-card, .password-card, .verification-center, .verification-wizard,
 .verification-doc-card, .verification-phone-row, .verification-intro,
@@ -366,7 +366,6 @@ button, input, select, textarea { color-scheme: inherit; }
 :root[data-theme="light"] .app-shell .landing-header .brand-logo-copy small {
   color: #cbd5e1;
 }
-:root[data-theme="light"] .landing-route-card { background: var(--color-surface); border-color: var(--color-border); }
 :root[data-theme="light"] .landing-hero { color: var(--color-text-primary); }
 :root[data-theme="light"] .splash-emblem { background: var(--color-surface); border-color: var(--color-border); box-shadow: 0 12px 32px var(--color-shadow); }
 :root[data-theme="light"] .admin-control-panel article,
@@ -636,11 +635,6 @@ button, input, select, textarea { color-scheme: inherit; }
   color: var(--color-text-primary);
 }
 :root[data-theme="light"] .app-shell .workspace .rider-dashboard .welcome-banner {
-  color: var(--color-text-primary);
-  background: var(--color-surface);
-  border-color: var(--color-border);
-}
-:root[data-theme="light"] .app-shell .landing-route-card {
   color: var(--color-text-primary);
   background: var(--color-surface);
   border-color: var(--color-border);

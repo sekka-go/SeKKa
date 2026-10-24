@@ -136,7 +136,6 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
 .role-picker button > span { display: inline-grid; place-items: center; color: var(--color-accent-text); }
 .auth-page-header, .landing-header { border-color: var(--line); }
 .landing-hero { background: transparent; }
-.landing-route-card { background: #1e293b; border-color: var(--line); box-shadow: none; }
 .surface { padding: var(--space-card); }
 .surface h2, .surface h3 { line-height: 1.45; }
 .surface-heading { align-items: flex-start; }
