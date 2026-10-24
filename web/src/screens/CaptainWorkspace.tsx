@@ -6,6 +6,7 @@ import MapPicker from "../components/MapPickerLoader";
 import LocationSearchField from "../components/LocationSearchField";
 import { categoryName, errorText, formatDate, money, statusLabel } from "../lib/formatters";
 import { useResolvedLocationPoints } from "../lib/use-location-addresses";
+import { subscribeToDeviceLocation } from "../lib/device-location";
 import { ApiError, api, type CaptainLine, type CaptainOffer, type CaptainProfile, type PoolStop, type RouteGeometry } from "../api";
 import type { MapPickMode, MapPoint } from "../MapPicker";
 import type { NavKey, Session, Toast } from "../types";
@@ -162,46 +163,25 @@ export default function CaptainWorkspace({ session, section, setSection, notify,
     }, () => notify(t("اسمح للمتصفح بالوصول لموقعك ثم حاول مرة أخرى."), "error"), { enableHighAccuracy: true, timeout: 10_000 });
   };
   useEffect(() => {
-    if (!profile || profile.verification_status !== "approved" || profile.status === "suspended_grace_expired" || !navigator.geolocation || !navigator.permissions) return;
+    if (!profile || profile.verification_status !== "approved" || profile.status === "suspended_grace_expired") return;
     let active = true;
-    let watchId: number | null = null;
     let syncInFlight = false;
-    let permission: PermissionStatus | null = null;
-    const stopWatching = () => {
-      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
-      watchId = null;
+    const syncLocation = (location: { lat: number; lng: number; updatedAt: number } | null) => {
+      if (!active || !location || Date.now() - location.updatedAt > 60_000) return;
+      const previous = lastLocationSync.current;
+      const movedMeters = previous ? Math.hypot((location.lat - previous.lat) * 111_000, (location.lng - previous.lng) * 111_000 * Math.cos(location.lat * Math.PI / 180)) : Infinity;
+      const elapsed = previous ? Date.now() - previous.at : Infinity;
+      if (syncInFlight || (previous && (elapsed < 30_000 || (movedMeters < 100 && elapsed < 5 * 60_000)))) return;
+      syncInFlight = true;
+      void api<{ profile: CaptainProfile }>("/captain/location", { method: "POST", token: session.token, body: { current_lat: location.lat, current_lng: location.lng } })
+        .then((result) => { if (active) { lastLocationSync.current = { lat: location.lat, lng: location.lng, at: Date.now() }; setProfile(result.profile); } })
+        .catch(() => undefined)
+        .finally(() => { syncInFlight = false; });
     };
-    const startWatching = () => {
-      if (!active || watchId !== null) return;
-      watchId = navigator.geolocation.watchPosition(({ coords }) => {
-        if (!active) return;
-        const previous = lastLocationSync.current;
-        const lat = coords.latitude;
-        const lng = coords.longitude;
-        const movedMeters = previous ? Math.hypot((lat - previous.lat) * 111_000, (lng - previous.lng) * 111_000 * Math.cos(lat * Math.PI / 180)) : Infinity;
-        const elapsed = previous ? Date.now() - previous.at : Infinity;
-        if (syncInFlight || (previous && (elapsed < 30_000 || (movedMeters < 100 && elapsed < 5 * 60_000)))) return;
-        syncInFlight = true;
-        void api<{ profile: CaptainProfile }>("/captain/location", { method: "POST", token: session.token, body: { current_lat: lat, current_lng: lng } })
-          .then((result) => { if (active) { lastLocationSync.current = { lat, lng, at: Date.now() }; setProfile(result.profile); } })
-          .catch(() => undefined)
-          .finally(() => { syncInFlight = false; });
-      }, () => undefined, { enableHighAccuracy: false, maximumAge: 30_000, timeout: 15_000 });
-    };
-    const updatePermission = () => {
-      if (permission?.state === "granted") startWatching();
-      else stopWatching();
-    };
-    void navigator.permissions.query({ name: "geolocation" }).then((status) => {
-      if (!active) return;
-      permission = status;
-      permission.addEventListener("change", updatePermission);
-      updatePermission();
-    }).catch(() => undefined);
+    const unsubscribe = subscribeToDeviceLocation(syncLocation);
     return () => {
       active = false;
-      stopWatching();
-      permission?.removeEventListener("change", updatePermission);
+      unsubscribe();
     };
   }, [profile?.verification_status, profile?.status, session.token]);
   const acceptOffer = async (offer: CaptainOffer) => {
