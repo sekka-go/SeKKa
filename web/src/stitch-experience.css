@@ -315,3 +315,62 @@ body { font-family: Tajawal, "Plus Jakarta Sans", "Segoe UI", sans-serif; }
 @media (prefers-reduced-motion: reduce) {
   .rider-overview-strip > button, .workspace .admin-overview-kpi { transition: none; }
 }
+
+/* Registration scrolls as one document on phones so consent and submit remain reachable. */
+@media (max-width: 560px) {
+  html:has(.auth-register-page),
+  body:has(.auth-register-page),
+  #root:has(.auth-register-page),
+  .app-shell:has(.auth-register-page) {
+    height: auto;
+    min-height: 100%;
+    overflow-x: clip;
+    overflow-y: visible;
+  }
+
+  .auth-register-page {
+    height: auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+    max-height: none;
+    overflow: visible;
+    padding-block-start: env(safe-area-inset-top, 0px);
+    padding-block-end: max(.5rem, env(safe-area-inset-bottom, 0px));
+  }
+
+  .auth-register-page > .auth-page-content {
+    display: block;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    padding-block: .35rem;
+  }
+
+  .auth-register-page .auth-register-card {
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    overflow: visible;
+    justify-content: flex-start;
+  }
+
+  .auth-register-page .auth-register-card .form-stack,
+  .auth-register-page .auth-register-card .form-stack label,
+  .auth-register-page .auth-password-control {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .auth-register-page .auth-password-control > input {
+    display: block;
+    box-sizing: border-box;
+    min-width: 0;
+    width: 100%;
+    padding-inline-start: 3rem;
+    padding-inline-end: .9rem;
+  }
+
+  .auth-register-page :is(input, button, a) { scroll-margin-block: 1rem; }
+}

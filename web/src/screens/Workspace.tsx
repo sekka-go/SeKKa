@@ -81,6 +81,8 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
   const [infoPage, setInfoPage] = useState<InfoPageKey | null>(null);
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
   const [localHour, setLocalHour] = useState(cairoHour);
+  const sectionRef = useRef(section);
+  sectionRef.current = section;
 
   const setSection = useCallback((next: NavKey, historyMode: "push" | "replace" = "push") => {
     const safeNext = sectionAllowedForRole(next, session.user.role) ? next : initialSection;
@@ -184,7 +186,7 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
     return () => window.clearInterval(timer);
   }, [refreshNotifications]);
   const refreshUnreadMessages = useCallback(async () => {
-    if (session.user.role === "admin") return;
+    if (session.user.role === "admin" || sectionRef.current === "messages") return;
     try {
       const result = await api<{ unread_total: number }>("/messages/conversations", { token: session.token });
       setUnreadMessageCount(result.unread_total);
@@ -253,7 +255,7 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
       <div className="page-content">{infoPage ? <InfoPages page={infoPage} onBack={() => setInfoPage(null)} /> : <>{section !== "booking" && section !== "notifications" && <div className={`page-heading ${section === "account" ? "page-heading-account" : ""}`}><div><h1>{t(title)}</h1>{subtitle && <p>{t(subtitle)}</p>}</div>{session.user.role === "admin" && section.startsWith("admin") && section !== "admin" && <button type="button" className="button button-outline button-small" onClick={() => setSection("admin")}>{t("العودة للملخص")}</button>}</div>}
         {section === "settings" && <AppSettings session={session} themePreference={themePreference} resolvedTheme={resolvedTheme} onThemePreferenceChange={onThemePreferenceChange} notify={notify} />}
         {session.user.role !== "admin" && <VerificationReminder session={session} onOpen={openMissingVerification} visible={section !== "account" && section !== "settings" && section !== "notifications" && !(session.user.role === "captain" && section === "offers")} />}
-        {section === "messages" && <MessagesWorkspace session={session} notify={notify} />}
+        {section === "messages" && <MessagesWorkspace session={session} notify={notify} onUnreadCountChange={setUnreadMessageCount} />}
         {session.user.role === "rider" && section !== "messages" && section !== "settings" && section !== "notifications" && <RiderWorkspace session={session} section={section} setSection={setSection} refreshNotifications={refreshNotifications} registerPoolRefresh={registerPoolRefresh} notify={notify} themePreference={themePreference} resolvedTheme={resolvedTheme} onThemePreferenceChange={onThemePreferenceChange} />}
         {session.user.role === "captain" && section !== "messages" && section !== "settings" && section !== "notifications" && <CaptainWorkspace session={session} section={section} setSection={setSection} notify={notify} />}
         {session.user.role === "admin" && section !== "settings" && section !== "notifications" && <AdminWorkspace session={session} section={section} refreshNotifications={refreshNotifications} notify={notify} />}

@@ -337,7 +337,7 @@ button, input, select, textarea { color-scheme: inherit; }
 
 /* The current route mark stays unchanged; its white road adapts with current text color. */
 .brand-logo-mark { color: var(--color-text-primary); }
-.splash-main-mark, .intro-logo-mark { color: var(--color-text-primary); }
+.splash-main-mark { color: var(--color-text-primary); }
 
 /* Light-specific treatments retain the original navy and gold hierarchy. */
 :root[data-theme="light"] .app-shell { background-image: none; }
@@ -368,14 +368,7 @@ button, input, select, textarea { color-scheme: inherit; }
 }
 :root[data-theme="light"] .landing-route-card { background: var(--color-surface); border-color: var(--color-border); }
 :root[data-theme="light"] .landing-hero { color: var(--color-text-primary); }
-:root[data-theme="light"] .intro-logo-screen {
-  color: var(--color-text-primary);
-  background: var(--color-background);
-}
 :root[data-theme="light"] .splash-emblem { background: var(--color-surface); border-color: var(--color-border); box-shadow: 0 12px 32px var(--color-shadow); }
-:root[data-theme="light"] .intro-logo-mark { color: var(--color-text-primary); filter: drop-shadow(0 8px 18px var(--color-shadow)); }
-:root[data-theme="light"] .splash-main-mark { color: var(--color-text-primary); }
-:root[data-theme="light"] .splash-floating-mark { color: #263449; }
 :root[data-theme="light"] .admin-control-panel article,
 :root[data-theme="light"] .admin-control-panel > nav,
 :root[data-theme="light"] .admin-control-panel .admin-nav-group { background-color: var(--color-surface); }

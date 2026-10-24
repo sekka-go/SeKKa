@@ -1,5 +1,5 @@
 import { getLanguage, t } from "../i18n/runtime";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, uploadVerificationDocument, type VerificationDocument, type VerificationDocumentType } from "../api";
 import { errorText } from "../lib/formatters";
 import type { Session, Toast } from "../types";
@@ -26,6 +26,7 @@ export default function VerificationCenter({ session, notify }: { session: Sessi
   const [wizardStarted, setWizardStarted] = useState(false);
   const [wizardComplete, setWizardComplete] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
+  const previousVerificationSignature = useRef("");
   const docs = useMemo(() => new Map((snapshot?.documents ?? []).map((doc) => [doc.document_type, doc])), [snapshot]);
   const mandatory = useMemo(() => !snapshot ? [] : snapshot.role === "rider" ? snapshot.requirements.rider : snapshot.requirements.captain_immediate, [snapshot]);
   const steps = useMemo(() => [
@@ -41,7 +42,14 @@ export default function VerificationCenter({ session, notify }: { session: Sessi
   const accountActivated = Boolean(snapshot?.phone_verified && allRequiredDocumentsApproved && (
     snapshot.role === "rider" || (snapshot.captain_status === "active" && snapshot.verification_status === "approved")
   ));
-  const verificationSignature = useMemo(() => snapshot ? [snapshot.phone_verified, ...snapshot.documents.map((doc) => `${doc.document_type}:${doc.status}:${doc.reviewed_at ?? ""}`)].join("|") : "", [snapshot]);
+  const verificationSignature = useMemo(() => snapshot ? [
+    snapshot.role,
+    snapshot.phone_verified,
+    snapshot.captain_status ?? "",
+    snapshot.verification_status ?? "",
+    snapshot.grace_period_expires_at ?? "",
+    ...snapshot.documents.map((doc) => `${doc.document_type}:${doc.status}:${doc.reviewed_at ?? ""}`),
+  ].join("|") : "", [snapshot]);
 
   const refresh = useCallback(async (quiet = false) => {
     if (!quiet) setLoading(true);
@@ -54,7 +62,13 @@ export default function VerificationCenter({ session, notify }: { session: Sessi
   }, [session.token]);
 
   useEffect(() => { void refresh(); }, [refresh]);
-  useEffect(() => { if (verificationSignature) window.dispatchEvent(new Event("sekka:verification-refresh")); }, [verificationSignature]);
+  useEffect(() => {
+    if (!verificationSignature) return;
+    if (previousVerificationSignature.current && previousVerificationSignature.current !== verificationSignature) {
+      window.dispatchEvent(new Event("sekka:verification-updated"));
+    }
+    previousVerificationSignature.current = verificationSignature;
+  }, [verificationSignature]);
   useEffect(() => {
     if (!snapshot) return;
     const key = `sekka.verification.focus.${session.user.id}`;
@@ -108,7 +122,6 @@ export default function VerificationCenter({ session, notify }: { session: Sessi
     try {
       await uploadVerificationDocument(session.token, type, file);
       notify(t("تم رفع المستند وإرساله للمراجعة."), "success");
-      window.dispatchEvent(new Event("sekka:verification-refresh"));
       await refresh(true);
     } catch (cause) { notify(errorText(cause), "error"); }
     finally { setBusyDocument(null); }

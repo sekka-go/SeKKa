@@ -54,7 +54,7 @@ function useVisiblePolling(callback: (() => Promise<void>) | null, intervalMs: n
   }, [callback, intervalMs]);
 }
 
-export default function MessagesWorkspace({ session, notify }: { session: Session; notify: (text: string, tone?: Toast["tone"]) => void }) {
+export default function MessagesWorkspace({ session, notify, onUnreadCountChange }: { session: Session; notify: (text: string, tone?: Toast["tone"]) => void; onUnreadCountChange: (count: number) => void }) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [contacts, setContacts] = useState<Person[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -75,16 +75,17 @@ export default function MessagesWorkspace({ session, notify }: { session: Sessio
     if (!quiet) setLoading(true);
     try {
       const [inbox, people] = await Promise.all([
-        api<{ conversations: Conversation[] }>("/messages/conversations", { token: session.token }),
+        api<{ conversations: Conversation[]; unread_total: number }>("/messages/conversations", { token: session.token }),
         includeContacts ? api<{ contacts: Person[] }>("/messages/contacts", { token: session.token }) : Promise.resolve(null),
       ]);
       setConversations(inbox.conversations);
+      onUnreadCountChange(inbox.unread_total);
       if (people) setContacts(people.contacts);
       setError("");
     } catch (cause) {
       setError(errorText(cause));
     } finally { setLoading(false); }
-  }, [session.token]);
+  }, [onUnreadCountChange, session.token]);
 
   const refreshMessages = useCallback(async (conversationId: number, quiet = false, markRead = true) => {
     if (!quiet) setLoadingMessages(true);

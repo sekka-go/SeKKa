@@ -39,11 +39,16 @@ export default function VerificationReminder({ session, onOpen, visible = true }
   }, [session.token]);
 
   useEffect(() => {
+    if (!visible) return;
     void refresh();
     const onRefresh = () => { void refresh(); };
     window.addEventListener("sekka:verification-refresh", onRefresh);
-    return () => window.removeEventListener("sekka:verification-refresh", onRefresh);
-  }, [refresh]);
+    window.addEventListener("sekka:verification-updated", onRefresh);
+    return () => {
+      window.removeEventListener("sekka:verification-refresh", onRefresh);
+      window.removeEventListener("sekka:verification-updated", onRefresh);
+    };
+  }, [refresh, visible]);
 
   useEffect(() => {
     const dueAt = Number(localStorage.getItem(reminderKey) || 0);
