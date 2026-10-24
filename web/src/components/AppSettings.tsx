@@ -87,7 +87,7 @@ export default function AppSettings({ session, themePreference, resolvedTheme, o
           <small className={`app-settings-status ${pushEnabled && pushReady ? "is-enabled" : ""}`} role="status">{pushStatus}</small>
         </div>
       </div>
-      {!permissionDenied && <button type="button" className={`button ${pushEnabled ? "button-outline" : "button-primary"} button-small`} onClick={() => void togglePush()} disabled={!pushReady || pushLoading || pushBusy} aria-pressed={pushEnabled}>
+      {(!permissionDenied || pushEnabled) && <button type="button" className={`button ${pushEnabled ? "button-outline" : "button-primary"} button-small`} onClick={() => void togglePush()} disabled={!pushReady || pushLoading || pushBusy} aria-pressed={pushEnabled}>
         {pushBusy ? t("جارٍ تحديث إعدادات الإشعارات") : t(pushEnabled ? "إيقاف إشعارات هذا الجهاز" : "تفعيل إشعارات هذا الجهاز")}
       </button>}
     </section>}
