@@ -51,17 +51,16 @@ const AuthScreen = lazy(loadAuthScreen);
 const Workspace = lazy(() => import("./screens/Workspace"));
 
 function RouteLoading() {
-  return <div className="route-chunk-loading" role="status" aria-live="polite"><span className="spinner" /><span>{t("loading.general")}</span></div>;
+  return <div className="route-chunk-loading" role="status" aria-label={t("loading.general")}><span className="spinner" /></div>;
 }
 
 export default function App() {
   const { direction } = useLanguage();
   const isRefresh = isRefreshNavigation();
-  const startupSplashStartedAt = useRef(performance.now());
   const [session, setSession] = useState<Session | null>(() => getStoredSession());
   const [sessionCheckPending, setSessionCheckPending] = useState(() => Boolean(getStoredSession()));
   const [sessionCheckTimedOut, setSessionCheckTimedOut] = useState(false);
-  const [refreshSplashVisible, setRefreshSplashVisible] = useState(() => isRefresh);
+  const [refreshSplashVisible, setRefreshSplashVisible] = useState(() => isRefresh && Boolean(getStoredSession()));
   const [showWelcome] = useState(() => currentPathname() === "/" && !getStoredSession() && !hasSeenWelcome());
   const [themePreference, setThemePreference] = useState<ThemePreference>(readThemePreference);
   const resolvedTheme = resolveTheme(themePreference);
@@ -114,26 +113,21 @@ export default function App() {
         if (!active) return;
         setSessionCheckPending(false);
         setSessionCheckTimedOut(false);
+        setRefreshSplashVisible(false);
       };
-      const minRefreshSplash = 500;
-      const remaining = Math.max(0, minRefreshSplash - (performance.now() - startupSplashStartedAt.current));
-      if (remaining) window.setTimeout(finish, remaining);
-      else finish();
+      finish();
     });
     return () => { active = false; };
   }, [session?.token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!session || !sessionCheckPending) return;
-    const timeout = window.setTimeout(() => setSessionCheckTimedOut(true), isRefresh ? 1500 : 4000);
+    const timeout = window.setTimeout(() => {
+      setSessionCheckTimedOut(true);
+      setRefreshSplashVisible(false);
+    }, isRefresh ? 1500 : 4000);
     return () => window.clearTimeout(timeout);
   }, [session?.token, sessionCheckPending]);
-
-  useEffect(() => {
-    if (!refreshSplashVisible) return;
-    const timeout = window.setTimeout(() => setRefreshSplashVisible(false), 500);
-    return () => window.clearTimeout(timeout);
-  }, []);
 
   useEffect(() => {
     if (!showWelcome) return;

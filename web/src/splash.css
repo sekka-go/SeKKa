@@ -32,7 +32,11 @@
 :root[data-theme="light"] .splash-title { text-shadow: 0 2px 16px var(--splash-line-soft); }
 :root[data-theme="light"] .splash-tagline { color: var(--color-text-secondary); }
 .is-refresh-splash { background: transparent; }
-.is-refresh-splash .splash-track { animation-duration: .5s; }
+.is-refresh-splash .splash-emblem { width: clamp(3.5rem, 14vw, 5rem); border-radius: 1.2rem; }
+.is-refresh-splash .splash-track { width: min(62vw, 19rem); height: min(62vw, 19rem); animation-duration: .5s; }
+.is-refresh-splash .splash-atmosphere i:nth-child(1) { width: min(46vw, 17rem); }
+.is-refresh-splash .splash-atmosphere i:nth-child(2) { width: min(60vw, 22rem); }
+.is-refresh-splash .splash-atmosphere i:nth-child(3) { width: min(74vw, 27rem); }
 .startup-home-skeleton {
   position: fixed;
   inset: 0;
