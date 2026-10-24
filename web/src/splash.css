@@ -35,24 +35,33 @@
 .is-refresh-splash .splash-content { position: absolute; inset: auto 0 max(2.5rem, env(safe-area-inset-bottom)); width: 100%; gap: .3rem; padding: 1rem; }
 .is-refresh-splash .splash-title { font-size: clamp(1.8rem, 8vw, 2.7rem); text-shadow: none; }
 .is-refresh-splash .splash-tagline { margin: 0; }
-.refresh-road { position: absolute; inset-inline: 0; bottom: 28%; height: 2px; background: color-mix(in srgb, var(--splash-accent) 34%, transparent); }
-.refresh-road i { position: absolute; top: -2px; width: 1.5rem; height: 4px; border-radius: 99px; background: var(--splash-line-soft); animation: refresh-road-flow .5s linear infinite; }
-.refresh-road i:nth-child(1) { left: 15%; }
-.refresh-road i:nth-child(2) { left: 52%; animation-delay: -.18s; }
-.refresh-road i:nth-child(3) { left: 82%; animation-delay: -.36s; }
-.refresh-car { position: absolute; bottom: calc(28% - 1rem); left: 0; width: clamp(13rem, 64vw, 21rem); height: auto; filter: drop-shadow(0 1rem 1.2rem color-mix(in srgb, var(--splash-accent) 25%, transparent)); animation: refresh-car-drive 2.2s linear infinite; }
-.refresh-driver-wave { transform-box: view-box; transform-origin: 242px 36px; animation: refresh-driver-wave .32s ease-in-out 3; }
-@keyframes refresh-car-drive {
-  0% { transform: translateX(110vw); }
-  30% { transform: translateX(18vw); }
-  55% { transform: translateX(15vw); }
-  100% { transform: translateX(-115vw); }
+.refresh-person { position: absolute; left: 50%; bottom: max(18%, env(safe-area-inset-bottom)); width: clamp(13rem, 64vw, 17rem); height: auto; overflow: visible; transform: translateX(-50%); filter: drop-shadow(0 1rem 1.2rem color-mix(in srgb, var(--splash-accent) 25%, transparent)); }
+.refresh-person-rise { opacity: 0; transform: translateY(110%); transform-box: view-box; animation: refresh-person-emerge 1.8s cubic-bezier(.18,.72,.28,1) both; }
+.refresh-wait-hands { opacity: 0; animation: refresh-wait-gesture 1.8s ease both; }
+.refresh-wave-arm { opacity: 0; transform-box: view-box; transform-origin: 166px 174px; animation: refresh-person-wave 1.8s ease-in-out both; }
+@keyframes refresh-person-emerge {
+  0% { opacity: 0; transform: translateY(110%); }
+  28%, 100% { opacity: 1; transform: translateY(0); }
 }
-@keyframes refresh-road-flow { to { transform: translateX(2rem); } }
-@keyframes refresh-driver-wave { 50% { transform: rotate(25deg); } }
+@keyframes refresh-wait-gesture {
+  0%, 24% { opacity: 0; }
+  30%, 52% { opacity: 1; }
+  60%, 100% { opacity: 0; }
+}
+@keyframes refresh-person-wave {
+  0%, 53% { opacity: 0; transform: rotate(0); }
+  58% { opacity: 1; transform: rotate(-5deg); }
+  65% { transform: rotate(18deg); }
+  72% { transform: rotate(-13deg); }
+  79% { transform: rotate(17deg); }
+  86% { transform: rotate(-12deg); }
+  93% { transform: rotate(15deg); }
+  100% { opacity: 1; transform: rotate(0); }
+}
 @media (prefers-reduced-motion: reduce) {
-  .refresh-car { left: 50%; transform: translateX(-50%); animation: none; }
-  .refresh-road i, .refresh-driver-wave { animation: none; }
+  .refresh-person-rise { opacity: 1; transform: none; animation: none; }
+  .refresh-wait-hands { opacity: 0; animation: none; }
+  .refresh-wave-arm { opacity: 1; transform: rotate(8deg); animation: none; }
 }
 .startup-home-skeleton {
   position: fixed;

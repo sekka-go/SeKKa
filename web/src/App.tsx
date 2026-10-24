@@ -115,7 +115,7 @@ export default function App() {
         setSessionCheckPending(false);
         setSessionCheckTimedOut(false);
       };
-      const minRefreshSplash = isRefresh ? 1200 : 0;
+      const minRefreshSplash = 1800;
       const remaining = Math.max(0, minRefreshSplash - (performance.now() - startupSplashStartedAt.current));
       if (remaining) window.setTimeout(finish, remaining);
       else finish();
@@ -131,7 +131,7 @@ export default function App() {
 
   useEffect(() => {
     if (!refreshSplashVisible) return;
-    const timeout = window.setTimeout(() => setRefreshSplashVisible(false), 1200);
+    const timeout = window.setTimeout(() => setRefreshSplashVisible(false), 1800);
     return () => window.clearTimeout(timeout);
   }, []);
 
