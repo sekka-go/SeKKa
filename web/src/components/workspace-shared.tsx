@@ -1,5 +1,5 @@
 import { getLanguage, t } from "../i18n/runtime";
-import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+import { useState, type ChangeEvent, type FormEvent } from "react";
 import MapPicker from "./MapPickerLoader";
 import RiderRoutePreferences from "./RiderRoutePreferences";
 import VerificationCenter from "./VerificationCenter";
@@ -84,7 +84,7 @@ export function ErrorState({ title = "حصلت مشكلة في تحميل الب
   return <section className="surface error-state" role="alert"><span className="error-state-mark" aria-hidden="true">!</span><div><h3>{t(title)}</h3><p>{t(text)}</p></div><button className="button button-outline button-small" type="button" onClick={onAction}>{t(action)}</button></section>;
 }
 export function LoadingCard({ text }: { text: string }) {
-  return <div className="surface loading-card" role="status" aria-label={t(text)}><span className="spinner" /></div>;
+  return <div className="loading-card" role="status" aria-label={t(text)}><span className="spinner" /></div>;
 }
 
 type NotificationCategory = "ride" | "chat" | "rating" | "alert" | "system";

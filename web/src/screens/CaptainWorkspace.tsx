@@ -10,8 +10,8 @@ import { ApiError, api, type CaptainLine, type CaptainOffer, type CaptainProfile
 import type { MapPickMode, MapPoint } from "../MapPicker";
 import type { NavKey, Session, Toast } from "../types";
 import { AccountPanel, EmptyState, ErrorState, LoadingCard } from "../components/workspace-shared";
-export default function CaptainWorkspace({ session, section, setSection, notify }: {
-  session: Session; section: NavKey; setSection: (section: NavKey) => void; notify: (text: string, tone?: Toast["tone"]) => void;
+export default function CaptainWorkspace({ session, section, setSection, notify, onInitialReady }: {
+  session: Session; section: NavKey; setSection: (section: NavKey) => void; notify: (text: string, tone?: Toast["tone"]) => void; onInitialReady: () => void;
 }) {
   const [profile, setProfile] = useState<CaptainProfile | null>(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
@@ -37,6 +37,7 @@ export default function CaptainWorkspace({ session, section, setSection, notify 
   const [earnings, setEarnings] = useState<{ trip: { id: number; group_id?: number; service_date: string; direction: string; departure_at: string; completed_at?: string | null; status: string }; stops: PoolStop[]; payment: { amount: number; reported_at?: string } | null }[]>([]);
   const [earningsTotal, setEarningsTotal] = useState(0);
   const [earningsLoading, setEarningsLoading] = useState(false);
+  const [earningsLoaded, setEarningsLoaded] = useState(false);
   const [earningsError, setEarningsError] = useState("");
   const [lines, setLines] = useState<CaptainLine[]>([]);
   const [publishedLinesLoaded, setPublishedLinesLoaded] = useState(false);
@@ -99,7 +100,7 @@ export default function CaptainWorkspace({ session, section, setSection, notify 
   }, [session.token]);
   useEffect(() => {
     if (!isOffersSection || profile?.verification_status !== "approved") return;
-    void loadPublishedLines().catch((error) => notify(errorText(error), "error"));
+    void loadPublishedLines().catch((error) => { setPublishedLinesLoaded(true); notify(errorText(error), "error"); });
   }, [isOffersSection, profile?.verification_status, loadPublishedLines, notify]);
   useEffect(() => {
     if (!isOffersSection || profile?.verification_status !== "approved") return;
@@ -111,6 +112,16 @@ export default function CaptainWorkspace({ session, section, setSection, notify 
     const timer = window.setInterval(() => { void refreshTrips(); }, 30_000);
     return () => window.clearInterval(timer);
   }, [profileLoaded, profile?.verification_status, isOffersSection, refreshTrips]);
+  useEffect(() => {
+    if (!profileLoaded) return;
+    if ((section === "offers" || section === "publish") && profile?.verification_status === "approved") {
+      if (offersLoaded && assignedTripsLoaded && publishedLinesLoaded) onInitialReady();
+      return;
+    }
+    if (section === "captainTrips" && !assignedTripsLoaded) return;
+    if (section === "captainEarnings" && !earningsLoaded) return;
+    onInitialReady();
+  }, [profileLoaded, profile, section, offersLoaded, assignedTripsLoaded, publishedLinesLoaded, earningsLoaded, onInitialReady]);
 
   const saveProfile = async (event: FormEvent) => {
     event.preventDefault(); setBusy(true);
@@ -183,7 +194,7 @@ export default function CaptainWorkspace({ session, section, setSection, notify 
       const result = await api<{ earnings: typeof earnings; total_amount: number }>("/captain/earnings", { token: session.token });
       setEarnings(result.earnings ?? []); setEarningsTotal(result.total_amount ?? 0);
     } catch (error) { setEarningsError(errorText(error)); }
-    finally { setEarningsLoading(false); }
+    finally { setEarningsLoaded(true); setEarningsLoading(false); }
   }, [session.token]);
   useEffect(() => { if (section === "captainEarnings") void loadEarnings(); }, [section, loadEarnings]);
 

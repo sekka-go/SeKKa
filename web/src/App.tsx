@@ -61,6 +61,7 @@ export default function App() {
   const [sessionCheckPending, setSessionCheckPending] = useState(() => Boolean(getStoredSession()));
   const [sessionCheckTimedOut, setSessionCheckTimedOut] = useState(false);
   const [refreshSplashVisible, setRefreshSplashVisible] = useState(() => isRefresh && Boolean(getStoredSession()));
+  const markCaptainHomeReady = useCallback(() => setRefreshSplashVisible(false), []);
   const [showWelcome] = useState(() => currentPathname() === "/" && !getStoredSession() && !hasSeenWelcome());
   const [themePreference, setThemePreference] = useState<ThemePreference>(readThemePreference);
   const resolvedTheme = resolveTheme(themePreference);
@@ -106,6 +107,7 @@ export default function App() {
         await loadAuthScreen().catch(() => undefined);
         if (!active) return;
         clearSession(); setSession(null); notify(t("انتهت جلستك، سجّل الدخول مرة أخرى."), "info");
+        setRefreshSplashVisible(false);
       }
     }).finally(() => {
       if (!active) return;
@@ -113,7 +115,8 @@ export default function App() {
         if (!active) return;
         setSessionCheckPending(false);
         setSessionCheckTimedOut(false);
-        setRefreshSplashVisible(false);
+        const captainHomeRefresh = session.user.role === "captain" && ["/", "/captain"].includes(currentPathname());
+        setRefreshSplashVisible(captainHomeRefresh);
       };
       finish();
     });
@@ -146,7 +149,7 @@ export default function App() {
     {(refreshSplashVisible || sessionCheckPending && !sessionCheckTimedOut) && <SekkaSplash title={t("اسم التطبيق")} tagline={t("طريقك أسهل مع سِكّة")} accessibleLabel={t("جاري فتح سِكّة")} variant="refresh" />}
     {sessionCheckPending && sessionCheckTimedOut && <div className="startup-home-skeleton" role="status" aria-label={t("جاري تحميل الصفحة الرئيسية")}><span /><span /><span /><span /></div>}
     {toast && <div className={`toast toast-${toast.tone}`} role={toast.tone === "error" ? "alert" : "status"} aria-live={toast.tone === "error" ? "assertive" : "polite"}><span className="toast-icon" aria-hidden="true">{toast.tone === "success" ? "✓" : toast.tone === "error" ? "!" : "i"}</span><span className="toast-message">{toast.text}</span><button onClick={() => { setToast(null); if (toastTimer.current !== null) window.clearTimeout(toastTimer.current); toastTimer.current = null; }} aria-label={t("إغلاق")}>×</button></div>}
-    {policyPage ? <main className="public-policy-page"><header><a href="/" aria-label="SeKKa"><BrandLogo /></a><PublicLanguageToggle /></header><InfoPages page={policyPage} onBack={() => { window.location.assign("/"); }} /></main> : session ? <RouteChunkBoundary><Suspense fallback={<RouteLoading />}><Workspace session={session} onSignOut={signOut} notify={notify} themePreference={themePreference} resolvedTheme={resolvedTheme} onThemePreferenceChange={setThemePreference} /></Suspense></RouteChunkBoundary> : currentPathname() === "/login" || currentPathname() === "/register" || isProtectedPath(currentPathname()) || !showWelcome ? <RouteChunkBoundary><Suspense fallback={<RouteLoading />}><AuthScreen onSignedIn={onSignedIn} notify={notify} /></Suspense></RouteChunkBoundary> : <LandingScreen />}
+    {policyPage ? <main className="public-policy-page"><header><a href="/" aria-label="SeKKa"><BrandLogo /></a><PublicLanguageToggle /></header><InfoPages page={policyPage} onBack={() => { window.location.assign("/"); }} /></main> : session ? <RouteChunkBoundary><Suspense fallback={<RouteLoading />}><Workspace session={session} onSignOut={signOut} notify={notify} themePreference={themePreference} resolvedTheme={resolvedTheme} onThemePreferenceChange={setThemePreference} onCaptainHomeReady={markCaptainHomeReady} /></Suspense></RouteChunkBoundary> : currentPathname() === "/login" || currentPathname() === "/register" || isProtectedPath(currentPathname()) || !showWelcome ? <RouteChunkBoundary><Suspense fallback={<RouteLoading />}><AuthScreen onSignedIn={onSignedIn} notify={notify} /></Suspense></RouteChunkBoundary> : <LandingScreen />}
   </div>;
 }
 

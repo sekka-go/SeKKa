@@ -183,7 +183,11 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
 .toast-error { border-color: rgba(239, 68, 68, .4); }
 .toast-info { border-color: rgba(234, 179, 8, .28); }
 .spinner { border-color: rgba(234, 179, 8, .25); border-top-color: var(--yellow); }
-.route-chunk-loading, .route-chunk-error { display: flex; align-items: center; justify-content: center; gap: .75rem; width: min(100% - 2rem, 38rem); margin: 1rem auto; padding: 1rem 1.25rem; border: 1px solid var(--line); border-radius: 1rem; color: var(--color-text-primary); background: var(--color-surface); }
+.loading-card .spinner, .route-chunk-loading .spinner { flex: 0 0 auto; width: 1.5rem; height: 1.5rem; border: 2px solid color-mix(in srgb, var(--color-primary) 24%, transparent); border-top-color: var(--color-primary); border-radius: 50%; animation: loading-spinner .8s linear infinite; }
+.route-chunk-loading { display: flex; align-items: center; justify-content: center; min-height: 4rem; margin: 1rem auto; color: var(--color-text-primary); background: transparent; }
+.route-chunk-error { display: flex; align-items: center; justify-content: center; gap: .75rem; width: min(100% - 2rem, 38rem); margin: 1rem auto; padding: 1rem 1.25rem; border: 1px solid var(--line); border-radius: 1rem; color: var(--color-text-primary); background: var(--color-surface); }
+@keyframes loading-spinner { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .loading-card .spinner, .route-chunk-loading .spinner { animation-duration: 1.5s; } }
 .route-chunk-error { flex-wrap: wrap; }
 .route-chunk-error p { margin: 0; }
 

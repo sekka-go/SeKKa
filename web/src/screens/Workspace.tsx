@@ -53,10 +53,11 @@ function pathForSection(section: NavKey, preserveUserProfile = false) {
   return sectionPaths[section];
 }
 
-export default function Workspace({ session, onSignOut, notify, themePreference, resolvedTheme, onThemePreferenceChange }: {
+export default function Workspace({ session, onSignOut, notify, themePreference, resolvedTheme, onThemePreferenceChange, onCaptainHomeReady }: {
   session: Session; onSignOut: () => void; notify: (text: string, tone?: Toast["tone"]) => void;
   resolvedTheme: "light" | "dark";
   themePreference: ThemePreference; onThemePreferenceChange: (value: ThemePreference) => void;
+  onCaptainHomeReady: () => void;
 }) {
   const initialSection: NavKey = session.user.role === "captain" ? "offers" : session.user.role === "admin" ? "admin" : "home";
   const [section, setSectionState] = useState<NavKey>(() => {
@@ -286,7 +287,7 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
         {session.user.role !== "admin" && <VerificationReminder session={session} onOpen={openMissingVerification} visible={section !== "account" && section !== "settings" && section !== "notifications" && !(session.user.role === "captain" && section === "offers")} />}
         {section === "messages" && <MessagesWorkspace session={session} notify={notify} onUnreadCountChange={setUnreadMessageCount} />}
         {session.user.role === "rider" && section !== "messages" && section !== "settings" && section !== "notifications" && <RiderWorkspace session={session} section={section} setSection={setSection} refreshNotifications={refreshNotifications} registerPoolRefresh={registerPoolRefresh} notify={notify} themePreference={themePreference} resolvedTheme={resolvedTheme} onThemePreferenceChange={onThemePreferenceChange} />}
-        {session.user.role === "captain" && section !== "messages" && section !== "settings" && section !== "notifications" && <CaptainWorkspace session={session} section={section} setSection={setSection} notify={notify} />}
+        {session.user.role === "captain" && section !== "messages" && section !== "settings" && section !== "notifications" && <CaptainWorkspace session={session} section={section} setSection={setSection} notify={notify} onInitialReady={onCaptainHomeReady} />}
         {session.user.role === "admin" && section !== "settings" && section !== "notifications" && <AdminWorkspace session={session} section={section} refreshNotifications={refreshNotifications} notify={notify} />}
         {notificationsOpen && <NotificationsPanel items={notifications} token={session.token} onRefresh={refreshNotifications} onPoolChanged={session.user.role === "rider" ? () => riderPoolRefreshRef.current() : undefined} onEditGroup={session.user.role === "rider" ? editNotificationGroup : undefined} allowWaitActions={session.user.role === "rider"} notify={notify} isLoading={!notificationsLoaded} error={notificationsError} onOpenSettings={() => setSection("settings")} onClose={closeNotifications} />}</>}
       </div>
