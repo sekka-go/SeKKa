@@ -40,9 +40,9 @@
 .refresh-road i:nth-child(1) { left: 15%; }
 .refresh-road i:nth-child(2) { left: 52%; animation-delay: -.18s; }
 .refresh-road i:nth-child(3) { left: 82%; animation-delay: -.36s; }
-.refresh-car { position: absolute; bottom: calc(28% - 1rem); left: 0; width: clamp(13rem, 64vw, 21rem); height: auto; filter: drop-shadow(0 1rem 1.2rem color-mix(in srgb, var(--splash-accent) 25%, transparent)); animation: refresh-car-drive 1.2s cubic-bezier(.35,.02,.72,.35) infinite; }
+.refresh-car { position: absolute; bottom: calc(28% - 1rem); left: 0; width: clamp(13rem, 64vw, 21rem); height: auto; filter: drop-shadow(0 1rem 1.2rem color-mix(in srgb, var(--splash-accent) 25%, transparent)); animation: refresh-car-drive 2.2s cubic-bezier(.35,.02,.72,.35) infinite; }
 .refresh-driver-wave { transform-box: view-box; transform-origin: 242px 36px; animation: refresh-driver-wave .32s ease-in-out 3; }
-@keyframes refresh-car-drive { from { transform: translateX(-115vw); } to { transform: translateX(110vw); } }
+@keyframes refresh-car-drive { from { transform: translateX(110vw); } to { transform: translateX(-115vw); } }
 @keyframes refresh-road-flow { to { transform: translateX(2rem); } }
 @keyframes refresh-driver-wave { 50% { transform: rotate(25deg); } }
 @media (prefers-reduced-motion: reduce) {
