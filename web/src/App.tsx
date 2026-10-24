@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type AnimationEvent } from "react";
 import { ApiError, api, clearSession, getStoredSession, storeSession, type User } from "./api";
 import LandingScreen from "./screens/LandingScreen";
 import RouteChunkBoundary from "./components/RouteChunkBoundary";
@@ -61,7 +61,10 @@ export default function App() {
   const [sessionCheckPending, setSessionCheckPending] = useState(() => Boolean(getStoredSession()));
   const [sessionCheckTimedOut, setSessionCheckTimedOut] = useState(false);
   const [refreshSplashVisible, setRefreshSplashVisible] = useState(() => isRefresh && Boolean(getStoredSession()));
-  const markCaptainHomeReady = useCallback(() => setRefreshSplashVisible(false), []);
+  const [refreshSplashExiting, setRefreshSplashExiting] = useState(false);
+  const markCaptainHomeReady = useCallback(() => {
+    if (!sessionCheckPending && refreshSplashVisible) setRefreshSplashExiting(true);
+  }, [sessionCheckPending, refreshSplashVisible]);
   const [showWelcome] = useState(() => currentPathname() === "/" && !getStoredSession() && !hasSeenWelcome());
   const [themePreference, setThemePreference] = useState<ThemePreference>(readThemePreference);
   const resolvedTheme = resolveTheme(themePreference);
@@ -97,6 +100,7 @@ export default function App() {
   useEffect(() => {
     if (!session) return;
     let active = true;
+    let authRejected = false;
     api<{ user: User }>("/auth/me", { token: session.token }).then(({ user }) => {
       if (!active) return;
       const next = { ...session, user };
@@ -104,10 +108,11 @@ export default function App() {
     }).catch(async (error) => {
       if (!active) return;
       if (error instanceof ApiError && error.status === 401) {
+        authRejected = true;
         await loadAuthScreen().catch(() => undefined);
         if (!active) return;
         clearSession(); setSession(null); notify(t("انتهت جلستك، سجّل الدخول مرة أخرى."), "info");
-        setRefreshSplashVisible(false);
+        setRefreshSplashExiting(true);
       }
     }).finally(() => {
       if (!active) return;
@@ -116,7 +121,8 @@ export default function App() {
         setSessionCheckPending(false);
         setSessionCheckTimedOut(false);
         const captainHomeRefresh = session.user.role === "captain" && ["/", "/captain"].includes(currentPathname());
-        setRefreshSplashVisible(captainHomeRefresh);
+        setRefreshSplashVisible(captainHomeRefresh && !authRejected);
+        if (!authRejected) setRefreshSplashExiting(false);
       };
       finish();
     });
@@ -127,7 +133,7 @@ export default function App() {
     if (!session || !sessionCheckPending) return;
     const timeout = window.setTimeout(() => {
       setSessionCheckTimedOut(true);
-      setRefreshSplashVisible(false);
+      setRefreshSplashExiting(true);
     }, isRefresh ? 1500 : 4000);
     return () => window.clearTimeout(timeout);
   }, [session?.token, sessionCheckPending]);
@@ -144,9 +150,15 @@ export default function App() {
   };
 
   const policyPage = publicPolicyPath(currentPathname());
+  const refreshSplashActive = refreshSplashVisible || refreshSplashExiting || sessionCheckPending && !sessionCheckTimedOut;
+  const handleRefreshSplashAnimationEnd = (event: AnimationEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget || event.animationName !== "refresh-splash-exit") return;
+    setRefreshSplashVisible(false);
+    setRefreshSplashExiting(false);
+  };
 
-  return <div className="app-shell" data-theme={resolvedTheme} dir={direction}>
-    {(refreshSplashVisible || sessionCheckPending && !sessionCheckTimedOut) && <SekkaSplash title={t("اسم التطبيق")} tagline={t("طريقك أسهل مع سِكّة")} accessibleLabel={t("جاري فتح سِكّة")} variant="refresh" />}
+  return <div className={`app-shell${refreshSplashActive ? " is-refresh-splash-active" : ""}`} data-theme={resolvedTheme} dir={direction}>
+    {refreshSplashActive && <SekkaSplash title={t("اسم التطبيق")} tagline={t("طريقك أسهل مع سِكّة")} accessibleLabel={t("جاري فتح سِكّة")} variant="refresh" exiting={refreshSplashExiting} onAnimationEnd={handleRefreshSplashAnimationEnd} />}
     {sessionCheckPending && sessionCheckTimedOut && <div className="startup-home-skeleton" role="status" aria-label={t("جاري تحميل الصفحة الرئيسية")}><span /><span /><span /><span /></div>}
     {toast && <div className={`toast toast-${toast.tone}`} role={toast.tone === "error" ? "alert" : "status"} aria-live={toast.tone === "error" ? "assertive" : "polite"}><span className="toast-icon" aria-hidden="true">{toast.tone === "success" ? "✓" : toast.tone === "error" ? "!" : "i"}</span><span className="toast-message">{toast.text}</span><button onClick={() => { setToast(null); if (toastTimer.current !== null) window.clearTimeout(toastTimer.current); toastTimer.current = null; }} aria-label={t("إغلاق")}>×</button></div>}
     {policyPage ? <main className="public-policy-page"><header><a href="/" aria-label="SeKKa"><BrandLogo /></a><PublicLanguageToggle /></header><InfoPages page={policyPage} onBack={() => { window.location.assign("/"); }} /></main> : session ? <RouteChunkBoundary><Suspense fallback={<RouteLoading />}><Workspace session={session} onSignOut={signOut} notify={notify} themePreference={themePreference} resolvedTheme={resolvedTheme} onThemePreferenceChange={setThemePreference} onCaptainHomeReady={markCaptainHomeReady} /></Suspense></RouteChunkBoundary> : currentPathname() === "/login" || currentPathname() === "/register" || isProtectedPath(currentPathname()) || !showWelcome ? <RouteChunkBoundary><Suspense fallback={<RouteLoading />}><AuthScreen onSignedIn={onSignedIn} notify={notify} /></Suspense></RouteChunkBoundary> : <LandingScreen />}

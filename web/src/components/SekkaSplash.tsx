@@ -1,11 +1,13 @@
 import SekkaMark from "./SekkaMark";
+import type { AnimationEvent } from "react";
 
-export default function SekkaSplash({ title, tagline, accessibleLabel, variant = "brand" }: { title: string; tagline: string; accessibleLabel: string; variant?: "brand" | "refresh" }) {
+export default function SekkaSplash({ title, tagline, accessibleLabel, variant = "brand", exiting = false, onAnimationEnd }: { title: string; tagline: string; accessibleLabel: string; variant?: "brand" | "refresh"; exiting?: boolean; onAnimationEnd?: (event: AnimationEvent<HTMLDivElement>) => void }) {
   const isRefresh = variant === "refresh";
   return <div
-    className={`sekka-splash${isRefresh ? " is-refresh-splash" : ""}`}
+    className={`sekka-splash${isRefresh ? " is-refresh-splash" : ""}${exiting && isRefresh ? " is-exiting" : ""}`}
     role="status"
     aria-label={accessibleLabel}
+    onAnimationEnd={onAnimationEnd}
   >
     <>
       <div className="splash-atmosphere" aria-hidden="true"><i /><i /><i /></div>

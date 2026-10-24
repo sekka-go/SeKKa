@@ -32,6 +32,10 @@
 :root[data-theme="light"] .splash-title { text-shadow: 0 2px 16px var(--splash-line-soft); }
 :root[data-theme="light"] .splash-tagline { color: var(--color-text-secondary); }
 .is-refresh-splash { background: transparent; }
+.app-shell.is-refresh-splash-active > :not(.sekka-splash) { visibility: hidden; }
+.is-refresh-splash.is-exiting { pointer-events: none; animation: refresh-splash-exit 360ms ease-out forwards; }
+@keyframes refresh-splash-exit { to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .is-refresh-splash.is-exiting { animation-duration: .01ms; } }
 .is-refresh-splash .splash-emblem { width: clamp(3.5rem, 14vw, 5rem); border-radius: 1.2rem; }
 .is-refresh-splash .splash-track { width: min(62vw, 19rem); height: min(62vw, 19rem); animation-duration: .5s; }
 .is-refresh-splash .splash-atmosphere i:nth-child(1) { width: min(46vw, 17rem); }
