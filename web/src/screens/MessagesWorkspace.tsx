@@ -156,12 +156,6 @@ export default function MessagesWorkspace({ session, notify, onUnreadCountChange
 
   return <section className="messages-experience messages-workspace surface" aria-label={t("الرسائل")} dir={getDirection()}>
     <aside className={`messages-inbox ${selected ? "has-selection" : ""}`} aria-label={t("messages.inbox") }>
-      <div className="messages-inbox-heading">
-        <button className="button button-primary messages-new-button" type="button" onClick={() => { setShowContacts((value) => !value); setContactQuery(""); }} aria-expanded={showContacts}>
-          <AppIcon name={showContacts ? "close" : "plus"} size={17} /><span>{showContacts ? t("messages.closePicker") : t("messages.newMessage")}</span>
-        </button>
-      </div>
-
       <label className="messages-search">
         <AppIcon name="search" size={18} />
         <input value={showContacts ? contactQuery : conversationQuery} onChange={(event) => showContacts ? setContactQuery(event.target.value) : setConversationQuery(event.target.value)} placeholder={showContacts ? t("messages.searchPeople") : t("messages.searchConversations")} aria-label={showContacts ? t("messages.searchPeople") : t("messages.searchConversations")} />
@@ -171,10 +165,11 @@ export default function MessagesWorkspace({ session, notify, onUnreadCountChange
       {!showContacts && <div className="messages-filters" role="group" aria-label={t("messages.filterConversations")}>
         <button type="button" className={!unreadOnly ? "is-active" : ""} aria-pressed={!unreadOnly} onClick={() => setUnreadOnly(false)}>{t("messages.all")}</button>
         <button type="button" className={unreadOnly ? "is-active" : ""} aria-pressed={unreadOnly} onClick={() => setUnreadOnly(true)}>{t("messages.unread")}<span>{conversations.reduce((count, item) => count + item.unread_count, 0)}</span></button>
+        {conversations.length > 0 && <button type="button" className="button button-primary messages-new-button" onClick={() => { setShowContacts(true); setContactQuery(""); }}><AppIcon name="plus" size={16} /><span>{t("messages.newMessage")}</span></button>}
       </div>}
 
       {showContacts ? <div className="messages-contact-picker">
-        <div className="messages-section-label"><strong>{t("messages.rideConnections")}</strong><span>{visibleContacts.length}</span></div>
+        <div className="messages-section-label"><strong>{t("messages.rideConnections")}</strong><span>{visibleContacts.length}</span><button type="button" className="messages-picker-close" onClick={() => setShowContacts(false)}><AppIcon name="close" size={15} />{t("messages.closePicker")}</button></div>
         {visibleContacts.length ? visibleContacts.map((person) => <button className="messages-contact-row" key={person.id} type="button" onClick={() => void startConversation(person)}>
           <ProfileAvatar userId={person.id} token={session.token} name={person.full_name} className="avatar messages-avatar" />
           <span className="messages-contact-copy"><b>{person.full_name}</b><small>{roleName(person.role)}</small></span>
