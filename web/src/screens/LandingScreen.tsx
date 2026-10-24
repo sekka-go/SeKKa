@@ -18,7 +18,7 @@ export default function LandingScreen() {
           <p>{t("شارك الطريق مع ناس رايحة في نفس اتجاهك، وخلي مشاويرك أسهل.")}</p>
           <div className="landing-hero-actions">
             <a className="button landing-primary-cta" href="/register">{t("ابدأ رحلتك الآن")} <span aria-hidden="true">←</span></a>
-            <a className="button stitch-welcome-login" href="/login">{t("تسجيل الدخول / لدي حساب بالفعل")}</a>
+            <a className="stitch-welcome-login-link" href="/login">{t("لدي حساب بالفعل")}</a>
           </div>
           <div className="landing-trust"><span className="landing-trust-dot" />{t("رحلات مشتركة موثوقة في القاهرة الكبرى")}</div>
         </div>
