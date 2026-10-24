@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { Session, Toast } from "../types";
 import { t } from "../i18n/runtime";
 import { errorText } from "../lib/formatters";
-import { getConfiguredPushPublicKey, hasPushSubscription, subscribeToPush, unsubscribeFromPush } from "../lib/push";
+import { getConfiguredPushPublicKey, getPushPromptChoice, hasPushSubscription, setPushPromptChoice, subscribeToPush, unsubscribeFromPush } from "../lib/push";
 import AppIcon from "./AppIcon";
 import LanguageSelector from "./LanguageSelector";
 import ThemePreferenceCard, { type ThemePreference } from "./ThemePreferenceCard";
@@ -18,6 +18,9 @@ export default function AppSettings({ session, themePreference, resolvedTheme, o
   const [pushReady, setPushReady] = useState(false);
   const [pushLoading, setPushLoading] = useState(true);
   const [pushBusy, setPushBusy] = useState(false);
+  const [pushPublicKey, setPushPublicKey] = useState<string | null>(null);
+  const [permissionDenied, setPermissionDenied] = useState(() => typeof Notification !== "undefined" && Notification.permission === "denied");
+  const [promptDeclined, setPromptDeclined] = useState(() => getPushPromptChoice() === "declined");
 
   useEffect(() => {
     let active = true;
@@ -25,6 +28,7 @@ export default function AppSettings({ session, themePreference, resolvedTheme, o
       .then(([publicKey, enabled]) => {
         if (!active) return;
         setPushReady(Boolean(publicKey));
+        setPushPublicKey(publicKey);
         setPushEnabled(Boolean(publicKey) && enabled);
       })
       .catch(() => { if (active) setPushReady(false); })
@@ -40,15 +44,26 @@ export default function AppSettings({ session, themePreference, resolvedTheme, o
         setPushEnabled(false);
         notify(t("تم إيقاف إشعارات سِكّة على هذا الجهاز."), "success");
       } else {
-        await subscribeToPush(session.token);
+        await subscribeToPush(session.token, pushPublicKey ?? undefined);
         setPushEnabled(true);
+        setPushPromptChoice("accepted");
+        setPromptDeclined(false);
         notify(t("تم تفعيل إشعارات سِكّة على هذا الجهاز."), "success");
       }
-    } catch (error) { notify(errorText(error), "error"); }
+    } catch (error) {
+      if (typeof Notification !== "undefined" && Notification.permission === "denied") {
+        setPermissionDenied(true);
+        setPromptDeclined(true);
+        setPushPromptChoice("declined");
+      }
+      notify(errorText(error), "error");
+    }
     finally { setPushBusy(false); }
   };
 
-  const pushStatus = pushLoading
+  const pushStatus = permissionDenied
+    ? t("الإشعارات مرفوضة من المتصفح. افتح إعدادات الموقع للسماح بها.")
+    : pushLoading
     ? t("جارٍ تحديث إعدادات الإشعارات")
     : !pushReady
       ? t("إشعارات الجهاز غير مهيأة حاليًا")
@@ -63,7 +78,7 @@ export default function AppSettings({ session, themePreference, resolvedTheme, o
       <ThemePreferenceCard value={themePreference} resolvedTheme={resolvedTheme} onChange={onThemePreferenceChange} />
       <LanguageSelector />
     </section>
-    <section className="surface app-settings-notifications" aria-labelledby="app-notifications-title">
+    {(pushEnabled || promptDeclined || permissionDenied) && <section className="surface app-settings-notifications" aria-labelledby="app-notifications-title">
       <div className="app-settings-notifications-copy">
         <span className="app-settings-icon"><AppIcon name="bell" size={20} /></span>
         <div>
@@ -72,9 +87,9 @@ export default function AppSettings({ session, themePreference, resolvedTheme, o
           <small className={`app-settings-status ${pushEnabled && pushReady ? "is-enabled" : ""}`} role="status">{pushStatus}</small>
         </div>
       </div>
-      <button type="button" className={`button ${pushEnabled ? "button-outline" : "button-primary"} button-small`} onClick={() => void togglePush()} disabled={!pushReady || pushLoading || pushBusy} aria-pressed={pushEnabled}>
+      {(!permissionDenied || pushEnabled) && <button type="button" className={`button ${pushEnabled ? "button-outline" : "button-primary"} button-small`} onClick={() => void togglePush()} disabled={!pushReady || pushLoading || pushBusy} aria-pressed={pushEnabled}>
         {pushBusy ? t("جارٍ تحديث إعدادات الإشعارات") : t(pushEnabled ? "إيقاف إشعارات هذا الجهاز" : "تفعيل إشعارات هذا الجهاز")}
-      </button>
-    </section>
+      </button>}
+    </section>}
   </div>;
 }

@@ -12,6 +12,7 @@
   --color-text-muted: #94a3b8;
   --color-primary: var(--brand-green);
   --color-primary-text: #ffffff;
+  --color-on-primary: #ffffff;
   --color-accent: var(--brand-green);
   --color-accent-text: var(--brand-green);
   --color-secondary: var(--brand-green);
@@ -79,6 +80,7 @@
   --color-text-muted: #64748b;
   --color-primary: var(--brand-green);
   --color-primary-text: #ffffff;
+  --color-on-primary: #ffffff;
   --color-accent: var(--brand-green);
   --color-accent-text: var(--brand-green);
   --color-secondary: var(--brand-green);
@@ -378,6 +380,35 @@ body { font-family: Tajawal, "Plus Jakarta Sans", "Segoe UI", sans-serif; }
 :root[data-theme="light"] .app-shell .theme-mode-toggle:hover:not(:disabled) {
   filter: brightness(1.08);
   box-shadow: 0 6px 20px color-mix(in srgb, var(--brand-green) 44%, transparent);
+}
+
+/* A saturated green surface always uses white foregrounds and icons. */
+:root[data-theme="light"] .app-shell .workspace .topbar .notification-bell,
+:root[data-theme="light"] .app-shell .workspace .topbar .notification-bell svg {
+  color: #fff;
+}
+
+.push-permission-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-block-end: 1rem;
+  padding: 1rem;
+}
+.push-permission-prompt > div:first-child { min-width: 0; }
+.push-permission-prompt strong { color: var(--color-text-primary); }
+.push-permission-prompt p { margin: .3rem 0 0; color: var(--color-text-secondary); font-size: .88rem; line-height: 1.55; }
+.push-permission-actions { display: flex; flex: 0 0 auto; flex-wrap: wrap; gap: .5rem; }
+.app-shell .push-permission-actions .push-prompt-dismiss {
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  box-shadow: none;
+}
+@media (max-width: 560px) {
+  .push-permission-prompt { align-items: stretch; flex-direction: column; }
+  .push-permission-actions { display: grid; grid-template-columns: 1fr 1fr; }
 }
 
 /* Registration scrolls as one document on phones so consent and submit remain reachable. */

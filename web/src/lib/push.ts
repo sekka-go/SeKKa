@@ -1,5 +1,24 @@
 import { api } from "../api";
 
+const pushPromptChoiceKey = "sekka.push.prompt-choice.v1";
+export type PushPromptChoice = "accepted" | "declined";
+let inMemoryPushPromptChoice: PushPromptChoice | null = null;
+
+export function getPushPromptChoice(): PushPromptChoice | null {
+  try {
+    const choice = localStorage.getItem(pushPromptChoiceKey);
+    if (choice === "accepted" || choice === "declined") return choice;
+  } catch {
+    return inMemoryPushPromptChoice;
+  }
+  return inMemoryPushPromptChoice;
+}
+
+export function setPushPromptChoice(choice: PushPromptChoice) {
+  inMemoryPushPromptChoice = choice;
+  try { localStorage.setItem(pushPromptChoiceKey, choice); } catch { /* Use the in-memory choice when storage is unavailable. */ }
+}
+
 function decodeApplicationServerKey(value: string): ArrayBuffer {
   const padded = `${value}${"=".repeat((4 - value.length % 4) % 4)}`;
   const binary = atob(padded.replace(/-/g, "+").replace(/_/g, "/"));
@@ -22,14 +41,14 @@ export async function getConfiguredPushPublicKey() {
   return publicKey;
 }
 
-export async function subscribeToPush(token: string) {
+export async function subscribeToPush(token: string, configuredPublicKey?: string) {
   if (!import.meta.env.PROD) throw new Error("إشعارات الجهاز تتاح بعد نشر التطبيق عبر HTTPS.");
   if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
     throw new Error("المتصفح الحالي لا يدعم إشعارات الجهاز.");
   }
 
   // Check server readiness first so permission is only requested when setup can finish.
-  const publicKey = await getConfiguredPushPublicKey();
+  const publicKey = configuredPublicKey ?? await getConfiguredPushPublicKey();
   if (!publicKey) throw new Error("إشعارات الجهاز غير متاحة حاليًا.");
   let permission = Notification.permission;
   if (permission === "default") permission = await Notification.requestPermission();
