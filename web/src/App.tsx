@@ -65,7 +65,7 @@ export default function App() {
   const refreshSplashActive = refreshSplashVisible || refreshSplashExiting || sessionCheckPending && !sessionCheckTimedOut;
   const refreshSplashActiveRef = useRef(refreshSplashActive);
   refreshSplashActiveRef.current = refreshSplashActive;
-  const markCaptainHomeReady = useCallback(() => {
+  const markHomeReady = useCallback(() => {
     if (!sessionCheckPending && refreshSplashVisible) setRefreshSplashExiting(true);
   }, [sessionCheckPending, refreshSplashVisible]);
   const [showWelcome] = useState(() => currentPathname() === "/" && !getStoredSession() && !hasSeenWelcome());
@@ -123,11 +123,12 @@ export default function App() {
         if (!active) return;
         setSessionCheckPending(false);
         setSessionCheckTimedOut(false);
-        const captainHomeRefresh = session.user.role === "captain" && ["/", "/captain"].includes(currentPathname());
+        const path = currentPathname();
+        const primaryHomeRefresh = path === "/" || session.user.role === "captain" && path === "/captain" || session.user.role === "admin" && path === "/admin";
         if (authRejected) {
           setRefreshSplashVisible(false);
           if (!refreshSplashActiveRef.current) setRefreshSplashExiting(false);
-        } else if (captainHomeRefresh) {
+        } else if (primaryHomeRefresh) {
           setRefreshSplashVisible(true);
           setRefreshSplashExiting(false);
         } else if (refreshSplashActiveRef.current) {
@@ -174,7 +175,7 @@ export default function App() {
     {refreshSplashActive && <SekkaSplash title={t("اسم التطبيق")} tagline={t("طريقك أسهل مع سِكّة")} accessibleLabel={t("جاري فتح سِكّة")} variant="refresh" exiting={refreshSplashExiting} onAnimationEnd={handleRefreshSplashAnimationEnd} />}
     {sessionCheckPending && sessionCheckTimedOut && <div className="startup-home-skeleton" role="status" aria-label={t("جاري تحميل الصفحة الرئيسية")}><span /><span /><span /><span /></div>}
     {toast && <div className={`toast toast-${toast.tone}`} role={toast.tone === "error" ? "alert" : "status"} aria-live={toast.tone === "error" ? "assertive" : "polite"}><span className="toast-icon" aria-hidden="true">{toast.tone === "success" ? "✓" : toast.tone === "error" ? "!" : "i"}</span><span className="toast-message">{toast.text}</span><button onClick={() => { setToast(null); if (toastTimer.current !== null) window.clearTimeout(toastTimer.current); toastTimer.current = null; }} aria-label={t("إغلاق")}>×</button></div>}
-    {policyPage ? <main className="public-policy-page"><header><a href="/" aria-label="SeKKa"><BrandLogo /></a><PublicLanguageToggle /></header><InfoPages page={policyPage} onBack={() => { window.location.assign("/"); }} /></main> : session ? <RouteChunkBoundary><Suspense fallback={<RouteLoading />}><Workspace session={session} onSignOut={signOut} notify={notify} themePreference={themePreference} resolvedTheme={resolvedTheme} onThemePreferenceChange={setThemePreference} onCaptainHomeReady={markCaptainHomeReady} /></Suspense></RouteChunkBoundary> : currentPathname() === "/login" || currentPathname() === "/register" || isProtectedPath(currentPathname()) || !showWelcome ? <RouteChunkBoundary><Suspense fallback={<RouteLoading />}><AuthScreen onSignedIn={onSignedIn} notify={notify} /></Suspense></RouteChunkBoundary> : <LandingScreen />}
+    {policyPage ? <main className="public-policy-page"><header><a href="/" aria-label="SeKKa"><BrandLogo /></a><PublicLanguageToggle /></header><InfoPages page={policyPage} onBack={() => { window.location.assign("/"); }} /></main> : session ? <RouteChunkBoundary><Suspense fallback={<RouteLoading />}><Workspace session={session} onSignOut={signOut} notify={notify} themePreference={themePreference} resolvedTheme={resolvedTheme} onThemePreferenceChange={setThemePreference} onHomeReady={markHomeReady} /></Suspense></RouteChunkBoundary> : currentPathname() === "/login" || currentPathname() === "/register" || isProtectedPath(currentPathname()) || !showWelcome ? <RouteChunkBoundary><Suspense fallback={<RouteLoading />}><AuthScreen onSignedIn={onSignedIn} notify={notify} /></Suspense></RouteChunkBoundary> : <LandingScreen />}
   </div>;
 }
 

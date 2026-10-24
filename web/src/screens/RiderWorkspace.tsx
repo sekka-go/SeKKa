@@ -23,10 +23,11 @@ import {
 const hasSelectedPoint = (point: MapPoint | null) =>
   typeof point?.lat === "number" && Number.isFinite(point.lat) &&
   typeof point?.lng === "number" && Number.isFinite(point.lng);
-export default function RiderWorkspace({ session, section, setSection, refreshNotifications, registerPoolRefresh, notify, themePreference, resolvedTheme, onThemePreferenceChange }: {
+export default function RiderWorkspace({ session, section, setSection, refreshNotifications, registerPoolRefresh, notify, themePreference, resolvedTheme, onThemePreferenceChange, onInitialReady }: {
   session: Session; section: NavKey; setSection: (section: NavKey, historyMode?: "push" | "replace") => void;
   refreshNotifications: () => Promise<void>; registerPoolRefresh: (refresh: () => Promise<void>) => void; notify: (text: string, tone?: Toast["tone"]) => void;
   themePreference: ThemePreference; resolvedTheme: "light" | "dark"; onThemePreferenceChange: (value: ThemePreference) => void;
+  onInitialReady: () => void;
 }) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [savedPlaces, setSavedPlaces] = useState<SavedPlace[]>([]);
@@ -230,6 +231,7 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
     setLoading(false);
   }, [session.token, notify]);
   useEffect(() => { void loadInitialData(); }, [loadInitialData]);
+  useEffect(() => { if (section === "home" && !loading) onInitialReady(); }, [section, loading, onInitialReady]);
 
   useEffect(() => {
     let active = true;

@@ -11,14 +11,16 @@ type Overview = Record<string, number>;
 type PoolOverview = Record<string, number>;
 const adminSections = new Set<NavKey>(["adminUsers", "adminDocuments", "adminTrips", "adminComplaints", "adminFinance", "adminFinanceAdjustment", "adminPricing", "adminAudit"]);
 
-export default function AdminWorkspace({ session, section, refreshNotifications, notify }: {
+export default function AdminWorkspace({ session, section, refreshNotifications, notify, onInitialReady }: {
   session: Session; section: NavKey; refreshNotifications: () => Promise<void>; notify: (text: string, tone?: Toast["tone"]) => void;
+  onInitialReady: () => void;
 }) {
   const [overview, setOverview] = useState<Overview | null>(null);
   const [poolOverview, setPoolOverview] = useState<PoolOverview | null>(null);
   const [disputesCapped, setDisputesCapped] = useState(false);
   const [dashboardLoading, setDashboardLoading] = useState(false);
   const [dashboardError, setDashboardError] = useState("");
+  const [dashboardInitialLoadComplete, setDashboardInitialLoadComplete] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
   const [broadcastTitle, setBroadcastTitle] = useState("");
   const [broadcastMessage, setBroadcastMessage] = useState("");
@@ -42,9 +44,11 @@ export default function AdminWorkspace({ session, section, refreshNotifications,
       setDashboardError(errorText(error));
     } finally {
       setDashboardLoading(false);
+      setDashboardInitialLoadComplete(true);
     }
   }, [session.token]);
   useEffect(() => { if (section === "admin") void refresh(); }, [section, refresh]);
+  useEffect(() => { if (section === "admin" && dashboardInitialLoadComplete) onInitialReady(); }, [section, dashboardInitialLoadComplete, onInitialReady]);
   useEffect(() => {
     if (section !== "admin") return;
     const timer = window.setInterval(() => { void refresh(); }, 60_000);
