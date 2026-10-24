@@ -80,7 +80,7 @@ export default function PwaNotice() {
       {!online ? (
         <div className="pwa-notice" role="status">
           <span><strong>{t("الاتصال غير متاح")}</strong><small>{t("يمكنك استخدام الصفحة المحفوظة، لكن الحجز ومتابعة الرحلات يحتاجان إلى الإنترنت.")}</small></span>
-          <button type="button" onClick={() => window.location.reload()}>{t("إعادة المحاولة")}</button>
+          <button type="button" onClick={() => { void fetch(window.location.origin, { method: "HEAD", cache: "no-store" }).then(() => setOnline(navigator.onLine)).catch(() => setOnline(navigator.onLine)); }}>{t("إعادة المحاولة")}</button>
         </div>
       ) : updateAvailable ? (
         <div className="pwa-notice" role="status">

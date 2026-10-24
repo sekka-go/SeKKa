@@ -2,6 +2,7 @@ import { getLanguage, t } from "../i18n/runtime";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, uploadVerificationDocument, type VerificationDocument, type VerificationDocumentType } from "../api";
 import { errorText } from "../lib/formatters";
+import { sameData, useSilentRefresh } from "../lib/use-silent-refresh";
 import type { Session, Toast } from "../types";
 
 type Snapshot = {
@@ -18,6 +19,7 @@ type Snapshot = {
 
 export default function VerificationCenter({ session, notify }: { session: Session; notify: (text: string, tone?: Toast["tone"]) => void }) {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
+  const snapshotRef = useRef<Snapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [busyDocument, setBusyDocument] = useState<VerificationDocumentType | null>(null);
   const [telegramUrl, setTelegramUrl] = useState("");
@@ -51,13 +53,15 @@ export default function VerificationCenter({ session, notify }: { session: Sessi
     ...snapshot.documents.map((doc) => `${doc.document_type}:${doc.status}:${doc.reviewed_at ?? ""}`),
   ].join("|") : "", [snapshot]);
 
-  const refresh = useCallback(async (quiet = false) => {
+  const refresh = useCallback(async (quiet = false, signal?: AbortSignal) => {
     if (!quiet) setLoading(true);
     try {
-      const data = await api<Snapshot>("/verification", { token: session.token });
-      setSnapshot(data); setError("");
-      return data;
-    } catch (cause) { setError(errorText(cause)); return null; }
+      const data = await api<Snapshot>("/verification", { token: session.token, signal, etag: true });
+      const changed = !sameData(snapshotRef.current, data);
+      if (changed) { snapshotRef.current = data; setSnapshot(data); }
+      if (!quiet) setError("");
+      return changed;
+    } catch (cause) { if (!quiet) setError(errorText(cause)); return false; }
     finally { if (!quiet) setLoading(false); }
   }, [session.token]);
 
@@ -103,18 +107,9 @@ export default function VerificationCenter({ session, notify }: { session: Sessi
     window.addEventListener("sekka:verification-refresh", onRefresh);
     return () => window.removeEventListener("sekka:verification-refresh", onRefresh);
   }, [refresh]);
-  useEffect(() => {
-    if (!telegramUrl || snapshot?.phone_verified) return;
-    const timer = window.setInterval(() => { void refresh(true); }, 5_000);
-    return () => window.clearInterval(timer);
-  }, [telegramUrl, snapshot?.phone_verified, refresh]);
-  useEffect(() => {
-    if (!allCoreComplete || accountActivated) return;
-    const timer = window.setInterval(() => { void refresh(true); }, 20_000);
-    const onVisibilityChange = () => { if (document.visibilityState === "visible") void refresh(true); };
-    document.addEventListener("visibilitychange", onVisibilityChange);
-    return () => { window.clearInterval(timer); document.removeEventListener("visibilitychange", onVisibilityChange); };
-  }, [accountActivated, allCoreComplete, refresh]);
+  useSilentRefresh((signal) => refresh(true, signal), {
+    enabled: Boolean((telegramUrl && !snapshot?.phone_verified) || (allCoreComplete && !accountActivated)), intervalMs: 20_000,
+  });
 
   const upload = async (type: VerificationDocumentType, file?: File) => {
     if (!file) return;

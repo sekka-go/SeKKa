@@ -37,8 +37,9 @@ export function corsHeaders(
   if (!allowedOrigin) return { "Vary": "Origin" };
   return {
     "Access-Control-Allow-Origin": allowedOrigin,
-    "Access-Control-Allow-Headers": "authorization, apikey, content-type",
+    "Access-Control-Allow-Headers": "authorization, apikey, content-type, if-none-match",
     "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+    "Access-Control-Expose-Headers": "ETag",
     "Access-Control-Max-Age": "86400",
     "Vary": "Origin",
   };
