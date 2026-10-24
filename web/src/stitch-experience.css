@@ -428,6 +428,7 @@ body { font-family: Tajawal, "Plus Jakarta Sans", "Segoe UI", sans-serif; }
 }
 .push-permission-prompt > div:first-child { min-width: 0; }
 .push-permission-prompt strong { color: var(--color-text-primary); }
+.app-shell .push-permission-prompt .button-primary:disabled { color: #fff; }
 .push-permission-prompt p { margin: .3rem 0 0; color: var(--color-text-secondary); font-size: .88rem; line-height: 1.55; }
 .push-permission-actions { display: flex; flex: 0 0 auto; flex-wrap: wrap; gap: .5rem; }
 .app-shell .push-permission-actions .push-prompt-dismiss {

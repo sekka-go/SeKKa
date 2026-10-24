@@ -1,7 +1,7 @@
 import { t } from "../i18n/runtime";
 import Button from "../components/Button";
 import AppIcon from "../components/AppIcon";
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import MapPicker from "../components/MapPickerLoader";
 import LocationSearchField from "../components/LocationSearchField";
 import { categoryName, errorText, formatDate, money, statusLabel } from "../lib/formatters";
@@ -53,6 +53,7 @@ export default function CaptainWorkspace({ session, section, setSection, notify,
   const [lineReturnArrival, setLineReturnArrival] = useState("");
   const [lineSeats, setLineSeats] = useState(4);
   const [linePaymentMethods, setLinePaymentMethods] = useState<string[]>(["cash"]);
+  const lastLocationSync = useRef<{ lat: number; lng: number; at: number } | null>(null);
   const isOffersSection = section === "offers" || section === "publish";
   const publishOpen = section === "publish";
 
@@ -156,10 +157,53 @@ export default function CaptainWorkspace({ session, section, setSection, notify,
   const updateLocation = async () => {
     if (!navigator.geolocation) { notify(t("المتصفح لا يدعم تحديد الموقع."), "error"); return; }
     navigator.geolocation.getCurrentPosition(async ({ coords }) => {
-      try { const result = await api<{ profile: CaptainProfile }>("/captain/location", { method: "POST", token: session.token, body: { current_lat: coords.latitude, current_lng: coords.longitude } }); setProfile(result.profile); notify(t("تم تحديث موقعك الحالي."), "success"); }
+      try { const result = await api<{ profile: CaptainProfile }>("/captain/location", { method: "POST", token: session.token, body: { current_lat: coords.latitude, current_lng: coords.longitude } }); lastLocationSync.current = { lat: coords.latitude, lng: coords.longitude, at: Date.now() }; setProfile(result.profile); notify(t("تم تحديث موقعك الحالي."), "success"); }
       catch (error) { notify(errorText(error), "error"); }
     }, () => notify(t("اسمح للمتصفح بالوصول لموقعك ثم حاول مرة أخرى."), "error"), { enableHighAccuracy: true, timeout: 10_000 });
   };
+  useEffect(() => {
+    if (!profile || profile.verification_status !== "approved" || profile.status === "suspended_grace_expired" || !navigator.geolocation || !navigator.permissions) return;
+    let active = true;
+    let watchId: number | null = null;
+    let syncInFlight = false;
+    let permission: PermissionStatus | null = null;
+    const stopWatching = () => {
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+      watchId = null;
+    };
+    const startWatching = () => {
+      if (!active || watchId !== null) return;
+      watchId = navigator.geolocation.watchPosition(({ coords }) => {
+        if (!active) return;
+        const previous = lastLocationSync.current;
+        const lat = coords.latitude;
+        const lng = coords.longitude;
+        const movedMeters = previous ? Math.hypot((lat - previous.lat) * 111_000, (lng - previous.lng) * 111_000 * Math.cos(lat * Math.PI / 180)) : Infinity;
+        const elapsed = previous ? Date.now() - previous.at : Infinity;
+        if (syncInFlight || (previous && (elapsed < 30_000 || (movedMeters < 100 && elapsed < 5 * 60_000)))) return;
+        syncInFlight = true;
+        void api<{ profile: CaptainProfile }>("/captain/location", { method: "POST", token: session.token, body: { current_lat: lat, current_lng: lng } })
+          .then((result) => { if (active) { lastLocationSync.current = { lat, lng, at: Date.now() }; setProfile(result.profile); } })
+          .catch(() => undefined)
+          .finally(() => { syncInFlight = false; });
+      }, () => undefined, { enableHighAccuracy: false, maximumAge: 30_000, timeout: 15_000 });
+    };
+    const updatePermission = () => {
+      if (permission?.state === "granted") startWatching();
+      else stopWatching();
+    };
+    void navigator.permissions.query({ name: "geolocation" }).then((status) => {
+      if (!active) return;
+      permission = status;
+      permission.addEventListener("change", updatePermission);
+      updatePermission();
+    }).catch(() => undefined);
+    return () => {
+      active = false;
+      stopWatching();
+      permission?.removeEventListener("change", updatePermission);
+    };
+  }, [profile?.verification_status, profile?.status, session.token]);
   const acceptOffer = async (offer: CaptainOffer) => {
     setBusy(true);
     try { await api(`/captain/pool/trips/${offer.trip.id}/accept`, { method: "POST", token: session.token }); setOffers((current) => current.filter((item) => item.trip.id !== offer.trip.id)); setSelectedOfferId(null); notify(t("تم قبول المسار. هتلاقي تفاصيله في رحلاتي."), "success"); await refreshTrips(); }
@@ -234,7 +278,7 @@ export default function CaptainWorkspace({ session, section, setSection, notify,
   return <div className={`captain-offers-page captain-stitch ${publishOpen ? "captain-stitch-publish" : "captain-stitch-home"}`}>
     {!publishOpen && <section className="captain-welcome-panel surface"><div className="captain-welcome-copy"><span className="eyebrow">SeKKa · {t("الكابتن")}</span><h2>{t("أهلاً")} {session.user.full_name.split(" ")[0]}</h2><p>{t("مسارات واضحة، طلبات مناسبة، ورحلات منظمة من مكان واحد.")}</p><div className="captain-welcome-actions"><Button type="button" variant="primary" onClick={() => setSection("publish")}>{t("＋ نشر مسار جديد")}</Button><Button type="button" variant="secondary" onClick={() => void updateLocation()}><AppIcon name="pin" size={17} /> {t("تحديث موقعي")}</Button></div></div><div className="captain-welcome-status"><span className="captain-status-mark"><AppIcon name="route" size={24} /></span><strong>{t("جاهز لاستقبال المسارات")}</strong><small>{t("سنطابق مساراتك مع طلبات الركاب القريبة")}</small></div></section>}
     {!publishOpen && <section className="captain-overview-grid" aria-label={t("ملخص الكابتن")}><article className="captain-overview-tile"><span className="captain-overview-icon"><AppIcon name="route" size={19} /></span><small>{t("مسارات منشورة")}</small><strong>{publishedLinesLoaded ? lines.length : "—"}</strong><span>{t("مساراتك الحالية")}</span></article><article className="captain-overview-tile"><span className="captain-overview-icon"><AppIcon name="inbox" size={19} /></span><small>{t("طلبات مناسبة")}</small><strong>{publishedLinesLoaded ? demandGroups.reduce((total, group) => total + group.requests.length, 0) : "—"}</strong><span>{t("تم تجميعها تلقائيًا")}</span></article><article className="captain-overview-tile"><span className="captain-overview-icon"><AppIcon name="trips" size={19} /></span><small>{t("رحلات قادمة")}</small><strong>{assignedTripsLoaded ? myTrips.length : "—"}</strong><span>{t("المسارات المسندة إليك")}</span></article></section>}
-    <div className="offer-toolbar captain-offer-toolbar"><div><div className="online-pill"><i />  {t("جاهز لاستقبال المسارات")}</div><p>{publishOpen ? t("أدخل بيانات المسار ومواعيد تشغيله ليظهر للركاب المناسبين.") : t("انشر مسارك وسنطابقه مع طلبات الركاب القريبة.")}</p></div><div className="offer-actions"><Button type="button" variant="icon" size="sm" aria-label={t("تحديث الموقع")} title={t("تحديث الموقع")} onClick={() => void updateLocation()}><AppIcon name="pin" size={19} /></Button><Button type="button" variant={publishOpen ? "ghost" : "primary"} size="sm" onClick={() => setSection(publishOpen ? "offers" : "publish")}>{publishOpen ? t("إغلاق النشر") : t("＋ نشر مسار")}</Button><Button type="button" variant="icon" size="sm" aria-label={t("تحديث المسارات")} title={offersLoading ? t("جارٍ التحديث…") : t("تحديث المسارات")} onClick={() => { void loadOffers(); void loadPublishedLines(); }} disabled={offersLoading}><AppIcon name="refresh" size={19} /></Button></div></div>{offerError && <div className="inline-error" role="alert">{offerError}<Button type="button" variant="primary" size="sm" onClick={openVerification}>{t("وثّق حسابك الآن")}</Button></div>}
+    <div className="offer-toolbar captain-offer-toolbar"><div><div className="online-pill"><i />  {t("جاهز لاستقبال المسارات")}</div><p>{publishOpen ? t("أدخل بيانات المسار ومواعيد تشغيله ليظهر للركاب المناسبين.") : t("انشر مسارك وسنطابقه مع طلبات الركاب القريبة.")}</p></div><div className="offer-actions"><Button type="button" variant="icon" size="sm" aria-label={t("تحديث الموقع")} title={t("تحديث الموقع")} onClick={() => void updateLocation()}><AppIcon name="pin" size={19} /></Button><Button type="button" variant={publishOpen ? "ghost" : "primary"} size="sm" onClick={() => setSection(publishOpen ? "offers" : "publish")}>{publishOpen ? t("إغلاق النشر") : t("＋ نشر مسار")}</Button></div></div>{offerError && <div className="inline-error" role="alert">{offerError}<Button type="button" variant="primary" size="sm" onClick={openVerification}>{t("وثّق حسابك الآن")}</Button></div>}
     {publishOpen && <section className="surface onboarding-card captain-route-editor"><div className="surface-heading"><div><span className="eyebrow">{t("مسار جديد")}</span><h2>{t("انشر خط سيرك")}</h2><p>{t("ستظهر الرحلة للركاب ذوي الطلبات المشابهة.")}</p></div><span className="surface-icon">⌖</span></div><form className="form-stack" onSubmit={publishLine}>
       <LocationSearchField kind="pickup" title={t("نقطة البداية")} value={originSearch} token={session.token} onChange={(value) => { setOriginSearch(value); setOrigin(null); }} onSelect={(point) => { setOrigin(point); setOriginSearch(point.label ?? ""); }} onChooseMap={() => { setLineMapTarget("pickup"); setLineMapOpen(true); }} onFocus={() => undefined} pointSelected={origin?.lat != null && origin.lng != null} />
       <LocationSearchField kind="dropoff" title={t("نقطة الوصول")} value={destinationSearch} token={session.token} onChange={(value) => { setDestinationSearch(value); setDestination(null); }} onSelect={(point) => { setDestination(point); setDestinationSearch(point.label ?? ""); }} onChooseMap={() => { setLineMapTarget("dropoff"); setLineMapOpen(true); }} onFocus={() => undefined} pointSelected={destination?.lat != null && destination.lng != null} />
