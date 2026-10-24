@@ -9,8 +9,7 @@ type BrandLogoProps = {
 export default function BrandLogo({ compact = false, className = "" }: BrandLogoProps) {
   return (
     <span className={`brand-logo ${compact ? "brand-logo-compact" : ""} ${className}`.trim()}>
-      <SekkaMark className="brand-logo-mark" />
-      {!compact && <span className="brand-logo-copy"><strong>{t("سِكَّة | SeKKa")}</strong><small>{t("معاك في السكة")}</small></span>}
+      {compact ? <SekkaMark className="brand-logo-mark" /> : <span className="brand-logo-copy"><strong>{t("سِكَّة | SeKKa")}</strong><small>{t("معاك في السكة")}</small></span>}
     </span>
   );
 }
