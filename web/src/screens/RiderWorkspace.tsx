@@ -13,8 +13,6 @@ import { reverseGeocode } from "../lib/location-address";
 import { api, type Category, type GroupView, type RiderCommuterPreferences, type SavedPlace } from "../api";
 import { defaultDates, isServiceDay, serviceDatesFromStart } from "../lib/booking-dates";
 import type { NavKey, Session, Toast } from "../types";
-import type { ThemePreference } from "../components/ThemePreferenceCard";
-import AppSettings from "../components/AppSettings";
 import {
   AccountPanel, EmptyState, ErrorState, GroupDetail, GroupSummary, LoadingCard,
   TripList,
@@ -23,10 +21,9 @@ import {
 const hasSelectedPoint = (point: MapPoint | null) =>
   typeof point?.lat === "number" && Number.isFinite(point.lat) &&
   typeof point?.lng === "number" && Number.isFinite(point.lng);
-export default function RiderWorkspace({ session, section, setSection, refreshNotifications, registerPoolRefresh, notify, themePreference, resolvedTheme, onThemePreferenceChange, onInitialReady }: {
+export default function RiderWorkspace({ session, section, setSection, refreshNotifications, registerPoolRefresh, notify, onInitialReady }: {
   session: Session; section: NavKey; setSection: (section: NavKey, historyMode?: "push" | "replace") => void;
   refreshNotifications: () => Promise<void>; registerPoolRefresh: (refresh: () => Promise<void>) => void; notify: (text: string, tone?: Toast["tone"]) => void;
-  themePreference: ThemePreference; resolvedTheme: "light" | "dark"; onThemePreferenceChange: (value: ThemePreference) => void;
   onInitialReady: () => void;
 }) {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -384,7 +381,7 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
 
   const requestCards = <div className="rider-request-list">{demandRequests.map((request) => <article className="surface rider-request-card" key={request.id}><div className="rider-request-card-top"><span className={`status-chip status-${request.status}`}>{request.status === "matched" ? t("تم العثور على مسار") : request.status === "open" ? t("نبحث عن مسار") : request.status === "cancelled" ? t("ملغي") : t("منتهي")}</span><span>{request.vehicle_type_id === "hiace" ? t("هاي إس") : t("ملاكي")}</span><time>{formatDate(request.trip_date)} · {request.arrival_time.slice(0, 5)}{request.return_arrival_time ? ` · ${t("عودة")} ${request.return_arrival_time.slice(0, 5)}` : ""}</time></div><div className="rider-request-route"><span className="rider-route-timeline" aria-hidden="true"><i /><b /><i /></span><div><strong>{request.pickup_label}</strong><strong>{request.dropoff_label}</strong></div></div><p className="rider-request-note">{request.demand_groups?.status === "matched" ? t("جمع التطبيق طلبك مع طلبات مشابهة.") : t("سيجمع التطبيق الطلبات المتقاربة تلقائيًا.")}</p>{request.line && <div className="rider-match-summary"><strong>{t("المسار المطابق")}: {request.line.origin_label} ← {request.line.destination_label}</strong><span>{request.line.captain_name} · {t("· وصول")} {request.line.arrival_time.slice(0, 5)}{request.return_arrival_time && request.line.return_arrival_time ? ` · ${t("عودة")} ${request.line.return_arrival_time.slice(0, 5)}` : ""} · {money(Number(request.line.price_per_seat))} {t("للمقعد")}</span></div>}</article>)}</div>;
 
-  if (section === "account") return <div className="rider-account-experience">{dataErrorBanner}<section className="rider-profile-heading"><div><span className="eyebrow">{t("حسابك في سِكّة")}</span><h2>{t("الملف الشخصي والإعدادات")}</h2><p>{t("بياناتك وأماكنك المحفوظة وتفضيلات التطبيق في مكان واحد.")}</p></div></section><AccountPanel session={session} notify={notify} /><AppSettings session={session} themePreference={themePreference} resolvedTheme={resolvedTheme} onThemePreferenceChange={onThemePreferenceChange} notify={notify} /></div>;
+  if (section === "account") return <div className="rider-account-experience">{dataErrorBanner}<section className="rider-profile-heading"><div><span className="eyebrow">{t("حسابك في سِكّة")}</span><h2>{t("الملف الشخصي والإعدادات")}</h2><p>{t("إدارة بيانات حسابك وأماكنك المحفوظة.")}</p></div></section><AccountPanel session={session} notify={notify} /></div>;
 
   if (section === "requests") return <div className="rider-requests-page">{dataErrorBanner}<section className="rider-section-intro"><span className="eyebrow">{t("كل طلباتك في مكان واحد")}</span><h2>{t("طلبات رحلاتك")}</h2><p>{t("تابع حالة طلباتك والمسارات التي تم العثور عليها")}</p></section>{demandRequests.length ? requestCards : initialLoadError ? null : <EmptyState icon="⌖" title={t("مافيش طلبات رحلات لسه")} text="ابحث عن مسار مناسب، ولو مافيش هنسجل طلبك ونجمعه مع الطلبات المشابهة." action="ابحث عن رحلة" onAction={() => openBooking("new")} />}</div>;
 
