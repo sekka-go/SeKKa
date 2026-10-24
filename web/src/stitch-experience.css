@@ -355,6 +355,10 @@ body { font-family: Tajawal, "Plus Jakarta Sans", "Segoe UI", sans-serif; }
   background: var(--online-dot);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--online-dot) 14%, transparent);
 }
+:root[data-theme] .app-shell .workspace .topbar .connection-state.is-online {
+  color: var(--online-fg);
+  background: var(--online-bg);
+}
 .app-settings-stack { background: var(--bg); }
 .app-settings-section { background: var(--surface); }
 
