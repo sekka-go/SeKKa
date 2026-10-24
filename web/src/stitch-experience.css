@@ -1,6 +1,7 @@
 /* Stitch-informed screen composition and SeKKa design tokens.
    Keep product behavior and preserve the header logo's existing appearance. */
 :root {
+  --brand-green: #00865b;
   --color-background: #090d16;
   --color-surface: #0f172a;
   --color-surface-elevated: #1e293b;
@@ -9,14 +10,14 @@
   --color-text-primary: #f8fafc;
   --color-text-secondary: #cbd5e1;
   --color-text-muted: #94a3b8;
-  --color-primary: #10b981;
+  --color-primary: var(--brand-green);
   --color-primary-text: #ffffff;
-  --color-accent: #4edea3;
-  --color-accent-text: #6ffbbe;
-  --color-secondary: #bec6e0;
-  --color-icon: #4edea3;
+  --color-accent: var(--brand-green);
+  --color-accent-text: var(--brand-green);
+  --color-secondary: var(--brand-green);
+  --color-icon: var(--brand-green);
   --color-border: #334155;
-  --color-success: #4edea3;
+  --color-success: var(--brand-green);
   --color-warning: #fbbf24;
   --color-error: #f87171;
   --color-danger: #f87171;
@@ -30,7 +31,7 @@
   --color-navigation-active: rgb(16 185 129 / 16%);
   --color-hover: rgb(148 163 184 / 10%);
   --color-selection: #10b981;
-  --color-focus: #34d399;
+  --color-focus: var(--brand-green);
   --color-shadow: rgb(2 6 23 / 24%);
   --color-soft-accent: rgb(16 185 129 / 11%);
   --color-soft-cyan: rgb(56 189 248 / 10%);
@@ -40,8 +41,8 @@
   --panel: var(--color-surface);
   --panel-hi: var(--color-surface-elevated);
   --yellow: var(--color-primary);
-  --yellow-deep: var(--color-accent-text);
-  --cyan: #4edea3;
+  --yellow-deep: var(--brand-green);
+  --cyan: var(--brand-green);
   --danger: var(--color-danger);
   --success: var(--color-success);
   --warning: var(--color-warning);
@@ -53,16 +54,16 @@
   --space-card: 1.15rem;
   --bg: var(--color-background);
   --surface: var(--color-surface);
-  --icon-chip-bg: rgba(255, 210, 31, .08);
-  --icon-fg: var(--color-icon);
-  --icon-chip-bg-active: rgba(255, 210, 31, .16);
-  --icon-fg-active: var(--color-accent-text);
+  --icon-chip-bg: color-mix(in srgb, var(--brand-green) 12%, var(--color-surface));
+  --icon-fg: var(--brand-green);
+  --icon-chip-bg-active: var(--brand-green);
+  --icon-fg-active: #ffffff;
   --online-bg: color-mix(in srgb, var(--color-success) 12%, var(--color-surface));
   --online-fg: var(--color-success);
   --online-dot: var(--color-success);
-  --splash-accent: #7ee8b0;
-  --splash-line-soft: color-mix(in srgb, #7ee8b0 40%, transparent);
-  --splash-ring: color-mix(in srgb, #7ee8b0 10%, transparent);
+  --splash-accent: var(--brand-green);
+  --splash-line-soft: color-mix(in srgb, var(--brand-green) 40%, transparent);
+  --splash-ring: color-mix(in srgb, var(--brand-green) 10%, transparent);
   font-family: Tajawal, "Plus Jakarta Sans", "Segoe UI", sans-serif;
 }
 
@@ -76,14 +77,14 @@
   --color-text-primary: #0b1c30;
   --color-text-secondary: #475569;
   --color-text-muted: #64748b;
-  --color-primary: #10b981;
+  --color-primary: var(--brand-green);
   --color-primary-text: #ffffff;
-  --color-accent: #047857;
-  --color-accent-text: #006c49;
-  --color-secondary: #565e74;
-  --color-icon: #006c49;
+  --color-accent: var(--brand-green);
+  --color-accent-text: var(--brand-green);
+  --color-secondary: var(--brand-green);
+  --color-icon: var(--brand-green);
   --color-border: #d5e0ec;
-  --color-success: #047857;
+  --color-success: var(--brand-green);
   --color-warning: #855300;
   --color-error: #b91c1c;
   --color-danger: #b91c1c;
@@ -97,28 +98,28 @@
   --color-navigation-active: #d1fae5;
   --color-hover: #eaf4ee;
   --color-selection: #10b981;
-  --color-focus: #047857;
+  --color-focus: var(--brand-green);
   --color-shadow: rgb(15 23 42 / 7%);
   --color-soft-accent: #ecfdf5;
   --color-soft-cyan: #e7f5f4;
   --yellow: #10b981;
-  --yellow-deep: #047857;
-  --cyan: #047857;
-  --icon-chip-bg: #2d6a4f;
+  --yellow-deep: var(--brand-green);
+  --cyan: var(--brand-green);
+  --icon-chip-bg: var(--brand-green);
   --icon-fg: #ffffff;
-  --icon-chip-bg-active: #1b4332;
+  --icon-chip-bg-active: var(--brand-green);
   --icon-fg-active: #ffffff;
-  --splash-accent: #2d6a4f;
-  --splash-line-soft: color-mix(in srgb, #2d6a4f 40%, transparent);
-  --splash-ring: color-mix(in srgb, #2d6a4f 10%, transparent);
+  --splash-accent: var(--brand-green);
+  --splash-line-soft: color-mix(in srgb, var(--brand-green) 40%, transparent);
+  --splash-ring: color-mix(in srgb, var(--brand-green) 10%, transparent);
 }
 
 html, body, #root, .app-shell { background: var(--color-background); color: var(--color-text-primary); }
 body { font-family: Tajawal, "Plus Jakarta Sans", "Segoe UI", sans-serif; }
 .app-shell :is(input, select, textarea) { border-radius: .8rem; }
 .app-shell :is(input, select, textarea):focus-visible { outline: 2px solid var(--color-focus); outline-offset: 1px; }
-.app-shell .button-primary { color: #fff; background: var(--color-primary); border-color: var(--color-primary); box-shadow: 0 5px 14px color-mix(in srgb, var(--color-primary) 18%, transparent); }
-.app-shell .button-primary:hover:not(:disabled) { background: #059669; border-color: #059669; }
+.app-shell .button-primary { color: #fff; background: var(--brand-green); border-color: var(--brand-green); box-shadow: 0 5px 16px color-mix(in srgb, var(--brand-green) 34%, transparent); }
+.app-shell .button-primary:hover:not(:disabled) { background: var(--brand-green); border-color: var(--brand-green); box-shadow: 0 6px 20px color-mix(in srgb, var(--brand-green) 48%, transparent); }
 .app-shell .button-outline, .app-shell .button-secondary { background: var(--color-surface-elevated); }
 .app-shell .button-danger, .app-shell .button-cancel-trip { color: var(--color-danger); background: color-mix(in srgb, var(--color-danger) 9%, var(--color-surface)); border-color: color-mix(in srgb, var(--color-danger) 45%, var(--color-border)); }
 .app-shell :is(.surface, .auth-card, .verification-center, .messages-workspace, .admin-control-panel article) { border-color: var(--color-border); border-radius: var(--radius-card); box-shadow: 0 2px 8px -2px var(--color-shadow), 0 1px 3px var(--color-shadow); }
@@ -214,8 +215,8 @@ body { font-family: Tajawal, "Plus Jakarta Sans", "Segoe UI", sans-serif; }
 .workspace .sidebar-primary-nav { gap: .35rem; }
 .workspace .sidebar-primary-nav .nav-item, .workspace .sidebar-utilities .nav-item { min-height: 2.9rem; padding: .55rem .7rem; color: #cbd5e1; border-radius: .85rem; }
 .workspace .sidebar-primary-nav .nav-item:hover, .workspace .sidebar-utilities .nav-item:hover { color: #fff; background: rgb(148 163 184 / 10%); }
-.workspace .sidebar-primary-nav .nav-item.nav-active { color: #6ffbbe; background: rgb(16 185 129 / 16%); box-shadow: inset 3px 0 #10b981; }
-.workspace .sidebar-primary-nav .nav-active .nav-icon { color: #6ffbbe; }
+.workspace .sidebar-primary-nav .nav-item.nav-active { color: var(--brand-green); background: color-mix(in srgb, var(--brand-green) 14%, var(--color-surface)); box-shadow: inset 3px 0 var(--brand-green); }
+.workspace .sidebar-primary-nav .nav-active .nav-icon { color: var(--icon-fg-active); }
 .workspace .sidebar-utilities { padding-top: .5rem; border-top: 1px solid rgb(148 163 184 / 18%); }
 .workspace .sidebar-info-links button { color: #9eacc0; }
 .workspace .sidebar-profile { min-height: 4.3rem; border: 1px solid rgb(148 163 184 / 24%); border-radius: 1rem; background: #18263a; }
@@ -361,6 +362,32 @@ body { font-family: Tajawal, "Plus Jakarta Sans", "Segoe UI", sans-serif; }
 }
 .app-settings-stack { background: var(--bg); }
 .app-settings-section { background: var(--surface); }
+
+/* Keep green actions saturated and consistent in the Light and Dark palettes. */
+:root[data-theme="light"] .app-shell :is(.button-primary, .button-outline, .button-secondary, .button-quiet, .button-dark):not(.button-danger):not(.button-cancel-trip):not(.is-danger):not(:disabled) {
+  color: #fff;
+  background: var(--brand-green);
+  border-color: var(--brand-green);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--brand-green) 32%, transparent);
+}
+:root[data-theme="light"] .app-shell :is(.button-primary, .button-outline, .button-secondary, .button-quiet, .button-dark):not(.button-danger):not(.button-cancel-trip):not(.is-danger):hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--brand-green) 44%, transparent);
+}
+:root[data-theme="light"] .app-shell .workspace .topbar :is(.notification-bell, .mobile-menu),
+:root[data-theme="light"] .app-shell .workspace .notification-icon-action,
+:root[data-theme="light"] .app-shell .theme-mode-toggle {
+  color: #fff;
+  background: var(--brand-green);
+  border-color: var(--brand-green);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--brand-green) 32%, transparent);
+}
+:root[data-theme="light"] .app-shell .workspace .topbar :is(.notification-bell, .mobile-menu):hover:not(:disabled),
+:root[data-theme="light"] .app-shell .workspace .notification-icon-action:hover:not(:disabled),
+:root[data-theme="light"] .app-shell .theme-mode-toggle:hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--brand-green) 44%, transparent);
+}
 
 /* Registration scrolls as one document on phones so consent and submit remain reachable. */
 @media (max-width: 560px) {

@@ -391,7 +391,7 @@
 }
 
 .journey-particle:nth-child(9) { left: 18%; top: 89%; background: #fb7185; animation-delay: -3.5s; }
-.journey-particle:nth-child(10) { left: 77%; top: 35%; background: #34d399; animation-delay: -1.5s; }
+.journey-particle:nth-child(10) { left: 77%; top: 35%; background: var(--color-success); animation-delay: -1.5s; }
 .journey-particle:nth-child(11) { left: 93%; top: 76%; background: #60a5fa; animation-delay: -5.5s; }
 .journey-particle:nth-child(12) { left: 42%; top: 12%; background: #facc15; animation-delay: -.5s; }
 

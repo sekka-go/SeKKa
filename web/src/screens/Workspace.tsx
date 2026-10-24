@@ -66,6 +66,7 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
     if (state?.sekkaWorkspace && state.sekkaSection && sectionAllowedForRole(state.sekkaSection, session.user.role)) return state.sekkaSection;
     return initialSection;
   });
+  const notificationReturn = useRef<{ section: NavKey; historyIndex: number; scrollY: number }>({ section: initialSection, historyIndex: 0, scrollY: 0 });
   const [historyDepth, setHistoryDepth] = useState(() => {
     const state = window.history.state as { sekkaWorkspace?: boolean; sekkaIndex?: number; sekkaSection?: NavKey } | null;
     return state?.sekkaWorkspace && state.sekkaSection && sectionAllowedForRole(state.sekkaSection, session.user.role) && state.sekkaSection === sectionForPath(window.location.pathname, session.user.role) ? state.sekkaIndex ?? 0 : 0;
@@ -171,6 +172,30 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
     setPendingGroupEdit(groupId);
     setSection("home");
   }, [setSection]);
+  const openNotifications = () => {
+    if (!notificationsOpen) {
+      const state = window.history.state as { sekkaWorkspace?: boolean; sekkaIndex?: number } | null;
+      notificationReturn.current = {
+        section,
+        historyIndex: state?.sekkaWorkspace ? state.sekkaIndex ?? historyDepth : historyDepth,
+        scrollY: window.scrollY,
+      };
+      setInfoPage(null);
+      setSection("notifications");
+      return;
+    }
+    closeNotifications();
+  };
+  const closeNotifications = () => {
+    const previous = notificationReturn.current;
+    const state = window.history.state as { sekkaWorkspace?: boolean; sekkaSection?: NavKey; sekkaIndex?: number } | null;
+    if (state?.sekkaWorkspace && state.sekkaSection === "notifications" && (state.sekkaIndex ?? 0) > previous.historyIndex) {
+      window.history.back();
+    } else {
+      setSection(previous.section, "replace");
+    }
+    window.requestAnimationFrame(() => window.requestAnimationFrame(() => window.scrollTo({ top: previous.scrollY, behavior: "instant" as ScrollBehavior })));
+  };
   useEffect(() => {
     if (pendingGroupEdit === null || section === "notifications") return;
     window.dispatchEvent(new CustomEvent<number>("sekka:edit-group", { detail: pendingGroupEdit }));
@@ -226,6 +251,10 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
   const activateNav = (item: { key: NavKey }) => {
     setInfoPage(null);
     if (item.key === "booking") window.dispatchEvent(new CustomEvent("sekka:booking-mode", { detail: "new" }));
+    if (item.key === "notifications" && !notificationsOpen) {
+      const state = window.history.state as { sekkaWorkspace?: boolean; sekkaIndex?: number } | null;
+      notificationReturn.current = { section, historyIndex: state?.sekkaWorkspace ? state.sekkaIndex ?? historyDepth : historyDepth, scrollY: window.scrollY };
+    }
     setSection(item.key);
     setNavOpen(false);
   };
@@ -251,7 +280,7 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
   return <div className={`workspace ${session.user.role === "captain" ? "captain-workspace" : ""} ${notificationsOpen ? "notifications-open" : ""} ${session.user.role === "rider" && section === "home" ? "rider-home-active" : ""} ${session.user.role === "rider" && section === "requests" ? "rider-requests-active" : ""}`}>
     <WorkspaceNavigation items={nav} activeSection={section} notificationsOpen={notificationsOpen} unreadCount={unread} unreadMessageCount={unreadMessageCount} role={session.user.role} fullName={session.user.full_name} userId={session.user.id} token={session.token} open={navOpen} onSelect={activateNav} onClose={() => setNavOpen(false)} onAccount={() => { setInfoPage(null); setSection("account"); setNavOpen(false); }} onInvite={() => void inviteFriends()} onSignOut={onSignOut} onOpenInfo={(page) => { setInfoPage(page); setSection(initialSection); setNavOpen(false); }} />
     <main className="main-area">
-      <header className="topbar"><div className="topbar-brand-group"><button type="button" className="mobile-menu" onClick={() => setNavOpen(true)} aria-label={t("فتح القائمة")}><AppIcon name="menu" /></button><button type="button" className="topbar-brand-home" onClick={() => { setSection(initialSection); setNavOpen(false); }} aria-label={t("العودة للرئيسية")}><BrandLogo className="topbar-brand" /></button></div><div className="topbar-actions"><span className={`connection-state ${isOnline ? "is-online" : "is-offline"}`} role="status"><i />{isOnline ? t("متصل") : t("غير متصل")}</span><button type="button" className={`icon-button notification-bell ${notificationsOpen ? "is-open" : ""}`} onClick={() => setSection("notifications")} aria-expanded={notificationsOpen} aria-controls="sekka-notifications-panel" aria-label={unread > 0 ? `${t("الإشعارات")} · ${unread} ${t("غير مقروءة")}` : t("الإشعارات")}><AppIcon name="bell" size={21} />{unread > 0 && <i />}</button></div></header>
+      <header className="topbar"><div className="topbar-brand-group"><button type="button" className="mobile-menu" onClick={() => setNavOpen(true)} aria-label={t("فتح القائمة")}><AppIcon name="menu" /></button><button type="button" className="topbar-brand-home" onClick={() => { setSection(initialSection); setNavOpen(false); }} aria-label={t("العودة للرئيسية")}><BrandLogo className="topbar-brand" /></button></div><div className="topbar-actions"><span className={`connection-state ${isOnline ? "is-online" : "is-offline"}`} role="status"><i />{isOnline ? t("متصل") : t("غير متصل")}</span><button type="button" className={`icon-button notification-bell ${notificationsOpen ? "is-open" : ""}`} onClick={openNotifications} aria-expanded={notificationsOpen} aria-controls="sekka-notifications-panel" aria-label={unread > 0 ? `${t("الإشعارات")} · ${unread} ${t("غير مقروءة")}` : t("الإشعارات")}><AppIcon name="bell" size={21} />{unread > 0 && <i />}</button></div></header>
       <div className="page-content">{infoPage ? <InfoPages page={infoPage} onBack={() => setInfoPage(null)} /> : <>{section !== "booking" && section !== "notifications" && <div className={`page-heading ${section === "account" ? "page-heading-account" : ""}`}><div><h1>{t(title)}</h1>{subtitle && <p>{t(subtitle)}</p>}</div>{session.user.role === "admin" && section.startsWith("admin") && section !== "admin" && <button type="button" className="button button-outline button-small" onClick={() => setSection("admin")}>{t("العودة للملخص")}</button>}</div>}
         {section === "settings" && <AppSettings session={session} themePreference={themePreference} resolvedTheme={resolvedTheme} onThemePreferenceChange={onThemePreferenceChange} notify={notify} />}
         {session.user.role !== "admin" && <VerificationReminder session={session} onOpen={openMissingVerification} visible={section !== "account" && section !== "settings" && section !== "notifications" && !(session.user.role === "captain" && section === "offers")} />}
@@ -259,7 +288,7 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
         {session.user.role === "rider" && section !== "messages" && section !== "settings" && section !== "notifications" && <RiderWorkspace session={session} section={section} setSection={setSection} refreshNotifications={refreshNotifications} registerPoolRefresh={registerPoolRefresh} notify={notify} themePreference={themePreference} resolvedTheme={resolvedTheme} onThemePreferenceChange={onThemePreferenceChange} />}
         {session.user.role === "captain" && section !== "messages" && section !== "settings" && section !== "notifications" && <CaptainWorkspace session={session} section={section} setSection={setSection} notify={notify} />}
         {session.user.role === "admin" && section !== "settings" && section !== "notifications" && <AdminWorkspace session={session} section={section} refreshNotifications={refreshNotifications} notify={notify} />}
-        {notificationsOpen && <NotificationsPanel items={notifications} token={session.token} onRefresh={refreshNotifications} onPoolChanged={session.user.role === "rider" ? () => riderPoolRefreshRef.current() : undefined} onEditGroup={session.user.role === "rider" ? editNotificationGroup : undefined} allowWaitActions={session.user.role === "rider"} notify={notify} isLoading={!notificationsLoaded} error={notificationsError} onOpenSettings={() => setSection("settings")} onClose={() => setSection(initialSection)} />}</>}
+        {notificationsOpen && <NotificationsPanel items={notifications} token={session.token} onRefresh={refreshNotifications} onPoolChanged={session.user.role === "rider" ? () => riderPoolRefreshRef.current() : undefined} onEditGroup={session.user.role === "rider" ? editNotificationGroup : undefined} allowWaitActions={session.user.role === "rider"} notify={notify} isLoading={!notificationsLoaded} error={notificationsError} onOpenSettings={() => setSection("settings")} onClose={closeNotifications} />}</>}
       </div>
     </main>
   </div>;

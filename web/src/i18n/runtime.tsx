@@ -20,6 +20,12 @@ function applicationName(language: Language) {
   return applicationNames[language];
 }
 
+export function isRefreshNavigation() {
+  if (typeof performance === "undefined") return false;
+  const navigation = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+  return navigation?.type === "reload";
+}
+
 function isLanguage(value: string | null): value is Language {
   return value === "ar" || value === "en";
 }
@@ -101,7 +107,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     let minimumSplashTimer: number | null = null;
     const startedAt = performance.now();
     const finishAfterReadableSplash = (finish: () => void) => {
-      const remaining = Math.max(0, 2200 - (performance.now() - startedAt));
+      const minimumDuration = isRefreshNavigation() ? 0 : 2200;
+      const remaining = Math.max(0, minimumDuration - (performance.now() - startedAt));
       minimumSplashTimer = window.setTimeout(() => {
         if (mounted) finish();
       }, remaining);
@@ -149,6 +156,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       title={applicationName(language)}
       tagline={language === "ar" ? "طريقك أسهل مع سِكّة" : "Your route, made easier"}
       accessibleLabel={language === "ar" ? "جاري فتح سِكّة" : "Opening SeKKa"}
+      variant={isRefreshNavigation() ? "refresh" : "brand"}
     />}
   </LanguageContext.Provider>;
 }

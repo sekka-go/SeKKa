@@ -31,6 +31,24 @@
 @media (prefers-reduced-motion: reduce) { .splash-track { animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }
 :root[data-theme="light"] .splash-title { text-shadow: 0 2px 16px var(--splash-line-soft); }
 :root[data-theme="light"] .splash-tagline { color: var(--color-text-secondary); }
+.is-refresh-splash .refresh-splash-scene { position: absolute; inset: 0; overflow: hidden; }
+.is-refresh-splash .splash-content { position: absolute; inset: auto 0 max(2.5rem, env(safe-area-inset-bottom)); width: 100%; gap: .3rem; padding: 1rem; }
+.is-refresh-splash .splash-title { font-size: clamp(1.8rem, 8vw, 2.7rem); text-shadow: none; }
+.is-refresh-splash .splash-tagline { margin: 0; }
+.refresh-road { position: absolute; inset-inline: 0; bottom: 28%; height: 2px; background: color-mix(in srgb, var(--splash-accent) 34%, transparent); }
+.refresh-road i { position: absolute; top: -2px; width: 1.5rem; height: 4px; border-radius: 99px; background: var(--splash-line-soft); animation: refresh-road-flow .5s linear infinite; }
+.refresh-road i:nth-child(1) { left: 15%; }
+.refresh-road i:nth-child(2) { left: 52%; animation-delay: -.18s; }
+.refresh-road i:nth-child(3) { left: 82%; animation-delay: -.36s; }
+.refresh-car { position: absolute; bottom: calc(28% - 1rem); left: 0; width: clamp(13rem, 64vw, 21rem); height: auto; filter: drop-shadow(0 1rem 1.2rem color-mix(in srgb, var(--splash-accent) 25%, transparent)); animation: refresh-car-drive 1.2s cubic-bezier(.35,.02,.72,.35) infinite; }
+.refresh-driver-wave { transform-box: view-box; transform-origin: 242px 36px; animation: refresh-driver-wave .32s ease-in-out 3; }
+@keyframes refresh-car-drive { from { transform: translateX(-115vw); } to { transform: translateX(110vw); } }
+@keyframes refresh-road-flow { to { transform: translateX(2rem); } }
+@keyframes refresh-driver-wave { 50% { transform: rotate(25deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .refresh-car { left: 50%; transform: translateX(-50%); animation: none; }
+  .refresh-road i, .refresh-driver-wave { animation: none; }
+}
 .startup-home-skeleton {
   position: fixed;
   inset: 0;

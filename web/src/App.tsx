@@ -5,7 +5,7 @@ import RouteChunkBoundary from "./components/RouteChunkBoundary";
 import SekkaSplash from "./components/SekkaSplash";
 import type { Session, Toast } from "./types";
 import type { ThemePreference } from "./components/ThemePreferenceCard";
-import { t, useLanguage } from "./i18n/runtime";
+import { isRefreshNavigation, t, useLanguage } from "./i18n/runtime";
 import InfoPages from "./components/InfoPages";
 import type { InfoPageKey } from "./components/InfoPages";
 import BrandLogo from "./components/BrandLogo";
@@ -56,9 +56,12 @@ function RouteLoading() {
 
 export default function App() {
   const { direction } = useLanguage();
+  const isRefresh = isRefreshNavigation();
+  const startupSplashStartedAt = useRef(performance.now());
   const [session, setSession] = useState<Session | null>(() => getStoredSession());
   const [sessionCheckPending, setSessionCheckPending] = useState(() => Boolean(getStoredSession()));
   const [sessionCheckTimedOut, setSessionCheckTimedOut] = useState(false);
+  const [refreshSplashVisible, setRefreshSplashVisible] = useState(() => isRefresh);
   const [showWelcome] = useState(() => currentPathname() === "/" && !getStoredSession() && !hasSeenWelcome());
   const [themePreference, setThemePreference] = useState<ThemePreference>(readThemePreference);
   const resolvedTheme = resolveTheme(themePreference);
@@ -106,19 +109,31 @@ export default function App() {
         clearSession(); setSession(null); notify(t("انتهت جلستك، سجّل الدخول مرة أخرى."), "info");
       }
     }).finally(() => {
-      if (active) {
+      if (!active) return;
+      const finish = () => {
+        if (!active) return;
         setSessionCheckPending(false);
         setSessionCheckTimedOut(false);
-      }
+      };
+      const minRefreshSplash = isRefresh ? 1200 : 0;
+      const remaining = Math.max(0, minRefreshSplash - (performance.now() - startupSplashStartedAt.current));
+      if (remaining) window.setTimeout(finish, remaining);
+      else finish();
     });
     return () => { active = false; };
   }, [session?.token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!session || !sessionCheckPending) return;
-    const timeout = window.setTimeout(() => setSessionCheckTimedOut(true), 4000);
+    const timeout = window.setTimeout(() => setSessionCheckTimedOut(true), isRefresh ? 1500 : 4000);
     return () => window.clearTimeout(timeout);
   }, [session?.token, sessionCheckPending]);
+
+  useEffect(() => {
+    if (!refreshSplashVisible) return;
+    const timeout = window.setTimeout(() => setRefreshSplashVisible(false), 1200);
+    return () => window.clearTimeout(timeout);
+  }, []);
 
   useEffect(() => {
     if (!showWelcome) return;
@@ -134,7 +149,7 @@ export default function App() {
   const policyPage = publicPolicyPath(currentPathname());
 
   return <div className="app-shell" data-theme={resolvedTheme} dir={direction}>
-    {sessionCheckPending && !sessionCheckTimedOut && <SekkaSplash title={t("اسم التطبيق")} tagline={t("طريقك أسهل مع سِكّة")} accessibleLabel={t("جاري فتح سِكّة")} />}
+    {(refreshSplashVisible || sessionCheckPending && !sessionCheckTimedOut) && <SekkaSplash title={t("اسم التطبيق")} tagline={t("طريقك أسهل مع سِكّة")} accessibleLabel={t("جاري فتح سِكّة")} variant={isRefresh ? "refresh" : "brand"} />}
     {sessionCheckPending && sessionCheckTimedOut && <div className="startup-home-skeleton" role="status" aria-label={t("جاري تحميل الصفحة الرئيسية")}><span /><span /><span /><span /></div>}
     {toast && <div className={`toast toast-${toast.tone}`} role={toast.tone === "error" ? "alert" : "status"} aria-live={toast.tone === "error" ? "assertive" : "polite"}><span className="toast-icon" aria-hidden="true">{toast.tone === "success" ? "✓" : toast.tone === "error" ? "!" : "i"}</span><span className="toast-message">{toast.text}</span><button onClick={() => { setToast(null); if (toastTimer.current !== null) window.clearTimeout(toastTimer.current); toastTimer.current = null; }} aria-label={t("إغلاق")}>×</button></div>}
     {policyPage ? <main className="public-policy-page"><header><a href="/" aria-label="SeKKa"><BrandLogo /></a><PublicLanguageToggle /></header><InfoPages page={policyPage} onBack={() => { window.location.assign("/"); }} /></main> : session ? <RouteChunkBoundary><Suspense fallback={<RouteLoading />}><Workspace session={session} onSignOut={signOut} notify={notify} themePreference={themePreference} resolvedTheme={resolvedTheme} onThemePreferenceChange={setThemePreference} /></Suspense></RouteChunkBoundary> : currentPathname() === "/login" || currentPathname() === "/register" || isProtectedPath(currentPathname()) || !showWelcome ? <RouteChunkBoundary><Suspense fallback={<RouteLoading />}><AuthScreen onSignedIn={onSignedIn} notify={notify} /></Suspense></RouteChunkBoundary> : <LandingScreen />}
