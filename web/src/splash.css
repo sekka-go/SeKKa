@@ -31,7 +31,8 @@
 @media (prefers-reduced-motion: reduce) { .splash-track { animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }
 :root[data-theme="light"] .splash-title { text-shadow: 0 2px 16px var(--splash-line-soft); }
 :root[data-theme="light"] .splash-tagline { color: var(--color-text-secondary); }
-.is-refresh-splash .splash-track { animation-duration: 1.8s; }
+.is-refresh-splash { background: transparent; }
+.is-refresh-splash .splash-track { animation-duration: .5s; }
 .startup-home-skeleton {
   position: fixed;
   inset: 0;
