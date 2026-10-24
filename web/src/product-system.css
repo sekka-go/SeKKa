@@ -486,7 +486,7 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
 
 /* Signup consent and secure password recovery controls. */
 .auth-password-control { position: relative; display: block; width: 100%; }
-.auth-page-card .auth-password-control input { width: 100%; padding-inline-start: 3rem; }
+.auth-page-card .form-stack .auth-password-control > input { width: 100%; padding-inline-start: 3rem; }
 .auth-password-toggle { position: absolute; inset-inline-start: .45rem; top: 50%; display: grid; place-items: center; width: 2.25rem; height: 2.25rem; padding: .4rem; color: #94a3b8; background: transparent; border: 0; border-radius: .55rem; transform: translateY(-50%); cursor: pointer; }
 .auth-password-toggle:hover, .auth-password-toggle:focus-visible { color: var(--color-accent-text); background: rgba(245,158,11,.1); outline: 2px solid rgba(245,158,11,.4); }
 .auth-password-toggle svg { width: 1.3rem; height: 1.3rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }

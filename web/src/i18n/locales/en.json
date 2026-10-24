@@ -1090,6 +1090,7 @@
     "حصل خطأ غير متوقع.": "Something went wrong.",
     "حصل خطأ غير متوقع. حاول مرة أخرى.": "Something went wrong. Please try again.",
     "تعذر الاتصال بالخادم. تأكد أنه يعمل ثم حاول مرة أخرى.": "Could not connect to the server. Check your connection and try again.",
+    "رابط المعاينة مخصص لمراجعة الواجهة ولا يدعم تسجيل الدخول. افتح sekka-go.pages.dev للدخول.": "This preview link is for reviewing the interface and does not support sign-in. Open sekka-go.pages.dev to log in.",
     "تعذر رفع الملف الآن. تأكد من اتصالك وحاول مرة أخرى.": "Could not upload the file. Check your connection and try again.",
     "تعذر رفع المستند.": "Could not upload the document.",
     "لم يصل تأكيد رفع المستند من الخادم.": "The server did not confirm the document upload.",

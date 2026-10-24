@@ -95,6 +95,12 @@ export class ApiError extends Error {
   constructor(status: number, message: string) { super(message); this.status = status; }
 }
 
+function isCloudflarePagesPreview(): boolean {
+  if (typeof window === "undefined") return false;
+  const hostname = window.location.hostname.toLowerCase();
+  return hostname.endsWith(".sekka-go.pages.dev") && hostname !== "sekka-go.pages.dev";
+}
+
 export async function api<T>(path: string, options: { method?: string; body?: unknown; token?: string | null; signal?: AbortSignal; timeoutMs?: number } = {}): Promise<T> {
   const controller = new AbortController();
   let timedOut = false;
@@ -126,7 +132,9 @@ export async function api<T>(path: string, options: { method?: string; body?: un
     if (cause instanceof ApiError) throw cause;
     if (timedOut) throw new ApiError(408, t("loading.failure"));
     if (options.signal?.aborted) throw cause;
-    throw new ApiError(0, "تعذر الاتصال بالخادم. تأكد أنه يعمل ثم حاول مرة أخرى.");
+    throw new ApiError(0, isCloudflarePagesPreview()
+      ? t("رابط المعاينة مخصص لمراجعة الواجهة ولا يدعم تسجيل الدخول. افتح sekka-go.pages.dev للدخول.")
+      : "تعذر الاتصال بالخادم. تأكد من اتصالك ثم حاول مرة أخرى.");
   } finally {
     window.clearTimeout(timeout);
     options.signal?.removeEventListener("abort", forwardAbort);
