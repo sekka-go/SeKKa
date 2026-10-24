@@ -4,6 +4,7 @@ import { api, type SavedPlace } from "../api";
 import { errorText } from "../lib/formatters";
 import { isInsideGreaterCairo } from "../lib/greater-cairo";
 import { addressParts, reverseGeocode, safeAddressLabel, type LocationSuggestion } from "../lib/location-address";
+import { getRecentDeviceLocation, rememberDeviceLocation } from "../lib/device-location";
 import { useResolvedLocationPoints } from "../lib/use-location-addresses";
 import type { MapPoint, MapPickMode } from "../MapPicker";
 
@@ -124,22 +125,30 @@ export default function LocationSearchField({
     setShowSavedPlaces(false);
     setSearchOpen(false);
     setEditing(false);
-    navigator.geolocation.getCurrentPosition(
-      async ({ coords }) => {
-        const { latitude: lat, longitude: lng } = coords;
-        if (locationRequest !== requestId.current) return;
-        if (!isInsideGreaterCairo(lat, lng)) {
-          setError(t("موقعك الحالي خارج القاهرة الكبرى. ابحث عن موقع داخل نطاق الخدمة أو حدده على الخريطة."));
-        } else {
-          skipNextSearch.current = true;
-          try {
-            const address = await reverseGeocode(token, lat, lng);
-            if (locationRequest === requestId.current) onSelect({ lat, lng, kind, label: address.label, primaryLabel: address.primary, secondaryLabel: address.secondary });
-          } catch {
-            if (locationRequest === requestId.current) onSelect({ lat, lng, kind, label: t("موقعي الحالي داخل القاهرة الكبرى"), primaryLabel: t("موقعي الحالي"), secondaryLabel: t("القاهرة الكبرى") });
-          }
+    const applyLocation = async (lat: number, lng: number) => {
+      if (locationRequest !== requestId.current) return;
+      if (!isInsideGreaterCairo(lat, lng)) {
+        setError(t("موقعك الحالي خارج القاهرة الكبرى. ابحث عن موقع داخل نطاق الخدمة أو حدده على الخريطة."));
+      } else {
+        skipNextSearch.current = true;
+        try {
+          const address = await reverseGeocode(token, lat, lng);
+          if (locationRequest === requestId.current) onSelect({ lat, lng, kind, label: address.label, primaryLabel: address.primary, secondaryLabel: address.secondary });
+        } catch {
+          if (locationRequest === requestId.current) onSelect({ lat, lng, kind, label: t("موقعي الحالي داخل القاهرة الكبرى"), primaryLabel: t("موقعي الحالي"), secondaryLabel: t("القاهرة الكبرى") });
         }
-        if (locationRequest === requestId.current) setLocating(false);
+      }
+      if (locationRequest === requestId.current) setLocating(false);
+    };
+    const recent = getRecentDeviceLocation();
+    if (recent) {
+      void applyLocation(recent.lat, recent.lng);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        rememberDeviceLocation(position);
+        void applyLocation(position.coords.latitude, position.coords.longitude);
       },
       (cause) => {
         if (locationRequest !== requestId.current) return;

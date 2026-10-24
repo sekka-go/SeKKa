@@ -15,6 +15,7 @@ import InfoPages, { type InfoPageKey } from "../components/InfoPages";
 import MessagesWorkspace from "./MessagesWorkspace";
 import type { ThemePreference } from "../components/ThemePreferenceCard";
 import AppSettings from "../components/AppSettings";
+import { startPermissionAwareDeviceLocation } from "../lib/device-location";
 function cairoHour() {
   return Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Africa/Cairo", hour: "2-digit", hourCycle: "h23" }).format(new Date()));
 }
@@ -207,6 +208,10 @@ export default function Workspace({ session, onSignOut, notify, themePreference,
     setPendingGroupEdit(null);
   }, [pendingGroupEdit, section]);
   useEffect(() => { void refreshNotifications(); }, [refreshNotifications]);
+  useEffect(() => {
+    if (session.user.role !== "rider" && session.user.role !== "captain") return;
+    return startPermissionAwareDeviceLocation();
+  }, [session.user.id, session.user.role]);
   useEffect(() => {
     const timer = window.setInterval(() => setLocalHour(cairoHour()), 60_000);
     return () => window.clearInterval(timer);
