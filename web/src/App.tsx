@@ -76,16 +76,16 @@ export default function App() {
       document.documentElement.dataset.theme = theme;
       try { localStorage.setItem("sekka.theme", themePreference); } catch { /* Keep the in-memory choice if storage is unavailable. */ }
       const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-      if (themeColor) themeColor.content = sessionCheckPending ? "#101827" : getComputedStyle(document.documentElement).getPropertyValue("--color-background").trim();
+      if (themeColor) themeColor.content = getComputedStyle(document.documentElement).getPropertyValue("--color-background").trim();
       const statusBarStyle = document.querySelector<HTMLMetaElement>("meta[name=\"apple-mobile-web-app-status-bar-style\"]");
-      if (statusBarStyle) statusBarStyle.content = !sessionCheckPending && theme === "light" ? "default" : "black";
+      if (statusBarStyle) statusBarStyle.content = theme === "light" ? "default" : "black";
     };
     applyTheme();
     if (themePreference !== "system") return;
     const media = window.matchMedia("(prefers-color-scheme: light)");
     media.addEventListener("change", applyTheme);
     return () => media.removeEventListener("change", applyTheme);
-  }, [themePreference, sessionCheckPending]);
+  }, [themePreference]);
   useEffect(() => {
     if (!session) return;
     let active = true;

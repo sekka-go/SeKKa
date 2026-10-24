@@ -98,17 +98,32 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+    let minimumSplashTimer: number | null = null;
+    const startedAt = performance.now();
+    const finishAfterReadableSplash = (finish: () => void) => {
+      const remaining = Math.max(0, 2200 - (performance.now() - startedAt));
+      minimumSplashTimer = window.setTimeout(() => {
+        if (mounted) finish();
+      }, remaining);
+    };
     void loadCatalog(language).then(() => {
       if (!mounted) return;
-      activateLanguage(language);
-      setCatalogReady(true);
+      finishAfterReadableSplash(() => {
+        activateLanguage(language);
+        setCatalogReady(true);
+      });
     }).catch(() => {
       if (!mounted) return;
-      activateLanguage("ar");
-      setLanguageState("ar");
-      setCatalogReady(true);
+      finishAfterReadableSplash(() => {
+        activateLanguage("ar");
+        setLanguageState("ar");
+        setCatalogReady(true);
+      });
     });
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+      if (minimumSplashTimer !== null) window.clearTimeout(minimumSplashTimer);
+    };
   }, [language]);
 
   const setLanguage = useCallback((nextLanguage: Language) => {
