@@ -21,6 +21,10 @@ export default function SekkaSplash({ title, tagline, accessibleLabel, exiting =
         <path d="M28 99c2-13 12-22 29-27l37-11 32-32c7-8 16-12 28-12h54c13 0 22 5 30 15l23 31 27 9c13 4 21 14 22 27l1 12H28V99Z" fill="var(--splash-accent)" />
         <path d="m105 61 27-29c5-5 11-8 20-8h52c9 0 16 4 21 11l18 26H105Z" fill="var(--surface)" opacity=".92" />
         <path d="M194 24h10c9 0 16 4 21 11l18 26h-49V24Z" fill="color-mix(in srgb, var(--splash-accent) 20%, var(--surface))" />
+        <circle cx="157" cy="40" r="9" fill="var(--color-text-primary)" />
+        <circle cx="160" cy="38" r="1.4" fill="var(--surface)" />
+        <path d="M157 44q4 3 7-1" stroke="var(--surface)" strokeWidth="1.4" strokeLinecap="round" />
+        <path d="M148 52c4-4 8-6 13-6s10 2 14 6l4 9h-36l5-9Z" fill="var(--splash-accent)" />
         <path d="M194 35c11-3 23 2 27 12" stroke="var(--color-text-primary)" strokeWidth="3" strokeLinecap="round" />
         <circle cx="208" cy="40" r="11" fill="var(--color-text-primary)" />
         <circle cx="211" cy="38" r="1.5" fill="var(--surface)" />
