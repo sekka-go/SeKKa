@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(42);
+SELECT plan(45);
 
 SELECT ok((SELECT relrowsecurity FROM pg_class WHERE oid = 'public.app_config'::regclass), 'app_config has RLS enabled');
 SELECT ok((SELECT relrowsecurity FROM pg_class WHERE oid = 'public.captain_lines'::regclass), 'captain_lines has RLS enabled');
@@ -50,6 +50,9 @@ SELECT ok(EXISTS (SELECT 1 FROM pg_trigger WHERE tgrelid = 'public.captain_lines
 SELECT ok(has_function_privilege('service_role', 'public.publish_captain_line(integer,text,text,double precision,double precision,text,double precision,double precision,jsonb,time,smallint[],integer,double precision,text[],time)', 'EXECUTE'), 'service_role can publish with server-calculated route distance');
 SELECT ok(NOT has_function_privilege('anon', 'public.publish_captain_line(integer,text,text,double precision,double precision,text,double precision,double precision,jsonb,time,smallint[],integer,double precision,text[],time)', 'EXECUTE'), 'anon cannot publish with server-calculated route distance');
 SELECT ok(NOT has_function_privilege('authenticated', 'public.publish_captain_line(integer,text,text,double precision,double precision,text,double precision,double precision,jsonb,time,smallint[],integer,double precision,text[],time)', 'EXECUTE'), 'authenticated cannot invoke server-calculated pricing directly');
+SELECT ok(has_function_privilege('service_role', 'public.publish_captain_line(integer,text,text,double precision,double precision,text,double precision,double precision,jsonb,time,smallint[],integer,double precision,numeric,text[],time)', 'EXECUTE'), 'service_role can publish a captain-priced line with route stops');
+SELECT ok(NOT has_function_privilege('anon', 'public.publish_captain_line(integer,text,text,double precision,double precision,text,double precision,double precision,jsonb,time,smallint[],integer,double precision,numeric,text[],time)', 'EXECUTE'), 'anon cannot publish a captain-priced line');
+SELECT ok(NOT has_function_privilege('authenticated', 'public.publish_captain_line(integer,text,text,double precision,double precision,text,double precision,double precision,jsonb,time,smallint[],integer,double precision,numeric,text[],time)', 'EXECUTE'), 'authenticated cannot publish a captain-priced line directly');
 
 SELECT * FROM finish();
 ROLLBACK;

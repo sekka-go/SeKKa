@@ -26,6 +26,7 @@ type MapPickerProps = {
   direction?: RouteDirection;
   readOnly?: boolean;
   restrictToGreaterCairo?: boolean;
+  selectionHint?: string;
   onOutsidePick?: () => void;
   onPick: (mode: MapPickMode, point: MapPoint) => void;
 };
@@ -66,6 +67,7 @@ export default function MapPicker({
   direction,
   readOnly = false,
   restrictToGreaterCairo = false,
+  selectionHint,
   onOutsidePick,
   onPick,
 }: MapPickerProps) {
@@ -229,7 +231,7 @@ export default function MapPicker({
       {tileError && <div className="map-state map-state-warning" role="status">{t("تعذر تحميل بعض بلاطات الخريطة. يمكنك الاستمرار في اختيار الموقع.")}</div>}
       {!hasVisibleStops && !hasRouteGeometry && readOnly && <div className="map-state map-state-warning" role="status">{t("لا توجد بيانات موقع كافية لعرض هذا المسار.")}</div>}
       {hasVisibleStops && !hasRouteGeometry && readOnly && <div className="map-state map-state-warning" role="status">{t("تعذر تحميل الطريق الفعلي؛ لن نعرض خطًا تقريبيًا بدلًا منه.")}</div>}
-      {!readOnly && <div className="map-hint">{t("اضغط على الخريطة لتحديد")} {mode === "pickup" ? t("نقطة الركوب") : t("نقطة النزول")}{restrictToGreaterCairo ? t(" · القاهرة الكبرى فقط") : ""}</div>}
+      {!readOnly && <div className="map-hint">{selectionHint ?? `${t("اضغط على الخريطة لتحديد")} ${mode === "pickup" ? t("نقطة الركوب") : t("نقطة النزول")}`}{restrictToGreaterCairo ? t(" · القاهرة الكبرى فقط") : ""}</div>}
       {readOnly && <div className="map-hint">{t("خريطة OpenStreetMap · الطريق الفعلي")}</div>}
     </div>
 
