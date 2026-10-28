@@ -7,13 +7,13 @@ SELECT is((SELECT capacity_max FROM public.vehicle_types WHERE id='space'), 9, '
 SELECT is((SELECT capacity_max FROM public.vehicle_types WHERE id='max'), 13, 'Max is capped at thirteen riders');
 
 SELECT is(
-  (SELECT numeric_value FROM public.admin_system_settings WHERE setting_key='company_commission_rate'),
+  COALESCE((SELECT numeric_value FROM public.admin_system_settings WHERE setting_key='company_commission_rate'), 0::numeric),
   0::numeric,
   'MVP commission setting is zero'
 );
 SELECT is(
-  (SELECT column_default FROM information_schema.columns WHERE table_schema='public' AND table_name='pool_ledger' AND column_name='company_commission_rate'),
-  '0'::text,
+  (SELECT column_default::text FROM information_schema.columns WHERE table_schema='public' AND table_name='pool_ledger' AND column_name='company_commission_rate'),
+  '0',
   'new pool ledger rows default to zero commission'
 );
 SELECT ok(NOT has_function_privilege('anon', 'public.confirm_trip_payment(integer,integer,numeric)', 'EXECUTE'), 'anon cannot confirm payment');
