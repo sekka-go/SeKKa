@@ -1,3 +1,4 @@
+import { t } from "./i18n/runtime";
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -25,6 +26,7 @@ type MapPickerProps = {
   direction?: RouteDirection;
   readOnly?: boolean;
   restrictToGreaterCairo?: boolean;
+  selectionHint?: string;
   onOutsidePick?: () => void;
   onPick: (mode: MapPickMode, point: MapPoint) => void;
 };
@@ -48,10 +50,10 @@ function validLine(line: RouteGeometry["outbound"] | undefined): line is NonNull
 function selectedSegments(route: RouteGeometry | null | undefined, direction?: RouteDirection) {
   const selected: Array<{ direction: RouteDirection; label: string; segments?: RouteSegment[] }> = [];
   if (!direction || direction === "outbound") {
-    selected.push({ direction: "outbound", label: "الذهاب", segments: route?.outbound_segments });
+    selected.push({ direction: "outbound", label: t("الذهاب"), segments: route?.outbound_segments });
   }
   if (!direction || direction === "return") {
-    selected.push({ direction: "return", label: "العودة", segments: route?.return_segments });
+    selected.push({ direction: "return", label: t("العودة"), segments: route?.return_segments });
   }
   return selected;
 }
@@ -65,6 +67,7 @@ export default function MapPicker({
   direction,
   readOnly = false,
   restrictToGreaterCairo = false,
+  selectionHint,
   onOutsidePick,
   onPick,
 }: MapPickerProps) {
@@ -176,7 +179,7 @@ export default function MapPicker({
         keyboard: true,
         draggable: !readOnly && routePlaces.length === 0,
       });
-      marker.bindTooltip([point.primaryLabel ?? point.label ?? (kind === "pickup" ? `ركوب · محطة ${sequence}` : `نزول · محطة ${sequence}`), point.secondaryLabel].filter(Boolean).join(" · "));
+      marker.bindTooltip([point.primaryLabel ?? point.label ?? (kind === "pickup" ? `${t("ركوب")} · ${t("محطة")} ${sequence}` : `${t("نزول")} · ${t("محطة")} ${sequence}`), point.secondaryLabel].filter(Boolean).join(" · "));
       if (!readOnly && routePlaces.length === 0) {
         marker.on("dragend", () => {
           const moved = marker.getLatLng();
@@ -198,7 +201,7 @@ export default function MapPicker({
       if (!validLine(line)) continue;
       const latLngs = line.coordinates.map(([lng, lat]) => [lat, lng] as L.LatLngExpression);
       L.polyline(latLngs, {
-        color: item.direction === "outbound" ? "#d9a900" : "#138e94",
+        color: getComputedStyle(document.documentElement).getPropertyValue(item.direction === "outbound" ? "--color-primary" : "--color-secondary").trim(),
         weight: 5,
         opacity: 0.88,
       }).addTo(layers);
@@ -223,16 +226,16 @@ export default function MapPicker({
 
   return <div className={`map-picker${readOnly ? " map-picker-readonly" : ""}`}>
     <div className="map-canvas">
-      <div ref={elementRef} className="leaflet-map" role="application" tabIndex={0} aria-label="خريطة اختيار وعرض مسار الرحلة" />
-      {!tilesLoaded && !tileError && <div className="map-state" role="status">جاري تحميل الخريطة…</div>}
-      {tileError && <div className="map-state map-state-warning" role="status">تعذر تحميل بعض بلاطات الخريطة. يمكنك الاستمرار في اختيار الموقع.</div>}
-      {!hasVisibleStops && !hasRouteGeometry && readOnly && <div className="map-state map-state-warning" role="status">لا توجد بيانات موقع كافية لعرض هذا المسار.</div>}
-      {hasVisibleStops && !hasRouteGeometry && readOnly && <div className="map-state map-state-warning" role="status">تعذر تحميل الطريق الفعلي؛ لن نعرض خطًا تقريبيًا بدلًا منه.</div>}
-      {!readOnly && <div className="map-hint">اضغط على الخريطة لتحديد {mode === "pickup" ? "نقطة الركوب" : "نقطة النزول"}{restrictToGreaterCairo ? " · القاهرة الكبرى فقط" : ""}</div>}
-      {readOnly && <div className="map-hint">خريطة OpenStreetMap · الطريق الفعلي</div>}
+      <div ref={elementRef} className="leaflet-map" role="application" tabIndex={0} aria-label={t("خريطة اختيار وعرض مسار الرحلة")} />
+      {!tilesLoaded && !tileError && <div className="map-state" role="status">{t("loading.map")}</div>}
+      {tileError && <div className="map-state map-state-warning" role="status">{t("تعذر تحميل بعض بلاطات الخريطة. يمكنك الاستمرار في اختيار الموقع.")}</div>}
+      {!hasVisibleStops && !hasRouteGeometry && readOnly && <div className="map-state map-state-warning" role="status">{t("لا توجد بيانات موقع كافية لعرض هذا المسار.")}</div>}
+      {hasVisibleStops && !hasRouteGeometry && readOnly && <div className="map-state map-state-warning" role="status">{t("تعذر تحميل الطريق الفعلي؛ لن نعرض خطًا تقريبيًا بدلًا منه.")}</div>}
+      {!readOnly && <div className="map-hint">{selectionHint ?? `${t("اضغط على الخريطة لتحديد")} ${mode === "pickup" ? t("نقطة الركوب") : t("نقطة النزول")}`}{restrictToGreaterCairo ? t(" · القاهرة الكبرى فقط") : ""}</div>}
+      {readOnly && <div className="map-hint">{t("خريطة OpenStreetMap · الطريق الفعلي")}</div>}
     </div>
 
-    {visibleStops.length > 0 && <ol className="map-stop-list" aria-label="ترتيب محطات الرحلة">
+    {visibleStops.length > 0 && <ol className="map-stop-list" aria-label={t("ترتيب محطات الرحلة")}>
       {visibleStops.map((point, index) => {
         const sequence = Number.isInteger(point.sequence) && Number(point.sequence) > 0
           ? Number(point.sequence)
@@ -242,7 +245,7 @@ export default function MapPicker({
         return <li key={`${kind}-${sequence}-${index}`}>
           <span className={`map-stop-list-number map-stop-${kind}`}>{sequence}</span>
           <span className="map-stop-location"><strong>{point.primaryLabel ?? label}</strong>{point.secondaryLabel && <small>{point.secondaryLabel}</small>}</span>
-          {!hasCoordinates(point) && <small>الموقع غير متاح</small>}
+          {!hasCoordinates(point) && <small>{t("الموقع غير متاح")}</small>}
         </li>;
       })}
     </ol>}
@@ -250,12 +253,12 @@ export default function MapPicker({
     {segmentRoutes.some((item) => item.segments?.length) && <div className="map-segments">
       {segmentRoutes.map((item) => item.segments?.map((segment) =>
         <div className="map-segment-row" key={`${item.direction}-${segment.from_stop_sequence}-${segment.to_stop_sequence}`}>
-          <strong>{item.label} · من محطة {segment.from_stop_sequence} إلى {segment.to_stop_sequence}</strong>
-          <span>{segment.distance_km.toFixed(1)} كم</span>
-          <span>حوالي {Math.round(segment.duration_min)} د</span>
+          <strong>{item.label}  {t("· من محطة")} {segment.from_stop_sequence}  {t("إلى")} {segment.to_stop_sequence}</strong>
+          <span>{segment.distance_km.toFixed(1)}  {t("كم")}</span>
+          <span>{t("حوالي")} {Math.round(segment.duration_min)}  {t("د")}</span>
         </div>
       ))}
     </div>}
-    <p className="map-data-caption">أوقات الطريق تقديرية ولا تشمل حركة المرور الحية.</p>
+    <p className="map-data-caption">{t("أوقات الطريق تقديرية ولا تشمل حركة المرور الحية.")}</p>
   </div>;
 }

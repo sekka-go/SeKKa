@@ -11,7 +11,7 @@
 }
 
 .auth-register-card .auth-heading h1 {
-  color: var(--yellow);
+  color: var(--color-accent-text);
 }
 
 .auth-register-card .form-stack label.auth-consent-check {
@@ -34,7 +34,7 @@
 }
 
 .auth-login-card .auth-heading {
-  text-align: right;
+  text-align: start;
 }
 
 .auth-login-card .auth-heading h1 {
@@ -54,7 +54,7 @@
 .auth-login-card .form-stack label {
   gap: 8px;
   align-items: stretch;
-  text-align: right;
+  text-align: start;
 }
 
 .auth-login-card .form-stack input {
@@ -180,7 +180,7 @@
 
   .auth-register-card .auth-heading h1 {
     margin: 0;
-    color: var(--yellow);
+    color: var(--color-accent-text);
   }
 
   .auth-register-card .auth-heading p {
@@ -324,6 +324,11 @@
   z-index: 1;
 }
 
+.auth-login-page > .auth-page-header > .stitch-language-toggle {
+  flex: 0 0 auto;
+  margin-inline-start: auto;
+}
+
 .auth-journey-backdrop {
   position: fixed;
   z-index: 0;
@@ -391,7 +396,7 @@
 }
 
 .journey-particle:nth-child(9) { left: 18%; top: 89%; background: #fb7185; animation-delay: -3.5s; }
-.journey-particle:nth-child(10) { left: 77%; top: 35%; background: #34d399; animation-delay: -1.5s; }
+.journey-particle:nth-child(10) { left: 77%; top: 35%; background: var(--color-success); animation-delay: -1.5s; }
 .journey-particle:nth-child(11) { left: 93%; top: 76%; background: #60a5fa; animation-delay: -5.5s; }
 .journey-particle:nth-child(12) { left: 42%; top: 12%; background: #facc15; animation-delay: -.5s; }
 

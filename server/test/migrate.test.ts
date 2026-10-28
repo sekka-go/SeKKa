@@ -4,7 +4,7 @@ import { openDatabase } from "../src/db/connection.js";
 import { runMigrations } from "../src/db/migrate.js";
 
 describe("runMigrations", () => {
-  it("يطبّق كل ملفات الـ migrations (001_init.sql إلى 013_push_subscriptions.sql) ويسجّلهم في schema_migrations", () => {
+  it("يطبّق كل ملفات الـ migrations (001_init.sql إلى 014_social_notifications_center.sql) ويسجّلهم في schema_migrations", () => {
     const db = openDatabase(":memory:");
     const applied = runMigrations(db);
 
@@ -22,6 +22,7 @@ describe("runMigrations", () => {
       "011_pool_settlement.sql",
       "012_pool_captain_escrow.sql",
       "013_push_subscriptions.sql",
+      "014_social_notifications_center.sql",
     ]);
 
     for (const filename of [
@@ -38,6 +39,7 @@ describe("runMigrations", () => {
       "011_pool_settlement.sql",
       "012_pool_captain_escrow.sql",
       "013_push_subscriptions.sql",
+      "014_social_notifications_center.sql",
     ]) {
       const row = db
         .prepare("SELECT filename FROM schema_migrations WHERE filename = ?")
@@ -56,7 +58,7 @@ describe("runMigrations", () => {
     const count = db.prepare("SELECT COUNT(*) as c FROM schema_migrations").get() as {
       c: number;
     };
-    assert.equal(count.c, 13);
+    assert.equal(count.c, 14);
   });
 
   it("بيبني جداول الـ Pool والتسوية والاحتياطي واشتراكات Push للمراحل 10–14", () => {
@@ -88,6 +90,7 @@ describe("runMigrations", () => {
       "pool_groups",
       "pool_ledger",
       "pool_members",
+      "pool_notification_mutes",
       "pool_notifications",
       "pool_subscriptions",
       "pool_trip_cancellations",

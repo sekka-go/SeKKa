@@ -8,7 +8,7 @@ SeKKa is served over HTTPS by Cloudflare Pages and has an Arabic RTL web app man
 - On iOS, the app shows instructions to use Share → Add to Home Screen.
 - A waiting service-worker update is announced; the user chooses when to activate it and reload.
 - When offline, SeKKa serves a small branded retry page. Booking and live trip data require an internet connection and are never represented as available offline.
-- The manifest and install icons use SeKKa's road-and-pin app logo, Arabic name, RTL language, and standalone launch mode.
+- The manifest uses a light launch background and defines separate transparent `any` icons and solid-green `maskable` icons from the same SeKKa mark. Dark browser chrome can use the additional `color_scheme_dark` member where supported.
 
 ## Cache and privacy boundaries
 
@@ -20,15 +20,18 @@ SeKKa is served over HTTPS by Cloudflare Pages and has an Arabic RTL web app man
 ## Source files
 
 - `web/public/manifest.webmanifest`: install metadata and declared icon sizes.
-- `web/public/brand/pwa-icon-192.png` and `pwa-icon-512.png`: real PNG install icons; exact dimensions are checked in CI.
+- `web/src/brand/sekka-mark.svg`: single vector source for the in-app mark and generated assets.
+- `web/public/brand/pwa-icon-192.png` and `pwa-icon-512.png`: transparent PNG icons for `purpose: any`.
+- `web/public/brand/pwa-icon-192-maskable.png` and `pwa-icon-512-maskable.png`: separate green-tile maskable icons.
+- `web/scripts/generate-pwa-icons.mjs`: generate the manifest icons, favicon PNG/SVG, Apple touch icon, notification badge, and share image with `pnpm --filter web generate:icons`.
 - `web/public/sw.js`: static shell, offline navigation fallback, safe update activation, and push notification click handling.
 - `web/src/pwa.ts` and `web/src/components/PwaNotice.tsx`: registration, installation, update, and connectivity UI.
 - `web/public/offline.html`: offline retry screen.
-- `web/scripts/check-pwa.mjs`: verifies required manifest fields, PNG signatures and dimensions, offline fallback, and cache boundaries.
+- `web/scripts/check-pwa.mjs`: verifies required manifest fields, icon purpose/transparency/dimensions, offline fallback, and cache boundaries.
 
 ## Verification checklist
 
-- CI runs `npm run check:pwa`, `npm run lint`, and `npm run build` for pull requests.
+- CI installs from the root `pnpm-lock.yaml` and runs `pnpm --filter web check:pwa`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build` for pull requests and pushes to `main`.
 - In Chrome or Edge, confirm Install appears after the production preview is eligible and launches in a standalone window.
 - On iOS Safari, use Share → Add to Home Screen and confirm the SeKKa icon and Arabic title.
 - After the first online load, switch offline and navigate/reload: the branded offline page should appear.

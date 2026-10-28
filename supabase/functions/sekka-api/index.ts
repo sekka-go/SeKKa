@@ -1,22 +1,27 @@
+// deno-lint-ignore no-import-prefix -- Supabase Edge Functions resolve npm: dependencies directly.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { routeWithOsrm, RoutingError } from "./routing.ts";
 import { dedupeLocationSuggestions, formatNominatimAddress, formatPhotonAddress, GREATER_CAIRO, isGreaterCairoPoint, normalizeLocationQuery, type LocationAddress, type LocationSuggestion, type NominatimResult, type PhotonProperties } from "./locations.ts";
+import { readJsonObjectBody, RequestBodyTooLargeError } from "./request-body.ts";
+import { activeMemberIdForRider } from "./group-view.ts";
+import { corsHeaders } from "./cors.ts";
 
 type Json = Record<string, unknown>;
 type User = { id: number; full_name: string; phone_number: string; role: "rider" | "captain" | "admin"; verified_at: string | null; created_at: string; account_status?: "active" | "suspended" | "banned" };
 const encoder = new TextEncoder();
-const corsHeaders = {
-  "Access-Control-Allow-Headers": "authorization, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-  "Access-Control-Max-Age": "86400",
-};
-
-function reply(data: unknown, status = 200, origin = "") {
-  const corsOrigin = origin === "http://localhost:5173" || origin === "https://sekka-go.pages.dev" || origin.endsWith(".sekka-go.pages.dev") ? origin : "null";
-  return new Response(status === 204 ? null : JSON.stringify(data), {
-    status,
-    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "access-control-allow-origin": corsOrigin, "vary": "Origin", ...corsHeaders },
-  });
+async function reply(data: unknown, status = 200, origin = "", req?: Request) {
+  const body = status === 204 ? null : JSON.stringify(data);
+  const headers = new Headers({ "content-type": "application/json; charset=utf-8", "cache-control": "no-store", ...corsHeaders(origin || null, Deno.env.get("SEKKA_ALLOWED_ORIGINS")) });
+  if (status === 200 && req?.method === "GET" && body !== null) {
+    const digest = await crypto.subtle.digest("SHA-256", encoder.encode(body));
+    const etag = `"${Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("")}"`;
+    headers.set("ETag", etag);
+    headers.set("Cache-Control", "private, no-cache, must-revalidate");
+    if (req.headers.get("if-none-match")?.split(",").map((value) => value.trim()).includes(etag)) {
+      return new Response(null, { status: 304, headers });
+    }
+  }
+  return new Response(body, { status, headers });
 }
 function error(message: string, status = 400, origin = "") { return reply({ error: message }, status, origin); }
 class ApiFailure extends Error { constructor(message: string, readonly status: number) { super(message); } }
@@ -31,7 +36,25 @@ function selectLocation(body: Json, prefix: "pickup" | "dropoff"): { lat: number
 }
 function clean(value: unknown): value is string { return typeof value === "string" && value.trim().length > 0; }
 function number(value: unknown): value is number { return typeof value === "number" && Number.isFinite(value); }
+function validIsoDate(value: unknown): value is string {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
+function cairoDateKey(date = new Date()): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Cairo", year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(date);
+  const part = (type: string) => parts.find((item) => item.type === type)?.value ?? "";
+  return `${part("year")}-${part("month")}-${part("day")}`;
+}
 function validPoint(lat: unknown, lng: unknown) { return number(lat) && lat >= -90 && lat <= 90 && number(lng) && lng >= -180 && lng <= 180; }
+function maskAdminIdentifier(value: string | null | undefined) {
+  if (!value) return null;
+  const compact = value.replace(/\s/g, "");
+  return `••••${compact.slice(-4)}`;
+}
 function normalizeClock(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const match = /^(?:([01]\d|2[0-3]):([0-5]\d))(?:[:][0-5]\d(?:\.\d{1,6})?)?$/.exec(value);
@@ -124,7 +147,7 @@ async function searchNominatimGreaterCairo(query: string): Promise<LocationSugge
   cacheWrite(cacheKey, unique);
   return unique;
 }
-async function searchGreaterCairo(query: string) {
+function searchGreaterCairo(query: string) {
   const cacheKey = `photon-search:${normalizeLocationQuery(query)}`;
   const cached = cacheRead<LocationSuggestion[]>(cacheKey);
   if (cached) return cached;
@@ -220,10 +243,11 @@ async function keyedDigest(value: string) {
   return hex(new Uint8Array(await crypto.subtle.sign("HMAC", key, encoder.encode(value))));
 }
 function binaryReply(data: Uint8Array, contentType: string, origin = "") {
-  const corsOrigin = origin === "http://localhost:5173" || origin === "https://sekka-go.pages.dev" || origin.endsWith(".sekka-go.pages.dev") ? origin : "null";
-  return new Response(data, { status: 200, headers: {
+  const body = new ArrayBuffer(data.byteLength);
+  new Uint8Array(body).set(data);
+  return new Response(body, { status: 200, headers: {
     "content-type": contentType, "content-disposition": "inline", "cache-control": "private, no-store",
-    "x-content-type-options": "nosniff", "access-control-allow-origin": corsOrigin, "vary": "Origin", ...corsHeaders,
+    "x-content-type-options": "nosniff", ...corsHeaders(origin || null, Deno.env.get("SEKKA_ALLOWED_ORIGINS")),
   } });
 }
 function phoneCandidates(value: string) {
@@ -255,13 +279,6 @@ const apiKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? (() => {
 })();
 const db = url && apiKey ? createClient(url, apiKey, { auth: { persistSession: false, autoRefreshToken: false } }) : null;
 
-async function readBody(req: Request): Promise<Json> {
-  const text = await req.text();
-  if (text.length > 1_000_000) throw new Error("حجم الطلب أكبر من المسموح.");
-  if (!text) return {};
-  const value = JSON.parse(text);
-  return value && typeof value === "object" && !Array.isArray(value) ? value as Json : {};
-}
 function randomUrlToken(byteLength = 18) {
   const bytes = crypto.getRandomValues(new Uint8Array(byteLength));
   let binary = "";
@@ -289,12 +306,17 @@ async function telegramRequest(method: string, payload: Json) {
   if (!response.ok || result.ok !== true) throw new ApiFailure("تعذر الاتصال بخدمة التحقق. حاول لاحقًا.", 502);
   return result;
 }
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 async function handleTelegramVerificationWebhook(body: Json, origin: string) {
-  const update = body as Record<string, any>;
-  const message = update.message as Record<string, any> | undefined;
-  if (!message || !Number.isInteger(message.from?.id) || !Number.isInteger(message.chat?.id)) return reply({ ok: true }, 200, origin);
-  const chatId = Number(message.chat.id), telegramUserId = Number(message.from.id);
+  const message = isRecord(body.message) ? body.message : null;
+  const from = message && isRecord(message.from) ? message.from : null;
+  const chat = message && isRecord(message.chat) ? message.chat : null;
+  if (!message || !from || !chat || !Number.isSafeInteger(from.id) || !Number.isSafeInteger(chat.id)) return reply({ ok: true }, 200, origin);
+  const chatId = chat.id as number, telegramUserId = from.id as number;
   const text = typeof message.text === "string" ? message.text : "";
+  const contact = isRecord(message.contact) ? message.contact : null;
   const resetStart = /^\/start\s+reset_([A-Za-z0-9_-]{20,32})$/.exec(text);
   if (resetStart) {
     const tokenHash = await digest(resetStart[1]);
@@ -313,17 +335,17 @@ async function handleTelegramVerificationWebhook(body: Json, origin: string) {
     });
     return reply({ ok: true }, 200, origin);
   }
-  if (message.contact && Number(message.contact.user_id) === telegramUserId) {
+  if (contact && contact.user_id === telegramUserId) {
     const { data: resetChallenges, error: resetError } = await db!.from("telegram_password_reset_challenges").select("token_hash,phone_hash,attempts").eq("telegram_user_id", telegramUserId).eq("status", "waiting_contact").gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false }).limit(1);
     if (resetError) throw resetError;
     const resetChallenge = resetChallenges?.[0];
     if (resetChallenge) {
-      const contact = phoneE164(String(message.contact.phone_number ?? ""));
-      if (!contact || await keyedDigest(contact) !== resetChallenge.phone_hash) {
+      const phone = phoneE164(typeof contact.phone_number === "string" ? contact.phone_number : "");
+      if (!phone || await keyedDigest(phone) !== resetChallenge.phone_hash) {
         await telegramRequest("sendMessage", { chat_id: chatId, text: "رقم الهاتف لا يطابق الرقم المستخدم في الطلب. أرسل رقمك المسجل أو ابدأ طلبًا جديدًا.", reply_markup: { remove_keyboard: true } });
         return reply({ ok: true }, 200, origin);
       }
-      const candidates = phoneCandidates(contact);
+      const candidates = phoneCandidates(phone);
       const { data: account, error: accountError } = await db!.from("users").select("id,phone_number").in("phone_number", candidates).maybeSingle();
       if (accountError) throw accountError;
       if (!account) {
@@ -358,7 +380,7 @@ async function handleTelegramVerificationWebhook(body: Json, origin: string) {
     });
     return reply({ ok: true }, 200, origin);
   }
-  if (message.contact && Number(message.contact.user_id) === telegramUserId) {
+  if (contact && contact.user_id === telegramUserId) {
     const { data: challenges, error: challengeError } = await db!.from("telegram_phone_verification_challenges").select("token_hash,user_id").eq("telegram_user_id", telegramUserId).eq("status", "waiting_contact").gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false }).limit(1);
     if (challengeError) throw challengeError;
     const challenge = challenges?.[0];
@@ -371,7 +393,8 @@ async function handleTelegramVerificationWebhook(body: Json, origin: string) {
       db!.from("telegram_phone_verification_challenges").select("telegram_user_id").eq("token_hash", challenge.token_hash).maybeSingle(),
     ]);
     if (userError || challengeUpdateError) throw userError ?? challengeUpdateError;
-    if (!target || sender?.telegram_user_id !== telegramUserId || phoneE164(String(message.contact.phone_number ?? "")) !== phoneE164(target.phone_number)) {
+    const phone = phoneE164(typeof contact.phone_number === "string" ? contact.phone_number : "");
+    if (!target || sender?.telegram_user_id !== telegramUserId || phone !== phoneE164(target.phone_number)) {
       await telegramRequest("sendMessage", { chat_id: chatId, text: "الرقم المرسل لا يطابق الرقم المسجّل في سِكّة. أرسل جهة اتصال رقمك المسجّل وحاول مرة أخرى.", reply_markup: { remove_keyboard: true } });
       return reply({ ok: true }, 200, origin);
     }
@@ -419,13 +442,18 @@ async function authenticate(req: Request): Promise<User | null> {
   const tokenHash = await digest(raw);
   const { data: session, error: queryError } = await db!.from("sessions").select("user_id,expires_at,revoked_at").eq("token_hash", tokenHash).maybeSingle();
   if (queryError || !session || session.revoked_at || Date.parse(session.expires_at) <= Date.now()) return null;
-  const { data: user, error: userError } = await db!.from("users").select("id,full_name,phone_number,role,verified_at,created_at").eq("id", session.user_id).maybeSingle();
+  const { data: user, error: userError } = await db!.from("users").select("id,full_name,phone_number,role,verified_at,created_at").eq("id", session.user_id).is("deleted_at", null).maybeSingle();
   if (userError || !user) return null;
   const { data: controls, error: controlsError } = await db!.from("admin_user_controls").select("status").eq("user_id", user.id).maybeSingle();
   if (controlsError) throw controlsError;
   return { ...user, account_status: (controls?.status ?? "active") as User["account_status"] };
 }
-async function requireRole(user: User | null, roles: User["role"][], origin: string) {
+async function getDirectMessageContactIds(userId: number): Promise<number[]> {
+  const { data, error: contactsError } = await db!.rpc("direct_message_contact_ids", { p_user_id: userId });
+  if (contactsError) throw contactsError;
+  return (data ?? []).map((row: { contact_user_id: number | string }) => Number(row.contact_user_id)).filter(Number.isSafeInteger);
+}
+function requireRole(user: User | null, roles: User["role"][], origin: string) {
   if (!user) return error("سجّل الدخول أولًا.", 401, origin);
   if (!roles.includes(user.role)) return error("ما عندكش صلاحية لتنفيذ الإجراء ده.", 403, origin);
   return null;
@@ -443,6 +471,32 @@ async function writeAdminAudit(actorId: number, action: string, resourceType: st
     p_reason: reason, p_before: before, p_after: after,
   });
   if (auditError) throw auditError;
+}
+async function deleteAccountData(actorId: number, targetId: number, reason: string | null) {
+  const [{ data: profile, error: profileError }, { data: documents, error: documentsError }] = await Promise.all([
+    db!.from("users").select("avatar_path").eq("id", targetId).is("deleted_at", null).maybeSingle(),
+    db!.from("user_verifications").select("object_path").eq("user_id", targetId),
+  ]);
+  if (profileError || documentsError) throw profileError ?? documentsError;
+  if (!profile) throw new Error("account not found or already deleted");
+  const paths = (documents ?? []).map((document) => document.object_path).filter((path): path is string => typeof path === "string" && path.length > 0);
+  const { data, error: deletionError } = await db!.rpc("sekka_delete_account_v1", {
+    p_actor_user_id: actorId, p_target_user_id: targetId, p_reason: reason,
+  });
+  if (deletionError) throw deletionError;
+  // Commit the account redaction first. A policy rejection must never remove
+  // verification files from an account that was not actually deleted.
+  const cleanupErrors: string[] = [];
+  if (paths.length) {
+    const { error: storageError } = await db!.storage.from("verification-documents").remove(paths);
+    if (storageError) cleanupErrors.push(storageError.message);
+  }
+  if (profile.avatar_path) {
+    const { error: avatarError } = await db!.storage.from("avatars").remove([profile.avatar_path]);
+    if (avatarError) cleanupErrors.push(avatarError.message);
+  }
+  if (cleanupErrors.length) console.error("account deletion storage cleanup failed", { targetId, errors: cleanupErrors });
+  return data;
 }
 async function notifyUser(userId: number, groupId: number | null, eventKey: string, payload: Json = {}) {
   if (groupId !== null) {
@@ -500,7 +554,7 @@ function validDates(value: unknown, type: string): string[] | null {
     const parsed = new Date(date + "T12:00:00Z");
     if (Number.isNaN(parsed.valueOf()) || parsed.toISOString().slice(0, 10) !== date || [5, 6].includes(parsed.getUTCDay())) return null;
     if (index > 0) {
-      let expected = new Date(dates[index - 1]! + "T12:00:00Z");
+      const expected = new Date(dates[index - 1]! + "T12:00:00Z");
       expected.setUTCDate(expected.getUTCDate() + 1);
       while ([5, 6].includes(expected.getUTCDay())) expected.setUTCDate(expected.getUTCDate() + 1);
       if (expected.toISOString().slice(0, 10) !== date) return null;
@@ -523,6 +577,28 @@ function distanceKm(a: { lat: number; lng: number }, b: { lat: number; lng: numb
   const rad = (d: number) => d * Math.PI / 180;
   const x = rad(b.lng - a.lng) * Math.cos(rad((a.lat + b.lat) / 2)), y = rad(b.lat - a.lat);
   return Math.hypot(x, y) * 6371.0088;
+}
+type CaptainRouteLine = {
+  origin_label: string; origin_lat: number; origin_lng: number;
+  destination_label: string; destination_lat: number; destination_lng: number;
+  arrival_time: string; return_arrival_time: string | null;
+};
+function orientCaptainLineForRider<T extends CaptainRouteLine>(line: T, pickupLat: number, pickupLng: number): T {
+  const pickup = { lat: pickupLat, lng: pickupLng };
+  const originDistance = distanceKm(pickup, { lat: Number(line.origin_lat), lng: Number(line.origin_lng) });
+  const returnDistance = distanceKm(pickup, { lat: Number(line.destination_lat), lng: Number(line.destination_lng) });
+  if (line.return_arrival_time == null || originDistance <= returnDistance) return line;
+  return {
+    ...line,
+    origin_label: line.destination_label,
+    origin_lat: line.destination_lat,
+    origin_lng: line.destination_lng,
+    destination_label: line.origin_label,
+    destination_lat: line.origin_lat,
+    destination_lng: line.origin_lng,
+    arrival_time: line.return_arrival_time,
+    return_arrival_time: line.arrival_time,
+  };
 }
 async function roadRoute(points: Json[]) {
   if (points.length < 2) throw new ApiFailure("المسار يحتاج نقطتين على الأقل.", 400);
@@ -614,22 +690,28 @@ async function activateGroup(group: Json, members: Json[], category: Json, quote
 }
 async function groupView(group: Json) {
   const { current_rider_id: _currentRiderId, ...publicGroup } = group;
-  const [members, trips, subs] = await Promise.all([
+  const [members, trips] = await Promise.all([
     getMembers(Number(group.id), false),
     db!.from("pool_trips").select("*").eq("group_id", group.id).order("service_date").order("direction"),
-    db!.from("pool_members").select("id").eq("group_id", group.id).eq("status", "active"),
   ]);
-  const memberIds = (subs.data ?? []).map((m) => m.id);
   let subscription;
-  if (memberIds.length) {
-    const { data } = await db!.from("pool_subscriptions").select("amount_due,refund_amount,service_days,discount_rate").in("member_id", memberIds);
-    subscription = data?.find((s) => members.some((m: Json) => m.rider_user_id === Number(_currentRiderId) && memberIds.includes(m.id)));
+  const ownActiveMemberId = activeMemberIdForRider(
+    members as Array<{ id: number; rider_user_id: number; status: string }>,
+    Number(_currentRiderId),
+  );
+  if (ownActiveMemberId !== null) {
+    const { data, error: subscriptionError } = await db!.from("pool_subscriptions")
+      .select("amount_due,refund_amount,service_days,discount_rate")
+      .eq("member_id", ownActiveMemberId)
+      .maybeSingle();
+    if (subscriptionError) throw subscriptionError;
+    subscription = data ?? undefined;
   }
   return { group: { ...publicGroup, service_dates: JSON.stringify(group.service_dates), route_geometry: group.route_geometry }, members, trips: trips.data ?? [], ...(subscription ? { subscription } : {}) };
 }
 
 
-async function automaticMatch(request: Json, riderId: number) {
+async function automaticMatch(request: Json) {
   const requestId = Number(request.id);
   if (request.status === "matched") {
     const { data: existing } = await db!.from("matches").select("*").eq("daily_commute_request_id", requestId).maybeSingle();
@@ -666,7 +748,12 @@ Deno.serve(async (req: Request) => {
   let body: Json = {};
   const multipart = req.headers.get("content-type")?.toLowerCase().startsWith("multipart/form-data") === true;
   if (!["GET", "HEAD"].includes(req.method) && !multipart) {
-    try { body = await readBody(req); } catch { return error("بيانات الطلب غير صالحة.", 400, origin); }
+    try {
+      body = await readJsonObjectBody(req);
+    } catch (cause) {
+      if (cause instanceof RequestBodyTooLargeError) return error("حجم الطلب أكبر من المسموح.", 413, origin);
+      return error("بيانات الطلب غير صالحة.", 400, origin);
+    }
   }
   try {
     if (req.method === "POST" && path === "/webhooks/telegram") {
@@ -690,7 +777,7 @@ Deno.serve(async (req: Request) => {
       if (e) throw e; return reply({ categories: data }, 200, origin);
     }
     const user = await authenticate(req);
-    if (user && user.account_status !== "active" && path !== "/auth/logout") return error("الحساب موقوف حاليًا. تواصل مع خدمة العملاء للمساعدة.", 403, origin);
+    if (user && user.account_status !== "active" && path !== "/auth/logout" && !(req.method === "DELETE" && path === "/account")) return error("الحساب موقوف حاليًا. تواصل مع خدمة العملاء للمساعدة.", 403, origin);
     const avatarRoute = path.match(/^\/profile\/(\d+)\/avatar$/);
     if (req.method === "GET" && avatarRoute) {
       if (!user) return error("سجّل الدخول لعرض الصور الشخصية.", 401, origin);
@@ -755,7 +842,7 @@ Deno.serve(async (req: Request) => {
         verification_status: profile?.verification_status ?? null,
         grace_period_expires_at: profile?.grace_period_expires_at ?? null,
         requirements: { rider: verificationDocuments.rider, captain_immediate: verificationDocuments.captainImmediate, captain_deferred: verificationDocuments.captainDeferred, labels: verificationDocLabels },
-      }, 200, origin);
+      }, 200, origin, req);
     }
     if (req.method === "POST" && path === "/verification/phone/telegram") {
       const gate = await requireRole(user, ["rider", "captain"], origin); if (gate) return gate;
@@ -888,14 +975,14 @@ Deno.serve(async (req: Request) => {
       return reply({ place: data }, 200, origin);
     }
     if (req.method === "POST" && path === "/locations/search") {
-      const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      const gate = await requireRole(user, ["rider", "captain"], origin); if (gate) return gate;
       const query = clean(body.query) ? body.query.trim().replace(/\s+/g, " ") : "";
       if (query.length < 3 || query.length > 120) return error("اكتب من ٣ إلى ١٢٠ حرفًا للبحث عن العنوان.", 400, origin);
       if (!await takeLimit(`location-search:user:${user!.id}`, 20, 300)) return error("استخدم البحث بعد دقائق؛ عدد المحاولات كبير.", 429, origin);
       return reply({ suggestions: await searchGreaterCairo(query) }, 200, origin);
     }
     if (req.method === "POST" && path === "/locations/search/precise") {
-      const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      const gate = await requireRole(user, ["rider", "captain"], origin); if (gate) return gate;
       const query = clean(body.query) ? body.query.trim().replace(/\s+/g, " ") : "";
       if (query.length < 3 || query.length > 120) return error("اكتب من ٣ إلى ١٢٠ حرفًا للبحث عن العنوان.", 400, origin);
       if (!await takeLimit(`location-precise:user:${user!.id}`, 10, 300)) return error("استخدم البحث الدقيق بعد دقائق؛ عدد المحاولات كبير.", 429, origin);
@@ -930,7 +1017,7 @@ Deno.serve(async (req: Request) => {
       const phone = typeof body.phone_number === "string" ? phoneE164(body.phone_number) : null;
       const code = typeof body.code === "string" ? body.code.trim() : "";
       const nextPassword = typeof body.new_password === "string" ? body.new_password : "";
-      if (!phone || !/^\d{6}$/.test(code) || nextPassword.length < 8) return error("أدخل رقم الهاتف والرمز المكوّن من ٦ أرقام وكلمة سر من ٨ أحرف على الأقل.", 400, origin);
+      if (!phone || !/^\d{6}$/.test(code) || nextPassword.length < 8 || nextPassword.length > 128) return error("أدخل رقم الهاتف والرمز المكوّن من ٦ أرقام وكلمة سر من ٨ إلى ١٢٨ حرفًا.", 400, origin);
       const phoneHash = await keyedDigest(phone);
       const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
       if (!await takeLimit(`password-reset-complete:ip:${ip}`, 10, 900) || !await takeLimit(`password-reset-complete:phone:${phoneHash}`, 5, 900)) return error("محاولات كثيرة. ابدأ استعادة جديدة بعد قليل.", 429, origin);
@@ -963,21 +1050,32 @@ Deno.serve(async (req: Request) => {
       if (!await takeLimit(`register:ip:${ip}`, 10, 3600) || !await takeLimit(`register:phone:${phone}`, 5, 3600)) {
         return error("تم إنشاء حسابات كثيرة مؤخرًا من هذا الجهاز أو الرقم. حاول بعد ساعة.", 429, origin);
       }
-      if (!clean(full_name) || !clean(phone_number) || !clean(password)) return error("لازم تكتب الاسم ورقم الهاتف وكلمة السر.", 400, origin);
+      if (!clean(full_name) || String(full_name).trim().length > 100 || !clean(phone_number) || String(phone_number).trim().length > 32 || !clean(password)) return error("بيانات الحساب غير صحيحة. تأكد من الاسم ورقم الهاتف وطول كلمة السر.", 400, origin);
       if (!["rider", "captain"].includes(String(role))) return error("نوع الحساب المطلوب مش متاح.", 400, origin);
-      if (String(password).length < 8) return error("كلمة السر لازم تكون ٨ أحرف على الأقل.", 400, origin);
-      if (body.accepted_terms !== true || body.terms_version !== "2026-10-05" || body.privacy_version !== "2026-10-05") return error("اقرأ الشروط وسياسة الخصوصية ووافق عليهما قبل إنشاء الحساب.", 400, origin);
+      if (String(password).length < 8 || String(password).length > 128) return error("كلمة السر لازم تكون من ٨ إلى ١٢٨ حرفًا.", 400, origin);
+      if (body.accepted_terms !== true || body.acknowledged_privacy !== true || body.terms_version !== "2026-10-24" || body.privacy_version !== "2026-10-24" || !["ar", "en"].includes(String(body.policy_locale))) return error("اقرأ الشروط وإشعار الخصوصية، ثم وافق على الشروط قبل إنشاء الحساب.", 400, origin);
+      const policyLocale = String(body.policy_locale) as "ar" | "en";
       const { data: existing } = await db.from("users").select("id").eq("phone_number", String(phone_number).trim()).maybeSingle();
       if (existing) return error("الرقم ده مسجّل قبل كده.", 409, origin);
-      const { data, error: e } = await db.from("users").insert({ full_name: String(full_name).trim(), phone_number: String(phone_number).trim(), password_hash: await hashPassword(String(password)), role, terms_accepted_at: new Date().toISOString(), terms_version: "2026-10-05", privacy_version: "2026-10-05" }).select("id,full_name,phone_number,role,verified_at,created_at").single();
-      if (e) return error("تعذر إنشاء الحساب؛ تأكد أن رقم الهاتف غير مسجل.", 409, origin);
-      return reply({ user: data }, 201, origin);
+      const { data, error: registerError } = await db.rpc("sekka_register_with_policy_acceptance_v1", {
+        p_full_name: String(full_name).trim(), p_phone_number: String(phone_number).trim(),
+        p_password_hash: await hashPassword(String(password)), p_role: String(role), p_policy_locale: policyLocale,
+      });
+      if (registerError) {
+        if (registerError.code === "23505") return error("الرقم ده مسجّل قبل كده.", 409, origin);
+        if (registerError.code === "22023") return error("بيانات الحساب أو اللغة غير صالحة.", 400, origin);
+        return error("تعذر إنشاء الحساب وحفظ سجل الموافقة. حاول مرة أخرى.", 503, origin);
+      }
+      const createdUser = Array.isArray(data) ? data[0] : null;
+      if (!createdUser) return error("تعذر تأكيد إنشاء الحساب. حاول مرة أخرى.", 503, origin);
+      return reply({ user: createdUser }, 201, origin);
     }
     if (req.method === "POST" && path === "/auth/login") {
       const phone = typeof body.phone_number === "string" ? body.phone_number.trim() : "";
+      if (phone.length > 32 || String(body.password ?? "").length > 128) return error("رقم الهاتف أو كلمة السر غير صحيحة.", 400, origin);
       const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
       if (!await takeLimit(`login:${ip}:${phone}`, 5, 900)) return error("محاولات كتير في وقت قصير. حاول تاني بعد شوية.", 429, origin);
-      const { data: record } = await db.from("users").select("id,full_name,phone_number,password_hash,role,verified_at,created_at").eq("phone_number", phone).maybeSingle();
+      const { data: record } = await db.from("users").select("id,full_name,phone_number,password_hash,role,verified_at,created_at").eq("phone_number", phone).is("deleted_at", null).maybeSingle();
       const valid = record ? await verifyPassword(String(body.password ?? ""), record.password_hash) : await verifyPassword(String(body.password ?? ""), "pbkdf2$310000$00000000000000000000000000000000$0000000000000000000000000000000000000000000000000000000000000000");
       if (!record || !valid) return error("رقم الهاتف أو كلمة السر غلط.", 401, origin);
       const { data: accountControl, error: controlError } = await db.from("admin_user_controls").select("status").eq("user_id", record.id).maybeSingle();
@@ -998,7 +1096,7 @@ Deno.serve(async (req: Request) => {
         return reply({ success: true }, 200, origin);
       }
       if (req.method === "POST" && path === "/auth/change-password") {
-        if (!clean(body.current_password) || !clean(body.new_password) || String(body.new_password).length < 8) return error("بيانات كلمة السر غير صحيحة أو أقصر من ٨ أحرف.", 400, origin);
+        if (!clean(body.current_password) || String(body.current_password).length > 128 || !clean(body.new_password) || String(body.new_password).length < 8 || String(body.new_password).length > 128) return error("بيانات كلمة السر غير صحيحة. يجب أن تكون الجديدة من ٨ إلى ١٢٨ حرفًا.", 400, origin);
         if (!await takeLimit(`password:${user.id}`, 5, 900)) return error("محاولات كتير في وقت قصير. حاول تاني بعد شوية.", 429, origin);
         const { data: row } = await db.from("users").select("password_hash").eq("id", user.id).single();
         if (!row || typeof row.password_hash !== "string" || !await verifyPassword(String(body.current_password), row.password_hash)) return error("كلمة السر الحالية غير صحيحة.", 401, origin);
@@ -1009,6 +1107,24 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    if (req.method === "DELETE" && path === "/account") {
+      if (!user) return error("سجّل الدخول أولًا.", 401, origin);
+      if (!clean(body.current_password) || String(body.current_password).length > 128) return error("أدخل كلمة السر الحالية لتأكيد حذف الحساب.", 400, origin);
+      if (!await takeLimit(`account-delete:${user.id}`, 3, 3600)) return error("محاولات حذف كثيرة. حاول مرة أخرى بعد قليل.", 429, origin);
+      const { data: credentials, error: credentialError } = await db.from("users").select("password_hash").eq("id", user.id).is("deleted_at", null).maybeSingle();
+      if (credentialError) throw credentialError;
+      if (!credentials || !await verifyPassword(String(body.current_password), credentials.password_hash)) return error("كلمة السر الحالية غير صحيحة.", 401, origin);
+      try { await deleteAccountData(user.id, user.id, null); }
+      catch (deletionError) {
+        const message = deletionError instanceof Error ? deletionError.message : "";
+        if (message.includes("finish or cancel active trips")) return error("أنه مشاويرك النشطة أو ألغها قبل حذف الحساب.", 409, origin);
+        if (message.includes("protected super administrator")) return error("لا يمكن حذف حساب مسؤول النظام المحمي.", 403, origin);
+        if (message.includes("account not found")) return error("الحساب غير موجود أو سبق حذفه.", 404, origin);
+        throw deletionError;
+      }
+      return reply({ success: true }, 200, origin);
+    }
+
     if (path === "/rider/requests") {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
       if (req.method === "POST") {
@@ -1016,7 +1132,7 @@ Deno.serve(async (req: Request) => {
         if (!clean(body.service_category_id) || !validPoint(body.pickup_lat, body.pickup_lng) || !validPoint(body.dropoff_lat, body.dropoff_lng)) return error("فئة الخدمة أو إحداثيات الرحلة غير صحيحة.", 400, origin);
         const { data: request, error: insertError } = await db.from("daily_commute_requests").insert({ rider_user_id: user!.id, service_category_id: body.service_category_id, pickup_lat: body.pickup_lat, pickup_lng: body.pickup_lng, dropoff_lat: body.dropoff_lat, dropoff_lng: body.dropoff_lng }).select().single();
         if (insertError) throw insertError;
-        const result = await automaticMatch(request, user!.id);
+        const result = await automaticMatch(request);
         return reply({ request: result.request, match: result.match }, 201, origin);
       }
       if (req.method === "GET") {
@@ -1030,6 +1146,205 @@ Deno.serve(async (req: Request) => {
         return reply({ requests: rows }, 200, origin);
       }
     }
+    if (path === "/rider/demand-requests") {
+      const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      if (req.method === "POST") {
+        const activationGate = await requireVerificationActivation(user!, origin); if (activationGate) return activationGate;
+        if (!(["private_car", "hiace"].includes(String(body.vehicle_type_id))) || !validIsoDate(body.trip_date) || String(body.trip_date) < cairoDateKey() || normalizeClock(body.arrival_time) !== body.arrival_time || (body.return_arrival_time != null && normalizeClock(body.return_arrival_time) !== body.return_arrival_time) || !clean(body.pickup_label) || !clean(body.dropoff_label) || !validPoint(body.pickup_lat, body.pickup_lng) || !validPoint(body.dropoff_lat, body.dropoff_lng) || !isGreaterCairoPoint(Number(body.pickup_lat), Number(body.pickup_lng)) || !isGreaterCairoPoint(Number(body.dropoff_lat), Number(body.dropoff_lng))) return error("راجع نوع المركبة والتاريخ والوقت ونقطتي الركوب والوصول داخل القاهرة الكبرى.", 400, origin);
+        const { data, error: createError } = await db.rpc("create_demand_request", { actor_id: user!.id, vehicle_id: body.vehicle_type_id, trip_on: body.trip_date, arrives: body.arrival_time, return_arrives: body.return_arrival_time ?? null, pickup_name: body.pickup_label.trim(), pickup_y: body.pickup_lat, pickup_x: body.pickup_lng, dropoff_name: body.dropoff_label.trim(), dropoff_y: body.dropoff_lat, dropoff_x: body.dropoff_lng, seat_count: Number(body.seats ?? 1) });
+        if (createError) {
+          if (createError.code === "42501") return error("يلزم توثيق الحساب ورقم الهاتف لإرسال طلب الرحلة.", 403, origin);
+          throw createError;
+        }
+        const request = Array.isArray(data) ? data[0] : data;
+        const [{ data: group }, { data: vehicle }] = await Promise.all([
+          db.from("demand_groups").select("id,status,captain_line_id").eq("id", request.demand_group_id).maybeSingle(),
+          db.from("vehicle_types").select("id,name_ar").eq("id", request.vehicle_type_id).maybeSingle(),
+        ]);
+        let line = null;
+        if (group?.captain_line_id) {
+          const { data: found } = await db.from("captain_lines").select("id,captain_user_id,origin_label,origin_lat,origin_lng,destination_label,destination_lat,destination_lng,arrival_time,return_arrival_time,seats,price_per_seat").eq("id", group.captain_line_id).maybeSingle();
+          const { data: captain } = found ? await db.from("users").select("full_name").eq("id", found.captain_user_id).maybeSingle() : { data: null };
+          const oriented = found ? orientCaptainLineForRider(found, Number(request.pickup_lat), Number(request.pickup_lng)) : null;
+          line = oriented ? { id: oriented.id, origin_label: oriented.origin_label, destination_label: oriented.destination_label, arrival_time: oriented.arrival_time, return_arrival_time: oriented.return_arrival_time, seats: oriented.seats, price_per_seat: oriented.price_per_seat, captain_name: captain?.full_name ?? "الكابتن" } : null;
+        }
+        return reply({ request, demand_group: group, vehicle, line }, 201, origin);
+      }
+      if (req.method === "GET") {
+        const { data, error: queryError } = await db.from("demand_requests").select("*,demand_groups(status,captain_line_id)").eq("rider_user_id", user!.id).order("created_at", { ascending: false }).limit(50);
+        if (queryError) throw queryError;
+        const rows = data ?? [];
+        const lineIds = [...new Set(rows.map((item) => Array.isArray(item.demand_groups) ? item.demand_groups[0]?.captain_line_id : item.demand_groups?.captain_line_id).filter((id): id is number => Number.isSafeInteger(id)))];
+        const { data: lines, error: linesError } = lineIds.length
+          ? await db.from("captain_lines").select("id,captain_user_id,origin_label,origin_lat,origin_lng,destination_label,destination_lat,destination_lng,arrival_time,return_arrival_time,price_per_seat").in("id", lineIds)
+          : { data: [], error: null };
+        if (linesError) throw linesError;
+        const captainIds = [...new Set((lines ?? []).map((line) => Number(line.captain_user_id)))];
+        const { data: captains, error: captainsError } = captainIds.length
+          ? await db.from("users").select("id,full_name").in("id", captainIds)
+          : { data: [], error: null };
+        if (captainsError) throw captainsError;
+        const linesById = new Map((lines ?? []).map((line) => [Number(line.id), line]));
+        const captainsById = new Map((captains ?? []).map((captain) => [Number(captain.id), captain.full_name]));
+        const requests = rows.map((item) => {
+          const group = Array.isArray(item.demand_groups) ? item.demand_groups[0] : item.demand_groups;
+          const found = group?.captain_line_id ? linesById.get(Number(group.captain_line_id)) : null;
+          const oriented = found ? orientCaptainLineForRider(found, Number(item.pickup_lat), Number(item.pickup_lng)) : null;
+          const line = oriented ? { origin_label: oriented.origin_label, destination_label: oriented.destination_label, arrival_time: oriented.arrival_time, return_arrival_time: oriented.return_arrival_time, price_per_seat: oriented.price_per_seat, captain_name: captainsById.get(Number(found!.captain_user_id)) ?? "الكابتن" } : null;
+          return { ...item, demand_groups: group ?? null, line };
+        });
+        return reply({ requests }, 200, origin, req);
+      }
+    }
+    if (req.method === "GET" && path === "/rider/lines/discover") {
+      const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      const pickupLat = Number(url.searchParams.get("pickup_lat")), pickupLng = Number(url.searchParams.get("pickup_lng"));
+      const hasDropoffLat = url.searchParams.has("dropoff_lat"), hasDropoffLng = url.searchParams.has("dropoff_lng");
+      const hasDropoff = hasDropoffLat && hasDropoffLng;
+      if (!validPoint(pickupLat, pickupLng) || !isGreaterCairoPoint(pickupLat, pickupLng) || (hasDropoffLat !== hasDropoffLng)) return error("اختر نقطة انطلاق صحيحة داخل القاهرة الكبرى.", 400, origin);
+      const dropoffLat = hasDropoff ? Number(url.searchParams.get("dropoff_lat")) : null;
+      const dropoffLng = hasDropoff ? Number(url.searchParams.get("dropoff_lng")) : null;
+      if (hasDropoff && (!validPoint(dropoffLat, dropoffLng) || !isGreaterCairoPoint(dropoffLat!, dropoffLng!))) return error("اختر نقطة وصول صحيحة داخل القاهرة الكبرى.", 400, origin);
+      const { data: config, error: configError } = await db.from("app_config").select("numeric_value").eq("config_key", "demand_route_radius_km").maybeSingle();
+      if (configError) throw configError;
+      const radiusKm = Number(config?.numeric_value);
+      if (!Number.isFinite(radiusKm) || radiusKm <= 0) return error("إعدادات البحث غير متاحة الآن.", 503, origin);
+      const { data: lines, error: linesError } = await db.from("captain_lines")
+        .select("id,captain_user_id,vehicle_type_id,origin_label,origin_lat,origin_lng,destination_label,destination_lat,destination_lng,intermediate_stops,arrival_time,return_arrival_time,service_days,seats,price_per_seat,status")
+        .eq("status", "active").order("created_at", { ascending: false }).limit(200);
+      if (linesError) throw linesError;
+      const pickup = { lat: pickupLat, lng: pickupLng };
+      const dropoff = hasDropoff ? { lat: dropoffLat!, lng: dropoffLng! } : null;
+      const matches = (lines ?? []).flatMap((line) => {
+        const start = { lat: Number(line.origin_lat), lng: Number(line.origin_lng) };
+        const end = { lat: Number(line.destination_lat), lng: Number(line.destination_lng) };
+        const outboundPickup = distanceKm(pickup, start), outboundDropoff = dropoff ? distanceKm(dropoff, end) : 0;
+        const reversePickup = line.return_arrival_time ? distanceKm(pickup, end) : Number.POSITIVE_INFINITY;
+        const reverseDropoff = dropoff && line.return_arrival_time ? distanceKm(dropoff, start) : 0;
+        const outboundMatch = outboundPickup <= radiusKm && outboundDropoff <= radiusKm;
+        const reverseMatch = reversePickup <= radiusKm && reverseDropoff <= radiusKm;
+        if (!outboundMatch && !reverseMatch) return [];
+        const reversed = !outboundMatch && reverseMatch;
+        return [{
+          id: Number(line.id), vehicle_type_id: line.vehicle_type_id,
+          origin_label: reversed ? line.destination_label : line.origin_label,
+          origin_lat: reversed ? line.destination_lat : line.origin_lat,
+          origin_lng: reversed ? line.destination_lng : line.origin_lng,
+          destination_label: reversed ? line.origin_label : line.destination_label,
+          destination_lat: reversed ? line.origin_lat : line.destination_lat,
+          destination_lng: reversed ? line.origin_lng : line.destination_lng,
+          arrival_time: reversed ? line.return_arrival_time : line.arrival_time,
+          service_days: line.service_days, seats: line.seats, price_per_seat: line.price_per_seat,
+          pickup_distance_km: Math.round((reversed ? reversePickup : outboundPickup) * 100) / 100,
+          dropoff_distance_km: Math.round((reversed ? reverseDropoff : outboundDropoff) * 100) / 100,
+          captain_user_id: Number(line.captain_user_id),
+        }];
+      }).sort((a, b) => a.pickup_distance_km + a.dropoff_distance_km - b.pickup_distance_km - b.dropoff_distance_km).slice(0, 30);
+      const captainIds = [...new Set(matches.map((line) => line.captain_user_id))];
+      const [captainsResult, profilesResult] = captainIds.length ? await Promise.all([
+        db.from("users").select("id,full_name").in("id", captainIds),
+        db.from("captain_profiles").select("user_id,verification_status").in("user_id", captainIds),
+      ]) : [{ data: [], error: null }, { data: [], error: null }];
+      if (captainsResult.error) throw captainsResult.error;
+      if (profilesResult.error) throw profilesResult.error;
+      const captainNames = new Map((captainsResult.data ?? []).map((captain) => [Number(captain.id), captain.full_name]));
+      const verifiedCaptains = new Set((profilesResult.data ?? []).filter((profile) => profile.verification_status === "approved").map((profile) => Number(profile.user_id)));
+      return reply({ lines: matches.map(({ captain_user_id, ...line }) => ({ ...line, captain_name: captainNames.get(captain_user_id) ?? "كابتن سِكّة", captain_verified: verifiedCaptains.has(captain_user_id) })) }, 200, origin, req);
+    }
+    if (req.method === "POST" && path === "/rider/lines/search") {
+      const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      if (!(["private_car", "hiace"].includes(String(body.vehicle_type_id))) || !validIsoDate(body.trip_date) || String(body.trip_date) < cairoDateKey() || normalizeClock(body.arrival_time) !== body.arrival_time || (body.return_arrival_time != null && normalizeClock(body.return_arrival_time) !== body.return_arrival_time) || !validPoint(body.pickup_lat, body.pickup_lng) || !validPoint(body.dropoff_lat, body.dropoff_lng) || !isGreaterCairoPoint(Number(body.pickup_lat), Number(body.pickup_lng)) || !isGreaterCairoPoint(Number(body.dropoff_lat), Number(body.dropoff_lng))) return error("راجع بيانات البحث عن المسار.", 400, origin);
+      const day = new Date(`${body.trip_date}T12:00:00Z`).getUTCDay();
+      const { data: config, error: configError } = await db.from("app_config").select("config_key,numeric_value").in("config_key", ["demand_route_radius_km", "demand_arrival_window_minutes"]);
+      if (configError) throw configError;
+      const radiusKm = Number(config?.find((item) => item.config_key === "demand_route_radius_km")?.numeric_value);
+      const arrivalWindow = Number(config?.find((item) => item.config_key === "demand_arrival_window_minutes")?.numeric_value);
+      if (!Number.isFinite(radiusKm) || !Number.isFinite(arrivalWindow)) return error("إعدادات البحث غير متاحة الآن.", 503, origin);
+      const { data: lines, error: searchError } = await db.from("captain_lines").select("id,captain_user_id,vehicle_type_id,origin_label,origin_lat,origin_lng,destination_label,destination_lat,destination_lng,intermediate_stops,arrival_time,return_arrival_time,service_days,seats,price_per_seat,payment_methods,women_only,status").eq("status", "active").eq("vehicle_type_id", body.vehicle_type_id).contains("service_days", [day]).limit(100);
+      if (searchError) throw searchError;
+      const lineIds = (lines ?? []).map((line) => Number(line.id));
+      const usedSeats = new Map<string, number>();
+      const addUsedSeats = (lineId: number, direction: string, count: number) => {
+        if (direction === "outbound" || direction === "roundtrip") {
+          const key = `${lineId}:outbound`; usedSeats.set(key, (usedSeats.get(key) ?? 0) + count);
+        }
+        if (direction === "return" || direction === "roundtrip") {
+          const key = `${lineId}:return`; usedSeats.set(key, (usedSeats.get(key) ?? 0) + count);
+        }
+      };
+      if (lineIds.length) {
+        const { data: matchedGroups, error: matchedError } = await db.from("demand_groups").select("id,captain_line_id,matched_direction").in("captain_line_id", lineIds).eq("trip_date", body.trip_date).eq("status", "matched");
+        if (matchedError) throw matchedError;
+        const groupIds = (matchedGroups ?? []).map((group) => Number(group.id));
+        if (groupIds.length) {
+          const { data: requests, error: requestsError } = await db.from("demand_requests").select("demand_group_id,seats").in("demand_group_id", groupIds);
+          if (requestsError) throw requestsError;
+          const ownerByGroup = new Map((matchedGroups ?? []).map((group) => [Number(group.id), { lineId: Number(group.captain_line_id), direction: String(group.matched_direction ?? "outbound") }]));
+          for (const request of requests ?? []) {
+            const owner = ownerByGroup.get(Number(request.demand_group_id));
+            if (owner) addUsedSeats(owner.lineId, owner.direction, Number(request.seats));
+          }
+        }
+      }
+      const pickup = { lat: Number(body.pickup_lat), lng: Number(body.pickup_lng) }, dropoff = { lat: Number(body.dropoff_lat), lng: Number(body.dropoff_lng) };
+      const arrivalMinutes = Number(String(body.arrival_time).slice(0, 2)) * 60 + Number(String(body.arrival_time).slice(3, 5));
+      const returnArrivalMinutes = body.return_arrival_time == null ? null : Number(String(body.return_arrival_time).slice(0, 2)) * 60 + Number(String(body.return_arrival_time).slice(3, 5));
+      const minuteDifference = (left: number, right: number) => Math.min(Math.abs(left - right), 1440 - Math.abs(left - right));
+      const matches = (lines ?? []).flatMap((line) => {
+        const outboundPickupDistance = distanceKm(pickup, { lat: Number(line.origin_lat), lng: Number(line.origin_lng) });
+        const outboundDropoffDistance = distanceKm(dropoff, { lat: Number(line.destination_lat), lng: Number(line.destination_lng) });
+        const returnPickupDistance = distanceKm(pickup, { lat: Number(line.destination_lat), lng: Number(line.destination_lng) });
+        const returnDropoffDistance = distanceKm(dropoff, { lat: Number(line.origin_lat), lng: Number(line.origin_lng) });
+        const outboundMinutes = Number(String(line.arrival_time).slice(0, 2)) * 60 + Number(String(line.arrival_time).slice(3, 5));
+        const returnMinutes = line.return_arrival_time == null ? null : Number(String(line.return_arrival_time).slice(0, 2)) * 60 + Number(String(line.return_arrival_time).slice(3, 5));
+        const outboundDiff = minuteDifference(arrivalMinutes, outboundMinutes);
+        const returnDiff = returnMinutes == null ? null : minuteDifference(arrivalMinutes, returnMinutes);
+        const returnLegDiff = returnArrivalMinutes == null ? null : minuteDifference(returnArrivalMinutes, outboundMinutes);
+        const outboundMatch = outboundPickupDistance <= radiusKm && outboundDropoffDistance <= radiusKm && outboundDiff <= arrivalWindow
+          && (returnArrivalMinutes == null || (returnMinutes != null && minuteDifference(returnArrivalMinutes, returnMinutes) <= arrivalWindow));
+        const reverseMatch = returnMinutes != null && returnPickupDistance <= radiusKm && returnDropoffDistance <= radiusKm
+          && returnDiff != null && returnDiff <= arrivalWindow
+          && (returnArrivalMinutes == null || (returnLegDiff != null && returnLegDiff <= arrivalWindow));
+        const matchedReturn = !outboundMatch && reverseMatch;
+        if (!outboundMatch && !reverseMatch) return [];
+        const pickupDistanceKm = matchedReturn ? returnPickupDistance : outboundPickupDistance;
+        const dropoffDistanceKm = matchedReturn ? returnDropoffDistance : outboundDropoffDistance;
+        const outboundSeats = Number(line.seats) - (usedSeats.get(`${line.id}:outbound`) ?? 0);
+        const returnSeats = Number(line.seats) - (usedSeats.get(`${line.id}:return`) ?? 0);
+        const seatsAvailable = returnArrivalMinutes != null ? Math.min(outboundSeats, returnSeats) : matchedReturn ? returnSeats : outboundSeats;
+        return [{
+          ...line,
+          origin_label: matchedReturn ? line.destination_label : line.origin_label,
+          origin_lat: matchedReturn ? line.destination_lat : line.origin_lat,
+          origin_lng: matchedReturn ? line.destination_lng : line.origin_lng,
+          destination_label: matchedReturn ? line.origin_label : line.destination_label,
+          destination_lat: matchedReturn ? line.origin_lat : line.destination_lat,
+          destination_lng: matchedReturn ? line.origin_lng : line.destination_lng,
+          arrival_time: matchedReturn ? line.return_arrival_time : line.arrival_time,
+          return_arrival_time: matchedReturn ? line.arrival_time : line.return_arrival_time,
+          matched_return: matchedReturn,
+          seats_available: seatsAvailable,
+          pickup_distance_km: Math.round(pickupDistanceKm * 100) / 100,
+          dropoff_distance_km: Math.round(dropoffDistanceKm * 100) / 100,
+          arrival_difference_minutes: matchedReturn ? (returnDiff ?? outboundDiff) : outboundDiff,
+        }];
+      }).filter((line) => line.seats_available > 0).sort((a, b) => a.pickup_distance_km + a.dropoff_distance_km - b.pickup_distance_km - b.dropoff_distance_km).slice(0, 20);
+      const captainIds = [...new Set(matches.map((line) => Number(line.captain_user_id)))];
+      const [captainsResult, captainProfilesResult] = captainIds.length ? await Promise.all([
+        db.from("users").select("id,full_name").in("id", captainIds),
+        db.from("captain_profiles").select("user_id,verification_status").in("user_id", captainIds),
+      ]) : [{ data: [], error: null }, { data: [], error: null }];
+      if (captainsResult.error) throw captainsResult.error;
+      if (captainProfilesResult.error) throw captainProfilesResult.error;
+      const captainNameById = new Map((captainsResult.data ?? []).map((captain) => [Number(captain.id), captain.full_name]));
+      const verifiedCaptainIds = new Set((captainProfilesResult.data ?? []).filter((profile) => profile.verification_status === "approved").map((profile) => Number(profile.user_id)));
+      const publicMatches = matches.map(({ captain_user_id, ...line }) => ({
+        ...line,
+        captain_name: captainNameById.get(Number(captain_user_id)) ?? "كابتن سِكّة",
+        captain_verified: verifiedCaptainIds.has(Number(captain_user_id)),
+      }));
+      return reply({ lines: publicMatches }, 200, origin);
+    }
     const dailyMatch = path.match(/^\/rider\/requests\/(\d+)\/match$/);
     if (req.method === "POST" && dailyMatch) {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
@@ -1037,7 +1352,7 @@ Deno.serve(async (req: Request) => {
       if (queryError) throw queryError;
       if (!request) return error("الطلب ده مش موجود.", 404, origin);
       if (Number(request.rider_user_id) !== user!.id) return error("الطلب ده مش بتاعك.", 403, origin);
-      const result = await automaticMatch(request, user!.id);
+      const result = await automaticMatch(request);
       if (result.not_open) return error("الطلب ده لم يعد مفتوحًا للمطابقة.", 409, origin);
       return reply({ request: result.request, match: result.match }, 200, origin);
     }
@@ -1097,12 +1412,35 @@ Deno.serve(async (req: Request) => {
       const { data: memberships, error: me } = await db.from("pool_members").select("group_id").eq("rider_user_id", user!.id).in("status", ["active", "awaiting_confirmation"]);
       if (me) throw me;
       const ids = [...new Set((memberships ?? []).map((m) => m.group_id))];
-      if (!ids.length) return reply({ groups: [] }, 200, origin);
+      if (!ids.length) return reply({ groups: [] }, 200, origin, req);
       const { data: groups, error: ge } = await db.from("pool_groups").select("*").in("id", ids).order("created_at", { ascending: false });
       if (ge) throw ge;
-      const views = [];
-      for (const g of groups ?? []) views.push(await groupView({ ...g, current_rider_id: user!.id }));
-      return reply({ groups: views }, 200, origin);
+      const groupIds = (groups ?? []).map((group) => Number(group.id));
+      if (!groupIds.length) return reply({ groups: [] }, 200, origin, req);
+      const [{ data: groupMembers, error: membersError }, { data: trips, error: tripsError }] = await Promise.all([
+        db.from("pool_members").select("*").in("group_id", groupIds).order("pickup_order").order("id"),
+        db.from("pool_trips").select("*").in("group_id", groupIds).order("service_date").order("direction"),
+      ]);
+      if (membersError || tripsError) throw membersError ?? tripsError;
+      const membersByGroup = new Map<number, typeof groupMembers>();
+      for (const member of groupMembers ?? []) { const list = membersByGroup.get(Number(member.group_id)) ?? []; list.push(member); membersByGroup.set(Number(member.group_id), list); }
+      const tripsByGroup = new Map<number, typeof trips>();
+      for (const trip of trips ?? []) { const list = tripsByGroup.get(Number(trip.group_id)) ?? []; list.push(trip); tripsByGroup.set(Number(trip.group_id), list); }
+      const ownActiveMemberIds = (groupMembers ?? []).filter((member) => Number(member.rider_user_id) === user!.id && member.status === "active").map((member) => Number(member.id));
+      const { data: subscriptions, error: subscriptionsError } = ownActiveMemberIds.length
+        ? await db.from("pool_subscriptions").select("member_id,amount_due,refund_amount,service_days,discount_rate").in("member_id", ownActiveMemberIds)
+        : { data: [], error: null };
+      if (subscriptionsError) throw subscriptionsError;
+      const subscriptionsByMember = new Map((subscriptions ?? []).map((subscription) => [Number(subscription.member_id), subscription]));
+      const views = (groups ?? []).map((group) => {
+        const members = membersByGroup.get(Number(group.id)) ?? [];
+        const ownMemberId = activeMemberIdForRider(members as Array<{ id: number; rider_user_id: number; status: string }>, user!.id);
+        const { current_rider_id: _currentRiderId, ...publicGroup } = { ...group, current_rider_id: user!.id };
+        const subscriptionRow = ownMemberId === null ? undefined : subscriptionsByMember.get(ownMemberId);
+        const subscription = subscriptionRow ? { amount_due: subscriptionRow.amount_due, refund_amount: subscriptionRow.refund_amount, service_days: subscriptionRow.service_days, discount_rate: subscriptionRow.discount_rate } : undefined;
+        return { group: { ...publicGroup, service_dates: JSON.stringify(group.service_dates), route_geometry: group.route_geometry }, members, trips: tripsByGroup.get(Number(group.id)) ?? [], ...(subscription ? { subscription } : {}) };
+      });
+      return reply({ groups: views }, 200, origin, req);
     }
     if (req.method === "POST" && path === "/rider/pool/discover") {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
@@ -1154,23 +1492,7 @@ Deno.serve(async (req: Request) => {
     }
     if (req.method === "POST" && path === "/rider/pool/groups") {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
-      const activationGate = await requireVerificationActivation(user!, origin); if (activationGate) return activationGate;
-      const { category_id, package_type, service_dates, morning_departure, return_departure } = body;
-      const dates = validDates(service_dates, String(package_type));
-      if (!clean(category_id) || !dates || !/^\d{2}:\d{2}$/.test(String(morning_departure)) || !/^\d{2}:\d{2}$/.test(String(return_departure)) || String(return_departure) <= String(morning_departure)) return error("راجع الفئة والأيام ومواعيد الذهاب والعودة.", 400, origin);
-      let pickup, dropoff;
-      try { pickup = await selectLocation(body, "pickup"); dropoff = await selectLocation(body, "dropoff"); }
-      catch (err) { if (err instanceof ApiFailure) return error(err.message, err.status, origin); throw err; }
-      const { data: category } = await db.from("pool_categories").select("*").eq("id", category_id).maybeSingle();
-      if (!category) return error("فئة الرحلة غير موجودة.", 404, origin);
-      const initialMember = { id: 0, pickup_lat: pickup.lat, pickup_lng: pickup.lng, pickup_place_id: pickup.place_id, dropoff_lat: dropoff.lat, dropoff_lng: dropoff.lng, dropoff_place_id: dropoff.place_id, pickup_order: 0 };
-      let q; try { q = await quote([initialMember], category); }
-      catch (err) { if (err instanceof ApiFailure) return error(err.message, err.status, origin); return error("خدمة حساب المسار غير متاحة حاليًا.", 503, origin); }
-      const { data: group, error: ge } = await db.from("pool_groups").insert({ created_by_user_id: user!.id, category_id, package_type, service_dates: dates, morning_departure: morning_departure + ":00", return_departure: return_departure + ":00", route_distance_km: q.out.distanceKm, route_duration_min: q.out.durationMin, seat_day_fare: q.seatDayFare, route_geometry: q.geometry, status: "waiting" }).select().single();
-      if (ge) throw ge;
-      const { error: memberError } = await db.from("pool_members").insert({ group_id: group.id, rider_user_id: user!.id, pickup_lat: pickup.lat, pickup_lng: pickup.lng, pickup_place_id: pickup.place_id, dropoff_lat: dropoff.lat, dropoff_lng: dropoff.lng, dropoff_place_id: dropoff.place_id, seats_reserved: 1, status: "active", price_decision: "accepted", pickup_order: 0 });
-      if (memberError) throw memberError;
-      return reply({ ...(await groupView(group)), auto_matched: false }, 201, origin);
+      return error("لم يعد الراكب ينشئ مجموعة. أرسل طلب رحلة فرديًا، وسيتولى التطبيق تجميع الطلبات المتشابهة.", 410, origin);
     }
     const editGroupMatch = path.match(/^\/rider\/pool\/groups\/(\d+)$/);
     if (req.method === "PUT" && editGroupMatch) {
@@ -1476,10 +1798,101 @@ Deno.serve(async (req: Request) => {
       return reply({ success: true }, 200, origin);
     }
 
+    if (req.method === "GET" && path === "/messages/contacts") {
+      if (!user) return error("سجّل الدخول أولًا.", 401, origin);
+      if (user.role === "admin") return reply({ contacts: [] }, 200, origin);
+      const contactIds = await getDirectMessageContactIds(user.id);
+      if (!contactIds.length) return reply({ contacts: [] }, 200, origin);
+      const { data: contacts, error: contactsError } = await db.from("users").select("id,full_name,role,avatar_path").in("id", contactIds).is("deleted_at", null).order("full_name");
+      if (contactsError) throw contactsError;
+      return reply({ contacts: contacts ?? [] }, 200, origin);
+    }
+    if (req.method === "GET" && path === "/messages/conversations") {
+      if (!user) return error("سجّل الدخول أولًا.", 401, origin);
+      const { data: rows, error: conversationsError } = await db.from("message_conversations")
+        .select("id,participant_low_id,participant_high_id,last_message_at,last_message_body,last_message_sender_id,unread_low,unread_high,created_at")
+        .or(`participant_low_id.eq.${user.id},participant_high_id.eq.${user.id}`)
+        .order("last_message_at", { ascending: false, nullsFirst: false }).order("id", { ascending: false }).limit(100);
+      if (conversationsError) throw conversationsError;
+      const conversationRows = rows ?? [];
+      const otherUserIds = [...new Set(conversationRows.map((row) => Number(row.participant_low_id) === user.id ? Number(row.participant_high_id) : Number(row.participant_low_id)))];
+      const { data: contacts, error: usersError } = otherUserIds.length
+        ? await db.from("users").select("id,full_name,role,avatar_path").in("id", otherUserIds).is("deleted_at", null)
+        : { data: [], error: null };
+      if (usersError) throw usersError;
+      const byId = new Map((contacts ?? []).map((contact) => [Number(contact.id), contact]));
+      const conversations = conversationRows.flatMap((row) => {
+        const otherUserId = Number(row.participant_low_id) === user.id ? Number(row.participant_high_id) : Number(row.participant_low_id);
+        const contact = byId.get(otherUserId);
+        return contact ? [{ ...row, other_user: contact, unread_count: Number(row.participant_low_id) === user.id ? row.unread_low : row.unread_high }] : [];
+      });
+      return reply({ conversations, unread_total: conversations.reduce((sum, row) => sum + Number(row.unread_count), 0) }, 200, origin, req);
+    }
+    if (req.method === "POST" && path === "/messages/conversations") {
+      if (!user) return error("سجّل الدخول أولًا.", 401, origin);
+      const recipientId = Number(body.recipient_user_id);
+      if (!Number.isSafeInteger(recipientId) || recipientId < 1 || recipientId === user.id) return error("اختار مستخدمًا صحيحًا لبدء المحادثة.", 400, origin);
+      if (user.role === "admin" || !(await getDirectMessageContactIds(user.id)).includes(recipientId)) return error("يمكنك مراسلة مستخدم شاركك رحلة أو مجموعة فقط.", 403, origin);
+      const { data: recipient, error: recipientError } = await db.from("users").select("id").eq("id", recipientId).is("deleted_at", null).maybeSingle();
+      if (recipientError) throw recipientError;
+      if (!recipient) return error("المستخدم غير موجود.", 404, origin);
+      const participantLowId = Math.min(user.id, recipientId), participantHighId = Math.max(user.id, recipientId);
+      const { data: existing, error: lookupError } = await db.from("message_conversations").select("id").eq("participant_low_id", participantLowId).eq("participant_high_id", participantHighId).maybeSingle();
+      if (lookupError) throw lookupError;
+      if (existing) return reply({ conversation: existing }, 200, origin);
+      const { data: conversation, error: createError } = await db.from("message_conversations").insert({ participant_low_id: participantLowId, participant_high_id: participantHighId }).select("id").single();
+      if (createError?.code === "23505") {
+        const { data: concurrent, error: concurrentError } = await db.from("message_conversations").select("id").eq("participant_low_id", participantLowId).eq("participant_high_id", participantHighId).single();
+        if (concurrentError) throw concurrentError;
+        return reply({ conversation: concurrent }, 200, origin);
+      }
+      if (createError) throw createError;
+      return reply({ conversation }, 201, origin);
+    }
+    const directMessageHistory = path.match(/^\/messages\/conversations\/(\d+)\/messages$/);
+    if (req.method === "GET" && directMessageHistory) {
+      if (!user) return error("سجّل الدخول أولًا.", 401, origin);
+      const conversationId = Number(directMessageHistory[1]);
+      const { data: conversation, error: conversationError } = await db.from("message_conversations").select("id").eq("id", conversationId).or(`participant_low_id.eq.${user.id},participant_high_id.eq.${user.id}`).maybeSingle();
+      if (conversationError) throw conversationError;
+      if (!conversation) return error("المحادثة غير موجودة.", 404, origin);
+      const beforeRaw = url.searchParams.get("before_id");
+      const beforeId = beforeRaw === null ? null : Number(beforeRaw);
+      if (beforeRaw !== null && (!Number.isSafeInteger(beforeId) || beforeId! < 1)) return error("مؤشر الرسائل غير صالح.", 400, origin);
+      let query = db.from("direct_messages").select("id,conversation_id,sender_user_id,body,created_at,read_at").eq("conversation_id", conversationId);
+      if (beforeId !== null) query = query.lt("id", beforeId);
+      const { data: messages, error: messagesError } = await query.order("id", { ascending: false }).limit(100);
+      if (messagesError) throw messagesError;
+      return reply({ messages: (messages ?? []).reverse(), has_older: (messages ?? []).length === 100 }, 200, origin, req);
+    }
+    const directMessageRead = path.match(/^\/messages\/conversations\/(\d+)\/read$/);
+    if (req.method === "POST" && directMessageRead) {
+      if (!user) return error("سجّل الدخول أولًا.", 401, origin);
+      const conversationId = Number(directMessageRead[1]);
+      const { data: conversation, error: conversationError } = await db.from("message_conversations").select("id").eq("id", conversationId).or(`participant_low_id.eq.${user.id},participant_high_id.eq.${user.id}`).maybeSingle();
+      if (conversationError) throw conversationError;
+      if (!conversation) return error("المحادثة غير موجودة.", 404, origin);
+      const { data: markedCount, error: markError } = await db.rpc("mark_direct_messages_read", { p_user_id: user.id, p_conversation_id: conversationId });
+      if (markError) throw markError;
+      return reply({ marked_count: markedCount }, 200, origin);
+    }
+    if (req.method === "POST" && directMessageHistory) {
+      if (!user) return error("سجّل الدخول أولًا.", 401, origin);
+      if (!clean(body.body) || body.body.trim().length > 2000) return error("اكتب رسالة من حرف واحد إلى 2000 حرف.", 400, origin);
+      if (!await takeLimit(`direct-message-send:${user.id}`, 30, 60)) return error("أرسلت رسائل كثيرة في وقت قصير. حاول بعد قليل.", 429, origin);
+      const conversationId = Number(directMessageHistory[1]);
+      const { data: conversation, error: conversationError } = await db.from("message_conversations").select("id").eq("id", conversationId).or(`participant_low_id.eq.${user.id},participant_high_id.eq.${user.id}`).maybeSingle();
+      if (conversationError) throw conversationError;
+      if (!conversation) return error("المحادثة غير موجودة.", 404, origin);
+      const { data: message, error: sendError } = await db.rpc("send_direct_message", { p_sender_user_id: user.id, p_conversation_id: conversationId, p_body: body.body.trim() });
+      if (sendError) throw sendError;
+      return reply({ message: Array.isArray(message) ? message[0] : message }, 201, origin);
+    }
+
     if (req.method === "GET" && path === "/pool/notifications") {
       if (!user) return error("سجّل الدخول أولًا.", 401, origin);
       const { data, error: e } = await db.from("pool_notifications").select("*").eq("user_id", user.id).is("deleted_at", null).order("id", { ascending: false }).limit(100);
-      if (e) throw e; return reply({ notifications: data }, 200, origin);
+      if (e) throw e; return reply({ notifications: data }, 200, origin, req);
     }
     const readNotice = path.match(/^\/pool\/notifications\/(\d+)\/read$/);
     if (req.method === "POST" && readNotice && user) {
@@ -1557,6 +1970,135 @@ Deno.serve(async (req: Request) => {
 
     if (path.startsWith("/captain/")) {
       const gate = await requireRole(user, ["captain"], origin); if (gate) return gate;
+      if (path === "/captain/lines" && req.method === "GET") {
+        const { data, error: queryError } = await db.from("captain_lines").select("*").eq("captain_user_id", user!.id).order("created_at", { ascending: false });
+        if (queryError) throw queryError;
+        return reply({ lines: data ?? [] }, 200, origin, req);
+      }
+      if (path === "/captain/demand-groups" && req.method === "GET") {
+        const { data: lines, error: linesError } = await db.from("captain_lines").select("id,origin_label,destination_label").eq("captain_user_id", user!.id);
+        if (linesError) throw linesError;
+        const lineIds = (lines ?? []).map((line) => Number(line.id));
+        if (!lineIds.length) return reply({ groups: [] }, 200, origin, req);
+        const { data: groups, error: groupsError } = await db.from("demand_groups").select("id,captain_line_id,vehicle_type_id,trip_date,arrival_time,return_arrival_time,status").in("captain_line_id", lineIds).eq("status", "matched").order("trip_date").order("arrival_time");
+        if (groupsError) throw groupsError;
+        const groupIds = (groups ?? []).map((group) => Number(group.id));
+        if (!groupIds.length) return reply({ groups: [] }, 200, origin, req);
+        const { data: requests, error: requestsError } = await db.from("demand_requests").select("id,demand_group_id,rider_user_id,pickup_label,dropoff_label,seats,status").in("demand_group_id", groupIds).in("status", ["open", "matched"]);
+        if (requestsError) throw requestsError;
+        const riderIds = [...new Set((requests ?? []).map((request) => Number(request.rider_user_id)))];
+        const { data: riders, error: ridersError } = riderIds.length ? await db.from("users").select("id,full_name").in("id", riderIds) : { data: [], error: null };
+        if (ridersError) throw ridersError;
+        const riderNames = new Map((riders ?? []).map((rider) => [Number(rider.id), String(rider.full_name)]));
+        return reply({ groups: (groups ?? []).map((group) => ({ ...group, requests: (requests ?? []).filter((request) => Number(request.demand_group_id) === Number(group.id)).map((request) => ({ ...request, rider_name: riderNames.get(Number(request.rider_user_id)) ?? "راكب" })) })) }, 200, origin, req);
+      }
+      if (req.method === "GET" && path === "/captain/pool/preferences") {
+        const [stats, capabilities] = await Promise.all([
+          db.from("pool_captain_stats").select("search_radius_km,absences").eq("captain_user_id", user!.id).maybeSingle(),
+          db.from("pool_captain_capabilities").select("has_ac,accepts_faster,accepts_saver").eq("captain_user_id", user!.id).maybeSingle(),
+        ]);
+        if (stats.error || capabilities.error) throw new Error("captain preferences query failed");
+        return reply({
+          radius_km: Number(stats.data?.search_radius_km ?? 4),
+          has_ac: Boolean(capabilities.data?.has_ac),
+          service_tiers: [
+            ...(capabilities.data?.accepts_faster ? ["faster"] : []),
+            ...(capabilities.data?.accepts_saver ? ["saver"] : []),
+          ],
+        }, 200, origin);
+      }
+      if (path === "/captain/lines" && req.method === "POST") {
+        const { data: profile, error: profileError } = await db.from("captain_profiles").select("vehicle_type_id,verification_status,status").eq("user_id", user!.id).maybeSingle();
+        if (profileError) throw profileError;
+        if (!profile || profile.verification_status !== "approved" || profile.status === "suspended_grace_expired" || !user!.verified_at) return error("يلزم اعتماد مستندات الكابتن وتوثيق الهاتف قبل نشر المسار.", 403, origin);
+        const activationGate = await requireVerificationActivation(user!, origin); if (activationGate) return activationGate;
+        const { data: vehicle, error: vehicleError } = await db.from("vehicle_types").select("capacity_max").eq("id", profile.vehicle_type_id).maybeSingle();
+        if (vehicleError) throw vehicleError;
+        const days = Array.isArray(body.service_days) ? body.service_days.map(Number) : [];
+        const methods = Array.isArray(body.payment_methods) ? body.payment_methods.map(String) : [];
+        const arrival = String(body.arrival_time ?? "");
+        const returnArrival = body.return_arrival_time == null || body.return_arrival_time === "" ? null : String(body.return_arrival_time);
+        const maxSeats = profile.vehicle_type_id === "private_car" ? 4 : profile.vehicle_type_id === "hiace" ? 14 : 0;
+        if (!vehicle || maxSeats === 0 || Number(vehicle.capacity_max) < maxSeats || String(body.vehicle_type_id) !== String(profile.vehicle_type_id) || !clean(body.origin_label) || !clean(body.destination_label) || !validPoint(body.origin_lat, body.origin_lng) || !validPoint(body.destination_lat, body.destination_lng) || !isGreaterCairoPoint(Number(body.origin_lat), Number(body.origin_lng)) || !isGreaterCairoPoint(Number(body.destination_lat), Number(body.destination_lng)) || !/^\d{2}:\d{2}$/.test(arrival) || (returnArrival != null && !/^\d{2}:\d{2}$/.test(returnArrival)) || !days.length || days.some((d) => !Number.isInteger(d) || d < 0 || d > 6) || new Set(days).size !== days.length || !Number.isInteger(Number(body.seats)) || Number(body.seats) < 1 || Number(body.seats) > maxSeats || !methods.length || methods.some((m) => !["cash", "instapay", "wallet"].includes(m))) return error("راجع المسار والأيام والمقاعد وطريقة الدفع.", 400, origin);
+        if (body.intermediate_stops != null && !Array.isArray(body.intermediate_stops)) return error("بيانات المحطات الوسيطة غير صحيحة.", 400, origin);
+        const stops = Array.isArray(body.intermediate_stops) ? body.intermediate_stops : [];
+        const seatPrice = body.price_per_seat == null ? null : Number(body.price_per_seat);
+        if (stops.length > 10) return error("يمكن إضافة 10 محطات وسيطة كحد أقصى.", 400, origin);
+        if (seatPrice != null && (!Number.isFinite(seatPrice) || seatPrice < 0.01 || seatPrice > 99_999_999.99)) return error("أدخل سعرًا صحيحًا للمقعد أكبر من صفر.", 400, origin);
+        if (stops.some((stop) => !stop || typeof stop.label !== "string" || !clean(stop.label) || !validPoint(stop.lat, stop.lng) || !isGreaterCairoPoint(Number(stop.lat), Number(stop.lng)))) return error("تأكد أن كل المحطات داخل القاهرة الكبرى.", 400, origin);
+        let routeDistanceKm: number;
+        try {
+          const routePoints = [
+            { lat: Number(body.origin_lat), lng: Number(body.origin_lng) },
+            ...stops.map((stop) => ({ lat: Number(stop.lat), lng: Number(stop.lng) })),
+            { lat: Number(body.destination_lat), lng: Number(body.destination_lng) },
+          ];
+          routeDistanceKm = (await roadRoute(routePoints)).distanceKm;
+        } catch {
+          return error("تعذر حساب مسافة المسار الآن. حاول مرة أخرى.", 503, origin);
+        }
+        const { data, error: createError } = await db.rpc("publish_captain_line", { actor_id: user!.id, vehicle_id: profile.vehicle_type_id, origin_name: body.origin_label.trim(), origin_y: body.origin_lat, origin_x: body.origin_lng, destination_name: body.destination_label.trim(), destination_y: body.destination_lat, destination_x: body.destination_lng, stops, arrival: `${arrival}:00`, return_arrives: returnArrival ? `${returnArrival}:00` : null, days, seat_count: Number(body.seats), route_km: routeDistanceKm, ...(seatPrice == null ? {} : { seat_price: seatPrice }), methods });
+        if (createError) {
+          if (createError.code === "42501") return error("يلزم اعتماد مستندات الكابتن وتوثيق الهاتف قبل نشر المسار.", 403, origin);
+          throw createError;
+        }
+        return reply({ line: Array.isArray(data) ? data[0] : data }, 201, origin);
+      }
+      const lineEdit = path.match(/^\/captain\/lines\/(\d+)$/);
+      if (req.method === "PUT" && lineEdit) {
+        const { data: profile, error: profileError } = await db.from("captain_profiles").select("vehicle_type_id,verification_status,status").eq("user_id", user!.id).maybeSingle();
+        if (profileError) throw profileError;
+        if (!profile || profile.verification_status !== "approved" || profile.status === "suspended_grace_expired" || !user!.verified_at) return error("يلزم اعتماد مستندات الكابتن وتوثيق الهاتف قبل تعديل المسار.", 403, origin);
+        const activationGate = await requireVerificationActivation(user!, origin); if (activationGate) return activationGate;
+        const { data: vehicle, error: vehicleError } = await db.from("vehicle_types").select("capacity_max").eq("id", profile.vehicle_type_id).maybeSingle();
+        if (vehicleError) throw vehicleError;
+        const days = Array.isArray(body.service_days) ? body.service_days.map(Number) : [];
+        const methods = Array.isArray(body.payment_methods) ? body.payment_methods.map(String) : [];
+        const arrival = String(body.arrival_time ?? "");
+        const returnArrival = body.return_arrival_time == null || body.return_arrival_time === "" ? null : String(body.return_arrival_time);
+        const maxSeats = profile.vehicle_type_id === "private_car" ? 4 : profile.vehicle_type_id === "hiace" ? 14 : 0;
+        if (!vehicle || maxSeats === 0 || Number(vehicle.capacity_max) < maxSeats || String(body.vehicle_type_id) !== String(profile.vehicle_type_id) || !clean(body.origin_label) || !clean(body.destination_label) || !validPoint(body.origin_lat, body.origin_lng) || !validPoint(body.destination_lat, body.destination_lng) || !isGreaterCairoPoint(Number(body.origin_lat), Number(body.origin_lng)) || !isGreaterCairoPoint(Number(body.destination_lat), Number(body.destination_lng)) || !/^\d{2}:\d{2}$/.test(arrival) || (returnArrival != null && !/^\d{2}:\d{2}$/.test(returnArrival)) || !days.length || days.some((d) => !Number.isInteger(d) || d < 0 || d > 6) || new Set(days).size !== days.length || !Number.isInteger(Number(body.seats)) || Number(body.seats) < 1 || Number(body.seats) > maxSeats || !methods.length || methods.some((m) => !["cash", "instapay", "wallet"].includes(m))) return error("راجع المسار والأيام والمقاعد وطريقة الدفع.", 400, origin);
+        if (body.intermediate_stops != null && !Array.isArray(body.intermediate_stops)) return error("بيانات المحطات الوسيطة غير صحيحة.", 400, origin);
+        const stops = Array.isArray(body.intermediate_stops) ? body.intermediate_stops : [];
+        const seatPrice = Number(body.price_per_seat);
+        if (stops.length > 10) return error("يمكن إضافة 10 محطات وسيطة كحد أقصى.", 400, origin);
+        if (!Number.isFinite(seatPrice) || seatPrice < 0.01 || seatPrice > 99_999_999.99) return error("أدخل سعرًا صحيحًا للمقعد أكبر من صفر.", 400, origin);
+        if (stops.some((stop) => !stop || typeof stop.label !== "string" || !clean(stop.label) || !validPoint(stop.lat, stop.lng) || !isGreaterCairoPoint(Number(stop.lat), Number(stop.lng)))) return error("تأكد أن كل المحطات داخل القاهرة الكبرى.", 400, origin);
+        let routeDistanceKm: number;
+        try {
+          const routePoints = [
+            { lat: Number(body.origin_lat), lng: Number(body.origin_lng) },
+            ...stops.map((stop) => ({ lat: Number(stop.lat), lng: Number(stop.lng) })),
+            { lat: Number(body.destination_lat), lng: Number(body.destination_lng) },
+          ];
+          routeDistanceKm = (await roadRoute(routePoints)).distanceKm;
+        } catch {
+          return error("تعذر حساب مسافة المسار الآن. حاول مرة أخرى.", 503, origin);
+        }
+        const { data, error: updateError } = await db.rpc("update_captain_line", {
+          actor_id: user!.id, line_id: Number(lineEdit[1]), vehicle_id: profile.vehicle_type_id,
+          origin_name: body.origin_label.trim(), origin_y: body.origin_lat, origin_x: body.origin_lng,
+          destination_name: body.destination_label.trim(), destination_y: body.destination_lat, destination_x: body.destination_lng,
+          stops, arrival: `${arrival}:00`, return_arrives: returnArrival ? `${returnArrival}:00` : null,
+          days, seat_count: Number(body.seats), route_km: routeDistanceKm, seat_price: seatPrice, methods,
+        });
+        if (updateError) {
+          if (updateError.code === "42501") return error("المسار غير موجود أو لا تملك صلاحية تعديله.", 403, origin);
+          if (updateError.code === "55000") return error("لا يمكن تعديل المسار بعد انضمام راكب.", 409, origin);
+          throw updateError;
+        }
+        return reply({ line: Array.isArray(data) ? data[0] : data }, 200, origin);
+      }
+      const lineStatus = path.match(/^\/captain\/lines\/(\d+)\/status$/);
+      if (req.method === "PATCH" && lineStatus) {
+        const { data, error: updateError } = await db.rpc("set_captain_line_status", { actor_id: user!.id, line_id: Number(lineStatus[1]), next_status: body.status });
+        if (updateError) {
+          if (updateError.code === "42501") return error("المسار غير موجود أو لا تملك صلاحية تعديله.", 403, origin);
+          if (updateError.code === "55000") return error("لا يمكن إلغاء المسار بعد انضمام راكب.", 409, origin);
+          throw updateError;
+        }
+        return reply({ line: Array.isArray(data) ? data[0] : data }, 200, origin);
+      }
       if (req.method === "GET" && path === "/captain/profile") {
         const { data } = await db.from("captain_profiles").select("*").eq("user_id", user!.id).maybeSingle();
         return data ? reply({ profile: data }, 200, origin) : error("ملف الكابتن غير موجود.", 404, origin);
@@ -1625,23 +2167,37 @@ Deno.serve(async (req: Request) => {
           db.from("pool_captain_stats").select("*").eq("captain_user_id", user!.id).maybeSingle(),
         ]);
         if (capabilityError || statsError) throw capabilityError ?? statsError;
-        if (!capability || profile.current_lat == null || profile.current_lng == null) return reply({ offers: [] }, 200, origin);
+        if (!capability || profile.current_lat == null || profile.current_lng == null) return reply({ offers: [] }, 200, origin, req);
         const { data: trips, error: tripsError } = await db.from("pool_trips").select("*").in("status", ["scheduled", "needs_captain"]).is("captain_user_id", null).gte("departure_at", new Date().toISOString()).order("departure_at").limit(100);
         if (tripsError) throw tripsError;
+        const groupIds = [...new Set((trips ?? []).map((trip) => Number(trip.group_id)))];
+        if (!groupIds.length) return reply({ offers: [] }, 200, origin, req);
+        const { data: groups, error: groupsError } = await db.from("pool_groups").select("*").in("id", groupIds);
+        if (groupsError) throw groupsError;
+        const groupsById = new Map((groups ?? []).map((group) => [Number(group.id), group]));
+        const categoryIds = [...new Set((groups ?? []).map((group) => String(group.category_id)))];
+        const [{ data: categories, error: categoriesError }, { data: members, error: membersError }] = await Promise.all([
+          categoryIds.length ? db.from("pool_categories").select("*").in("id", categoryIds) : Promise.resolve({ data: [], error: null }),
+          db.from("pool_members").select("*").in("group_id", groupIds).eq("status", "active").order("pickup_order"),
+        ]);
+        if (categoriesError || membersError) throw categoriesError ?? membersError;
+        const categoriesById = new Map((categories ?? []).map((category) => [String(category.id), category]));
+        const membersByGroup = new Map<number, typeof members>();
+        for (const member of members ?? []) {
+          const id = Number(member.group_id), current = membersByGroup.get(id) ?? [];
+          current.push(member); membersByGroup.set(id, current);
+        }
         const offers = [];
         for (const trip of trips ?? []) {
-          const { data: group, error: groupError } = await db.from("pool_groups").select("*").eq("id", trip.group_id).maybeSingle();
-          if (groupError) throw groupError;
-          const { data: category, error: categoryError } = group ? await db.from("pool_categories").select("*").eq("id", group.category_id).maybeSingle() : { data: null, error: null };
-          if (categoryError) throw categoryError;
-          const { data: members, error: membersError } = group ? await db.from("pool_members").select("*").eq("group_id", group.id).eq("status", "active").order("pickup_order") : { data: [], error: null };
-          if (membersError) throw membersError;
-          const first = members?.[0];
+          const group = groupsById.get(Number(trip.group_id));
+          const category = group ? categoriesById.get(String(group.category_id)) : null;
+          const groupMembers = membersByGroup.get(Number(trip.group_id)) ?? [];
+          const first = groupMembers[0];
           if (!group || !category || !first || group.status !== "active") continue;
           if ((category.speed_tier === "faster" && !capability.accepts_faster) || (category.speed_tier === "saver" && !capability.accepts_saver) || Number(category.has_ac) !== Number(capability.has_ac)) continue;
           const effective = Math.max(4, Number(stats?.search_radius_km ?? 4) - Number(stats?.absences ?? 0));
           if (distanceKm({ lat: profile.current_lat, lng: profile.current_lng }, { lat: first.pickup_lat, lng: first.pickup_lng }) > effective) continue;
-          const stops = routePoints(members, trip.direction).map((stop, index) => ({
+          const stops = routePoints(groupMembers, trip.direction).map((stop, index) => ({
             id: index + 1,
             member_id: Number(stop.member_id),
             stop_type: stop.stop_type,
@@ -1653,7 +2209,7 @@ Deno.serve(async (req: Request) => {
           }));
           offers.push({ group_id: group.id, category_id: group.category_id, package_type: group.package_type, route_distance_km: group.route_distance_km, seat_day_fare: group.seat_day_fare, route_geometry: group.route_geometry, trip: { ...trip, stops } });
         }
-        return reply({ offers }, 200, origin);
+        return reply({ offers }, 200, origin, req);
       }
 
       const poolTripDetail = path.match(/^\/captain\/pool\/trips\/(\d+)$/);
@@ -1687,13 +2243,21 @@ Deno.serve(async (req: Request) => {
 
       if (req.method === "GET" && path === "/captain/pool/trips") {
         const { data: trips } = await db.from("pool_trips").select("*").eq("captain_user_id", user!.id).in("status", ["assigned", "in_progress"]).order("departure_at");
-        const out = [];
-        for (const trip of trips ?? []) {
-          const { data: stops } = await db.from("pool_trip_stops").select("*").eq("trip_id", trip.id).order("sequence");
-          const { data: group } = await db.from("pool_groups").select("id,route_geometry").eq("id", trip.group_id).single();
-          out.push({ trip: { ...trip, group_id: group?.id, route_geometry: group?.route_geometry }, stops: stops ?? [] });
-        }
-        return reply({ trips: out }, 200, origin);
+        const tripIds = (trips ?? []).map((trip) => Number(trip.id));
+        const groupIds = [...new Set((trips ?? []).map((trip) => Number(trip.group_id)))];
+        const [{ data: stops, error: stopsError }, { data: groups, error: groupsError }] = await Promise.all([
+          tripIds.length ? db.from("pool_trip_stops").select("*").in("trip_id", tripIds).order("sequence") : Promise.resolve({ data: [], error: null }),
+          groupIds.length ? db.from("pool_groups").select("id,route_geometry").in("id", groupIds) : Promise.resolve({ data: [], error: null }),
+        ]);
+        if (stopsError || groupsError) throw stopsError ?? groupsError;
+        const groupsById = new Map((groups ?? []).map((group) => [Number(group.id), group]));
+        const stopsByTrip = new Map<number, typeof stops>();
+        for (const stop of stops ?? []) { const list = stopsByTrip.get(Number(stop.trip_id)) ?? []; list.push(stop); stopsByTrip.set(Number(stop.trip_id), list); }
+        const out = (trips ?? []).map((trip) => {
+          const group = groupsById.get(Number(trip.group_id));
+          return { trip: { ...trip, group_id: group?.id, route_geometry: group?.route_geometry }, stops: stopsByTrip.get(Number(trip.id)) ?? [] };
+        });
+        return reply({ trips: out }, 200, origin, req);
       }
 
       const reorder = path.match(/^\/captain\/pool\/groups\/(\d+)\/reorder$/);
@@ -1894,7 +2458,10 @@ Deno.serve(async (req: Request) => {
       const { data: users, error: usersError } = userIds.length ? await db.from("users").select("id,full_name,phone_number,role,verified_at").in("id", userIds) : { data: [], error: null };
       if (usersError) throw usersError;
       const usersById = new Map((users ?? []).map((row) => [row.id, row]));
-      return reply({ documents: (documents ?? []).map((row) => ({ ...row, document_label: verificationDocLabels[row.document_type] ?? row.document_type, user: usersById.get(row.user_id) ?? null })) }, 200, origin);
+      return reply({ documents: (documents ?? []).map((row) => {
+        const owner = usersById.get(row.user_id);
+        return { ...row, document_label: verificationDocLabels[row.document_type] ?? row.document_type, user: owner ? { ...owner, phone_number: maskAdminIdentifier(owner.phone_number) } : null };
+      }) }, 200, origin);
     }
     const adminVerificationFile = path.match(/^\/admin\/verifications\/(\d+)\/file$/);
     if (req.method === "GET" && adminVerificationFile) {
@@ -1903,6 +2470,7 @@ Deno.serve(async (req: Request) => {
       if (!document) return error("المستند غير موجود.", 404, origin);
       const { data: signed, error: signedError } = await db.storage.from("verification-documents").createSignedUrl(document.object_path, 60);
       if (signedError) throw signedError;
+      await writeAdminAudit(user!.id, "verification.document_viewed", "verification_document", String(adminVerificationFile[1]), null);
       return reply({ signed_url: signed.signedUrl, expires_in_seconds: 60 }, 200, origin);
     }
     const reviewVerification = path.match(/^\/admin\/verifications\/(\d+)\/review$/);
@@ -1917,22 +2485,34 @@ Deno.serve(async (req: Request) => {
       return reply({ document }, 200, origin);
     }
     if (req.method === "GET" && path === "/admin/users") {
-      const q = (url.searchParams.get("q") ?? "").trim().slice(0, 100);
+      const q = (url.searchParams.get("q") ?? "").trim().replace(/[^\p{L}\p{N}\s+\-]/gu, "").slice(0, 100);
       const role = url.searchParams.get("role");
-      const limit = Math.min(100, Math.max(1, Number(url.searchParams.get("limit") ?? 50) || 50));
-      const buildUserQuery = () => {
-        let query = db.from("users").select("id,full_name,phone_number,role,verified_at,created_at").order("created_at", { ascending: false }).limit(limit);
-        if (["rider", "captain", "admin"].includes(String(role))) query = query.eq("role", role);
-        return query;
-      };
-      const escapedQuery = q.replace(/[\\%_]/g, "\\$&");
-      const queries = q
-        ? await Promise.all([buildUserQuery().ilike("full_name", `%${escapedQuery}%`), buildUserQuery().ilike("phone_number", `%${escapedQuery}%`)])
-        : [await buildUserQuery()];
-      const queryError = queries.find((result) => result.error)?.error;
-      if (queryError) throw queryError;
-      const data = [...new Map(queries.flatMap((result) => result.data ?? []).map((item) => [item.id, item])).values()]
-        .sort((left, right) => Date.parse(right.created_at) - Date.parse(left.created_at)).slice(0, limit);
+      const requestedLimit = Number(url.searchParams.get("limit") ?? 25);
+      const offset = Number(url.searchParams.get("offset") ?? 0);
+      const status = url.searchParams.get("status") ?? "all";
+      if (!Number.isSafeInteger(requestedLimit) || requestedLimit < 1 || requestedLimit > 50 || !Number.isSafeInteger(offset) || offset < 0 || offset > 100_000 || !["all", "active", "suspended", "banned"].includes(status)) return error("إعدادات ترقيم المستخدمين غير صحيحة.", 400, origin);
+      let filteredControlIds: number[] | null = null;
+      if (status !== "all") {
+        let controlsQuery = db.from("admin_user_controls").select("user_id");
+        controlsQuery = status === "active" ? controlsQuery.neq("status", "active") : controlsQuery.eq("status", status);
+        const { data: filteredControls, error: filteredControlsError } = await controlsQuery;
+        if (filteredControlsError) throw filteredControlsError;
+        filteredControlIds = (filteredControls ?? []).map((item) => item.user_id);
+        if (status === "active" && filteredControlIds.length === 0) filteredControlIds = null;
+      }
+      let query = db.from("users").select("id,full_name,phone_number,role,verified_at,created_at", { count: "exact" }).is("deleted_at", null).order("created_at", { ascending: false }).range(offset, offset + requestedLimit - 1);
+      if (["rider", "captain", "admin"].includes(String(role))) query = query.eq("role", role);
+      if (filteredControlIds?.length) {
+        if (status === "active") query = query.not("id", "in", `(${filteredControlIds.join(",")})`);
+        else query = query.in("id", filteredControlIds);
+      } else if (["suspended", "banned"].includes(status)) {
+        return reply({ users: [], total: 0, offset, limit: requestedLimit, has_more: false }, 200, origin);
+      }
+      if (q) {
+        query = query.or(`full_name.ilike.%${q}%,phone_number.ilike.%${q}%`);
+      }
+      const { data, count: total, error: userQueryError } = await query;
+      if (userQueryError) throw userQueryError;
       const ids = (data ?? []).map((item) => item.id);
       const [controls, profiles] = await Promise.all([
         ids.length ? db.from("admin_user_controls").select("user_id,status,reason,updated_at").in("user_id", ids) : Promise.resolve({ data: [], error: null }),
@@ -1941,7 +2521,11 @@ Deno.serve(async (req: Request) => {
       if (controls.error || profiles.error) throw controls.error ?? profiles.error;
       const statusById = new Map((controls.data ?? []).map((item) => [item.user_id, item]));
       const profileById = new Map((profiles.data ?? []).map((item) => [item.user_id, item]));
-      return reply({ users: (data ?? []).map((item) => ({ ...item, account_status: statusById.get(item.id)?.status ?? "active", control: statusById.get(item.id) ?? null, captain: profileById.get(item.id) ?? null })) }, 200, origin);
+      const users = (data ?? []).map((item) => {
+        const captain = profileById.get(item.id);
+        return { ...item, phone_number: maskAdminIdentifier(item.phone_number), account_status: statusById.get(item.id)?.status ?? "active", control: statusById.get(item.id) ?? null, captain: captain ? { ...captain, license_number: maskAdminIdentifier(captain.license_number) } : null };
+      });
+      return reply({ users, total: total ?? 0, offset, limit: requestedLimit, has_more: (total ?? 0) > offset + users.length }, 200, origin);
     }
     const userStatusRoute = path.match(/^\/admin\/users\/(\d+)\/status$/);
     if (req.method === "PATCH" && userStatusRoute) {
@@ -1951,6 +2535,160 @@ Deno.serve(async (req: Request) => {
       return reply({ user_control: data }, 200, origin);
     }
     const userProfileRoute = path.match(/^\/admin\/users\/(\d+)$/);
+    if (req.method === "DELETE" && userProfileRoute) {
+      const targetUserId = Number(userProfileRoute[1]);
+      const reason = clean(body.reason) ? body.reason.trim() : "";
+      if (!Number.isSafeInteger(targetUserId) || targetUserId < 1) return error("رقم المستخدم غير صالح.", 400, origin);
+      if (targetUserId === user!.id) return error("لا يمكن حذف حساب المسؤول الذي ينفذ الإجراء.", 409, origin);
+      if (!reason || reason.length > 1000) return error("اكتب سبب حذف الحساب (حتى 1000 حرف).", 400, origin);
+      try { await deleteAccountData(user!.id, targetUserId, reason); }
+      catch (deletionError) {
+        const message = deletionError instanceof Error ? deletionError.message : "";
+        if (message.includes("finish or cancel active trips")) return error("لا يمكن الحذف أثناء وجود مشوار نشط. أنهِه أو ألغِه أولًا.", 409, origin);
+        if (message.includes("protected super administrator")) return error("لا يمكن حذف حساب مسؤول النظام المحمي.", 403, origin);
+        if (message.includes("target account not found")) return error("المستخدم غير موجود أو سبق حذفه.", 404, origin);
+        throw deletionError;
+      }
+      return reply({ success: true }, 200, origin);
+    }
+    if (req.method === "GET" && userProfileRoute) {
+      const targetUserId = Number(userProfileRoute[1]);
+      if (!Number.isSafeInteger(targetUserId) || targetUserId < 1) return error("رقم المستخدم غير صالح.", 400, origin);
+      const [target, controls, captain, documents] = await Promise.all([
+        db.from("users").select("id,full_name,phone_number,role,verified_at,created_at").eq("id", targetUserId).is("deleted_at", null).maybeSingle(),
+        db.from("admin_user_controls").select("status,reason,updated_at,updated_by_user_id").eq("user_id", targetUserId).maybeSingle(),
+        db.from("captain_profiles").select("vehicle_type_id,vehicle_plate,license_number,verification_status,status,grace_period_expires_at").eq("user_id", targetUserId).maybeSingle(),
+        db.from("user_verifications").select("id,document_type,status,rejection_reason,uploaded_at,reviewed_at,reviewed_by").eq("user_id", targetUserId).order("uploaded_at", { ascending: false }).limit(20),
+      ]);
+      const queryError = target.error ?? controls.error ?? captain.error ?? documents.error;
+      if (queryError) throw queryError;
+      if (!target.data) return error("المستخدم غير موجود.", 404, origin);
+
+      const isRider = target.data.role === "rider";
+      const [membersResult, dailyRequestsResult, demandRequestsResult, savedPlacesResult, preferredRoutesResult, commuterPreferencesResult, captainLinesResult, captainPoolTripsResult, captainMatchesResult] = await Promise.all([
+        isRider ? db.from("pool_members").select("id,group_id,status,joined_at,cancelled_at,price_decision").eq("rider_user_id", targetUserId).order("joined_at", { ascending: false }).limit(500) : Promise.resolve({ data: [], error: null }),
+        isRider ? db.from("daily_commute_requests").select("id,status,created_at,requested_at").eq("rider_user_id", targetUserId).order("created_at", { ascending: false }).limit(500) : Promise.resolve({ data: [], error: null }),
+        isRider ? db.from("demand_requests").select("id,status,trip_date,arrival_time,return_arrival_time,pickup_label,dropoff_label,seats,created_at").eq("rider_user_id", targetUserId).order("created_at", { ascending: false }).limit(500) : Promise.resolve({ data: [], error: null }),
+        isRider ? db.from("rider_saved_places").select("place_type,label,updated_at").eq("user_id", targetUserId).order("updated_at", { ascending: false }).limit(100) : Promise.resolve({ data: [], error: null }),
+        isRider ? db.from("rider_preferred_routes").select("pickup_label,dropoff_label,updated_at").eq("user_id", targetUserId).maybeSingle() : Promise.resolve({ data: null, error: null }),
+        isRider ? db.from("rider_commuter_preferences").select("usual_days,usual_departure_time,usual_return_time,frequent_places,updated_at").eq("user_id", targetUserId).maybeSingle() : Promise.resolve({ data: null, error: null }),
+        !isRider && target.data.role === "captain" ? db.from("captain_lines").select("id,vehicle_type_id,origin_label,destination_label,arrival_time,return_arrival_time,service_days,seats,price_per_seat,payment_methods,women_only,status,created_at").eq("captain_user_id", targetUserId).order("created_at", { ascending: false }).limit(100) : Promise.resolve({ data: [], error: null }),
+        !isRider && target.data.role === "captain" ? db.from("pool_trips").select("id,group_id,service_date,direction,departure_at,status,completed_at").eq("captain_user_id", targetUserId).order("departure_at", { ascending: false }).limit(500) : Promise.resolve({ data: [], error: null }),
+        !isRider && target.data.role === "captain" ? db.from("matches").select("id,daily_commute_request_id,matched_at").eq("captain_user_id", targetUserId).order("matched_at", { ascending: false }).limit(500) : Promise.resolve({ data: [], error: null }),
+      ]);
+      const activityError = membersResult.error ?? dailyRequestsResult.error ?? demandRequestsResult.error ?? savedPlacesResult.error ?? preferredRoutesResult.error ?? commuterPreferencesResult.error ?? captainLinesResult.error ?? captainPoolTripsResult.error ?? captainMatchesResult.error;
+      if (activityError) throw activityError;
+
+      const poolMembers = membersResult.data ?? [];
+      const groupIds = [...new Set(poolMembers.map((item) => item.group_id))];
+      const groupTripsResult = groupIds.length
+        ? await db.from("pool_trips").select("id,group_id,service_date,direction,departure_at,status,completed_at").in("group_id", groupIds).order("departure_at", { ascending: false }).limit(1000)
+        : { data: [], error: null };
+      if (groupTripsResult.error) throw groupTripsResult.error;
+      const poolTrips = isRider
+        ? (groupTripsResult.data ?? []).filter((trip) => poolMembers.some((member) => {
+            if (member.group_id !== trip.group_id) return false;
+            const rawTripTime = String(trip.departure_at ?? trip.service_date ?? "");
+            const joinedAt = String(member.joined_at ?? "");
+            const cancelledAt = member.cancelled_at ? String(member.cancelled_at) : null;
+            if (rawTripTime.length === 10) return joinedAt.slice(0, 10) <= rawTripTime && (!cancelledAt || cancelledAt.slice(0, 10) >= rawTripTime);
+            const tripTime = Date.parse(rawTripTime);
+            const joinedTime = Date.parse(joinedAt);
+            const cancelledTime = cancelledAt ? Date.parse(cancelledAt) : Number.POSITIVE_INFINITY;
+            return Number.isFinite(tripTime) && Number.isFinite(joinedTime) && joinedTime <= tripTime && cancelledTime >= tripTime;
+          }))
+        : (captainPoolTripsResult.data ?? []);
+
+      const matchIds = (captainMatchesResult.data ?? []).map((item) => item.id);
+      const riderRequestIds = (dailyRequestsResult.data ?? []).map((item) => item.id);
+      const dailyMatchesResult = isRider && riderRequestIds.length
+        ? await db.from("matches").select("id,daily_commute_request_id,matched_at").in("daily_commute_request_id", riderRequestIds).order("matched_at", { ascending: false }).limit(1000)
+        : { data: [], error: null };
+      if (dailyMatchesResult.error) throw dailyMatchesResult.error;
+      const tripMatchIds = isRider ? (dailyMatchesResult.data ?? []).map((item) => item.id) : matchIds;
+      const dailyTripsResult = tripMatchIds.length
+        ? await db.from("trips").select("id,match_id,status,started_at,completed_at,total_distance_km,total_amount").in("match_id", tripMatchIds).order("started_at", { ascending: false }).limit(1000)
+        : { data: [], error: null };
+      if (dailyTripsResult.error) throw dailyTripsResult.error;
+
+      const memberIds = poolMembers.map((item) => item.id);
+      const poolTripIds = poolTrips.map((item) => item.id);
+      const [settlementsResult, paymentsResult, savedAuditResult] = await Promise.all([
+        isRider && memberIds.length
+          ? db.from("pool_ledger").select("id,trip_id,member_id,rider_amount,captain_share_amount,settlement_status,created_at").in("member_id", memberIds).order("created_at", { ascending: false }).limit(1000)
+          : !isRider && poolTripIds.length
+            ? db.from("pool_ledger").select("id,trip_id,member_id,rider_amount,captain_share_amount,settlement_status,created_at").in("trip_id", poolTripIds).order("created_at", { ascending: false }).limit(1000)
+            : Promise.resolve({ data: [], error: null }),
+        dailyTripsResult.data?.length
+          ? db.from("payments").select("id,trip_id,amount,reported_at,confirmed_at").in("trip_id", dailyTripsResult.data.map((item) => item.id)).order("confirmed_at", { ascending: false }).limit(1000)
+          : Promise.resolve({ data: [], error: null }),
+        db.from("admin_audit_logs").select("id,action,reason,created_at,actor_user_id").eq("resource_type", "user").eq("resource_id", String(targetUserId)).order("created_at", { ascending: false }).limit(50),
+      ]);
+      if (settlementsResult.error || paymentsResult.error || savedAuditResult.error) throw settlementsResult.error ?? paymentsResult.error ?? savedAuditResult.error;
+      const paymentRows = paymentsResult.data ?? [];
+      const paymentIds = paymentRows.map((item) => item.id);
+      const paymentEventsResult = paymentIds.length
+        ? await db.from("payment_status_events").select("payment_id,to_status,adjusted_amount,created_at").in("payment_id", paymentIds).order("created_at", { ascending: true }).limit(2000)
+        : { data: [], error: null };
+      if (paymentEventsResult.error) throw paymentEventsResult.error;
+      const latestPaymentEvent = new Map<number, { to_status: string; adjusted_amount: number | null }>();
+      for (const event of paymentEventsResult.data ?? []) latestPaymentEvent.set(event.payment_id, event);
+      const effectivePayments = paymentRows.map((item) => {
+        const event = latestPaymentEvent.get(item.id);
+        const status = event?.to_status ?? "confirmed";
+        return { id: item.id, trip_id: item.trip_id, amount: event && status === "adjusted" && event.adjusted_amount !== null ? event.adjusted_amount : item.amount, status, confirmed_at: item.confirmed_at, reported_at: item.reported_at };
+      });
+      const validPayments = effectivePayments.filter((item) => item.confirmed_at && ["confirmed", "resolved", "adjusted"].includes(item.status));
+      const settledRows = (settlementsResult.data ?? []).filter((item) => item.settlement_status === "settled");
+      const journeyRows = [...poolTrips.map((item) => ({ id: item.id, type: "pool", status: item.status, date: item.departure_at ?? item.service_date })), ...(dailyTripsResult.data ?? []).map((item) => ({ id: item.id, type: "daily", status: item.status, date: item.started_at ?? item.completed_at }))]
+        .sort((a, b) => String(b.date ?? "").localeCompare(String(a.date ?? "")));
+      const requestRows = [
+        ...(dailyRequestsResult.data ?? []).map((item) => ({ id: item.id, type: "daily", status: item.status, date: item.requested_at ?? item.created_at })),
+        ...(demandRequestsResult.data ?? []).map((item) => ({ id: item.id, type: "pool", status: item.status, date: item.created_at, trip_date: item.trip_date })),
+      ].sort((a, b) => String(b.date ?? "").localeCompare(String(a.date ?? "")));
+      const recentDocuments = (documents.data ?? []).map((document) => ({ ...document, document_label: verificationDocLabels[document.document_type] ?? document.document_type }));
+      const commuterPreferences = commuterPreferencesResult.data;
+      const frequentPlaces = Array.isArray(commuterPreferences?.frequent_places)
+        ? commuterPreferences.frequent_places.map((place: unknown) => typeof place === "object" && place !== null ? { label: clean((place as Record<string, unknown>).label) ? String((place as Record<string, unknown>).label).slice(0, 120) : "" } : null).filter((place): place is { label: string } => Boolean(place?.label))
+        : [];
+      await writeAdminAudit(user!.id, "user.details_viewed", "user", String(targetUserId), null);
+      return reply({ user: {
+        ...target.data,
+        account_status: controls.data?.status ?? "active",
+        control: controls.data,
+        captain: captain.data,
+        verification_documents: recentDocuments,
+        journey_summary: {
+          requests_total: (dailyRequestsResult.data?.length ?? 0) + (demandRequestsResult.data?.length ?? 0),
+          requests_cancelled: (dailyRequestsResult.data ?? []).filter((item) => item.status === "cancelled").length + (demandRequestsResult.data ?? []).filter((item) => item.status === "cancelled").length,
+          pool_memberships_total: poolMembers.length,
+          pool_memberships_cancelled: poolMembers.filter((item) => item.status === "cancelled").length,
+          journeys_completed: journeyRows.filter((item) => item.status === "completed").length,
+          journeys_cancelled: journeyRows.filter((item) => item.status === "cancelled").length,
+          history_truncated: poolMembers.length >= 500 || (dailyRequestsResult.data?.length ?? 0) >= 500 || (demandRequestsResult.data?.length ?? 0) >= 500 || poolTrips.length >= 500 || (dailyTripsResult.data?.length ?? 0) >= 1000 || journeyRows.length > 100 || requestRows.length > 100,
+        },
+        journey_history: journeyRows.slice(0, 100),
+        request_history: requestRows.slice(0, 100),
+        saved_places: savedPlacesResult.data ?? [],
+        preferred_route: preferredRoutesResult.data,
+        commuter_preferences: commuterPreferences ? { usual_days: commuterPreferences.usual_days, usual_departure_time: commuterPreferences.usual_departure_time, usual_return_time: commuterPreferences.usual_return_time, frequent_places: frequentPlaces, updated_at: commuterPreferences.updated_at } : null,
+        captain_lines: captainLinesResult.data ?? [],
+        financial_summary: {
+          confirmed_payments_total: validPayments.reduce((total, item) => total + Number(item.amount ?? 0), 0),
+          confirmed_payments_count: validPayments.length,
+          settled_ledger_total: settledRows.reduce((total, item) => total + Number(isRider ? item.rider_amount : item.captain_share_amount), 0),
+          settled_ledger_count: settledRows.length,
+          latest_payment_at: validPayments.map((item) => item.confirmed_at).filter(Boolean).sort().at(-1) ?? null,
+          latest_settlement_at: settledRows.map((item) => item.created_at).filter(Boolean).sort().at(-1) ?? null,
+          history_truncated: paymentRows.length >= 1000 || (settlementsResult.data?.length ?? 0) >= 1000 || (paymentEventsResult.data?.length ?? 0) >= 2000 || effectivePayments.length + settledRows.length > 100,
+        },
+        payment_history: [
+          ...effectivePayments.map((item) => ({ id: item.id, trip_id: item.trip_id, source: "daily", amount: Number(item.amount), status: item.status, created_at: item.confirmed_at ?? item.reported_at })),
+          ...settledRows.map((item) => ({ id: item.id, trip_id: item.trip_id, source: "pool", amount: Number(isRider ? item.rider_amount : item.captain_share_amount), status: "settled", created_at: item.created_at })),
+        ].sort((a, b) => String(b.created_at ?? "").localeCompare(String(a.created_at ?? ""))).slice(0, 100),
+        account_history: savedAuditResult.data ?? [],
+      } }, 200, origin);
+    }
     if (req.method === "PATCH" && userProfileRoute) {
       if (!clean(body.reason) || body.reason.trim().length > 1000) return error("اكتب سبب تعديل الحساب.", 400, origin);
       const patch: Record<string, string> = {};
@@ -1967,11 +2705,12 @@ Deno.serve(async (req: Request) => {
       return reply({ user: data }, 200, origin);
     }
     if (req.method === "GET" && path === "/admin/trips") {
-      const [daily, pooled] = await Promise.all([
+      const [daily, pooled, groups] = await Promise.all([
         db.from("trips").select("id,status,started_at,completed_at,total_distance_km,total_amount,match_id").eq("status", "in_progress").order("started_at", { ascending: false }).limit(100),
         db.from("pool_trips").select("id,group_id,service_date,direction,departure_at,estimated_arrival_at,captain_user_id,status,group:pool_groups!inner(category_id,status,created_by_user_id)").in("status", ["scheduled", "assigned", "needs_captain"]).order("departure_at", { ascending: true }).limit(100),
+        db.from("pool_groups").select("id,category_id,package_type,service_dates,morning_departure,return_departure,status,route_distance_km,seat_day_fare,waiting_since").in("status", ["waiting", "minimum_met", "price_review", "needs_captain", "active"]).order("waiting_since", { ascending: true }).limit(100),
       ]);
-      if (daily.error || pooled.error) throw daily.error ?? pooled.error;
+      if (daily.error || pooled.error || groups.error) throw daily.error ?? pooled.error ?? groups.error;
       const matchIds = (daily.data ?? []).map((trip) => trip.match_id);
       const { data: matches, error: matchError } = matchIds.length ? await db.from("matches").select("id,captain_user_id,daily_commute_request_id").in("id", matchIds) : { data: [], error: null };
       if (matchError) throw matchError;
@@ -1984,7 +2723,7 @@ Deno.serve(async (req: Request) => {
         const match = matchById.get(trip.match_id);
         return { ...trip, captain_user_id: match?.captain_user_id ?? null, request: match ? requestById.get(match.daily_commute_request_id) ?? null : null };
       });
-      return reply({ daily_trips: dailyTrips, pool_trips: pooled.data ?? [] }, 200, origin);
+      return reply({ daily_trips: dailyTrips, pool_trips: pooled.data ?? [], pool_groups: groups.data ?? [] }, 200, origin);
     }
     const tripActionRoute = path.match(/^\/admin\/trips\/(daily|pool)\/(\d+)\/(cancel|captain)$/);
     if (req.method === "POST" && tripActionRoute) {
@@ -2061,6 +2800,15 @@ Deno.serve(async (req: Request) => {
       const { data: events, error: eventError } = await db.from("payment_status_events").select("id,payment_id,from_status,to_status,actor_user_id,reason,adjusted_amount,created_at").eq("to_status", "disputed").order("created_at", { ascending: false }).order("id", { ascending: false }).limit(100);
       if (eventError) throw eventError;
       const paymentIds = [...new Set((events ?? []).map((event) => event.payment_id))];
+      if (url.searchParams.get("summary") === "true") {
+        const { data: latestEvents, error: latestError } = paymentIds.length
+          ? await db.from("payment_status_events").select("payment_id,to_status").in("payment_id", paymentIds).order("created_at", { ascending: false }).order("id", { ascending: false })
+          : { data: [], error: null };
+        if (latestError) throw latestError;
+        const latestByPayment = new Map<number, string>();
+        for (const event of latestEvents ?? []) if (!latestByPayment.has(Number(event.payment_id))) latestByPayment.set(Number(event.payment_id), String(event.to_status));
+        return reply({ total_count: [...latestByPayment.values()].filter((status) => status === "disputed").length, capped: (events ?? []).length === 100 }, 200, origin, req);
+      }
       const [payments, history] = await Promise.all([
         paymentIds.length ? db.from("payments").select("id,trip_id,amount,reported_by_user_id,reported_at").in("id", paymentIds) : Promise.resolve({ data: [], error: null }),
         paymentIds.length ? db.from("payment_status_events").select("id,payment_id,from_status,to_status,actor_user_id,reason,adjusted_amount,created_at").in("payment_id", paymentIds).order("created_at", { ascending: false }).order("id", { ascending: false }) : Promise.resolve({ data: [], error: null }),
@@ -2184,7 +2932,7 @@ Deno.serve(async (req: Request) => {
       const requestKey = `broadcast:${requestId}`;
       let offset = 0, recipientCount = 0;
       while (true) {
-        const { data: recipients, error: recipientsError } = await db.from("users").select("id").order("id", { ascending: true }).range(offset, offset + 999);
+        const { data: recipients, error: recipientsError } = await db.from("users").select("id").is("deleted_at", null).order("id", { ascending: true }).range(offset, offset + 999);
         if (recipientsError) throw recipientsError;
         if (!recipients?.length) break;
         const rows = recipients.map(({ id }) => ({ user_id: id, group_id: null, type: "system", event_key: requestKey, payload: { title, message } }));
@@ -2296,32 +3044,75 @@ Deno.serve(async (req: Request) => {
       return reply({ event }, 200, origin);
     }
     if (req.method === "GET" && path === "/admin/analytics/overview") {
-      const names = ["users", "captain_profiles", "daily_commute_requests", "trips", "payments", "pool_groups", "pool_members", "pool_trips"];
-      const counts = await Promise.all(names.map(name => db!.from(name).select("id", { count: "exact", head: true })));
-      const amounts = await db.from("payments").select("amount");
-      if (counts.some(x => x.error) || amounts.error) throw new Error("analytics query failed");
-      const overview: Record<string, number> = Object.fromEntries(names.map((name, i) => [name, counts[i].count ?? 0]));
-      overview.confirmed_payment_amount = (amounts.data ?? []).reduce((sum, item) => sum + Number(item.amount), 0);
-      return reply({ overview }, 200, origin);
+      const count = (table: string, column?: string, value?: string) => {
+        let query = db!.from(table).select("id", { count: "exact", head: true });
+        if (column && value) query = query.eq(column, value);
+        return query;
+      };
+      const queries = await Promise.all([
+        count("users"), count("users", "role", "rider"), count("captain_profiles"),
+        count("captain_profiles", "verification_status", "pending"), count("captain_profiles", "verification_status", "approved"),
+        count("trips", "status", "in_progress"), count("pool_trips", "status", "in_progress"),
+        count("trips", "status", "completed"), count("pool_trips", "status", "completed"),
+        count("pool_groups", "status", "price_review"),
+      ]);
+      const failed = queries.map((result, index) => result.error ? { query: index, code: result.error.code, message: result.error.message } : null).filter(Boolean);
+      if (failed.length) {
+        console.error("[sekka-api] admin analytics queries failed", failed);
+        throw new Error("admin analytics queries failed");
+      }
+      const value = (index: number) => queries[index].count ?? 0;
+      const overview: Record<string, number> = {
+        total_users: value(0), total_riders: value(1), total_captains: value(2),
+        captains_pending_verification: value(3), captains_approved: value(4),
+        total_trips_in_progress: value(5) + value(6), total_trips_completed: value(7) + value(8),
+        pending_price_approvals: value(9),
+      };
+      return reply({ overview }, 200, origin, req);
     }
     if (req.method === "GET" && path === "/admin/pool/overview") {
-      const [groups, ledgers, trips] = await Promise.all([
-        db.from("pool_groups").select("id,status,package_type,category_id,created_at,waiting_since,route_distance_km,seat_day_fare"),
-        db.from("pool_ledger").select("list_amount,rider_amount,company_share_amount,captain_share_amount,settlement_status"),
-        db.from("pool_trips").select("id,status"),
+      const countStatus = (status: string) => db.from("pool_groups").select("id", { count: "exact", head: true }).eq("status", status);
+      const [waiting, minimumMet, priceReview, needsCaptain, active] = await Promise.all([
+        countStatus("waiting"), countStatus("minimum_met"), countStatus("price_review"), countStatus("needs_captain"), countStatus("active"),
       ]);
-      if (groups.error || ledgers.error || trips.error) throw new Error("pool overview query failed");
-      return reply({ groups: groups.data ?? [], trips: trips.data ?? [], totals: { list_amount: (ledgers.data ?? []).reduce((sum, x) => sum + Number(x.list_amount), 0), rider_amount: (ledgers.data ?? []).reduce((sum, x) => sum + Number(x.rider_amount), 0), company_share_amount: (ledgers.data ?? []).reduce((sum, x) => sum + Number(x.company_share_amount), 0), captain_share_amount: (ledgers.data ?? []).reduce((sum, x) => sum + Number(x.captain_share_amount), 0), pending_settlements: (ledgers.data ?? []).filter(x => x.settlement_status === "pending").length } }, 200, origin);
+      const failed = [waiting, minimumMet, priceReview, needsCaptain, active].map((result, index) => result.error ? { query: index, code: result.error.code, message: result.error.message } : null).filter(Boolean);
+      if (failed.length) {
+        console.error("[sekka-api] admin pool overview queries failed", failed);
+        throw new Error("admin pool overview queries failed");
+      }
+      return reply({ overview: {
+        waiting_groups: (waiting.count ?? 0) + (minimumMet.count ?? 0),
+        price_review_groups: priceReview.count ?? 0,
+        needs_captain_groups: needsCaptain.count ?? 0,
+        active_groups: active.count ?? 0,
+      } }, 200, origin, req);
     }
-    if (req.method === "GET" && path === "/captain/pool/preferences") {
-      const gate = await requireRole(user, ["captain"], origin); if (gate) return gate;
-      if (!user) return error("سجّل الدخول أولًا.", 401, origin);
-      const [stats, capabilities] = await Promise.all([
-        db.from("pool_captain_stats").select("*").eq("captain_user_id", user.id).maybeSingle(),
-        db.from("pool_captain_capabilities").select("*").eq("captain_user_id", user.id).maybeSingle(),
-      ]);
-      if (stats.error || capabilities.error) throw new Error("captain preferences query failed");
-      return reply({ radius_km: stats.data?.search_radius_km ?? 4, effective_radius_km: Math.max(4, Number(stats.data?.search_radius_km ?? 4) - Math.min(3, Number(stats.data?.absences ?? 0))), absences: stats.data?.absences ?? 0, capabilities: capabilities.data ?? null }, 200, origin);
+    if (req.method === "GET" && path === "/admin/finance/summary") {
+      let lastId = 0;
+      let companyDue = 0;
+      let captainsDue = 0;
+      let pendingRows = 0;
+      while (true) {
+        const { data, error: ledgerError } = await db.from("pool_ledger")
+          .select("id,company_share_amount,captain_share_amount")
+          .eq("settlement_status", "pending")
+          .gt("id", lastId)
+          .order("id", { ascending: true })
+          .limit(1000);
+        if (ledgerError) {
+          console.error("[sekka-api] admin finance summary query failed", { code: ledgerError.code, message: ledgerError.message, lastId });
+          throw new Error("admin finance summary query failed");
+        }
+        for (const row of data ?? []) {
+          companyDue += Number(row.company_share_amount);
+          captainsDue += Number(row.captain_share_amount);
+        }
+        const received = data?.length ?? 0;
+        pendingRows += received;
+        if (received < 1000) break;
+        lastId = data?.[received - 1]?.id ?? lastId;
+      }
+      return reply({ company_due: companyDue, captains_due: captainsDue, pending_settlements: pendingRows }, 200, origin);
     }
     return error("المسار غير موجود.", 404, origin);
   } catch (err) {

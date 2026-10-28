@@ -1,3 +1,4 @@
+import { getDirection, getLanguage, t } from "../i18n/runtime";
 import { useState, type ChangeEvent, type FocusEvent } from "react";
 
 type TimePicker12hProps = {
@@ -20,7 +21,8 @@ const parseTime = (value: string) => {
 
 export const formatTime12h = (value: string) => {
   const { hour12, minute, period } = parseTime(value);
-  return `${String(hour12).padStart(2, "0")}:${String(minute).padStart(2, "0")} ${period === "am" ? "ص" : "م"}`;
+  const suffix = getLanguage() === "ar" ? (period === "am" ? "ص" : "م") : period.toUpperCase();
+  return `${String(hour12).padStart(2, "0")}:${String(minute).padStart(2, "0")} ${suffix}`;
 };
 
 export default function TimePicker12h({ label, value, onChange }: TimePicker12hProps) {
@@ -57,12 +59,15 @@ export default function TimePicker12h({ label, value, onChange }: TimePicker12hP
   };
   const togglePeriod = () => commit(Number(hourDraft) || parsed.hour12, Number(minuteDraft) || parsed.minute, parsed.period === "am" ? "pm" : "am");
 
-  return <label className="time-picker-field">{label}
+  const translatedLabel = t(label);
+  const unitLabel = getLanguage() === "ar" ? t("ساعة") : "Hour";
+  const minuteLabel = getLanguage() === "ar" ? t("دقيقة") : "Minute";
+  return <label className="time-picker-field">{translatedLabel}
     <span className="time-picker-control" dir="ltr">
-      <input type="text" inputMode="numeric" pattern="[0-9]*" maxLength={2} aria-label={`ساعة ${label}`} value={hourDraft} onChange={(event) => handlePartChange("hour", event)} onBlur={(event) => handlePartBlur("hour", event)} />
+      <input type="text" inputMode="numeric" pattern="[0-9]*" maxLength={2} aria-label={`${unitLabel} ${translatedLabel}`} value={hourDraft} onChange={(event) => handlePartChange("hour", event)} onBlur={(event) => handlePartBlur("hour", event)} />
       <span aria-hidden="true">:</span>
-      <input type="text" inputMode="numeric" pattern="[0-9]*" maxLength={2} aria-label={`دقيقة ${label}`} value={minuteDraft} onChange={(event) => handlePartChange("minute", event)} onBlur={(event) => handlePartBlur("minute", event)} />
-      <button type="button" className="time-period-toggle" dir="rtl" aria-label={`التبديل إلى ${parsed.period === "am" ? "مساءً" : "صباحًا"} · ${label}`} onClick={togglePeriod}>{parsed.period === "am" ? "ص" : "م"}</button>
+      <input type="text" inputMode="numeric" pattern="[0-9]*" maxLength={2} aria-label={`${minuteLabel} ${translatedLabel}`} value={minuteDraft} onChange={(event) => handlePartChange("minute", event)} onBlur={(event) => handlePartBlur("minute", event)} />
+      <button type="button" className="time-period-toggle" dir={getDirection()} aria-label={getLanguage() === "ar" ? `${t("التبديل إلى")} ${parsed.period === "am" ? t("مساءً") : t("صباحًا")} · ${translatedLabel}` : `Switch to ${parsed.period === "am" ? "PM" : "AM"} · ${translatedLabel}`} onClick={togglePeriod}>{parsed.period === "am" ? (getLanguage() === "ar" ? "ص" : "AM") : (getLanguage() === "ar" ? "م" : "PM")}</button>
     </span>
   </label>;
 }

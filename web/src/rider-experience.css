@@ -1,0 +1,127 @@
+/* Stitch-inspired rider journey. Scoped to rider views; the shared SeKKa brand and other roles stay untouched. */
+.workspace.rider-home-active .page-heading, .workspace.rider-requests-active .page-heading { display: none; }
+.workspace .rider-home-experience .dashboard-main { gap: 1.35rem; }
+.workspace .rider-hero {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr); align-items: center;
+  min-height: 19rem; overflow: hidden; padding: clamp(1.25rem, 4vw, 2.25rem); border: 1px solid var(--color-border);
+  border-radius: 1.5rem; color: var(--color-text-primary); background: linear-gradient(125deg, var(--color-surface) 0%, var(--color-surface-elevated) 100%);
+  box-shadow: 0 1rem 2.5rem var(--color-shadow);
+}
+.workspace .rider-hero-copy { position: relative; z-index: 1; max-width: 50rem; }
+.workspace .rider-hero .eyebrow, .workspace .rider-section-intro .eyebrow, .workspace .rider-section-heading .eyebrow { color: var(--color-accent-text); font-size: .84rem; font-weight: 800; }
+.workspace .rider-hero h2 { margin: .55rem 0 .75rem; font-size: clamp(1.9rem, 5vw, 3.25rem); line-height: 1.2; letter-spacing: -.035em; }
+.workspace .rider-hero h2 em { color: var(--color-accent-text); font-style: normal; }
+.workspace .rider-hero-copy > p { max-width: 33rem; margin: 0; color: var(--color-text-secondary); font-size: 1rem; line-height: 1.85; }
+.workspace .rider-hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-top: 1.3rem; }
+.workspace .rider-hero-actions .button { min-height: 3.15rem; padding-inline: 1.35rem; }
+.workspace .rider-service-area { display: inline-flex; align-items: center; gap: .5rem; color: var(--color-text-secondary); font-size: .86rem; }
+.workspace .rider-service-area i { width: .58rem; height: .58rem; border-radius: 50%; background: var(--color-info); box-shadow: 0 0 .8rem color-mix(in srgb, var(--color-info) 55%, transparent); }
+.workspace .rider-shortcuts, .workspace .rider-home-requests, .workspace .rider-requests-page, .workspace .rider-section-intro { min-width: 0; }
+.workspace .rider-section-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: .8rem; }
+.workspace .rider-section-heading h2, .workspace .rider-section-intro h2 { margin: .15rem 0 0; font-size: 1.28rem; }
+.workspace .rider-section-heading .text-action { flex: 0 0 auto; color: var(--color-accent-text); }
+.workspace .rider-section-heading .text-action b { display: inline-grid; min-width: 1.3rem; height: 1.3rem; margin-inline-start: .3rem; place-items: center; border-radius: 99px; color: var(--color-primary-text); background: var(--color-primary); font-size: .72rem; }
+.workspace .rider-place-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: .7rem; }
+.workspace .rider-place-chip { display: flex; min-width: 0; align-items: center; gap: .8rem; padding: .85rem; border: 1px solid var(--color-border); border-radius: 1rem; color: var(--color-text-primary); background: var(--color-surface); text-align: start; transition: border-color .18s ease, transform .18s ease; }
+.workspace .rider-place-chip:hover { border-color: var(--color-info); transform: translateY(-2px); }
+.workspace .rider-place-icon { display: grid; width: 2.7rem; height: 2.7rem; flex: 0 0 auto; place-items: center; border-radius: .85rem; color: var(--color-accent-text); background: var(--color-soft-accent); font-size: 1.35rem; }
+.workspace .rider-place-chip > span:nth-child(2) { display: grid; min-width: 0; gap: .12rem; }
+.workspace .rider-place-chip small { color: var(--color-text-muted); }
+.workspace .rider-place-chip strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.workspace .rider-place-chip > b { margin-inline-start: auto; color: var(--color-accent-text); }
+.workspace .rider-saved-empty { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem; padding: 1rem; border: 1px dashed var(--color-border); border-radius: 1rem; color: var(--color-text-secondary); background: var(--color-surface); }
+.workspace .rider-saved-empty > span { color: var(--color-info); font-size: 1.5rem; }
+.workspace .rider-saved-empty p { flex: 1 1 14rem; margin: 0; line-height: 1.6; }
+.workspace .rider-request-list { display: grid; gap: .75rem; }
+.workspace .rider-request-overview { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .65rem; }
+.workspace .rider-request-overview > div { display: grid; gap: .35rem; padding: .8rem .9rem; border: 1px solid var(--color-border); border-radius: .95rem; background: var(--color-surface); }
+.workspace .rider-request-overview span { color: var(--color-text-secondary); font-size: .76rem; }
+.workspace .rider-request-overview strong { color: var(--color-accent-text); font-size: 1.25rem; }
+.workspace .rider-request-filters { display: flex; gap: .45rem; overflow-x: auto; padding: .1rem 0 .35rem; scrollbar-width: thin; }
+.workspace .rider-request-filters button { display: inline-flex; flex: 0 0 auto; align-items: center; gap: .45rem; min-height: 2.45rem; padding: .45rem .7rem; border: 1px solid var(--color-border); border-radius: 999px; color: var(--color-text-secondary); background: var(--color-surface); font: inherit; font-size: .78rem; font-weight: 700; cursor: pointer; }
+.workspace .rider-request-filters button.is-active { border-color: var(--color-primary); color: var(--color-primary-text); background: var(--color-primary); }
+.workspace .rider-request-filters button span { display: grid; min-width: 1.25rem; height: 1.25rem; padding-inline: .25rem; place-items: center; border-radius: 99px; background: color-mix(in srgb,var(--color-text-primary) 10%,transparent); font-size: .68rem; }
+.workspace .rider-request-card { padding: 1rem; border: 1px solid var(--color-border); border-radius: 1.1rem; background: var(--color-surface); }
+.workspace .rider-request-card-top { display: flex; flex-wrap: wrap; align-items: center; gap: .55rem; color: var(--color-text-secondary); font-size: .82rem; }
+.workspace .rider-request-card-top time { margin-inline-start: auto; }
+.workspace .rider-request-route { display: grid; grid-template-columns: 1.2rem minmax(0,1fr); gap: .75rem; margin-top: 1rem; }
+.workspace .rider-request-route > div { display: grid; gap: 1.05rem; min-width: 0; }
+.workspace .rider-request-route > div strong { overflow-wrap: anywhere; }
+.workspace .rider-route-timeline { position: relative; display: grid; justify-items: center; align-content: space-between; padding-block: .3rem; }
+.workspace .rider-route-timeline::before { position: absolute; top: .5rem; bottom: .5rem; width: 2px; content: ""; background: var(--color-border); }
+.workspace .rider-route-timeline i, .workspace .rider-route-timeline b { z-index: 1; width: .65rem; height: .65rem; border: 2px solid var(--color-surface); border-radius: 50%; background: var(--color-info); box-shadow: 0 0 0 1px var(--color-info); }
+.workspace .rider-route-timeline b { background: var(--color-primary); box-shadow: 0 0 0 1px var(--color-primary); }
+.workspace .rider-request-note { margin: .85rem 0 0; color: var(--color-text-muted); font-size: .86rem; line-height: 1.6; }
+.workspace .rider-match-summary { display: grid; gap: .25rem; margin-top: .85rem; padding: .8rem; border-inline-start: 3px solid var(--color-info); border-radius: .6rem; color: var(--color-text-primary); background: var(--color-soft-cyan); font-size: .85rem; line-height: 1.6; }
+.workspace .rider-match-summary span { color: var(--color-text-secondary); }
+.workspace .rider-result-card { padding: 1rem; border: 1px solid var(--color-border); border-radius: 1rem; background: var(--color-surface); }
+.workspace .rider-result-route { display: grid; grid-template-columns: 1.2rem minmax(0,1fr); gap: .75rem; }
+.workspace .rider-result-route > div { display: grid; gap: .9rem; }
+.workspace .rider-result-meta { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .85rem; }
+.workspace .rider-result-meta span { padding: .35rem .55rem; border: 1px solid var(--color-border); border-radius: 99px; color: var(--color-text-secondary); background: var(--color-surface-elevated); font-size: .78rem; }
+.workspace .rider-view-all { margin-top: .8rem; }
+.workspace .rider-requests-page { display: grid; gap: 1rem; }
+.workspace .rider-section-intro { padding: 1.15rem 1.25rem; border: 1px solid var(--color-border); border-radius: 1rem; background: var(--color-surface-elevated); }
+.workspace .rider-section-intro p { margin: .35rem 0 0; color: var(--color-text-secondary); }
+.workspace .rider-trips-experience .trips-group-list, .workspace .rider-trips-experience .all-trips-section { margin-top: .5rem; }
+.workspace .rider-trip-detail-dialog { position: relative; display: grid; gap: .8rem; max-height: min(90dvh, 44rem); overflow-y: auto; color: var(--color-text-primary); text-align: start; background: var(--color-surface); border-color: var(--color-border); box-shadow: 0 1rem 3rem var(--color-shadow); }
+.workspace .rider-trip-detail-dialog h2 { margin: 0; font-size: 1.15rem; }
+.workspace .rider-trip-detail-dialog p { color: var(--color-text-secondary); }
+.workspace .rider-trip-detail-close { position: absolute; inset-block-start: .65rem; inset-inline-end: .7rem; display: grid; width: 2.25rem; height: 2.25rem; place-items: center; color: var(--color-text-secondary); background: var(--color-surface-raised); border: 1px solid var(--color-border); border-radius: 50%; font-size: 1.35rem; cursor: pointer; }
+.workspace .rider-trip-detail-route { display: grid; gap: .45rem; padding: .9rem; border: 1px solid var(--color-border); border-radius: .9rem; background: var(--color-surface-raised); }
+.workspace .rider-trip-detail-route span { color: var(--color-primary); }
+.workspace .rider-trip-detail-dialog dl { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .5rem; margin: 0; }
+.workspace .rider-trip-detail-dialog dl > div { display: grid; gap: .2rem; padding: .7rem; border: 1px solid var(--color-border); border-radius: .75rem; }
+.workspace .rider-trip-detail-dialog dt { color: var(--color-text-muted); font-size: .72rem; }
+.workspace .rider-trip-detail-dialog dd { margin: 0; font-weight: 750; }
+.workspace .rider-trip-detail-dialog footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .6rem; }
+.workspace .rider-trip-offer-list { display: grid; gap: .75rem; }
+.workspace .rider-trip-offer-list > .rider-section-heading { margin: .25rem 0 0; }
+.workspace .rider-trip-offer { display: grid; gap: .8rem; padding: 1rem; border: 1px solid var(--color-border); border-radius: 1.1rem; background: var(--color-surface); box-shadow: 0 .3rem .9rem var(--color-shadow); }
+.workspace .rider-trip-offer-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem; color: var(--color-text-secondary); font-size: .8rem; }
+.workspace .rider-trip-offer-captain { display: inline-flex; align-items: center; gap: .4rem; color: var(--color-text-primary); font-weight: 750; }
+.workspace .rider-trip-offer-captain > b { display: grid; width: 1.1rem; height: 1.1rem; place-items: center; border-radius: 50%; color: var(--color-primary-text); background: var(--color-primary); font-size: .68rem; }
+.workspace .rider-trip-offer-route { display: grid; gap: .65rem; padding: .85rem; border-radius: .9rem; color: var(--color-text-primary); background: var(--color-surface-raised); }
+.workspace .rider-trip-offer-route > span { display: flex; align-items: center; gap: .65rem; min-width: 0; overflow-wrap: anywhere; font-weight: 700; }
+.workspace .rider-trip-offer-route i { flex: 0 0 .65rem; width: .65rem; height: .65rem; border: 2px solid var(--color-surface); border-radius: 50%; background: var(--color-info); box-shadow: 0 0 0 1px var(--color-info); }
+.workspace .rider-trip-offer-route b { width: 1px; height: .8rem; margin-inline-start: -.34rem; margin-inline-end: -.34rem; background: var(--color-border); }
+.workspace .rider-trip-offer-route > span + span i { background: var(--color-primary); box-shadow: 0 0 0 1px var(--color-primary); }
+.workspace .rider-trip-offer-meta { display: flex; flex-wrap: wrap; align-items: center; gap: .55rem; color: var(--color-text-secondary); font-size: .8rem; }
+.workspace .rider-trip-offer-meta strong { margin-inline-start: auto; color: var(--color-accent-text); font-size: 1rem; }
+.workspace .rider-trip-distance { color: var(--color-text-muted); font-size: .75rem; }
+.workspace .rider-trip-offer-action { justify-self: start; }
+.workspace .rider-home-discovery-carousel { position: relative; display: grid; grid-template-columns: auto minmax(0,1fr); align-items: start; gap: .7rem 1rem; min-height: 11rem; overflow: hidden; padding: 1rem; border: 1px solid color-mix(in srgb,var(--color-primary) 28%,var(--color-border)); border-radius: 1.15rem; background: linear-gradient(125deg,var(--color-surface),color-mix(in srgb,var(--color-primary) 8%,var(--color-surface))); box-shadow: 0 .35rem 1.1rem var(--color-shadow); }
+.workspace .rider-promo-mark { display: grid; justify-items: center; gap: .4rem; color: var(--color-accent-text); }
+.workspace .rider-promo-mark > span { max-width: 7rem; color: var(--color-text-muted); font-size: .68rem; font-weight: 750; text-align: center; }
+.workspace .rider-promo-mark > i { width: .5rem; height: .5rem; border-radius: 50%; background: var(--color-primary); box-shadow: 0 0 .6rem color-mix(in srgb,var(--color-primary) 55%,transparent); }
+.workspace .rider-promo-content { display: grid; align-content: start; justify-items: start; gap: .45rem; min-width: 0; animation: rider-promo-enter .55s cubic-bezier(.2,.75,.25,1) both; }
+.workspace .rider-promo-content h2 { margin: 0; color: var(--color-text-primary); font-size: clamp(1rem,2.5vw,1.25rem); overflow-wrap: anywhere; }
+.workspace .rider-promo-content p { margin: 0 0 .2rem; color: var(--color-text-secondary); font-size: .85rem; line-height: 1.6; }
+.workspace .rider-promo-content .button { min-height: 2.35rem; padding: .45rem .8rem; font-size: .78rem; }
+.workspace .rider-promo-pagination { position: absolute; inset-inline-end: 1rem; bottom: 1.1rem; display: flex; gap: .35rem; }
+.workspace .rider-promo-pagination button { width: .5rem; height: .5rem; padding: 0; border: 0; border-radius: 99px; background: var(--color-border); transition: width .25s ease,background-color .25s ease; cursor: pointer; }
+.workspace .rider-promo-pagination button.is-active { width: 1.3rem; background: var(--color-primary); }
+@keyframes rider-promo-enter { from { opacity: 0; transform: translateY(.5rem); } to { opacity: 1; transform: translateY(0); } }
+.workspace .rider-booking-experience .booking-form-surface { border-radius: 1.35rem; }
+.workspace .rider-booking-experience .surface-heading { padding-bottom: 1rem; border-bottom: 1px solid var(--color-border); }
+.workspace .rider-booking-experience .surface-heading h2 { font-size: clamp(1.4rem, 4vw, 1.85rem); }
+.workspace .rider-booking-experience .form-stack { gap: 1rem; }
+.workspace .rider-booking-experience .form-stack > label, .workspace .rider-booking-experience .time-row label { color: var(--color-text-primary); font-weight: 700; }
+.workspace .rider-account-experience .surface { border-color: var(--color-border); }
+@media (max-width: 700px) {
+  .workspace .rider-trip-detail-dialog footer > button { flex: 1 1 9rem; }
+  .workspace .rider-home-discovery-carousel { min-height: 12rem; gap: .65rem; padding: .85rem; }
+  .workspace .rider-promo-mark > span { max-width: 5rem; }
+  .workspace .rider-promo-pagination { inset-inline-end: .9rem; bottom: .9rem; }
+  .workspace .rider-hero { min-height: 0; gap: .3rem; padding: 1.1rem; border-radius: 1.1rem; }
+  .workspace .rider-hero h2 { font-size: clamp(1.55rem, 7vw, 2.3rem); }
+  .workspace .rider-hero-copy > p { font-size: .9rem; }
+}
+@media (max-width: 460px) {
+  .workspace .rider-hero { grid-template-columns: minmax(0,1fr); }
+  .workspace .rider-hero-copy { padding-inline: 0; }
+  .workspace .rider-hero-actions { align-items: flex-start; flex-direction: column; gap: .65rem; }
+  .workspace .rider-section-heading { align-items: flex-start; }
+  .workspace .rider-request-card { padding: .85rem; }
+}
+@media (prefers-reduced-motion: reduce) { .workspace .rider-place-chip { transition: none; } }

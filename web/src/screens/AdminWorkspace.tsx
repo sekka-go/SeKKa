@@ -1,48 +1,70 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { t } from "../i18n/runtime";
+import Button from "../components/Button";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { api } from "../api";
-import { errorText, money } from "../lib/formatters";
+import { errorText } from "../lib/formatters";
+import { sameData, useSilentRefresh } from "../lib/use-silent-refresh";
 import type { NavKey, Session, Toast } from "../types";
-import { AccountPanel, EmptyState, ErrorState, LoadingCard } from "../components/workspace-shared";
-import AdminControlPanel from "../components/AdminControlPanel";
-export default function AdminWorkspace({ session, section, refreshNotifications, notify }: {
-  session: Session; section: NavKey; refreshNotifications: () => Promise<void>; notify: (text: string, tone?: Toast["tone"]) => void;
+import { AccountPanel, ErrorState, LoadingCard } from "../components/workspace-shared";
+
+const AdminControlPanel = lazy(() => import("../components/AdminControlPanel"));
+type Overview = Record<string, number>;
+type PoolOverview = Record<string, number>;
+const adminSections = new Set<NavKey>(["adminUsers", "adminDocuments", "adminTrips", "adminComplaints", "adminFinance", "adminFinanceAdjustment", "adminPricing", "adminAudit"]);
+
+export default function AdminWorkspace({ session, section, refreshNotifications, notify, onInitialReady }: {
+  session: Session; section: NavKey; refreshNotifications: (quiet?: boolean, signal?: AbortSignal) => Promise<void>; notify: (text: string, tone?: Toast["tone"]) => void;
+  onInitialReady: () => void;
 }) {
-  const [overview, setOverview] = useState<Record<string, number> | null>(null);
-  const [poolOverview, setPoolOverview] = useState<Record<string, number | boolean | string> | null>(null);
-  const [captains, setCaptains] = useState<Record<string, unknown>[]>([]);
-  const [busyId, setBusyId] = useState<number | null>(null);
+  const [overview, setOverview] = useState<Overview | null>(null);
+  const overviewRef = useRef<Overview | null>(null);
+  const [poolOverview, setPoolOverview] = useState<PoolOverview | null>(null);
+  const poolOverviewRef = useRef<PoolOverview | null>(null);
+  const [disputesCapped, setDisputesCapped] = useState(false);
+  const disputesCappedRef = useRef(false);
+  const [dashboardLoading, setDashboardLoading] = useState(false);
+  const [dashboardError, setDashboardError] = useState("");
+  const [dashboardInitialLoadComplete, setDashboardInitialLoadComplete] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<number | null>(null);
   const [broadcastTitle, setBroadcastTitle] = useState("");
   const [broadcastMessage, setBroadcastMessage] = useState("");
   const [broadcastBusy, setBroadcastBusy] = useState(false);
   const [broadcastRequestId, setBroadcastRequestId] = useState("");
-  const [dashboardLoading, setDashboardLoading] = useState(true);
-  const [dashboardError, setDashboardError] = useState("");
-  const refresh = useCallback(async () => {
-    setDashboardError("");
+
+  const refresh = useCallback(async (quiet = false, signal?: AbortSignal) => {
+    if (!quiet) { setDashboardLoading(true); setDashboardError(""); }
     try {
-      const [stats, pending, pool] = await Promise.all([
-        api<{ overview: Record<string, number> }>("/admin/analytics/overview", { token: session.token }),
-        api<{ captains: Record<string, unknown>[] }>("/admin/captains?status=pending", { token: session.token }),
-        api<{ overview: Record<string, number | boolean | string> }>("/admin/pool/overview", { token: session.token }),
+      const [stats, pool, disputes] = await Promise.all([
+        api<{ overview: Overview }>("/admin/analytics/overview", { token: session.token, signal, etag: true }),
+        api<{ overview: PoolOverview }>("/admin/pool/overview", { token: session.token, signal, etag: true }),
+        api<{ total_count: number; capped: boolean }>("/admin/disputes?summary=true", { token: session.token, signal, etag: true }),
       ]);
-      setOverview(stats.overview); setCaptains(pending.captains); setPoolOverview(pool.overview);
+      const nextOverview = { ...stats.overview, disputes_awaiting_admin: disputes.total_count };
+      const changed = !sameData(overviewRef.current, nextOverview) || !sameData(poolOverviewRef.current, pool.overview) || disputesCappedRef.current !== disputes.capped;
+      overviewRef.current = nextOverview; poolOverviewRef.current = pool.overview; disputesCappedRef.current = disputes.capped;
+      setOverview((current) => sameData(current, nextOverview) ? current : nextOverview);
+      setDisputesCapped((current) => current === disputes.capped ? current : disputes.capped);
+      setPoolOverview((current) => sameData(current, pool.overview) ? current : pool.overview);
+      if (!quiet) setLastUpdated(Date.now());
+      return changed;
     } catch (error) {
-      setDashboardError(errorText(error));
-      throw error;
-    } finally { setDashboardLoading(false); }
+      if (!quiet) setDashboardError(errorText(error));
+      return false;
+    } finally {
+      if (!quiet) setDashboardLoading(false);
+      setDashboardInitialLoadComplete(true);
+    }
   }, [session.token]);
-  useEffect(() => { void refresh().catch((error) => notify(errorText(error), "error")); }, [refresh, notify]);
-  useEffect(() => {
-    if (section !== "admin") return;
-    const timer = window.setInterval(() => { void refresh().catch((error) => notify(errorText(error), "error")); }, 30_000);
-    return () => window.clearInterval(timer);
-  }, [section, refresh, notify]);
+  useEffect(() => { if (section === "admin") void refresh(overviewRef.current !== null); }, [section, refresh]);
+  useEffect(() => { if (section === "admin" && dashboardInitialLoadComplete) onInitialReady(); }, [section, dashboardInitialLoadComplete, onInitialReady]);
+  useSilentRefresh((signal) => refresh(true, signal), { enabled: section === "admin", intervalMs: 60_000 });
+
   if (section === "account") return <AccountPanel session={session} notify={notify} />;
   if (section === "broadcast") {
     const submitBroadcast = async (event: FormEvent) => {
       event.preventDefault();
       const title = broadcastTitle.trim(), message = broadcastMessage.trim();
-      if (!title || !message) { notify("اكتب عنوان الرسالة ومحتواها أولًا.", "error"); return; }
+      if (!title || !message) { notify(t("اكتب عنوان الرسالة ومحتواها أولًا."), "error"); return; }
       setBroadcastBusy(true);
       const requestId = broadcastRequestId || crypto.randomUUID();
       setBroadcastRequestId(requestId);
@@ -50,21 +72,32 @@ export default function AdminWorkspace({ session, section, refreshNotifications,
         const result = await api<{ notified_users: number }>("/admin/notifications/broadcast", { method: "POST", token: session.token, body: { title, message, request_id: requestId } });
         setBroadcastTitle(""); setBroadcastMessage(""); setBroadcastRequestId("");
         await refreshNotifications();
-        notify(`تم إرسال الرسالة إلى ${result.notified_users} مستخدم.`, "success");
+        notify(`${t("تم إرسال الرسالة إلى")} ${result.notified_users} ${t(result.notified_users === 1 ? "مستخدم." : "مستخدمين.")}`, "success");
       } catch (error) { notify(errorText(error), "error"); }
       finally { setBroadcastBusy(false); }
     };
-    return <section className="surface admin-broadcast"><div className="section-title-row"><div><span className="eyebrow">إدارة سِكّة</span><h2>إرسال رسالة عامة</h2><p>ستظهر الرسالة في صندوق الإشعارات لدى جميع المستخدمين.</p></div></div><form className="admin-broadcast-form" onSubmit={(event) => void submitBroadcast(event)}><label>عنوان الرسالة<input value={broadcastTitle} onChange={(event) => setBroadcastTitle(event.target.value)} maxLength={100} required placeholder="مثال: تحديث مهم" /></label><label>نص الرسالة<textarea value={broadcastMessage} onChange={(event) => setBroadcastMessage(event.target.value)} maxLength={1000} rows={5} required placeholder="اكتب الرسالة التي ستصل للجميع" /></label><div className="admin-broadcast-footer"><small>{broadcastMessage.length}/1000 حرف</small><button className="button button-primary" type="submit" disabled={broadcastBusy || !broadcastTitle.trim() || !broadcastMessage.trim()}>{broadcastBusy ? "جاري الإرسال…" : "إرسال للجميع"}</button></div></form></section>;
+    return <section className="surface admin-broadcast"><div className="section-title-row"><div><span className="eyebrow">{t("إدارة سِكّة")}</span><h2>{t("إرسال رسالة عامة")}</h2><p>{t("ستظهر الرسالة في صندوق الإشعارات لدى جميع المستخدمين.")}</p></div></div><form className="admin-broadcast-form" onSubmit={(event) => void submitBroadcast(event)}><label>{t("عنوان الرسالة")}<input value={broadcastTitle} onChange={(event) => setBroadcastTitle(event.target.value)} maxLength={100} required placeholder={t("مثال: تحديث مهم")} /></label><label>{t("نص الرسالة")}<textarea value={broadcastMessage} onChange={(event) => setBroadcastMessage(event.target.value)} maxLength={1000} rows={5} required placeholder={t("اكتب الرسالة التي ستصل للجميع")} /></label><div className="admin-broadcast-footer"><small>{broadcastMessage.length}{t("/1000 حرف")}</small><Button variant="primary" type="submit" loading={broadcastBusy} disabled={!broadcastTitle.trim() || !broadcastMessage.trim()}>{t("إرسال للجميع")}</Button></div></form></section>;
   }
-  const decide = async (captainId: number, status: "approved" | "rejected") => {
-    const reason = window.prompt("اكتب سبب قرار توثيق الكابتن");
-    if (!reason?.trim()) return;
-    setBusyId(captainId);
-    try { await api(`/admin/captains/${captainId}/verification`, { method: "POST", token: session.token, body: { status, reason: reason.trim() } }); await refresh(); notify(status === "approved" ? "تم توثيق الكابتن." : "تم رفض طلب التوثيق.", "success"); }
-    catch (error) { notify(errorText(error), "error"); }
-    finally { setBusyId(null); }
-  };
-  if (dashboardLoading && !overview) return <LoadingCard text="بنحمّل ملخص المنصة…" />;
-  if (dashboardError && !overview) return <ErrorState text={dashboardError} onAction={() => void refresh().catch((error) => notify(errorText(error), "error"))} />;
-  return <>{dashboardError && <ErrorState title="تعذر تحديث بعض بيانات الإدارة" text={dashboardError} onAction={() => void refresh().catch((error) => notify(errorText(error), "error"))} />}<AdminControlPanel session={session} notify={notify} /><div className="admin-dashboard"><div className="admin-stats-grid"><div className="surface admin-stat"><small>إجمالي المستخدمين</small><strong>{overview?.total_users ?? "—"}</strong></div><details className="surface admin-user-breakdown"><summary>تفاصيل المستخدمين</summary><div className="admin-summary-grid"><div><small>الركاب</small><strong>{overview?.total_riders ?? "—"}</strong></div><div><small>الكباتن</small><strong>{overview?.total_captains ?? "—"}</strong></div></div></details></div><section className="surface admin-review"><div className="section-title-row"><div><span className="eyebrow">مراجعة الحسابات</span><h2>كباتن بانتظار التوثيق</h2><p>راجع بيانات المركبة قبل تفعيل استقبال المسارات.</p></div><button className="button button-outline button-small" onClick={() => void refresh().catch((error) => notify(errorText(error), "error"))}>تحديث ↻</button></div>{captains.length ? captains.map((captain) => <div className="admin-captain-row" key={String(captain.user_id)}><span className="avatar">{String(captain.full_name).slice(0, 1)}</span><div className="admin-captain-info"><strong>{String(captain.full_name)}</strong><small>{String(captain.phone_number)} · {String(captain.vehicle_type_id)} · لوحة {String(captain.vehicle_plate)}</small><small>رخصة {String(captain.license_number)}</small></div><div className="admin-review-actions"><button className="button button-primary button-small" disabled={busyId === Number(captain.user_id)} onClick={() => void decide(Number(captain.user_id), "approved")}>موافقة</button><button className="button button-quiet button-small" disabled={busyId === Number(captain.user_id)} onClick={() => void decide(Number(captain.user_id), "rejected")}>رفض</button></div></div>) : <EmptyState icon="✓" title="مفيش طلبات معلقة" text="هتظهر هنا طلبات الكباتن الجديدة." />}</section><details className="admin-secondary-details"><summary>تفاصيل التشغيل والمستحقات</summary><div className="admin-secondary-content"><section className="surface admin-summary"><div className="section-title-row"><div><span className="eyebrow">مجموعات سِكّة</span><h2>تشغيل الرحلات والدفتر المؤجل</h2></div><button className="button button-outline button-small" onClick={() => void refresh().catch((error) => notify(errorText(error), "error"))}>تحديث ↻</button></div><div className="admin-summary-grid"><div><small>مجموعات الانتظار</small><strong>{poolOverview?.waiting_groups ?? "—"}</strong></div><div><small>بانتظار موافقة السعر</small><strong>{poolOverview?.price_review_groups ?? "—"}</strong></div><div><small>بانتظار كابتن</small><strong>{poolOverview?.needs_captain_groups ?? "—"}</strong></div><div><small>مجموعات نشطة</small><strong>{poolOverview?.active_groups ?? "—"}</strong></div><div><small>مستحقات الشركة الدفترية</small><strong>{money(Number(poolOverview?.company_due ?? 0))}</strong></div><div><small>مستحقات الكباتن الدفترية</small><strong>{money(Number(poolOverview?.captains_due ?? 0))}</strong></div></div><p className="muted-text">هذه قيود حسابية معلقة فقط؛ لا يتم تحصيل أو تحويل أي أموال.</p></section><section className="surface admin-summary"><div className="section-title-row"><div><span className="eyebrow">صحة المنصة</span><h2>نظرة عامة</h2></div><span className="online-pill"><i /> مباشر</span></div><div className="admin-summary-grid"><div><small>كباتن موثقون</small><strong>{overview?.captains_approved ?? "—"}</strong></div><div><small>رحلات جارية</small><strong>{overview?.total_trips_in_progress ?? "—"}</strong></div><div><small>رحلات مكتملة</small><strong>{overview?.total_trips_completed ?? "—"}</strong></div><div><small>اعتراضات مفتوحة</small><strong>{overview?.disputes_awaiting_admin ?? "—"}</strong></div></div><p className="muted-text">تسوية بوابة الدفع وعمولة الرحلات المشتركة مؤجلتان.</p></section></div></details></div></>;
+  if (adminSections.has(section)) return <Suspense fallback={<LoadingCard text="loading.adminSection" />}><AdminControlPanel session={session} notify={notify} section={section} /></Suspense>;
+
+  const cards: Array<{ label: string; value: number | string | undefined; section: NavKey }> = [
+    { label: "كباتن بانتظار التوثيق", value: overview?.captains_pending_verification, section: "adminDocuments" },
+    { label: "اعتراضات مفتوحة", value: overview?.disputes_awaiting_admin === undefined ? undefined : disputesCapped ? `${overview.disputes_awaiting_admin}+` : overview.disputes_awaiting_admin, section: "adminComplaints" },
+    { label: "رحلات جارية", value: overview?.total_trips_in_progress, section: "adminTrips" },
+    { label: "مجموعات بانتظار موافقة السعر", value: poolOverview?.price_review_groups, section: "adminTrips" },
+  ];
+  const navigate = (target: NavKey) => window.dispatchEvent(new CustomEvent<NavKey>("sekka:navigate", { detail: target }));
+  if (!overview && section === "admin" && !dashboardError) return <LoadingCard text="loading.adminSummary" />;
+  if (dashboardError && !overview) return <ErrorState text={dashboardError} onAction={() => void refresh()} />;
+
+  return <div className="admin-dashboard">
+    {dashboardError && <ErrorState title={t("تعذر تحديث بعض بيانات الإدارة")} text={dashboardError} onAction={() => void refresh()} />}
+    <div className="admin-overview-toolbar"><p>{t("آخر تحديث")} · {lastUpdated === null ? t("جارٍ التحديث…") : new Date(lastUpdated).toLocaleTimeString()}</p><Button type="button" variant="secondary" size="sm" disabled={dashboardLoading} onClick={() => void refresh()} aria-label={t("تحديث بيانات الإدارة")}>{dashboardLoading ? t("جارٍ التحديث…") : t("تحديث ↻")}</Button></div>
+    <section className="admin-overview-kpis" aria-label={t("ملخص الإدارة")}>
+      {cards.map((card) => <button className="surface admin-overview-kpi" key={card.label} onClick={() => navigate(card.section)}><span>{t(card.label)}</span><strong aria-live="polite">{dashboardLoading && !overview ? <i className="spinner" aria-label={t("loading.general")} /> : card.value ?? 0}</strong></button>)}
+    </section>
+    <section className="surface admin-overview-users"><div><span className="eyebrow">{t("المستخدمون")}</span><strong>{overview?.total_users ?? 0}</strong><small>{t("راكب")} {overview?.total_riders ?? 0} · {t("كابتن")} {overview?.total_captains ?? 0}</small></div><Button variant="secondary" size="sm" onClick={() => navigate("adminUsers")}>{t("إدارة المستخدمين")}</Button></section>
+    {(overview?.captains_pending_verification ?? 0) > 0 && <section className="surface admin-overview-review"><div><h2>{t("طلبات توثيق تحتاج مراجعة")}</h2><p>{t("افتح قائمة المستندات لمراجعة الطلبات واتخاذ القرار.")}</p></div><Button variant="primary" size="sm" onClick={() => navigate("adminDocuments")}>{t("مراجعة المستندات")}</Button></section>}
+    <p className="admin-overview-note">{t("المبالغ المعروضة في الدفتر قيود حسابية فقط؛ لا يتم تحصيل أو تحويل أموال.")}</p>
+  </div>;
 }

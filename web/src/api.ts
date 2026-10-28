@@ -1,3 +1,5 @@
+import { t } from "./i18n/runtime";
+
 export type Role = "rider" | "captain" | "admin";
 export interface User { id: number; full_name: string; phone_number: string; role: Role; verified_at: string | null; created_at?: string }
 export interface Category {
@@ -58,12 +60,19 @@ export interface CaptainProfile { verification_status: "pending" | "approved" | 
 export type VerificationDocumentType = "national_id_front" | "national_id_back" | "driving_license_front" | "driving_license_back" | "vehicle_license_front" | "vehicle_license_back" | "criminal_record" | "drug_test";
 export type VerificationDocument = { id: number; document_type: VerificationDocumentType; status: "pending" | "approved" | "rejected"; rejection_reason: string | null; uploaded_at: string; reviewed_at: string | null };
 export interface CaptainOffer { group_id: number; category_id: string; package_type: string; route_distance_km: number | null; seat_day_fare: number | null; route_geometry: RouteGeometry | null; trip: PoolTrip }
+export interface CaptainLine {
+  id: number; vehicle_type_id: "private_car" | "hiace"; origin_label: string; origin_lat: number; origin_lng: number; destination_label: string; destination_lat: number; destination_lng: number;
+  intermediate_stops: Array<{ label: string; lat: number; lng: number }>;
+  arrival_time: string; return_arrival_time?: string | null; service_days: number[]; seats: number; route_distance_km: number; price_per_km: number; price_per_seat: number;
+  payment_methods: string[]; status: "active" | "paused" | "cancelled";
+}
 
 const TOKEN_KEY = "sekka.session.token";
 const USER_KEY = "sekka.session.user";
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.DEV ? "" : "https://uorxfakceqnhxqnaawdy.supabase.co/functions/v1/sekka-api")).replace(/\/+$/, "");
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
   ?? "sb_publishable__gh8lr-A5tr5Q9CMi7YIuw_yrRFwgJl";
+const etagCache = new Map<string, { etag: string; payload: unknown }>();
 
 export function getStoredSession(): { token: string; user: User } | null {
   try {
@@ -88,26 +97,67 @@ export class ApiError extends Error {
   constructor(status: number, message: string) { super(message); this.status = status; }
 }
 
-export async function api<T>(path: string, options: { method?: string; body?: unknown; token?: string | null; signal?: AbortSignal } = {}): Promise<T> {
+function isCloudflarePagesPreview(): boolean {
+  if (typeof window === "undefined") return false;
+  const hostname = window.location.hostname.toLowerCase();
+  return hostname.endsWith(".sekka-go.pages.dev") && hostname !== "sekka-go.pages.dev";
+}
+
+export async function api<T>(path: string, options: { method?: string; body?: unknown; token?: string | null; signal?: AbortSignal; timeoutMs?: number; etag?: boolean } = {}): Promise<T> {
+  const controller = new AbortController();
+  let timedOut = false;
+  const forwardAbort = () => controller.abort(options.signal?.reason);
+  if (options.signal?.aborted) forwardAbort();
+  else options.signal?.addEventListener("abort", forwardAbort, { once: true });
+  const timeout = window.setTimeout(() => { timedOut = true; controller.abort(); }, Math.max(1, options.timeoutMs ?? 15_000));
   const headers: Record<string, string> = { Accept: "application/json" };
   if (options.body !== undefined) headers["Content-Type"] = "application/json";
   if (options.token) headers.Authorization = `Bearer ${options.token}`;
   if (API_BASE_URL) headers.apikey = SUPABASE_PUBLISHABLE_KEY;
+  const cacheKey = `${options.token ?? "public"}:${path}`;
+  const cached = options.etag ? etagCache.get(cacheKey) : undefined;
+  if (cached) headers["If-None-Match"] = cached.etag;
 
   let response: Response;
   try {
     response = await fetch(`${API_BASE_URL}/api${path}`, {
       method: options.method ?? "GET", headers,
       ...(options.body !== undefined ? { body: JSON.stringify(options.body) } : {}),
-      ...(options.signal ? { signal: options.signal } : {}),
+      signal: controller.signal,
     });
+    if (response.status === 304 && cached) return cached.payload as T;
+    if (response.status === 304) {
+      delete headers["If-None-Match"];
+      response = await fetch(`${API_BASE_URL}/api${path}`, {
+        method: options.method ?? "GET", headers,
+        ...(options.body !== undefined ? { body: JSON.stringify(options.body) } : {}),
+        signal: controller.signal,
+      });
+    }
+    let payload: { error?: string } & T;
+    try { payload = await response.json() as { error?: string } & T; }
+    catch (cause) {
+      if (timedOut || controller.signal.aborted) throw cause;
+      payload = {} as { error?: string } & T;
+    }
+    if (!response.ok) throw new ApiError(response.status, payload.error ?? "حصل خطأ غير متوقع. حاول مرة أخرى.");
+    const etag = options.etag ? response.headers.get("ETag") : null;
+    if (etag) {
+      etagCache.set(cacheKey, { etag, payload });
+      if (etagCache.size > 200) etagCache.delete(etagCache.keys().next().value!);
+    }
+    return payload;
   } catch (cause) {
+    if (cause instanceof ApiError) throw cause;
+    if (timedOut) throw new ApiError(408, t("loading.failure"));
     if (options.signal?.aborted) throw cause;
-    throw new ApiError(0, "تعذر الاتصال بالخادم. تأكد أنه يعمل ثم حاول مرة أخرى.");
+    throw new ApiError(0, isCloudflarePagesPreview()
+      ? t("رابط المعاينة مخصص لمراجعة الواجهة ولا يدعم تسجيل الدخول. افتح sekka-go.pages.dev للدخول.")
+      : "تعذر الاتصال بالخادم. تأكد من اتصالك ثم حاول مرة أخرى.");
+  } finally {
+    window.clearTimeout(timeout);
+    options.signal?.removeEventListener("abort", forwardAbort);
   }
-  const payload = await response.json().catch(() => ({})) as { error?: string } & T;
-  if (!response.ok) throw new ApiError(response.status, payload.error ?? "حصل خطأ غير متوقع. حاول مرة أخرى.");
-  return payload;
 }
 
 export async function uploadVerificationDocument(token: string, documentType: VerificationDocumentType, file: File): Promise<{ document: VerificationDocument }> {

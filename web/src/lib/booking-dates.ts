@@ -1,4 +1,5 @@
 import type { MapPoint } from "../MapPicker";
+import { t } from "../i18n/runtime";
 
 export function todayInCairo() {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Cairo" }).format(new Date());
@@ -30,8 +31,8 @@ export function defaultDates(type: "daily" | "weekly" | "monthly") {
 }
 export function readDates(value: string) { try { return JSON.parse(value) as string[]; } catch { return []; } }
 export function pointLabel(point: MapPoint | null) {
-  if (!point) return "اضغط على الخريطة لتحديد الموقع";
+  if (!point) return t("اضغط على الخريطة لتحديد الموقع");
   if (point.label) return point.label;
-  if (typeof point.lat !== "number" || typeof point.lng !== "number") return "الموقع غير متاح";
-  return "عنوان محدد على الخريطة";
+  if (typeof point.lat !== "number" || typeof point.lng !== "number") return t("الموقع غير متاح");
+  return t("عنوان محدد على الخريطة");
 }

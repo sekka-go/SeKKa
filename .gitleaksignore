@@ -1,0 +1,4 @@
+# Historical .env.example JWT fixtures were inspected without printing values;
+# both decode to the public Supabase anon role, not a service-role credential.
+a64b0ef0f68ff0d5cd9a88467bfea100b7f44728:server/.env.example:jwt:3
+66af5c25b39b69c76770c15a6fb5ad43693f04a9:server/.env.example:jwt:6

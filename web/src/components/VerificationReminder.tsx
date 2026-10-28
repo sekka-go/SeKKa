@@ -1,3 +1,4 @@
+import { t } from "../i18n/runtime";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, type VerificationDocument, type VerificationDocumentType } from "../api";
 import type { Session } from "../types";
@@ -38,11 +39,16 @@ export default function VerificationReminder({ session, onOpen, visible = true }
   }, [session.token]);
 
   useEffect(() => {
+    if (!visible) return;
     void refresh();
     const onRefresh = () => { void refresh(); };
     window.addEventListener("sekka:verification-refresh", onRefresh);
-    return () => window.removeEventListener("sekka:verification-refresh", onRefresh);
-  }, [refresh]);
+    window.addEventListener("sekka:verification-updated", onRefresh);
+    return () => {
+      window.removeEventListener("sekka:verification-refresh", onRefresh);
+      window.removeEventListener("sekka:verification-updated", onRefresh);
+    };
+  }, [refresh, visible]);
 
   useEffect(() => {
     const dueAt = Number(localStorage.getItem(reminderKey) || 0);
@@ -71,14 +77,14 @@ export default function VerificationReminder({ session, onOpen, visible = true }
   return <aside className={`verification-reminder ${missing.deferred ? "is-deferred" : ""}`} aria-live="polite">
     <span className="verification-reminder-icon" aria-hidden="true">!</span>
     <div className="verification-reminder-copy">
-      <strong>{missing.deferred ? "اقترب موعد استكمال ملف الكابتن" : "أكمل بيانات التوثيق الناقصة"}</strong>
-      <p>{missing.deferred ? `المستند المطلوب: ${missing.label}. ارفعه قبل انتهاء المهلة.` : `المطلوب الآن: ${missing.label}. أكمل هذه الخطوة لمتابعة تفعيل حسابك.`}</p>
+      <strong>{missing.deferred ? t("اقترب موعد استكمال ملف الكابتن") : t("أكمل بيانات التوثيق الناقصة")}</strong>
+      <p>{missing.deferred ? <>{t("المستند المطلوب:")} {t(missing.label)}. {t("ارفعه قبل انتهاء المهلة.")}</> : <>{t("المطلوب الآن:")} {t(missing.label)}. {t("أكمل هذه الخطوة لمتابعة تفعيل حسابك.")}</>}</p>
     </div>
     <div className="verification-reminder-actions">
       <button type="button" className="button button-primary button-small" onClick={() => onOpen(missing.target)}>
-        {missing.target === "phone" ? "وثّق رقم الهاتف" : `أكمل ${missing.label}`}
+        {missing.target === "phone" ? t("وثّق رقم الهاتف") : `${t("أكمل")} ${t(missing.label)}`}
       </button>
-      <button type="button" className="button button-quiet button-small" onClick={remindLater} aria-label="ذكّرني بعد أسبوع">ذكّرني لاحقًا</button>
+      <button type="button" className="button button-quiet button-small" onClick={remindLater} aria-label={t("ذكّرني بعد أسبوع")}>{t("ذكّرني لاحقًا")}</button>
     </div>
   </aside>;
 }

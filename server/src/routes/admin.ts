@@ -122,7 +122,11 @@ export function createAdminRouter(db: DatabaseSync): Router {
   // مش نهائي (راجع NEXT_PROMPT.md، Pricing Proposal Log) — ده بس Endpoint
   // إداري لتحديث نفس Placeholder، مش قرار تسعير جديد.
   router.patch("/admin/pricing/:vehicleTypeId", ...guarded, (req, res) => {
-    const { vehicleTypeId } = req.params;
+    const vehicleTypeId = req.params.vehicleTypeId;
+    if (typeof vehicleTypeId !== "string" || vehicleTypeId.trim().length === 0) {
+      res.status(400).json({ error: "معرّف نوع المركبة غير صالح." });
+      return;
+    }
     const { base_fee, rate_per_km, rate_per_min } = req.body ?? {};
 
     if (

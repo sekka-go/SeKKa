@@ -5,6 +5,8 @@ interface RateLimitOptions {
   windowMs: number;
   /** أقصى عدد محاولات مسموح بيها لكل مفتاح جوه النافذة. */
   max: number;
+  /** حد أقصى للمفاتيح المتعقبة لحماية الذاكرة من مفاتيح عشوائية كثيرة. */
+  maxTrackedKeys?: number;
   /** بيبني المفتاح اللي بيتحدد بيه كل طرف على حدة (IP، رقم هاتف، userId...). */
   keyFn: (req: Request) => string;
   /** رسالة عربية عامة ترجع في جسم رد الـ 429. */
@@ -28,6 +30,7 @@ interface RateLimitOptions {
  */
 export function createRateLimiter(options: RateLimitOptions): RequestHandler {
   const attempts = new Map<string, { count: number; resetAt: number }>();
+  const maxTrackedKeys = options.maxTrackedKeys ?? 10_000;
 
   // تنضيف انتهازي (Opportunistic) للمفاتيح المنتهية — بيتشغّل كل 500 طلب
   // بدل كل طلب، عشان مايبقاش فيه تكلفة إضافية محسوسة على كل Request. بيمنع
@@ -54,6 +57,13 @@ export function createRateLimiter(options: RateLimitOptions): RequestHandler {
     const entry = attempts.get(key);
 
     if (!entry || entry.resetAt <= now) {
+      if (attempts.size >= maxTrackedKeys) {
+        sweep(now);
+        if (attempts.size >= maxTrackedKeys) {
+          const oldestKey = attempts.keys().next().value;
+          if (oldestKey !== undefined) attempts.delete(oldestKey);
+        }
+      }
       attempts.set(key, { count: 1, resetAt: now + options.windowMs });
       next();
       return;

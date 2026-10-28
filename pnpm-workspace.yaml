@@ -1,0 +1,9 @@
+packages:
+  - web
+  - server
+
+allowBuilds:
+  esbuild: true
+
+overrides:
+  body-parser: ^2.4.0

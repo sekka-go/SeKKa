@@ -1,33 +1,35 @@
-name: Web quality
+name: Project quality
 
 on:
   pull_request:
+  push:
+    branches: [main]
 
 permissions:
   contents: read
 
 jobs:
-  web:
-    name: Lint and production build
+  quality:
+    name: Lint, types, tests, and production build
     runs-on: ubuntu-latest
     steps:
       - name: Check out source
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: web/package-lock.json
+      - name: Enable Corepack
+        run: corepack enable
       - name: Install dependencies
-        run: npm ci
-        working-directory: web
+        run: pnpm install --frozen-lockfile
       - name: Validate PWA assets
-        run: npm run check:pwa
-        working-directory: web
+        run: pnpm --filter web check:pwa
       - name: Lint
-        run: npm run lint
-        working-directory: web
+        run: pnpm lint
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Unit tests
+        run: pnpm test
       - name: Build
-        run: npm run build
-        working-directory: web
+        run: pnpm build

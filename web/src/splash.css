@@ -1,0 +1,59 @@
+.sekka-splash {
+  position: fixed;
+  z-index: 20000;
+  inset: 0;
+  overflow: hidden;
+  color: var(--color-text-primary);
+  background: var(--bg);
+  isolation: isolate;
+}
+
+.startup-car-scene { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.startup-road { position: absolute; right: 0; bottom: 34%; left: 0; height: 2px; background: color-mix(in srgb, var(--splash-accent) 30%, transparent); }
+.startup-road i { position: absolute; top: -2px; width: 1.5rem; height: 4px; border-radius: 99px; background: var(--splash-accent); animation: startup-road-flow .55s linear infinite; }
+.startup-road i:nth-child(1) { left: 15%; }
+.startup-road i:nth-child(2) { left: 52%; animation-delay: -.18s; }
+.startup-road i:nth-child(3) { left: 82%; animation-delay: -.36s; }
+.startup-car { position: absolute; bottom: calc(34% - 1rem); left: 0; width: clamp(12rem, 64vw, 21rem); height: auto; filter: drop-shadow(0 .7rem 1rem color-mix(in srgb, var(--splash-accent) 18%, transparent)); animation: startup-car-drive 2.45s cubic-bezier(.18,.62,.3,1) both; }
+.startup-driver-wave { transform-box: view-box; transform-origin: 242px 36px; animation: startup-driver-wave .34s ease-in-out 3; }
+.splash-content { position: absolute; right: 0; bottom: max(10%, env(safe-area-inset-bottom)); left: 0; display: grid; justify-items: center; gap: .5rem; box-sizing: border-box; padding: 1rem max(1rem, env(safe-area-inset-right)) 0 max(1rem, env(safe-area-inset-left)); text-align: center; }
+.splash-emblem { display: grid; width: clamp(3rem, 12vw, 4rem); aspect-ratio: 1; place-items: center; }
+.splash-main-mark { display: block; width: 100%; height: 100%; }
+.splash-title { max-width: 100%; margin: 0; color: var(--color-text-primary); font-size: clamp(2rem, 8vw, 3rem); font-weight: 900; line-height: 1.15; }
+.splash-tagline { margin: 0; color: var(--color-text-secondary); font-size: clamp(.9rem, 3.5vw, 1.1rem); font-weight: 650; }
+.sekka-splash.is-exiting { pointer-events: none; animation: startup-splash-exit 260ms ease-out forwards; }
+.startup-home-skeleton { position: fixed; inset: 0; z-index: 10000; display: grid; align-content: start; gap: 1rem; padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom)); overflow: hidden; background: var(--color-background); }
+.startup-home-skeleton span { display: block; min-height: 5rem; border: 1px solid color-mix(in srgb, var(--color-text-primary) 12%, transparent); border-radius: 1rem; background: linear-gradient(100deg, color-mix(in srgb, var(--color-text-primary) 5%, transparent) 25%, color-mix(in srgb, var(--color-text-primary) 11%, transparent) 40%, color-mix(in srgb, var(--color-text-primary) 5%, transparent) 65%); background-size: 220% 100%; animation: startup-skeleton-shimmer 1.5s ease-in-out infinite; }
+.startup-home-skeleton span:first-child { min-height: 4rem; }
+
+@keyframes startup-car-drive {
+  0% { transform: translateX(110vw); }
+  27% { transform: translateX(18vw); }
+  62% { transform: translateX(15vw); }
+  100% { transform: translateX(-115vw); }
+}
+@keyframes startup-road-flow { to { transform: translateX(2rem); } }
+@keyframes startup-driver-wave { 50% { transform: rotate(25deg); } }
+@keyframes startup-splash-exit { to { opacity: 0; visibility: hidden; } }
+@keyframes startup-skeleton-shimmer { to { background-position-x: -220%; } }
+
+@media (max-width: 560px) {
+  .splash-content { bottom: max(12%, env(safe-area-inset-bottom)); }
+  .startup-road { bottom: 36%; }
+  .startup-car { bottom: calc(36% - 1rem); }
+}
+@media (max-height: 520px) {
+  .splash-content { bottom: max(5%, env(safe-area-inset-bottom)); gap: .25rem; }
+  .splash-emblem { width: 2.5rem; }
+  .splash-title { font-size: clamp(1.4rem, 9vh, 2rem); }
+  .splash-tagline { font-size: .8rem; }
+  .startup-road { bottom: 54%; }
+  .startup-car { bottom: calc(54% - 1rem); width: min(45vw, 15rem); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .startup-car { left: 50%; transform: translateX(-50%); animation: none; }
+  .startup-road i, .startup-driver-wave { animation: none; }
+  .startup-driver-wave { transform: rotate(12deg); }
+  .sekka-splash.is-exiting { animation-duration: .01ms; }
+  .startup-home-skeleton span { animation: none; }
+}

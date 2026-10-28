@@ -2,5 +2,8 @@
   "nodeModulesDir": "auto",
   "imports": {
     "@std/assert": "jsr:@std/assert@1.0.19"
+  },
+  "tasks": {
+    "check:edge": "deno check supabase/functions/sekka-api/index.ts"
   }
 }

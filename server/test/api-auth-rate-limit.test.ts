@@ -55,6 +55,20 @@ describe("Rate limiting — /api/auth/login", () => {
   });
 });
 
+describe("Rate limiting — /api/auth/register", () => {
+  it("limits repeated signup attempts for the same phone", async () => {
+    const app = createApp(freshMigratedDb());
+    const payload = { ...RIDER, password: "short" };
+    for (let i = 0; i < 5; i += 1) {
+      const response = await request(app).post("/api/auth/register").send(payload);
+      assert.equal(response.status, 400);
+    }
+    const blocked = await request(app).post("/api/auth/register").send(payload);
+    assert.equal(blocked.status, 429);
+    assert.ok(blocked.headers["retry-after"]);
+  });
+});
+
 describe("Rate limiting — /api/auth/change-password", () => {
   it("بيرفض بـ 429 بعد 5 محاولات غلط لـ current_password لنفس المستخدم", async () => {
     const app = createApp(freshMigratedDb());

@@ -6,8 +6,10 @@
   "scripts": {
     "dev": "vite --configLoader native",
     "build": "tsc -b && vite build --configLoader native",
+    "typecheck": "tsc -b --pretty false",
     "lint": "oxlint",
     "check:pwa": "node scripts/check-pwa.mjs",
+    "generate:icons": "node scripts/generate-pwa-icons.mjs",
     "preview": "vite preview --configLoader native"
   },
   "dependencies": {
@@ -23,6 +25,7 @@
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
     "oxlint": "^1.81.0",
+    "sharp": "0.35.5",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.2",
     "vite": "^8.3.0"
