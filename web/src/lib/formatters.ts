@@ -31,8 +31,13 @@ export function roleLabel(role: string) {
 }
 
 export function vehicleTypeLabel(type: string) {
-  const labels: Record<string, string> = { private_car: "ملاكي", hiace: "هاي إس" };
+  const labels: Record<string, string> = { prime: "SeKKa Prime", daily: "SeKKa Daily", space: "SeKKa Space", max: "SeKKa Max", private_car: "ملاكي", hiace: "هاي إس" };
   return labels[type] ? t(labels[type]!) : t("نوع مركبة غير معروف");
+}
+
+export function vehicleCapacity(type: string) {
+  const capacity: Record<string, number> = { prime: 3, daily: 4, space: 9, max: 13, private_car: 4, hiace: 14 };
+  return capacity[type] ?? 1;
 }
 
 export function maskLastFour(value: string | null | undefined) {

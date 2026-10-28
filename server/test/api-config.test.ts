@@ -10,11 +10,11 @@ describe("GET /api/config", () => {
     const res = await request(app).get("/api/config");
 
     assert.equal(res.status, 200);
-    assert.equal(res.body.vehicle_types.length, 2);
+    assert.equal(res.body.vehicle_types.length, 4);
     assert.equal(res.body.service_categories.length, 3);
     assert.deepEqual(
       res.body.vehicle_types.map((v: { id: string }) => v.id).sort(),
-      ["hiace", "private_car"],
+      ["daily", "max", "prime", "space"],
     );
     assert.deepEqual(
       res.body.service_categories.map((c: { id: string }) => c.id).sort(),

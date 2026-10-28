@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { freshMigratedDb } from "./helpers.js";
-import { arriveAtTripStop, completeTripAndLedgerPayment } from "../src/trip/lifecycle.js";
+import { arriveAtTripStop, completeTrip } from "../src/trip/lifecycle.js";
 import { findTripStopsByTripId } from "../src/db/trip-repository.js";
-import { currentPaymentStatus, findPaymentByTripId } from "../src/db/payment-repository.js";
+import { findPaymentByTripId } from "../src/db/payment-repository.js";
 import { haversineDistanceKm } from "../src/db/matching-repository.js";
 
 function registerUser(
@@ -23,7 +23,7 @@ function createApprovedCaptain(db: ReturnType<typeof freshMigratedDb>, phone: st
   db.prepare(
     `INSERT INTO captain_profiles
        (user_id, vehicle_type_id, license_number, vehicle_plate, verification_status, current_lat, current_lng)
-     VALUES (?, 'private_car', 'LIC', 'PLT', 'approved', 30.05, 31.24)`,
+     VALUES (?, 'daily', 'LIC', 'PLT', 'approved', 30.05, 31.24)`,
   ).run(userId);
   return userId;
 }
@@ -97,32 +97,29 @@ describe("arriveAtTripStop", () => {
   });
 });
 
-describe("completeTripAndLedgerPayment", () => {
+describe("completeTrip", () => {
   it("مايكملش قبل ما كل الـ Stops توصل", () => {
     const db = freshMigratedDb();
     const { tripId, stops } = setupMatchedTrip(db, "50");
     arriveAtTripStop(db, tripId, stops[0].id);
-    const outcome = completeTripAndLedgerPayment(db, tripId);
+    const outcome = completeTrip(db, tripId);
     assert.equal(outcome.outcome, "stops_not_all_reached");
   });
 
-  it("بعد كل الـ Stops: بيقفل الرحلة ويعمل Payment Confirmed أوتوماتيك في نفس اللحظة", () => {
+  it("بعد كل نقاط الوصول: يغلق الرحلة ولا ينشئ تأكيد دفع تلقائيًا", () => {
     const db = freshMigratedDb();
     const { tripId, stops, captainId } = setupMatchedTrip(db, "60");
     arriveAtTripStop(db, tripId, stops[0].id);
     const lastArrival = arriveAtTripStop(db, tripId, stops[1].id);
     assert.equal(lastArrival.outcome, "arrived");
 
-    const outcome = completeTripAndLedgerPayment(db, tripId);
+    const outcome = completeTrip(db, tripId);
     assert.equal(outcome.outcome, "completed");
     if (outcome.outcome === "completed") {
       assert.equal(outcome.trip.status, "completed");
       assert.ok(outcome.trip.total_distance_km! > 0);
-      assert.equal(outcome.payment.reported_by_user_id, captainId);
-      assert.equal(outcome.payment.amount, outcome.trip.total_amount);
-
-      const status = currentPaymentStatus(db, outcome.payment.id);
-      assert.equal(status, "confirmed", "التأكيد نظامي أوتوماتيك من نفس لحظة الإدخال");
+      assert.equal(findPaymentByTripId(db, tripId), null);
+      assert.ok(captainId > 0);
     }
   });
 
@@ -131,20 +128,20 @@ describe("completeTripAndLedgerPayment", () => {
     const { tripId, stops } = setupMatchedTrip(db, "70");
     arriveAtTripStop(db, tripId, stops[0].id);
     arriveAtTripStop(db, tripId, stops[1].id);
-    completeTripAndLedgerPayment(db, tripId);
+    completeTrip(db, tripId);
 
-    const second = completeTripAndLedgerPayment(db, tripId);
+    const second = completeTrip(db, tripId);
     assert.equal(second.outcome, "trip_not_in_progress");
 
     const paymentsCount = db.prepare(`SELECT COUNT(*) as c FROM payments WHERE trip_id = ?`).get(tripId) as {
       c: number;
     };
-    assert.equal(paymentsCount.c, 1);
+    assert.equal(paymentsCount.c, 0);
   });
 
   it("trip_not_found لرحلة مش موجودة", () => {
     const db = freshMigratedDb();
-    const outcome = completeTripAndLedgerPayment(db, 9999);
+    const outcome = completeTrip(db, 9999);
     assert.equal(outcome.outcome, "trip_not_found");
   });
 });

@@ -3,19 +3,19 @@ import { describe, it } from "node:test";
 import { calculateCaptainEscrowReserve, calculateCaptainEscrowTransfer } from "../src/finance/captain-escrow.js";
 
 describe("fixed captain deferred escrow", () => {
-  it("reserves up to four service days from the captain's 80% share", () => {
+  it("reserves up to four service days from the captain's full fare", () => {
     assert.deepEqual(calculateCaptainEscrowReserve(100, 22), {
-      dailyCaptainShareAmount: 80,
+      dailyCaptainShareAmount: 100,
       reserveDays: 4,
-      reservedAmount: 320,
+      reservedAmount: 400,
     });
   });
 
   it("does not reserve more days than the package contains", () => {
     assert.deepEqual(calculateCaptainEscrowReserve(75, 3), {
-      dailyCaptainShareAmount: 60,
+      dailyCaptainShareAmount: 75,
       reserveDays: 3,
-      reservedAmount: 180,
+      reservedAmount: 225,
     });
   });
 

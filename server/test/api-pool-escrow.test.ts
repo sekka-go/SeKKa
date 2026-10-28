@@ -71,8 +71,8 @@ describe("Commute Pool fixed-captain escrow API", () => {
     };
     assert.equal(escrow.original_captain_user_id, captain.userId);
     assert.equal(escrow.service_days, 5);
-    assert.equal(escrow.daily_captain_share_amount, 80);
-    assert.equal(escrow.reserved_amount, 320);
+    assert.equal(escrow.daily_captain_share_amount, 100);
+    assert.equal(escrow.reserved_amount, 400);
     assert.equal(escrow.status, "reserved");
   });
 
@@ -100,16 +100,16 @@ describe("Commute Pool fixed-captain escrow API", () => {
     assert.equal(transfer.escrow_id, escrowId);
     assert.equal(transfer.original_captain_user_id, original.userId);
     assert.equal(transfer.replacement_captain_user_id, replacement.userId);
-    assert.equal(transfer.amount_due, 40);
-    assert.equal(transfer.escrow_funded_amount, 40);
+    assert.equal(transfer.amount_due, 47.5);
+    assert.equal(transfer.escrow_funded_amount, 47.5);
     assert.equal(transfer.unfunded_amount, 0);
     assert.equal(transfer.transfer_status, "pending");
 
     const closed = db.prepare("SELECT used_amount,released_amount,status FROM pool_captain_escrows WHERE id=?").get(escrowId) as {
       used_amount: number; released_amount: number; status: string;
     };
-    assert.equal(closed.used_amount, 40);
-    assert.equal(closed.released_amount, 280);
+    assert.equal(closed.used_amount, 47.5);
+    assert.equal(closed.released_amount, 272.5);
     assert.equal(closed.status, "released");
   });
 

@@ -19,7 +19,7 @@ function createApprovedCaptain(db: ReturnType<typeof freshMigratedDb>, phone: st
   db.prepare(
     `INSERT INTO captain_profiles
        (user_id, vehicle_type_id, license_number, vehicle_plate, verification_status, current_lat, current_lng)
-     VALUES (?, 'private_car', 'LIC', 'PLT', 'approved', 30.05, 31.24)`,
+     VALUES (?, 'daily', 'LIC', 'PLT', 'approved', 30.05, 31.24)`,
   ).run(userId);
   return userId;
 }
@@ -75,12 +75,12 @@ describe("006_trip_payment.sql — إنشاء الرحلة تلقائيًا عن
     assert.equal(stops[0].reached_at, null);
   });
 
-  it("pricing_config متزرّعة (Seed) لكل vehicle_type_id (private_car, hiace)", () => {
+  it("pricing_config متاحة للفئات الجديدة مع إبقاء تعريفات الأسعار القديمة للتاريخ", () => {
     const db = freshMigratedDb();
     const rows = db.prepare(`SELECT vehicle_type_id FROM pricing_config ORDER BY vehicle_type_id`).all() as any[];
     assert.deepEqual(
       rows.map((r) => r.vehicle_type_id),
-      ["hiace", "private_car"],
+      ["daily", "hiace", "max", "prime", "private_car", "space"],
     );
   });
 });

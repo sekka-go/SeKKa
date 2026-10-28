@@ -23,7 +23,7 @@ export interface ServiceCategory {
 // متوقع في أي مكان تاني.
 export function getVehicleTypes(db: DatabaseSync): VehicleType[] {
   const rows = db
-    .prepare("SELECT id, name_ar, capacity_max FROM vehicle_types ORDER BY id")
+    .prepare("SELECT id, name_ar, capacity_max FROM vehicle_types WHERE id IN ('prime','daily','space','max') ORDER BY id")
     .all() as unknown as VehicleType[];
   return rows.map((row) => ({ ...row }));
 }

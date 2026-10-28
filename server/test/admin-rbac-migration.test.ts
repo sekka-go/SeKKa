@@ -23,7 +23,7 @@ function createCaptainWithStatus(
   db.prepare(
     `INSERT INTO captain_profiles
        (user_id, vehicle_type_id, license_number, vehicle_plate, verification_status)
-     VALUES (?, 'private_car', 'LIC', 'PLT', ?)`,
+     VALUES (?, 'daily', 'LIC', 'PLT', ?)`,
   ).run(userId, status);
   return userId;
 }
@@ -101,7 +101,7 @@ describe("007_admin_rbac.sql — role admin و Bootstrap account", () => {
     assert.throws(() => {
       db.prepare(
         `INSERT INTO captain_profiles (user_id, vehicle_type_id, license_number, vehicle_plate)
-         VALUES (?, 'private_car', 'LIC', 'PLT')`,
+         VALUES (?, 'daily', 'LIC', 'PLT')`,
       ).run(riderId);
     });
   });

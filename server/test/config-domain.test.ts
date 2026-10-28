@@ -4,13 +4,15 @@ import { getServiceCategories, getVehicleTypes } from "../src/db/config-reposito
 import { freshMigratedDb } from "./helpers.js";
 
 describe("Config domain — القراءة السليمة", () => {
-  it("vehicle_types يرجّع بالضبط private_car (3) و hiace (14)، بدون Elite", () => {
+  it("vehicle_types يعرض فئات المركبات الجديدة بسعاتها المعتمدة", () => {
     const db = freshMigratedDb();
     const vehicleTypes = getVehicleTypes(db);
 
     assert.deepEqual(vehicleTypes, [
-      { id: "hiace", name_ar: "هاي إس", capacity_max: 14 },
-      { id: "private_car", name_ar: "ملاكي", capacity_max: 3 },
+      { id: "daily", name_ar: "Daily", capacity_max: 4 },
+      { id: "max", name_ar: "Max", capacity_max: 13 },
+      { id: "prime", name_ar: "Prime", capacity_max: 3 },
+      { id: "space", name_ar: "Space", capacity_max: 9 },
     ]);
     assert.equal(
       vehicleTypes.some((v) => v.id.toLowerCase().includes("elite")),
@@ -23,9 +25,9 @@ describe("Config domain — القراءة السليمة", () => {
     const categories = getServiceCategories(db);
 
     assert.deepEqual(categories, [
-      { id: "faster", vehicle_type_id: "private_car", name_ar: "فاستر", max_seats: 3, ac_rule: "none" },
-      { id: "plus", vehicle_type_id: "private_car", name_ar: "بلس", max_seats: 3, ac_rule: "required" },
-      { id: "saver", vehicle_type_id: "hiace", name_ar: "سيفر", max_seats: 14, ac_rule: "optional" },
+      { id: "faster", vehicle_type_id: "daily", name_ar: "فاستر", max_seats: 3, ac_rule: "none" },
+      { id: "plus", vehicle_type_id: "daily", name_ar: "بلس", max_seats: 3, ac_rule: "required" },
+      { id: "saver", vehicle_type_id: "max", name_ar: "سيفر", max_seats: 13, ac_rule: "optional" },
     ]);
     assert.equal(
       categories.some((c) => c.id.toLowerCase().includes("elite")),
@@ -90,7 +92,7 @@ describe("Config domain — رفض max_seats > capacity_max (trigger دفاع ث
   it("يرفض تحديث service_category لاحقًا يخليه يتخطى capacity_max", () => {
     const db = freshMigratedDb();
     assert.throws(
-      () => db.prepare("UPDATE service_categories SET max_seats = ? WHERE id = ?").run(4, "faster"),
+      () => db.prepare("UPDATE service_categories SET max_seats = ? WHERE id = ?").run(5, "faster"),
       /exceeds vehicle_types\.capacity_max/,
     );
   });
@@ -98,7 +100,7 @@ describe("Config domain — رفض max_seats > capacity_max (trigger دفاع ث
   it("يرفض تحديث vehicle_types.capacity_max لو هيكسر فئة قائمة مرتبطة بيه", () => {
     const db = freshMigratedDb();
     assert.throws(
-      () => db.prepare("UPDATE vehicle_types SET capacity_max = ? WHERE id = ?").run(10, "hiace"),
+      () => db.prepare("UPDATE vehicle_types SET capacity_max = ? WHERE id = ?").run(10, "max"),
       /would violate/,
     );
   });
@@ -110,7 +112,7 @@ describe("Config domain — رفض max_seats > capacity_max (trigger دفاع ث
         .prepare(
           "INSERT INTO service_categories (id, vehicle_type_id, name_ar, max_seats, ac_rule) VALUES (?, ?, ?, ?, ?)",
         )
-        .run("mini_saver", "hiace", "سيفر ميني", 10, "optional"),
+        .run("mini_saver", "max", "سيفر ميني", 10, "optional"),
     );
   });
 });

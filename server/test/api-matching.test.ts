@@ -19,7 +19,7 @@ const CAPTAIN = {
 };
 
 const VEHICLE = {
-  vehicle_type_id: "private_car",
+  vehicle_type_id: "daily",
   license_number: "LIC-100",
   vehicle_plate: "أ ب ج 100",
 };
@@ -74,7 +74,7 @@ async function setUpApprovedCaptain(
   return row.id;
 }
 
-describe("POST /api/rider/requests — Phase 5: matching أوتوماتيكي فور الإنشاء", () => {
+describe("POST /api/rider/requests — requests stay open until rider chooses a published trip", () => {
   it("مفيش كباتن مؤهلين — الطلب بيتعمل وبيفضل open، match: null", async () => {
     const db = freshMigratedDb();
     const app = createApp(db);
@@ -90,7 +90,7 @@ describe("POST /api/rider/requests — Phase 5: matching أوتوماتيكي ف
     assert.equal(res.body.match, null);
   });
 
-  it("فيه كابتن مؤهل — الطلب بيتطابق فورًا، status='matched'، match مرفق", async () => {
+  it("فيه كابتن مؤهل — لا يتم تعيينه تلقائيًا", async () => {
     const db = freshMigratedDb();
     const app = createApp(db);
     const captainId = await setUpApprovedCaptain(app, db, "01066666610", 30.045, 31.236);
@@ -102,14 +102,14 @@ describe("POST /api/rider/requests — Phase 5: matching أوتوماتيكي ف
       .send(VALID_REQUEST);
 
     assert.equal(res.status, 201);
-    assert.equal(res.body.request.status, "matched");
-    assert.ok(res.body.match);
-    assert.equal(res.body.match.captain_user_id, captainId);
+    assert.equal(res.body.request.status, "open");
+    assert.equal(res.body.match, null);
+    assert.notEqual(captainId, res.body.match?.captain_user_id);
   });
 });
 
-describe("GET /api/rider/requests — Phase 5: تفاصيل الـ Match مرفقة", () => {
-  it("طلب matched بيرجع معاه match، طلب open بيرجع match: null", async () => {
+describe("GET /api/rider/requests — open requests have no final captain assignment", () => {
+  it("الطلب المفتوح يرجع match: null حتى مع وجود كابتن مؤهل", async () => {
     const db = freshMigratedDb();
     const app = createApp(db);
     await setUpApprovedCaptain(app, db, "01066666620", 30.045, 31.236);
@@ -126,13 +126,13 @@ describe("GET /api/rider/requests — Phase 5: تفاصيل الـ Match مرف�
 
     assert.equal(res.status, 200);
     assert.equal(res.body.requests.length, 1);
-    assert.equal(res.body.requests[0].status, "matched");
-    assert.ok(res.body.requests[0].match);
+    assert.equal(res.body.requests[0].status, "open");
+    assert.equal(res.body.requests[0].match, null);
   });
 });
 
-describe("POST /api/rider/requests/:id/match — إعادة محاولة يدوية", () => {
-  it("مفيش كابتن وقت الإنشاء، بعدين كابتن بيبقى متاح — إعادة المحاولة بتنجح", async () => {
+describe("POST /api/rider/requests/:id/match — retry does not assign a captain", () => {
+  it("يظل الطلب مفتوحًا بعد ظهور كابتن مؤهل حتى يختار الراكب رحلة منشورة", async () => {
     const db = freshMigratedDb();
     const app = createApp(db);
     const token = await registerAndLogin(app, RIDER);
@@ -150,11 +150,11 @@ describe("POST /api/rider/requests/:id/match — إعادة محاولة يدو�
       .set("Authorization", `Bearer ${token}`);
 
     assert.equal(retry.status, 200);
-    assert.equal(retry.body.request.status, "matched");
-    assert.ok(retry.body.match);
+    assert.equal(retry.body.request.status, "open");
+    assert.equal(retry.body.match, null);
   });
 
-  it("طلب اتطابق فعلًا — إعادة المحاولة Idempotent، بترجع نفس الـ Match", async () => {
+  it("الطلبات التي طابقت سابقًا تظل تعرض المطابقة التاريخية نفسها", async () => {
     const db = freshMigratedDb();
     const app = createApp(db);
     await setUpApprovedCaptain(app, db, "01066666640", 30.045, 31.236);
@@ -164,14 +164,16 @@ describe("POST /api/rider/requests/:id/match — إعادة محاولة يدو�
       .post("/api/rider/requests")
       .set("Authorization", `Bearer ${token}`)
       .send(VALID_REQUEST);
-    const firstMatchId = created.body.match.id;
+    // Legacy records can still exist in an upgraded database; this test
+    // covers the new path only, where no match is created.
+    assert.equal(created.body.match, null);
 
     const retry = await request(app)
       .post(`/api/rider/requests/${created.body.request.id}/match`)
       .set("Authorization", `Bearer ${token}`);
 
     assert.equal(retry.status, 200);
-    assert.equal(retry.body.match.id, firstMatchId);
+    assert.equal(retry.body.match, null);
   });
 
   it("طلب اتلغى — 409", async () => {

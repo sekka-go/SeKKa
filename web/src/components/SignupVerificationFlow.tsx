@@ -42,7 +42,7 @@ export default function SignupVerificationFlow({ session, notify, onExplore }: {
   const [busy, setBusy] = useState(false);
   const [busyDocument, setBusyDocument] = useState<VerificationDocumentType | null>(null);
   const [telegramUrl, setTelegramUrl] = useState("");
-  const [vehicle, setVehicle] = useState("private_car");
+  const [vehicle, setVehicle] = useState("prime");
   const [license, setLicense] = useState("");
   const [plate, setPlate] = useState("");
   const docs = useMemo(() => new Map((snapshot?.documents ?? []).map((doc) => [doc.document_type, doc])), [snapshot]);
@@ -157,7 +157,7 @@ export default function SignupVerificationFlow({ session, notify, onExplore }: {
             <div className="verification-wizard-heading"><h3>{currentStep.kind === "vehicle" ? t("بيانات المركبة") : currentStep.kind === "phone" ? t("توثيق رقم الهاتف") : t(snapshot.requirements.labels[currentStep.type] ?? currentStep.type)}</h3></div>
             {currentStep.kind === "vehicle" && <form className="form-stack signup-vehicle-form" onSubmit={(event) => void saveVehicle(event)}>
               <p>{t("سجّل بيانات المركبة لبدء مراجعة طلب الكابتن. تبدأ مهلة المستندات المؤجلة بعد إنشاء ملف المركبة.")}</p>
-              <label htmlFor="signup-vehicle-type">{t("نوع المركبة")}<select id="signup-vehicle-type" name="vehicle_type" value={vehicle} onChange={(event) => setVehicle(event.target.value)}><option value="private_car">{t("سيارة خاصة")}</option><option value="hiace">{t("هاي إس")}</option></select></label>
+              <label htmlFor="signup-vehicle-type">{t("فئة المركبة")}<select id="signup-vehicle-type" name="vehicle_type" value={vehicle} onChange={(event) => setVehicle(event.target.value)}><option value="prime">SeKKa Prime · 3 {t("ركاب")}</option><option value="daily">SeKKa Daily · 4 {t("ركاب")}</option><option value="space">SeKKa Space · 9 {t("ركاب")}</option><option value="max">SeKKa Max · 13 {t("راكبًا")}</option></select></label>
               <label htmlFor="signup-license-number">{t("رقم الرخصة")}<input id="signup-license-number" name="license_number" value={license} onChange={(event) => setLicense(event.target.value)} autoComplete="off" required /></label>
               <label htmlFor="signup-plate-number">{t("رقم اللوحة")}<input id="signup-plate-number" name="plate_number" value={plate} onChange={(event) => setPlate(event.target.value)} autoComplete="off" required /></label>
               <button className="button button-primary" disabled={busy}>{busy ? t("لحظة واحدة…") : t("حفظ ومتابعة")}</button>
