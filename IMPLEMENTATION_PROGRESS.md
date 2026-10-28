@@ -20,10 +20,12 @@
 ## Verification
 
 - `pnpm lint`, `pnpm typecheck`, `pnpm test` (201 passed), `pnpm build`, and `git diff --check` passed.
-- `supabase test db --local` could not run because Docker Desktop's Linux engine was unavailable. No production migration was applied.
+- GitHub Actions: project quality, security, routing, and Supabase database/pgTAP checks passed on PR #143.
+- Local `supabase test db` could not connect because Docker Desktop was unavailable; pgTAP passed in GitHub Actions.
 
 ## Remaining rollout work
 
 - The published-line selection screen exists, but its current CTA still enters the legacy group-creation flow. A rider-selected line is not yet persisted as a line-specific join request. Do not describe selection/join as fully implemented until this workflow is connected end-to-end.
-- Apply the two pending Supabase migrations in order before deploying the Edge Function that calls `confirm_trip_payment`; then verify the hosted deployment and runtime.
+- Applied both Supabase migrations to project `uorxfakceqnhxqnaawdy` and deployed Edge Function `sekka-api` version 61. Verified `/config` returns Prime 3, Daily 4, Space 9, and Max 13.
+- The Cloudflare Pages app needs a final live asset check after its Git integration publishes the merged main branch. Direct Cloudflare deployment status is unavailable until the connected Cloudflare account is reauthenticated.
 - Local untracked brand files (`web/src/components/SikkaMark.tsx`, `SikkaSplash.tsx`, `web/src/light-theme.css`) were preserved and are outside this implementation; they are not referenced by the current app.
