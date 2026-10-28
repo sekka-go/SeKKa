@@ -32,6 +32,15 @@ export default function WorkspaceNavigation({
   const roleLabel = t(role === "rider" ? "راكب" : role === "captain" ? "كابتن" : "مدير النظام");
   const sectionLabel = t(role === "rider" ? "مساحة الراكب" : role === "captain" ? "مساحة الكابتن" : "إدارة سِكَّة");
 
+  // Keep the fixed mobile navigation focused on the actions people use most.
+  // Less frequent destinations remain available in the full navigation drawer.
+  const mobileKeys: Record<Role, NavKey[]> = {
+    rider: ["home", "trips", "requests", "messages", "account"],
+    captain: ["offers", "publish", "captainRequests", "captainTrips", "captainEarnings"],
+    admin: ["admin", "adminUsers", "broadcast"],
+  };
+  const mobileItems = items.filter((item) => mobileKeys[role].includes(item.key)).slice(0, 5);
+
   const renderItem = (item: WorkspaceNavItem, placement: "sidebar" | "mobile" = "sidebar") => {
     const active = notificationsOpen ? item.key === "notifications" : activeSection === item.key;
     return <button
@@ -75,7 +84,7 @@ export default function WorkspaceNavigation({
       </button>
       <button type="button" className="sidebar-signout" onClick={onSignOut}><AppIcon name="logout" size={18} />{t("تسجيل الخروج")}</button>
     </aside>
-    <nav className="mobile-tabbar" aria-label={t("التنقل الرئيسي")}>{items.map((item) => renderItem(item, "mobile"))}</nav>
+    <nav className="mobile-tabbar" aria-label={t("التنقل الرئيسي")}>{mobileItems.map((item) => renderItem(item, "mobile"))}</nav>
     {open && <button type="button" className="sidebar-scrim" onClick={onClose} aria-label={t("إغلاق القائمة")} />}
   </>;
 }

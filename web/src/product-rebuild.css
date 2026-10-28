@@ -1,0 +1,183 @@
+/* SeKKa interface reconstruction. This layer is intentionally last so every
+   existing workflow shares one responsive visual language without changing
+   route, API, or business-state behavior. */
+:root {
+  --color-background: #0c1716;
+  --color-surface: #122220;
+  --color-surface-raised: #1a302c;
+  --color-border: #36534d;
+  --color-text: #f2f8f5;
+  --color-text-primary: #f2f8f5;
+  --color-text-secondary: #b6cbc4;
+  --color-text-muted: #a8c0b8;
+  --color-primary: #18c28b;
+  --color-primary-text: #06251b;
+  --color-accent: #57dfb2;
+  --color-accent-text: #57dfb2;
+  --color-secondary: #55ceb8;
+  --color-icon: #57dfb2;
+  --color-success: #62dba4;
+  --color-warning: #f3bf59;
+  --color-error: #ff9898;
+  --color-danger: #ff9898;
+  --color-info: #85c8ff;
+  --color-input-background: #142722;
+  --color-input-text: #f2f8f5;
+  --color-placeholder: #9bb3ab;
+  --color-disabled: #8ba099;
+  --color-overlay: rgb(5 17 15 / 70%);
+  --color-navigation-background: rgb(14 29 26 / 96%);
+  --color-navigation-active: rgb(24 194 139 / 15%);
+  --color-hover: rgb(255 255 255 / 6%);
+  --color-focus: #6ee7b7;
+  --color-shadow: rgb(1 13 10 / 24%);
+  --color-soft-accent: rgb(24 194 139 / 10%);
+  --color-soft-cyan: rgb(85 206 184 / 10%);
+  --radius-card: 1.2rem;
+  --radius-control: .85rem;
+  --space-card: 1.15rem;
+  --touch-target-min: 44px;
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --color-background: #f4f8f6;
+  --color-surface: #ffffff;
+  --color-surface-raised: #edf6f2;
+  --color-border: #cbded6;
+  --color-text: #122923;
+  --color-text-primary: #122923;
+  --color-text-secondary: #48645b;
+  --color-text-muted: #547067;
+  --color-primary: #008761;
+  --color-primary-text: #ffffff;
+  --color-accent: #007957;
+  --color-accent-text: #007957;
+  --color-secondary: #087c77;
+  --color-icon: #007957;
+  --color-success: #176b49;
+  --color-warning: #805600;
+  --color-error: #a12622;
+  --color-danger: #a12622;
+  --color-info: #155b83;
+  --color-input-background: #f5faf8;
+  --color-input-text: #122923;
+  --color-placeholder: #627a72;
+  --color-disabled: #60756e;
+  --color-overlay: rgb(15 38 30 / 48%);
+  --color-navigation-background: rgb(255 255 255 / 96%);
+  --color-navigation-active: #d8f7e9;
+  --color-hover: #edf7f2;
+  --color-focus: #008761;
+  --color-shadow: rgb(18 41 34 / 8%);
+  --color-soft-accent: #e6f7ef;
+  --color-soft-cyan: #e7f5f3;
+  color-scheme: light;
+}
+
+html, body, #root { min-height: 100%; }
+body { background: var(--color-background); color: var(--color-text); }
+button, input, select, textarea { font-family: inherit; }
+.app-shell, .workspace, .workspace .main-area, .workspace .page-content,
+.auth-page, .landing-page { color: var(--color-text-primary); background: var(--color-background); }
+
+/* Public entry and account access */
+.landing-page {
+  background: radial-gradient(ellipse at 82% 12%, color-mix(in srgb, var(--color-primary) 11%, transparent), transparent 34rem), var(--color-background);
+}
+.landing-header, .auth-page-header { border-color: var(--color-border); }
+.landing-header { width: min(100%, 90rem); min-height: 4.75rem; padding-inline: clamp(1rem, 5vw, 4rem); }
+.stitch-welcome-availability { color: var(--color-text-secondary); }
+.landing-hero { width: min(100%, 90rem); min-height: 34rem; gap: clamp(2rem, 6vw, 6rem); }
+.landing-hero-copy { max-width: 42rem; }
+.landing-hero h1 { max-width: 13ch; font-size: clamp(2.9rem, 6vw, 5.2rem); line-height: 1.12; letter-spacing: -.035em; }
+.landing-hero h1 em { color: var(--color-accent-text); }
+.landing-hero-copy > p { max-width: 34rem; color: var(--color-text-secondary); }
+.landing-primary-cta, .button-primary { color: var(--color-primary-text); background: var(--color-primary); border-color: var(--color-primary); }
+.landing-trust { color: var(--color-text-secondary); }
+.landing-trust-dot { background: var(--color-success); box-shadow: 0 0 0 .25rem color-mix(in srgb, var(--color-success) 18%, transparent); }
+.landing-story { width: min(100%, 32rem); border-color: var(--color-border); border-radius: 1.5rem; background: var(--color-surface); box-shadow: 0 1.4rem 4rem var(--color-shadow); }
+.landing-story-stage { min-height: 0; }
+.landing-story-caption { color: var(--color-text-primary); }
+.landing-story-dots button.is-active { background: var(--color-primary); }
+.stitch-welcome-benefits { width: min(100% - 2rem, 78rem); margin-inline: auto; border-color: var(--color-border); }
+.stitch-welcome-benefits > div { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 1rem; }
+.stitch-welcome-benefits > div > span { color: var(--color-accent-text); background: var(--color-soft-accent); }
+.stitch-welcome-benefits p, .landing-how-it-works p { color: var(--color-text-secondary); }
+.landing-how-it-works { width: min(100% - 2rem, 78rem); margin-inline: auto; }
+.landing-how-grid article { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 1rem; }
+.landing-how-grid article > span { color: var(--color-primary-text); background: var(--color-primary); }
+
+.auth-page { position: relative; min-height: 100svh; overflow-x: clip; background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--color-primary) 9%, transparent), transparent 36rem), var(--color-background); }
+.auth-page-header { position: relative; z-index: 2; width: min(100%, 80rem); min-height: 4.5rem; }
+.auth-page-header > .stitch-language-toggle { margin-inline-start: auto; }
+.auth-page-content { position: relative; z-index: 1; width: min(100%, 80rem); min-height: calc(100svh - 5rem); margin-inline: auto; }
+.auth-card { border-color: var(--color-border); background: var(--color-surface); box-shadow: 0 1.5rem 4rem var(--color-shadow); }
+.auth-heading p, .auth-switch { color: var(--color-text-secondary); }
+.auth-route-art { position: absolute; inset: 14% 8% auto; height: min(55vh, 26rem); opacity: .2; }
+.auth-route-line { position: absolute; inset: 20% 15%; border: 2px dashed var(--color-accent); border-radius: 46% 54% 39% 61% / 50% 38% 62% 50%; transform: rotate(-17deg); }
+.auth-route-stop, .auth-route-node { position: absolute; display: block; border-radius: 50%; }
+.auth-route-stop { width: 1rem; height: 1rem; background: var(--color-primary); box-shadow: 0 0 0 .45rem color-mix(in srgb, var(--color-primary) 18%, transparent); }
+.auth-route-stop--start { inset: 31% auto auto 18%; }
+.auth-route-stop--end { inset: auto 18% 27% auto; }
+.auth-route-node { width: .45rem; height: .45rem; background: var(--color-secondary); }
+.auth-route-node--one { inset: 33% 33% auto auto; }
+.auth-route-node--two { inset: auto auto 28% 36%; }
+.auth-route-car { position: absolute; inset: 44% auto auto 54%; display: grid; place-items: center; width: 3rem; height: 3rem; border-radius: 1rem; color: var(--color-primary); background: var(--color-surface); box-shadow: 0 .5rem 1.4rem var(--color-shadow); transform: rotate(-12deg); }
+
+/* Shared workspace architecture across rider, captain, messaging and admin. */
+.workspace { min-height: 100dvh; }
+.workspace .topbar { border-color: var(--color-border); box-shadow: 0 4px 18px var(--color-shadow); }
+.workspace .sidebar { border-color: var(--color-border); }
+.workspace .nav-item.nav-active { color: var(--color-text-primary); }
+.workspace .nav-item.nav-active .nav-icon { color: var(--color-accent-text); }
+.workspace .page-heading { margin-block-end: clamp(1rem, 3vw, 1.6rem); padding-block-end: 1rem; border-block-end: 1px solid var(--color-border); }
+.workspace .page-heading h1 { font-size: clamp(1.55rem, 3vw, 2rem); line-height: 1.25; letter-spacing: -.02em; }
+.workspace .page-heading p { max-width: 62ch; }
+.workspace .page-content > :not(.page-heading) { min-width: 0; }
+.app-shell :is(.surface, .offer-card, .route-offer-card, .account-card, .metric-card, .notification-item, .messages-inbox, .messages-thread) {
+  border-color: var(--color-border);
+  box-shadow: 0 8px 24px var(--color-shadow);
+}
+.app-shell :is(.surface, .account-card, .help-card, .settings-disclosure) { background-color: var(--color-surface); }
+.app-shell :is(.soft-surface, .offer-toolbar, .booking-stepper, .stitch-search-card) { background-color: var(--color-surface-raised); }
+.app-shell :is(.page-heading p, .surface p, .muted-text, .rider-section-intro p) { color: var(--color-text-secondary); }
+.app-shell :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) { background-color: var(--color-input-background); border-color: var(--color-border); }
+.app-shell :is(.button-primary, button.button-primary, .landing-primary-cta) { box-shadow: 0 5px 14px color-mix(in srgb, var(--color-primary) 22%, transparent); }
+.app-shell :is(button, a, input, select, textarea, summary):focus-visible { outline-color: var(--color-focus); }
+
+@media (max-width: 760px) {
+  .workspace .page-content { padding: 1rem .9rem calc(6rem + env(safe-area-inset-bottom)); }
+  .workspace .page-heading { margin-block-end: 1rem; padding-block-end: .8rem; }
+  .workspace .mobile-tabbar { display: grid; grid-template-columns: repeat(var(--mobile-tab-count, 5), minmax(0, 1fr)); gap: .15rem; }
+  .workspace .mobile-tabbar .nav-item { min-width: 0; min-height: 3.45rem; padding: .35rem .15rem; gap: .18rem; }
+  .workspace .mobile-tabbar .nav-label { max-width: 100%; overflow: hidden; font-size: clamp(.58rem, 2.4vw, .7rem); text-overflow: ellipsis; white-space: nowrap; }
+  .workspace .mobile-tabbar:has(.nav-item:nth-child(3):last-child) { --mobile-tab-count: 3; }
+  .workspace .mobile-tabbar .nav-count { inset-block-start: 0; inset-inline-end: 8%; }
+  .landing-header { min-height: 4rem; padding: .75rem 1rem; }
+  .landing-hero { min-height: auto; padding: 2.25rem 1rem 2rem; gap: 1.5rem; }
+  .landing-hero h1 { max-width: 12ch; font-size: clamp(2.5rem, 10vw, 3.5rem); }
+  .landing-hero-copy > p { font-size: 1rem; line-height: 1.75; }
+  .landing-hero-actions { flex-direction: row; align-items: center; gap: .9rem; }
+  .landing-story { width: min(100%, 28rem); }
+  .stitch-welcome-benefits { width: min(100% - 2rem, 42rem); }
+  .landing-how-it-works { width: min(100% - 2rem, 42rem); }
+  .auth-page { min-height: 100svh; padding-inline: 1rem; }
+  .auth-page-header { min-height: 3.75rem; padding-block: .5rem; }
+  .auth-page-content { min-height: calc(100svh - 3.75rem); padding-block: 1rem 2rem; }
+  .auth-card { width: min(100%, 32rem); }
+  .auth-route-art { inset-block-start: 18%; inset-inline: 2%; height: 45vh; }
+}
+
+@media (max-width: 560px) {
+  html:has(.auth-page), body:has(.auth-page), #root:has(.auth-page), .app-shell:has(.auth-page) { height: auto; min-height: 100%; overflow: visible; }
+  .auth-page { display: block; height: auto; max-height: none; overflow-y: auto; }
+  .auth-page-content { display: grid; align-content: start; }
+  .auth-card { padding: 1.15rem; }
+  .auth-register-card .form-stack label.auth-consent-check { white-space: normal; }
+  .auth-route-art { opacity: .12; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
