@@ -25,7 +25,7 @@ function createApprovedCaptain(
   db.prepare(
     `INSERT INTO captain_profiles
        (user_id, vehicle_type_id, license_number, vehicle_plate, verification_status, current_lat, current_lng)
-     VALUES (?, 'private_car', 'LIC', 'PLT', 'approved', ?, ?)`,
+     VALUES (?, 'daily', 'LIC', 'PLT', 'approved', ?, ?)`,
   ).run(userId, lat, lng);
   return userId;
 }
@@ -52,7 +52,7 @@ describe("Migration 005 — captain_profiles.current_lat/current_lng", () => {
     });
     db.prepare(
       `INSERT INTO captain_profiles (user_id, vehicle_type_id, license_number, vehicle_plate)
-       VALUES (?, 'private_car', 'L', 'P')`,
+       VALUES (?, 'daily', 'L', 'P')`,
     ).run(userId);
 
     const row = db
@@ -73,14 +73,14 @@ describe("Migration 005 — captain_profiles.current_lat/current_lng", () => {
     assert.throws(() => {
       db.prepare(
         `INSERT INTO captain_profiles (user_id, vehicle_type_id, license_number, vehicle_plate, current_lat)
-         VALUES (?, 'private_car', 'L', 'P', 999)`,
+         VALUES (?, 'daily', 'L', 'P', 999)`,
       ).run(userId);
     });
 
     assert.throws(() => {
       db.prepare(
         `INSERT INTO captain_profiles (user_id, vehicle_type_id, license_number, vehicle_plate, current_lng)
-         VALUES (?, 'private_car', 'L', 'P', -999)`,
+         VALUES (?, 'daily', 'L', 'P', -999)`,
       ).run(userId);
     });
   });

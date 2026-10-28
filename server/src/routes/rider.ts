@@ -9,7 +9,6 @@ import {
   findDailyCommuteRequestsByRiderId,
 } from "../db/booking-repository.js";
 import { requireAuth } from "../middleware/require-auth.js";
-import { runAutomaticMatching } from "../matching/engine.js";
 import { findMatchByRequestId } from "../db/matching-repository.js";
 import { findCompletedTripsByRiderId, findTripStopsByTripId, findTripWithContextById } from "../db/trip-repository.js";
 import { currentPaymentStatus, findPaymentByTripId, insertPaymentStatusEvent } from "../db/payment-repository.js";
@@ -90,19 +89,9 @@ export function createRiderRouter(db: DatabaseSync): Router {
       return;
     }
 
-    // Phase 5 — Matching أوتوماتيكي فورًا بعد الإنشاء (قرار #1 من المالك،
-    // مفيش خطوة موافقة كابتن). لو مفيش كابتن مؤهل دلوقتي، الطلب بيفضل
-    // 'open' عادي — ده مش خطأ، ممكن يتحاول تاني عبر /match لاحقًا.
-    const matchOutcome = runAutomaticMatching(db, commuteRequest.id);
-    const finalRequest =
-      matchOutcome.outcome === "matched"
-        ? findDailyCommuteRequestById(db, commuteRequest.id)!
-        : commuteRequest;
-
-    res.status(201).json({
-      request: finalRequest,
-      match: matchOutcome.outcome === "matched" ? matchOutcome.match : null,
-    });
+    // Keep demand requests open. Riders choose from published captain lines;
+    // this legacy request endpoint must not assign a captain automatically.
+    res.status(201).json({ request: commuteRequest, match: null });
   });
 
   // GET /api/rider/requests — طلبات صاحب الجلسة بس (مش طلبات راكب تاني).
@@ -141,21 +130,18 @@ export function createRiderRouter(db: DatabaseSync): Router {
       return;
     }
 
-    const outcome = runAutomaticMatching(db, id);
-
-    if (outcome.outcome === "matched" || outcome.outcome === "already_matched") {
+    if (existing.status === "matched") {
       res.status(200).json({
         request: findDailyCommuteRequestById(db, id),
-        match: outcome.match,
+        match: findMatchByRequestId(db, id),
       });
       return;
     }
-
-    if (outcome.outcome === "no_eligible_captain") {
+    if (existing.status === "open") {
       res.status(200).json({
-        request: findDailyCommuteRequestById(db, id),
+        request: existing,
         match: null,
-        message: "لسه مفيش كابتن متاح، الطلب لسه مفتوح.",
+        message: "الطلب ما زال مفتوحًا. اختر رحلة منشورة من صفحة الرحلات.",
       });
       return;
     }

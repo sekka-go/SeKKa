@@ -711,33 +711,6 @@ async function groupView(group: Json) {
 }
 
 
-async function automaticMatch(request: Json) {
-  const requestId = Number(request.id);
-  if (request.status === "matched") {
-    const { data: existing } = await db!.from("matches").select("*").eq("daily_commute_request_id", requestId).maybeSingle();
-    return { request, match: existing, already_matched: true };
-  }
-  if (request.status !== "open") return { request, match: null, not_open: true };
-  const { data: category, error: categoryError } = await db!.from("service_categories").select("vehicle_type_id").eq("id", request.service_category_id).maybeSingle();
-  if (categoryError) throw categoryError;
-  if (!category) return { request, match: null };
-  const { data: verifiedUsers, error: usersError } = await db!.from("users").select("id,verified_at").eq("role", "captain").not("verified_at", "is", null);
-  if (usersError) throw usersError;
-  const ids = (verifiedUsers ?? []).map(x => x.id);
-  if (!ids.length) return { request, match: null };
-  const { data: profiles, error: profilesError } = await db!.from("captain_profiles").select("user_id,vehicle_type_id,current_lat,current_lng,created_at").eq("verification_status", "approved").eq("vehicle_type_id", category.vehicle_type_id).not("current_lat", "is", null).not("current_lng", "is", null).in("user_id", ids);
-  if (profilesError) throw profilesError;
-  const ranked = (profiles ?? []).map(p => ({ ...p, distance_km: distanceKm({ lat: Number(request.pickup_lat), lng: Number(request.pickup_lng) }, { lat: Number(p.current_lat), lng: Number(p.current_lng) }) })).sort((a,b) => a.distance_km-b.distance_km || String(a.created_at).localeCompare(String(b.created_at)) || Number(a.user_id)-Number(b.user_id));
-  for (const candidate of ranked) {
-    const { data: match, error: matchError } = await db!.from("matches").insert({ daily_commute_request_id: requestId, captain_user_id: candidate.user_id, distance_km: candidate.distance_km }).select().maybeSingle();
-    if (!matchError && match) return { request: { ...request, status: "matched" }, match };
-    const { data: existing } = await db!.from("matches").select("*").eq("daily_commute_request_id", requestId).maybeSingle();
-    if (existing) return { request: { ...request, status: "matched" }, match: existing };
-    if (matchError?.code !== "23505") throw matchError;
-  }
-  return { request, match: null };
-}
-
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin") ?? "";
   if (req.method === "OPTIONS") return reply({}, 204, origin);
@@ -768,7 +741,7 @@ Deno.serve(async (req: Request) => {
       return reply({ status: "ok", service: "sekka-supabase-api", phase: 14, time: new Date().toISOString() }, 200, origin);
     }
     if (req.method === "GET" && path === "/config") {
-      const [vehicles, categories] = await Promise.all([db.from("vehicle_types").select("*").order("id"), db.from("service_categories").select("*").order("id")]);
+      const [vehicles, categories] = await Promise.all([db.from("vehicle_types").select("*").in("id", ["prime", "daily", "space", "max"]).order("id"), db.from("service_categories").select("*").order("id")]);
       if (vehicles.error || categories.error) return error("حصل خطأ ونحن بنجيب الإعدادات، جرّب تاني بعد شوية.", 500, origin);
       return reply({ vehicle_types: vehicles.data, service_categories: categories.data, maps: { address_search_enabled: true, provider: "photon+nominatim", routing_provider: "osrm", service_area: "greater-cairo" } }, 200, origin);
     }
@@ -1132,8 +1105,7 @@ Deno.serve(async (req: Request) => {
         if (!clean(body.service_category_id) || !validPoint(body.pickup_lat, body.pickup_lng) || !validPoint(body.dropoff_lat, body.dropoff_lng)) return error("فئة الخدمة أو إحداثيات الرحلة غير صحيحة.", 400, origin);
         const { data: request, error: insertError } = await db.from("daily_commute_requests").insert({ rider_user_id: user!.id, service_category_id: body.service_category_id, pickup_lat: body.pickup_lat, pickup_lng: body.pickup_lng, dropoff_lat: body.dropoff_lat, dropoff_lng: body.dropoff_lng }).select().single();
         if (insertError) throw insertError;
-        const result = await automaticMatch(request);
-        return reply({ request: result.request, match: result.match }, 201, origin);
+        return reply({ request, match: null }, 201, origin);
       }
       if (req.method === "GET") {
         const { data: requests, error: queryError } = await db.from("daily_commute_requests").select("*").eq("rider_user_id", user!.id).order("requested_at", { ascending: false });
@@ -1150,7 +1122,11 @@ Deno.serve(async (req: Request) => {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
       if (req.method === "POST") {
         const activationGate = await requireVerificationActivation(user!, origin); if (activationGate) return activationGate;
-        if (!(["private_car", "hiace"].includes(String(body.vehicle_type_id))) || !validIsoDate(body.trip_date) || String(body.trip_date) < cairoDateKey() || normalizeClock(body.arrival_time) !== body.arrival_time || (body.return_arrival_time != null && normalizeClock(body.return_arrival_time) !== body.return_arrival_time) || !clean(body.pickup_label) || !clean(body.dropoff_label) || !validPoint(body.pickup_lat, body.pickup_lng) || !validPoint(body.dropoff_lat, body.dropoff_lng) || !isGreaterCairoPoint(Number(body.pickup_lat), Number(body.pickup_lng)) || !isGreaterCairoPoint(Number(body.dropoff_lat), Number(body.dropoff_lng))) return error("راجع نوع المركبة والتاريخ والوقت ونقطتي الركوب والوصول داخل القاهرة الكبرى.", 400, origin);
+        const capacityByClass = { prime: 3, daily: 4, space: 9, max: 13 } as const;
+        const capacity = capacityByClass[body.vehicle_type_id as keyof typeof capacityByClass];
+        const requestedSeats = Number(body.seats ?? 1);
+        if (!capacity || !Number.isInteger(requestedSeats) || requestedSeats < 1 || requestedSeats > capacity) return error("عدد المقاعد يتجاوز سعة فئة المركبة.", 400, origin);
+        if (!(["prime", "daily", "space", "max"].includes(String(body.vehicle_type_id))) || !validIsoDate(body.trip_date) || String(body.trip_date) < cairoDateKey() || normalizeClock(body.arrival_time) !== body.arrival_time || (body.return_arrival_time != null && normalizeClock(body.return_arrival_time) !== body.return_arrival_time) || !clean(body.pickup_label) || !clean(body.dropoff_label) || !validPoint(body.pickup_lat, body.pickup_lng) || !validPoint(body.dropoff_lat, body.dropoff_lng) || !isGreaterCairoPoint(Number(body.pickup_lat), Number(body.pickup_lng)) || !isGreaterCairoPoint(Number(body.dropoff_lat), Number(body.dropoff_lng))) return error("راجع نوع المركبة والتاريخ والوقت ونقطتي الركوب والوصول داخل القاهرة الكبرى.", 400, origin);
         const { data, error: createError } = await db.rpc("create_demand_request", { actor_id: user!.id, vehicle_id: body.vehicle_type_id, trip_on: body.trip_date, arrives: body.arrival_time, return_arrives: body.return_arrival_time ?? null, pickup_name: body.pickup_label.trim(), pickup_y: body.pickup_lat, pickup_x: body.pickup_lng, dropoff_name: body.dropoff_label.trim(), dropoff_y: body.dropoff_lat, dropoff_x: body.dropoff_lng, seat_count: Number(body.seats ?? 1) });
         if (createError) {
           if (createError.code === "42501") return error("يلزم توثيق الحساب ورقم الهاتف لإرسال طلب الرحلة.", 403, origin);
@@ -1253,7 +1229,7 @@ Deno.serve(async (req: Request) => {
     }
     if (req.method === "POST" && path === "/rider/lines/search") {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
-      if (!(["private_car", "hiace"].includes(String(body.vehicle_type_id))) || !validIsoDate(body.trip_date) || String(body.trip_date) < cairoDateKey() || normalizeClock(body.arrival_time) !== body.arrival_time || (body.return_arrival_time != null && normalizeClock(body.return_arrival_time) !== body.return_arrival_time) || !validPoint(body.pickup_lat, body.pickup_lng) || !validPoint(body.dropoff_lat, body.dropoff_lng) || !isGreaterCairoPoint(Number(body.pickup_lat), Number(body.pickup_lng)) || !isGreaterCairoPoint(Number(body.dropoff_lat), Number(body.dropoff_lng))) return error("راجع بيانات البحث عن المسار.", 400, origin);
+      if (!(["prime", "daily", "space", "max"].includes(String(body.vehicle_type_id))) || !validIsoDate(body.trip_date) || String(body.trip_date) < cairoDateKey() || normalizeClock(body.arrival_time) !== body.arrival_time || (body.return_arrival_time != null && normalizeClock(body.return_arrival_time) !== body.return_arrival_time) || !validPoint(body.pickup_lat, body.pickup_lng) || !validPoint(body.dropoff_lat, body.dropoff_lng) || !isGreaterCairoPoint(Number(body.pickup_lat), Number(body.pickup_lng)) || !isGreaterCairoPoint(Number(body.dropoff_lat), Number(body.dropoff_lng))) return error("راجع بيانات البحث عن المسار.", 400, origin);
       const day = new Date(`${body.trip_date}T12:00:00Z`).getUTCDay();
       const { data: config, error: configError } = await db.from("app_config").select("config_key,numeric_value").in("config_key", ["demand_route_radius_km", "demand_arrival_window_minutes"]);
       if (configError) throw configError;
@@ -1352,9 +1328,13 @@ Deno.serve(async (req: Request) => {
       if (queryError) throw queryError;
       if (!request) return error("الطلب ده مش موجود.", 404, origin);
       if (Number(request.rider_user_id) !== user!.id) return error("الطلب ده مش بتاعك.", 403, origin);
-      const result = await automaticMatch(request);
-      if (result.not_open) return error("الطلب ده لم يعد مفتوحًا للمطابقة.", 409, origin);
-      return reply({ request: result.request, match: result.match }, 200, origin);
+      if (request.status === "matched") {
+        const { data: match, error: matchError } = await db.from("matches").select("*").eq("daily_commute_request_id", request.id).maybeSingle();
+        if (matchError) throw matchError;
+        return reply({ request, match }, 200, origin);
+      }
+      if (request.status !== "open") return error("الطلب ده لم يعد مفتوحًا.", 409, origin);
+      return reply({ request, match: null, message: "الطلب ما زال مفتوحًا. اختر رحلة منشورة من صفحة الرحلات." }, 200, origin);
     }
     const dailyCancel = path.match(/^\/rider\/requests\/(\d+)\/cancel$/);
     if (req.method === "POST" && dailyCancel) {
@@ -2018,7 +1998,7 @@ Deno.serve(async (req: Request) => {
         const methods = Array.isArray(body.payment_methods) ? body.payment_methods.map(String) : [];
         const arrival = String(body.arrival_time ?? "");
         const returnArrival = body.return_arrival_time == null || body.return_arrival_time === "" ? null : String(body.return_arrival_time);
-        const maxSeats = profile.vehicle_type_id === "private_car" ? 4 : profile.vehicle_type_id === "hiace" ? 14 : 0;
+        const maxSeats = Number(vehicle?.capacity_max ?? 0);
         if (!vehicle || maxSeats === 0 || Number(vehicle.capacity_max) < maxSeats || String(body.vehicle_type_id) !== String(profile.vehicle_type_id) || !clean(body.origin_label) || !clean(body.destination_label) || !validPoint(body.origin_lat, body.origin_lng) || !validPoint(body.destination_lat, body.destination_lng) || !isGreaterCairoPoint(Number(body.origin_lat), Number(body.origin_lng)) || !isGreaterCairoPoint(Number(body.destination_lat), Number(body.destination_lng)) || !/^\d{2}:\d{2}$/.test(arrival) || (returnArrival != null && !/^\d{2}:\d{2}$/.test(returnArrival)) || !days.length || days.some((d) => !Number.isInteger(d) || d < 0 || d > 6) || new Set(days).size !== days.length || !Number.isInteger(Number(body.seats)) || Number(body.seats) < 1 || Number(body.seats) > maxSeats || !methods.length || methods.some((m) => !["cash", "instapay", "wallet"].includes(m))) return error("راجع المسار والأيام والمقاعد وطريقة الدفع.", 400, origin);
         if (body.intermediate_stops != null && !Array.isArray(body.intermediate_stops)) return error("بيانات المحطات الوسيطة غير صحيحة.", 400, origin);
         const stops = Array.isArray(body.intermediate_stops) ? body.intermediate_stops : [];
@@ -2056,7 +2036,7 @@ Deno.serve(async (req: Request) => {
         const methods = Array.isArray(body.payment_methods) ? body.payment_methods.map(String) : [];
         const arrival = String(body.arrival_time ?? "");
         const returnArrival = body.return_arrival_time == null || body.return_arrival_time === "" ? null : String(body.return_arrival_time);
-        const maxSeats = profile.vehicle_type_id === "private_car" ? 4 : profile.vehicle_type_id === "hiace" ? 14 : 0;
+        const maxSeats = Number(vehicle?.capacity_max ?? 0);
         if (!vehicle || maxSeats === 0 || Number(vehicle.capacity_max) < maxSeats || String(body.vehicle_type_id) !== String(profile.vehicle_type_id) || !clean(body.origin_label) || !clean(body.destination_label) || !validPoint(body.origin_lat, body.origin_lng) || !validPoint(body.destination_lat, body.destination_lng) || !isGreaterCairoPoint(Number(body.origin_lat), Number(body.origin_lng)) || !isGreaterCairoPoint(Number(body.destination_lat), Number(body.destination_lng)) || !/^\d{2}:\d{2}$/.test(arrival) || (returnArrival != null && !/^\d{2}:\d{2}$/.test(returnArrival)) || !days.length || days.some((d) => !Number.isInteger(d) || d < 0 || d > 6) || new Set(days).size !== days.length || !Number.isInteger(Number(body.seats)) || Number(body.seats) < 1 || Number(body.seats) > maxSeats || !methods.length || methods.some((m) => !["cash", "instapay", "wallet"].includes(m))) return error("راجع المسار والأيام والمقاعد وطريقة الدفع.", 400, origin);
         if (body.intermediate_stops != null && !Array.isArray(body.intermediate_stops)) return error("بيانات المحطات الوسيطة غير صحيحة.", 400, origin);
         const stops = Array.isArray(body.intermediate_stops) ? body.intermediate_stops : [];
@@ -2105,7 +2085,7 @@ Deno.serve(async (req: Request) => {
       }
       if (req.method === "POST" && path === "/captain/profile") {
         const { vehicle_type_id, license_number, vehicle_plate } = body;
-        if (!clean(vehicle_type_id) || !clean(license_number) || !clean(vehicle_plate)) return error("بيانات المركبة والرخصة مطلوبة.", 400, origin);
+        if (!new Set(["prime", "daily", "space", "max"]).has(String(vehicle_type_id)) || !clean(license_number) || !clean(vehicle_plate)) return error("فئة المركبة أو بيانات الرخصة غير صحيحة.", 400, origin);
         const { data: profile, error: pe } = await db.from("captain_profiles").upsert({ user_id: user!.id, vehicle_type_id, license_number, vehicle_plate }, { onConflict: "user_id", ignoreDuplicates: true }).select().maybeSingle();
         if (pe) throw pe;
         if (profile) return reply({ profile }, 200, origin);
@@ -2329,15 +2309,12 @@ Deno.serve(async (req: Request) => {
         if (stops?.some((s) => !s.reached_at)) return error("لا يمكن إنهاء الرحلة قبل تسجيل الوصول لكل النقاط.", 409, origin);
         const { data: group } = await db.from("pool_groups").select("package_type,seat_day_fare").eq("id", trip.group_id).single();
         if (!group) return error("بيانات المجموعة المرتبطة بالرحلة غير متاحة.", 500, origin);
-        const { data: commissionSetting, error: commissionError } = await db.from("admin_system_settings").select("numeric_value").eq("setting_key", "company_commission_rate").maybeSingle();
-        if (commissionError) throw commissionError;
-        const commissionRate = number(Number(commissionSetting?.numeric_value)) ? Number(commissionSetting!.numeric_value) : 0.2;
         const { data: members } = await db.from("pool_members").select("*").eq("group_id", trip.group_id).eq("status", "active");
         for (const m of members ?? []) {
           const listAmount = roundMoney(Number(group.seat_day_fare) * Number(m.seats_reserved));
           const discount = discountRate(group.package_type);
           const riderAmount = roundMoney(listAmount * (1 - discount));
-          await db.from("pool_ledger").upsert({ trip_id: tripId, member_id: m.id, list_amount: listAmount, rider_amount: riderAmount, discount_amount: roundMoney(listAmount - riderAmount), captain_share_amount: roundMoney(listAmount * (1 - commissionRate)), company_share_amount: roundMoney(Math.max(0, listAmount * commissionRate - (listAmount - riderAmount))), company_commission_rate: commissionRate, settlement_status: "pending" }, { onConflict: "trip_id,member_id" });
+          await db.from("pool_ledger").upsert({ trip_id: tripId, member_id: m.id, list_amount: listAmount, rider_amount: riderAmount, discount_amount: roundMoney(listAmount - riderAmount), captain_share_amount: riderAmount, company_share_amount: 0, company_commission_rate: 0, settlement_status: "pending" }, { onConflict: "trip_id,member_id" });
         }
         const { error: e } = await db.from("pool_trips").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", tripId).eq("captain_user_id", user!.id);
         if (e) throw e;
@@ -2409,11 +2386,7 @@ Deno.serve(async (req: Request) => {
         const { data: completed, error: completeError } = await db.from("trips").update({ status: "completed", completed_at: new Date().toISOString(), total_distance_km: roundMoney(totalDistance), total_amount: roundMoney(totalAmount) }).eq("id", tripId).eq("status", "in_progress").select().maybeSingle();
         if (completeError) throw completeError;
         if (!completed) return error("الرحلة اتقفلت بالفعل.", 409, origin);
-        const { data: existingPayment } = await db.from("payments").select("*").eq("trip_id", tripId).maybeSingle();
-        if (existingPayment) return reply({ trip: completed, payment: existingPayment }, 200, origin);
-        const { data: payment, error: paymentError } = await db.from("payments").insert({ trip_id: tripId, amount: totalAmount, reported_by_user_id: user!.id }).select().single();
-        if (paymentError) throw paymentError;
-        return reply({ trip: completed, payment }, 200, origin);
+        return reply({ trip: completed, payment: null, payment_status: "awaiting_captain_confirmation" }, 200, origin);
       }
       if (req.method === "GET" && path === "/captain/earnings") {
         const { data: matches, error: matchesError } = await db.from("matches").select("id").eq("captain_user_id", user!.id);
@@ -2428,6 +2401,21 @@ Deno.serve(async (req: Request) => {
           earnings.push({ trip, stops: stops ?? [], payment: payment ?? null });
         }
         return reply({ earnings, total_amount: earnings.reduce((sum, item) => sum + Number(item.payment?.amount ?? 0), 0) }, 200, origin);
+      }
+
+      const confirmDailyPayment = path.match(/^\/captain\/trips\/(\d+)\/confirm-payment$/);
+      if (req.method === "POST" && confirmDailyPayment) {
+        const amount = Number(body.amount);
+        if (!number(amount) || amount <= 0) return error("أدخل المبلغ الذي استلمته فعليًا.", 400, origin);
+        const { data, error: confirmError } = await db.rpc("confirm_trip_payment", {
+          actor_id: user!.id, trip_id: Number(confirmDailyPayment[1]), actual_amount: amount,
+        });
+        if (confirmError) {
+          if (confirmError.code === "42501") return error("تأكيد الاستلام متاح لكابتن الرحلة بعد إتمامها فقط.", 403, origin);
+          if (confirmError.code === "23505") return error("تم تسجيل استلام المبلغ لهذه الرحلة بالفعل.", 409, origin);
+          throw confirmError;
+        }
+        return reply({ payment: data }, 201, origin);
       }
 
       return error("مسار واجهة غير معروف ضمن خدمات الكابتن.", 404, origin);
@@ -2830,14 +2818,10 @@ Deno.serve(async (req: Request) => {
         db.from("admin_system_settings").select("setting_key,numeric_value,updated_at").eq("setting_key", "company_commission_rate").maybeSingle(),
       ]);
       if (pricing.error || categories.error || commission.error) throw pricing.error ?? categories.error ?? commission.error;
-      return reply({ pricing: pricing.data ?? [], pool_categories: categories.data ?? [], commission_rate: commission.data?.numeric_value ?? 0.2 }, 200, origin);
+      return reply({ pricing: pricing.data ?? [], pool_categories: categories.data ?? [], commission_rate: 0 }, 200, origin);
     }
     if (req.method === "PATCH" && path === "/admin/settings/commission") {
-      if (!number(body.rate) || body.rate < 0 || body.rate > 1) return error("نسبة العمولة يجب أن تكون بين 0 و1.", 400, origin);
-      if (!clean(body.reason)) return error("اكتب سبب تغيير العمولة.", 400, origin);
-      const { data, error: settingsError } = await db.rpc("admin_set_commission_rate", { p_actor_user_id: user!.id, p_rate: body.rate, p_reason: body.reason.trim() });
-      if (settingsError) throw settingsError;
-      return reply({ setting: data }, 200, origin);
+      return error("عمولة المنصة ثابتة عند 0٪ في النسخة الأولى.", 409, origin);
     }
     const poolPricingRoute = path.match(/^\/admin\/settings\/pool-categories\/([^/]+)$/);
     if (req.method === "PATCH" && poolPricingRoute) {

@@ -19,7 +19,7 @@ const RIDER = {
 };
 
 const VEHICLE = {
-  vehicle_type_id: "private_car",
+  vehicle_type_id: "prime",
   license_number: "LIC-001",
   vehicle_plate: "أ ب ج 123",
 };
@@ -99,7 +99,7 @@ describe("POST /api/captain/profile", () => {
       .send(VEHICLE);
 
     assert.equal(res.status, 201);
-    assert.equal(res.body.profile.vehicle_type_id, "private_car");
+    assert.equal(res.body.profile.vehicle_type_id, "prime");
     assert.equal(res.body.profile.verification_status, "pending");
   });
 

@@ -16,7 +16,8 @@ function roundMoney(value: number) {
 
 /** يحسب احتياطيًا تقديريًا من حصة الكابتن، من غير تنفيذ حجز مالي. */
 export function calculateCaptainEscrowReserve(dailyListAmount: number, serviceDays: number): CaptainEscrowReserve {
-  const dailyCaptainShareAmount = roundMoney(Math.max(0, dailyListAmount) * 0.8);
+  // The MVP has no platform commission; the captain share is the full agreed fare.
+  const dailyCaptainShareAmount = roundMoney(Math.max(0, dailyListAmount));
   const reserveDays = Math.min(4, Math.max(0, Math.floor(serviceDays)));
   return {
     dailyCaptainShareAmount,

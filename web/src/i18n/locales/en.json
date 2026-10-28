@@ -1767,5 +1767,18 @@
   "اشترك في الرحلة": "Join this trip",
   "أنشئ طلب رحلة": "Create a trip request",
   "راجع طلب الرحلة": "Review matched trip",
-  "تمت مطابقة طلبك": "Your request was matched"
+  "تمت مطابقة طلبك": "Your request was matched",
+  "المبلغ الذي استلمته فعليًا": "Amount actually received",
+  "أدخل المبلغ الذي استلمته فعليًا.": "Enter the amount you actually received.",
+  "تم تسجيل استلام المبلغ.": "Receipt confirmation saved.",
+  "بانتظار تأكيد الاستلام": "Awaiting receipt confirmation",
+  "تأكيد استلام المبلغ": "Confirm amount received",
+  "عمولة المنصة ثابتة في النسخة الأولى": "Platform commission is fixed at 0% in the MVP"
+  ,"فئة المركبة": "Vehicle class"
+  ,"SeKKa Prime": "SeKKa Prime"
+  ,"SeKKa Daily": "SeKKa Daily"
+  ,"SeKKa Space": "SeKKa Space"
+  ,"SeKKa Max": "SeKKa Max"
+  ,"ركاب": "passengers"
+  ,"راكبًا": "passengers"
 }

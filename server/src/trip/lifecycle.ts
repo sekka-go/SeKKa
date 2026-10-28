@@ -12,7 +12,6 @@ import {
   type TripRecord,
   type TripStopRecord,
 } from "../db/trip-repository.js";
-import { insertPayment, type PaymentRecord } from "../db/payment-repository.js";
 
 /**
  * منطق دورة حياة الرحلة الأوحد والمعتمد (قاعدة عامة 5 — Server-Authoritative،
@@ -73,19 +72,16 @@ export function arriveAtTripStop(
 }
 
 export type CompleteOutcome =
-  | { outcome: "completed"; trip: TripRecord; payment: PaymentRecord }
+  | { outcome: "completed"; trip: TripRecord }
   | { outcome: "trip_not_found" }
   | { outcome: "trip_not_in_progress" }
   | { outcome: "stops_not_all_reached" };
 
 /**
- * يقفل الرحلة (بعد ما يتأكد كل الـ Stops وصلت) ويعمل صف Payment Ledger في
- * نفس الـ Transaction — لحظة إقفال الرحلة بالظبط، مش قبلها ولا بعدها
- * (BEGIN IMMEDIATE/COMMIT/ROLLBACK، نفس نمط runAutomaticMatching بتاع
- * Phase 5). التأكيد نظامي أوتوماتيك (مفيش actor بشري) لأن صف payments نفسه
- * بيتعمل Confirmed من لحظة إنشائه — راجع 006_trip_payment.sql.
+ * يقفل الرحلة بعد تسجيل الوصول لكل النقاط. لا ينشئ إيصال دفع: الدفع يتم
+ * مباشرة بين الراكب والكابتن، ويُسجل منفصلًا بعد تأكيد الكابتن للمبلغ المستلم.
  */
-export function completeTripAndLedgerPayment(db: DatabaseSync, tripId: number): CompleteOutcome {
+export function completeTrip(db: DatabaseSync, tripId: number): CompleteOutcome {
   const trip = findTripById(db, tripId);
   if (!trip) return { outcome: "trip_not_found" };
   if (trip.status !== "in_progress") return { outcome: "trip_not_in_progress" };
@@ -106,8 +102,6 @@ export function completeTripAndLedgerPayment(db: DatabaseSync, tripId: number): 
   }
   const totalAmount = stops[stops.length - 1].fare_at_stop!;
 
-  const ctx = findTripWithContextById(db, tripId)!;
-
   db.exec("BEGIN IMMEDIATE");
   try {
     const updatedTrip = completeTripRow(db, tripId, totalDistanceKm, totalAmount);
@@ -116,14 +110,8 @@ export function completeTripAndLedgerPayment(db: DatabaseSync, tripId: number): 
       return { outcome: "trip_not_in_progress" };
     }
 
-    const payment = insertPayment(db, {
-      trip_id: tripId,
-      amount: totalAmount,
-      reported_by_user_id: ctx.captain_user_id,
-    });
-
     db.exec("COMMIT");
-    return { outcome: "completed", trip: updatedTrip, payment };
+    return { outcome: "completed", trip: updatedTrip };
   } catch (err) {
     db.exec("ROLLBACK");
     throw err;

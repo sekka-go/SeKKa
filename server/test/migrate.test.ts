@@ -4,7 +4,7 @@ import { openDatabase } from "../src/db/connection.js";
 import { runMigrations } from "../src/db/migrate.js";
 
 describe("runMigrations", () => {
-  it("يطبّق كل ملفات الـ migrations (001_init.sql إلى 014_social_notifications_center.sql) ويسجّلهم في schema_migrations", () => {
+  it("يطبّق كل ملفات الـ migrations حتى 016 ويسجّلهم في schema_migrations", () => {
     const db = openDatabase(":memory:");
     const applied = runMigrations(db);
 
@@ -23,6 +23,8 @@ describe("runMigrations", () => {
       "012_pool_captain_escrow.sql",
       "013_push_subscriptions.sql",
       "014_social_notifications_center.sql",
+      "015_mvp_no_commission.sql",
+      "016_vehicle_classes.sql",
     ]);
 
     for (const filename of [
@@ -40,6 +42,8 @@ describe("runMigrations", () => {
       "012_pool_captain_escrow.sql",
       "013_push_subscriptions.sql",
       "014_social_notifications_center.sql",
+      "015_mvp_no_commission.sql",
+      "016_vehicle_classes.sql",
     ]) {
       const row = db
         .prepare("SELECT filename FROM schema_migrations WHERE filename = ?")
@@ -58,7 +62,7 @@ describe("runMigrations", () => {
     const count = db.prepare("SELECT COUNT(*) as c FROM schema_migrations").get() as {
       c: number;
     };
-    assert.equal(count.c, 14);
+    assert.equal(count.c, 16);
   });
 
   it("بيبني جداول الـ Pool والتسوية والاحتياطي واشتراكات Push للمراحل 10–14", () => {

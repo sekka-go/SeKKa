@@ -8,7 +8,7 @@ const ADMIN_PHONE = "+20000000000";
 const ADMIN_PASSWORD = "ChangeMe_Admin_2026!";
 
 const VEHICLE = {
-  vehicle_type_id: "private_car",
+  vehicle_type_id: "daily",
   license_number: "LIC-300",
   vehicle_plate: "أ ب ج 300",
 };
@@ -75,7 +75,10 @@ async function completeAFullTrip(
     .post("/api/rider/requests")
     .set("Authorization", `Bearer ${riderToken}`)
     .send(VALID_REQUEST);
-  const matchId = createRes.body.match.id as number;
+  assert.equal(createRes.body.match, null, "new demand requests are not assigned automatically");
+  const requestRow = db.prepare(`SELECT id FROM daily_commute_requests WHERE rider_user_id = (SELECT id FROM users WHERE phone_number = ?)`).get(riderPhone) as { id: number };
+  const captainRow = db.prepare(`SELECT id FROM users WHERE phone_number = ?`).get(captainPhone) as { id: number };
+  const matchId = Number(db.prepare(`INSERT INTO matches (daily_commute_request_id, captain_user_id, distance_km) VALUES (?, ?, 0)`).run(requestRow.id, captainRow.id).lastInsertRowid);
   const trip = db.prepare(`SELECT id FROM trips WHERE match_id = ?`).get(matchId) as { id: number };
   const stops = db
     .prepare(`SELECT id FROM trip_stops WHERE trip_id = ? ORDER BY sequence`)
@@ -89,14 +92,19 @@ async function completeAFullTrip(
   const completeRes = await request(app)
     .post(`/api/captain/trips/${trip.id}/complete`)
     .set("Authorization", `Bearer ${captainToken}`);
+  assert.equal(completeRes.body.payment, null);
+  const paymentRes = await request(app)
+    .post(`/api/captain/trips/${trip.id}/confirm-payment`)
+    .set("Authorization", `Bearer ${captainToken}`)
+    .send({ amount: completeRes.body.trip.total_amount });
 
   return {
     riderToken,
     captainToken,
     captainPhone,
     tripId: trip.id,
-    paymentId: completeRes.body.payment.id as number,
-    amount: completeRes.body.payment.amount as number,
+    paymentId: paymentRes.body.payment.id as number,
+    amount: paymentRes.body.payment.amount as number,
   };
 }
 

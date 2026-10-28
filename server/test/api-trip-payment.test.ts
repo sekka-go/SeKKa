@@ -5,7 +5,7 @@ import { createApp } from "../src/app.js";
 import { freshMigratedDb } from "./helpers.js";
 
 const VEHICLE = {
-  vehicle_type_id: "private_car",
+  vehicle_type_id: "daily",
   license_number: "LIC-200",
   vehicle_plate: "أ ب ج 200",
 };
@@ -65,9 +65,10 @@ async function setUpMatchedTrip(
     .set("Authorization", `Bearer ${riderToken}`)
     .send(VALID_REQUEST);
   assert.equal(createRes.status, 201);
-  assert.ok(createRes.body.match, "لازم يتطابق فورًا (كابتن مؤهل واحد متاح)");
-
-  const matchId = createRes.body.match.id as number;
+  assert.equal(createRes.body.match, null, "لا يتم تعيين كابتن تلقائيًا");
+  const requestId = db.prepare(`SELECT id FROM daily_commute_requests WHERE rider_user_id = (SELECT id FROM users WHERE phone_number = ?)`).get(riderPhone) as { id: number };
+  const captainId = db.prepare(`SELECT id FROM users WHERE phone_number = ?`).get(captainPhone) as { id: number };
+  const matchId = Number(db.prepare(`INSERT INTO matches (daily_commute_request_id, captain_user_id, distance_km) VALUES (?, ?, 0)`).run(requestId.id, captainId.id).lastInsertRowid);
   const trip = db.prepare(`SELECT id FROM trips WHERE match_id = ?`).get(matchId) as { id: number };
   const stops = db
     .prepare(`SELECT id, sequence FROM trip_stops WHERE trip_id = ? ORDER BY sequence`)
@@ -130,7 +131,7 @@ describe("POST /api/captain/trips/:tripId/stops/:stopId/arrive", () => {
 });
 
 describe("POST /api/captain/trips/:tripId/complete", () => {
-  it("مايكملش قبل وصول كل الـ Stops، وبيقفل + يعمل Payment بعد كده", async () => {
+  it("مايكملش قبل وصول كل الـ Stops، وبعدها يغلق دون تسجيل الدفع تلقائيًا", async () => {
     const db = freshMigratedDb();
     const app = createApp(db);
     const { captainToken, tripId, stops } = await setUpMatchedTrip(app, db, "40");
@@ -152,7 +153,15 @@ describe("POST /api/captain/trips/:tripId/complete", () => {
       .set("Authorization", `Bearer ${captainToken}`);
     assert.equal(completeRes.status, 200);
     assert.equal(completeRes.body.trip.status, "completed");
-    assert.ok(completeRes.body.payment.amount > 0);
+    assert.equal(completeRes.body.payment, null);
+    assert.equal(completeRes.body.payment_status, "awaiting_captain_confirmation");
+
+    const confirmation = await request(app)
+      .post(`/api/captain/trips/${tripId}/confirm-payment`)
+      .set("Authorization", `Bearer ${captainToken}`)
+      .send({ amount: 25 });
+    assert.equal(confirmation.status, 201);
+    assert.equal(confirmation.body.payment.amount, 25);
 
     const again = await request(app)
       .post(`/api/captain/trips/${tripId}/complete`)
@@ -176,6 +185,7 @@ describe("GET /api/rider/trips و GET /api/captain/earnings", () => {
         .set("Authorization", `Bearer ${captainToken}`);
     }
     await request(app).post(`/api/captain/trips/${tripId}/complete`).set("Authorization", `Bearer ${captainToken}`);
+    await request(app).post(`/api/captain/trips/${tripId}/confirm-payment`).set("Authorization", `Bearer ${captainToken}`).send({ amount: 25 });
 
     const afterRider = await request(app).get("/api/rider/trips").set("Authorization", `Bearer ${riderToken}`);
     assert.equal(afterRider.body.trips.length, 1);
@@ -198,6 +208,7 @@ describe("POST /api/rider/trips/:id/dispute", () => {
     await request(app)
       .post(`/api/captain/trips/${setup.tripId}/complete`)
       .set("Authorization", `Bearer ${setup.captainToken}`);
+    await request(app).post(`/api/captain/trips/${setup.tripId}/confirm-payment`).set("Authorization", `Bearer ${setup.captainToken}`).send({ amount: 25 });
     return setup;
   }
 

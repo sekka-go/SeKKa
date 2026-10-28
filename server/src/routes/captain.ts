@@ -15,18 +15,19 @@ import { generateOtp, hashOtp, isDevOtpLoggingAllowed, logOtpDevOnly, otpExpiryF
 import { requireAuth } from "../middleware/require-auth.js";
 import { createRateLimiter } from "../middleware/rate-limit.js";
 import {
+  findTripById,
   findTripStopsByTripId,
   findTripWithContextById,
   findCompletedTripsByCaptainId,
 } from "../db/trip-repository.js";
-import { arriveAtTripStop, completeTripAndLedgerPayment } from "../trip/lifecycle.js";
-import { findPaymentByTripId } from "../db/payment-repository.js";
+import { arriveAtTripStop, completeTrip } from "../trip/lifecycle.js";
+import { findPaymentByTripId, insertPayment } from "../db/payment-repository.js";
 
 // مصفوفة المركبات النهائية (قاعدة عامة 3) — نفس القيم الموجودة فعليًا في
 // vehicle_types (001_init.sql). الـ FK في captain_profiles بيرفض أي قيمة
 // تانية برضه (دفاع طبقة تانية)، لكن الفحص هنا بيسمح برسالة 400 عربية واضحة
 // بدل خطأ SQL عام لو حد حاول قيمة زي "elite".
-const ALLOWED_VEHICLE_TYPES = ["private_car", "hiace"];
+const ALLOWED_VEHICLE_TYPES = ["prime", "daily", "space", "max"];
 
 // رسالة فشل OTP موحّدة — نفس منطق رسالة فشل الدخول في Phase 2: رسالة واحدة
 // عامة لكل أسباب الفشل (غلط / منتهي / مستخدم قبل كده) عشان محدش يقدر يستنتج
@@ -277,9 +278,7 @@ export function createCaptainRouter(db: DatabaseSync): Router {
     }
   });
 
-  // POST /api/captain/trips/:tripId/complete — إضافة Phase 6. يقفل الرحلة
-  // (بعد وصول كل الـ Stops) ويعمل صف Payment Ledger أول حالة (Confirmed
-  // أوتوماتيك، الكابتن كمُبلِّغ) في نفس اللحظة — راجع lifecycle.ts.
+  // POST /api/captain/trips/:tripId/complete — إغلاق الرحلة فقط.
   router.post("/captain/trips/:tripId/complete", ...guarded, (req, res) => {
     const tripId = Number(req.params.tripId);
     if (!Number.isInteger(tripId) || tripId <= 0) {
@@ -297,10 +296,10 @@ export function createCaptainRouter(db: DatabaseSync): Router {
       return;
     }
 
-    const outcome = completeTripAndLedgerPayment(db, tripId);
+    const outcome = completeTrip(db, tripId);
     switch (outcome.outcome) {
       case "completed":
-        res.status(200).json({ trip: outcome.trip, payment: outcome.payment });
+        res.status(200).json({ trip: outcome.trip, payment: null, payment_status: "awaiting_captain_confirmation" });
         return;
       case "trip_not_found":
         res.status(404).json({ error: "الرحلة دي مش موجودة." });
@@ -311,6 +310,31 @@ export function createCaptainRouter(db: DatabaseSync): Router {
       case "stops_not_all_reached":
         res.status(409).json({ error: "لازم توصل كل نقط الرحلة قبل ما تقفلها." });
         return;
+    }
+  });
+
+  // Captain explicitly records the amount actually received after the trip.
+  router.post("/captain/trips/:tripId/confirm-payment", ...guarded, (req, res) => {
+    const tripId = Number(req.params.tripId);
+    const actualAmount = req.body?.amount;
+    if (!Number.isInteger(tripId) || tripId <= 0) {
+      res.status(404).json({ error: "الرحلة دي مش موجودة." });
+      return;
+    }
+    if (typeof actualAmount !== "number" || !Number.isFinite(actualAmount) || actualAmount <= 0) {
+      res.status(400).json({ error: "أدخل المبلغ الذي استلمته فعليًا." });
+      return;
+    }
+    const ctx = findTripWithContextById(db, tripId);
+    if (!ctx) { res.status(404).json({ error: "الرحلة دي مش موجودة." }); return; }
+    if (ctx.captain_user_id !== req.auth!.userId) { res.status(403).json({ error: "الرحلة دي مش بتاعتك." }); return; }
+    const trip = findTripById(db, tripId);
+    if (trip?.status !== "completed") { res.status(409).json({ error: "أكد الاستلام بعد إتمام الرحلة فقط." }); return; }
+    try {
+      const payment = insertPayment(db, { trip_id: tripId, amount: actualAmount, reported_by_user_id: req.auth!.userId });
+      res.status(201).json({ payment });
+    } catch {
+      res.status(409).json({ error: "تم تسجيل استلام المبلغ لهذه الرحلة بالفعل." });
     }
   });
 

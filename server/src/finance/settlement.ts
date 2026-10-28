@@ -10,7 +10,9 @@ export type PoolSettlement = {
   settlementStatus: "pending";
 };
 
-const COMPANY_COMMISSION_RATE = 0.2;
+// Phase 1 MVP: all agreed fare stays between the rider and captain. SeKKa
+// records the amount for operations but does not take a platform commission.
+const COMPANY_COMMISSION_RATE = 0;
 const CAPTAIN_SHARE_RATE = 1 - COMPANY_COMMISSION_RATE;
 
 function roundMoney(value: number) {
@@ -26,7 +28,7 @@ export function calculatePoolSettlement(listAmount: number, packageType: PoolPac
   const safeListAmount = roundMoney(Math.max(0, listAmount));
   const riderAmount = roundMoney(safeListAmount * (1 - discountRate(packageType)));
   const discountAmount = roundMoney(safeListAmount - riderAmount);
-  const captainShareAmount = roundMoney(safeListAmount * CAPTAIN_SHARE_RATE);
+  const captainShareAmount = roundMoney(riderAmount * CAPTAIN_SHARE_RATE);
   const companyShareAmount = roundMoney(Math.max(0, safeListAmount * COMPANY_COMMISSION_RATE - discountAmount));
 
   return {
