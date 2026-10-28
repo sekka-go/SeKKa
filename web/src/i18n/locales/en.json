@@ -1781,4 +1781,42 @@
   ,"SeKKa Max": "SeKKa Max"
   ,"ركاب": "passengers"
   ,"راكبًا": "passengers"
+,
+  "طلبات الانضمام للرحلات المنشورة": "Requests to join published trips",
+  "رحلات اخترتها": "Trips you selected",
+  "بانتظار رد الكابتن": "Waiting for captain response",
+  "تم قبول طلب الانضمام": "Join request accepted",
+  "تم رفض طلب الانضمام": "Join request declined",
+  "لم ترسل طلب انضمام لرحلة منشورة بعد.": "You have not requested to join a published trip yet.",
+  "اختارها الركاب من الرحلات المنشورة": "Chosen by riders from published trips",
+  "طلبات الانضمام": "Join requests",
+  "بانتظار ردك": "Waiting for your response",
+  "مقبول": "Accepted",
+  "مرفوض": "Declined",
+  "قبول الطلب": "Accept request",
+  "رفض الطلب": "Decline request",
+  "تم قبول طلب الانضمام.": "Join request accepted.",
+  "تم رفض طلب الانضمام.": "Join request declined.",
+  "تم إرسال طلب الانضمام للكابتن. تقدر تتابع حالته في طلباتي.": "Your request was sent to the captain. Track it in My requests.",
+  "سيُرسل طلب انضمام للكابتن على الرحلة والتاريخ المحددين، ويمكنك متابعة الرد في طلباتي.": "A request will be sent to the captain for this trip and date. Track the response in My requests.",
+  "جارٍ إرسال طلب الانضمام…": "Sending join request…",
+  "التاريخ القادم": "Next service date",
+  "الرحلة غير متاحة في هذا اليوم.": "This trip is unavailable on that date.",
+  "لديك طلب مفتوح بالفعل على هذه الرحلة في هذا اليوم.": "You already have an open request for this trip on this date.",
+  "نقطتا الركوب والوصول يجب أن تكونا على خط الرحلة وبالترتيب.": "Pickup and drop-off must follow the selected route.",
+  "لا توجد مقاعد كافية لهذا اليوم.": "There are not enough seats for this date.",
+  "تمت معالجة هذا الطلب بالفعل.": "This request has already been processed.",
+  "الطلب غير موجود.": "Request not found.",
+  "اختر قبول الطلب أو رفضه.": "Choose whether to accept or decline the request.",
+  "يلزم توثيق الحساب لإرسال طلب الانضمام.": "Verify your account before sending a join request."
+,
+  "لديك 3 طلبات انضمام معلقة بالفعل. انتظر رد الكباتن أو انتهاء الطلبات.": "You already have 3 pending join requests. Wait for a response or for requests to expire.",
+  "انتهت مهلة الطلب.": "The request expired.",
+  "طلب انضمام جديد": "New join request",
+  "اختار راكب رحلتك المنشورة وأرسل طلب انضمام.": "A rider selected your published trip and requested to join.",
+  "تحديث طلب الانضمام": "Join request update",
+  "وافق الكابتن على طلب انضمامك للرحلة.": "The captain accepted your trip request.",
+  "اعتذر الكابتن عن قبول طلب الانضمام.": "The captain declined your trip request."
+,
+  "حدد نقطتي الركوب والنزول قبل إرسال الطلب.": "Select your pickup and drop-off points before sending the request."
 }

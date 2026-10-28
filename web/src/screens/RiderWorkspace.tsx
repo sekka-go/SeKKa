@@ -12,7 +12,7 @@ import { isInsideGreaterCairo } from "../lib/greater-cairo";
 import { reverseGeocode } from "../lib/location-address";
 import { subscribeToDeviceLocation } from "../lib/device-location";
 import { sameData, useSilentRefresh } from "../lib/use-silent-refresh";
-import { api, type Category, type GroupView, type RiderCommuterPreferences, type SavedPlace } from "../api";
+import { api, type CaptainLineJoinRequest, type Category, type GroupView, type RiderCommuterPreferences, type SavedPlace } from "../api";
 import { defaultDates, isServiceDay, serviceDatesFromStart, shiftDate, todayInCairo } from "../lib/booking-dates";
 import type { NavKey, Session, Toast } from "../types";
 import {
@@ -24,7 +24,8 @@ const hasSelectedPoint = (point: MapPoint | null) =>
   typeof point?.lng === "number" && Number.isFinite(point.lng);
 type RiderLineOffer = {
   id: number; vehicle_type_id: "prime" | "daily" | "space" | "max" | "private_car" | "hiace"; origin_label: string; origin_lat: number; origin_lng: number;
-  destination_label: string; destination_lat: number; destination_lng: number; arrival_time: string; service_days: number[];
+  destination_label: string; destination_lat: number; destination_lng: number; arrival_time: string; return_arrival_time?: string | null; direction: "outbound" | "return"; service_days: number[];
+  intermediate_stops?: Array<{ label: string; lat: number; lng: number }>;
   seats: number; price_per_seat: number; pickup_distance_km: number; dropoff_distance_km: number; captain_name: string; captain_verified: boolean;
 };
 const nextServiceDate = (days: number[]) => {
@@ -48,6 +49,15 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
   const [tripOffersError, setTripOffersError] = useState("");
   const [tripSearchNonce, setTripSearchNonce] = useState(0);
   const [selectedOffer, setSelectedOffer] = useState<RiderLineOffer | null>(null);
+  const [lineJoinPickup, setLineJoinPickup] = useState<MapPoint | null>(null);
+  const [lineJoinDropoff, setLineJoinDropoff] = useState<MapPoint | null>(null);
+  const [lineJoinPickupSearch, setLineJoinPickupSearch] = useState("");
+  const [lineJoinDropoffSearch, setLineJoinDropoffSearch] = useState("");
+  const [lineJoinMapOpen, setLineJoinMapOpen] = useState(false);
+  const [lineJoinMapMode, setLineJoinMapMode] = useState<MapPickMode>("pickup");
+  const [lineJoinRequests, setLineJoinRequests] = useState<CaptainLineJoinRequest[]>([]);
+  const [lineJoinSubmitting, setLineJoinSubmitting] = useState(false);
+  const [lineJoinRequestsLoading, setLineJoinRequestsLoading] = useState(false);
   const tripOffersLoadedRef = useRef(false);
   const tripOffersRef = useRef<RiderLineOffer[]>([]);
   const [homeSlide, setHomeSlide] = useState(0);
@@ -112,15 +122,6 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
     setPriceInfoOpen(false);
     setSection("booking");
   };
-  const openCaptainOffer = (line: RiderLineOffer) => {
-    const origin = { lat: line.origin_lat, lng: line.origin_lng, label: line.origin_label, primaryLabel: line.origin_label, kind: "pickup" as const };
-    const destination = { lat: line.destination_lat, lng: line.destination_lng, label: line.destination_label, primaryLabel: line.destination_label, kind: "dropoff" as const };
-    setBookingMode("new"); setEditingGroupId(null); setCategoryId(""); setPackageType("daily"); setDates(defaultDates("daily"));
-    setBookingTripDate(nextServiceDate(line.service_days)); setBookingArrivalTime(line.arrival_time.slice(0, 5)); setBookingReturnArrivalTime("");
-    setBookingPickup(origin); setPickup(origin); setDropoff(destination); setPickupSearch(line.origin_label); setDropoffSearch(line.destination_label);
-    setSection("booking"); window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
   const startEditingGroup = (view: GroupView) => {
     const group = view.group;
     const member = view.members.find((item) => item.status === "active" && item.rider_user_id === session.user.id);
@@ -245,6 +246,43 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
     if (sameData(demandRequestsRef.current, result.requests ?? [])) return false;
     demandRequestsRef.current = result.requests ?? []; setDemandRequests(result.requests ?? []); return true;
   }, [session.token]);
+  const loadLineJoinRequests = useCallback(async () => {
+    setLineJoinRequestsLoading(true);
+    try {
+      const result = await api<{ requests: CaptainLineJoinRequest[] }>("/rider/line-requests", { token: session.token, etag: true });
+      setLineJoinRequests(result.requests ?? []);
+    } catch (error) { notify(errorText(error), "error"); }
+    finally { setLineJoinRequestsLoading(false); }
+  }, [session.token, notify]);
+  const requestSelectedLine = async () => {
+    if (!selectedOffer || lineJoinSubmitting) return;
+    if (!hasSelectedPoint(lineJoinPickup) || !hasSelectedPoint(lineJoinDropoff) || !lineJoinPickup?.label || !lineJoinDropoff?.label) {
+      notify(t("حدد نقطتي الركوب والنزول قبل إرسال الطلب."), "error"); return;
+    }
+    setLineJoinSubmitting(true);
+    try {
+      const tripDate = nextServiceDate(selectedOffer.service_days);
+      const result = await api<{ request: CaptainLineJoinRequest }>("/rider/line-requests", { method: "POST", token: session.token, body: {
+        line_id: selectedOffer.id, trip_date: tripDate, pickup_label: lineJoinPickup.label,
+        pickup_lat: lineJoinPickup.lat, pickup_lng: lineJoinPickup.lng,
+        dropoff_label: lineJoinDropoff.label, dropoff_lat: lineJoinDropoff.lat,
+        dropoff_lng: lineJoinDropoff.lng, seats: 1, direction: selectedOffer.direction,
+      } });
+      setLineJoinRequests((current) => [result.request, ...current.filter((request) => request.id !== result.request.id)]);
+      setSelectedOffer(null);
+      notify(t("تم إرسال طلب الانضمام للكابتن. تقدر تتابع حالته في طلباتي."), "success");
+    } catch (error) { notify(errorText(error), "error"); }
+    finally { setLineJoinSubmitting(false); }
+  };
+  const selectLineOffer = (line: RiderLineOffer) => {
+    const pickupPoint = tripOrigin && hasSelectedPoint(tripOrigin) ? tripOrigin : { lat: line.origin_lat, lng: line.origin_lng, label: line.origin_label, kind: "pickup" as const };
+    const dropoffPoint = { lat: line.destination_lat, lng: line.destination_lng, label: line.destination_label, kind: "dropoff" as const };
+    setLineJoinPickup(pickupPoint); setLineJoinPickupSearch(pickupPoint.label ?? line.origin_label);
+    setLineJoinDropoff(dropoffPoint); setLineJoinDropoffSearch(dropoffPoint.label ?? line.destination_label);
+    setLineJoinMapOpen(false); setSelectedOffer(line);
+  };
+  const chooseLineJoinMap = (mode: MapPickMode) => { setLineJoinMapMode(mode); setLineJoinMapOpen(true); };
+  useEffect(() => { if (section === "requests") void loadLineJoinRequests(); }, [section, loadLineJoinRequests]);
   useEffect(() => subscribeToDeviceLocation((location) => {
     if (!location) {
       if (tripOriginSource.current !== "device") return;
@@ -498,7 +536,8 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
 
   if (section === "account") return <div className="rider-account-experience">{dataErrorBanner}<section className="rider-profile-heading"><div><span className="eyebrow">{t("حسابك في سِكّة")}</span><h2>{t("الملف الشخصي والإعدادات")}</h2><p>{t("إدارة بيانات حسابك وأماكنك المحفوظة.")}</p></div></section><AccountPanel session={session} notify={notify} /></div>;
 
-  if (section === "requests") return <div className="rider-requests-page">{dataErrorBanner}{demandRequests.length ? <><section className="rider-request-overview" aria-label={t("ملخص طلباتك")}><div><span>{t("بانتظار المطابقة")}</span><strong>{openDemandCount}</strong></div><div><span>{t("تمت مطابقتها")}</span><strong>{matchedDemandCount}</strong></div><div><span>{t("منتهية أو ملغاة")}</span><strong>{closedDemandCount}</strong></div></section><div className="rider-request-filters" role="group" aria-label={t("تصفية الطلبات")}>{([["all", t("كل الطلبات"), demandRequests.length], ["open", t("قيد البحث"), openDemandCount], ["matched", t("تمت مطابقتها"), matchedDemandCount], ["closed", t("المنتهية"), closedDemandCount]] as const).map(([filter, label, count]) => <button type="button" key={filter} aria-pressed={requestFilter === filter} className={requestFilter === filter ? "is-active" : ""} onClick={() => setRequestFilter(filter)}>{label}<span>{count}</span></button>)}</div>{visibleDemandRequests.length ? requestCards : <EmptyState icon="inbox" title={t("لا توجد طلبات في هذا التصنيف")} text={t("اختر تصنيفًا آخر لمتابعة طلباتك.")} />}</> : initialLoadError ? null : <EmptyState icon="inbox" title={t("لم تسجل طلب رحلة بعد")} text={t("طلباتك تظهر هنا بعد البحث عن الرحلات المنشورة وعدم العثور على رحلة مناسبة ثم تسجيل طلبك.")} action="أنشئ طلب رحلة" onAction={() => openBooking("new")} />}</div>;
+  const lineJoinRequestSection = <section className="surface rider-request-card"><div className="section-title-row"><div><span className="eyebrow">{t("طلبات الانضمام للرحلات المنشورة")}</span><h2>{t("رحلات اخترتها")}</h2></div><button type="button" className="button button-outline button-small" onClick={() => void loadLineJoinRequests()} disabled={lineJoinRequestsLoading}>{t("تحديث")}</button></div>{lineJoinRequestsLoading && !lineJoinRequests.length ? <LoadingCard text="loading.riderRequests" /> : lineJoinRequests.length ? <div className="rider-request-list">{lineJoinRequests.map((request) => <article className="surface rider-request-card" key={request.id}><div className="rider-request-card-top"><span className={`status-chip status-${request.status}`}>{t(request.status === "pending" ? "بانتظار رد الكابتن" : request.status === "accepted" ? "تم قبول طلب الانضمام" : request.status === "rejected" ? "تم رفض طلب الانضمام" : "ملغي")}</span><time>{formatDate(request.trip_date)}</time></div><div className="rider-request-route"><span className="rider-route-timeline" aria-hidden="true"><i /><b /><i /></span><div><strong>{request.pickup_label}</strong><strong>{request.dropoff_label}</strong></div></div><p>{request.captain_lines?.captain_name ?? t("الكابتن")} · {t(request.direction === "return" ? "وقت العودة" : "وقت الانطلاق")} {request.captain_lines?.arrival_time?.slice(0, 5) ?? "—"} · {money(Number(request.captain_lines?.price_per_seat ?? 0))} {t("للمقعد")}</p></article>)}</div> : <p>{t("لم ترسل طلب انضمام لرحلة منشورة بعد.")}</p>}</section>;
+  if (section === "requests") return <div className="rider-requests-page">{dataErrorBanner}{lineJoinRequestSection}{demandRequests.length ? <><section className="rider-request-overview" aria-label={t("ملخص طلباتك")}><div><span>{t("بانتظار المطابقة")}</span><strong>{openDemandCount}</strong></div><div><span>{t("تمت مطابقتها")}</span><strong>{matchedDemandCount}</strong></div><div><span>{t("منتهية أو ملغاة")}</span><strong>{closedDemandCount}</strong></div></section><div className="rider-request-filters" role="group" aria-label={t("تصفية الطلبات")}>{([["all", t("كل الطلبات"), demandRequests.length], ["open", t("قيد البحث"), openDemandCount], ["matched", t("تمت مطابقتها"), matchedDemandCount], ["closed", t("المنتهية"), closedDemandCount]] as const).map(([filter, label, count]) => <button type="button" key={filter} aria-pressed={requestFilter === filter} className={requestFilter === filter ? "is-active" : ""} onClick={() => setRequestFilter(filter)}>{label}<span>{count}</span></button>)}</div>{visibleDemandRequests.length ? requestCards : <EmptyState icon="inbox" title={t("لا توجد طلبات في هذا التصنيف")} text={t("اختر تصنيفًا آخر لمتابعة طلباتك.")} />}</> : initialLoadError ? null : <EmptyState icon="inbox" title={t("لم تسجل طلب رحلة بعد")} text={t("طلباتك تظهر هنا بعد البحث عن الرحلات المنشورة وعدم العثور على رحلة مناسبة ثم تسجيل طلبك.")} action="أنشئ طلب رحلة" onAction={() => openBooking("new")} />}</div>;
 
   if (section === "booking" && bookingMode !== "edit") return <><RiderDemandFlow session={session} notify={notify} onBack={() => setSection("home")} onOpenRequests={() => setSection("requests")} onRequestCreated={async () => { await refreshDemandRequests(); }} initialPickup={bookingPickup ?? pickup} initialDropoff={dropoff} initialTripDate={bookingTripDate} initialArrivalTime={bookingArrivalTime} initialReturnArrivalTime={bookingReturnArrivalTime} savedPlaces={savedPlaces} />{dataErrorBanner}</>;
   if (loading && section === "home") return <div className="dashboard-grid rider-dashboard"><section className="dashboard-main">{welcomeBanner}<LoadingCard text="loading.riderRequests" /></section></div>;
@@ -614,15 +653,15 @@ export default function RiderWorkspace({ session, section, setSection, refreshNo
     {tripOffersError && <ErrorState title={t("تعذر تحميل الرحلات")} text={tripOffersError} action="إعادة المحاولة" onAction={() => { tripOffersLoadedRef.current = false; setTripSearchNonce((value) => value + 1); }} />}
     {!tripOffersLoading && !tripOffersError && (tripOffers.length ? <section className="rider-trip-offer-list" aria-label={t("الرحلات المناسبة")}>
       <div className="rider-section-heading"><div><span className="eyebrow">{t("رحلات الكباتن المطابقة لبحثك")}</span><h2>{t("الرحلات المناسبة لك")}</h2></div><span className="section-count">{tripOffers.length}</span></div>
-      {tripOffers.map((line) => <article className="surface rider-trip-offer" key={line.id}>
+      {tripOffers.map((line) => <article className="surface rider-trip-offer" key={`${line.id}:${line.direction}`}>
         <div className="rider-trip-offer-top"><span className="rider-trip-offer-captain"><AppIcon name="user" size={16} />{line.captain_name}{line.captain_verified && <b aria-label={t("كابتن موثق")}>✓</b>}</span><span>{vehicleTypeLabel(line.vehicle_type_id)}</span></div>
         <div className="rider-trip-offer-route"><span><i /><b />{line.origin_label}</span><span><i />{line.destination_label}</span></div>
-        <div className="rider-trip-offer-meta"><span>{t("وقت الانطلاق")} · {line.arrival_time.slice(0, 5)}</span><span>{line.seats} {t("مقاعد")}</span><strong>{money(Number(line.price_per_seat))} {t("للمقعد")}</strong></div>
+        <div className="rider-trip-offer-meta"><span>{t(line.direction === "return" ? "وقت العودة" : "وقت الانطلاق")} · {line.arrival_time.slice(0, 5)}</span><span>{line.seats} {t("مقاعد")}</span><strong>{money(Number(line.price_per_seat))} {t("للمقعد")}</strong></div>
         <small className="rider-trip-distance">{t("نقطة انطلاقك تبعد")} {line.pickup_distance_km} {t("كم")}</small>
-        <button type="button" className="button button-primary rider-trip-offer-action" onClick={() => setSelectedOffer(line)}>{t("اشترك في الرحلة")} <span aria-hidden="true">←</span></button>
+        <button type="button" className="button button-primary rider-trip-offer-action" onClick={() => selectLineOffer(line)}>{t("اشترك في الرحلة")} <span aria-hidden="true">←</span></button>
       </article>)}
     </section> : <EmptyState icon="route" title={tripOrigin ? t("لم نجد رحلة منشورة تناسب بحثك") : t("حدد نقطة انطلاق لعرض الرحلات")} text={tripOrigin ? t("لم نجد رحلة منشورة قريبة من موقعك. يمكنك تسجيل طلب رحلة من صفحة طلباتي.") : t("اسمح للتطبيق باستخدام موقعك لعرض الرحلات المنشورة القريبة.")} />)}
-    {selectedOffer && <div className="brand-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedOffer(null); }}><section className="brand-confirm-dialog rider-trip-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="rider-trip-detail-title"><button type="button" className="rider-trip-detail-close" onClick={() => setSelectedOffer(null)} aria-label={t("إغلاق")}>×</button><span className="eyebrow">{t("تفاصيل الرحلة المنشورة")}</span><h2 id="rider-trip-detail-title">{t("رحلة مع الكابتن")} {selectedOffer.captain_name}</h2><div className="rider-trip-detail-route"><strong>{selectedOffer.origin_label}</strong><span aria-hidden="true">←</span><strong>{selectedOffer.destination_label}</strong></div><dl><div><dt>{t("نوع المركبة")}</dt><dd>{vehicleTypeLabel(selectedOffer.vehicle_type_id)}</dd></div><div><dt>{t("وقت الانطلاق")}</dt><dd>{selectedOffer.arrival_time.slice(0, 5)}</dd></div><div><dt>{t("مقاعد متاحة")}</dt><dd>{selectedOffer.seats}</dd></div><div><dt>{t("سعر المقعد")}</dt><dd>{money(Number(selectedOffer.price_per_seat))}</dd></div><div><dt>{t("المسافة من نقطة انطلاقك")}</dt><dd>{selectedOffer.pickup_distance_km} {t("كم")}</dd></div></dl><p>{t("لإرسال طلب الانضمام، أكمل الموعد ونقاط الركوب والنزول. سنطابق طلبك مع الرحلة المنشورة.")}</p><footer><button type="button" className="button button-outline" onClick={() => setSelectedOffer(null)}>{t("رجوع للرحلات")}</button><button type="button" className="button button-primary" onClick={() => { openCaptainOffer(selectedOffer); setSelectedOffer(null); }}>{t("طلب الانضمام للرحلة")} <span aria-hidden="true">←</span></button></footer></section></div>}
+    {selectedOffer && <div className="brand-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedOffer(null); }}><section className="brand-confirm-dialog rider-trip-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="rider-trip-detail-title"><button type="button" className="rider-trip-detail-close" onClick={() => setSelectedOffer(null)} aria-label={t("إغلاق")}>×</button><span className="eyebrow">{t("تفاصيل الرحلة المنشورة")}</span><h2 id="rider-trip-detail-title">{t("رحلة مع الكابتن")} {selectedOffer.captain_name}</h2><div className="rider-trip-detail-route"><strong>{selectedOffer.origin_label}</strong><span aria-hidden="true">←</span><strong>{selectedOffer.destination_label}</strong></div><dl><div><dt>{t("نوع المركبة")}</dt><dd>{vehicleTypeLabel(selectedOffer.vehicle_type_id)}</dd></div><div><dt>{t(selectedOffer.direction === "return" ? "وقت العودة" : "وقت الانطلاق")}</dt><dd>{selectedOffer.arrival_time.slice(0, 5)}</dd></div><div><dt>{t("التاريخ القادم")}</dt><dd>{formatDate(nextServiceDate(selectedOffer.service_days))}</dd></div><div><dt>{t("مقاعد متاحة")}</dt><dd>{selectedOffer.seats}</dd></div><div><dt>{t("سعر المقعد")}</dt><dd>{money(Number(selectedOffer.price_per_seat))}</dd></div><div><dt>{t("المسافة من نقطة انطلاقك")}</dt><dd>{selectedOffer.pickup_distance_km} {t("كم")}</dd></div></dl><div className="location-search-stack"><LocationSearchField kind="pickup" title={t("نقطة الركوب")} value={lineJoinPickupSearch} token={session.token} savedPlaces={savedPlaces} onChange={(value) => { setLineJoinPickupSearch(value); setLineJoinPickup(null); }} onSelect={(point) => { setLineJoinPickup(point); setLineJoinPickupSearch(point.label ?? ""); }} onChooseMap={() => chooseLineJoinMap("pickup")} onFocus={() => undefined} pointSelected={hasSelectedPoint(lineJoinPickup)} /><LocationSearchField kind="dropoff" title={t("نقطة النزول")} value={lineJoinDropoffSearch} token={session.token} savedPlaces={savedPlaces} onChange={(value) => { setLineJoinDropoffSearch(value); setLineJoinDropoff(null); }} onSelect={(point) => { setLineJoinDropoff(point); setLineJoinDropoffSearch(point.label ?? ""); }} onChooseMap={() => chooseLineJoinMap("dropoff")} onFocus={() => undefined} pointSelected={hasSelectedPoint(lineJoinDropoff)} /></div>{lineJoinMapOpen && <section className="booking-map-panel" aria-label={t("اختيار الموقع من الخريطة")}><div className="booking-map-toolbar"><p className="map-instruction">{t("حدد")} {lineJoinMapMode === "pickup" ? t("نقطة الركوب") : t("نقطة النزول")} {t("على الخريطة")}</p><button type="button" className="map-close-button" onClick={() => setLineJoinMapOpen(false)} aria-label={t("إغلاق الخريطة")}>×</button></div><div className="booking-map"><MapPicker pickup={lineJoinPickup} dropoff={lineJoinDropoff} mode={lineJoinMapMode} direction={selectedOffer.direction} restrictToGreaterCairo routePlaces={[{ lat: selectedOffer.origin_lat, lng: selectedOffer.origin_lng, kind: "pickup" as const, sequence: 0 }, ...(selectedOffer.intermediate_stops ?? []).map((stop, index) => ({ ...stop, kind: "pickup" as const, sequence: index + 1 })), { lat: selectedOffer.destination_lat, lng: selectedOffer.destination_lng, kind: "dropoff" as const, sequence: (selectedOffer.intermediate_stops ?? []).length + 1 }]} onOutsidePick={() => notify(t("اختار نقطة داخل القاهرة الكبرى فقط."), "error")} onPick={(mode, point) => { if (mode === "pickup") { setLineJoinPickup(point); setLineJoinPickupSearch(point.label ?? ""); } else { setLineJoinDropoff(point); setLineJoinDropoffSearch(point.label ?? ""); } setLineJoinMapOpen(false); }} /></div></section>}<p>{t("سيُرسل طلب انضمام للكابتن على الرحلة والتاريخ المحددين، ويمكنك متابعة الرد في طلباتي.")}</p><footer><button type="button" className="button button-outline" onClick={() => setSelectedOffer(null)}>{t("رجوع للرحلات")}</button><button type="button" className="button button-primary" onClick={() => void requestSelectedLine()} disabled={lineJoinSubmitting || !hasSelectedPoint(lineJoinPickup) || !hasSelectedPoint(lineJoinDropoff)}>{lineJoinSubmitting ? t("جارٍ إرسال طلب الانضمام…") : t("طلب الانضمام للرحلة")} <span aria-hidden="true">←</span></button></footer></section></div>}
   </div>;
   return <div className="dashboard-grid rider-dashboard rider-home-experience">
     <section className="dashboard-main">{dataErrorBanner}

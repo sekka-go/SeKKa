@@ -1118,6 +1118,53 @@ Deno.serve(async (req: Request) => {
         return reply({ requests: rows }, 200, origin);
       }
     }
+    if (path === "/rider/line-requests") {
+      const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
+      if (req.method === "GET") {
+        const { data, error: queryError } = await db.from("captain_line_join_requests")
+          .select("*,captain_lines(id,origin_label,destination_label,arrival_time,return_arrival_time,price_per_seat,captain_user_id)")
+          .eq("rider_user_id", user!.id).order("created_at", { ascending: false }).limit(50);
+        if (queryError) throw queryError;
+        const captainIds = [...new Set((data ?? []).map((row) => Number(row.captain_lines?.captain_user_id)).filter(Number.isSafeInteger))];
+        const { data: captains, error: captainError } = captainIds.length
+          ? await db.from("users").select("id,full_name").in("id", captainIds) : { data: [], error: null };
+        if (captainError) throw captainError;
+        const names = new Map((captains ?? []).map((captain) => [Number(captain.id), captain.full_name]));
+        return reply({ requests: (data ?? []).map((row) => {
+          const rawLine = row.captain_lines;
+          const line = rawLine && row.direction === "return" ? { ...rawLine, origin_label: rawLine.destination_label, destination_label: rawLine.origin_label, arrival_time: rawLine.return_arrival_time ?? rawLine.arrival_time } : rawLine;
+          return { ...row, captain_lines: line ? { ...line, captain_name: names.get(Number(rawLine!.captain_user_id)) ?? "الكابتن" } : null };
+        }) }, 200, origin, req);
+      }
+      if (req.method === "POST") {
+        const activationGate = await requireVerificationActivation(user!, origin); if (activationGate) return activationGate;
+        if (!Number.isSafeInteger(Number(body.line_id)) || (body.direction != null && !["outbound", "return"].includes(String(body.direction))) || !validIsoDate(body.trip_date) || String(body.trip_date) < cairoDateKey()
+          || !clean(body.pickup_label) || !clean(body.dropoff_label) || !validPoint(body.pickup_lat, body.pickup_lng) || !validPoint(body.dropoff_lat, body.dropoff_lng)
+          || !isGreaterCairoPoint(Number(body.pickup_lat), Number(body.pickup_lng)) || !isGreaterCairoPoint(Number(body.dropoff_lat), Number(body.dropoff_lng))) {
+          return error("راجع الرحلة والتاريخ ونقطتي الركوب والوصول.", 400, origin);
+        }
+        const seats = Number(body.seats ?? 1);
+        if (!Number.isInteger(seats) || seats < 1 || seats > 13) return error("عدد المقاعد المطلوب غير صحيح.", 400, origin);
+        const { data, error: createError } = await db.rpc("create_captain_line_join_request", {
+          actor_id: user!.id, line_id: Number(body.line_id), trip_on: body.trip_date,
+          pickup_name: body.pickup_label.trim(), pickup_y: body.pickup_lat, pickup_x: body.pickup_lng,
+          dropoff_name: body.dropoff_label.trim(), dropoff_y: body.dropoff_lat, dropoff_x: body.dropoff_lng, seat_count: seats,
+          trip_direction: body.direction === "return" ? "return" : "outbound",
+        });
+        if (createError) {
+          if (createError.code === "42501") return error("يلزم توثيق الحساب لإرسال طلب الانضمام.", 403, origin);
+          if (createError.code === "22023") return error("نقطتا الركوب والوصول يجب أن تكونا على خط الرحلة وبالترتيب.", 400, origin);
+          if (createError.code === "23505") return error("لديك طلب مفتوح بالفعل على هذه الرحلة في هذا اليوم.", 409, origin);
+          if (createError.code === "54000") return error("لديك 3 طلبات انضمام معلقة بالفعل. انتظر رد الكباتن أو انتهاء الطلبات.", 429, origin);
+          if (createError.code === "P0002") return error("الرحلة غير متاحة في هذا اليوم.", 404, origin);
+          throw createError;
+        }
+        const request = Array.isArray(data) ? data[0] : data;
+        const { data: line } = await db.from("captain_lines").select("captain_user_id").eq("id", Number(body.line_id)).maybeSingle();
+        if (line) void notifyUser(Number(line.captain_user_id), null, `line-join-request:${request.id}:created`, { title: "طلب انضمام جديد", message: "اختار راكب رحلتك المنشورة وأرسل طلب انضمام.", line_id: Number(body.line_id), request_id: Number(request.id) }).catch((notifyError) => console.error("line join request notification failed", notifyError));
+        return reply({ request }, 201, origin);
+      }
+    }
     if (path === "/rider/demand-requests") {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
       if (req.method === "POST") {
@@ -1199,10 +1246,12 @@ Deno.serve(async (req: Request) => {
         const reverseDropoff = dropoff && line.return_arrival_time ? distanceKm(dropoff, start) : 0;
         const outboundMatch = outboundPickup <= radiusKm && outboundDropoff <= radiusKm;
         const reverseMatch = reversePickup <= radiusKm && reverseDropoff <= radiusKm;
-        if (!outboundMatch && !reverseMatch) return [];
-        const reversed = !outboundMatch && reverseMatch;
-        return [{
+        return ([
+          ...(outboundMatch ? [false] : []),
+          ...(reverseMatch ? [true] : []),
+        ] as const).map((reversed) => ({
           id: Number(line.id), vehicle_type_id: line.vehicle_type_id,
+          direction: reversed ? "return" : "outbound",
           origin_label: reversed ? line.destination_label : line.origin_label,
           origin_lat: reversed ? line.destination_lat : line.origin_lat,
           origin_lng: reversed ? line.destination_lng : line.origin_lng,
@@ -1210,11 +1259,13 @@ Deno.serve(async (req: Request) => {
           destination_lat: reversed ? line.origin_lat : line.destination_lat,
           destination_lng: reversed ? line.origin_lng : line.destination_lng,
           arrival_time: reversed ? line.return_arrival_time : line.arrival_time,
-          service_days: line.service_days, seats: line.seats, price_per_seat: line.price_per_seat,
+          service_days: line.service_days,
+          intermediate_stops: reversed ? [...(line.intermediate_stops ?? [])].reverse() : line.intermediate_stops ?? [],
+          seats: line.seats, price_per_seat: line.price_per_seat,
           pickup_distance_km: Math.round((reversed ? reversePickup : outboundPickup) * 100) / 100,
           dropoff_distance_km: Math.round((reversed ? reverseDropoff : outboundDropoff) * 100) / 100,
           captain_user_id: Number(line.captain_user_id),
-        }];
+        }));
       }).sort((a, b) => a.pickup_distance_km + a.dropoff_distance_km - b.pickup_distance_km - b.dropoff_distance_km).slice(0, 30);
       const captainIds = [...new Set(matches.map((line) => line.captain_user_id))];
       const [captainsResult, profilesResult] = captainIds.length ? await Promise.all([
@@ -1954,6 +2005,39 @@ Deno.serve(async (req: Request) => {
         const { data, error: queryError } = await db.from("captain_lines").select("*").eq("captain_user_id", user!.id).order("created_at", { ascending: false });
         if (queryError) throw queryError;
         return reply({ lines: data ?? [] }, 200, origin, req);
+      }
+      if (path === "/captain/line-requests" && req.method === "GET") {
+        const { data, error: queryError } = await db.from("captain_line_join_requests")
+          .select("*,captain_lines!inner(id,captain_user_id,origin_label,destination_label,arrival_time,return_arrival_time,price_per_seat)")
+          .eq("captain_lines.captain_user_id", user!.id).order("created_at", { ascending: false }).limit(100);
+        if (queryError) throw queryError;
+        const riderIds = [...new Set((data ?? []).map((row) => Number(row.rider_user_id)))];
+        const { data: riders, error: riderError } = riderIds.length ? await db.from("users").select("id,full_name").in("id", riderIds) : { data: [], error: null };
+        if (riderError) throw riderError;
+        const names = new Map((riders ?? []).map((rider) => [Number(rider.id), rider.full_name]));
+        return reply({ requests: (data ?? []).map((row) => {
+          const line = row.captain_lines;
+          const orientedLine = line && row.direction === "return" ? { ...line, origin_label: line.destination_label, destination_label: line.origin_label, arrival_time: line.return_arrival_time ?? line.arrival_time } : line;
+          return { ...row, captain_lines: orientedLine, rider_name: names.get(Number(row.rider_user_id)) ?? "راكب" };
+        }) }, 200, origin, req);
+      }
+      const lineJoinDecision = path.match(/^\/captain\/line-requests\/(\d+)$/);
+      if (lineJoinDecision && req.method === "PATCH") {
+        if (body.decision !== "accepted" && body.decision !== "rejected") return error("اختر قبول الطلب أو رفضه.", 400, origin);
+        const { data, error: decisionError } = await db.rpc("decide_captain_line_join_request", {
+          actor_id: user!.id, request_id: Number(lineJoinDecision[1]), decision: body.decision,
+          response_text: typeof body.response === "string" ? body.response.slice(0, 500) : null,
+        });
+        if (decisionError) {
+          if (decisionError.code === "42501") return error("لا تملك صلاحية اتخاذ قرار بشأن هذا الطلب.", 403, origin);
+          if (decisionError.code === "23514") return error("لا توجد مقاعد كافية لهذا اليوم.", 409, origin);
+          if (decisionError.code === "55000") return error(decisionError.message.includes("expired") ? "انتهت مهلة الطلب." : "تمت معالجة هذا الطلب بالفعل.", 409, origin);
+          if (decisionError.code === "P0002") return error("الطلب غير موجود.", 404, origin);
+          throw decisionError;
+        }
+        const request = Array.isArray(data) ? data[0] : data;
+        void notifyUser(Number(request.rider_user_id), null, `line-join-request:${request.id}:${request.status}`, { title: "تحديث طلب الانضمام", message: request.status === "accepted" ? "وافق الكابتن على طلب انضمامك للرحلة." : "اعتذر الكابتن عن قبول طلب الانضمام.", line_id: Number(request.line_id), request_id: Number(request.id), status: request.status }).catch((notifyError) => console.error("line join decision notification failed", notifyError));
+        return reply({ request }, 200, origin);
       }
       if (path === "/captain/demand-groups" && req.method === "GET") {
         const { data: lines, error: linesError } = await db.from("captain_lines").select("id,origin_label,destination_label").eq("captain_user_id", user!.id);
