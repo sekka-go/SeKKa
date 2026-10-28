@@ -66,6 +66,16 @@ export interface CaptainLine {
   arrival_time: string; return_arrival_time?: string | null; service_days: number[]; seats: number; route_distance_km: number; price_per_km: number; price_per_seat: number;
   payment_methods: string[]; status: "active" | "paused" | "cancelled";
 }
+export interface CaptainLineJoinRequest {
+  id: number; line_id: number; rider_user_id: number; trip_date: string;
+  direction: "outbound" | "return";
+  pickup_label: string; pickup_lat: number; pickup_lng: number;
+  dropoff_label: string; dropoff_lat: number; dropoff_lng: number;
+  seats: number; status: "pending" | "accepted" | "rejected" | "cancelled";
+  captain_response: string | null; created_at: string; responded_at: string | null;
+  rider_name?: string;
+  captain_lines?: { id: number; origin_label: string; destination_label: string; arrival_time: string; return_arrival_time?: string | null; price_per_seat: number; captain_name?: string } | null;
+}
 
 const TOKEN_KEY = "sekka.session.token";
 const USER_KEY = "sekka.session.user";

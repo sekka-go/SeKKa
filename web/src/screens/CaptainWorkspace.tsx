@@ -8,7 +8,7 @@ import { categoryName, errorText, formatDate, money, statusLabel, vehicleCapacit
 import { useResolvedLocationPoints } from "../lib/use-location-addresses";
 import { getRecentDeviceLocation, subscribeToDeviceLocation } from "../lib/device-location";
 import { sameData, useSilentRefresh } from "../lib/use-silent-refresh";
-import { ApiError, api, type CaptainLine, type CaptainOffer, type CaptainProfile, type PoolStop, type RouteGeometry } from "../api";
+import { ApiError, api, type CaptainLine, type CaptainLineJoinRequest, type CaptainOffer, type CaptainProfile, type PoolStop, type RouteGeometry } from "../api";
 import type { MapPickMode, MapPoint } from "../MapPicker";
 import type { NavKey, Session, Toast } from "../types";
 import { AccountPanel, EmptyState, ErrorState, LoadingCard } from "../components/workspace-shared";
@@ -48,6 +48,8 @@ export default function CaptainWorkspace({ session, section, setSection, notify,
   const [publishedLinesLoaded, setPublishedLinesLoaded] = useState(false);
   const [demandGroups, setDemandGroups] = useState<{ id: number; captain_line_id: number; trip_date: string; arrival_time: string; return_arrival_time?: string | null; requests: { id: number; rider_name: string; pickup_label: string; dropoff_label: string; seats: number }[] }[]>([]);
   const demandGroupsRef = useRef<typeof demandGroups>([]);
+  const [lineJoinRequests, setLineJoinRequests] = useState<CaptainLineJoinRequest[]>([]);
+  const lineJoinRequestsRef = useRef<CaptainLineJoinRequest[]>([]);
   const [origin, setOrigin] = useState<MapPoint | null>(null);
   const [destination, setDestination] = useState<MapPoint | null>(null);
   const [originSearch, setOriginSearch] = useState("");
@@ -114,6 +116,26 @@ export default function CaptainWorkspace({ session, section, setSection, notify,
     setPublishedLinesLoaded(true);
     return changed;
   }, [session.token]);
+  const loadLineJoinRequests = useCallback(async (signal?: AbortSignal) => {
+    try {
+      const result = await api<{ requests: CaptainLineJoinRequest[] }>("/captain/line-requests", { token: session.token, signal, etag: true });
+      const next = result.requests ?? [];
+      const changed = !sameData(lineJoinRequestsRef.current, next);
+      if (changed) { lineJoinRequestsRef.current = next; setLineJoinRequests(next); }
+      return changed;
+    } catch { return false; }
+  }, [session.token]);
+  useEffect(() => { if (isCaptainRequestsSection && profile?.verification_status === "approved") void loadLineJoinRequests(); }, [isCaptainRequestsSection, profile?.verification_status, loadLineJoinRequests]);
+  useSilentRefresh(loadLineJoinRequests, { enabled: isCaptainRequestsSection && profile?.verification_status === "approved", intervalMs: 20_000 });
+  const decideLineJoinRequest = async (request: CaptainLineJoinRequest, decision: "accepted" | "rejected") => {
+    setBusy(true);
+    try {
+      const result = await api<{ request: CaptainLineJoinRequest }>(`/captain/line-requests/${request.id}`, { method: "PATCH", token: session.token, body: { decision } });
+      setLineJoinRequests((current) => { const next = current.map((item) => item.id === request.id ? result.request : item); lineJoinRequestsRef.current = next; return next; });
+      notify(t(decision === "accepted" ? "تم قبول طلب الانضمام." : "تم رفض طلب الانضمام."), "success");
+    } catch (error) { notify(errorText(error), "error"); }
+    finally { setBusy(false); }
+  };
   useEffect(() => {
     if (!isLineManagementSection || profile?.verification_status !== "approved") return;
     void loadPublishedLines().catch((error) => { setPublishedLinesLoaded(true); notify(errorText(error), "error"); });
@@ -344,6 +366,7 @@ export default function CaptainWorkspace({ session, section, setSection, notify,
       return <article className="surface offer-card" key={line.id}><span className={`status-chip status-${line.status}`}>{line.status === "active" ? t("نشط") : line.status === "paused" ? t("متوقف مؤقتًا") : t("ملغي")}</span><h3>{line.origin_label} ← {line.destination_label}</h3><p>{vehicleTypeLabel(line.vehicle_type_id)}  {t("· وصول")} {line.arrival_time.slice(0,5)} · {line.seats}  {t("مقاعد ·")} {money(line.price_per_seat)}</p>{line.status !== "cancelled" && <div className="captain-line-actions"><Button type="button" variant="secondary" onClick={async () => { try { await api(`/captain/lines/${line.id}/status`, { method: "PATCH", token: session.token, body: { status: line.status === "active" ? "paused" : "active" } }); await loadPublishedLines(); } catch (error) { notify(errorText(error), "error"); } }}>{line.status === "active" ? t("إيقاف مؤقت") : t("استئناف المسار")}</Button>{!hasRiders && <><Button type="button" variant="secondary" onClick={() => editLine(line)}>{t("تعديل المسار")}</Button><Button type="button" variant="danger" disabled={busy} onClick={() => void cancelLine(line)}>{t("إلغاء المسار")}</Button></>}{hasRiders && <small>{t("لا يمكن تعديل المسار أو إلغاؤه بعد انضمام راكب.")}</small>}</div>}</article>;
     })}</div></section>}
     {showCaptainHome && demandGroups.length > 0 && <section className="surface admin-summary"><div className="section-title-row"><div><span className="eyebrow">{t("طلبات متشابهة")}</span><h2>{t("الركاب المطابقون لمساراتك")}</h2><p>{t("جمع التطبيق طلباتهم المتقاربة تلقائيًا.")}</p></div></div><div className="offer-grid">{demandGroups.map((group) => <article className="surface offer-card" key={group.id}><h3>{t("رحلة")} {formatDate(group.trip_date)}  {t("· وصول")} {group.arrival_time.slice(0,5)}{group.return_arrival_time ? ` · ${t("عودة")} ${group.return_arrival_time.slice(0,5)}` : ""}</h3>{group.requests.map((request) => <p key={request.id}><strong>{request.rider_name}</strong> · {request.pickup_label} ← {request.dropoff_label} · {request.seats}  {t("مقعد")}</p>)}</article>)}</div></section>}
+    {isCaptainRequestsSection && lineJoinRequests.length > 0 && <section className="surface admin-summary"><div className="section-title-row"><div><span className="eyebrow">{t("اختارها الركاب من الرحلات المنشورة")}</span><h2>{t("طلبات الانضمام")}</h2></div><Button type="button" variant="secondary" size="sm" onClick={() => void loadLineJoinRequests()}>{t("تحديث")}</Button></div><div className="offer-grid">{lineJoinRequests.map((request) => <article className="surface offer-card" key={request.id}><span className={`status-chip status-${request.status}`}>{t(request.status === "pending" ? "بانتظار ردك" : request.status === "accepted" ? "مقبول" : request.status === "rejected" ? "مرفوض" : "ملغي")}</span><h3>{request.rider_name ?? t("راكب")} · {formatDate(request.trip_date)} · {t(request.direction === "return" ? "عودة" : "ذهاب")}</h3><p>{request.captain_lines?.origin_label} ← {request.captain_lines?.destination_label}</p><p>{request.pickup_label} ← {request.dropoff_label} · {request.seats} {t("مقاعد")}</p><p>{request.captain_lines?.arrival_time?.slice(0, 5)} · {money(Number(request.captain_lines?.price_per_seat ?? 0))} {t("للمقعد")}</p>{request.status === "pending" && <div className="captain-line-actions"><Button type="button" variant="secondary" disabled={busy} onClick={() => void decideLineJoinRequest(request, "accepted")}>{t("قبول الطلب")}</Button><Button type="button" variant="danger" disabled={busy} onClick={() => void decideLineJoinRequest(request, "rejected")}>{t("رفض الطلب")}</Button></div>}</article>)}</div></section>}
     {isCaptainRequestsSection && selectedOffer && <section className="surface captain-offer-review" aria-labelledby="captain-offer-review-title"><div className="captain-offer-review-heading"><div><span className="eyebrow">{t("مراجعة قبل القبول")}</span><h2 id="captain-offer-review-title">{t("تأكيد الطلب المتاح")}</h2></div><span className="status-chip status-needs_captain">{t("بانتظار كابتن")}</span></div><div className="captain-offer-review-grid"><div><small>{t("المجموعة")}</small><strong>#{selectedOffer.group_id}</strong></div><div><small>{t("التاريخ والاتجاه")}</small><strong>{formatDate(selectedOffer.trip.service_date)} · {selectedOffer.trip.direction === "outbound" ? t("ذهاب") : t("عودة")}</strong></div><div><small>{t("موعد الانطلاق")}</small><strong>{selectedOffer.trip.departure_at.slice(11, 16)}</strong></div><div><small>{t("المسافة")}</small><strong>{selectedOffer.route_distance_km ?? "—"}  {t("كم")}</strong></div><div><small>{t("الفئة")}</small><strong>{categoryName({ id: selectedOffer.category_id, speed_tier: selectedOffer.category_id.includes("saver") ? "saver" : "faster", has_ac: selectedOffer.category_id.includes("ac") ? 1 : 0, seats: selectedOffer.category_id.includes("saver") ? 4 : 3, base_fee: 0, rate_per_km: 0, rate_per_min: 0 })}</strong></div><div><small>{t("سعر المقعد")}</small><strong>{money(selectedOffer.seat_day_fare)}</strong></div></div><MapPicker pickup={null} dropoff={null} mode="pickup" route={selectedOffer.route_geometry} routePlaces={offerStopPoints} onPick={() => undefined} /><div className="captain-offer-review-actions"><button type="button" className="button button-outline" onClick={() => setSelectedOfferId(null)} disabled={busy}>{t("العودة لقائمة الطلبات")}</button><button type="button" className="button button-primary" onClick={() => void acceptOffer(selectedOffer)} disabled={busy}>{busy ? t("جارٍ قبول الطلب…") : t("تأكيد قبول الطلب")}</button></div></section>}
     {isCaptainRequestsSection && (offersLoading || !offersLoaded ? <LoadingCard text="loading.captainHome" /> : offerError && !offers.length ? <ErrorState title="loading.failure" text={offerError} action="تحديث الطلبات" onAction={() => void loadOffers()} /> : offers.length ? <div className="offer-grid route-offer-grid">{[...offers].sort((a, b) => a.trip.departure_at.localeCompare(b.trip.departure_at) || a.trip.id - b.trip.id).map((offer) => {
       const category = categoryName({ id: offer.category_id, speed_tier: offer.category_id.includes("saver") ? "saver" : "faster", has_ac: offer.category_id.includes("ac") ? 1 : 0, seats: offer.category_id.includes("saver") ? 4 : 3, base_fee: 0, rate_per_km: 0, rate_per_min: 0 });
@@ -358,7 +381,7 @@ export default function CaptainWorkspace({ session, section, setSection, notify,
         {visibleOfferMap === offer.trip.id && <MapPicker pickup={null} dropoff={null} mode="pickup" route={offer.route_geometry} routePlaces={visibleOfferMap === selectedOfferId ? offerStopPoints : offer.trip.stops?.map((stop) => ({ lat: stop.lat, lng: stop.lng, kind: stop.stop_type, sequence: stop.sequence }))} readOnly onPick={() => undefined} />}
         <button className="button button-primary button-wide route-offer-accept" disabled={busy} onClick={() => setSelectedOfferId(offer.trip.id)}>{selectedOfferId === offer.trip.id ? t("الطلب قيد المراجعة") : t("مراجعة الطلب وقبوله")}</button>
       </article>;
-    })}</div> : <EmptyState icon="⌖" title={t("مفيش طلبات قريبة دلوقتي")} text={t("تأكد من السماح للتطبيق باستخدام موقعك ومن نطاق البحث لعرض الطلبات المناسبة لسيارتك.")} action="تحديث الطلبات" onAction={() => void loadOffers()} />)}
+    })}</div> : lineJoinRequests.length > 0 ? null : <EmptyState icon="⌖" title={t("مفيش طلبات قريبة دلوقتي")} text={t("تأكد من السماح للتطبيق باستخدام موقعك ومن نطاق البحث لعرض الطلبات المناسبة لسيارتك.")} action="تحديث الطلبات" onAction={() => void loadOffers()} />)}
   </div>;
 }
 
