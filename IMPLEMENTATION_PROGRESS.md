@@ -27,5 +27,5 @@
 
 - The published-line selection screen exists, but its current CTA still enters the legacy group-creation flow. A rider-selected line is not yet persisted as a line-specific join request. Do not describe selection/join as fully implemented until this workflow is connected end-to-end.
 - Applied both Supabase migrations to project `uorxfakceqnhxqnaawdy` and deployed Edge Function `sekka-api` version 61. Verified `/config` returns Prime 3, Daily 4, Space 9, and Max 13.
-- The Cloudflare Pages app needs a final live asset check after its Git integration publishes the merged main branch. Direct Cloudflare deployment status is unavailable until the connected Cloudflare account is reauthenticated.
+- Cloudflare Pages production serves the merged build (`/assets/index-eprgweBN.js`); its HTML and JS return HTTP 200 and include the new vehicle classes.
 - Local untracked brand files (`web/src/components/SikkaMark.tsx`, `SikkaSplash.tsx`, `web/src/light-theme.css`) were preserved and are outside this implementation; they are not referenced by the current app.
