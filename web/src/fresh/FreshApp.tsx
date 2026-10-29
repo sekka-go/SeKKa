@@ -1,13 +1,12 @@
 import { useState } from "react";
 import "./fresh-app.css";
 
-type Role = "rider" | "captain" | "admin";
+type Role = "rider" | "captain";
 type Screen = "home" | "trips" | "account" | "help";
 
 const roleLabels: Record<Role, string> = {
   rider: "راكب",
   captain: "كابتن",
-  admin: "إدارة",
 };
 
 const navItems: { id: Screen; label: string; icon: string }[] = [
@@ -46,9 +45,9 @@ export default function FreshApp() {
             <div className="fresh-hero">
               <div className="fresh-hero-copy">
                 <span className="fresh-eyebrow">سِكّة — تنقّل أذكى</span>
-                <h1>{role === "rider" ? "مشوارك يبدأ من هنا." : role === "captain" ? "خلّي كل مشوار فرصة جديدة." : "إدارة واضحة، وقرارات مبنية على بيانات."}</h1>
-                <p>{role === "rider" ? "خطّط لرحلتك، واعرف تفاصيلها قبل ما تبعت طلبك." : role === "captain" ? "نظّم عروض رحلاتك وتابع طلبات الانضمام من مساحة واحدة." : "تابع حالة المنظومة ومراجعة العمليات من مكان واحد."}</p>
-                <button className="fresh-primary-button" onClick={() => setScreen("trips")}>{role === "rider" ? "استكشف الرحلات" : role === "captain" ? "إدارة الرحلات" : "فتح لوحة الإدارة"} <span aria-hidden="true">←</span></button>
+                <h1>{role === "rider" ? "مشوارك يبدأ من هنا." : "خلّي كل مشوار فرصة جديدة."}</h1>
+                <p>{role === "rider" ? "خطّط لرحلتك، واعرف تفاصيلها قبل ما تبعت طلبك." : "نظّم عروض رحلاتك وتابع طلبات الانضمام من مساحة واحدة."}</p>
+                <button className="fresh-primary-button" onClick={() => setScreen("trips")}>{role === "rider" ? "استكشف الرحلات" : "إدارة الرحلات"} <span aria-hidden="true">←</span></button>
               </div>
               <div className="fresh-route-art" aria-hidden="true">
                 <div className="fresh-route-orbit orbit-one"></div><div className="fresh-route-orbit orbit-two"></div>
@@ -63,7 +62,6 @@ export default function FreshApp() {
                 ? [{ icon: "⌕", title: "ابحث عن رحلة", body: "استعرض الرحلات المتاحة وتفاصيلها.", action: "استعراض الرحلات" }, { icon: "◎", title: "تابع طلباتك", body: "اعرف حالة طلبات الانضمام والرحلات.", action: "عرض الرحلات" }, { icon: "▤", title: "تفاصيل حسابك", body: "راجع بيانات حسابك وإعداداته.", action: "حسابي" }]
                 : role === "captain"
                 ? [{ icon: "＋", title: "عروض الرحلات", body: "انتقل لمساحة إدارة عروضك.", action: "إدارة العروض" }, { icon: "▣", title: "طلبات الانضمام", body: "تابع الطلبات الواردة وحالتها.", action: "عرض الطلبات" }, { icon: "◷", title: "مواعيد الرحلات", body: "راجع المواعيد المسجلة.", action: "عرض المواعيد" }]
-                : [{ icon: "▦", title: "نظرة عامة", body: "مدخل لمساحة الإدارة.", action: "فتح النظرة العامة" }, { icon: "◉", title: "المستخدمون", body: "مساحة مراجعة حسابات المستخدمين.", action: "مراجعة المستخدمين" }, { icon: "⌁", title: "سجل العمليات", body: "مساحة متابعة العمليات والتدقيق.", action: "فتح السجل" }]
               ).map((item, index) => (
                 <button className="fresh-action-card" key={item.title} onClick={() => setScreen(index === 2 && role === "rider" ? "account" : "trips")}>
                   <span className="fresh-action-icon">{item.icon}</span><strong>{item.title}</strong><p>{item.body}</p><span className="fresh-card-link">{item.action} <span aria-hidden="true">←</span></span>
@@ -77,7 +75,7 @@ export default function FreshApp() {
         {screen === "trips" && (
           <div className="fresh-placeholder-panel">
             <span className="fresh-large-icon">↗</span><span className="fresh-eyebrow">مساحة {roleLabels[role]}</span>
-            <h1>{role === "rider" ? "الرحلات" : role === "captain" ? "إدارة الرحلات" : "إدارة المنظومة"}</h1>
+            <h1>{role === "rider" ? "الرحلات" : "إدارة الرحلات"}</h1>
             <p>تم إنشاء نقطة دخول واضحة لهذه المساحة. الخطوة التالية هي ربط كل حالة بالـ API والصلاحيات والبيانات الفعلية، بدل عرض بيانات تجريبية أو نتائج غير مؤكدة.</p>
             <button className="fresh-secondary-button" onClick={() => setScreen("home")}>العودة للرئيسية</button>
           </div>
