@@ -2089,7 +2089,7 @@ Deno.serve(async (req: Request) => {
         const stops = Array.isArray(body.intermediate_stops) ? body.intermediate_stops : [];
         const seatPrice = body.price_per_seat == null ? null : Number(body.price_per_seat);
         if (stops.length > 10) return error("يمكن إضافة 10 محطات وسيطة كحد أقصى.", 400, origin);
-        if (seatPrice != null && (!Number.isFinite(seatPrice) || seatPrice < 0.01 || seatPrice > 99_999_999.99)) return error("أدخل سعرًا صحيحًا للمقعد أكبر من صفر.", 400, origin);
+        if (seatPrice == null || !Number.isFinite(seatPrice) || seatPrice < 0.01 || seatPrice > 99_999_999.99) return error("أدخل سعرًا صحيحًا للمقعد أكبر من صفر.", 400, origin);
         if (stops.some((stop) => !stop || typeof stop.label !== "string" || !clean(stop.label) || !validPoint(stop.lat, stop.lng) || !isGreaterCairoPoint(Number(stop.lat), Number(stop.lng)))) return error("تأكد أن كل المحطات داخل القاهرة الكبرى.", 400, origin);
         let routeDistanceKm: number;
         try {
@@ -2102,7 +2102,7 @@ Deno.serve(async (req: Request) => {
         } catch {
           return error("تعذر حساب مسافة المسار الآن. حاول مرة أخرى.", 503, origin);
         }
-        const { data, error: createError } = await db.rpc("publish_captain_line", { actor_id: user!.id, vehicle_id: profile.vehicle_type_id, origin_name: body.origin_label.trim(), origin_y: body.origin_lat, origin_x: body.origin_lng, destination_name: body.destination_label.trim(), destination_y: body.destination_lat, destination_x: body.destination_lng, stops, arrival: `${arrival}:00`, return_arrives: returnArrival ? `${returnArrival}:00` : null, days, seat_count: Number(body.seats), route_km: routeDistanceKm, ...(seatPrice == null ? {} : { seat_price: seatPrice }), methods });
+        const { data, error: createError } = await db.rpc("publish_captain_line", { actor_id: user!.id, vehicle_id: profile.vehicle_type_id, origin_name: body.origin_label.trim(), origin_y: body.origin_lat, origin_x: body.origin_lng, destination_name: body.destination_label.trim(), destination_y: body.destination_lat, destination_x: body.destination_lng, stops, arrival: `${arrival}:00`, return_arrives: returnArrival ? `${returnArrival}:00` : null, days, seat_count: Number(body.seats), route_km: routeDistanceKm, seat_price: seatPrice, methods });
         if (createError) {
           if (createError.code === "42501") return error("يلزم اعتماد مستندات الكابتن وتوثيق الهاتف قبل نشر المسار.", 403, origin);
           throw createError;

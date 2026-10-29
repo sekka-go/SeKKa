@@ -40,6 +40,18 @@ $$;
 REVOKE ALL ON FUNCTION public.enforce_captain_line_pricing() FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.enforce_captain_line_pricing() TO service_role;
 
+DROP TRIGGER IF EXISTS trg_captain_line_pricing ON public.captain_lines;
+CREATE TRIGGER trg_captain_line_pricing
+BEFORE INSERT OR UPDATE OF vehicle_type_id, seats, route_distance_km, price_per_km, price_per_seat, payment_methods
+ON public.captain_lines
+FOR EACH ROW EXECUTE FUNCTION public.enforce_captain_line_pricing();
+
+-- Remove the old overload that published lines without a captain-set seat price.
+DROP FUNCTION IF EXISTS public.publish_captain_line(
+  integer, text, text, double precision, double precision, text, double precision,
+  double precision, jsonb, time, smallint[], integer, double precision, text[], time
+);
+
 CREATE OR REPLACE FUNCTION public.set_captain_line_status(actor_id integer, line_id integer, next_status text)
 RETURNS public.captain_lines
 LANGUAGE plpgsql SECURITY INVOKER SET search_path = pg_catalog, public AS $$
@@ -243,7 +255,7 @@ END;
 $$;
 
 REVOKE ALL ON FUNCTION public.sekka_match_demand_group(integer) FROM PUBLIC, anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.sekka_match_demand_group(integer) TO service_role;
+REVOKE EXECUTE ON FUNCTION public.sekka_match_demand_group(integer) FROM service_role;
 
 -- Keep new fallback requests clustered only with other open requests. Old
 -- matched groups remain readable as historical records but are not a route

@@ -36,7 +36,7 @@ BEGIN
   SELECT * INTO line_row FROM public.publish_captain_line(
     captain_id, 'private_car', 'Hidden origin label', 30.0, 31.0,
     'Hidden destination label', 30.1, 31.2, '[]'::jsonb, '08:00'::time,
-    ARRAY[1]::smallint[], 4, 12.50, ARRAY['cash']::text[]
+    ARRAY[1]::smallint[], 4, 12.50, 20::numeric, ARRAY['cash']::text[]
   );
 
   IF NOT EXISTS (
