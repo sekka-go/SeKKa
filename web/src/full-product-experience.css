@@ -1,0 +1,377 @@
+/* SeKKa Full Product Experience v1
+   A deliberately new visual direction for the live product, not a preview-only skin.
+   Forest-green mobility brand, warm paper canvas, editorial hierarchy and app-like navigation.
+   Existing React flows, routes, permissions, API calls and business rules remain untouched. */
+:root {
+  color-scheme: light;
+  --brand-green: #155c43;
+  --color-background: #f4f6f1;
+  --color-surface: #ffffff;
+  --color-surface-elevated: #f8faf6;
+  --color-surface-raised: #eaf0e8;
+  --color-border: #dce5dc;
+  --color-text: #15291f;
+  --color-text-primary: #15291f;
+  --color-text-secondary: #52665b;
+  --color-text-muted: #708177;
+  --color-primary: #176447;
+  --color-primary-text: #ffffff;
+  --color-on-primary: #ffffff;
+  --color-accent: #b9e66a;
+  --color-accent-text: #155c43;
+  --color-secondary: #1d8060;
+  --color-icon: #176447;
+  --color-success: #16764b;
+  --color-warning: #95620c;
+  --color-error: #b83232;
+  --color-danger: #b83232;
+  --color-info: #286f9b;
+  --color-input-background: #fbfcf9;
+  --color-input-text: #15291f;
+  --color-placeholder: #7b8b80;
+  --color-disabled: #8a9a8f;
+  --color-overlay: rgb(13 34 24 / 55%);
+  --color-navigation-background: #fff;
+  --color-navigation-active: #e7f3e9;
+  --color-hover: #edf4ec;
+  --color-focus: #8fc84a;
+  --color-shadow: rgb(24 54 38 / 7%);
+  --color-soft-accent: #edf6e9;
+  --color-soft-cyan: #e9f4ee;
+  --radius-card: 1.35rem;
+  --radius-control: .9rem;
+  --space-card: 1.2rem;
+  font-family: "Tajawal", "Segoe UI", sans-serif;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-background: #101b16;
+  --color-surface: #17271f;
+  --color-surface-elevated: #20352a;
+  --color-surface-raised: #24392e;
+  --color-border: #344c3d;
+  --color-text: #f3f7ef;
+  --color-text-primary: #f3f7ef;
+  --color-text-secondary: #c1d0c4;
+  --color-text-muted: #a0b3a5;
+  --color-primary: #b9e66a;
+  --color-primary-text: #163b2c;
+  --color-on-primary: #163b2c;
+  --color-accent: #b9e66a;
+  --color-accent-text: #c5ed83;
+  --color-secondary: #72c79a;
+  --color-icon: #b9e66a;
+  --color-success: #80d7a1;
+  --color-warning: #f2ca76;
+  --color-error: #ffaaa3;
+  --color-danger: #ffaaa3;
+  --color-info: #8ccdf0;
+  --color-input-background: #101d16;
+  --color-input-text: #f3f7ef;
+  --color-placeholder: #a0b3a5;
+  --color-disabled: #819487;
+  --color-overlay: rgb(0 0 0 / 68%);
+  --color-navigation-background: #14231b;
+  --color-navigation-active: #294333;
+  --color-hover: rgb(255 255 255 / 6%);
+  --color-focus: #b9e66a;
+  --color-shadow: rgb(0 0 0 / 22%);
+  --color-soft-accent: #203b2a;
+  --color-soft-cyan: #1d382c;
+}
+html { scroll-behavior: smooth; }
+body { background: var(--color-background) !important; color: var(--color-text-primary); }
+#root, .app-shell { min-height: 100dvh; background: var(--color-background) !important; color: var(--color-text-primary); }
+button, input, select, textarea { font-family: inherit; }
+::selection { background: #cceaa2; color: #173d2b; }
+
+/* Public home: a calmer editorial landing page with a confident brand statement. */
+.app-shell .stitch-welcome-page, .landing-page {
+  width: min(100%, 88rem);
+  min-height: 100dvh;
+  margin-inline: auto;
+  padding: max(1rem, env(safe-area-inset-top)) clamp(1rem, 4.5vw, 4.25rem) max(2rem, env(safe-area-inset-bottom));
+  background: transparent !important;
+  gap: clamp(1.2rem, 3vw, 2.5rem);
+}
+.app-shell .stitch-welcome-header, .landing-header {
+  min-height: 5rem;
+  border-bottom: 1px solid var(--color-border);
+  gap: 1rem;
+}
+.landing-brand, .brand-lockup, .sidebar-brand { color: var(--color-text-primary); }
+.landing-hero {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: 2rem;
+  padding: clamp(1.4rem, 5vw, 4.5rem);
+  background: linear-gradient(118deg, #e8f2e6 0%, #f8faf5 58%, #dcebd9 100%) !important;
+  color: #173d2b;
+  border: 1px solid #d5e5d2;
+  box-shadow: 0 24px 70px rgb(27 73 48 / 8%);
+}
+.landing-hero::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: clamp(15rem, 36vw, 34rem);
+  aspect-ratio: 1;
+  left: -9%;
+  bottom: -48%;
+  border: 1px solid rgb(21 92 67 / 15%);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2.5rem rgb(21 92 67 / 3%), 0 0 0 5rem rgb(21 92 67 / 3%);
+}
+.landing-hero-copy { max-width: 44rem; }
+.landing-hero .eyebrow { color: #176447; background: #d8ebd4; border-radius: 999px; padding: .5rem .85rem; }
+.landing-hero h1 { font-size: clamp(2.8rem, 6.4vw, 6.2rem); line-height: 1.08; letter-spacing: -.045em; font-weight: 900; color: #173d2b; margin-block: 1.4rem; }
+.landing-hero h1 em { color: #1d7654; }
+.landing-hero-copy > p { max-width: 35rem; color: #52695a; font-size: clamp(1rem, 1.6vw, 1.25rem); line-height: 1.9; }
+.landing-primary-cta, .button-primary {
+  min-height: 3.25rem;
+  padding: .85rem 1.3rem;
+  border-radius: 1rem;
+  background: #155c43 !important;
+  border: 1px solid #155c43 !important;
+  color: white !important;
+  box-shadow: 0 8px 20px rgb(21 92 67 / 18%);
+  font-weight: 800;
+  transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.landing-primary-cta:hover, .button-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 25px rgb(21 92 67 / 22%); background: #0f4935 !important; }
+.stitch-welcome-login-link { color: #155c43; font-weight: 800; }
+.landing-trust { color: #536b5b; }
+.landing-trust-dot { background: #23875e; }
+.stitch-welcome-benefits { gap: 1rem; }
+.stitch-welcome-benefits > div {
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border);
+  border-radius: 1.25rem;
+  padding: 1.25rem;
+  box-shadow: 0 8px 24px var(--color-shadow);
+}
+.stitch-welcome-benefits > div > span { background: #e5f2df; color: #155c43; border-radius: 1rem; width: 2.75rem; height: 2.75rem; display: grid; place-items: center; }
+.stitch-welcome-benefits strong, .landing-how-it-works strong { color: var(--color-text-primary); }
+.stitch-welcome-benefits p, .landing-how-it-works p { color: var(--color-text-secondary); }
+.landing-how-it-works { padding-block: 1.5rem; }
+.landing-how-heading h2 { font-size: clamp(1.7rem, 3.5vw, 2.7rem); letter-spacing: -.03em; }
+.landing-how-grid article { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 1.2rem; padding: 1.2rem; }
+.landing-how-grid article > span { background: #dff0d8; color: #155c43; border-radius: .85rem; font-weight: 900; }
+
+/* Live authenticated product: app frame, navigation and page rhythm. */
+.workspace { background: var(--color-background) !important; color: var(--color-text-primary); }
+.workspace .main-area { background: var(--color-background) !important; min-width: 0; }
+.workspace .topbar {
+  min-height: 4.6rem;
+  padding-inline: clamp(1rem, 3vw, 2.5rem);
+  background: color-mix(in srgb, var(--color-navigation-background) 92%, transparent) !important;
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: 0 5px 24px var(--color-shadow);
+  backdrop-filter: blur(20px);
+}
+.topbar-brand-home { border-radius: .9rem; }
+.topbar-actions { gap: .75rem; }
+.connection-state { padding: .45rem .75rem; border: 1px solid var(--color-border); background: var(--color-surface); border-radius: 999px; font-size: .78rem; }
+.workspace .page-content { width: min(100%, 96rem); padding: clamp(1rem, 3vw, 2.75rem) clamp(1rem, 3.6vw, 3.5rem) calc(7rem + env(safe-area-inset-bottom)); }
+.page-heading { align-items: end; gap: 1rem; margin-block: 0 1.75rem; }
+.page-heading h1 { font-size: clamp(1.8rem, 3.4vw, 2.8rem); font-weight: 900; letter-spacing: -.045em; line-height: 1.15; }
+.page-heading p { color: var(--color-text-secondary); line-height: 1.75; margin-top: .55rem; max-width: 48rem; }
+.sidebar-brand { padding: 1.25rem 1.1rem 1.6rem; }
+.sidebar-brand strong { font-weight: 900; letter-spacing: -.03em; }
+.workspace .sidebar, .workspace-navigation, .sidebar-nav, .sidebar-inner {
+  background: var(--color-navigation-background) !important;
+}
+.sidebar-primary-nav { gap: .35rem; }
+.nav-item {
+  min-height: 3.1rem;
+  border-radius: .95rem !important;
+  margin-inline: .4rem;
+  padding-inline: .9rem;
+  color: var(--color-text-secondary) !important;
+  transition: background .16s ease, color .16s ease, transform .16s ease;
+}
+.nav-item:hover { background: var(--color-hover) !important; color: var(--color-text-primary) !important; transform: translateX(-2px); }
+.nav-item.active, .nav-item[aria-current="page"] { background: var(--color-navigation-active) !important; color: var(--color-primary) !important; font-weight: 850; box-shadow: inset -3px 0 0 var(--color-primary); }
+.nav-icon { border-radius: .7rem; }
+.sidebar-label, .sidebar-section-heading { color: var(--color-text-muted) !important; font-size: .72rem; letter-spacing: .04em; }
+.sidebar-profile { border-top: 1px solid var(--color-border); }
+.mobile-tabbar {
+  background: var(--color-navigation-background) !important;
+  border-top: 1px solid var(--color-border) !important;
+  box-shadow: 0 -8px 28px var(--color-shadow);
+  backdrop-filter: blur(18px);
+}
+.mobile-tabbar .nav-item { margin: 0; min-height: 3.7rem; border-radius: .8rem !important; }
+.mobile-tabbar .nav-item.active { box-shadow: inset 0 3px 0 var(--color-primary); }
+.sidebar-scrim { background: var(--color-overlay) !important; backdrop-filter: blur(4px); }
+
+/* Consistent cards: white paper surfaces, clean borders and more deliberate spacing. */
+.app-shell :is(.surface, .metric-card, .group-summary, .offer-card, .route-offer-card,
+  .commuter-board-card, .account-card, .password-card, .verification-center,
+  .verification-wizard, .verification-doc-card, .verification-phone-row,
+  .verification-intro, .verification-finish, .messages-workspace,
+  .messages-thread-list, .messages-chat-panel, .messages-empty,
+  .admin-secondary-details, .captain-settings-details, .admin-control-panel article,
+  .admin-control-panel > nav, .admin-nav-group, .settings-disclosure,
+  .settings-disclosure > details, .soft-surface, .offer-toolbar, .booking-stepper,
+  .help-card, .brand-confirm-dialog, .price-info-popover, .admin-overview-kpi,
+  .admin-overview-users, .admin-overview-review, .captain-welcome-panel,
+  .captain-earnings-summary, .captain-earnings-list, .captain-trip-detail,
+  .rider-request-card, .rider-trip-offer, .booking-form-surface, .booking-map-panel) {
+  color: var(--color-text-primary);
+  background: var(--color-surface) !important;
+  border-color: var(--color-border) !important;
+  border-radius: var(--radius-card);
+  box-shadow: 0 8px 28px var(--color-shadow);
+}
+.app-shell :is(.surface, .metric-card, .group-summary, .offer-card, .route-offer-card,
+  .admin-overview-kpi, .captain-welcome-panel, .rider-request-card, .rider-trip-offer) {
+  padding: clamp(1rem, 2vw, 1.45rem);
+}
+.app-shell :is(.surface p, .surface small, .muted-text, .section-toolbar p, .offer-toolbar p,
+  .rider-request-note, .rider-trip-offer-meta, .captain-direct-payment-note) {
+  color: var(--color-text-secondary);
+}
+.surface-heading { border-bottom-color: var(--color-border) !important; }
+.section-title-row { gap: 1rem; }
+.section-title-row h2, .section-title-row h3 { font-weight: 850; letter-spacing: -.025em; }
+.eyebrow { color: var(--color-primary); font-weight: 850; }
+.status-chip { border-radius: 999px; padding: .38rem .7rem; font-weight: 800; }
+.button { min-height: 2.85rem; border-radius: .9rem; font-weight: 800; transition: transform .16s ease, box-shadow .16s ease; }
+.button:not(:disabled):active { transform: translateY(1px); }
+.button-outline, .button-quiet {
+  background: var(--color-surface) !important;
+  color: var(--color-text-primary) !important;
+  border: 1px solid var(--color-border) !important;
+}
+.button-outline:hover, .button-quiet:hover { background: var(--color-hover) !important; }
+.text-action { color: var(--color-primary) !important; font-weight: 800; }
+.form-stack label, .form-field-label, .field-heading { color: var(--color-text-secondary); font-weight: 700; }
+.form-stack input, .form-stack select, .form-stack textarea, .form-field input,
+.form-field select, .form-field textarea, .booking-layout input, .booking-layout select,
+.booking-layout textarea {
+  min-height: 3rem;
+  background: var(--color-input-background) !important;
+  color: var(--color-input-text) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: .85rem !important;
+  box-shadow: none;
+}
+input::placeholder, textarea::placeholder { color: var(--color-placeholder) !important; opacity: 1; }
+input:focus, select:focus, textarea:focus { border-color: var(--color-primary) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent) !important; }
+.info-note, .rider-overview-strip, .captain-status-box, .admin-overview-note {
+  background: var(--color-soft-accent) !important;
+  color: var(--color-text-primary);
+  border-color: var(--color-border) !important;
+  border-radius: 1rem;
+}
+
+/* Rider: make the first screen feel like a mobility home, not a generic admin grid. */
+.rider-workspace .rider-hero, .rider-workspace .rider-home-hero, .rider-hero {
+  border-radius: 1.6rem;
+}
+.rider-hero h2, .rider-hero h1 { font-size: clamp(1.8rem, 4vw, 3.1rem); font-weight: 900; letter-spacing: -.045em; }
+.rider-dashboard { gap: 1.2rem; }
+.rider-overview-strip { border: 1px solid #d7e8d3; padding: 1rem 1.2rem; }
+.rider-overview-icon, .rider-place-icon, .rider-promo-mark {
+  border-radius: 1rem;
+  background: #e1f0dc !important;
+  color: #155c43 !important;
+}
+.rider-shortcuts { gap: .8rem; }
+.rider-shortcuts > * { border-radius: 1.1rem; border: 1px solid var(--color-border); background: var(--color-surface) !important; }
+.rider-trip-offer-route, .rider-request-route { font-weight: 850; }
+.rider-route-timeline i, .rider-trip-detail-route i { background: var(--color-primary); }
+.rider-trip-offer-action { min-width: 8rem; }
+.booking-stepper { padding: .8rem; }
+.booking-review-total { background: var(--color-soft-accent); border-radius: 1rem; padding: 1rem; }
+.rider-place-chip { border-radius: 999px; background: var(--color-surface) !important; border: 1px solid var(--color-border); }
+
+/* Captain: a clear operations cockpit, with route and earnings information prioritized. */
+.captain-workspace .page-content { width: min(100%, 96rem); }
+.captain-workspace .page-heading { margin-bottom: 1.8rem; }
+.captain-welcome-panel { background: linear-gradient(120deg, var(--color-surface) 0%, var(--color-soft-accent) 100%) !important; }
+.captain-welcome-copy h2 { font-size: clamp(1.5rem, 3vw, 2.4rem); font-weight: 900; letter-spacing: -.04em; }
+.captain-overview-grid, .offer-grid, .route-offer-grid { gap: 1rem; }
+.captain-overview-tile { background: var(--color-surface) !important; border: 1px solid var(--color-border); border-radius: 1.2rem; padding: 1.25rem; }
+.captain-overview-icon { background: #e1f0dc !important; color: #155c43 !important; border-radius: .95rem; }
+.captain-earnings-summary { background: linear-gradient(135deg, #155c43, #217854) !important; color: #fff !important; border: 0 !important; }
+.captain-earnings-summary :is(h1,h2,h3,p,small,strong,span) { color: inherit; }
+.captain-earning-row { border-bottom-color: var(--color-border) !important; padding-block: .9rem; }
+.route-offer-timeline { border-color: var(--color-border); }
+.route-offer-stop.pickup i { background: #2e9567; }
+.route-offer-stop.dropoff i { background: #d9a64a; }
+
+/* Admin: calmer data-dense tables and an unmistakable management workspace. */
+.admin-dashboard { gap: 1.2rem; }
+.admin-overview-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.admin-overview-kpis { gap: 1rem; }
+.admin-overview-kpi { padding: 1.2rem; }
+.admin-overview-kpi strong, .admin-overview-kpi b { font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 900; letter-spacing: -.04em; }
+.admin-overview-users, .admin-overview-review { padding: 1.25rem; }
+.admin-broadcast { padding: clamp(1rem, 2.5vw, 1.8rem); }
+.admin-broadcast-form { gap: 1rem; }
+
+/* Authentication: simplify the split-screen into a polished, legible entry journey. */
+.auth-layout { background: var(--color-background) !important; gap: 0; }
+.auth-story { background: linear-gradient(145deg, #e4f0e0 0%, #f6f8f2 68%, #d7e9d3 100%) !important; color: #173d2b; padding: clamp(1.5rem, 5vw, 5rem); }
+.auth-story h1, .auth-story h2 { color: #173d2b; font-weight: 900; letter-spacing: -.045em; }
+.auth-story p, .auth-story .story-footer, .auth-story .story-route, .auth-story .story-stats span { color: #52695a; }
+.auth-story .story-stats strong { color: #155c43; }
+.auth-panel { background: var(--color-background) !important; padding: clamp(1rem, 4vw, 3rem); }
+.auth-card {
+  background: var(--color-surface) !important;
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border) !important;
+  border-radius: 1.6rem;
+  padding: clamp(1.25rem, 3vw, 2.5rem);
+  box-shadow: 0 25px 70px rgb(24 54 38 / 10%) !important;
+}
+.auth-heading h2 { font-size: clamp(1.65rem, 3vw, 2.3rem); font-weight: 900; letter-spacing: -.035em; }
+.auth-heading p, .auth-legal, .muted-text { color: var(--color-text-secondary); }
+.auth-tabs { border-bottom-color: var(--color-border); }
+.auth-tabs button { color: var(--color-text-secondary); }
+.auth-tabs button.active { color: var(--color-primary); border-color: var(--color-primary); font-weight: 850; }
+.form-stack { gap: 1.1rem; }
+
+/* Tables, dialogs, notifications and edge cases inherit the same surface system. */
+table { border-color: var(--color-border); }
+th { color: var(--color-text-secondary); background: var(--color-surface-elevated); }
+td { border-color: var(--color-border); }
+tr:hover td { background: var(--color-hover); }
+[role="dialog"], .brand-modal-backdrop .brand-confirm-dialog { border-radius: 1.4rem; }
+.icon-button { border: 1px solid var(--color-border); border-radius: .9rem; background: var(--color-surface); color: var(--color-text-primary); }
+.icon-button:hover { background: var(--color-hover); }
+a { text-underline-offset: .2em; }
+:focus-visible { outline: 3px solid color-mix(in srgb, var(--color-focus) 70%, transparent); outline-offset: 3px; }
+@media (max-width: 800px) {
+  .app-shell .stitch-welcome-page, .landing-page { padding-inline: 1rem; gap: 1rem; }
+  .landing-hero { border-radius: 1.35rem; padding: 1.4rem; }
+  .landing-hero h1 { font-size: clamp(2.5rem, 10vw, 4.2rem); }
+  .landing-hero .landing-hero-actions { align-items: stretch; gap: .7rem; }
+  .landing-primary-cta { width: 100%; justify-content: center; }
+  .stitch-welcome-benefits { grid-template-columns: 1fr !important; }
+  .stitch-welcome-benefits > div { display: grid; grid-template-columns: 2.75rem minmax(0,1fr); column-gap: .85rem; align-items: center; }
+  .stitch-welcome-benefits > div > span { grid-row: span 2; }
+  .stitch-welcome-benefits p { margin: .15rem 0 0; }
+  .landing-how-grid { grid-template-columns: 1fr !important; }
+  .auth-layout { grid-template-columns: 1fr !important; }
+  .auth-story { min-height: auto; padding: 1.4rem 1.2rem 1.7rem; }
+  .auth-story-copy { margin: 1.6rem 0; }
+  .auth-story h1 { font-size: clamp(2.25rem, 10vw, 3.4rem); }
+  .story-stats { gap: 1rem; margin-top: 1.4rem; }
+  .story-stats strong { font-size: 1.6rem; }
+  .auth-panel { padding: 1rem; }
+  .auth-card { width: 100%; }
+  .workspace .topbar { min-height: 4rem; padding-inline: .85rem; }
+  .workspace .page-content { padding: 1.1rem .9rem calc(6.5rem + env(safe-area-inset-bottom)); }
+  .page-heading { align-items: start; margin-bottom: 1.2rem; }
+  .page-heading h1 { font-size: 1.75rem; }
+  .rider-dashboard, .captain-overview-grid, .admin-overview-kpis { grid-template-columns: 1fr !important; }
+  .admin-overview-toolbar { align-items: stretch; flex-direction: column; }
+  .surface, .app-shell :is(.surface, .metric-card, .offer-card, .route-offer-card) { border-radius: 1.05rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}
