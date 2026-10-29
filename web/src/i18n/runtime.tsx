@@ -14,7 +14,7 @@ type LanguageContextValue = {
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 let activeLanguage: Language = "ar";
-const applicationNames: Record<Language, string> = { ar: "سِكّة", en: "SeKKa" };
+const applicationNames: Record<Language, string> = { ar: "sekka", en: "sekka" };
 
 function applicationName(language: Language) {
   return applicationNames[language];
@@ -134,7 +134,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = language;
     document.documentElement.dir = direction;
     document.documentElement.dataset.language = language;
-    document.title = language === "ar" ? "سِكَّة | SeKKa" : "SeKKa | With you on the road";
+    document.title = language === "ar" ? "sekka | معاك في السكة" : "sekka | With you on the road";
     try { localStorage.setItem("sekka.language", language); } catch { /* Preserve the in-memory choice. */ }
   }, [language, direction]);
 

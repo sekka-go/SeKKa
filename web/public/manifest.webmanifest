@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "سِكَّة | SeKKa",
-  "short_name": "SeKKa",
+  "name": "sekka | سِكَّة",
+  "short_name": "sekka",
   "description": "معاك في السكة",
   "lang": "ar",
   "dir": "rtl",
@@ -13,11 +13,11 @@
     "minimal-ui"
   ],
   "orientation": "portrait-primary",
-  "theme_color": "#f8f9ff",
-  "background_color": "#f8f9ff",
+  "theme_color": "#f5f7fc",
+  "background_color": "#f5f7fc",
   "color_scheme_dark": {
-    "background_color": "#090d16",
-    "theme_color": "#090d16"
+    "background_color": "#0b2427",
+    "theme_color": "#0b2427"
   },
   "categories": [
     "travel",

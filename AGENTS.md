@@ -4,9 +4,18 @@ SeKKa is an Arabic, RTL-first marketplace for regular shared rides in Egypt. Cap
 
 ## Source of truth
 
-- Product behavior: [`docs/PRD.pdf`](docs/PRD.pdf).
-- If existing code, database behavior, and the PRD conflict, stop and ask before changing the data model or user flows.
-- Follow one task at a time from [`docs/TASKS_PHASE1.md`](docs/TASKS_PHASE1.md). Do not begin another task unless asked.
+The current approved product/design source pack is in [`docs/product-spec/`](docs/product-spec/):
+
+1. `SeKKa_Master_PRD_MVP_v2_AR.md` defines product scope and business rules.
+2. `DECISION_LOG.md` defines approved, open, and deferred decisions. Never resolve an open decision by inference.
+3. `SeKKa_Master_Screen_Map_MVP_v1_AR.md` defines the target screen inventory and flows.
+4. `SeKKa_Master_UI_UX_Design_Spec_AR.md` and `DESIGN.md` define screen UX and visual rules; the attached reference image is stored under `reference/`.
+5. `ARCHITECTURE.md` defines technical architecture and system boundaries.
+6. `IMPLEMENTATION_PLAN_v1.md` and `IMPLEMENTATION_PLAN_v2.md` are separate implementation plans. Neither supersedes the other implicitly; compare them and preserve both.
+
+Older PRDs, task plans, screen maps, Stitch exports, and handoffs elsewhere in the repository are historical inputs only. They are not product authority where they conflict with the current source pack. Preserve technical infrastructure, environment/security configuration, existing auth/API integrations, production data, and historical migrations unless a reviewed forward-compatible change is required.
+
+When a product decision remains open, implement only independent work and document the blocked behavior. Do not claim release readiness while a P0 decision blocks an end-to-end flow.
 
 ## Approved stack
 

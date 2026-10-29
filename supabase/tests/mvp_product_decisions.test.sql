@@ -57,6 +57,23 @@ BEGIN
      OR (SELECT status FROM public.demand_requests WHERE id=request_row.id) <> 'open' THEN
     RAISE EXCEPTION 'new matching requests must stay open for rider choice';
   END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.pool_notifications
+    WHERE user_id = rider_id
+      AND event_key = 'demand-suggestion:' || request_row.id || ':' || line_row.id
+      AND (payload->>'line_id')::integer = line_row.id
+  ) THEN
+    RAISE EXCEPTION 'a newly published suitable line must notify the rider without assigning it';
+  END IF;
+  IF line_row.price_per_km <> 0 OR line_row.price_per_seat <> 20 THEN
+    RAISE EXCEPTION 'the captain-set seat price must be preserved without legacy per-kilometre pricing';
+  END IF;
+  BEGIN
+    UPDATE public.captain_lines SET payment_methods = ARRAY['wallet']::text[] WHERE id = line_row.id;
+    RAISE EXCEPTION 'legacy wallet payment method should be rejected';
+  EXCEPTION WHEN SQLSTATE '22023' THEN
+    NULL;
+  END;
 END
 $fixture$;
 $test$, 'new lines remain suggestions and do not automatically assign open demand');

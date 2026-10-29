@@ -6,6 +6,7 @@ export interface Category {
   id: string; speed_tier: "faster" | "saver"; has_ac: number; seats: number;
   base_fee: number; rate_per_km: number; rate_per_min: number;
 }
+export interface VehicleType { id: string; name_ar: string; capacity_max: number }
 export interface SavedPlace { place_type: "home" | "work" | "frequent"; label: string; lat: number; lng: number; }
 export interface RiderCommuterPreferences {
   usual_days: number[];
