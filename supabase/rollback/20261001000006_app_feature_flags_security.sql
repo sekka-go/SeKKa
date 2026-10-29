@@ -1,2 +1,0 @@
-DROP POLICY app_feature_flags_service_role_all ON public.app_feature_flags;
-DROP INDEX public.idx_app_feature_flags_updated_by_user_id;
