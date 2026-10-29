@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
+import "./redesign/public-screens-preview.css";
 import "./product-system.css";
 import "./brand-lockup.css";
 import "./auth-layout.css";
