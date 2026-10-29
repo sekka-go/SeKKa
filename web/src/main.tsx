@@ -17,6 +17,7 @@ import "./captain-stitch-screens.css";
 import "./application-redesign.css";
 import "./stitch-experience.css";
 import "./full-product-experience.css";
+import "./bright-product-system.css";
 import App from "./App";
 import PwaNotice from "./components/PwaNotice";
 import { registerPwa } from "./pwa";
