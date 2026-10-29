@@ -1,0 +1,102 @@
+/* SeKKa bright product UI — applied to the real application routes, not preview-only screens. */
+:root {
+  color-scheme: light;
+  --ink: #183b35;
+  --muted: #627b74;
+  --line: #dcebe4;
+  --panel: #ffffff;
+  --panel-hi: #f2fbf6;
+  --yellow: #ffd34e;
+  --yellow-deep: #b98000;
+  --cyan: #8adfe0;
+  --danger: #b83243;
+  --color-background: #f5faf6;
+  --color-accent-text: #087e63;
+  --color-error: #b83243;
+  --bg: #f5faf6;
+  --color-foreground: #183b35;
+  --color-border: #dcebe4;
+}
+html, body { background: #f5faf6; color: #183b35; }
+body { min-width: 320px; }
+.app-shell { color: #183b35; background: radial-gradient(circle at 92% 0%, rgba(255,211,78,.22), transparent 24rem), radial-gradient(circle at 0% 36%, rgba(98,214,186,.13), transparent 28rem), #f5faf6; }
+.app-shell button, .app-shell input, .app-shell select, .app-shell textarea { accent-color: #009b76; }
+.auth-story { color: #fff; background: linear-gradient(145deg,#087d63 0%,#075848 56%,#123e38 100%); }
+.auth-story p, .auth-story .story-footer, .auth-story .story-stats span, .auth-story .story-route { color: #d4f3e8; }
+.auth-story h1 em, .auth-story .eyebrow, .auth-story .story-stats strong { color: #ffdc69; }
+.auth-panel { background: linear-gradient(145deg,#e9fbf2,#fff8df); }
+.auth-card { color: #183b35; border: 1px solid #d8eee2; border-radius: 28px; background: rgba(255,255,255,.96); box-shadow: 0 22px 70px rgba(14,94,69,.12); }
+.auth-heading h2, .auth-card h2, .auth-card h3 { color: #183b35; }
+.auth-heading p, .auth-legal, .muted-text, .form-stack label { color: #627b74; }
+.form-stack input, .form-stack select { color: #183b35; background: #fbfefc; border: 1px solid #d5e8de; border-radius: 12px; }
+.form-stack input:focus, .form-stack select:focus { border-color: #009b76; box-shadow: 0 0 0 3px rgba(0,155,118,.12); }
+.button { border-radius: 12px; color: #fff; background: linear-gradient(120deg,#009b76,#08ad83); box-shadow: 0 5px 12px rgba(0,130,94,.14); }
+.button-outline { color: #087e63; background: #fff; border-color: #bfe4d3; box-shadow: none; }
+.button-quiet { color: #627b74; box-shadow: none; }
+.role-picker button { color: #627b74; border: 1px solid #dcebe4; border-radius: 14px; background: #fbfefc; }
+.role-picker button.selected { color: #087e63; border-color: #009b76; background: #e8faf1; }
+.workspace { color: #183b35; background: #f5faf6; }
+.sidebar { background: #fff; border-inline-end: 1px solid #dcebe4; box-shadow: 4px 0 24px rgba(18,72,54,.035); }
+.sidebar-label { color: #8aa198; }
+.sidebar-brand strong, .brand-logo-copy strong, .profile-copy strong { color: #183b35; }
+.sidebar-brand small, .brand-logo-copy small { color: #70877f; }
+.nav-item { color: #627b74; border-radius: 12px; }
+.nav-item.nav-active, .nav-item:hover { color: #067b5e; background: #e6f8ef; }
+.nav-icon { color: #009b76; }
+.help-card { color: #627b74; border: 1px solid #d8eee2; border-radius: 16px; background: linear-gradient(145deg,#e8faf1,#fff8dc); }
+.help-card strong { color: #183b35; }
+.sidebar-profile { color: #183b35; border-radius: 12px; }
+.avatar { color: #fff; background: linear-gradient(135deg,#00a77d,#08765e); }
+.topbar { background: rgba(255,255,255,.88); border-bottom: 1px solid #e1eee6; backdrop-filter: blur(12px); }
+.breadcrumbs { color: #70877f; }
+.breadcrumbs strong { color: #183b35; }
+.icon-button, .text-action, .mobile-menu { color: #58746b; }
+.page-content { padding-top: clamp(1.4rem,3vw,3rem); }
+.page-heading h1 { color: #173e35; font-weight: 800; letter-spacing: -.025em; }
+.page-heading p { color: #647d74; }
+.eyebrow, .heading-mark { color: #079a73; }
+.surface, .booking-form-surface, .booking-aside, .dashboard-main, .dashboard-side { border-color: #deece4; border-radius: 20px; background: #fff; box-shadow: 0 7px 25px rgba(22,74,53,.045); }
+.soft-surface { border-color: #cdeee0; background: linear-gradient(145deg,#e4faf0,#fff9df); }
+.soft-surface p, .soft-surface li, .compact-note p { color: #5e786e; }
+.soft-surface li::marker, .aside-icon, .surface-icon { color: #079a73; }
+.segmented-control { border-color: #dcebe4; border-radius: 14px; background: #f3faf6; }
+.segmented-control button { color: #627b74; border-radius: 10px; }
+.segmented-control button.selected { color: #fff; background: #009b76; }
+.package-option, .category-option { color: #627b74; border-color: #dcebe4; border-radius: 14px; background: #fff; }
+.package-option strong, .category-option strong { color: #183b35; }
+.package-option.selected, .category-option.selected { border-color: #00a77d; background: #e8faf1; box-shadow: 0 0 0 2px rgba(0,167,125,.07); }
+.package-option b, .category-option b, .tier-helper strong, .text-action.active { color: #07835f; }
+.tier-helper, .info-note, .form-footnote { color: #58746b; border-inline-start-color: #00a77d; border-radius: 0 12px 12px 0; background: #edfaf3; }
+.date-chip { color: #627b74; border-color: #dcebe4; border-radius: 10px; background: #fff; }
+.date-chip.active { color: #fff; background: #009b76; border-color: #009b76; }
+.map-picker { overflow: hidden; border-color: #d6e7dc; border-radius: 18px; }
+.map-canvas { background: #e8f3e8; }
+.map-hint { color: #183b35; border-radius: 9px; background: rgba(255,255,255,.94); }
+.marker-pickup { background: #00a77d; }.marker-dropoff { background: #ffcb3d; }
+.offer-grid, .admin-stats-grid, .admin-summary-grid { gap: 1.1rem; }
+.offer-card { border: 1px solid #deece4; border-radius: 20px; background: #fff; box-shadow: 0 7px 25px rgba(22,74,53,.045); }
+.offer-card h3 { color: #183b35; }
+.offer-card-top, .offer-meta { color: #627b74; }
+.status-chip, .online-pill { color: #087e63; border-radius: 999px; background: #e2f8ed; }
+.admin-stat, .admin-summary { border: 1px solid #deece4; border-radius: 18px; background: #fff; }
+.admin-stat strong, .admin-summary-grid strong { color: #07835f; }
+.admin-stat small, .admin-summary-grid small { color: #627b74; }
+.admin-captain-row { border-color: #e4eee8; }
+.admin-captain-info small { color: #627b74; }
+.toast { color: #183b35; border: 1px solid #d7e9de; border-radius: 14px; background: #fff; box-shadow: 0 12px 35px rgba(20,65,49,.15); }
+.connection-banner { color: #96313e; background: #fff0ee; }
+.inline-error { color: #a12f3c; border-color: #f4c8c9; border-radius: 12px; background: #fff2f0; }
+.empty-state, .error-state { border-radius: 18px; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid rgba(255,195,45,.9); outline-offset: 2px; }
+@media (max-width: 800px) {
+  .sidebar { background: #fff; box-shadow: 16px 0 40px rgba(20,65,49,.13); }
+  .topbar { background: rgba(255,255,255,.95); }
+  .page-content { padding: 1rem; }
+  .page-heading { gap: 1rem; margin-bottom: 1.4rem; }
+  .page-heading h1 { font-size: 1.7rem; }
+  .surface, .booking-form-surface, .booking-aside, .dashboard-main, .dashboard-side { border-radius: 16px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .button, .nav-item, .offer-card, .surface { transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
+  .offer-card:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(22,74,53,.09); }
+}
