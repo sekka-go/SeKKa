@@ -39,9 +39,9 @@ assert.equal(markPixels[3], 0, "shared SeKKa logo mark must keep transparent cor
 for (const file of ["favicon-32.png", "favicon-48.png", "apple-touch-icon-180.png", "sekka-badge.png", "sekka-share.png"]) {
   await readFile(path.join(root, "public/brand", file));
 }
-assert.equal(manifest.theme_color, "#f8f9ff");
-assert.equal(manifest.background_color, "#f8f9ff");
-assert.equal(manifest.color_scheme_dark?.background_color, "#090d16");
+assert.equal(manifest.theme_color, "#f5f7fc");
+assert.equal(manifest.background_color, "#f5f7fc");
+assert.equal(manifest.color_scheme_dark?.background_color, "#0b2427");
 
 await readFile(path.join(root, "public/offline.html"));
 const worker = await readFile(path.join(root, "public/sw.js"), "utf8");

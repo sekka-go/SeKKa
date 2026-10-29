@@ -1144,7 +1144,7 @@ Deno.serve(async (req: Request) => {
           return error("راجع الرحلة والتاريخ ونقطتي الركوب والوصول.", 400, origin);
         }
         const seats = Number(body.seats ?? 1);
-        if (!Number.isInteger(seats) || seats < 1 || seats > 13) return error("عدد المقاعد المطلوب غير صحيح.", 400, origin);
+        if (!Number.isInteger(seats) || seats < 1) return error("عدد المقاعد المطلوب غير صحيح.", 400, origin);
         const { data, error: createError } = await db.rpc("create_captain_line_join_request", {
           actor_id: user!.id, line_id: Number(body.line_id), trip_on: body.trip_date,
           pickup_name: body.pickup_label.trim(), pickup_y: body.pickup_lat, pickup_x: body.pickup_lng,
@@ -1169,8 +1169,9 @@ Deno.serve(async (req: Request) => {
       const gate = await requireRole(user, ["rider"], origin); if (gate) return gate;
       if (req.method === "POST") {
         const activationGate = await requireVerificationActivation(user!, origin); if (activationGate) return activationGate;
-        const capacityByClass = { prime: 3, daily: 4, space: 9, max: 13 } as const;
-        const capacity = capacityByClass[body.vehicle_type_id as keyof typeof capacityByClass];
+        const { data: vehicle, error: vehicleError } = await db.from("vehicle_types").select("capacity_max").eq("id", String(body.vehicle_type_id ?? "")).maybeSingle();
+        if (vehicleError) throw vehicleError;
+        const capacity = Number(vehicle?.capacity_max ?? 0);
         const requestedSeats = Number(body.seats ?? 1);
         if (!capacity || !Number.isInteger(requestedSeats) || requestedSeats < 1 || requestedSeats > capacity) return error("عدد المقاعد يتجاوز سعة فئة المركبة.", 400, origin);
         if (!(["prime", "daily", "space", "max"].includes(String(body.vehicle_type_id))) || !validIsoDate(body.trip_date) || String(body.trip_date) < cairoDateKey() || normalizeClock(body.arrival_time) !== body.arrival_time || (body.return_arrival_time != null && normalizeClock(body.return_arrival_time) !== body.return_arrival_time) || !clean(body.pickup_label) || !clean(body.dropoff_label) || !validPoint(body.pickup_lat, body.pickup_lng) || !validPoint(body.dropoff_lat, body.dropoff_lng) || !isGreaterCairoPoint(Number(body.pickup_lat), Number(body.pickup_lng)) || !isGreaterCairoPoint(Number(body.dropoff_lat), Number(body.dropoff_lng))) return error("راجع نوع المركبة والتاريخ والوقت ونقطتي الركوب والوصول داخل القاهرة الكبرى.", 400, origin);
@@ -1180,7 +1181,7 @@ Deno.serve(async (req: Request) => {
           throw createError;
         }
         const request = Array.isArray(data) ? data[0] : data;
-        const [{ data: group }, { data: vehicle }] = await Promise.all([
+        const [{ data: group }, { data: vehicleType }] = await Promise.all([
           db.from("demand_groups").select("id,status,captain_line_id").eq("id", request.demand_group_id).maybeSingle(),
           db.from("vehicle_types").select("id,name_ar").eq("id", request.vehicle_type_id).maybeSingle(),
         ]);
@@ -1191,7 +1192,7 @@ Deno.serve(async (req: Request) => {
           const oriented = found ? orientCaptainLineForRider(found, Number(request.pickup_lat), Number(request.pickup_lng)) : null;
           line = oriented ? { id: oriented.id, origin_label: oriented.origin_label, destination_label: oriented.destination_label, arrival_time: oriented.arrival_time, return_arrival_time: oriented.return_arrival_time, seats: oriented.seats, price_per_seat: oriented.price_per_seat, captain_name: captain?.full_name ?? "الكابتن" } : null;
         }
-        return reply({ request, demand_group: group, vehicle, line }, 201, origin);
+        return reply({ request, demand_group: group, vehicle: vehicleType, line }, 201, origin);
       }
       if (req.method === "GET") {
         const { data, error: queryError } = await db.from("demand_requests").select("*,demand_groups(status,captain_line_id)").eq("rider_user_id", user!.id).order("created_at", { ascending: false }).limit(50);
@@ -2083,12 +2084,12 @@ Deno.serve(async (req: Request) => {
         const arrival = String(body.arrival_time ?? "");
         const returnArrival = body.return_arrival_time == null || body.return_arrival_time === "" ? null : String(body.return_arrival_time);
         const maxSeats = Number(vehicle?.capacity_max ?? 0);
-        if (!vehicle || maxSeats === 0 || Number(vehicle.capacity_max) < maxSeats || String(body.vehicle_type_id) !== String(profile.vehicle_type_id) || !clean(body.origin_label) || !clean(body.destination_label) || !validPoint(body.origin_lat, body.origin_lng) || !validPoint(body.destination_lat, body.destination_lng) || !isGreaterCairoPoint(Number(body.origin_lat), Number(body.origin_lng)) || !isGreaterCairoPoint(Number(body.destination_lat), Number(body.destination_lng)) || !/^\d{2}:\d{2}$/.test(arrival) || (returnArrival != null && !/^\d{2}:\d{2}$/.test(returnArrival)) || !days.length || days.some((d) => !Number.isInteger(d) || d < 0 || d > 6) || new Set(days).size !== days.length || !Number.isInteger(Number(body.seats)) || Number(body.seats) < 1 || Number(body.seats) > maxSeats || !methods.length || methods.some((m) => !["cash", "instapay", "wallet"].includes(m))) return error("راجع المسار والأيام والمقاعد وطريقة الدفع.", 400, origin);
+        if (!vehicle || maxSeats === 0 || Number(vehicle.capacity_max) < maxSeats || String(body.vehicle_type_id) !== String(profile.vehicle_type_id) || !clean(body.origin_label) || !clean(body.destination_label) || !validPoint(body.origin_lat, body.origin_lng) || !validPoint(body.destination_lat, body.destination_lng) || !isGreaterCairoPoint(Number(body.origin_lat), Number(body.origin_lng)) || !isGreaterCairoPoint(Number(body.destination_lat), Number(body.destination_lng)) || !/^\d{2}:\d{2}$/.test(arrival) || (returnArrival != null && !/^\d{2}:\d{2}$/.test(returnArrival)) || !days.length || days.some((d) => !Number.isInteger(d) || d < 0 || d > 6) || new Set(days).size !== days.length || !Number.isInteger(Number(body.seats)) || Number(body.seats) < 1 || Number(body.seats) > maxSeats || !methods.length || methods.some((m) => !["cash", "instapay"].includes(m))) return error("راجع المسار والأيام والمقاعد وطريقة الدفع.", 400, origin);
         if (body.intermediate_stops != null && !Array.isArray(body.intermediate_stops)) return error("بيانات المحطات الوسيطة غير صحيحة.", 400, origin);
         const stops = Array.isArray(body.intermediate_stops) ? body.intermediate_stops : [];
         const seatPrice = body.price_per_seat == null ? null : Number(body.price_per_seat);
         if (stops.length > 10) return error("يمكن إضافة 10 محطات وسيطة كحد أقصى.", 400, origin);
-        if (seatPrice != null && (!Number.isFinite(seatPrice) || seatPrice < 0.01 || seatPrice > 99_999_999.99)) return error("أدخل سعرًا صحيحًا للمقعد أكبر من صفر.", 400, origin);
+        if (seatPrice == null || !Number.isFinite(seatPrice) || seatPrice < 0.01 || seatPrice > 99_999_999.99) return error("أدخل سعرًا صحيحًا للمقعد أكبر من صفر.", 400, origin);
         if (stops.some((stop) => !stop || typeof stop.label !== "string" || !clean(stop.label) || !validPoint(stop.lat, stop.lng) || !isGreaterCairoPoint(Number(stop.lat), Number(stop.lng)))) return error("تأكد أن كل المحطات داخل القاهرة الكبرى.", 400, origin);
         let routeDistanceKm: number;
         try {
@@ -2101,7 +2102,7 @@ Deno.serve(async (req: Request) => {
         } catch {
           return error("تعذر حساب مسافة المسار الآن. حاول مرة أخرى.", 503, origin);
         }
-        const { data, error: createError } = await db.rpc("publish_captain_line", { actor_id: user!.id, vehicle_id: profile.vehicle_type_id, origin_name: body.origin_label.trim(), origin_y: body.origin_lat, origin_x: body.origin_lng, destination_name: body.destination_label.trim(), destination_y: body.destination_lat, destination_x: body.destination_lng, stops, arrival: `${arrival}:00`, return_arrives: returnArrival ? `${returnArrival}:00` : null, days, seat_count: Number(body.seats), route_km: routeDistanceKm, ...(seatPrice == null ? {} : { seat_price: seatPrice }), methods });
+        const { data, error: createError } = await db.rpc("publish_captain_line", { actor_id: user!.id, vehicle_id: profile.vehicle_type_id, origin_name: body.origin_label.trim(), origin_y: body.origin_lat, origin_x: body.origin_lng, destination_name: body.destination_label.trim(), destination_y: body.destination_lat, destination_x: body.destination_lng, stops, arrival: `${arrival}:00`, return_arrives: returnArrival ? `${returnArrival}:00` : null, days, seat_count: Number(body.seats), route_km: routeDistanceKm, seat_price: seatPrice, methods });
         if (createError) {
           if (createError.code === "42501") return error("يلزم اعتماد مستندات الكابتن وتوثيق الهاتف قبل نشر المسار.", 403, origin);
           throw createError;
@@ -2121,7 +2122,7 @@ Deno.serve(async (req: Request) => {
         const arrival = String(body.arrival_time ?? "");
         const returnArrival = body.return_arrival_time == null || body.return_arrival_time === "" ? null : String(body.return_arrival_time);
         const maxSeats = Number(vehicle?.capacity_max ?? 0);
-        if (!vehicle || maxSeats === 0 || Number(vehicle.capacity_max) < maxSeats || String(body.vehicle_type_id) !== String(profile.vehicle_type_id) || !clean(body.origin_label) || !clean(body.destination_label) || !validPoint(body.origin_lat, body.origin_lng) || !validPoint(body.destination_lat, body.destination_lng) || !isGreaterCairoPoint(Number(body.origin_lat), Number(body.origin_lng)) || !isGreaterCairoPoint(Number(body.destination_lat), Number(body.destination_lng)) || !/^\d{2}:\d{2}$/.test(arrival) || (returnArrival != null && !/^\d{2}:\d{2}$/.test(returnArrival)) || !days.length || days.some((d) => !Number.isInteger(d) || d < 0 || d > 6) || new Set(days).size !== days.length || !Number.isInteger(Number(body.seats)) || Number(body.seats) < 1 || Number(body.seats) > maxSeats || !methods.length || methods.some((m) => !["cash", "instapay", "wallet"].includes(m))) return error("راجع المسار والأيام والمقاعد وطريقة الدفع.", 400, origin);
+        if (!vehicle || maxSeats === 0 || Number(vehicle.capacity_max) < maxSeats || String(body.vehicle_type_id) !== String(profile.vehicle_type_id) || !clean(body.origin_label) || !clean(body.destination_label) || !validPoint(body.origin_lat, body.origin_lng) || !validPoint(body.destination_lat, body.destination_lng) || !isGreaterCairoPoint(Number(body.origin_lat), Number(body.origin_lng)) || !isGreaterCairoPoint(Number(body.destination_lat), Number(body.destination_lng)) || !/^\d{2}:\d{2}$/.test(arrival) || (returnArrival != null && !/^\d{2}:\d{2}$/.test(returnArrival)) || !days.length || days.some((d) => !Number.isInteger(d) || d < 0 || d > 6) || new Set(days).size !== days.length || !Number.isInteger(Number(body.seats)) || Number(body.seats) < 1 || Number(body.seats) > maxSeats || !methods.length || methods.some((m) => !["cash", "instapay"].includes(m))) return error("راجع المسار والأيام والمقاعد وطريقة الدفع.", 400, origin);
         if (body.intermediate_stops != null && !Array.isArray(body.intermediate_stops)) return error("بيانات المحطات الوسيطة غير صحيحة.", 400, origin);
         const stops = Array.isArray(body.intermediate_stops) ? body.intermediate_stops : [];
         const seatPrice = Number(body.price_per_seat);

@@ -16,22 +16,13 @@ const PRIVACY_VERSION = "2026-10-24";
 
 function AuthJourneyBackdrop() {
   return <div className="auth-journey-backdrop" aria-hidden="true">
-    <span className="journey-car journey-car--taxi">🚕</span>
-    <span className="journey-car journey-car--van">🚐</span>
-    <span className="journey-car journey-car--smile">🚗😊</span>
-    <div className="auth-journey-particles">
-      <span className="journey-particle">😊</span>
-      <span className="journey-particle">❤️</span>
-      <span className="journey-particle">⭐</span>
-      <span className="journey-particle">💛</span>
-      <span className="journey-particle">✨</span>
-      <span className="journey-particle">😊</span>
-      <span className="journey-particle">❤️</span>
-      <span className="journey-particle">⭐</span>
-      <span className="journey-particle journey-confetti" />
-      <span className="journey-particle journey-confetti" />
-      <span className="journey-particle journey-confetti" />
-      <span className="journey-particle journey-confetti" />
+    <div className="auth-route-art">
+      <span className="auth-route-line" />
+      <span className="auth-route-stop auth-route-stop--start" />
+      <span className="auth-route-stop auth-route-stop--end" />
+      <span className="auth-route-node auth-route-node--one" />
+      <span className="auth-route-node auth-route-node--two" />
+      <span className="auth-route-car"><AppIcon name="car" size={25} /></span>
     </div>
   </div>;
 }

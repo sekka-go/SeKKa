@@ -35,11 +35,6 @@ export function vehicleTypeLabel(type: string) {
   return labels[type] ? t(labels[type]!) : t("نوع مركبة غير معروف");
 }
 
-export function vehicleCapacity(type: string) {
-  const capacity: Record<string, number> = { prime: 3, daily: 4, space: 9, max: 13, private_car: 4, hiace: 14 };
-  return capacity[type] ?? 1;
-}
-
 export function maskLastFour(value: string | null | undefined) {
   if (!value) return t("غير متاح");
   const digits = value.replace(/\s/g, "");

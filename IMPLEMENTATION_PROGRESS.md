@@ -50,3 +50,27 @@
 - The older pool/group offer path remains in the captain workspace and old records remain supported. Removing or migrating historical pool data was not part of this local schema addition.
 - The new migration and Edge Function changes are local only. No Supabase production migration, Edge deployment, Pages deployment, PR merge, or other production mutation occurred in this pass.
 - Validation after the implementation changes: `pnpm lint`, `pnpm typecheck`, `pnpm test` (201/201), `pnpm build`, `deno check supabase/functions/sekka-api/index.ts`, and `git diff --check` passed. Supabase local status is blocked by the unavailable Docker Desktop Linux engine, so the new pgTAP test and migration remain unverified by Postgres execution.
+
+## Follow-up cleanup — product decisions and fallback requests (2026-10-29)
+
+### Implemented in the current working tree
+
+- Rider-created fallback requests stay open and separate from published captain rides. A suitable ride now produces an actionable notification and a home suggestion; neither trigger assigns a captain or changes the request/group to `matched`.
+- New fallback requests cluster only with other open fallback requests. They are no longer attached to legacy groups already assigned to a captain.
+- New captain-published rides accept only captain-set seat prices and cash/InstaPay. The old automatic 7–11 EGP/km pricing constraint is removed in a forward migration; the legacy `price_per_km` column stays for schema compatibility and is set to zero for new/updated rows.
+- New ride/request forms use the four approved vehicle classes and their configured capacities. Legacy type IDs remain in the database for historical foreign keys but are not offered in new forms.
+- The rider no-results copy now clearly separates (1) a published ride the rider can request to join from (2) a fallback request that receives suggestions the rider may choose.
+- The rider's nearby-trips empty state now has a direct **Create ride request** action and opens the request form with the known starting point prefilled.
+- Added a pgTAP assertion for notification-on-suggestion while keeping the demand open and unassigned.
+
+### Current validation
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm test` (201/201), `pnpm build`, `deno check supabase/functions/sekka-api/index.ts`, locale JSON parsing, and `git diff --check` all passed after these changes.
+- The new Supabase migration and pgTAP test are not applied locally yet. The previous local reset attempt failed because Docker Desktop's Linux engine was unavailable. Do not treat the DB changes as execution-verified until database tests run.
+- No production migration, Edge Function deployment, Pages deployment, commit, or push was performed in this pass.
+
+### Deliberately preserved
+
+- Existing matched demand groups, old vehicle-type foreign keys, and past payment/ledger rows remain readable; they are historical data and are not rewritten or deleted by this cleanup.
+- The older pool/commute feature remains available for its existing trip records. It is separate from the new published-ride request flow. Removing it would require a distinct product/data migration beyond retiring the conflicting new-ride behavior.
+- Existing untracked `SikkaMark.tsx`, `SikkaSplash.tsx`, and `light-theme.css` files remain untouched.

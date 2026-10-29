@@ -39,7 +39,7 @@ export default function LandingScreen() {
         <div className="landing-how-heading"><span className="eyebrow">{t("خطوات بسيطة")}</span><h2>{t("من البحث إلى مشوار واضح")}</h2></div>
         <div className="landing-how-grid">
           <article><span>١</span><div><strong>{t("حدد طريقك ومواعيدك")}</strong><p>{t("اختر نقطتي الركوب والوصول ومواعيد الذهاب والعودة.")}</p></div></article>
-          <article><span>٢</span><div><strong>{t("راجع المسارات المناسبة")}</strong><p>{t("قارن المسارات المتاحة وسعر المقعد قبل تأكيد الطلب.")}</p></div></article>
+          <article><span>٢</span><div><strong>{t("راجع الرحلات المناسبة")}</strong><p>{t("قارن الرحلات المنشورة والسعر قبل طلب الانضمام.")}</p></div></article>
           <article><span>٣</span><div><strong>{t("اتفق مباشرة مع الكابتن")}</strong><p>{t("تابع مجموعتك ورحلاتك من حسابك، والدفع يتم مباشرة للكابتن.")}</p></div></article>
         </div>
       </section>
