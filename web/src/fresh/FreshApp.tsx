@@ -60,8 +60,7 @@ export default function FreshApp() {
             <div className="fresh-action-grid">
               {(role === "rider"
                 ? [{ icon: "⌕", title: "ابحث عن رحلة", body: "استعرض الرحلات المتاحة وتفاصيلها.", action: "استعراض الرحلات" }, { icon: "◎", title: "تابع طلباتك", body: "اعرف حالة طلبات الانضمام والرحلات.", action: "عرض الرحلات" }, { icon: "▤", title: "تفاصيل حسابك", body: "راجع بيانات حسابك وإعداداته.", action: "حسابي" }]
-                : role === "captain"
-                ? [{ icon: "＋", title: "عروض الرحلات", body: "انتقل لمساحة إدارة عروضك.", action: "إدارة العروض" }, { icon: "▣", title: "طلبات الانضمام", body: "تابع الطلبات الواردة وحالتها.", action: "عرض الطلبات" }, { icon: "◷", title: "مواعيد الرحلات", body: "راجع المواعيد المسجلة.", action: "عرض المواعيد" }]
+                : [{ icon: "＋", title: "عروض الرحلات", body: "انتقل لمساحة إدارة عروضك.", action: "إدارة العروض" }, { icon: "▣", title: "طلبات الانضمام", body: "تابع الطلبات الواردة وحالتها.", action: "عرض الطلبات" }, { icon: "◷", title: "مواعيد الرحلات", body: "راجع المواعيد المسجلة.", action: "عرض المواعيد" }]
               ).map((item, index) => (
                 <button className="fresh-action-card" key={item.title} onClick={() => setScreen(index === 2 && role === "rider" ? "account" : "trips")}>
                   <span className="fresh-action-icon">{item.icon}</span><strong>{item.title}</strong><p>{item.body}</p><span className="fresh-card-link">{item.action} <span aria-hidden="true">←</span></span>
