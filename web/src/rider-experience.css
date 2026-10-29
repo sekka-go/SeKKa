@@ -125,3 +125,121 @@
   .workspace .rider-request-card { padding: .85rem; }
 }
 @media (prefers-reduced-motion: reduce) { .workspace .rider-place-chip { transition: none; } }
+
+
+/* Production rider workspace polish — integrated into live components, not preview routes. */
+.workspace.rider-home-active .rider-overview-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .8rem;
+}
+.workspace.rider-home-active .rider-overview-strip > button {
+  min-width: 0;
+  min-height: 5.25rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 1.15rem;
+  background: linear-gradient(145deg, var(--color-surface), var(--color-surface-elevated));
+  box-shadow: 0 .35rem 1.1rem var(--color-shadow);
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.workspace.rider-home-active .rider-overview-strip > button:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-info);
+  box-shadow: 0 .65rem 1.4rem var(--color-shadow);
+}
+.workspace.rider-home-active .rider-overview-icon {
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: .9rem;
+}
+.workspace .rider-home-discovery-carousel {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 1.35rem;
+  box-shadow: 0 .7rem 1.8rem var(--color-shadow);
+}
+.workspace .rider-home-discovery-carousel::after {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  width: .28rem;
+  border-radius: inherit;
+  background: var(--color-primary);
+  content: "";
+  pointer-events: none;
+}
+.workspace .rider-promo-content {
+  max-width: 48rem;
+}
+.workspace .rider-promo-content h2 {
+  line-height: 1.35;
+  letter-spacing: -.02em;
+}
+.workspace .rider-promo-content p {
+  max-width: 42rem;
+  line-height: 1.85;
+}
+.workspace .rider-trip-offer {
+  border-radius: 1.2rem;
+  box-shadow: 0 .3rem 1rem var(--color-shadow);
+  transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.workspace .rider-trip-offer:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-info);
+  box-shadow: 0 .7rem 1.5rem var(--color-shadow);
+}
+.workspace .rider-trip-offer-action {
+  min-height: 2.9rem;
+}
+.workspace .rider-trip-detail-dialog {
+  max-height: min(90dvh, 54rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.workspace .rider-trip-detail-dialog footer {
+  position: sticky;
+  inset-block-end: 0;
+  padding-top: .8rem;
+  background: var(--color-surface);
+}
+.workspace .rider-place-chip:focus-visible,
+.workspace .rider-overview-strip > button:focus-visible,
+.workspace .rider-trip-offer-action:focus-visible {
+  outline: 3px solid var(--color-info);
+  outline-offset: 3px;
+}
+@media (max-width: 680px) {
+  .workspace.rider-home-active .rider-overview-strip {
+    gap: .5rem;
+  }
+  .workspace.rider-home-active .rider-overview-strip > button {
+    min-height: 4.6rem;
+    gap: .45rem;
+    padding: .7rem .55rem;
+    border-radius: .9rem;
+  }
+  .workspace.rider-home-active .rider-overview-icon {
+    width: 2.3rem;
+    height: 2.3rem;
+  }
+  .workspace.rider-home-active .rider-overview-strip small {
+    font-size: .7rem;
+    line-height: 1.45;
+  }
+  .workspace.rider-home-active .rider-overview-strip strong {
+    font-size: 1.15rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .workspace.rider-home-active .rider-overview-strip > button,
+  .workspace .rider-trip-offer {
+    transition: none;
+  }
+  .workspace.rider-home-active .rider-overview-strip > button:hover,
+  .workspace .rider-trip-offer:hover {
+    transform: none;
+  }
+}
