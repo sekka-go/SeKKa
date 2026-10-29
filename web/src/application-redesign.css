@@ -323,3 +323,146 @@ button, a, input, select, textarea, summary { -webkit-tap-highlight-color: trans
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+
+/* Admin workspace polish — scoped to real, data-backed admin screens. */
+.app-shell .admin-dashboard {
+  display: grid;
+  gap: 1.1rem;
+  width: min(100%, 86rem);
+  margin-inline: auto;
+  padding-block: .35rem 1.5rem;
+  color: var(--color-text-primary);
+}
+.app-shell .admin-overview-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .8rem;
+  padding: .2rem 0;
+}
+.app-shell .admin-overview-toolbar p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: .875rem;
+}
+.app-shell .admin-overview-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .85rem;
+}
+.app-shell .admin-overview-kpi {
+  display: grid;
+  align-content: space-between;
+  gap: .85rem;
+  min-width: 0;
+  min-height: 8.25rem;
+  padding: 1.15rem;
+  text-align: start;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: linear-gradient(145deg, var(--color-surface), var(--color-surface-raised));
+  box-shadow: 0 8px 24px var(--color-shadow);
+  transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.app-shell .admin-overview-kpi:hover {
+  border-color: var(--color-accent);
+  box-shadow: 0 12px 28px var(--color-shadow);
+  transform: translateY(-2px);
+}
+.app-shell .admin-overview-kpi > span {
+  color: var(--color-text-secondary);
+  font-size: .88rem;
+  line-height: 1.55;
+}
+.app-shell .admin-overview-kpi > strong {
+  color: var(--color-text-primary);
+  font-size: clamp(1.65rem, 3vw, 2.25rem);
+  font-weight: 850;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.app-shell .admin-overview-users,
+.app-shell .admin-overview-review {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  border-radius: var(--radius-card);
+}
+.app-shell .admin-overview-users > div { display: grid; gap: .3rem; }
+.app-shell .admin-overview-users > div > strong {
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.app-shell .admin-overview-users small,
+.app-shell .admin-overview-review p,
+.app-shell .admin-overview-note { color: var(--color-text-secondary); }
+.app-shell .admin-overview-review h2 { margin: 0 0 .3rem; font-size: 1.05rem; }
+.app-shell .admin-overview-review p { margin: 0; line-height: 1.65; }
+.app-shell .admin-overview-note { margin: 0; font-size: .82rem; line-height: 1.7; }
+.app-shell .admin-control-panel {
+  width: min(100%, 90rem);
+  min-width: 0;
+  margin-inline: auto;
+  color: var(--color-text-primary);
+}
+.app-shell .admin-control-panel .admin-panel-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-block: 0 1.1rem;
+}
+.app-shell .admin-control-panel :is(input:not([type="checkbox"]), select, textarea) {
+  max-width: 100%;
+  min-height: 2.8rem;
+  color: var(--color-input-text);
+  background: var(--color-input-background);
+  border-color: var(--color-border);
+  border-radius: var(--radius-control);
+}
+.app-shell .admin-control-panel :is(input, select, textarea)::placeholder { color: var(--color-placeholder); opacity: 1; }
+.app-shell .admin-control-panel :is(button, a, input, select, textarea):focus-visible,
+.app-shell .admin-dashboard :is(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}
+.app-shell .admin-control-panel :is(table, .admin-data-table) {
+  max-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.app-shell .admin-control-panel :is(th, td) { line-height: 1.55; }
+.app-shell .admin-control-panel th {
+  color: var(--color-text-secondary);
+  font-size: .78rem;
+  font-weight: 800;
+}
+.app-shell .admin-control-panel td { color: var(--color-text-primary); }
+.app-shell .admin-control-panel :is(.admin-verification-document-card, .admin-user-profile, .admin-captain-approval) {
+  border-radius: var(--radius-card);
+}
+.app-shell .admin-control-panel :is(.admin-user-filters, .admin-verification-user-group, .admin-profile-section) {
+  min-width: 0;
+}
+@media (max-width: 760px) {
+  .app-shell .admin-overview-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .app-shell .admin-overview-kpi { min-height: 7rem; padding: .9rem; }
+  .app-shell .admin-overview-kpi > span { font-size: .8rem; }
+}
+@media (max-width: 420px) {
+  .app-shell .admin-overview-kpis { gap: .55rem; }
+  .app-shell .admin-overview-kpi { min-height: 6.5rem; padding: .75rem; }
+  .app-shell .admin-overview-users, .app-shell .admin-overview-review { align-items: stretch; }
+  .app-shell .admin-overview-users .button, .app-shell .admin-overview-review .button { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-shell .admin-overview-kpi { transition: none; }
+  .app-shell .admin-overview-kpi:hover { transform: none; }
+}
