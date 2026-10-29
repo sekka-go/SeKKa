@@ -165,3 +165,45 @@
   .captain-workspace .captain-earnings-summary { align-items: flex-start; flex-direction: column; }
   .captain-workspace .account-grid { grid-template-columns: 1fr; }
 }
+
+
+/* Production captain workspace refinement: live data cards and touch targets. */
+.captain-workspace .captain-overview-tile {
+  min-height: 6.2rem;
+  box-shadow: 0 .25rem .9rem var(--color-shadow);
+  transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.captain-workspace .captain-overview-tile:hover {
+  border-color: var(--color-secondary);
+  transform: translateY(-2px);
+  box-shadow: 0 .65rem 1.35rem var(--color-shadow);
+}
+.captain-workspace .captain-welcome-panel {
+  border-color: color-mix(in srgb, var(--color-secondary) 22%, var(--color-border));
+  box-shadow: 0 .55rem 1.5rem var(--color-shadow);
+}
+.captain-workspace .captain-welcome-status { align-self: stretch; align-content: center; }
+.captain-workspace .captain-offer-toolbar,
+.captain-workspace .offer-card,
+.captain-workspace .captain-profile-card { box-shadow: 0 .25rem 1rem var(--color-shadow); }
+.captain-workspace .route-offer-card {
+  border-color: color-mix(in srgb, var(--color-secondary) 20%, var(--color-border));
+}
+.captain-workspace .offer-card .button,
+.captain-workspace .captain-trip-detail .trip-actions .button { min-height: 2.9rem; }
+.captain-workspace button:focus-visible,
+.captain-workspace a:focus-visible,
+.captain-workspace input:focus-visible,
+.captain-workspace select:focus-visible,
+.captain-workspace textarea:focus-visible { outline: 3px solid var(--color-info); outline-offset: 3px; }
+@media (max-width: 760px) {
+  .captain-workspace .captain-overview-tile { min-height: 5.2rem; border-radius: .9rem; box-shadow: none; }
+  .captain-workspace .captain-overview-tile:hover { transform: none; }
+  .captain-workspace .captain-welcome-panel { border-radius: 1.1rem; }
+  .captain-workspace .captain-offer-toolbar,
+  .captain-workspace .offer-card { border-radius: 1rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .captain-workspace .captain-overview-tile { transition: none; }
+  .captain-workspace .captain-overview-tile:hover { transform: none; }
+}
