@@ -50,6 +50,27 @@ export function GroupDetail({ view, categories, busy, action, notify: _notify, o
       {group.status === "price_review" && <div className="warning-panel"><span>!</span><div><strong>{t("في تعديل على السعر")}</strong><p>{t("راجع السعر الجديد واختار تكمل أو تخرج من المجموعة بدون غرامة.")}</p></div><div className="warning-actions"><button className="button button-primary button-small" disabled={busy} onClick={() => action(group.id, "price-decision", { action: "accept" })}>{t("موافق")}</button><button className="button button-quiet button-small" disabled={busy} onClick={() => action(group.id, "price-decision", { action: "decline" })}>{t("رفض")}</button></div></div>}
 
     </section>
+    <section className="surface group-live-summary" aria-label={t("متابعة حالة الرحلة والاشتراك")}>
+      <div className="group-live-summary-heading">
+        <div><span className="eyebrow">{t("متابعة رحلتك")}</span><h3>{t("حالة المجموعة والاشتراك")}</h3></div>
+        <span className={`status-chip status-${group.status}`}>{group.status === "needs_captain" ? t("جاري البحث عن كابتن") : statusLabel(group.status)}</span>
+      </div>
+      <div className="group-live-summary-grid">
+        <div><small>{t("اكتمال المقاعد")}</small><strong>{seats} / {category?.seats ?? "—"}</strong><span>{t("مقاعد محجوزة")}</span></div>
+        <div><small>{t("مواعيد الرحلات")}</small><strong>{trips.length}</strong><span>{t("رحلات مسجلة")}</span></div>
+        <div><small>{t("أقرب يوم خدمة")}</small><strong>{firstFutureDate ? formatDate(firstFutureDate) : t("لم يُحدد بعد")}</strong><span>{firstFutureDate ? t("موعد خدمة قادم") : t("تابع تحديثات المجموعة")}</span></div>
+        {view.subscription && <div><small>{t("المبلغ المستحق المسجل")}</small><strong>{money(view.subscription.amount_due)}</strong><span>{t("حسب بيانات الاشتراك الحالية")}</span></div>}
+      </div>
+      <p className="group-live-summary-note">{group.status === "waiting"
+        ? t("المجموعة ما زالت في انتظار اكتمالها. إنشاء المجموعة لا يعني أن الاشتراك نشط.")
+        : group.status === "needs_captain"
+          ? t("يجري البحث عن كابتن مناسب للمجموعة. تابع الحالة قبل اعتبار الرحلة مؤكدة.")
+          : group.status === "price_review"
+            ? t("هناك تعديل سعر يحتاج إلى قرارك قبل المتابعة.")
+            : trips.length
+              ? t("هذه الحالة مبنية على بيانات المجموعة ومواعيد الرحلات المسجلة في حسابك.")
+              : t("حالة المجموعة معروضة كما سجلها النظام. راجع المواعيد قبل الاعتماد على الرحلة.")}</p>
+    </section>
     <details className="trip-extra-details"><summary>{t("تفاصيل المشوار · المسار والركاب والمواعيد")}</summary>
       <div className="detail-route-map"><div className="section-title-row"><div><h3>{t("خط السير")}</h3><p>{t("ذهاب وعودة · الخريطة تعرض الطريق الفعلي")}</p></div>{!(group.route_geometry?.outbound_segments?.length || group.route_geometry?.return_segments?.length) && <span className="map-distance">{group.route_duration_min ?? "—"}  {t("د")}</span>}</div><MapPicker pickup={routeStops[0] ?? null} dropoff={routeStops[1] ?? null} mode="pickup" route={group.route_geometry} onPick={() => undefined} /></div>
     <section className="surface detail-section"><div className="section-title-row"><div><h3>{t("الركاب والمقاعد")}</h3><p>{seats}  {t("مقاعد من")} {category?.seats ?? "—"}  {t("محجوزة")}</p></div></div><div className="rider-list">{members.map((member, index) => <div key={member.id} className={`rider-row ${member.status !== "active" ? "rider-muted" : ""}`}><div className="rider-profile-line">{member.rider_user_id != null && <ProfileAvatar userId={member.rider_user_id} token={token} name={`راكب ${index + 1}`} className="avatar rider-profile-avatar" />}<div><strong>{index === 0 ? t("أنت") : `راكب ${index + 1}`}</strong><small>{member.seats_reserved}  {t("مقعد ·")} {member.status === "active" ? t("مؤكد") : member.status === "awaiting_confirmation" ? t("بانتظار التأكيد") : t("غادر المجموعة")}</small></div></div>{member.price_decision === "pending" && group.status === "price_review" && <span className="rider-state">{t("مطلوب ردك")}</span>}</div>)}</div></section>
