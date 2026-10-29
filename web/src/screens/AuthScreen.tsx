@@ -82,6 +82,15 @@ export default function AuthScreen({ onSignedIn, notify, onStartupReady }: { onS
           return;
         }
       }
+      if (session.user.role === "admin") {
+        // The server has authenticated this account; preserve its authorized
+        // destination so the admin workspace opens immediately after sign-in.
+        window.history.replaceState(
+          { sekkaWorkspace: true, sekkaSection: "admin", sekkaIndex: 0 },
+          "",
+          "/admin",
+        );
+      }
       onSignedIn(session);
     } catch (cause) { setError(errorText(cause)); }
     finally { setBusy(false); }
