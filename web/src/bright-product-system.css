@@ -100,3 +100,73 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .button, .nav-item, .offer-card, .surface { transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
   .offer-card:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(22,74,53,.09); }
 }
+
+
+/* First-ten screen pass: make the real rider and captain workflows read as distinct, clear surfaces. */
+.rider-home-experience .rider-hero {
+  border: 1px solid rgba(0, 155, 118, .12);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 88% 12%, rgba(255, 211, 78, .28), transparent 13rem),
+    linear-gradient(125deg, #e4faf0 0%, #f7fff9 56%, #fff8df 100%);
+  box-shadow: 0 14px 38px rgba(22, 74, 53, .07);
+}
+.rider-home-experience .rider-hero h2 { color: #173e35; }
+.rider-home-experience .rider-hero h2 em { color: #079a73; font-style: normal; }
+.rider-overview-strip > button {
+  min-height: 84px; border: 1px solid #deece4; border-radius: 18px;
+  background: linear-gradient(145deg, #fff 0%, #f4fcf7 100%);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.rider-overview-strip > button:hover { transform: translateY(-2px); border-color: #9ad9bf; box-shadow: 0 10px 24px rgba(22, 74, 53, .08); }
+.rider-trip-offer {
+  padding: clamp(1rem, 2.5vw, 1.45rem);
+  border: 1px solid #dcebe4;
+  background: linear-gradient(160deg, #fff 0%, #fbfefc 100%);
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.rider-trip-offer:hover { border-color: #a6dec6; box-shadow: 0 12px 30px rgba(22, 74, 53, .075); transform: translateY(-1px); }
+.rider-trip-offer-captain b { display: inline-grid; place-items: center; width: 1.25rem; height: 1.25rem; border-radius: 50%; color: #fff; background: #079a73; }
+.rider-trip-offer-route { padding: .9rem 1rem; border-radius: 14px; background: #f1faf5; }
+.rider-trip-offer-meta strong { color: #07835f; font-size: 1.05rem; }
+.rider-trip-offer-action { width: 100%; min-height: 46px; }
+.rider-trip-detail-dialog {
+  width: min(100% - 1.5rem, 680px);
+  max-height: min(90dvh, 900px);
+  overflow-y: auto;
+  border: 1px solid #d8eee2;
+  border-radius: 26px;
+  background: linear-gradient(155deg, #fff 0%, #fbfefc 72%, #f0fbf5 100%);
+  box-shadow: 0 28px 90px rgba(14, 65, 48, .22);
+}
+.rider-trip-detail-dialog dl > div { border-bottom: 1px solid #e4f0e9; padding-block: .65rem; }
+.rider-trip-detail-dialog dd { color: #087e63; font-weight: 750; }
+.booking-review, .booking-form-surface { border-color: #dcebe4; }
+.booking-review-total { border-radius: 14px; background: linear-gradient(110deg, #e6faf0, #fff8df); }
+.trips-group-list .group-summary {
+  width: 100%; text-align: start; border: 1px solid #deece4;
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.trips-group-list .group-summary:hover { transform: translateY(-2px); border-color: #9ad9bf; box-shadow: 0 12px 28px rgba(22, 74, 53, .08); }
+.group-detail-layout .detail-hero { background: linear-gradient(130deg, #e9fbf2, #fff 70%, #fff8df); }
+.group-detail-layout .action-card { border-color: #cdeee0; background: linear-gradient(150deg, #fff, #f3fcf7); }
+.captain-stitch .surface { border-color: #deece4; }
+.captain-stitch .section-toolbar { align-items: center; gap: 1rem; }
+.captain-stitch .offer-card { overflow: hidden; }
+.captain-stitch .offer-card .button { min-height: 42px; }
+.captain-stitch-profile .onboarding-card { background: linear-gradient(150deg, #fff, #f3fcf7 72%, #fff8df); }
+@media (max-width: 640px) {
+  .rider-trip-detail-dialog { width: calc(100% - 1rem); padding: 1rem; border-radius: 20px; }
+  .rider-trip-detail-dialog footer { position: sticky; bottom: 0; padding-top: .75rem; background: rgba(255,255,255,.96); }
+  .rider-overview-strip > button { min-width: 0; padding: .75rem; }
+}
+
+.group-live-summary { padding: clamp(1rem, 2.4vw, 1.4rem); border-color: #cdeee0; background: linear-gradient(135deg, #f0fcf6 0%, #fff 70%, #fff9e4 100%); }
+.group-live-summary-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+.group-live-summary-heading h3 { margin: .25rem 0 0; color: #183b35; font-size: 1.08rem; }
+.group-live-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(125px, 1fr)); gap: .7rem; }
+.group-live-summary-grid > div { display: flex; flex-direction: column; gap: .25rem; min-width: 0; padding: .85rem; border: 1px solid #dcebe4; border-radius: 14px; background: rgba(255,255,255,.88); }
+.group-live-summary-grid small, .group-live-summary-grid span { color: #627b74; font-size: .8rem; }
+.group-live-summary-grid strong { color: #087e63; overflow-wrap: anywhere; font-size: 1.02rem; }
+.group-live-summary-note { margin: 1rem 0 0; padding: .8rem 1rem; border-radius: 12px; color: #46685c; background: #e8f8ef; line-height: 1.65; }
+@media (max-width: 520px) { .group-live-summary-heading { flex-direction: column; } .group-live-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
