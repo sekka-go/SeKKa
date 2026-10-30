@@ -5,6 +5,7 @@ import "./rider-home-screen.css";
 export type HomeAction =
   | "explore"
   | "myTrips"
+  | "mySubscriptions"
   | "myRequests"
   | "newTrip"
   | "support"
@@ -272,6 +273,11 @@ export default function RiderHomeScreen({ supabase, onAction }: Props) {
         <button onClick={() => go("myTrips")}>
           <Icon name="users" />
           <span>رحلاتي</span>
+        </button>
+
+        <button onClick={() => go("mySubscriptions")}>
+          <Icon name="list" />
+          <span>اشتراكاتي</span>
         </button>
 
         <button onClick={() => go("myRequests")}>
