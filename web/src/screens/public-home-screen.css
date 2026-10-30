@@ -1,0 +1,67 @@
+.sekka-public-home {
+  --register-green: var(--sekka-brand);
+  --register-green-deep: var(--sekka-brand-strong);
+  --register-gold: var(--sekka-gold);
+  --register-cream: var(--sekka-cream);
+  --register-ink: var(--sekka-ink);
+  min-height: 100svh;
+  overflow: clip;
+  padding: max(.75rem, env(safe-area-inset-top)) max(1.2rem, env(safe-area-inset-right)) max(1.25rem, env(safe-area-inset-bottom)) max(1.2rem, env(safe-area-inset-left));
+  background: var(--sekka-cream);
+  color: var(--sekka-ink);
+  font-family: var(--sekka-font-arabic);
+}
+.sekka-public-home * { box-sizing: border-box; }
+.sekka-public-home a { color: inherit; text-decoration: none; }
+.sekka-public-header { display: flex; align-items: center; justify-content: space-between; width: min(100%, 72rem); margin: 0 auto; padding-block: .45rem; }
+.sekka-public-brand { display: inline-flex; align-items: center; gap: .55rem; color: var(--register-green-deep) !important; font-size: 1.2rem; font-weight: 900; }
+.sekka-public-brand img { width: 2.75rem; height: 2.75rem; object-fit: contain; }
+.sekka-public-login { padding: .65rem 1rem; border: 1px solid var(--sekka-border); border-radius: 999px; font-size: .84rem; font-weight: 800; }
+.sekka-public-hero { position: relative; display: grid; grid-template-columns: 1fr .85fr; align-items: center; gap: 2rem; width: min(100%, 72rem); min-height: 28rem; margin: 1rem auto 3.5rem; padding: clamp(1.4rem, 5vw, 3.2rem); overflow: hidden; border-radius: 2rem; background: linear-gradient(120deg, var(--sekka-brand-strong), var(--sekka-brand)); color: #fff; box-shadow: var(--sekka-shadow-card); }
+.sekka-public-hero::before { position: absolute; inset-block-start: -16rem; inset-inline-end: -9rem; width: 34rem; height: 30rem; transform: rotate(-18deg); border: 1px solid rgb(199 163 75 / 46%); border-radius: 50%; box-shadow: 0 0 0 1.25rem rgb(255 255 255 / 3%), 0 0 0 2.5rem rgb(255 255 255 / 2%); content: ""; pointer-events: none; }
+.sekka-public-hero-copy { position: relative; z-index: 1; max-width: 36rem; }
+.sekka-public-kicker { display: inline-block; color: var(--sekka-gold); font-size: .78rem; font-weight: 850; letter-spacing: .025em; }
+.sekka-public-hero h1 { margin: .65rem 0 .8rem; color: #fff; font-size: clamp(2rem, 6vw, 3.6rem); font-weight: 900; line-height: 1.34; }
+.sekka-public-hero h1 em { color: #e8d49b; font-style: normal; }
+.sekka-public-hero-copy > p { max-width: 31rem; margin: 0; color: rgb(255 255 255 / 78%); font-size: clamp(.95rem, 2vw, 1.1rem); line-height: 1.9; }
+.sekka-public-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin-block-start: 1.5rem; }
+.sekka-public-primary,.sekka-public-secondary { display: inline-flex; align-items: center; justify-content: center; gap: .7rem; min-height: 3.1rem; padding: .7rem 1.2rem; border-radius: 999px; font-size: .88rem; font-weight: 850; }
+.sekka-public-primary { background: #e8d49b; color: var(--sekka-brand-strong) !important; box-shadow: 0 6px 18px rgb(0 0 0 / 16%); }
+.sekka-public-secondary { border: 1px solid rgb(255 255 255 / 50%); color: #fff !important; }
+.sekka-public-visual { position: relative; display: grid; min-height: 18rem; place-items: center; }
+.sekka-public-route-line { position: relative; width: min(18rem, 70%); height: 13rem; transform: rotate(-18deg); border-block-start: 2px solid rgb(232 212 155 / 78%); border-inline-start: 2px solid rgb(232 212 155 / 78%); border-radius: 55% 0 0 0; }
+.sekka-public-route-line::after { position: absolute; inset-inline-start: 38%; inset-block-start: 24%; width: 72%; height: 90%; border-inline-end: 2px solid rgb(232 212 155 / 78%); border-block-end: 2px solid rgb(232 212 155 / 78%); border-radius: 0 0 55% 0; content: ""; }
+.sekka-public-route-line span { position: absolute; z-index: 1; width: .8rem; height: .8rem; border: 3px solid var(--sekka-gold); border-radius: 50%; background: var(--sekka-brand-strong); }
+.sekka-public-route-line span:first-child { inset-block-start: -.42rem; inset-inline-start: -.4rem; }
+.sekka-public-route-line span:last-child { inset-block-end: -1rem; inset-inline-end: -1rem; }
+.sekka-public-visual-caption { position: absolute; inset-block-end: .3rem; inset-inline-start: 0; display: flex; align-items: center; gap: .5rem; color: rgb(255 255 255 / 74%); font-size: .76rem; }
+.sekka-public-dot { width: .5rem; height: .5rem; border-radius: 50%; background: var(--sekka-gold); }
+.sekka-public-how,.sekka-public-captain { width: min(100%, 72rem); margin-inline: auto; }
+.sekka-public-section-heading { margin-block-end: 1rem; }
+.sekka-public-section-heading h2,.sekka-public-captain h2 { margin: .3rem 0; color: var(--register-green-deep); font-size: clamp(1.3rem, 4vw, 1.9rem); font-weight: 900; }
+.sekka-public-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .8rem; margin: 0; padding: 0; list-style: none; }
+.sekka-public-steps li { display: flex; align-items: flex-start; gap: .75rem; min-height: 7rem; padding: 1rem; border: 1px solid var(--sekka-border); border-radius: 1.1rem; background: rgb(255 255 255 / 76%); }
+.sekka-public-steps li > span { display: grid; flex: 0 0 2rem; height: 2rem; place-items: center; border-radius: 50%; background: var(--sekka-brand); color: #fff; font-weight: 900; }
+.sekka-public-steps h3 { margin: 0; color: var(--register-green-deep); font-size: .92rem; font-weight: 850; }
+.sekka-public-steps p,.sekka-public-captain p { margin: .35rem 0 0; color: var(--sekka-muted); font-size: .8rem; line-height: 1.7; }
+.sekka-public-captain { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-block: 1.5rem; padding: 1.25rem 1.5rem; border: 1px solid var(--sekka-border); border-radius: 1.25rem; background: #fff; }
+.sekka-public-captain .sekka-public-secondary { flex: 0 0 auto; border-color: var(--sekka-gold); color: var(--sekka-brand) !important; }
+.sekka-public-footer { display: flex; justify-content: space-between; gap: 1rem; width: min(100%, 72rem); margin: 1rem auto 0; padding-block: 1rem; border-block-start: 1px solid var(--sekka-border); color: var(--sekka-muted); font-size: .75rem; }
+.sekka-public-footer a { color: var(--sekka-brand); font-weight: 800; }
+@media (max-width: 700px) {
+  .sekka-public-hero { grid-template-columns: 1fr; gap: 1rem; min-height: auto; margin-block: .6rem 2.4rem; padding: 1.6rem 1.3rem 1rem; border-radius: 1.5rem; }
+  .sekka-public-hero h1 { font-size: clamp(2rem, 10vw, 2.9rem); }
+  .sekka-public-visual { min-height: 11rem; }
+  .sekka-public-route-line { width: 12rem; height: 9rem; }
+  .sekka-public-visual-caption { inset-block-end: 0; }
+  .sekka-public-steps { grid-template-columns: 1fr; }
+  .sekka-public-steps li { min-height: auto; }
+  .sekka-public-captain { align-items: flex-start; flex-direction: column; padding: 1rem; }
+  .sekka-public-captain .sekka-public-secondary { width: 100%; }
+}
+@media (max-width: 360px) {
+  .sekka-public-home { padding-inline: 1rem; }
+  .sekka-public-actions { align-items: stretch; flex-direction: column; }
+  .sekka-public-actions > a { width: 100%; }
+  .sekka-public-footer { align-items: flex-start; flex-direction: column; }
+}

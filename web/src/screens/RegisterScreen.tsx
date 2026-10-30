@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { Button, InlineAlert, TextField } from "../design-system/components";
 import "./register-screen.css";
 
 export type SignupRole = "rider" | "captain";
@@ -16,6 +17,7 @@ type RegisterScreenProps = {
   onGoogleRegister?: () => void | Promise<void>;
   onTerms?: () => void;
   onPrivacy?: () => void;
+  initialRole?: SignupRole;
   loading?: boolean;
   error?: string;
 };
@@ -26,6 +28,7 @@ export default function RegisterScreen({
   onGoogleRegister,
   onTerms,
   onPrivacy,
+  initialRole = "rider",
   loading = false,
   error: externalError = "",
 }: RegisterScreenProps) {
@@ -33,7 +36,7 @@ export default function RegisterScreen({
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [role, setRole] = useState<SignupRole>("rider");
+  const [role, setRole] = useState<SignupRole>(initialRole);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [accepted, setAccepted] = useState(false);
@@ -106,77 +109,10 @@ export default function RegisterScreen({
         </header>
 
         <form className="sekka-register-form" onSubmit={submit} noValidate>
-          <label className="sekka-register-field">
-            <span>الاسم بالكامل</span>
-            <input
-              name="full_name"
-              type="text"
-              autoComplete="name"
-              value={fullName}
-              onChange={(event) => setFullName(event.target.value)}
-              placeholder="اكتب اسمك كما يظهر في بطاقتك"
-              required
-            />
-          </label>
-
-          <label className="sekka-register-field">
-            <span>رقم الهاتف</span>
-            <input
-              name="phone"
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel-national"
-              dir="ltr"
-              value={phone}
-              onChange={(event) => setPhone(event.target.value)}
-              placeholder="01xxxxxxxxx"
-              required
-            />
-          </label>
-
-          <label className="sekka-register-field">
-            <span>كلمة المرور</span>
-            <input
-              name="new-password"
-              type={showPassword ? "text" : "password"}
-              autoComplete="new-password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="8 أحرف على الأقل"
-              minLength={8}
-              required
-            />
-            <button
-              type="button"
-              className="sekka-register-toggle"
-              onClick={() => setShowPassword((visible) => !visible)}
-              aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
-              aria-pressed={showPassword}
-            />
-            <PasswordVisibilityIcon visible={showPassword} />
-          </label>
-
-          <label className="sekka-register-field">
-            <span>تأكيد كلمة المرور</span>
-            <input
-              name="confirm-password"
-              type={showConfirm ? "text" : "password"}
-              autoComplete="new-password"
-              value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
-              placeholder="أعد كتابة كلمة المرور"
-              minLength={8}
-              required
-            />
-            <button
-              type="button"
-              className="sekka-register-toggle"
-              onClick={() => setShowConfirm((visible) => !visible)}
-              aria-label={showConfirm ? "إخفاء تأكيد كلمة المرور" : "إظهار تأكيد كلمة المرور"}
-              aria-pressed={showConfirm}
-            />
-            <PasswordVisibilityIcon visible={showConfirm} />
-          </label>
+          <TextField label="الاسم بالكامل" name="full_name" type="text" autoComplete="name" value={fullName} onChange={(event) => setFullName(event.target.value)} placeholder="اكتب اسمك كما يظهر في بطاقتك" required />
+          <TextField label="رقم الهاتف" name="phone" type="tel" inputMode="tel" autoComplete="tel-national" dir="ltr" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="01xxxxxxxxx" required />
+          <TextField label="كلمة المرور" name="new-password" type={showPassword ? "text" : "password"} autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="8 أحرف على الأقل" minLength={8} required trailing={<PasswordToggle visible={showPassword} label="كلمة المرور" onToggle={() => setShowPassword((visible) => !visible)} />} />
+          <TextField label="تأكيد كلمة المرور" name="confirm-password" type={showConfirm ? "text" : "password"} autoComplete="new-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} placeholder="أعد كتابة كلمة المرور" minLength={8} required trailing={<PasswordToggle visible={showConfirm} label="تأكيد كلمة المرور" onToggle={() => setShowConfirm((visible) => !visible)} />} />
 
           <div className="sekka-register-consent">
             <label>
@@ -189,12 +125,9 @@ export default function RegisterScreen({
             </span>
           </div>
 
-          {error && <p className="sekka-register-error" role="alert">{error}</p>}
+          {error && <InlineAlert>{error}</InlineAlert>}
 
-          <button className="sekka-register-submit" type="submit" disabled={loading}>
-            {loading ? "جارٍ إنشاء الحساب…" : "إنشاء حساب جديد"}
-            {!loading && <span aria-hidden="true">←</span>}
-          </button>
+          <Button type="submit" loading={loading} loadingLabel="جارٍ إنشاء الحساب…">إنشاء حساب جديد <span aria-hidden="true">←</span></Button>
         </form>
 
         <div className="sekka-register-role-switch">
@@ -242,6 +175,10 @@ function PasswordVisibilityIcon({ visible }: { visible: boolean }) {
       )}
     </svg>
   );
+}
+
+function PasswordToggle({ visible, label, onToggle }: { visible: boolean; label: string; onToggle: () => void }) {
+  return <><button type="button" className="sekka-register-toggle" onClick={onToggle} aria-label={`${visible ? "إخفاء" : "إظهار"} ${label}`} aria-pressed={visible} /><PasswordVisibilityIcon visible={visible} /></>;
 }
 
 function GoogleIcon() {

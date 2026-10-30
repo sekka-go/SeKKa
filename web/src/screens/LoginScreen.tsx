@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { Button, InlineAlert, TextField } from "../design-system/components";
 import "./register-screen.css";
 
 type LoginScreenProps = {
@@ -38,7 +39,7 @@ export default function LoginScreen({ onLogin, onCreateAccount, loading = false,
     <main className="sekka-register-screen" dir="rtl" lang="ar">
       <div className="sekka-register-screen__accent" aria-hidden="true" />
       <section className="sekka-register-card sekka-login-card" aria-labelledby="sekka-login-title">
-        <a className="sekka-register-brand" href="/" aria-label="سِكّة - إنشاء حساب">
+        <a className="sekka-register-brand" href="/" aria-label="سِكّة - الصفحة الرئيسية">
           <img src="/brand/sekka-mark.png" alt="شعار سِكّة" />
         </a>
         <header className="sekka-register-intro">
@@ -48,23 +49,12 @@ export default function LoginScreen({ onLogin, onCreateAccount, loading = false,
         </header>
 
         <form className="sekka-register-form" onSubmit={submit} noValidate>
-          <label className="sekka-register-field">
-            <span>رقم الهاتف</span>
-            <input type="tel" name="phone" inputMode="tel" autoComplete="tel-national" dir="ltr" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="01xxxxxxxxx" required />
-          </label>
-          <label className="sekka-register-field">
-            <span>كلمة المرور</span>
-            <input type={visible ? "text" : "password"} name="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="أدخل كلمة المرور" required />
-            <button type="button" className="sekka-register-toggle" onClick={() => setVisible((value) => !value)} aria-label={visible ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"} aria-pressed={visible} />
-            <PasswordIcon visible={visible} />
-          </label>
+          <TextField label="رقم الهاتف" type="tel" name="phone" inputMode="tel" autoComplete="tel-national" dir="ltr" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="01xxxxxxxxx" required />
+          <TextField label="كلمة المرور" name="password" type={visible ? "text" : "password"} autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="أدخل كلمة المرور" required trailing={<><button type="button" className="sekka-register-toggle" onClick={() => setVisible((value) => !value)} aria-label={visible ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"} aria-pressed={visible} /><PasswordIcon visible={visible} /></>} />
 
-          {(formError || error) && <p className="sekka-register-error" role="alert">{formError || error}</p>}
-          {success && <p className="sekka-login-success" role="status">{success}</p>}
-          <button className="sekka-register-submit" type="submit" disabled={loading}>
-            {loading ? "جارٍ تسجيل الدخول…" : "تسجيل الدخول"}
-            {!loading && <span aria-hidden="true">←</span>}
-          </button>
+          {(formError || error) && <InlineAlert>{formError || error}</InlineAlert>}
+          {success && <InlineAlert tone="success">{success}</InlineAlert>}
+          <Button type="submit" loading={loading} loadingLabel="جارٍ تسجيل الدخول…">تسجيل الدخول <span aria-hidden="true">←</span></Button>
         </form>
 
         <p className="sekka-register-login">ليس لديك حساب؟ <button type="button" onClick={onCreateAccount}>سجّل الآن</button></p>

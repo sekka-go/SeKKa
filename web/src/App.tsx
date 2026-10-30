@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import RegisterScreen, { type SignupPayload } from "./screens/RegisterScreen";
 import LoginScreen from "./screens/LoginScreen";
+import PublicHomeScreen from "./screens/PublicHomeScreen";
 
 type RegistrationState = "form" | "verify" | "complete";
 
@@ -24,11 +25,14 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [loginSuccess, setLoginSuccess] = useState("");
-  const isLoginPage = window.location.pathname.replace(/\/+$/, "") === "/login";
+  const path = window.location.pathname.replace(/\/+$/, "") || "/";
+  const isLoginPage = path === "/login";
+  const isRegisterPage = path === "/register";
+  const isPublicHome = path === "/";
 
   useEffect(() => {
-    document.title = isLoginPage ? "تسجيل الدخول | سِكّة" : "إنشاء حساب جديد | سِكّة";
-  }, [isLoginPage]);
+    document.title = isLoginPage ? "تسجيل الدخول | سِكّة" : isRegisterPage ? "إنشاء حساب جديد | سِكّة" : isPublicHome ? "سِكّة | تنقّل منتظم" : "الصفحة غير موجودة | سِكّة";
+  }, [isLoginPage, isRegisterPage, isPublicHome]);
 
   async function register(payload: SignupPayload) {
     setError("");
@@ -124,10 +128,26 @@ export default function App() {
   }
 
   if (isLoginPage) {
-    return <LoginScreen onLogin={login} onCreateAccount={() => { window.location.assign("/"); }} loading={loading} error={error} success={loginSuccess} />;
+    return <LoginScreen onLogin={login} onCreateAccount={() => { window.location.assign("/register"); }} loading={loading} error={error} success={loginSuccess} />;
   }
 
-  return <RegisterScreen onRegister={register} onLogin={() => { window.location.assign("/login"); }} loading={loading} error={error} />;
+  if (isRegisterPage) {
+    const initialRole = new URLSearchParams(window.location.search).get("role") === "captain" ? "captain" : "rider";
+    return <RegisterScreen initialRole={initialRole} onRegister={register} onLogin={() => { window.location.assign("/login"); }} loading={loading} error={error} />;
+  }
+
+  if (isPublicHome) return <PublicHomeScreen />;
+
+  return (
+    <main className="sekka-register-screen" dir="rtl" lang="ar">
+      <section className="sekka-register-card sekka-register-result">
+        <a className="sekka-register-brand" href="/" aria-label="سِكّة - الصفحة الرئيسية"><img src="/brand/sekka-mark.png" alt="شعار سِكّة" /></a>
+        <h1>الصفحة غير موجودة</h1>
+        <p className="sekka-register-result-copy">الرابط الذي فتحته غير متاح.</p>
+        <a className="sekka-register-submit sekka-register-link-button" href="/">العودة إلى الصفحة الرئيسية</a>
+      </section>
+    </main>
+  );
 }
 
 function authErrorMessage(error: unknown): string {

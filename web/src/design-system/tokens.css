@@ -1,0 +1,45 @@
+:root {
+  color-scheme: light;
+  --sekka-brand: #064f42;
+  --sekka-brand-strong: #003d34;
+  --sekka-gold: #c7a34b;
+  --sekka-cream: #fbf8ef;
+  --sekka-ink: #164f45;
+  --sekka-muted: #568078;
+  --sekka-subtle: #78827e;
+  --sekka-border: #d5d4cf;
+  --sekka-surface: #fff;
+  --sekka-error: #b42318;
+  --sekka-success: #16734f;
+  --sekka-radius-card: 1.5rem;
+  --sekka-radius-control: .95rem;
+  --sekka-radius-button: 1rem;
+  --sekka-shadow-card: 0 18px 54px rgb(17 55 45 / 12%);
+  --sekka-shadow-button: 0 8px 18px rgb(4 75 62 / 16%);
+  --sekka-space-1: .25rem;
+  --sekka-space-2: .5rem;
+  --sekka-space-3: .75rem;
+  --sekka-space-4: 1rem;
+  --sekka-space-6: 1.5rem;
+  --sekka-font-arabic: Tajawal, "Segoe UI", sans-serif;
+  font-family: var(--sekka-font-arabic);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --sekka-brand: #70c6a8;
+  --sekka-brand-strong: #bce9d5;
+  --sekka-gold: #dfc276;
+  --sekka-cream: #102d29;
+  --sekka-ink: #eaf4ed;
+  --sekka-muted: #bad1c5;
+  --sekka-subtle: #a6beb2;
+  --sekka-border: #36554b;
+  --sekka-surface: #173b34;
+  --sekka-error: #ffaaa0;
+  --sekka-success: #88ddb2;
+  --sekka-shadow-card: 0 18px 54px rgb(0 0 0 / 24%);
+  --sekka-shadow-button: 0 8px 18px rgb(0 0 0 / 22%);
+}

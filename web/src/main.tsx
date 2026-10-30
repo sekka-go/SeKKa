@@ -1,6 +1,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
+import "./design-system/tokens.css";
 import "./sekka-system.css";
 
 const root = document.getElementById("root");
