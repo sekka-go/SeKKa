@@ -24,7 +24,7 @@ The session token is stored in local storage with a seven-day client expiry matc
 | Rider home | Partially functional | Name from restored custom session; latest demand request from `GET /rider/demand-requests`. |
 | Rider trip search | Integrated | Location suggestions use `POST /locations/search`; search uses `POST /rider/lines/search` with selected coordinates, date, time, and vehicle category. |
 | Rider requests and completed trips | Integrated read; demand request submit connected | `/rider/demand-requests`, `/rider/requests`, and `/rider/trips` power account history. A matched result can submit a real `/rider/demand-requests` request using the selected route details; it is a search request, not a reservation or guarantee. |
-| Captain home, offers, vehicle list | Partially functional | Reads `/captain/lines`; home also reads `/captain/demand-groups`. Create/edit/status endpoints exist, but the current form does not yet collect validated map coordinates or send those mutations. |
+| Captain home and offers | Partially functional; line writes connected | Reads `/captain/lines`; home also reads `/captain/demand-groups`. Create/edit now submit selected Cairo map-search locations to `/captain/lines` and `/captain/lines/{id}`; pause/resume uses `/captain/lines/{id}/status`. Backend approval and phone-verification requirements remain enforced. |
 | Captain profile and verification | Partially functional | Reads `/auth/me`, `/captain/profile`, and `/verification`; the UI upload flow is not yet connected to the backend verification document contract. |
 | Captain rider requests and groups | Partially functional | Reads actual `/captain/demand-groups`; related membership operations were not integrated in this batch. |
 | Rider/captain notifications | Integrated read/update | Uses `/pool/notifications` and `/pool/notifications/{id}/read`. |
@@ -49,13 +49,14 @@ The production CORS configuration was not changed.
 - Preview loaded at a mobile viewport without console errors or horizontal overflow.
 - No real registration or login was attempted because no test accounts were provided.
 - `/requests/new` routes into the rider search flow. The result details screen can submit a real demand request; a real account is required to verify API permission and identity-verification gates.
+- Captain line create/edit and pause/resume controls now call the verified line mutation endpoints; test accounts with approved captain profiles are needed to confirm the positive write path.
 - No Supabase product-table reads remain in `RiderHomeScreen`, `RiderTripsScreen`, `RiderJourneyScreen`, or `CaptainJourneyScreen`.
 - There is no test script in `web/package.json`.
 
 ## Remaining work
 
 1. Run rider/captain happy-path and role-separation checks with designated test accounts.
-2. Connect captain line create/edit/status through the actual API and validated map selections.
+2. Run captain line create/edit/pause/resume checks with an approved test captain account.
 3. Continue screen-by-screen review of the remaining 78-screen map. A discovered endpoint alone does not mean a screen is integrated; validate its payload, authorization, and business rules first.
 4. Review whether the current UI passenger-count selector accurately reflects the API's `seats_available` field for every result type.
 
