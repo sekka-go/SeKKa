@@ -83,3 +83,9 @@
 - This is a preview-shell improvement only. It does not complete the 24 rider screens, connect preview forms to real data, or count as production UI delivery.
 - Verification: `pnpm lint`, `pnpm typecheck`, `pnpm test` (201/201), `pnpm build`, and `git diff --check` passed. Final screenshot verification was interrupted by the browser screenshot tool after HMR; the page DOM was inspected at 390×844 and confirmed to contain the new bottom navigation and original logo.
 - Figma screen creation remains incomplete: the original file is view-only, and the new file's screen-building call failed due to a font API error; subsequent retries reached the Starter-plan MCP call limit. The new file currently contains only its reference capture and design-system pages.
+
+## Production rider home visual alignment — 2026-10-30
+
+- Aligned the live rider home hero with the approved mobile reference by using the deep teal welcome surface and higher-contrast title, supporting copy, service-area marker, and mint highlight.
+- Added semantic hero color tokens for light and dark themes; no logo or trip/search behavior changed.
+- Verification: `pnpm lint`, `pnpm typecheck`, `pnpm build`, and `git diff --check` passed. The previous immediately preceding batch also passed all 201 server tests; this batch changes only CSS tokens and presentation rules.

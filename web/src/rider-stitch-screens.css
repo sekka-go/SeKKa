@@ -226,3 +226,19 @@
   .workspace .stitch-filter-row > span { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .workspace .stitch-rider-flow * { scroll-behavior: auto !important; transition-duration: .01ms !important; } }
+
+/* Rider home hero follows the dark teal welcome panel from the approved mobile reference. */
+.workspace .rider-home-experience .rider-hero {
+  color: var(--color-hero-text);
+  border-color: color-mix(in srgb, var(--color-hero-highlight) 26%, transparent);
+  background:
+    radial-gradient(ellipse at 100% 0%, color-mix(in srgb, var(--color-hero-highlight) 18%, transparent), transparent 52%),
+    linear-gradient(125deg, var(--color-hero-background), color-mix(in srgb, var(--color-hero-background) 72%, var(--color-primary)));
+  box-shadow: 0 .8rem 2rem color-mix(in srgb, var(--color-hero-background) 20%, transparent);
+}
+.workspace .rider-home-experience .rider-hero .eyebrow { color: var(--color-hero-highlight); }
+.workspace .rider-home-experience .rider-hero h2 { color: var(--color-hero-text); }
+.workspace .rider-home-experience .rider-hero h2 em { color: var(--color-hero-highlight); }
+.workspace .rider-home-experience .rider-hero-copy > p { color: var(--color-hero-muted); }
+.workspace .rider-home-experience .rider-service-area { color: var(--color-hero-muted); }
+.workspace .rider-home-experience .rider-service-area i { background: var(--color-hero-highlight); box-shadow: 0 0 .8rem color-mix(in srgb, var(--color-hero-highlight) 50%, transparent); }

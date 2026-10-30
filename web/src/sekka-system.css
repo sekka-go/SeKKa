@@ -56,6 +56,10 @@
   --space-card: 1rem;
   --touch-target-min: 44px;
   --brand-deep: #073e3b;
+  --color-hero-background: #103d3b;
+  --color-hero-text: #f3fbf8;
+  --color-hero-muted: #c5ddd7;
+  --color-hero-highlight: #81dfbd;
   font-family: Tajawal, "Segoe UI", sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -112,6 +116,10 @@
   --page-bg: var(--color-background);
   --focus-ring: var(--color-focus);
   --brand-deep: #073e3b;
+  --color-hero-background: #092a2b;
+  --color-hero-text: #f3fbf8;
+  --color-hero-muted: #bad1cc;
+  --color-hero-highlight: #72e0b7;
 }
 
 html { min-width: 320px; background: var(--color-background); scroll-padding-top: 5rem; }
