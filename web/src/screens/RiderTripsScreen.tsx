@@ -1,11 +1,13 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { sekkaApi, type SekkaApiError } from "../lib/sekka-api";
+import { requestStatusLabel } from "../lib/request-status";
 import "./rider-trips-screen.css";
 
 type Place = { label: string; primary: string; secondary: string; lat: number; lng: number };
 type Line = { id: number; origin_label: string; destination_label: string; vehicle_type_id: string; arrival_time: string; return_arrival_time: string | null; service_days: number[]; seats?: number; seats_available?: number; price_per_seat: number | null; captain_name: string; captain_verified: boolean; pickup_distance_km: number; dropoff_distance_km: number };
-type Props = { supabase: unknown; mode: "available" | "mine"; onHome: () => void };
+type Props = { supabase: unknown; mode: "available" | "mine" | "daily"; onHome: () => void };
 type Order = "recent" | "price";
+type ServiceCategory = { id: string; name_ar: string; vehicle_type_id?: string; max_seats?: number };
 const days = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
 const categories = [{ id: "prime", label: "Prime" }, { id: "daily", label: "Daily" }, { id: "space", label: "Space" }, { id: "max", label: "Max" }];
 
@@ -14,12 +16,15 @@ function Icon({ name }: { name: "back" | "pin" | "calendar" | "clock" | "people"
   return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{p[name]}</svg>;
 }
 
-function statusLabel(value?: string) { return ({ open: "قيد المتابعة", matched: "تم العثور على مسار", pending: "قيد المراجعة", completed: "مكتمل", cancelled: "ملغي" } as Record<string, string>)[value ?? ""] ?? value ?? "غير متاح"; }
+function statusLabel(value?: string) { return value === "completed" ? "مكتمل" : requestStatusLabel(value); }
 
 export default function RiderTripsScreen({ mode, onHome }: Props) {
   const mine = mode === "mine";
+  const daily = mode === "daily";
   const [lines, setLines] = useState<Line[]>([]);
   const [requests, setRequests] = useState<Record<string, any>[]>([]);
+  const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>([]);
+  const [serviceCategoryId, setServiceCategoryId] = useState("");
   const [from, setFrom] = useState(""); const [to, setTo] = useState("");
   const [fromPlace, setFromPlace] = useState<Place | null>(null); const [toPlace, setToPlace] = useState<Place | null>(null);
   const [fromSuggestions, setFromSuggestions] = useState<Place[]>([]); const [toSuggestions, setToSuggestions] = useState<Place[]>([]);
@@ -27,6 +32,7 @@ export default function RiderTripsScreen({ mode, onHome }: Props) {
   const [searched, setSearched] = useState(false); const [order, setOrder] = useState<Order>("recent"); const [vehicleFilter, setVehicleFilter] = useState("all");
   const [categoryOpen, setCategoryOpen] = useState(false); const [selected, setSelected] = useState<Line | null>(null);
   const [loading, setLoading] = useState(true); const [searching, setSearching] = useState(false); const [requesting, setRequesting] = useState(false); const [requestError, setRequestError] = useState(""); const [createdRequest, setCreatedRequest] = useState<Record<string, any> | null>(null); const [error, setError] = useState(""); const [actionBusyId, setActionBusyId] = useState<string|null>(null); const [queryKey, setQueryKey] = useState(0);
+  const createRequestLock = useRef(false); const requestActionLock = useRef(false);
 
   useEffect(() => {
     if (mine || from.trim().length < 3 || fromPlace?.label === from.trim()) { setFromSuggestions([]); return; }
@@ -57,12 +63,15 @@ export default function RiderTripsScreen({ mode, onHome }: Props) {
             sekkaApi<{ trips: Record<string, any>[] }>("/rider/trips"),
           ]);
           if (active) { setRequests([...(requestData.requests ?? []), ...(dailyData.requests ?? []).map((item) => ({ ...item, _daily: true })), ...(tripData.trips ?? []).map((item) => ({ ...item, id: String(item.trip?.id ?? item.id), _completed_trip: true }))]); setLines([]); }
+        } else if (daily) {
+          const { service_categories } = await sekkaApi<{ service_categories: ServiceCategory[] }>("/config");
+          if (active) { setServiceCategories(service_categories ?? []); setLines([]); setRequests([]); }
         } else { if (active) { setLines([]); setRequests([]); } }
       } catch (cause) { if (active) setError(apiMessage(cause)); }
       finally { if (active) setLoading(false); }
     }
     void load(); return () => { active = false; };
-  }, [mine, queryKey]);
+  }, [mine, daily, queryKey]);
 
   const results = useMemo(() => lines.filter((line) => (vehicleFilter === "all" || line.vehicle_type_id === vehicleFilter) && (line.seats_available ?? line.seats ?? 0) >= passengers)
     .sort((a, b) => order === "price" ? (a.price_per_seat ?? Number.MAX_SAFE_INTEGER) - (b.price_per_seat ?? Number.MAX_SAFE_INTEGER) : (a.pickup_distance_km + a.dropoff_distance_km) - (b.pickup_distance_km + b.dropoff_distance_km)), [lines, order, vehicleFilter, passengers]);
@@ -83,36 +92,51 @@ export default function RiderTripsScreen({ mode, onHome }: Props) {
     } catch (cause) { setLines([]); setError(apiMessage(cause)); }
     finally { setSearching(false); }
   }
+  async function createDailyRequest(event: FormEvent) {
+    event.preventDefault(); setRequestError(""); setError("");
+    if (!fromPlace || !toPlace) { setRequestError("اختر نقطة الانطلاق والوجهة من اقتراحات العناوين."); return; }
+    if (!serviceCategoryId) { setRequestError("اختر فئة الخدمة المطلوبة."); return; }
+    if (createRequestLock.current) return;
+    createRequestLock.current = true; setRequesting(true);
+    try {
+      const { request } = await sekkaApi<{ request: Record<string, any>; match?: Record<string, any> | null }>("/rider/requests", { method: "POST", body: { service_category_id: serviceCategoryId, pickup_lat: fromPlace.lat, pickup_lng: fromPlace.lng, dropoff_lat: toPlace.lat, dropoff_lng: toPlace.lng } });
+      setCreatedRequest(request);
+    } catch (cause) { setRequestError(apiMessage(cause)); }
+    finally { createRequestLock.current = false; setRequesting(false); }
+  }
   async function createDemandRequest() {
-    if (!selected || !fromPlace || !toPlace || requesting) return;
+    if (!selected || !fromPlace || !toPlace || createRequestLock.current) return;
+    createRequestLock.current = true;
     setRequesting(true); setRequestError("");
     try {
       const result = await sekkaApi<{ request: Record<string, any>; demand_group?: Record<string, any> | null }>("/rider/demand-requests", { method: "POST", body: { vehicle_type_id: selected.vehicle_type_id, seats: passengers, trip_date: date, arrival_time: time, pickup_label: fromPlace.label, dropoff_label: toPlace.label, pickup_lat: fromPlace.lat, pickup_lng: fromPlace.lng, dropoff_lat: toPlace.lat, dropoff_lng: toPlace.lng } });
       setCreatedRequest({ ...result.request, demand_group: result.demand_group ?? null });
       setSelected(null);
     } catch (cause) { setRequestError(apiMessage(cause)); }
-    finally { setRequesting(false); }
+    finally { createRequestLock.current = false; setRequesting(false); }
   }
   async function cancelDailyRequest(request: Record<string, any>) {
     const id = String(request.id);
-    if (request.status !== "open" || actionBusyId) return;
+    if (request.status !== "open" || requestActionLock.current) return;
     if (!window.confirm("هل تريد إلغاء طلب التنقل المفتوح؟")) return;
+    requestActionLock.current = true;
     setActionBusyId(id); setError("");
     try {
       const { request: cancelled } = await sekkaApi<{ request: Record<string, any> }>(`/rider/requests/${encodeURIComponent(id)}/cancel`, { method: "POST" });
       setRequests((items) => items.map((item) => item._daily && String(item.id) === id ? { ...item, ...cancelled, _daily: true } : item));
     } catch (cause) { setError(apiMessage(cause)); }
-    finally { setActionBusyId(null); }
+    finally { requestActionLock.current = false; setActionBusyId(null); }
   }
   async function refreshDailyRequest(request: Record<string, any>) {
     const id = String(request.id);
-    if (actionBusyId) return;
+    if (requestActionLock.current) return;
+    requestActionLock.current = true;
     setActionBusyId(id); setError("");
     try {
       const { request: current, match } = await sekkaApi<{ request: Record<string, any>; match: Record<string, any> | null }>(`/rider/requests/${encodeURIComponent(id)}/match`, { method: "POST" });
       setRequests((items) => items.map((item) => item._daily && String(item.id) === id ? { ...item, ...current, match: match ?? null, _daily: true } : item));
     } catch (cause) { setError(apiMessage(cause)); }
-    finally { setActionBusyId(null); }
+    finally { requestActionLock.current = false; setActionBusyId(null); }
   }
   async function disputeTrip(request: Record<string, any>) {
     const tripId = String(request.trip?.id ?? request.id);
@@ -138,19 +162,19 @@ export default function RiderTripsScreen({ mode, onHome }: Props) {
   const placeField = (which: "from" | "to", label: string, value: string, setValue: (value: string) => void, suggestions: Place[]) => <label className="rider-trip-place-field"><span>{label} <Icon name="pin"/></span><input value={value} onChange={(event) => { setValue(event.target.value); if (which === "from") setFromPlace(null); else setToPlace(null); }} placeholder={which === "from" ? "نقطة الانطلاق" : "الوجهة"} autoComplete="off"/>{suggestions.length > 0 && <div className="rider-place-suggestions" role="listbox">{suggestions.map((place, index) => <button type="button" key={`${place.lat}-${place.lng}-${index}`} onClick={() => selectPlace(place, which)}><strong>{place.primary}</strong><small>{place.secondary}</small></button>)}</div>}</label>;
 
   return <main className="rider-trips-screen" dir="rtl" lang="ar">
-    <header className="rider-trips-header"><img src="/brand/sekka-mark.png" alt="سِكّة"/><div><span>{mine ? "طلباتك ورحلاتك المسجلة" : "اكتشف الخطوط التي تناسبك"}</span><h1>{mine ? "رحلاتي" : "البحث عن رحلة"}</h1></div><button onClick={onHome} aria-label="العودة للرئيسية"><Icon name="back"/></button></header>
-    {!mine && <form className="rider-trip-search" onSubmit={submitSearch}>
+    <header className="rider-trips-header"><img src="/brand/sekka-mark.png" alt="سِكّة"/><div><span>{mine ? "طلباتك ورحلاتك المسجلة" : daily ? "سجل مشوارك اليومي لمتابعة المطابقة" : "اكتشف الخطوط التي تناسبك"}</span><h1>{mine ? "رحلاتي" : daily ? "طلب تنقّل يومي" : "البحث عن رحلة"}</h1></div><button onClick={onHome} aria-label="العودة للرئيسية"><Icon name="back"/></button></header>
+    {!mine && <form className="rider-trip-search" onSubmit={daily ? createDailyRequest : submitSearch}>
       <div className="rider-trip-search-grid">
-        <label><span>تاريخ الرحلة <Icon name="calendar"/></span><input type="date" value={date} min={new Date().toLocaleDateString("en-CA")} onChange={(event) => setDate(event.target.value)}/></label>
+        {daily ? <label className="rider-trip-place-field"><span>فئة الخدمة</span><select value={serviceCategoryId} onChange={(event) => setServiceCategoryId(event.target.value)} disabled={!serviceCategories.length}><option value="">اختر الفئة</option>{serviceCategories.map((category) => <option key={category.id} value={category.id}>{category.name_ar}</option>)}</select></label> : <label><span>تاريخ الرحلة <Icon name="calendar"/></span><input type="date" value={date} min={new Date().toLocaleDateString("en-CA")} onChange={(event) => setDate(event.target.value)}/></label>}
         {placeField("to", "إلى أين؟", to, setTo, toSuggestions)}
         {placeField("from", "من أين؟", from, setFrom, fromSuggestions)}
-      </div><div className="rider-trip-search-bottom"><label className="rider-passengers-label"><span>موعد الوصول</span><input type="time" value={time} onChange={(event) => setTime(event.target.value)}/></label><label className="rider-passengers-label"><span>عدد الركاب</span><span className="rider-passenger-control"><button type="button" onClick={() => setPassengers((count) => Math.max(1, count - 1))} disabled={passengers <= 1} aria-label="تقليل عدد الركاب">−</button><b>{passengers} راكب</b><button type="button" onClick={() => setPassengers((count) => Math.min(13, count + 1))} disabled={passengers >= 13} aria-label="زيادة عدد الركاب">+</button></span></label><button className="rider-trip-submit" type="submit" disabled={searching}><Icon name="search"/> {searching ? "جارٍ البحث…" : "ابحث عن الرحلات"}</button></div>
+      </div>{daily ? <div className="rider-trip-search-bottom"><span className="rider-search-limit-note">سيتم تسجيل نقطة الانطلاق والوجهة والفئة فقط، وفق حقول API المتاحة.</span><button className="rider-trip-submit" type="submit" disabled={requesting || !serviceCategories.length}>{requesting ? "جارٍ تسجيل الطلب…" : "تسجيل طلب التنقّل اليومي"}</button></div> : <div className="rider-trip-search-bottom"><label className="rider-passengers-label"><span>موعد الوصول</span><input type="time" value={time} onChange={(event) => setTime(event.target.value)}/></label><label className="rider-passengers-label"><span>عدد الركاب</span><span className="rider-passenger-control"><button type="button" onClick={() => setPassengers((count) => Math.max(1, count - 1))} disabled={passengers <= 1} aria-label="تقليل عدد الركاب">−</button><b>{passengers} راكب</b><button type="button" onClick={() => setPassengers((count) => Math.min(13, count + 1))} disabled={passengers >= 13} aria-label="زيادة عدد الركاب">+</button></span></label><button className="rider-trip-submit" type="submit" disabled={searching}><Icon name="search"/> {searching ? "جارٍ البحث…" : "ابحث عن الرحلات"}</button></div>}
     </form>}
     <section className="rider-trips-list-section">
-      <div className="rider-trips-results-heading"><div><span>{mine ? "البيانات المسجلة في حسابك" : "نتائج المطابقة حسب المسار والوقت"}</span><h2>{mine ? "طلباتي ورحلاتي" : searched ? "الرحلات المناسبة لك" : "الرحلات المتاحة"}</h2></div>{!mine && !loading && !error && <span className="rider-results-count">{results.length} رحلة</span>}</div>
-      {!mine && <div className="rider-trip-filters"><div className="rider-trip-filter-row" aria-label="ترتيب وتصفية الرحلات"><button className={order === "recent" && vehicleFilter === "all" ? "selected" : ""} onClick={() => { setOrder("recent"); setVehicleFilter("all"); }}>كل الرحلات <span>☷</span></button><button className={order === "price" ? "selected" : ""} onClick={() => setOrder("price")}>الأقل سعرًا <span>◉</span></button><button aria-expanded={categoryOpen} aria-controls="trip-category-options" className={vehicleFilter !== "all" ? "selected" : ""} onClick={() => setCategoryOpen((open) => !open)}>{selectedCategory ? `الفئة: ${selectedCategory.label}` : "تصفية بالفئة"} <span>⚙</span></button></div>{categoryOpen && <div id="trip-category-options" className="rider-trip-category-options" role="group" aria-label="فئة المركبة"><button className={vehicleFilter === "all" ? "selected" : ""} onClick={() => { setVehicleFilter("all"); setCategoryOpen(false); }}>كل الفئات</button>{categories.map((category) => <button key={category.id} className={vehicleFilter === category.id ? "selected" : ""} onClick={() => { setVehicleFilter(category.id); setCategoryOpen(false); }}>{category.label}</button>)}</div>}</div>}
-      {!mine && <>{createdRequest && <div className="rider-trips-state" role="status"><strong>تم تسجيل طلب البحث</strong><p>رقم الطلب: {createdRequest.id}. حالة الطلب: {statusLabel(createdRequest.status)}. تسجيل الطلب لا يضمن توافر رحلة أو قبول الكابتن.</p><button onClick={() => window.location.assign("/my-trips")}>متابعة طلباتي</button></div>}<p className="rider-search-limit-note">تُطابق النتائج مواقعك وموعد الوصول مع العروض النشطة عبر خدمة سِكّة. يعرض النظام سعة الخط المعلنة؛ اختيار عدد الركاب لا يحجز مقاعد.</p></>}
-      {loading ? <div className="rider-trips-state" role="status"><strong>جارٍ تحميل البيانات</strong><p>نحمّل البيانات من حسابك.</p></div> : error ? <div className="rider-trips-state rider-trips-error" role="alert"><strong>تعذر تحميل البيانات</strong><p>{error}</p>{mine && <button onClick={retry}>إعادة المحاولة</button>}</div> : mine ? requests.length ? <div className="rider-trips-results">{requests.map((request, index) => <article className="rider-trip-card" key={`${request.id}-${index}`}><div className="trip-card-route"><div className="trip-route-place"><i className="trip-route-dot"/><span>{request.pickup_label || request.stops?.[0]?.label || (request._daily ? "طلب تنقّل يومي" : "موقع الانطلاق المسجل")}</span></div><div className="trip-route-connector"/><div className="trip-route-place"><i className="trip-route-dot"/><span>{request.dropoff_label || request.stops?.at?.(-1)?.label || (request._daily ? "بانتظار تحديد مسار" : "وجهة الطلب")}</span></div><div className="trip-route-datetime"><span><Icon name="calendar"/>{request.trip_date || request.trip?.completed_at?.slice(0, 10) || request.requested_at?.slice(0, 10) || "—"}</span><span><Icon name="clock"/>{statusLabel(request._completed_trip ? "completed" : request.status)}</span></div>{request._daily&&request.status==="open"&&<><button className="rider-trip-detail-button" disabled={actionBusyId!==null} onClick={()=>void refreshDailyRequest(request)}>{actionBusyId===String(request.id)?"جارٍ تحديث الحالة…":"تحديث حالة الطلب"}</button><button className="rider-trip-detail-button" disabled={actionBusyId!==null} onClick={()=>void cancelDailyRequest(request)}>{actionBusyId===String(request.id)?"جارٍ الإلغاء…":"إلغاء الطلب المفتوح"}</button></>}{request._daily&&request.status==="matched"&&<span className="trip-seat-badge">تم العثور على رحلة</span>}{request._completed_trip&&request.payment_status==="confirmed"&&<button className="rider-trip-detail-button" disabled={actionBusyId!==null} onClick={()=>void disputeTrip(request)}>{actionBusyId===String(request.trip?.id??request.id)?"جارٍ الإرسال…":"اعتراض على المبلغ"}</button>}{request._completed_trip&&request.payment_status==="disputed"&&<span className="trip-seat-badge">الاعتراض قيد المراجعة</span>}</div></article>)}</div> : <div className="rider-trips-state"><strong>لا توجد طلبات أو رحلات مسجلة</strong><p>عند إرسال طلب أو إكمال رحلة ستظهر بياناتها هنا.</p><button onClick={() => window.location.assign("/trips")}>استكشف الرحلات</button></div> : results.length ? <div className="rider-trips-results">{results.map(lineCard)}</div> : <div className="rider-trips-state"><strong>{searched ? "لم نعثر على رحلات مطابقة" : "ابدأ البحث عن رحلة"}</strong><p>{searched ? "جرّب اختيار مواقع قريبة أو موعد وصول آخر." : "حدد الانطلاق والوجهة والتاريخ، ثم اختر كل عنوان من الاقتراحات."}</p></div>}
+      <div className="rider-trips-results-heading"><div><span>{mine ? "البيانات المسجلة في حسابك" : daily ? "المواقع والفئة تُرسل إلى خدمة سِكّة" : "نتائج المطابقة حسب المسار والوقت"}</span><h2>{mine ? "طلباتي ورحلاتي" : daily ? "طلب تنقّل يومي" : searched ? "الرحلات المناسبة لك" : "الرحلات المتاحة"}</h2></div>{mine ? <button className="rider-trip-detail-button" onClick={retry} disabled={loading}>تحديث الطلبات</button> : !daily && !loading && !error && <span className="rider-results-count">{results.length} رحلة</span>}</div>
+      {!mine && !daily && <div className="rider-trip-filters"><div className="rider-trip-filter-row" aria-label="ترتيب وتصفية الرحلات"><button className={order === "recent" && vehicleFilter === "all" ? "selected" : ""} onClick={() => { setOrder("recent"); setVehicleFilter("all"); }}>كل الرحلات <span>☷</span></button><button className={order === "price" ? "selected" : ""} onClick={() => setOrder("price")}>الأقل سعرًا <span>◉</span></button><button aria-expanded={categoryOpen} aria-controls="trip-category-options" className={vehicleFilter !== "all" ? "selected" : ""} onClick={() => setCategoryOpen((open) => !open)}>{selectedCategory ? `الفئة: ${selectedCategory.label}` : "تصفية بالفئة"} <span>⚙</span></button></div>{categoryOpen && <div id="trip-category-options" className="rider-trip-category-options" role="group" aria-label="فئة المركبة"><button className={vehicleFilter === "all" ? "selected" : ""} onClick={() => { setVehicleFilter("all"); setCategoryOpen(false); }}>كل الفئات</button>{categories.map((category) => <button key={category.id} className={vehicleFilter === category.id ? "selected" : ""} onClick={() => { setVehicleFilter(category.id); setCategoryOpen(false); }}>{category.label}</button>)}</div>}</div>}
+      {!mine && <>{createdRequest && <div className="rider-trips-state" role="status"><strong>استلم الخادم طلبك</strong><p>رقم الطلب: {createdRequest.id}. الحالة الحالية: {statusLabel(createdRequest.status)}. لا يعرض النظام قبول رحلة قبل أن تظهر مطابقة فعلية.</p><button onClick={() => window.location.assign("/my-trips")}>متابعة حالة الطلب</button></div>}{requestError && <div className="rider-trips-state rider-trips-error" role="alert"><strong>لم يتم تسجيل الطلب</strong><p>{requestError}</p></div>}{!daily && <p className="rider-search-limit-note">تُطابق النتائج مواقعك وموعد الوصول مع العروض النشطة عبر خدمة سِكّة. يعرض النظام سعة الخط المعلنة؛ اختيار عدد الركاب لا يحجز مقاعد.</p>}</>}
+      {loading ? <div className="rider-trips-state" role="status"><strong>جارٍ تحميل البيانات</strong><p>{daily ? "نحمّل فئات الخدمة من النظام." : "نحمّل البيانات من حسابك."}</p></div> : error ? <div className="rider-trips-state rider-trips-error" role="alert"><strong>تعذر تحميل البيانات</strong><p>{error}</p><button onClick={retry}>إعادة المحاولة</button></div> : mine ? requests.length ? <div className="rider-trips-results">{requests.map((request, index) => <article className="rider-trip-card" key={`${request.id}-${index}`}><div className="trip-card-route"><div className="trip-route-place"><i className="trip-route-dot"/><span>{request.pickup_label || request.stops?.[0]?.label || (request._daily ? "طلب تنقّل يومي" : "موقع الانطلاق المسجل")}</span></div><div className="trip-route-connector"/><div className="trip-route-place"><i className="trip-route-dot"/><span>{request.dropoff_label || request.stops?.at?.(-1)?.label || (request._daily ? "بانتظار تحديد مسار" : "وجهة الطلب")}</span></div><div className="trip-route-datetime"><span><Icon name="calendar"/>{request.trip_date || request.trip?.completed_at?.slice(0, 10) || request.requested_at?.slice(0, 10) || "—"}</span><span><Icon name="clock"/>{statusLabel(request._completed_trip ? "completed" : request.status)}</span></div>{request.demand_groups?.status&&<span className="trip-seat-badge">حالة المجموعة: {statusLabel(request.demand_groups.status)}</span>}{request._daily&&request.status==="open"&&<><button className="rider-trip-detail-button" disabled={actionBusyId!==null} onClick={()=>void refreshDailyRequest(request)}>{actionBusyId===String(request.id)?"جارٍ تحديث الحالة…":"تحديث حالة الطلب"}</button><button className="rider-trip-detail-button" disabled={actionBusyId!==null} onClick={()=>void cancelDailyRequest(request)}>{actionBusyId===String(request.id)?"جارٍ الإلغاء…":"إلغاء الطلب المفتوح"}</button></>}{request._daily&&request.status==="matched"&&<span className="trip-seat-badge">تم العثور على رحلة</span>}{request._completed_trip&&request.payment_status==="confirmed"&&<button className="rider-trip-detail-button" disabled={actionBusyId!==null} onClick={()=>void disputeTrip(request)}>{actionBusyId===String(request.trip?.id??request.id)?"جارٍ الإرسال…":"اعتراض على المبلغ"}</button>}{request._completed_trip&&request.payment_status==="disputed"&&<span className="trip-seat-badge">الاعتراض قيد المراجعة</span>}</div></article>)}</div> : <div className="rider-trips-state"><strong>لا توجد طلبات أو رحلات مسجلة</strong><p>عند إرسال طلب أو إكمال رحلة ستظهر بياناتها هنا.</p><button onClick={() => window.location.assign(daily ? "/requests/new" : "/trips")}>{daily ? "تسجيل طلب تنقّل" : "استكشف الرحلات"}</button></div> : daily ? <div className="rider-trips-state"><strong>سجل مشوارك اليومي</strong><p>اختر فئة الخدمة ونقطتي الانطلاق والوصول لإرسال طلب محفوظ إلى حسابك.</p></div> : results.length ? <div className="rider-trips-results">{results.map(lineCard)}</div> : <div className="rider-trips-state"><strong>{searched ? "لم نعثر على رحلات مطابقة" : "ابدأ البحث عن رحلة"}</strong><p>{searched ? "جرّب اختيار مواقع قريبة أو موعد وصول آخر." : "حدد الانطلاق والوجهة والتاريخ، ثم اختر كل عنوان من الاقتراحات."}</p></div>}
     </section>
     <nav className="rider-trips-bottom-nav" aria-label="التنقل الرئيسي"><a href="/home"><Icon name="home"/><span>الرئيسية</span></a><a className={!mine ? "active" : ""} aria-current={!mine ? "page" : undefined} href="/trips"><Icon name="search"/><span>البحث</span></a><a className={mine ? "active" : ""} aria-current={mine ? "page" : undefined} href="/my-trips"><Icon name="bag"/><span>طلباتي</span></a><a href="/journey/conversations"><Icon name="chat"/><span>المحادثات</span></a><a href="/journey/profile"><Icon name="user"/><span>المزيد</span></a></nav>
     {selected && <div className="rider-trip-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelected(null); }}><section className="rider-trip-modal" role="dialog" aria-modal="true" aria-labelledby="trip-detail-title"><button className="rider-trip-modal-close" onClick={() => setSelected(null)} aria-label="إغلاق">×</button><span className="rider-trip-published">عرض نشط</span><h2 id="trip-detail-title">{selected.origin_label} ← {selected.destination_label}</h2><p><Icon name="calendar"/> أيام التشغيل: {(selected.service_days ?? []).map((day) => days[day]).filter(Boolean).join("، ") || "حسب التاريخ المختار"}</p><p><Icon name="clock"/> موعد الوصول: {selected.arrival_time?.slice(0, 5) || "غير محدد"}</p><p><Icon name="car"/> فئة المركبة: {categories.find((category) => category.id === selected.vehicle_type_id)?.label ?? selected.vehicle_type_id}</p><p><Icon name="people"/> المقاعد المتاحة: {selected.seats_available ?? selected.seats ?? "—"}</p><p>السعر للمقعد: {selected.price_per_seat == null ? "غير محدد" : `${selected.price_per_seat} ج.م`}</p><p>الكابتن: {selected.captain_name}{selected.captain_verified ? " • معتمد" : ""}</p><p className="rider-trip-modal-note">إرسال طلب البحث لا يحجز مقعدًا ولا يضمن قبول الرحلة. سيراجع النظام التوافق وحالة اعتماد حسابك.</p>{requestError && <p className="rider-trips-error" role="alert">{requestError}</p>}<button className="rider-trip-submit" disabled={requesting} onClick={() => void createDemandRequest()}>{requesting ? "جارٍ تسجيل الطلب…" : "إرسال طلب البحث عن رحلة"}</button></section></div>}

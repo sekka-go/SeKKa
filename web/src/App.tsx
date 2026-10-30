@@ -260,7 +260,7 @@ export default function App() {
   if (adminScreenKey && adminScreenKeys.includes(adminScreenKey)) return <Suspense fallback={<main className="sekka-public-route-state" dir="rtl">جارٍ فتح لوحة الإدارة…</main>}><AdminConsoleScreen supabase={supabase} screen={adminScreenKey} onNavigate={(target) => window.location.assign(target)} /></Suspense>;
   if (sharedScreenKey && sharedScreenKeys.includes(sharedScreenKey)) return <Suspense fallback={<main className="sekka-public-route-state" dir="rtl">جارٍ تحميل الصفحة…</main>}><AdminConsoleScreen supabase={supabase} screen={sharedScreenKey} shared onNavigate={(target) => window.location.assign(target)} /></Suspense>;
 
-  if (isRiderTripsPage) return <RiderTripsScreen supabase={supabase} mode={isMyTripsPage ? "mine" : "available"} onHome={() => window.location.assign("/home")} />;
+  if (isRiderTripsPage) return <RiderTripsScreen supabase={supabase} mode={isMyTripsPage ? "mine" : isRequestCreatePage ? "daily" : "available"} onHome={() => window.location.assign("/home")} />;
   if (journeyKey) return <RiderJourneyScreen supabase={supabase} screen={journeyKey} onNavigate={(target) => window.location.assign(target)} />;
 
   if (isPublicHome && publicRouteState === "checking") return <main className="sekka-public-route-state" dir="rtl" lang="ar"><img src="/brand/sekka-mark.png" alt="سِكّة"/><span>جارٍ التحقق من حسابك…</span></main>;
