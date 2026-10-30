@@ -111,6 +111,9 @@
 .sekka-register-success-mark { display: grid; width: 3.5rem; height: 3.5rem; margin: 1rem auto; place-items: center; border-radius: 50%; background: #e5f7ef; color: var(--register-green); font-size: 2rem; font-weight: 900; }
 .sekka-register-link-button { text-decoration: none; }
 .sekka-register-role-note { margin: 1rem 0 0; color: #78827e; font-size: .72rem; line-height: 1.7; }
+.sekka-login-card .sekka-register-intro { margin-block-end: 1.5rem; }
+.sekka-login-success { margin: 0; color: var(--register-green); font-size: .82rem; font-weight: 800; }
+.sekka-login-card .sekka-register-role-switch > button { min-height: 3.3rem; }
 
 @media (max-width: 360px) {
   .sekka-register-card { padding: .9rem; border-radius: 1.15rem; }

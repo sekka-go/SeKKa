@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import RegisterScreen, { type SignupPayload } from "./screens/RegisterScreen";
+import LoginScreen from "./screens/LoginScreen";
 
 type RegistrationState = "form" | "verify" | "complete";
 
@@ -22,6 +23,12 @@ export default function App() {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [loginSuccess, setLoginSuccess] = useState("");
+  const isLoginPage = window.location.pathname.replace(/\/+$/, "") === "/login";
+
+  useEffect(() => {
+    document.title = isLoginPage ? "تسجيل الدخول | سِكّة" : "إنشاء حساب جديد | سِكّة";
+  }, [isLoginPage]);
 
   async function register(payload: SignupPayload) {
     setError("");
@@ -63,6 +70,28 @@ export default function App() {
     }
   }
 
+  async function login(phoneNumber: string, password: string) {
+    setError("");
+    setLoginSuccess("");
+    if (!supabase) {
+      setError("تسجيل الدخول غير متاح حاليًا. إعدادات الاتصال بالخدمة غير مكتملة.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        phone: `+20${phoneNumber.slice(1)}`,
+        password,
+      });
+      if (loginError) throw loginError;
+      setLoginSuccess("تم تسجيل الدخول بنجاح.");
+    } catch (cause) {
+      setError(authErrorMessage(cause));
+    } finally {
+      setLoading(false);
+    }
+  }
+
   if (state === "verify" || state === "complete") {
     return (
       <main className="sekka-register-screen" dir="rtl" lang="ar">
@@ -94,11 +123,16 @@ export default function App() {
     );
   }
 
+  if (isLoginPage) {
+    return <LoginScreen onLogin={login} onCreateAccount={() => { window.location.assign("/"); }} loading={loading} error={error} success={loginSuccess} />;
+  }
+
   return <RegisterScreen onRegister={register} onLogin={() => { window.location.assign("/login"); }} loading={loading} error={error} />;
 }
 
 function authErrorMessage(error: unknown): string {
   const message = error instanceof Error ? error.message.toLowerCase() : "";
+  if (message.includes("invalid login credentials")) return "رقم الهاتف أو كلمة المرور غير صحيحة.";
   if (message.includes("already registered") || message.includes("already been registered")) return "رقم الهاتف مسجل بالفعل. سجّل الدخول أو استخدم استعادة الحساب.";
   if (message.includes("password") && (message.includes("weak") || message.includes("short"))) return "كلمة المرور ضعيفة. استخدم كلمة مرور أطول وأكثر أمانًا.";
   if (message.includes("phone") && (message.includes("invalid") || message.includes("not supported"))) return "تعذر قبول رقم الهاتف. تأكد من الرقم وحاول مرة أخرى.";
