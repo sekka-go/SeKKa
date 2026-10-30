@@ -102,7 +102,7 @@ export default function RegisterScreen({
         <header className="sekka-register-intro">
           <p className="sekka-register-eyebrow">أهلًا بك في سِكّة</p>
           <h1 id="sekka-register-title">{role === "captain" ? "أنشئ حساب كابتن" : "أنشئ حسابك"}</h1>
-          <p>{role === "captain" ? "انضم إلى الكباتن وانشر رحلاتك" : "ابدأ رحلتك بسهولة وأمان"}</p>
+          <p>{role === "captain" ? "انضم إلى الكباتن وانشر رحلاتك" : "ابدأ رحلتك بسهولة وسرعة"}</p>
         </header>
 
         <form className="sekka-register-form" onSubmit={submit} noValidate>
@@ -114,7 +114,7 @@ export default function RegisterScreen({
               autoComplete="name"
               value={fullName}
               onChange={(event) => setFullName(event.target.value)}
-              placeholder="اكتب اسمك كما يظهر في هويتك"
+              placeholder="اكتب اسمك كما يظهر في بطاقتك"
               required
             />
           </label>
@@ -146,9 +146,14 @@ export default function RegisterScreen({
               minLength={8}
               required
             />
-            <button type="button" className="sekka-register-toggle" onClick={() => setShowPassword((visible) => !visible)}>
-              {showPassword ? "إخفاء" : "إظهار"}
-            </button>
+            <button
+              type="button"
+              className="sekka-register-toggle"
+              onClick={() => setShowPassword((visible) => !visible)}
+              aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+              aria-pressed={showPassword}
+            />
+            <PasswordVisibilityIcon visible={showPassword} />
           </label>
 
           <label className="sekka-register-field">
@@ -163,9 +168,14 @@ export default function RegisterScreen({
               minLength={8}
               required
             />
-            <button type="button" className="sekka-register-toggle" onClick={() => setShowConfirm((visible) => !visible)}>
-              {showConfirm ? "إخفاء" : "إظهار"}
-            </button>
+            <button
+              type="button"
+              className="sekka-register-toggle"
+              onClick={() => setShowConfirm((visible) => !visible)}
+              aria-label={showConfirm ? "إخفاء تأكيد كلمة المرور" : "إظهار تأكيد كلمة المرور"}
+              aria-pressed={showConfirm}
+            />
+            <PasswordVisibilityIcon visible={showConfirm} />
           </label>
 
           <div className="sekka-register-consent">
@@ -193,7 +203,6 @@ export default function RegisterScreen({
             <CarIcon />
             {role === "rider" ? "التسجيل ككابتن" : "التسجيل كراكب"}
           </button>
-          <p>{role === "rider" ? "كابتن؟ أنشئ حسابك من هنا" : "راكب؟ أنشئ حسابك من هنا"}</p>
         </div>
 
         {onGoogleRegister && (
@@ -215,6 +224,24 @@ export default function RegisterScreen({
 
 function CarIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 11 1.4-4.2A2.7 2.7 0 0 1 9 5h6a2.7 2.7 0 0 1 2.6 1.8L19 11l1.5 1.2c.3.2.5.6.5 1v4.3c0 .8-.7 1.5-1.5 1.5H18v-2H6v2H4.5c-.8 0-1.5-.7-1.5-1.5v-4.3c0-.4.2-.8.5-1L5 11Zm2.1-.5h9.8l-1.1-3.3a.9.9 0 0 0-.9-.6H9.1a.9.9 0 0 0-.9.6l-1.1 3.3ZM7 14a1.2 1.2 0 1 0 0 2.4A1.2 1.2 0 0 0 7 14Zm10 0a1.2 1.2 0 1 0 0 2.4A1.2 1.2 0 0 0 17 14Z" fill="currentColor" /></svg>;
+}
+
+function PasswordVisibilityIcon({ visible }: { visible: boolean }) {
+  return (
+    <svg className="sekka-register-toggle-icon" viewBox="0 0 24 24" aria-hidden="true">
+      {visible ? (
+        <>
+          <path d="M2.5 12s3.2-6 9.5-6 9.5 6 9.5 6-3.2 6-9.5 6-9.5-6-9.5-6Z" />
+          <circle cx="12" cy="12" r="2.7" />
+        </>
+      ) : (
+        <>
+          <path d="m3 3 18 18M10.6 6.2A10.9 10.9 0 0 1 12 6c6.3 0 9.5 6 9.5 6a16 16 0 0 1-3.1 3.6M6.2 6.3C3.8 8 2.5 12 2.5 12s3.2 6 9.5 6c1.3 0 2.5-.3 3.5-.7" />
+          <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+        </>
+      )}
+    </svg>
+  );
 }
 
 function GoogleIcon() {

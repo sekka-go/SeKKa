@@ -75,8 +75,11 @@
 .sekka-register-field input:focus { border-color: var(--register-green); box-shadow: 0 0 0 3px rgb(6 79 66 / 12%); }
 .sekka-register-field input::placeholder { color: #85898a; opacity: 1; }
 .sekka-register-field input[dir="ltr"] { text-align: left; }
-.sekka-register-field:has(.sekka-register-toggle) input { padding-inline-end: 4.4rem; }
-.sekka-register-toggle { position: absolute; inset-inline-end: .7rem; inset-block-end: .55rem; min-height: 2rem; padding: .2rem .35rem; border: 0; background: transparent; color: #648078; font-size: .72rem; font-weight: 700; cursor: pointer; }
+.sekka-register-field:has(.sekka-register-toggle) input { padding-inline-end: 3.2rem; }
+.sekka-register-toggle { position: absolute; z-index: 1; inset-inline-end: .65rem; inset-block-end: .5rem; width: 2rem; height: 2rem; padding: .25rem; border: 0; border-radius: 50%; background: transparent; color: #648078; cursor: pointer; }
+.sekka-register-toggle:hover { background: rgb(6 79 66 / 7%); color: var(--register-green); }
+.sekka-register-toggle:focus-visible { outline: 2px solid var(--register-green); outline-offset: 1px; }
+.sekka-register-toggle-icon { position: absolute; inset-inline-end: 1.15rem; inset-block-end: 1.08rem; width: 1.1rem; height: 1.1rem; fill: none; stroke: #648078; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
 
 .sekka-register-consent { display: grid; gap: .3rem; margin-block-start: .1rem; color: #4d5b56; font-size: .76rem; font-weight: 650; }
 .sekka-register-consent > label { display: flex; align-items: flex-start; gap: .55rem; cursor: pointer; }
@@ -97,7 +100,6 @@
 .sekka-register-role-switch > button:hover { background: rgb(199 163 75 / 9%); }
 .sekka-register-role-switch > button:disabled { opacity: .6; cursor: wait; }
 .sekka-register-role-switch svg { width: 1.35rem; height: 1.35rem; color: var(--register-gold); }
-.sekka-register-role-switch p { margin: .45rem 0 0; color: #727b77; font-size: .72rem; }
 .sekka-register-google { border: 1px solid var(--register-green); background: rgb(255 255 255 / 72%); color: var(--register-green); font-size: .85rem; }
 .sekka-register-google svg { width: 1.35rem; height: 1.35rem; }
 .sekka-register-login { margin: 1rem 0 0; color: #414846; font-size: .82rem; font-weight: 700; text-align: center; }
