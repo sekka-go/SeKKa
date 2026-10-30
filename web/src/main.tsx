@@ -9,6 +9,7 @@ import "./rider-experience.css";
 import "./rider-stitch-screens.css";
 import "./captain-stitch-screens.css";
 import "./sekka-system.css";
+import "./auth-login-screen-two.css";
 import App from "./App";
 import PwaNotice from "./components/PwaNotice";
 import { registerPwa } from "./pwa";

@@ -35,11 +35,14 @@ export default function AuthScreen({ onSignedIn, notify, onStartupReady }: { onS
   const [newPassword, setNewPassword] = useState("");
   const [pendingRouteSetup, setPendingRouteSetup] = useState<Session | null>(null);
   const [pendingSignupVerification, setPendingSignupVerification] = useState<Session | null>(null);
+  const submitting = useRef(false);
 
   useEffect(() => { onStartupReady(); }, [onStartupReady]);
 
   const submit = async (event: FormEvent) => {
-    event.preventDefault(); setBusy(true); setError("");
+    event.preventDefault();
+    if (submitting.current) return;
+    submitting.current = true; setBusy(true); setError("");
     try {
       if (mode === "register") {
         if (!acceptedTerms || !acknowledgedPrivacy || !readTerms || !readPrivacy) throw new Error("اقرأ الشروط وسياسة الخصوصية قبل إنشاء الحساب، ووافق على الشروط.");
@@ -71,7 +74,7 @@ export default function AuthScreen({ onSignedIn, notify, onStartupReady }: { onS
       }
       onSignedIn(session);
     } catch (cause) { setError(errorText(cause)); }
-    finally { setBusy(false); }
+    finally { submitting.current = false; setBusy(false); }
   };
 
   const requestReset = async (event: FormEvent) => {
@@ -118,10 +121,11 @@ export default function AuthScreen({ onSignedIn, notify, onStartupReady }: { onS
     }}
   />;
 
-  return <main className={`auth-page ${mode === "login" ? "auth-login-page" : "auth-register-page"} ${mode === "register" && role === "captain" ? "auth-captain-journey" : ""}`}>
+  return <main className={`auth-page ${mode === "login" ? "auth-login-page auth-screen-two" : "auth-register-page"} ${mode === "register" && role === "captain" ? "auth-captain-journey" : ""}`}>
     <header className="auth-page-header"><a href="/"><BrandLogo /></a><PublicLanguageToggle /></header>
     <section className="auth-page-content">
       <div className={`auth-card auth-page-card ${mode === "login" ? "auth-login-card" : "auth-register-card"}`}>
+        {mode === "login" && <div className="auth-screen-two-brand"><BrandLogo /></div>}
         <div className="auth-tabs"><span className="active" aria-current="page">{mode === "login" ? t("تسجيل الدخول") : t("حساب جديد")}</span></div>
         <div className="auth-heading">
           {mode === "login" && <span className="eyebrow">{t("مبسوطين برجوعك")}</span>}
@@ -134,8 +138,8 @@ export default function AuthScreen({ onSignedIn, notify, onStartupReady }: { onS
             <label htmlFor="auth-full-name">{t("الاسم بالكامل")}<input id="auth-full-name" name="full_name" autoComplete="name" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder={t("مثال: أحمد محمد أحمد")} required /></label>
             <fieldset className="role-picker"><legend>{t("هتستخدم سِكّة بصفتك؟")}</legend><button type="button" aria-pressed={role === "rider"} className={role === "rider" ? "selected" : ""} onClick={() => setRole("rider")}><span><AppIcon name="user" size={21} /></span><strong>{t("راكب")}</strong><small>{t("أدور على مشوار مشترك")}</small></button><button type="button" aria-pressed={role === "captain"} className={role === "captain" ? "selected" : ""} onClick={() => setRole("captain")}><span><AppIcon name="car" size={21} /></span><strong>{t("كابتن")}</strong><small>{t("أوصل الركاب لوجهتهم")}</small></button></fieldset>
           </>}
-          <label htmlFor="auth-phone">{t("رقم الهاتف")}<input id="auth-phone" name="phone_number" autoComplete={mode === "login" ? "username" : "tel"} type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="01xxxxxxxxx" required /></label>
-          <label className="auth-password-label" htmlFor="auth-password">{t("كلمة السر")}<span className="auth-password-control"><input id="auth-password" name="password" autoComplete={mode === "login" ? "current-password" : "new-password"} type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder={mode === "register" ? t("8 أحرف على الأقل") : "••••••••"} minLength={mode === "register" ? 8 : 1} required /><button type="button" className="auth-password-toggle" onClick={() => setShowPassword((shown) => !shown)} aria-label={showPassword ? t("إخفاء كلمة السر") : t("إظهار كلمة السر")} aria-pressed={showPassword}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.2 12s3.4-6.1 9.8-6.1 9.8 6.1 9.8 6.1-3.4 6.1-9.8 6.1S2.2 12 2.2 12Z"/><circle cx="12" cy="12" r="2.7"/>{showPassword && <path d="m3 3 18 18"/>}</svg></button></span></label>
+          {mode === "login" ? <label className="auth-screen-two-field" htmlFor="auth-phone">{t("رقم الهاتف")}<span className="auth-screen-two-input"><AppIcon name="user" size={21} /><input id="auth-phone" name="phone_number" autoComplete="username" type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="01xxxxxxxxx" required /></span></label> : <label htmlFor="auth-phone">{t("رقم الهاتف")}<input id="auth-phone" name="phone_number" autoComplete="tel" type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="01xxxxxxxxx" required /></label>}
+          <label className={`auth-password-label ${mode === "login" ? "auth-screen-two-field" : ""}`} htmlFor="auth-password"><span>{t("كلمة السر")}</span><span className={`auth-password-control ${mode === "login" ? "auth-screen-two-input" : ""}`}>{mode === "login" && <AppIcon name="shield" size={21} />}<input id="auth-password" name="password" autoComplete={mode === "login" ? "current-password" : "new-password"} type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder={mode === "register" ? t("8 أحرف على الأقل") : "••••••••"} minLength={mode === "register" ? 8 : 1} required /><button type="button" className="auth-password-toggle" onClick={() => setShowPassword((shown) => !shown)} aria-label={showPassword ? t("إخفاء كلمة السر") : t("إظهار كلمة السر")} aria-pressed={showPassword}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.2 12s3.4-6.1 9.8-6.1 9.8 6.1 9.8 6.1-3.4 6.1-9.8 6.1S2.2 12 2.2 12Z"/><circle cx="12" cy="12" r="2.7"/>{showPassword && <path d="m3 3 18 18"/>}</svg></button></span></label>
           {mode === "register" && <section className="auth-consent" aria-labelledby="auth-consent-title">
             <strong id="auth-consent-title">{t("قبل إنشاء حسابك")}</strong>
             <p>{t("اقرأ المستندين بالتمرير إلى نهايتهما، ثم أكّد موافقتك.")}</p>
@@ -145,7 +149,7 @@ export default function AuthScreen({ onSignedIn, notify, onStartupReady }: { onS
           </section>}
           {error && <div className="inline-error" role="alert">{error}</div>}
           {mode === "login" && <button type="button" className="auth-forgot-link" onClick={() => { setForgotStep("request"); setError(""); }}>{t("نسيت كلمة السر؟")}</button>}
-          <button className="button button-primary button-wide" disabled={busy}>{busy ? mode === "login" ? t("loading.login") : t("لحظة واحدة…") : mode === "login" ? t("دخول إلى حسابي") : t("إنشاء الحساب")}<span aria-hidden="true">←</span></button>
+          <button className={`button button-primary button-wide ${mode === "login" ? "auth-screen-two-submit" : ""}`} disabled={busy}>{busy ? mode === "login" ? t("loading.login") : t("لحظة واحدة…") : mode === "login" ? t("دخول إلى حسابي") : t("إنشاء الحساب")}<span aria-hidden="true">←</span></button>
         </form> : forgotStep === "request" ? <form className="form-stack auth-reset-form" onSubmit={requestReset}>
           <h2>{t("استعادة كلمة السر")}</h2><p>{t("أدخل رقم الهاتف المسجل، وسنجهز رابطًا آمنًا لبدء التحقق عبر بوت سِكّة في تيليجرام.")}</p>
           <label htmlFor="reset-phone">{t("رقم الهاتف")}<input id="reset-phone" name="phone_number" autoComplete="tel" type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="01xxxxxxxxx" required /></label>
