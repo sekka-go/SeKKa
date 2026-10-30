@@ -1,4 +1,4 @@
-# SeKKa Production Backend Integration — Batch 1
+# SeKKa Production Backend Integration — Batches 1–2
 
 Date: 2026-10-30
 Scope: custom authentication, rider trip discovery and requests, rider home data, captain dashboard/profile reads, and authenticated messaging/notification reads. No database schema, RLS policy, or production data was changed.
@@ -48,7 +48,7 @@ The production CORS configuration was not changed.
 - Preview proxy `GET /__sekka-api/auth/me` without a session — HTTP 401, as expected.
 - Preview loaded at a mobile viewport without console errors or horizontal overflow.
 - No real registration or login was attempted because no test accounts were provided.
-- The request-creation form is wired to the existing demand-request API; a real account is required to verify its permission and verification gates.
+- `/requests/new` routes into the rider search flow. The result details screen can submit a real demand request; a real account is required to verify API permission and identity-verification gates.
 - No Supabase product-table reads remain in `RiderHomeScreen`, `RiderTripsScreen`, `RiderJourneyScreen`, or `CaptainJourneyScreen`.
 - There is no test script in `web/package.json`.
 
@@ -61,6 +61,6 @@ The production CORS configuration was not changed.
 
 ## Delivery
 
-- Commit: `e7af379` — `Integrate rider and captain flows with SeKKa API`
-- Preview: https://codex-sekka-ui-rebuild.sekka-go.pages.dev
-- Cloudflare deployment ID: `c1a2cf13-65b7-48c5-8cfc-6bbe1298a1e7` (build and deploy succeeded).
+- Commit: `ad52cd9` — `Connect rider search to real demand requests`
+- Preview: https://0d22a0be.sekka-go.pages.dev
+- Cloudflare deployment ID: `0d22a0be-deb7-45c5-a9c6-5daa394bec26` (build and deploy succeeded).
