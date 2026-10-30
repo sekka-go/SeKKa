@@ -28,7 +28,7 @@ The session token is stored in local storage with a seven-day client expiry matc
 | Captain profile and verification | Read and upload integrated | Reads `/auth/me`, `/captain/profile`, and `/verification`. Captains can submit the eight supported document kinds through multipart `POST /verification/documents/{kind}`; the UI validates file type and the 8 MB limit, shows pending review only after a successful response, and preserves API errors. |
 | Captain rider requests and groups | Partially functional | Reads actual `/captain/demand-groups`; related membership operations were not integrated in this batch. |
 | Rider/captain notifications | Integrated read/update | Uses `/pool/notifications` and `/pool/notifications/{id}/read`. |
-| Rider/captain conversations | Partially functional | Uses `/messages/conversations`; conversation history uses the deployed message endpoint where an ID is present. |
+| Captain conversations | Integrated read, mark-read, and send | Uses `/messages/conversations`, the participant-scoped `/messages/conversations/{id}/messages` read/send endpoints, and `/messages/conversations/{id}/read`. Contact name, unread counts, message ownership styling, 2,000-character validation, and success/error states come from the real API flow. |
 | Captain completed-trip receipts | Integrated | `/captain/earnings` supplies completed trips and payment records. The UI now reads the nested response correctly and submits the captain’s actual received amount to `POST /captain/trips/{id}/confirm-payment`; backend ownership and trip-state checks remain authoritative. |
 | Subscriptions, subscription receipts, proof upload, payment codes, complaints, ratings | Not integrated | No deployed API route was verified for these subscription/payment-code flows. The UI does not claim these actions succeeded. |
 | Admin screens | Not audited in this batch | They were not changed; existing admin API/session handling is separate. |
@@ -55,6 +55,9 @@ The production CORS configuration was not changed.
 - Cloudflare Preview for the captain document upload commit completed successfully: deployment `cea73b4c-e465-4f05-9cfd-03b8e5ccd848`; `/` and `/captain/journey/documents` returned HTTP 200, `/__sekka-api/health` returned HTTP 200, and unauthenticated `/__sekka-api/auth/me` returned the expected HTTP 401.
 - Captain earnings/payment reads were matched against the deployed function’s nested `{ trip, stops, payment }` response. Confirm-receipt uses the deployed RPC-backed API endpoint and prevents duplicate client submissions. No payment write was attempted without a designated test captain account.
 - Cloudflare Preview for captain payment confirmation completed successfully: deployment `f1e4b718-f1e6-4da7-a608-665531ed5b26`; `/` and `/captain/journey/documents` returned HTTP 200, `/__sekka-api/health` returned HTTP 200, and unauthenticated `/__sekka-api/auth/me` returned the expected HTTP 401.
+- Captain conversations now display the actual contact and history, mark messages read, and submit messages through the deployed participant-checked endpoint. Authenticated messaging was not exercised without an account available for test use.
+- Cloudflare Preview for captain messaging completed successfully: deployment `d13141b5-60c3-4f03-9793-135ab48fdd6d`; `/` and `/captain/journey/conversations` returned HTTP 200, `/__sekka-api/health` returned HTTP 200, unauthenticated `/__sekka-api/auth/me` returned the expected HTTP 401, and the browser redirected the protected conversation route to login with no console errors.
+- Unread-count refinement deployment `715ca82c-0f26-4793-a813-c42eefe46b90` completed successfully; the conversation route and API health checks returned HTTP 200, while unauthenticated identity remained HTTP 401.
 - No Supabase product-table reads remain in `RiderHomeScreen`, `RiderTripsScreen`, `RiderJourneyScreen`, or `CaptainJourneyScreen`.
 - There is no test script in `web/package.json`.
 
@@ -67,6 +70,6 @@ The production CORS configuration was not changed.
 
 ## Delivery — current functional batch
 
-- Commit: [`3d2d98b`](https://github.com/sekka-go/SeKKa/commit/3d2d98b6c48ae43aa1e4d72227cad90d05d152a5) — `Connect captain trip payment confirmation`
-- Preview: [https://f1e4b718.sekka-go.pages.dev](https://f1e4b718.sekka-go.pages.dev)
-- Cloudflare deployment ID: `f1e4b718-f1e6-4da7-a608-665531ed5b26` (build and deploy succeeded).
+- Commit: [`37dbeb5`](https://github.com/sekka-go/SeKKa/commit/37dbeb5e97fc3b22d691ddfb301ec3e15b20c17a) — `Show unread captain conversation counts`
+- Preview: [https://715ca82c.sekka-go.pages.dev](https://715ca82c.sekka-go.pages.dev)
+- Cloudflare deployment ID: `715ca82c-0f26-4793-a813-c42eefe46b90` (build and deploy succeeded).
