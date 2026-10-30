@@ -1,0 +1,9 @@
+/* Color tokens live in styles/sekka-theme.css. Keep structural tokens here. */
+:root {
+  --sekka-space-1: .25rem;
+  --sekka-space-2: .5rem;
+  --sekka-space-3: .75rem;
+  --sekka-space-4: 1rem;
+  --sekka-space-6: 1.5rem;
+  --touch-target-min: 44px;
+}

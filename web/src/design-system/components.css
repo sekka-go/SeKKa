@@ -1,0 +1,18 @@
+.sekka-state { display: grid; justify-items: center; gap: .65rem; padding: clamp(1.25rem, 5vw, 2rem); border: 1px solid var(--sekka-border); border-radius: var(--sekka-radius-card); background: var(--sekka-surface); color: var(--sekka-ink); text-align: center; }
+.sekka-state h1,.sekka-state h2 { margin: 0; color: var(--sekka-brand-strong); font-size: 1.12rem; font-weight: 900; }
+.sekka-state p { max-width: 38rem; margin: 0; color: var(--sekka-muted); font-size: .88rem; line-height: 1.75; }
+.sekka-state-symbol { display: grid; width: 2.75rem; height: 2.75rem; place-items: center; border-radius: 1rem; background: color-mix(in srgb, var(--sekka-gold) 16%, transparent); color: var(--sekka-brand); font-size: 1.45rem; font-weight: 900; }
+.sekka-state-loading { display: flex; align-items: center; justify-content: center; min-height: 6rem; border: 0; background: transparent; color: var(--sekka-muted); font-size: .85rem; }
+.sekka-state-spinner { width: 1.15rem; height: 1.15rem; border: 2px solid var(--sekka-border); border-block-start-color: var(--sekka-brand); border-radius: 50%; animation: sekka-state-spin .8s linear infinite; }
+@keyframes sekka-state-spin { to { transform: rotate(1turn); } }
+.sekka-offline-notice { position: sticky; z-index: 5; inset-block-start: 0; padding: .65rem 1rem; background: var(--sekka-primary-dark); color: var(--sekka-text-light); font-size: .82rem; font-weight: 750; text-align: center; }
+.sekka-confirm-dialog { width: min(calc(100vw - 2rem), 28rem); padding: 1.35rem; border: 1px solid var(--sekka-border); border-radius: var(--sekka-radius-card); outline: none; background: var(--sekka-surface); box-shadow: var(--sekka-shadow-card); color: var(--sekka-ink); }
+.sekka-dialog-backdrop { position: fixed; z-index: 50; inset: 0; display: grid; place-items: center; padding: 1rem; background: var(--color-overlay); }
+.sekka-confirm-dialog h2 { margin: 0; color: var(--sekka-brand-strong); font-size: 1.1rem; font-weight: 900; }
+.sekka-confirm-dialog p { margin: .55rem 0 1.2rem; color: var(--sekka-muted); font-size: .87rem; line-height: 1.75; }
+.sekka-confirm-actions { display: flex; align-items: center; gap: .65rem; }
+.sekka-confirm-actions > * { flex: 1; }
+.sekka-confirm-actions .sekka-confirm-primary { margin: 0; }
+.sekka-confirm-cancel { min-height: 3.2rem; border: 1px solid var(--sekka-border); border-radius: var(--sekka-radius-button); background: transparent; color: var(--sekka-ink); font: inherit; font-weight: 800; cursor: pointer; }
+.sekka-state-link { display: inline-flex; align-items: center; justify-content: center; min-height: 2.8rem; padding: .6rem 1rem; border-radius: 999px; background: var(--sekka-button-primary); color: var(--sekka-button-primary-text); font-size: .86rem; font-weight: 800; }
+@media (prefers-reduced-motion: reduce) { .sekka-state-spinner { animation-duration: 1.8s; } }

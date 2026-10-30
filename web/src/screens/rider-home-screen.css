@@ -1,0 +1,640 @@
+.sekka-home {
+  --sekka-green: var(--sekka-primary);
+  --sekka-deep: var(--sekka-primary-dark);
+  --sekka-gold: var(--sekka-action);
+  --sekka-cream: var(--sekka-background);
+  --sekka-muted: var(--sekka-text-secondary);
+}
+
+.sekka-home {
+  width: min(100%, 480px);
+  max-width: 100%;
+  min-height: 100svh;
+  margin: 0 auto;
+  padding: 14px 18px 106px;
+  background: var(--sekka-cream);
+  color: var(--sekka-green);
+  font-family: var(--sekka-font-arabic);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.sekka-home *,
+.bottom-nav {
+  box-sizing: border-box;
+}
+
+/* The shared shell has a 320px minimum; relax it for this mobile screen. */
+html:has(.sekka-home),
+body:has(.sekka-home),
+#root:has(.sekka-home),
+.app-shell:has(.sekka-home) {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+.sekka-home button {
+  font: inherit;
+  cursor: pointer;
+}
+
+/* HEADER */
+
+.home-header {
+  height: 88px;
+  direction: ltr;
+  display: grid;
+  grid-template-columns: 48px 1fr 130px 36px;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  width: 46px;
+  height: 46px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--sekka-green);
+  color: white;
+  display: grid;
+  place-items: center;
+}
+
+.avatar svg {
+  width: 25px;
+  height: 25px;
+}
+
+.welcome {
+  display: flex;
+  flex-direction: column;
+  direction: rtl;
+  text-align: right;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.welcome strong {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.welcome span {
+  font-size: 11px;
+  color: var(--sekka-primary-light);
+}
+
+.brand-logo {
+  width: 124px;
+  height: 68px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.brand-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.notification {
+  position: relative;
+  border: 0;
+  background: none;
+  color: var(--sekka-green);
+  padding: 4px;
+}
+
+.notification svg {
+  width: 29px;
+  height: 29px;
+}
+
+.notification i {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--sekka-danger);
+}
+
+/* HERO */
+
+.home-hero {
+  position: relative;
+  min-height: 300px;
+  margin: 0 -18px 22px;
+  padding: 54px 22px 24px;
+
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb,var(--sekka-background) 12%,transparent),
+      color-mix(in srgb,var(--sekka-background) 8%,transparent)
+    ),
+    url("/images/sekka-login-skyline.jpg");
+
+  background-size: cover;
+  background-position: center;
+
+  border-radius: 0 0 48px 48px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  text-align: center;
+}
+
+.hero-copy {
+  margin: auto 0 42px;
+  text-shadow: 0 1px 8px color-mix(in srgb,var(--sekka-surface) 80%,transparent);
+}
+
+.hero-copy h1 {
+  margin: 0 0 5px;
+  font-size: 27px;
+  font-weight: 800;
+}
+
+.hero-copy p {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.search-bar {
+  direction: ltr;
+  width: 100%;
+  min-height: 60px;
+  border: 0;
+  border-radius: 40px;
+  background: white;
+  color: var(--sekka-text-secondary);
+
+  box-shadow: var(--sekka-shadow-card);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 22px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.search-bar svg {
+  width: 30px;
+  height: 30px;
+  color: var(--sekka-green);
+}
+
+.search-bar span { direction: rtl; text-align: right; }
+
+/* QUICK ACTIONS */
+
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 22px;
+}
+
+.quick-actions button {
+  min-width: 0;
+  min-height: 94px;
+  padding: 10px 3px 8px;
+
+  border: 1px solid var(--sekka-border);
+  border-radius: 22px;
+
+  background: color-mix(in srgb,var(--sekka-surface) 28%,transparent);
+  color: var(--sekka-green);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.quick-actions svg {
+  width: 34px;
+  height: 34px;
+  stroke-width: 2.3;
+}
+
+.quick-actions span {
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* FEATURED CARD */
+
+.featured-card {
+  position: relative;
+  min-height: 205px;
+  margin-bottom: 27px;
+
+  border-radius: 23px;
+
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb,var(--sekka-primary-dark) 98%,transparent) 0%,
+      color-mix(in srgb,var(--sekka-primary-dark) 93%,transparent) 48%,
+      color-mix(in srgb,var(--sekka-primary-dark) 2%,transparent) 100%
+    ),
+    url("/images/sekka-login-skyline.jpg");
+
+  background-size: cover;
+  background-position: center;
+
+  overflow: hidden;
+  color: white;
+}
+
+.featured-copy {
+  width: 68%;
+  padding: 20px;
+}
+
+.featured-tag {
+  display: inline-block;
+  padding: 4px 15px;
+  border-radius: 20px;
+
+  background: var(--sekka-gold);
+  color: var(--sekka-deep);
+
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.featured-copy h2 {
+  margin: 9px 0 3px;
+  font-size: 22px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.featured-copy p {
+  margin: 0 0 15px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.featured-copy button {
+  border: 0;
+  border-radius: 30px;
+
+  background: var(--sekka-gold);
+  color: var(--sekka-deep);
+
+  padding: 8px 17px;
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.featured-copy button b {
+  margin-right: 8px;
+}
+
+/* RECENT TRIPS */
+
+.recent-section {
+  margin-bottom: 15px;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.section-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin: 0;
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.section-heading h2 svg {
+  width: 27px;
+  height: 27px;
+}
+
+.section-heading button {
+  border: 0;
+  background: none;
+  color: var(--sekka-green);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.recent-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr 120px;
+  gap: 8px;
+  align-items: center;
+
+  padding: 14px 12px;
+
+  border: 1px solid var(--sekka-border);
+  border-radius: 22px;
+
+  background: color-mix(in srgb,var(--sekka-surface) 48%,transparent);
+
+  box-shadow: var(--sekka-shadow-card);
+}
+
+.route-points {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.route-points > div:not(.route-dash) {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.route-points svg {
+  width: 21px;
+  height: 21px;
+  flex: none;
+}
+
+.route-points span {
+  display: flex;
+  flex-direction: column;
+}
+
+.route-points strong {
+  font-size: 13px;
+}
+
+.route-points small {
+  font-size: 11px;
+  color: var(--sekka-muted);
+}
+
+.route-dash {
+  height: 13px;
+  margin-right: 9px;
+  border-right: 2px dashed var(--sekka-text-muted);
+}
+
+.trip-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+
+  color: var(--sekka-text-secondary);
+  font-size: 11px;
+}
+
+.trip-meta span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.trip-meta svg {
+  width: 17px;
+  height: 17px;
+}
+
+.trip-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.trip-type {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  padding: 7px 5px;
+  border-radius: 22px;
+
+  background: var(--sekka-warning-bg);
+  color: var(--sekka-green);
+
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.trip-type svg {
+  width: 20px;
+  height: 20px;
+}
+
+.trip-actions button {
+  border: 0;
+  border-radius: 22px;
+
+  background: var(--sekka-action);
+  color: var(--sekka-text);
+
+  padding: 8px 5px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.recent-empty {
+  min-height: 118px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid var(--sekka-border);
+  border-radius: 22px;
+  background: color-mix(in srgb,var(--sekka-surface) 56%,transparent);
+  color: var(--sekka-muted);
+  text-align: center;
+  box-shadow: var(--sekka-shadow-card);
+}
+
+.recent-empty p { margin: 0; }
+.recent-empty button {
+  border: 0;
+  border-radius: 22px;
+  background: var(--sekka-action);
+  color: var(--sekka-text);
+  padding: 8px 16px;
+  font-weight: 800;
+}
+
+/* BOTTOM NAVIGATION */
+
+.bottom-nav {
+  position: fixed;
+  z-index: 5;
+
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+
+  width: min(100%, 480px);
+  min-height: 84px;
+
+  padding: 9px 12px max(10px, env(safe-area-inset-bottom));
+
+  border-radius: 34px 34px 0 0;
+  background: var(--sekka-nav-bg);
+  direction: ltr;
+
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+
+  box-shadow: var(--sekka-shadow-card);
+}
+
+.bottom-nav button {
+  position: relative;
+
+  border: 0;
+  background: none;
+  color: var(--sekka-nav-inactive);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+
+  font-size: 11px;
+}
+
+.bottom-nav svg {
+  width: 25px;
+  height: 25px;
+}
+
+.bottom-nav .selected {
+  color: var(--sekka-primary);
+}
+
+.bottom-nav .selected:after {
+  content: "";
+
+  position: absolute;
+  bottom: -3px;
+
+  width: 54px;
+  height: 4px;
+
+  border-radius: 5px;
+  background: var(--sekka-gold);
+}
+
+@media(max-width:480px) {
+  .bottom-nav { left: 0; right: 0; transform: none; margin-inline: auto; }
+}
+
+/* RESPONSIVE */
+
+@media(max-width:390px) {
+
+  .sekka-home {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .home-header {
+    grid-template-columns: 36px minmax(0, 1fr) 76px 26px;
+    gap: 5px;
+  }
+
+  .brand-logo {
+    width: 76px;
+    height: 54px;
+  }
+
+  .welcome strong {
+    font-size: 13px;
+  }
+
+  .welcome span {
+    font-size: 10px;
+  }
+
+  .home-hero {
+    margin-left: -12px;
+    margin-right: -12px;
+    min-height: 270px;
+  }
+
+  .quick-actions {
+    gap: 5px;
+  }
+
+  .quick-actions button {
+    min-height: 85px;
+    border-radius: 17px;
+  }
+
+  .quick-actions span {
+    font-size: 10px;
+  }
+
+  .featured-copy {
+    width: 75%;
+    padding: 17px 13px;
+  }
+
+  .featured-copy h2 {
+    font-size: 19px;
+  }
+
+  .featured-copy p {
+    font-size: 12px;
+  }
+
+  .recent-card { grid-template-columns: minmax(0, 1fr) 104px; padding: 10px 8px; }
+  .route-points { grid-row: span 2; min-width: 0; }
+  .trip-meta { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+  .trip-meta span { white-space: normal; }
+  .trip-actions { grid-column: 2; }
+
+  .trip-meta {
+    font-size: 10px;
+  }
+}
+
+@media(min-width:600px) {
+
+  .sekka-home {
+    padding-top: 22px;
+  }
+
+  .home-hero {
+    min-height: 350px;
+  }
+
+  .quick-actions button {
+    min-height: 112px;
+  }
+
+  .featured-card {
+    min-height: 230px;
+  }
+}
+
