@@ -16,7 +16,7 @@ export function clearAdminApiToken() {
 
 export async function adminApi<T>(path: string, options: { token?: string | null; method?: string; body?: unknown } = {}): Promise<T> {
   const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-  const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
+  const publishableKey = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY) as string | undefined;
   if (!url || !publishableKey) throw new Error("إعداد الاتصال بخدمة سِكّة غير مكتمل.");
   const headers = new Headers({ apikey: publishableKey, Accept: "application/json" });
   if (options.token) headers.set("Authorization", `Bearer ${options.token}`);
