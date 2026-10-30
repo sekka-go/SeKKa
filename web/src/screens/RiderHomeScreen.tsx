@@ -242,7 +242,7 @@ export default function RiderHomeScreen({ user, onAction }: Props) {
 
         <div className="hero-copy">
           <h1>اكتشف رحلتك القادمة</h1>
-          <p>مع سِكّة .. لرحلات آمنة ومريحة</p>
+          <p>قارن عروض الرحلات وتواصل مباشرة مع الكابتن. ظهور العرض لا يضمن تنفيذه.</p>
         </div>
 
         <button
@@ -276,7 +276,7 @@ export default function RiderHomeScreen({ user, onAction }: Props) {
           <h2>اكتشف أجمل الوجهات</h2>
 
           <p>
-            مع كباتن موثوقين ومركبات مريحة
+            قارن المسار والمواعيد والسعر المعلن قبل التواصل
           </p>
 
           <button onClick={() => go("featuredTrips")}>

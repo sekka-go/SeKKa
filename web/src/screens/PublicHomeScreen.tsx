@@ -14,7 +14,7 @@ export default function PublicHomeScreen() {
 
         <header className="welcome-copy">
           <h1 id="welcome-title">رحلتك .. أسهل</h1>
-          <p>مع سِكّة، نربطك بالناس والوجهات</p>
+          <p>اكتشف عروض التنقل المنتظم، قارنها وتواصل مباشرة مع الكابتن. سِكّة تسهّل الوصول ولا تضمن تنفيذ الرحلة.</p>
         </header>
 
         <div className="welcome-actions">

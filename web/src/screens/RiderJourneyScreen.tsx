@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { sekkaApi, logoutSekkaSession } from "../lib/sekka-api";
 import "./rider-journey-screen.css";
@@ -37,11 +37,17 @@ export default function RiderJourneyScreen({ screen, onNavigate }: Props) {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedConversation, setSelectedConversation] = useState<Record<string, any> | null>(null);
+  const [messageDraft, setMessageDraft] = useState("");
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const [messageError, setMessageError] = useState("");
+  const [notificationActionId, setNotificationActionId] = useState<string | null>(null);
+  const sendLock = useRef(false);
 
   useEffect(() => {
     let active = true;
     async function load() {
-      setLoading(true); setError(""); setNotice("");
+      setLoading(true); setError(""); setNotice(""); setMessageError(""); setMessageDraft("");
       try {
         const { user } = await sekkaApi<{ user: any }>("/auth/me");
         if (user?.role !== "rider") { onNavigate(user?.role === "captain" ? "/captain/home" : "/login"); return; }
@@ -54,10 +60,22 @@ export default function RiderJourneyScreen({ screen, onNavigate }: Props) {
           result = (notifications ?? []).map((item) => ({ ...item, type: item.kind ?? "إشعار", payload: { message: item.body ?? item.title } }));
         } else if (screen === "conversations") {
           const { conversations } = await sekkaApi<{ conversations: any[] }>("/messages/conversations"); result = conversations ?? [];
+          if (active) setSelectedConversation(null);
         } else if (screen === "conversation") {
           const id = new URLSearchParams(window.location.search).get("id");
-          if (!id || !/^\d+$/.test(id)) { setNotice("اختر محادثة من قائمة المحادثات أولًا."); }
-          else { const { messages } = await sekkaApi<{ messages: any[] }>(`/messages/conversations/${id}/messages`); result = messages ?? []; }
+          if (!id || !/^\d+$/.test(id) || !Number.isSafeInteger(Number(id)) || Number(id) < 1) { setNotice("اختر محادثة من قائمة المحادثات أولًا."); }
+          else {
+            if (active) setSelectedConversation(null);
+            const [conversationResult, messageResult] = await Promise.all([
+              sekkaApi<{ conversations: any[] }>("/messages/conversations"),
+              sekkaApi<{ messages: any[] }>(`/messages/conversations/${id}/messages`),
+            ]);
+            result = messageResult.messages ?? [];
+            const conversation = (conversationResult.conversations ?? []).find((item) => String(item.id) === id);
+            if (active) setSelectedConversation(conversation ?? null);
+            try { await sekkaApi(`/messages/conversations/${id}/read`, { method: "POST" }); }
+            catch { if (active) setNotice("تم تحميل الرسائل، لكن تعذر تحديث حالة القراءة."); }
+          }
         } else if (["subscriptions", "subscription", "receipt", "payment-method", "proof", "captain-confirmation", "payment-code", "payment-result", "renewal", "group", "replacement-captain"].includes(screen)) {
           const { requests } = await sekkaApi<{ requests: any[] }>("/rider/demand-requests");
           result = (requests ?? []).map((item) => ({ ...item, id: String(item.id), joined_at: item.created_at, group: { status: item.demand_groups?.status ?? item.status, starts_on: item.trip_date, line: { origin_name: item.pickup_label, destination_name: item.dropoff_label, departure_time: item.arrival_time, return_time: item.return_arrival_time, monthly_price: item.line?.price_per_seat ?? null, currency: "EGP", payment_methods: [], vehicle_details: null, vehicle: null } } }));
@@ -75,6 +93,39 @@ export default function RiderJourneyScreen({ screen, onNavigate }: Props) {
   async function markRead(id: string) {
     try { await sekkaApi(`/pool/notifications/${id}/read`, { method: "POST" }); setRecords((items) => items.map((item) => String(item.id) === id ? { ...item, read_at: new Date().toISOString() } : item)); }
     catch { setError("تعذر تحديث الإشعار. حاول مرة أخرى."); }
+  }
+  async function deleteNotification(id: string) {
+    if (notificationActionId) return;
+    setNotificationActionId(id); setError(""); setNotice("");
+    try {
+      const result = await sekkaApi<{ deleted: boolean }>(`/pool/notifications/${id}/delete`, { method: "POST" });
+      if (!result.deleted) throw new Error("لم يؤكد الخادم حذف الإشعار.");
+      setRecords((items) => items.filter((item) => String(item.id) !== id));
+      setNotice("تم حذف الإشعار من قائمتك.");
+    } catch (cause) { setError(journeyApiError(cause)); }
+    finally { setNotificationActionId(null); }
+  }
+  async function muteNotificationGroup(id: string) {
+    if (notificationActionId) return;
+    setNotificationActionId(id); setError(""); setNotice("");
+    try {
+      const result = await sekkaApi<{ muted: boolean }>(`/pool/notifications/${id}/mute`, { method: "POST" });
+      if (!result.muted) throw new Error("لم يؤكد الخادم إيقاف إشعارات المجموعة.");
+      setNotice("تم إيقاف إشعارات هذه المجموعة.");
+    } catch (cause) { setError(journeyApiError(cause)); }
+    finally { setNotificationActionId(null); }
+  }
+  async function sendMessage() {
+    const id = new URLSearchParams(window.location.search).get("id");
+    const body = messageDraft.trim();
+    if (!id || !/^\d+$/.test(id) || !body || body.length > 2000 || sendLock.current) return;
+    sendLock.current = true; setSendingMessage(true); setMessageError("");
+    try {
+      const { message } = await sekkaApi<{ message: Record<string, any> }>(`/messages/conversations/${id}/messages`, { method: "POST", body: { body } });
+      if (!message?.id) throw new Error("لم يؤكد الخادم حفظ الرسالة.");
+      setRecords((items) => [...items, message]); setMessageDraft("");
+    } catch (cause) { setMessageError(journeyApiError(cause)); }
+    finally { sendLock.current = false; setSendingMessage(false); }
   }
   async function signOut() { try { await logoutSekkaSession(); } finally { onNavigate("/login"); } }
 
@@ -109,8 +160,8 @@ export default function RiderJourneyScreen({ screen, onNavigate }: Props) {
             <div className="journey-actions"><a className="journey-secondary" href={`/journey/${screen === "receipt" ? "payment-method" : screen === "payment-method" ? "proof" : screen === "subscription" ? "receipt" : "subscriptions"}`}>{screen === "subscription" ? "عرض إيصال سِكّة" : screen === "receipt" ? "متابعة لوسيلة الدفع" : "العودة إلى اشتراكاتي"}</a></div>
           </>}
         </>}
-        {(screen === "conversations" || screen === "conversation") && <>{records.length ? screen === "conversation" ? <><DataCard title="محادثة المجموعة" badge="محادثة آمنة"><Info label="أحدث رسالة" value={records[0].latest?.body ?? "لا توجد رسائل بعد"}/><Info label="آخر تحديث" value={dateLabel(records[0].latest?.created_at ?? records[0].created_at)}/></DataCard><button className="journey-secondary" onClick={() => onNavigate("/journey/conversations")}>العودة إلى المحادثات</button></> : <div className="journey-list">{records.map((item) => <a className="journey-data-card journey-conversation" key={item.id} href={`/journey/conversation?id=${item.id}`}><span className="journey-card-icon">☏</span><div><strong>محادثة الرحلة</strong><p>{item.latest?.body ?? "ابدأ متابعة رسائل مجموعتك"}</p></div><time>{item.latest ? dateLabel(item.latest.created_at) : dateLabel(item.created_at)}</time></a>)}</div> : <Empty icon="☏" title={screen === "conversation" ? "المحادثة غير متاحة" : "لا توجد محادثات بعد"} body="ستظهر محادثات المجموعة هنا عندما تكون متاحة لحسابك."/>}<p className="journey-note">إرسال الرسائل غير متاح حتى تفعيل نقطة الكتابة الآمنة على الخادم.</p></>}
-        {screen === "notifications" && <>{records.length ? <div className="journey-list">{records.map((item) => <article key={item.id} className={`journey-data-card journey-notification ${item.read_at ? "read" : "unread"}`}><span className="journey-card-icon">♧</span><div><strong>{notificationTitle(item.type)}</strong><p>{item.payload?.message ?? item.payload?.title ?? "لديك تحديث جديد في سِكّة."}</p><time>{dateLabel(item.created_at)}</time></div>{!item.read_at && <button onClick={() => void markRead(item.id)}>تمت القراءة</button>}</article>)}</div> : <Empty icon="♧" title="أنت على اطلاع" body="لا توجد إشعارات جديدة في الوقت الحالي."/>}</>}
+        {(screen === "conversations" || screen === "conversation") && <>{screen === "conversation" ? selectedConversation ? <section className="journey-chat"><header className="journey-data-card journey-chat-header"><button className="journey-secondary" onClick={() => onNavigate("/journey/conversations")}>رجوع للمحادثات</button><strong>{selectedConversation.other_user?.full_name ?? "محادثة الرحلة"}</strong><span>{selectedConversation.other_user?.role === "captain" ? "كابتن" : "راكب"}</span></header><div className="journey-chat-messages" aria-live="polite">{records.length ? records.map((message) => <article key={message.id} className={`journey-chat-message ${String(message.sender_user_id) === String(profile?.id) ? "mine" : "theirs"}`}><p>{message.body}</p><time>{dateLabel(message.created_at)}</time></article>) : <Empty icon="☏" title="ابدأ المحادثة" body="اكتب رسالتك للتواصل مع الطرف الآخر."/>}</div>{messageError && <div className="journey-alert error" role="alert">{messageError}</div>}<form className="journey-chat-compose" onSubmit={(event) => { event.preventDefault(); void sendMessage(); }}><textarea aria-label="اكتب رسالة" maxLength={2000} value={messageDraft} onChange={(event) => setMessageDraft(event.target.value)} placeholder="اكتب رسالتك هنا"/><button className="journey-primary" disabled={sendingMessage || !messageDraft.trim()}>{sendingMessage ? "جارٍ الإرسال…" : "إرسال الرسالة"}</button></form></section> : <Empty icon="☏" title="المحادثة غير متاحة" body="افتح المحادثة من قائمة محادثاتك للتحقق من صلاحية الوصول."/> : records.length ? <div className="journey-list">{records.map((item) => <a className="journey-data-card journey-conversation" key={item.id} href={`/journey/conversation?id=${item.id}`}><span className="journey-card-icon">☏</span><div><strong>{item.other_user?.full_name ?? "محادثة الرحلة"}</strong><p>{item.last_message_body ?? item.latest?.body ?? "لا توجد رسائل بعد"}</p></div><time>{dateLabel(item.last_message_at ?? item.latest?.created_at ?? item.created_at)}</time></a>)}</div> : <Empty icon="☏" title="لا توجد محادثات بعد" body="ستظهر محادثات المجموعة هنا عندما تكون متاحة لحسابك."/>}</>}
+        {screen === "notifications" && <>{records.length ? <div className="journey-list">{records.map((item) => <article key={item.id} className={`journey-data-card journey-notification ${item.read_at ? "read" : "unread"}`}><span className="journey-card-icon">♧</span><div><strong>{notificationTitle(item.type)}</strong><p>{item.payload?.message ?? item.payload?.title ?? "لديك تحديث جديد في سِكّة."}</p><time>{dateLabel(item.created_at)}</time></div><div className="journey-notification-actions">{!item.read_at && <button onClick={() => void markRead(String(item.id))}>تمت القراءة</button>}{item.group_id != null && <button disabled={notificationActionId === String(item.id)} onClick={() => void muteNotificationGroup(String(item.id))}>إيقاف إشعارات المجموعة</button>}<button disabled={notificationActionId === String(item.id)} onClick={() => void deleteNotification(String(item.id))}>{notificationActionId === String(item.id) ? "جارٍ التحديث…" : "حذف"}</button></div></article>)}</div> : <Empty icon="♧" title="أنت على اطلاع" body="لا توجد إشعارات جديدة في الوقت الحالي."/>}</>}
         {screen === "complaint-status" && <>{records.length ? <div className="journey-list">{records.map((item) => <DataCard key={item.id} title={`بلاغ #${item.id.slice(0,8)}`} badge={statusLabel(item.status)}><p>{item.description}</p>{item.resolution_note && <Info label="الرد" value={item.resolution_note}/>}<Info label="تاريخ الإرسال" value={dateLabel(item.created_at)}/></DataCard>)}</div> : <Empty icon="◎" title="لا توجد شكاوى مسجلة" body="إذا أرسلت بلاغًا، ستظهر حالته هنا." action="/journey/complaint" actionLabel="تقديم شكوى" navigate={onNavigate}/>}</>}
         {screen === "complaint" && <div className="journey-data-card"><label className="journey-form-label">نوع البلاغ<select><option>مشكلة في رحلة</option><option>مشكلة دفع</option><option>سلوك غير مناسب</option><option>أخرى</option></select></label><label className="journey-form-label">تفاصيل المشكلة<textarea rows={5} placeholder="اكتب ما حدث والتفاصيل التي تساعدنا على المراجعة"/></label><button className="journey-primary" onClick={() => setNotice("تعذر الإرسال: لم تُفعّل صلاحية إنشاء الشكاوى من التطبيق بعد. لم يتم تسجيل البلاغ.")}>إرسال الشكوى</button><a className="journey-inline-link" href="/journey/complaint-status">متابعة شكوى سابقة</a></div>}
         {screen === "ratings" && <>{records.length ? records.map((item) => <DataCard key={item.id} title={`تقييم الرحلة • ${dateLabel(item.created_at)}`} badge={`${item.score} من 5`}>{item.comment && <p>{item.comment}</p>}</DataCard>) : <Empty icon="★" title="لا توجد تقييمات مسجلة" body="ستظهر تقييماتك هنا بعد انتهاء الرحلة وتسجيل التقييم."/>}<p className="journey-note">لا يمكن إضافة تقييم قبل تفعيل التحقق من أهلية الرحلة ونقطة الحفظ الآمنة.</p></>}
