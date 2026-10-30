@@ -3,8 +3,14 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import RegisterScreen, { type SignupPayload } from "./screens/RegisterScreen";
 import LoginScreen from "./screens/LoginScreen";
 import PublicHomeScreen from "./screens/PublicHomeScreen";
+import RiderHomeScreen, { type HomeAction } from "./screens/RiderHomeScreen";
+import RiderTripsScreen from "./screens/RiderTripsScreen";
+import CaptainHomeScreen from "./screens/CaptainHomeScreen";
+import ForgotPasswordScreen, { ResetPasswordScreen } from "./screens/legal/ForgotPasswordScreen";
+import LegalDocumentScreen from "./screens/legal/LegalDocumentScreen";
 
 type RegistrationState = "form" | "verify" | "complete";
+type PublicRouteState = "checking" | "guest" | "redirecting" | "error";
 
 function makeSupabaseClient(): SupabaseClient | null {
   const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
@@ -25,14 +31,67 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [loginSuccess, setLoginSuccess] = useState("");
+  const [resetSessionReady, setResetSessionReady] = useState(false);
+  const [checkingResetSession, setCheckingResetSession] = useState(false);
   const path = window.location.pathname.replace(/\/+$/, "") || "/";
   const isLoginPage = path === "/login";
   const isRegisterPage = path === "/register";
   const isPublicHome = path === "/";
+  const isRiderHome = path === "/home";
+  const isCaptainHome = path === "/captain/home";
+  const isTripsPage = path === "/trips";
+  const isMyTripsPage = path === "/my-trips";
+  const isRiderTripsPage = isTripsPage || isMyTripsPage;
+  const isForgotPasswordPage = path === "/forgot-password";
+  const isResetPasswordPage = path === "/reset-password";
+  const isTermsPage = path === "/terms";
+  const isPrivacyPage = path === "/privacy";
+  const [publicRouteState, setPublicRouteState] = useState<PublicRouteState>(() => isPublicHome && supabase ? "checking" : "guest");
 
   useEffect(() => {
-    document.title = isLoginPage ? "تسجيل الدخول | سِكّة" : isRegisterPage ? "إنشاء حساب جديد | سِكّة" : isPublicHome ? "سِكّة | تنقّل منتظم" : "الصفحة غير موجودة | سِكّة";
-  }, [isLoginPage, isRegisterPage, isPublicHome]);
+    if (!isResetPasswordPage || !supabase) { setCheckingResetSession(false); return; }
+    let active = true;
+    setCheckingResetSession(true);
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY" && session && active) {
+        setResetSessionReady(true);
+        setCheckingResetSession(false);
+      }
+    });
+    void supabase.auth.getSession().then(({ data, error: sessionError }) => {
+      if (!active) return;
+      if (!sessionError && data.session) setResetSessionReady(true);
+      setCheckingResetSession(false);
+    }).catch(() => { if (active) setCheckingResetSession(false); });
+    return () => { active = false; authListener.subscription.unsubscribe(); };
+  }, [isResetPasswordPage, supabase]);
+
+  useEffect(() => {
+    if (!isPublicHome || !supabase) { setPublicRouteState("guest"); return; }
+    let active = true;
+    async function redirectAuthenticatedUser() {
+      try {
+        const { data: sessionData, error: sessionError } = await supabase!.auth.getSession();
+        if (sessionError) throw sessionError;
+        if (!sessionData.session) { if (active) setPublicRouteState("guest"); return; }
+        const { data: profile, error: profileError } = await supabase!.from("profiles").select("role").eq("id", sessionData.session.user.id).maybeSingle();
+        if (profileError) throw profileError;
+        const destinations: Record<string, string> = { rider: "/home", captain: "/captain/home", admin: "/admin" };
+        const destination = profile?.role ? destinations[profile.role] : undefined;
+        if (!destination) throw new Error("missing-role");
+        if (active) setPublicRouteState("redirecting");
+        window.location.replace(destination);
+      } catch {
+        if (active) setPublicRouteState("error");
+      }
+    }
+    void redirectAuthenticatedUser();
+    return () => { active = false; };
+  }, [isPublicHome, supabase]);
+
+  useEffect(() => {
+    document.title = isLoginPage ? "تسجيل الدخول | سِكّة" : isRegisterPage ? "إنشاء حساب جديد | سِكّة" : isForgotPasswordPage ? "استعادة الحساب | سِكّة" : isResetPasswordPage ? "تعيين كلمة مرور | سِكّة" : isTermsPage ? "الشروط والأحكام | سِكّة" : isPrivacyPage ? "سياسة الخصوصية | سِكّة" : isRiderHome ? "الرئيسية | سِكّة" : isCaptainHome ? "الرئيسية للكابتن | سِكّة" : isTripsPage ? "الرحلات المتاحة | سِكّة" : isMyTripsPage ? "رحلاتي | سِكّة" : isPublicHome ? "سِكّة | تنقّل منتظم" : "الصفحة غير موجودة | سِكّة";
+  }, [isLoginPage, isRegisterPage, isForgotPasswordPage, isResetPasswordPage, isTermsPage, isPrivacyPage, isRiderHome, isCaptainHome, isTripsPage, isMyTripsPage, isPublicHome]);
 
   async function register(payload: SignupPayload) {
     setError("");
@@ -88,12 +147,45 @@ export default function App() {
         password,
       });
       if (loginError) throw loginError;
-      setLoginSuccess("تم تسجيل الدخول بنجاح.");
+      const { data: authData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!authData.user) throw new Error("Authenticated user was not returned");
+      const { data: profile, error: profileError } = await supabase.from("profiles").select("role").eq("id", authData.user.id).maybeSingle();
+      if (profileError) throw profileError;
+      const destinations: Record<string, string> = { rider: "/home", captain: "/captain/home", admin: "/admin" };
+      const destination = profile?.role ? destinations[profile.role] : undefined;
+      if (destination) window.location.replace(destination);
+      else setError("تم تسجيل الدخول، لكن نوع الحساب غير محدد. تواصل مع الدعم لاستكمال بيانات حسابك.");
     } catch (cause) {
       setError(authErrorMessage(cause));
     } finally {
       setLoading(false);
     }
+  }
+
+  async function sendRecoveryPhoneCode(phoneNumber: string) {
+    if (!supabase) throw new Error("service unavailable");
+    const { error: otpError } = await supabase.auth.signInWithOtp({ phone: toEgyptianPhone(phoneNumber), options: { shouldCreateUser: false } });
+    if (otpError) throw otpError;
+  }
+
+  async function verifyRecoveryPhoneCode(phoneNumber: string, token: string) {
+    if (!supabase) throw new Error("service unavailable");
+    const { error: verifyError } = await supabase.auth.verifyOtp({ phone: toEgyptianPhone(phoneNumber), token, type: "sms" });
+    if (verifyError) throw verifyError;
+  }
+
+  async function sendEmailPasswordReset(email: string) {
+    if (!supabase) throw new Error("service unavailable");
+    const { error: recoveryError } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` });
+    if (recoveryError) throw recoveryError;
+  }
+
+  async function updateRecoveredPassword(password: string) {
+    if (!supabase) throw new Error("service unavailable");
+    const { error: updateError } = await supabase.auth.updateUser({ password });
+    if (updateError) throw updateError;
+    await supabase.auth.signOut();
   }
 
   if (state === "verify" || state === "complete") {
@@ -128,14 +220,42 @@ export default function App() {
   }
 
   if (isLoginPage) {
-    return <LoginScreen onLogin={login} onCreateAccount={() => { window.location.assign("/register"); }} loading={loading} error={error} success={loginSuccess} />;
+    return <LoginScreen onLogin={login} onCreateAccount={() => { window.location.assign("/register"); }} onForgotPassword={() => { window.location.assign("/forgot-password"); }} loading={loading} error={error} success={loginSuccess} />;
   }
 
   if (isRegisterPage) {
     const initialRole = new URLSearchParams(window.location.search).get("role") === "captain" ? "captain" : "rider";
-    return <RegisterScreen initialRole={initialRole} onRegister={register} onLogin={() => { window.location.assign("/login"); }} loading={loading} error={error} />;
+    return <RegisterScreen initialRole={initialRole} onRegister={register} onLogin={() => { window.location.assign("/login"); }} onTerms={() => { window.location.assign("/terms"); }} onPrivacy={() => { window.location.assign("/privacy"); }} loading={loading} error={error} />;
   }
 
+  if (isForgotPasswordPage) return <ForgotPasswordScreen onBack={() => { window.location.assign("/login"); }} onSendPhoneCode={sendRecoveryPhoneCode} onVerifyPhoneCode={verifyRecoveryPhoneCode} onSendEmailReset={sendEmailPasswordReset} onUpdatePassword={updateRecoveredPassword} />;
+  if (isResetPasswordPage) return <ResetPasswordScreen sessionReady={resetSessionReady} checkingSession={checkingResetSession} onBack={() => { window.location.assign("/login"); }} onUpdatePassword={updateRecoveredPassword} />;
+  if (isTermsPage || isPrivacyPage) return <LegalDocumentScreen kind={isTermsPage ? "terms" : "privacy"} onBack={() => { if (window.history.length > 1) window.history.back(); else window.location.assign("/register"); }} />;
+
+  if (isRiderHome) {
+    const routes: Record<HomeAction, string> = {
+      home: "/home",
+      explore: "/trips",
+      myTrips: "/my-trips",
+      myRequests: "/requests",
+      newTrip: "/requests/new",
+      support: "/support",
+      profile: "/profile",
+      notifications: "/notifications",
+      allTrips: "/my-trips",
+      featuredTrips: "/trips",
+      recentTrip: "/my-trips",
+    };
+    return <RiderHomeScreen supabase={supabase} onAction={(action) => window.location.assign(routes[action])} />;
+  }
+
+  if (isCaptainHome) return <CaptainHomeScreen supabase={supabase} />;
+
+  if (isRiderTripsPage) return <RiderTripsScreen supabase={supabase} mode={isMyTripsPage ? "mine" : "available"} onHome={() => window.location.assign("/home")} />;
+
+  if (isPublicHome && publicRouteState === "checking") return <main className="sekka-public-route-state" dir="rtl" lang="ar"><img src="/brand/sekka-mark.png" alt="سِكّة"/><span>جارٍ التحقق من حسابك…</span></main>;
+  if (isPublicHome && publicRouteState === "redirecting") return <main className="sekka-public-route-state" dir="rtl" lang="ar"><img src="/brand/sekka-mark.png" alt="سِكّة"/><span>جارٍ فتح صفحتك الرئيسية…</span></main>;
+  if (isPublicHome && publicRouteState === "error") return <main className="sekka-public-route-state" dir="rtl" lang="ar"><img src="/brand/sekka-mark.png" alt="سِكّة"/><h1>تعذر فتح الصفحة الرئيسية لحسابك</h1><p>تعذر التحقق من جلسة الدخول أو أن دور الحساب غير محدد. سجّل الدخول مجددًا أو تواصل مع الدعم.</p><a href="/login">الانتقال لتسجيل الدخول</a></main>;
   if (isPublicHome) return <PublicHomeScreen />;
 
   return (
@@ -159,4 +279,9 @@ function authErrorMessage(error: unknown): string {
   if (message.includes("rate limit") || message.includes("too many")) return "تم إرسال محاولات كثيرة. انتظر قليلًا ثم حاول مجددًا.";
   if (message.includes("fetch") || message.includes("network")) return "تعذر الاتصال بالخدمة. تحقق من الإنترنت وحاول مجددًا.";
   return "تعذر إتمام العملية. تحقق من البيانات وحاول مرة أخرى.";
+}
+
+function toEgyptianPhone(phoneNumber: string) {
+  const normalized = phoneNumber.replace(/[\s()-]/g, "");
+  return normalized.startsWith("+20") ? normalized : `+20${normalized.replace(/^0/, "")}`;
 }

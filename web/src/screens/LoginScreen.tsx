@@ -5,12 +5,13 @@ import "./register-screen.css";
 type LoginScreenProps = {
   onLogin: (phone: string, password: string) => Promise<void>;
   onCreateAccount: () => void;
+  onForgotPassword: () => void;
   loading?: boolean;
   error?: string;
   success?: string;
 };
 
-export default function LoginScreen({ onLogin, onCreateAccount, loading = false, error = "", success = "" }: LoginScreenProps) {
+export default function LoginScreen({ onLogin, onCreateAccount, onForgotPassword, loading = false, error = "", success = "" }: LoginScreenProps) {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [visible, setVisible] = useState(false);
@@ -51,6 +52,8 @@ export default function LoginScreen({ onLogin, onCreateAccount, loading = false,
         <form className="sekka-register-form" onSubmit={submit} noValidate>
           <TextField label="رقم الهاتف" type="tel" name="phone" inputMode="tel" autoComplete="tel-national" dir="ltr" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="01xxxxxxxxx" required />
           <TextField label="كلمة المرور" name="password" type={visible ? "text" : "password"} autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="أدخل كلمة المرور" required trailing={<><button type="button" className="sekka-register-toggle" onClick={() => setVisible((value) => !value)} aria-label={visible ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"} aria-pressed={visible} /><PasswordIcon visible={visible} /></>} />
+
+          <button className="auth-forgot-link" type="button" onClick={onForgotPassword}>نسيت كلمة المرور؟</button>
 
           {(formError || error) && <InlineAlert>{formError || error}</InlineAlert>}
           {success && <InlineAlert tone="success">{success}</InlineAlert>}

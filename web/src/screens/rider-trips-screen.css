@@ -1,0 +1,86 @@
+.rider-trips-screen{position:relative;isolation:isolate;box-sizing:border-box;width:min(100%,1080px);min-height:100svh;margin:0 auto;padding:max(20px,env(safe-area-inset-top)) 30px 112px;overflow:hidden;background:var(--sekka-background);color:var(--sekka-primary);font-family:var(--sekka-font-arabic,Cairo,sans-serif)}
+.rider-trips-screen:before{position:absolute;z-index:-1;top:0;left:0;width:260px;height:118px;background:linear-gradient(155deg,var(--sekka-primary) 0 61%,var(--sekka-action) 61% 65%,transparent 65%);content:"";pointer-events:none}
+html:has(.rider-trips-screen),body:has(.rider-trips-screen),#root:has(.rider-trips-screen),.app-shell:has(.rider-trips-screen){min-width:0;max-width:100%;overflow-x:clip}
+.rider-trips-screen *, .rider-trip-modal-backdrop *{box-sizing:border-box}
+.rider-trips-screen button,.rider-trip-modal-backdrop button,.rider-trips-screen input{font:inherit}
+.rider-trips-screen button{cursor:pointer}
+.rider-trips-header{display:grid;grid-template-columns:150px minmax(0,1fr) 44px;align-items:center;gap:20px;min-height:122px;margin:0 0 14px;direction:rtl}
+.rider-trips-header>img{width:150px;height:80px;object-fit:contain}
+.rider-trips-header>div{text-align:right}
+.rider-trips-header>div span{color:var(--sekka-text-secondary);font-size:13px}
+.rider-trips-header h1{margin:0;font-size:30px;line-height:1.3;font-weight:850}
+.rider-trips-header>button{width:42px;height:42px;display:grid;place-items:center;border:0;border-radius:50%;background:transparent;color:var(--sekka-primary)}
+.rider-trips-header>button svg{width:27px;height:27px;transform:rotate(180deg)}
+.rider-trip-search{display:grid;grid-template-columns:1fr;gap:0;margin:0 0 20px;padding:16px 20px;border:1px solid var(--sekka-border);border-radius:25px;background:var(--sekka-surface);box-shadow:var(--sekka-shadow-card)}
+.rider-trip-search-grid{display:grid;grid-template-columns:1fr 1fr 1fr;direction:rtl}
+.rider-trip-search label{display:grid;align-content:start;gap:8px;min-width:0;padding:8px 18px;color:var(--sekka-primary-light);font-size:13px;font-weight:800}
+.rider-trip-search label+label{border-right:1px solid var(--sekka-border)}
+.rider-trip-search label>span:first-child{display:flex;align-items:center;gap:9px}
+.rider-trip-search label>span:first-child svg{width:21px;height:21px;color:var(--sekka-primary)}
+.rider-trip-search input{width:100%;min-width:0;height:45px;padding:0 12px;border:1px solid transparent;border-radius:11px;background:var(--sekka-surface);color:var(--sekka-text);text-align:right;font-size:14px}
+.rider-trip-search input:focus{outline:2px solid var(--sekka-primary-light);outline-offset:1px}
+.rider-trip-search input::placeholder{color:var(--sekka-text-secondary);opacity:1}
+.rider-trip-search-bottom{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:14px;margin-top:11px;padding-top:13px;border-top:1px solid var(--sekka-border)}
+.rider-trip-search .rider-passengers-label{grid-template-columns:auto minmax(120px,1fr);align-items:center;padding:0 10px}
+.rider-trip-search .rider-passengers-label>span:first-child{font-size:14px}
+.rider-passenger-control{min-height:48px;display:flex;align-items:center;justify-content:space-around;border:1px solid var(--sekka-border);border-radius:13px;background:var(--sekka-surface)}
+.rider-passenger-control button{width:30px;height:30px;border:0;border-radius:50%;background:var(--sekka-success-bg);color:var(--sekka-primary);font-size:20px;line-height:1}
+.rider-passenger-control button:disabled{opacity:.45;cursor:not-allowed}
+.rider-trip-search .rider-trip-submit{min-height:54px;display:flex;align-items:center;justify-content:center;gap:12px;border:0;border-radius:17px;background:var(--sekka-action);color:var(--sekka-text);font-weight:850;font-size:18px;box-shadow:0 7px 18px color-mix(in srgb,var(--sekka-primary) 12%,transparent)}
+.rider-trip-submit svg{width:22px;height:22px}
+.rider-trips-list-section{display:grid;gap:12px;padding-bottom:14px}
+.rider-trips-results-heading{display:flex;justify-content:space-between;align-items:end;gap:10px;margin:0 2px 1px}
+.rider-trips-results-heading>div>span{color:var(--sekka-primary-light);font-size:12px;font-weight:800}
+.rider-trips-results-heading h2{margin:1px 0 0;font-size:21px;font-weight:850}
+.rider-results-count{padding-bottom:4px;color:var(--sekka-text-secondary);font-size:12px}
+.rider-trip-filter-row{display:flex;gap:10px;align-items:center;overflow-x:auto;padding:1px 0 8px;scrollbar-width:none}
+.rider-trip-filter-row::-webkit-scrollbar{display:none}
+.rider-trip-filter-row button{flex:0 0 auto;min-height:43px;display:flex;align-items:center;gap:10px;padding:0 18px;border:1px solid var(--sekka-border);border-radius:999px;background:var(--sekka-surface);color:var(--sekka-primary);font-weight:700;font-size:13px;white-space:nowrap}
+.rider-trip-filter-row button span{font-size:16px}
+.rider-trip-filter-row button.selected{border-color:var(--sekka-action);background:var(--sekka-action);color:var(--sekka-text)}
+.rider-search-limit-note{margin:-2px 1px 4px;color:var(--sekka-text-secondary);font-size:11px;line-height:1.6}
+.rider-trips-results{display:grid;gap:13px}
+.rider-trip-card{display:grid;grid-template-columns:220px minmax(0,1fr) 220px;align-items:stretch;direction:ltr;min-height:178px;padding:15px 14px;border:1px solid var(--sekka-border);border-radius:25px;background:var(--sekka-surface);box-shadow:var(--sekka-shadow-card)}
+.trip-card-price,.trip-card-route,.trip-card-captain{direction:rtl;min-width:0}
+.trip-card-price{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:5px;padding:0 10px 0 14px;border-right:1px solid var(--sekka-border)}
+.trip-seat-badge{display:inline-flex;align-items:center;gap:4px;padding:5px 9px;border-radius:18px;background:var(--sekka-success-bg);color:var(--sekka-primary-light);font-size:11px;font-weight:800}
+.trip-seat-badge svg{width:15px;height:15px}
+.trip-card-price>strong{margin-top:5px;color:var(--sekka-primary);font-size:25px;line-height:1.3}
+.trip-card-price>small{color:var(--sekka-text-secondary);font-size:12px}
+.rider-trip-detail-button{min-height:40px;display:inline-flex;align-items:center;justify-content:center;gap:8px;margin-top:7px;padding:0 15px;border:0;border-radius:999px;background:var(--sekka-action);color:var(--sekka-text);font-size:13px;font-weight:750;white-space:nowrap}
+.rider-trip-detail-button svg{width:15px;height:15px;transform:rotate(180deg)}
+.trip-card-route{display:flex;flex-direction:column;justify-content:center;gap:5px;padding:0 20px}
+.trip-route-place{display:flex;align-items:center;gap:12px;min-width:0;color:var(--sekka-primary);font-size:16px;font-weight:750}
+.trip-route-place span{overflow-wrap:anywhere}
+.trip-route-dot{width:13px;height:13px;flex:0 0 auto;border:3px solid var(--sekka-primary-light);border-radius:50%;background:var(--sekka-surface)}
+.trip-route-connector{height:18px;margin-inline-start:6px;border-right:2px dashed var(--sekka-text-secondary)}
+.trip-route-datetime{display:flex;flex-wrap:wrap;gap:10px 20px;margin:9px 0 0 24px;color:var(--sekka-text-secondary);font-size:12px}
+.trip-route-datetime>span{display:flex;align-items:center;gap:6px}
+.trip-route-datetime svg{width:17px;height:17px}
+.trip-card-captain{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:0 8px;border-left:1px solid var(--sekka-border);color:var(--sekka-primary);text-align:center;font-size:12px}
+.trip-card-captain>strong{color:var(--sekka-primary);font-size:15px}
+.trip-card-captain>span:last-child{display:flex;align-items:center;gap:6px}
+.trip-card-captain>span:last-child svg{width:20px;height:20px}
+.trip-captain-avatar{width:48px;height:48px;display:grid;place-items:center;border-radius:50%;background:var(--sekka-success-bg);color:var(--sekka-primary)}
+.trip-captain-avatar svg{width:25px;height:25px}
+.rider-trips-state{display:grid;justify-items:center;gap:9px;padding:36px 20px;border:1px solid var(--sekka-border);border-radius:22px;background:var(--sekka-surface);color:var(--sekka-text-secondary);text-align:center}
+.rider-trips-state strong{color:var(--sekka-primary);font-size:17px}
+.rider-trips-state p{margin:0;line-height:1.8}
+.rider-trips-state button{min-height:42px;padding:0 18px;border:0;border-radius:14px;background:var(--sekka-primary);color:var(--sekka-text-light);font-weight:800}
+.rider-trips-error{color:var(--sekka-danger)}
+.rider-member-status{margin:4px 9px 0;color:var(--sekka-text-secondary);font-size:12px}
+.rider-trip-modal-backdrop{position:fixed;z-index:20;inset:0;display:grid;align-items:end;justify-items:center;padding:16px;background:var(--color-overlay)}
+.rider-trip-modal{position:relative;width:min(100%,520px);padding:26px 22px 20px;border-radius:24px 24px 18px 18px;background:var(--sekka-surface);color:var(--sekka-primary);box-shadow:var(--sekka-shadow)}
+.rider-trip-modal-close{position:absolute;top:12px;left:12px;width:36px;height:36px;border:1px solid var(--sekka-border);border-radius:50%;background:var(--sekka-surface);color:var(--sekka-primary);font-size:23px;line-height:1}
+.rider-trip-modal h2{margin:14px 0;font-size:21px}
+.rider-trip-modal p{display:flex;align-items:center;gap:8px;margin:12px 0;color:var(--sekka-text-secondary);font-size:14px;line-height:1.7}
+.rider-trip-modal p svg{width:18px;height:18px;flex:0 0 auto}
+.rider-trip-modal .rider-trip-modal-note{padding:10px 12px;border-radius:12px;background:var(--sekka-warning-bg);color:var(--sekka-primary-dark);font-size:12px}
+.rider-trips-bottom-nav{position:fixed;z-index:10;inset-inline:0;bottom:0;display:grid;grid-template-columns:repeat(3,1fr);width:min(100%,1080px);min-height:82px;margin:auto;padding:9px 12px max(9px,env(safe-area-inset-bottom));border-radius:28px 28px 0 0;background:var(--sekka-nav-bg);box-shadow:var(--sekka-shadow-card)}
+.rider-trips-bottom-nav a{display:grid;justify-items:center;align-content:center;gap:3px;color:var(--sekka-nav-inactive);text-decoration:none;font-size:11px}
+.rider-trips-bottom-nav svg{width:23px;height:23px}
+.rider-trips-bottom-nav a.active{color:var(--sekka-primary);font-weight:850}
+.rider-trips-bottom-nav a.active:after{width:55px;height:3px;margin-top:2px;border-radius:4px;background:var(--sekka-action);content:""}
+@media(max-width:700px){.rider-trips-screen{padding:12px 14px 104px}.rider-trips-screen:before{width:130px;height:65px}.rider-trips-header{grid-template-columns:92px minmax(0,1fr) 38px;min-height:72px;gap:8px;margin-bottom:12px}.rider-trips-header>img{width:92px;height:55px}.rider-trips-header>div span{font-size:10px}.rider-trips-header h1{font-size:21px}.rider-trips-header>button{width:36px;height:36px}.rider-trip-search{padding:11px;border-radius:20px;margin-bottom:14px}.rider-trip-search-grid{grid-template-columns:1fr 1fr;gap:4px 2px}.rider-trip-search label{padding:7px 6px;gap:4px;font-size:11px}.rider-trip-search label:nth-child(2){border-right:0}.rider-trip-search label:nth-child(3){grid-column:1/-1;border:0;border-top:1px solid var(--sekka-border)}.rider-trip-search input{height:39px;padding:0 8px;font-size:12px}.rider-trip-search label>span:first-child svg{width:17px;height:17px}.rider-trip-search-bottom{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:8px;margin-top:7px;padding-top:9px}.rider-trip-search .rider-passengers-label{grid-template-columns:1fr;gap:4px;padding:0 4px}.rider-trip-search .rider-passengers-label>span:first-child{font-size:11px}.rider-passenger-control{min-height:41px}.rider-passenger-control button{width:26px;height:26px}.rider-trip-search .rider-trip-submit{min-height:46px;gap:6px;border-radius:13px;font-size:13px}.rider-trip-submit svg{width:19px;height:19px}.rider-trips-results-heading h2{font-size:18px}.rider-trips-results-heading>div>span{font-size:10px}.rider-trip-filter-row{gap:7px}.rider-trip-filter-row button{min-height:38px;padding:0 12px;font-size:11px}.rider-search-limit-note{font-size:10px}.rider-trip-card{grid-template-columns:82px minmax(0,1fr) 82px;min-height:158px;padding:10px 6px;border-radius:19px}.trip-card-price{gap:4px;padding:0 5px 0 7px}.trip-seat-badge{gap:2px;padding:4px 5px;font-size:9px}.trip-seat-badge svg{width:13px;height:13px}.trip-card-price>strong{font-size:17px;overflow-wrap:anywhere}.trip-card-price>small{font-size:9px}.rider-trip-detail-button{min-height:34px;gap:3px;margin-top:5px;padding:0 6px;font-size:9px}.rider-trip-detail-button svg{width:12px;height:12px}.trip-card-route{gap:5px;padding:0 7px}.trip-route-place{gap:6px;font-size:12px;line-height:1.45}.trip-route-dot{width:11px;height:11px;border-width:2px}.trip-route-connector{height:13px;margin-inline-start:4px}.trip-route-datetime{display:grid;gap:5px;margin:5px 0 0 17px;font-size:9px}.trip-route-datetime svg{width:13px;height:13px}.trip-card-captain{gap:5px;padding:0 3px;font-size:9px}.trip-card-captain>strong{font-size:10px}.trip-captain-avatar{width:35px;height:35px}.trip-captain-avatar svg{width:19px;height:19px}.trip-card-captain>span:last-child{gap:3px;font-size:8px}.trip-card-captain>span:last-child svg{width:15px;height:15px}.rider-trips-bottom-nav{min-height:70px;border-radius:20px 20px 0 0}.rider-trips-bottom-nav svg{width:20px;height:20px}.rider-trips-bottom-nav a{font-size:9px}}
+@media(max-width:360px){.rider-trips-screen{padding-inline:10px}.rider-trip-card{grid-template-columns:76px minmax(0,1fr) 76px;padding-inline:4px}.trip-card-price>strong{font-size:15px}.trip-card-captain>span:last-child{font-size:7px}.rider-trip-filter-row button{padding-inline:10px}}
+@media(min-width:701px){.rider-trip-search-grid>label{min-height:93px}.rider-trip-search label:nth-child(2){border-right:1px solid var(--sekka-border)}.rider-trip-search-grid>label:nth-child(3){border-right:1px solid var(--sekka-border)}.rider-trip-modal-backdrop{align-items:center}}

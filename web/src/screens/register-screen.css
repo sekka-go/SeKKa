@@ -12,7 +12,7 @@
   padding: max(1.25rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1.25rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
   color: var(--register-ink);
   background:
-    linear-gradient(180deg, rgb(251 248 239 / 87%), rgb(251 248 239 / 96%) 56%, var(--register-cream)),
+    linear-gradient(180deg, color-mix(in srgb,var(--sekka-background) 87%,transparent), color-mix(in srgb,var(--sekka-background) 96%,transparent) 56%, var(--register-cream)),
     url("/images/sekka-login-skyline.jpg") center 6rem / min(100%, 850px) auto no-repeat,
     var(--register-cream);
   font-family: var(--sekka-font-arabic);
@@ -25,9 +25,9 @@
 .sekka-register-card {
   width: min(100%, 29rem);
   padding: clamp(1rem, 4vw, 1.75rem);
-  border: 1px solid rgb(6 79 66 / 12%);
+  border: 1px solid color-mix(in srgb,var(--sekka-primary) 12%,transparent);
   border-radius: var(--sekka-radius-card);
-  background: rgb(255 255 255 / 83%);
+  background: color-mix(in srgb,var(--sekka-surface) 83%,transparent);
   box-shadow: var(--sekka-shadow-card);
   backdrop-filter: blur(14px);
 }
@@ -51,10 +51,10 @@
 .sekka-register-intro { margin-block-end: 1.15rem; text-align: center; }
 .sekka-register-eyebrow { margin: 0 0 .2rem; color: var(--register-green); font-size: .82rem; font-weight: 800; }
 .sekka-register-intro h1 { margin: 0; color: var(--register-green-deep); font-size: clamp(1.55rem, 5vw, 1.9rem); font-weight: 850; line-height: 1.45; }
-.sekka-register-intro > p:last-child { margin: .15rem 0 0; color: #568078; font-size: .9rem; font-weight: 600; }
+.sekka-register-intro > p:last-child { margin: .15rem 0 0; color: var(--sekka-text-secondary); font-size: .9rem; font-weight: 600; }
 
 .sekka-register-form { display: grid; gap: .7rem; }
-.sekka-register-field { position: relative; display: grid; gap: .25rem; min-width: 0; color: #315d54; font-size: .78rem; font-weight: 800; }
+.sekka-register-field { position: relative; display: grid; gap: .25rem; min-width: 0; color: var(--sekka-primary-light); font-size: .78rem; font-weight: 800; }
 .sekka-register-field > span { padding-inline: .15rem; }
 .sekka-register-field input {
   display: block;
@@ -62,55 +62,56 @@
   min-width: 0;
   min-height: 3.05rem;
   padding: .7rem .9rem;
-  border: 1px solid #d5d4cf;
+  border: 1px solid var(--sekka-border);
   border-radius: .95rem;
   outline: none;
-  background: rgb(255 255 255 / 96%);
-  color: #253c37;
+  background: color-mix(in srgb,var(--sekka-surface) 96%,transparent);
+  color: var(--sekka-text);
   font-size: .9rem;
   font-weight: 600;
   text-align: start;
-  box-shadow: 0 2px 7px rgb(0 0 0 / 2%);
+  box-shadow: var(--sekka-shadow-card);
 }
-.sekka-register-field input:focus { border-color: var(--register-green); box-shadow: 0 0 0 3px rgb(6 79 66 / 12%); }
-.sekka-register-field input::placeholder { color: #85898a; opacity: 1; }
+.sekka-register-field input:focus { border-color: var(--register-green); box-shadow: 0 0 0 3px color-mix(in srgb,var(--sekka-primary) 12%,transparent); }
+.sekka-register-field input::placeholder { color: var(--sekka-text-secondary); opacity: 1; }
 .sekka-register-field input[dir="ltr"] { text-align: left; }
 .sekka-register-field:has(.sekka-register-toggle) input { padding-inline-end: 3.2rem; }
-.sekka-register-toggle { position: absolute; z-index: 1; inset-inline-end: .65rem; inset-block-end: .5rem; width: 2rem; height: 2rem; padding: .25rem; border: 0; border-radius: 50%; background: transparent; color: #648078; cursor: pointer; }
-.sekka-register-toggle:hover { background: rgb(6 79 66 / 7%); color: var(--register-green); }
+.sekka-register-toggle { position: absolute; z-index: 1; inset-inline-end: .65rem; inset-block-end: .5rem; width: 2rem; height: 2rem; padding: .25rem; border: 0; border-radius: 50%; background: transparent; color: var(--sekka-text-secondary); cursor: pointer; }
+.sekka-register-toggle:hover { background: color-mix(in srgb,var(--sekka-primary) 7%,transparent); color: var(--register-green); }
 .sekka-register-toggle:focus-visible { outline: 2px solid var(--register-green); outline-offset: 1px; }
-.sekka-register-toggle-icon { position: absolute; inset-inline-end: 1.15rem; inset-block-end: 1.08rem; width: 1.1rem; height: 1.1rem; fill: none; stroke: #648078; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+.sekka-register-toggle-icon { position: absolute; inset-inline-end: 1.15rem; inset-block-end: 1.08rem; width: 1.1rem; height: 1.1rem; fill: none; stroke: var(--sekka-text-secondary); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
 
-.sekka-register-consent { display: grid; gap: .3rem; margin-block-start: .1rem; color: #4d5b56; font-size: .76rem; font-weight: 650; }
+.sekka-register-consent { display: grid; gap: .3rem; margin-block-start: .1rem; color: var(--sekka-text-secondary); font-size: .76rem; font-weight: 650; }
 .sekka-register-consent > label { display: flex; align-items: flex-start; gap: .55rem; cursor: pointer; }
 .sekka-register-consent input { flex: 0 0 1.1rem; width: 1.1rem; height: 1.1rem; margin: .08rem 0 0; accent-color: var(--register-green); }
 .sekka-register-consent-links { display: flex; flex-wrap: wrap; gap: .3rem .8rem; padding-inline-start: 1.65rem; }
 .sekka-register-consent-links button { padding: 0; border: 0; background: none; color: var(--register-green); text-decoration: underline; font-size: .73rem; font-weight: 800; cursor: pointer; }
-.sekka-register-consent-links button:disabled { color: #78827e; cursor: default; }
-.sekka-register-error { margin: 0; color: #b42318; font-size: .78rem; font-weight: 700; }
+.sekka-register-consent-links button:disabled { color: var(--sekka-text-secondary); cursor: default; }
+.sekka-register-error { margin: 0; color: var(--sekka-danger); font-size: .78rem; font-weight: 700; }
 .sekka-register-submit, .sekka-register-google { display: flex; align-items: center; justify-content: center; gap: .7rem; width: 100%; min-height: 3.3rem; border-radius: 1rem; font-weight: 850; cursor: pointer; }
-.sekka-register-submit { margin-block-start: .15rem; border: 1px solid var(--register-green); border-radius: var(--sekka-radius-button); background: linear-gradient(110deg, var(--register-green), var(--register-green-deep)); color: white; font-size: 1rem; box-shadow: var(--sekka-shadow-button); }
+.sekka-register-submit { margin-block-start: .15rem; border: 1px solid var(--sekka-button-primary); border-radius: var(--sekka-radius-button); background: var(--sekka-button-primary); color: var(--sekka-button-primary-text); font-size: 1rem; box-shadow: var(--sekka-shadow-button); }
 .sekka-register-submit span { font-size: 1.25rem; line-height: 1; }
 .sekka-register-submit:disabled, .sekka-register-google:disabled { opacity: .62; cursor: wait; }
-.sekka-register-divider { display: flex; align-items: center; gap: .8rem; margin-block: .9rem .65rem; color: #747b78; font-size: .82rem; font-weight: 700; }
-.sekka-register-divider::before, .sekka-register-divider::after { flex: 1; height: 1px; background: #d5d4cf; content: ""; }
+.sekka-login-card .auth-forgot-link { justify-self: start; width: fit-content; margin-block: -.15rem 0; padding: 0; border: 0; background: transparent; color: var(--register-green); font: inherit; font-size: .78rem; font-weight: 650; line-height: 1.4; text-align: start; text-decoration: none; cursor: pointer; }
+.sekka-register-divider { display: flex; align-items: center; gap: .8rem; margin-block: .9rem .65rem; color: var(--sekka-text-secondary); font-size: .82rem; font-weight: 700; }
+.sekka-register-divider::before, .sekka-register-divider::after { flex: 1; height: 1px; background: var(--sekka-border); content: ""; }
 .sekka-register-role-switch { margin-block-start: .55rem; text-align: center; }
 .sekka-register-role-switch .sekka-register-divider { margin-block: .25rem .65rem; }
 .sekka-register-role-switch > button { display: flex; align-items: center; justify-content: center; gap: .6rem; width: 100%; min-height: 3.1rem; padding: .6rem 1rem; border: 1px solid var(--register-gold); border-radius: 1rem; background: transparent; color: var(--register-green); font: inherit; font-size: .88rem; font-weight: 850; cursor: pointer; }
-.sekka-register-role-switch > button:hover { background: rgb(199 163 75 / 9%); }
+.sekka-register-role-switch > button:hover { background: color-mix(in srgb,var(--sekka-action) 9%,transparent); }
 .sekka-register-role-switch > button:disabled { opacity: .6; cursor: wait; }
 .sekka-register-role-switch svg { width: 1.35rem; height: 1.35rem; color: var(--register-gold); }
-.sekka-register-google { border: 1px solid var(--register-green); background: rgb(255 255 255 / 72%); color: var(--register-green); font-size: .85rem; }
+.sekka-register-google { border: 1px solid var(--register-green); background: color-mix(in srgb,var(--sekka-surface) 72%,transparent); color: var(--register-green); font-size: .85rem; }
 .sekka-register-google svg { width: 1.35rem; height: 1.35rem; }
-.sekka-register-login { margin: 1rem 0 0; color: #414846; font-size: .82rem; font-weight: 700; text-align: center; }
+.sekka-register-login { margin: 1rem 0 0; color: var(--sekka-text); font-size: .82rem; font-weight: 700; text-align: center; }
 .sekka-register-login button { padding: 0; border: 0; background: none; color: var(--register-green); text-decoration: underline; font-weight: 850; cursor: pointer; }
 .sekka-register-result { position: relative; z-index: 1; text-align: center; }
 .sekka-register-result h1 { margin: .25rem 0; color: var(--register-green-deep); font-size: clamp(1.45rem, 5vw, 1.8rem); }
-.sekka-register-result-copy { margin: .35rem 0 1.25rem; color: #568078; font-size: .9rem; line-height: 1.8; }
+.sekka-register-result-copy { margin: .35rem 0 1.25rem; color: var(--sekka-text-secondary); font-size: .9rem; line-height: 1.8; }
 .sekka-register-back { margin-block-start: 1rem; padding: .45rem .8rem; border: 0; background: none; color: var(--register-green); text-decoration: underline; font: inherit; font-size: .82rem; font-weight: 800; cursor: pointer; }
-.sekka-register-success-mark { display: grid; width: 3.5rem; height: 3.5rem; margin: 1rem auto; place-items: center; border-radius: 50%; background: #e5f7ef; color: var(--register-green); font-size: 2rem; font-weight: 900; }
+.sekka-register-success-mark { display: grid; width: 3.5rem; height: 3.5rem; margin: 1rem auto; place-items: center; border-radius: 50%; background: var(--sekka-success-bg); color: var(--register-green); font-size: 2rem; font-weight: 900; }
 .sekka-register-link-button { text-decoration: none; }
-.sekka-register-role-note { margin: 1rem 0 0; color: #78827e; font-size: .72rem; line-height: 1.7; }
+.sekka-register-role-note { margin: 1rem 0 0; color: var(--sekka-text-secondary); font-size: .72rem; line-height: 1.7; }
 .sekka-login-card .sekka-register-intro { margin-block-end: 1.5rem; }
 .sekka-login-success { margin: 0; color: var(--register-green); font-size: .82rem; font-weight: 800; }
 .sekka-login-card .sekka-register-role-switch > button { min-height: 3.3rem; }
