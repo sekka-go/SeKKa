@@ -5,10 +5,10 @@ import LoginScreen from "./screens/LoginScreen";
 import PublicHomeScreen from "./screens/PublicHomeScreen";
 import RiderHomeScreen, { type HomeAction } from "./screens/RiderHomeScreen";
 import RiderTripsScreen from "./screens/RiderTripsScreen";
-import CaptainHomeScreen from "./screens/CaptainHomeScreen";
 import ForgotPasswordScreen, { ResetPasswordScreen } from "./screens/legal/ForgotPasswordScreen";
 import LegalDocumentScreen from "./screens/legal/LegalDocumentScreen";
 import RiderJourneyScreen, { type RiderJourneyKey } from "./screens/RiderJourneyScreen";
+import CaptainJourneyScreen, { type CaptainJourneyKey } from "./screens/CaptainJourneyScreen";
 
 type RegistrationState = "form" | "verify" | "complete";
 type PublicRouteState = "checking" | "guest" | "redirecting" | "error";
@@ -40,6 +40,8 @@ export default function App() {
   const isPublicHome = path === "/";
   const isRiderHome = path === "/home";
   const isCaptainHome = path === "/captain/home";
+  const captainJourneyMatch = path.match(/^\/captain\/journey\/([a-z-]+)$/);
+  const captainJourneyKey = captainJourneyMatch?.[1] as CaptainJourneyKey | undefined;
   const isTripsPage = path === "/trips";
   const isMyTripsPage = path === "/my-trips";
   const journeyMatch = path.match(/^\/journey\/([a-z-]+)$/);
@@ -94,8 +96,8 @@ export default function App() {
 
   useEffect(() => {
     const journeyTitle: Partial<Record<RiderJourneyKey, string>> = { group: "تفاصيل المجموعة", subscriptions: "اشتراكاتي", subscription: "تفاصيل الاشتراك", receipt: "إيصال سِكّة", "payment-method": "اختيار وسيلة الدفع", proof: "رفع إثبات التحويل", "captain-confirmation": "انتظار تأكيد الكابتن", "payment-code": "تأكيد كود الدفع", "payment-result": "نتيجة الدفع", renewal: "التجديد الشهري", "replacement-captain": "البحث عن كابتن بديل", conversations: "المحادثات", conversation: "تفاصيل المحادثة", notifications: "الإشعارات", ratings: "التقييمات", complaint: "تقديم شكوى", "complaint-status": "متابعة الشكوى", profile: "الملف الشخصي والإعدادات" };
-    document.title = isLoginPage ? "تسجيل الدخول | سِكّة" : isRegisterPage ? "إنشاء حساب جديد | سِكّة" : isForgotPasswordPage ? "استعادة الحساب | سِكّة" : isResetPasswordPage ? "تعيين كلمة مرور | سِكّة" : isTermsPage ? "الشروط والأحكام | سِكّة" : isPrivacyPage ? "سياسة الخصوصية | سِكّة" : isRiderHome ? "الرئيسية | سِكّة" : isCaptainHome ? "الرئيسية للكابتن | سِكّة" : isTripsPage ? "الرحلات المتاحة | سِكّة" : isMyTripsPage ? "رحلاتي | سِكّة" : journeyKey ? `${journeyTitle[journeyKey] ?? "حسابي"} | سِكّة` : isPublicHome ? "سِكّة | تنقّل منتظم" : "الصفحة غير موجودة | سِكّة";
-  }, [isLoginPage, isRegisterPage, isForgotPasswordPage, isResetPasswordPage, isTermsPage, isPrivacyPage, isRiderHome, isCaptainHome, isTripsPage, isMyTripsPage, isPublicHome, journeyKey]);
+    document.title = isLoginPage ? "تسجيل الدخول | سِكّة" : isRegisterPage ? "إنشاء حساب جديد | سِكّة" : isForgotPasswordPage ? "استعادة الحساب | سِكّة" : isResetPasswordPage ? "تعيين كلمة مرور | سِكّة" : isTermsPage ? "الشروط والأحكام | سِكّة" : isPrivacyPage ? "سياسة الخصوصية | سِكّة" : isRiderHome ? "الرئيسية | سِكّة" : isCaptainHome || captainJourneyKey === "home" ? "الرئيسية للكابتن | سِكّة" : isTripsPage ? "الرحلات المتاحة | سِكّة" : isMyTripsPage ? "رحلاتي | سِكّة" : journeyKey ? `${journeyTitle[journeyKey] ?? "حسابي"} | سِكّة` : captainJourneyKey ? `الكابتن | ${captainJourneyKey} | سِكّة` : isPublicHome ? "سِكّة | تنقّل منتظم" : "الصفحة غير موجودة | سِكّة";
+  }, [isLoginPage, isRegisterPage, isForgotPasswordPage, isResetPasswordPage, isTermsPage, isPrivacyPage, isRiderHome, isCaptainHome, isTripsPage, isMyTripsPage, isPublicHome, journeyKey, captainJourneyKey]);
 
   async function register(payload: SignupPayload) {
     setError("");
@@ -254,7 +256,8 @@ export default function App() {
     return <RiderHomeScreen supabase={supabase} onAction={(action) => window.location.assign(routes[action])} />;
   }
 
-  if (isCaptainHome) return <CaptainHomeScreen supabase={supabase} />;
+  if (isCaptainHome) return <CaptainJourneyScreen supabase={supabase} screen="home" onNavigate={(target) => window.location.assign(target)} />;
+  if (captainJourneyKey) return <CaptainJourneyScreen supabase={supabase} screen={captainJourneyKey} onNavigate={(target) => window.location.assign(target)} />;
 
   if (isRiderTripsPage) return <RiderTripsScreen supabase={supabase} mode={isMyTripsPage ? "mine" : "available"} onHome={() => window.location.assign("/home")} />;
   if (journeyKey) return <RiderJourneyScreen supabase={supabase} screen={journeyKey} onNavigate={(target) => window.location.assign(target)} />;
