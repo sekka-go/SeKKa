@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { sekkaApi, logoutSekkaSession } from "../lib/sekka-api";
+import { sekkaApi, sekkaApiForm, logoutSekkaSession } from "../lib/sekka-api";
 import "./rider-journey-screen.css";
 
 export type RiderJourneyKey = "group" | "subscriptions" | "subscription" | "receipt" | "payment-method" | "proof" | "captain-confirmation" | "payment-code" | "payment-result" | "renewal" | "replacement-captain" | "conversations" | "conversation" | "notifications" | "ratings" | "complaint" | "complaint-status" | "profile";
@@ -40,6 +40,13 @@ export default function RiderJourneyScreen({ screen, onNavigate }: Props) {
   const [selectedConversation, setSelectedConversation] = useState<Record<string, any> | null>(null);
   const [messageDraft, setMessageDraft] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [reportType, setReportType] = useState<"user" | "offer" | "behavior">("behavior");
+  const [reportTargetType, setReportTargetType] = useState<"user" | "offer">("user");
+  const [reportTargetId, setReportTargetId] = useState("");
+  const [reportCategory, setReportCategory] = useState("fraud");
+  const [reportDescription, setReportDescription] = useState("");
+  const [reportFiles, setReportFiles] = useState<File[]>([]);
+  const [reportSubmitting, setReportSubmitting] = useState(false);
   const [messageError, setMessageError] = useState("");
   const [notificationActionId, setNotificationActionId] = useState<string | null>(null);
   const sendLock = useRef(false);
@@ -58,6 +65,8 @@ export default function RiderJourneyScreen({ screen, onNavigate }: Props) {
         } else if (screen === "notifications") {
           const { notifications } = await sekkaApi<{ notifications: any[] }>("/pool/notifications");
           result = (notifications ?? []).map((item) => ({ ...item, type: item.kind ?? "إشعار", payload: { message: item.body ?? item.title } }));
+        } else if (screen === "complaint-status") {
+          const { reports } = await sekkaApi<{ reports: any[] }>("/reports/mine"); result = reports ?? [];
         } else if (screen === "conversations") {
           const { conversations } = await sekkaApi<{ conversations: any[] }>("/messages/conversations"); result = conversations ?? [];
           if (active) setSelectedConversation(null);
@@ -127,6 +136,27 @@ export default function RiderJourneyScreen({ screen, onNavigate }: Props) {
     } catch (cause) { setMessageError(journeyApiError(cause)); }
     finally { sendLock.current = false; setSendingMessage(false); }
   }
+  async function submitReport(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (reportSubmitting) return;
+    const targetId = Number(reportTargetId);
+    if (!Number.isSafeInteger(targetId) || targetId < 1) { setError("أدخل رقم المستخدم أو العرض المرتبط بالبلاغ."); return; }
+    if (reportDescription.trim().length < 20) { setError("اكتب وصفًا لا يقل عن 20 حرفًا."); return; }
+    if (reportFiles.length > 3 || reportFiles.some((item) => item.size > 5 * 1024 * 1024 || !/^(image\/(jpeg|png|webp)|application\/pdf)$/.test(item.type))) { setError("يمكن إرفاق 3 ملفات JPEG أو PNG أو WebP أو PDF، بحجم 5 ميجابايت لكل ملف."); return; }
+    const form = new FormData();
+    form.set("subject_type", reportType); form.set("category", reportCategory); form.set("description", reportDescription.trim());
+    const targetKind = reportType === "user" ? "user" : reportType === "offer" ? "offer" : reportTargetType;
+    if (targetKind === "user") form.set("subject_user_id", String(targetId)); else form.set("captain_line_id", String(targetId));
+    for (const item of reportFiles) form.append("evidence", item);
+    setReportSubmitting(true); setError(""); setNotice("");
+    try {
+      const { report } = await sekkaApiForm<{ report: any }>("/reports", form);
+      if (!report?.id || report.status !== "submitted") throw new Error("لم يؤكد الخادم تسجيل البلاغ.");
+      setReportDescription(""); setReportFiles([]); setReportTargetId("");
+      setNotice(`تم تسجيل البلاغ رقم ${report.id}. ستراجعه الإدارة؛ لا ينتج عن البلاغ حظر تلقائي.`);
+    } catch (cause) { setError(journeyApiError(cause)); }
+    finally { setReportSubmitting(false); }
+  }
   async function signOut() { try { await logoutSekkaSession(); } finally { onNavigate("/login"); } }
 
   const membership = records[0];
@@ -162,8 +192,17 @@ export default function RiderJourneyScreen({ screen, onNavigate }: Props) {
         </>}
         {(screen === "conversations" || screen === "conversation") && <>{screen === "conversation" ? selectedConversation ? <section className="journey-chat"><header className="journey-data-card journey-chat-header"><button className="journey-secondary" onClick={() => onNavigate("/journey/conversations")}>رجوع للمحادثات</button><strong>{selectedConversation.other_user?.full_name ?? "محادثة الرحلة"}</strong><span>{selectedConversation.other_user?.role === "captain" ? "كابتن" : "راكب"}</span></header><div className="journey-chat-messages" aria-live="polite">{records.length ? records.map((message) => <article key={message.id} className={`journey-chat-message ${String(message.sender_user_id) === String(profile?.id) ? "mine" : "theirs"}`}><p>{message.body}</p><time>{dateLabel(message.created_at)}</time></article>) : <Empty icon="☏" title="ابدأ المحادثة" body="اكتب رسالتك للتواصل مع الطرف الآخر."/>}</div>{messageError && <div className="journey-alert error" role="alert">{messageError}</div>}<form className="journey-chat-compose" onSubmit={(event) => { event.preventDefault(); void sendMessage(); }}><textarea aria-label="اكتب رسالة" maxLength={2000} value={messageDraft} onChange={(event) => setMessageDraft(event.target.value)} placeholder="اكتب رسالتك هنا"/><button className="journey-primary" disabled={sendingMessage || !messageDraft.trim()}>{sendingMessage ? "جارٍ الإرسال…" : "إرسال الرسالة"}</button></form></section> : <Empty icon="☏" title="المحادثة غير متاحة" body="افتح المحادثة من قائمة محادثاتك للتحقق من صلاحية الوصول."/> : records.length ? <div className="journey-list">{records.map((item) => <a className="journey-data-card journey-conversation" key={item.id} href={`/journey/conversation?id=${item.id}`}><span className="journey-card-icon">☏</span><div><strong>{item.other_user?.full_name ?? "محادثة الرحلة"}</strong><p>{item.last_message_body ?? item.latest?.body ?? "لا توجد رسائل بعد"}</p></div><time>{dateLabel(item.last_message_at ?? item.latest?.created_at ?? item.created_at)}</time></a>)}</div> : <Empty icon="☏" title="لا توجد محادثات بعد" body="ستظهر محادثات المجموعة هنا عندما تكون متاحة لحسابك."/>}</>}
         {screen === "notifications" && <>{records.length ? <div className="journey-list">{records.map((item) => <article key={item.id} className={`journey-data-card journey-notification ${item.read_at ? "read" : "unread"}`}><span className="journey-card-icon">♧</span><div><strong>{notificationTitle(item.type)}</strong><p>{item.payload?.message ?? item.payload?.title ?? "لديك تحديث جديد في سِكّة."}</p><time>{dateLabel(item.created_at)}</time></div><div className="journey-notification-actions">{!item.read_at && <button onClick={() => void markRead(String(item.id))}>تمت القراءة</button>}{item.group_id != null && <button disabled={notificationActionId === String(item.id)} onClick={() => void muteNotificationGroup(String(item.id))}>إيقاف إشعارات المجموعة</button>}<button disabled={notificationActionId === String(item.id)} onClick={() => void deleteNotification(String(item.id))}>{notificationActionId === String(item.id) ? "جارٍ التحديث…" : "حذف"}</button></div></article>)}</div> : <Empty icon="♧" title="أنت على اطلاع" body="لا توجد إشعارات جديدة في الوقت الحالي."/>}</>}
-        {screen === "complaint-status" && <>{records.length ? <div className="journey-list">{records.map((item) => <DataCard key={item.id} title={`بلاغ #${item.id.slice(0,8)}`} badge={statusLabel(item.status)}><p>{item.description}</p>{item.resolution_note && <Info label="الرد" value={item.resolution_note}/>}<Info label="تاريخ الإرسال" value={dateLabel(item.created_at)}/></DataCard>)}</div> : <Empty icon="◎" title="لا توجد شكاوى مسجلة" body="إذا أرسلت بلاغًا، ستظهر حالته هنا." action="/journey/complaint" actionLabel="تقديم شكوى" navigate={onNavigate}/>}</>}
-        {screen === "complaint" && <div className="journey-data-card"><label className="journey-form-label">نوع البلاغ<select><option>مشكلة في رحلة</option><option>مشكلة دفع</option><option>سلوك غير مناسب</option><option>أخرى</option></select></label><label className="journey-form-label">تفاصيل المشكلة<textarea rows={5} placeholder="اكتب ما حدث والتفاصيل التي تساعدنا على المراجعة"/></label><button className="journey-primary" onClick={() => setNotice("تعذر الإرسال: لم تُفعّل صلاحية إنشاء الشكاوى من التطبيق بعد. لم يتم تسجيل البلاغ.")}>إرسال الشكوى</button><a className="journey-inline-link" href="/journey/complaint-status">متابعة شكوى سابقة</a></div>}
+        {screen === "complaint-status" && <>{records.length ? <div className="journey-list">{records.map((item) => <DataCard key={item.id} title={`بلاغ #${item.id}`} badge={statusLabel(item.status)}><p>{item.description}</p>{item.resolution_note && <Info label="نتيجة المراجعة" value={item.resolution_note}/>}<Info label="التصنيف" value={reportCategoryLabel(item.category)}/><Info label="تاريخ الإرسال" value={dateLabel(item.created_at)}/></DataCard>)}</div> : <Empty icon="◎" title="لا توجد بلاغات مسجلة" body="إذا أرسلت بلاغًا، ستظهر حالته هنا." action="/journey/complaint" actionLabel="تقديم بلاغ" navigate={onNavigate}/>}</>}
+        {screen === "complaint" && <form className="journey-data-card" onSubmit={(event) => void submitReport(event)}>
+          <label className="journey-form-label">موضوع البلاغ<select value={reportType} onChange={(event) => setReportType(event.target.value as typeof reportType)}><option value="behavior">سلوك مخالف</option><option value="user">حساب مستخدم</option><option value="offer">عرض رحلة</option></select></label>
+          <label className="journey-form-label">التصنيف<select value={reportCategory} onChange={(event) => setReportCategory(event.target.value)}><option value="fraud">اشتباه احتيال</option><option value="harassment">مضايقة أو إساءة</option><option value="unsafe_behavior">سلوك غير آمن</option><option value="misleading_offer">معلومات مضللة في عرض</option><option value="other">أخرى</option></select></label>
+          {reportType === "behavior" && <label className="journey-form-label">البلاغ متعلق بـ<select value={reportTargetType} onChange={(event) => setReportTargetType(event.target.value as typeof reportTargetType)}><option value="user">مستخدم</option><option value="offer">عرض رحلة</option></select></label>}
+          <label className="journey-form-label">رقم {reportType === "offer" || (reportType === "behavior" && reportTargetType === "offer") ? "العرض" : "المستخدم"}<input inputMode="numeric" value={reportTargetId} onChange={(event) => setReportTargetId(event.target.value)} placeholder="المعرّف الظاهر في تفاصيل العنصر"/></label>
+          <label className="journey-form-label">وصف الواقعة<textarea rows={5} minLength={20} maxLength={5000} required value={reportDescription} onChange={(event) => setReportDescription(event.target.value)} placeholder="اكتب ما حدث بوضوح (20 حرفًا على الأقل)"/></label>
+          <label className="journey-upload">{reportFiles.length ? `المرفقات: ${reportFiles.map((item) => item.name).join("، ")}` : "إرفاق أدلة اختياريًا (حتى 3 ملفات)"}<input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" multiple onChange={(event) => setReportFiles(Array.from(event.target.files ?? []).slice(0, 3))}/></label>
+          <p className="journey-note">تُحفظ الأدلة في مساحة خاصة ولا تظهر إلا لمسؤول مخوّل. البلاغ يخضع للمراجعة ولا يوقف الحساب تلقائيًا.</p>
+          <button className="journey-primary" disabled={reportSubmitting}>{reportSubmitting ? "جارٍ إرسال البلاغ…" : "إرسال البلاغ"}</button><a className="journey-inline-link" href="/journey/complaint-status">متابعة بلاغ سابق</a>
+        </form>}
         {screen === "ratings" && <>{records.length ? records.map((item) => <DataCard key={item.id} title={`تقييم الرحلة • ${dateLabel(item.created_at)}`} badge={`${item.score} من 5`}>{item.comment && <p>{item.comment}</p>}</DataCard>) : <Empty icon="★" title="لا توجد تقييمات مسجلة" body="ستظهر تقييماتك هنا بعد انتهاء الرحلة وتسجيل التقييم."/>}<p className="journey-note">لا يمكن إضافة تقييم قبل تفعيل التحقق من أهلية الرحلة ونقطة الحفظ الآمنة.</p></>}
         {screen === "profile" && <div className="journey-data-card profile-card"><span className="profile-initial">{profile?.full_name?.slice(0,1) ?? "س"}</span><h2>{profile?.full_name ?? "مستخدم سِكّة"}</h2><p>{profile?.phone ?? "رقم الهاتف غير متاح للعرض"}</p><div className="journey-info-grid"><Info label="نوع الحساب" value={profile?.role === "rider" ? "راكب" : profile?.role === "captain" ? "كابتن" : profile?.role === "admin" ? "إدارة" : "—"}/><Info label="اللغة" value={profile?.locale === "en" ? "English" : "العربية"}/></div><button className="journey-secondary" onClick={signOut}>تسجيل الخروج</button><div className="profile-links"><a href="/privacy">سياسة الخصوصية</a><a href="/terms">الشروط والأحكام</a><a href="/journey/notifications">إعدادات الإشعارات</a></div></div>}
       </>}
@@ -182,7 +221,8 @@ function DataCard({ title, badge, children }: { title: string; badge?: string; c
 function Info({ label, value }: { label: string; value: string }) { return <div className="journey-info"><span>{label}</span><strong>{value}</strong></div>; }
 function Empty({ icon, title, body, action, actionLabel, navigate }: { icon: string; title: string; body: string; action?: string; actionLabel?: string; navigate?: (path: string) => void }) { return <div className="journey-empty"><span>{icon}</span><h2>{title}</h2><p>{body}</p>{action && <button className="journey-primary" onClick={() => navigate?.(action)}>{actionLabel}</button>}</div>; }
 function MembershipCard({ item, onNavigate }: { item: any; onNavigate: (path: string) => void }) { const line = item.group?.line; return <article className="journey-data-card journey-membership"><div className="journey-card-heading"><span className="journey-card-icon">⌂</span><span className="journey-badge">{statusLabel(item.subscription?.status ?? item.status)}</span></div><h2>{line ? `${line.origin_name} ← ${line.destination_name}` : "مجموعة الرحلة"}</h2><p>{line?.vehicle?.name_ar ?? "مجموعة سِكّة"} • {line?.departure_time?.slice(0,5) ?? "موعد الرحلة"}</p><div className="journey-membership-footer"><strong>{money(item.subscription?.monthly_price ?? line?.monthly_price, item.subscription?.currency ?? line?.currency)}</strong><button className="journey-secondary" onClick={() => onNavigate("/journey/subscription")}>التفاصيل <span>←</span></button></div></article>; }
-function statusLabel(status?: string) { const labels: Record<string,string> = { active:"نشط",pending:"قيد الانتظار",initiated:"بدأت العملية",paid:"تم الدفع",confirmed:"مؤكد",forming:"قيد الاكتمال",open:"مفتوحة",resolved:"تمت المعالجة",closed:"مغلقة",cancelled:"ملغاة",rejected:"مرفوض",searching:"جارٍ البحث" }; return status ? labels[status] ?? status : "غير متاح"; }
+function statusLabel(status?: string) { const labels: Record<string,string> = { active:"نشط",pending:"قيد الانتظار",initiated:"بدأت العملية",paid:"تم الدفع",confirmed:"مؤكد",forming:"قيد الاكتمال",open:"مفتوحة",resolved:"تمت المعالجة",closed:"مغلقة",cancelled:"ملغاة",rejected:"مرفوض",searching:"جارٍ البحث",submitted:"تم الإرسال",in_review:"قيد مراجعة الإدارة",reviewed:"تمت المراجعة" }; return status ? labels[status] ?? status : "غير متاح"; }
+function reportCategoryLabel(category?: string) { return ({fraud:"اشتباه احتيال",harassment:"مضايقة أو إساءة",unsafe_behavior:"سلوك غير آمن",misleading_offer:"معلومات مضللة في عرض",other:"أخرى"} as Record<string,string>)[category ?? ""] ?? category ?? "—"; }
 function money(amount?: number | null, currency?: string) { return amount == null ? "السعر غير محدد" : `${new Intl.NumberFormat("ar-EG", { maximumFractionDigits: 0 }).format(amount)} ${currency === "EGP" || !currency ? "ج.م" : currency}`; }
 function dateLabel(value?: string) { if (!value) return ""; return new Intl.DateTimeFormat("ar-EG", { dateStyle:"medium", timeStyle:"short" }).format(new Date(value)); }
 function methodLabel(method: string) { return ({cash:"كاش",ewallet:"محفظة إلكترونية",instapay:"InstaPay"} as Record<string,string>)[method] ?? method; }
