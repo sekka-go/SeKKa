@@ -26,17 +26,17 @@ The session token is stored in local storage with a seven-day client expiry matc
 | Rider requests and completed trips | Integrated read | `/rider/demand-requests`, `/rider/requests`, and `/rider/trips`; these are displayed as requests/history, not as a guaranteed reservation. |
 | Captain home, offers, vehicle list | Partially functional | Reads `/captain/lines`; home also reads `/captain/demand-groups`. Create/edit/status endpoints exist, but the current form does not yet collect validated map coordinates or send those mutations. |
 | Captain profile and verification | Partially functional | Reads `/auth/me`, `/captain/profile`, and `/verification`; the UI upload flow is not yet connected to the backend verification document contract. |
-| Captain rider requests and groups | Partially functional | Reads actual `/captain/demand-groups`; payment and membership operations remain unavailable. |
+| Captain rider requests and groups | Partially functional | Reads actual `/captain/demand-groups`; related membership operations were not integrated in this batch. |
 | Rider/captain notifications | Integrated read/update | Uses `/pool/notifications` and `/pool/notifications/{id}/read`. |
 | Rider/captain conversations | Partially functional | Uses `/messages/conversations`; conversation history uses the deployed message endpoint where an ID is present. |
-| Subscriptions, receipts, proof upload, payment codes, complaints, ratings | Not integrated | These screens were not connected in this batch. The deployed function has some related routes (verification documents, trip payment confirmation, and trip disputes); their full contracts need a separate screen-by-screen mapping before use. No fake writes are sent. |
+| Subscriptions, receipts, proof upload, payment codes, complaints, ratings | Not integrated | These screens were not connected in this batch. Related routes exist for verification documents, trip payment confirmation, and trip disputes; each needs a separate screen-by-screen contract and business-rule review before use. No fake writes are sent. |
 | Admin screens | Not audited in this batch | They were not changed; existing admin API/session handling is separate. |
 
 ## API routing and CORS
 
-Direct calls from a Cloudflare branch Preview were blocked by the production Edge Function's CORS allowlist (the checked preflight returned HTTP 204 without an `Access-Control-Allow-Origin` header). This branch includes a same-origin Cloudflare Pages Function proxy for `/__sekka-api/*` to the fixed SeKKa Edge Function origin. It forwards the public anon `apikey` and the user's bearer token; it does not contain a service-role key or bypass backend authorization. Local Vite continues to use its development proxy. The deployed Preview proxy still needs a live check.
+Direct calls from a Cloudflare branch Preview were blocked by the production Edge Function's CORS allowlist (the checked preflight returned HTTP 204 without an `Access-Control-Allow-Origin` header). This branch includes a same-origin Cloudflare Pages Function proxy for `/__sekka-api/*` to the fixed SeKKa Edge Function origin. It forwards the public anon `apikey` and the user's bearer token; it does not contain a service-role key or bypass backend authorization. Local Vite continues to use its development proxy. The deployed Preview proxy passed live checks.
 
-The production CORS configuration was not changed. The Preview proxy must be validated after Pages deploys the new `functions/` route.
+The production CORS configuration was not changed.
 
 ## Checks performed
 
@@ -44,14 +44,22 @@ The production CORS configuration was not changed. The Preview proxy must be val
 - `npm run build` — passed. Vite reports the existing main JavaScript chunk is above 500 kB; build succeeds.
 - Production API `GET /health` with the configured public anon key — HTTP 200.
 - Production API `GET /auth/me` without a session — HTTP 401, as expected.
+- Preview proxy `GET /__sekka-api/health` — HTTP 200.
+- Preview proxy `GET /__sekka-api/auth/me` without a session — HTTP 401, as expected.
+- Preview loaded at a mobile viewport without console errors or horizontal overflow.
 - No real registration or login was attempted because no test accounts were provided.
 - No Supabase product-table reads remain in `RiderHomeScreen`, `RiderTripsScreen`, `RiderJourneyScreen`, or `CaptainJourneyScreen`.
 - There is no test script in `web/package.json`.
 
 ## Remaining work
 
-1. Validate the same-origin API proxy after Cloudflare Pages deploys the branch Preview (`/health` and anonymous `/auth/me`).
-2. Run rider/captain happy-path and role-separation checks with designated test accounts.
-3. Connect captain line create/edit/status through the actual API and validated map selections.
-4. Continue screen-by-screen review of the remaining 78-screen map. A discovered endpoint alone does not mean a screen is integrated; validate its payload, authorization, and business rules first.
-5. Review whether the current UI passenger-count selector accurately reflects the API's `seats_available` field for every result type.
+1. Run rider/captain happy-path and role-separation checks with designated test accounts.
+2. Connect captain line create/edit/status through the actual API and validated map selections.
+3. Continue screen-by-screen review of the remaining 78-screen map. A discovered endpoint alone does not mean a screen is integrated; validate its payload, authorization, and business rules first.
+4. Review whether the current UI passenger-count selector accurately reflects the API's `seats_available` field for every result type.
+
+## Delivery
+
+- Commit: `e7af379` — `Integrate rider and captain flows with SeKKa API`
+- Preview: https://codex-sekka-ui-rebuild.sekka-go.pages.dev
+- Cloudflare deployment ID: `c1a2cf13-65b7-48c5-8cfc-6bbe1298a1e7` (build and deploy succeeded).
