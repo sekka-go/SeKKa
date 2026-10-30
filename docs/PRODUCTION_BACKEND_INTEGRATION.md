@@ -23,7 +23,7 @@ The session token is stored in local storage with a seven-day client expiry matc
 | Session restore, protected routes, role separation, expiry, logout | Integrated | `GET /auth/me`, `/auth/logout`, local token handling, and role-based route guards. |
 | Rider home | Partially functional | Name from restored custom session; latest demand request from `GET /rider/demand-requests`. |
 | Rider trip search | Integrated | Location suggestions use `POST /locations/search`; search uses `POST /rider/lines/search` with selected coordinates, date, time, and vehicle category. |
-| Rider requests and completed trips | Integrated read | `/rider/demand-requests`, `/rider/requests`, and `/rider/trips`; these are displayed as requests/history, not as a guaranteed reservation. |
+| Rider requests and completed trips | Integrated read; demand request submit connected | `/rider/demand-requests`, `/rider/requests`, and `/rider/trips` power account history. A matched result can submit a real `/rider/demand-requests` request using the selected route details; it is a search request, not a reservation or guarantee. |
 | Captain home, offers, vehicle list | Partially functional | Reads `/captain/lines`; home also reads `/captain/demand-groups`. Create/edit/status endpoints exist, but the current form does not yet collect validated map coordinates or send those mutations. |
 | Captain profile and verification | Partially functional | Reads `/auth/me`, `/captain/profile`, and `/verification`; the UI upload flow is not yet connected to the backend verification document contract. |
 | Captain rider requests and groups | Partially functional | Reads actual `/captain/demand-groups`; related membership operations were not integrated in this batch. |
@@ -48,6 +48,7 @@ The production CORS configuration was not changed.
 - Preview proxy `GET /__sekka-api/auth/me` without a session — HTTP 401, as expected.
 - Preview loaded at a mobile viewport without console errors or horizontal overflow.
 - No real registration or login was attempted because no test accounts were provided.
+- The request-creation form is wired to the existing demand-request API; a real account is required to verify its permission and verification gates.
 - No Supabase product-table reads remain in `RiderHomeScreen`, `RiderTripsScreen`, `RiderJourneyScreen`, or `CaptainJourneyScreen`.
 - There is no test script in `web/package.json`.
 
