@@ -305,26 +305,6 @@ body:has(.sekka-home),
   margin-right: 8px;
 }
 
-.slider-dots {
-  position: absolute;
-  bottom: 15px;
-  left: 16px;
-
-  display: flex;
-  gap: 7px;
-}
-
-.slider-dots i {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: white;
-}
-
-.slider-dots i.active {
-  background: var(--sekka-gold);
-}
-
 /* RECENT TRIPS */
 
 .recent-section {
@@ -563,6 +543,10 @@ body:has(.sekka-home),
 
   border-radius: 5px;
   background: var(--sekka-gold);
+}
+
+@media(max-width:480px) {
+  .bottom-nav { left: 0; right: 0; transform: none; margin-inline: auto; }
 }
 
 /* RESPONSIVE */

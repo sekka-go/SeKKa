@@ -26,6 +26,7 @@ const screens: Record<RiderJourneyKey, ScreenMeta> = {
   profile: { title: "الملف الشخصي والإعدادات", eyebrow: "حسابك في سِكّة", intro: "بيانات الحساب وخيارات الخصوصية والإشعارات والمساعدة.", icon: "◉" },
 };
 const entries: Array<[RiderJourneyKey, string]> = [["group", "تفاصيل المجموعة"],["subscriptions", "اشتراكاتي"],["subscription", "تفاصيل الاشتراك"],["receipt", "إيصال سِكّة"],["payment-method", "وسيلة الدفع"],["proof", "إثبات التحويل"],["captain-confirmation", "تأكيد الكابتن"],["payment-code", "كود الدفع"],["payment-result", "نتيجة الدفع"],["renewal", "التجديد الشهري"],["replacement-captain", "كابتن بديل"],["conversations", "المحادثات"],["conversation", "تفاصيل المحادثة"],["notifications", "الإشعارات"],["ratings", "التقييمات"],["complaint", "تقديم شكوى"],["complaint-status", "متابعة الشكوى"],["profile", "الملف الشخصي"]];
+const entryGroups: Array<[string, RiderJourneyKey[]]> = [["الرحلة والاشتراك", ["group", "subscriptions", "subscription", "renewal", "replacement-captain"]], ["الدفع", ["receipt", "payment-method", "proof", "captain-confirmation", "payment-code", "payment-result"]], ["التواصل والمساندة", ["conversations", "conversation", "notifications", "ratings", "complaint", "complaint-status"]], ["الحساب", ["profile"]]];
 
 export default function RiderJourneyScreen({ supabase, screen, onNavigate }: Props) {
   const meta = screens[screen];
@@ -83,7 +84,7 @@ export default function RiderJourneyScreen({ supabase, screen, onNavigate }: Pro
           const { data, error: queryError } = await supabase.from("ratings").select("id,group_id,score,comment,created_at").eq("reviewer_id", auth.user.id).order("created_at", { ascending: false });
           if (queryError) throw queryError; setRecords(data ?? []);
         } else setRecords([]);
-      } catch (cause) { if (active) setError(cause instanceof Error ? cause.message : "تعذر تحميل البيانات."); }
+      } catch (cause) { if (active) setError(cause instanceof Error && cause.message.includes("إعدادات الاتصال") ? cause.message : "تعذر تحميل بيانات حسابك. تحقق من الاتصال أو سجّل الدخول مجددًا ثم حاول مرة أخرى."); }
       finally { if (active) setLoading(false); }
     }
     void load(); return () => { active = false; };
@@ -105,7 +106,7 @@ export default function RiderJourneyScreen({ supabase, screen, onNavigate }: Pro
   return <main className="rider-journey" dir="rtl" lang="ar">
     <header className="journey-topbar"><button className="journey-back" onClick={() => { if (document.referrer.startsWith(window.location.origin)) window.history.back(); else onNavigate("/home"); }} aria-label="رجوع">‹</button><a href="/home" className="journey-brand"><img src="/brand/sekka-mark.png" alt="سِكّة" /></a><button className="journey-avatar" onClick={() => onNavigate("/journey/profile")} aria-label="الملف الشخصي">{profile?.full_name?.slice(0, 1) ?? "س"}</button></header>
     <section className="journey-hero"><span className="journey-eyebrow">{meta.eyebrow}</span><h1>{meta.title}</h1><p>{meta.intro}</p><div className="journey-hero-icon" aria-hidden="true">{meta.icon}</div></section>
-    <nav className="journey-shortcuts" aria-label="شاشات الراكب">{entries.map(([key, label]) => <a key={key} className={key === screen ? "active" : ""} href={`/journey/${key}`}>{label}</a>)}</nav>
+    <details className="journey-directory"><summary>خدمات الراكب <span>استعرض الأقسام</span></summary><nav className="journey-shortcuts" aria-label="أقسام الراكب">{entryGroups.map(([group, keys]) => <section className="journey-link-group" key={group}><h2>{group}</h2><div>{entries.filter(([key]) => keys.includes(key)).map(([key, label]) => <a key={key} className={key === screen ? "active" : ""} aria-current={key === screen ? "page" : undefined} href={`/journey/${key}`}>{label}</a>)}</div></section>)}</nav></details>
     <section className="journey-content">
       {loading && <div className="journey-state"><span className="journey-spinner"/> جارٍ تحميل بيانات حسابك…</div>}
       {error && !loading && <div className="journey-alert error" role="alert">{error}<button onClick={() => window.location.reload()}>إعادة المحاولة</button></div>}

@@ -293,14 +293,6 @@ export default function RiderHomeScreen({ supabase, onAction }: Props) {
 
         </div>
 
-        <div className="slider-dots">
-          <i className="active" />
-          <i />
-          <i />
-          <i />
-          <i />
-        </div>
-
       </section>
 
       {/* RECENT TRIPS */}
