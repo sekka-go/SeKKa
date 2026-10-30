@@ -106,6 +106,13 @@
 .sekka-register-google svg { width: 1.35rem; height: 1.35rem; }
 .sekka-register-login { margin: 1rem 0 0; color: #414846; font-size: .82rem; font-weight: 700; text-align: center; }
 .sekka-register-login button { padding: 0; border: 0; background: none; color: var(--register-green); text-decoration: underline; font-weight: 850; cursor: pointer; }
+.sekka-register-result { position: relative; z-index: 1; text-align: center; }
+.sekka-register-result h1 { margin: .25rem 0; color: var(--register-green-deep); font-size: clamp(1.45rem, 5vw, 1.8rem); }
+.sekka-register-result-copy { margin: .35rem 0 1.25rem; color: #568078; font-size: .9rem; line-height: 1.8; }
+.sekka-register-back { margin-block-start: 1rem; padding: .45rem .8rem; border: 0; background: none; color: var(--register-green); text-decoration: underline; font: inherit; font-size: .82rem; font-weight: 800; cursor: pointer; }
+.sekka-register-success-mark { display: grid; width: 3.5rem; height: 3.5rem; margin: 1rem auto; place-items: center; border-radius: 50%; background: #e5f7ef; color: var(--register-green); font-size: 2rem; font-weight: 900; }
+.sekka-register-link-button { text-decoration: none; }
+.sekka-register-role-note { margin: 1rem 0 0; color: #78827e; font-size: .72rem; line-height: 1.7; }
 
 @media (max-width: 360px) {
   .sekka-register-card { padding: .9rem; border-radius: 1.15rem; }
