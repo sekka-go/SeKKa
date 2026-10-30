@@ -1,4 +1,4 @@
-# SeKKa Production Backend Integration — Batches 1–2
+# SeKKa Production Backend Integration — Batches 1–4
 
 Date: 2026-10-30
 Scope: custom authentication, rider trip discovery and requests, rider home data, captain dashboard/profile reads, and authenticated messaging/notification reads. No database schema, RLS policy, or production data was changed.
@@ -25,7 +25,7 @@ The session token is stored in local storage with a seven-day client expiry matc
 | Rider trip search | Integrated | Location suggestions use `POST /locations/search`; search uses `POST /rider/lines/search` with selected coordinates, date, time, and vehicle category. |
 | Rider requests and completed trips | Integrated read; demand request submit connected | `/rider/demand-requests`, `/rider/requests`, and `/rider/trips` power account history. A matched result can submit a real `/rider/demand-requests` request using the selected route details; it is a search request, not a reservation or guarantee. |
 | Captain home and offers | Partially functional; line writes connected | Reads `/captain/lines`; home also reads `/captain/demand-groups`. Create/edit now submit selected Cairo map-search locations to `/captain/lines` and `/captain/lines/{id}`; pause/resume uses `/captain/lines/{id}/status`. Backend approval and phone-verification requirements remain enforced. |
-| Captain profile and verification | Partially functional | Reads `/auth/me`, `/captain/profile`, and `/verification`; the UI upload flow is not yet connected to the backend verification document contract. |
+| Captain profile and verification | Read and upload integrated | Reads `/auth/me`, `/captain/profile`, and `/verification`. Captains can submit the eight supported document kinds through multipart `POST /verification/documents/{kind}`; the UI validates file type and the 8 MB limit, shows pending review only after a successful response, and preserves API errors. |
 | Captain rider requests and groups | Partially functional | Reads actual `/captain/demand-groups`; related membership operations were not integrated in this batch. |
 | Rider/captain notifications | Integrated read/update | Uses `/pool/notifications` and `/pool/notifications/{id}/read`. |
 | Rider/captain conversations | Partially functional | Uses `/messages/conversations`; conversation history uses the deployed message endpoint where an ID is present. |
@@ -50,6 +50,8 @@ The production CORS configuration was not changed.
 - No real registration or login was attempted because no test accounts were provided.
 - `/requests/new` routes into the rider search flow. The result details screen can submit a real demand request; a real account is required to verify API permission and identity-verification gates.
 - Captain line create/edit and pause/resume controls now call the verified line mutation endpoints; test accounts with approved captain profiles are needed to confirm the positive write path.
+- Captain verification documents use multipart upload with the authenticated custom bearer session. Client-side file checks match the deployed contract (JPEG, PNG, WebP, PDF; max 8 MB). The positive-path upload was not executed because no designated test captain account or test documents were provided.
+- Cloudflare Preview for the captain document upload commit completed successfully: deployment `cea73b4c-e465-4f05-9cfd-03b8e5ccd848`; `/` and `/captain/journey/documents` returned HTTP 200, `/__sekka-api/health` returned HTTP 200, and unauthenticated `/__sekka-api/auth/me` returned the expected HTTP 401.
 - No Supabase product-table reads remain in `RiderHomeScreen`, `RiderTripsScreen`, `RiderJourneyScreen`, or `CaptainJourneyScreen`.
 - There is no test script in `web/package.json`.
 
@@ -60,8 +62,8 @@ The production CORS configuration was not changed.
 3. Continue screen-by-screen review of the remaining 78-screen map. A discovered endpoint alone does not mean a screen is integrated; validate its payload, authorization, and business rules first.
 4. Review whether the current UI passenger-count selector accurately reflects the API's `seats_available` field for every result type.
 
-## Delivery
+## Delivery — current functional batch
 
-- Commit: `ad52cd9` — `Connect rider search to real demand requests`
-- Preview: https://0d22a0be.sekka-go.pages.dev
-- Cloudflare deployment ID: `0d22a0be-deb7-45c5-a9c6-5daa394bec26` (build and deploy succeeded).
+- Commit: [`4ee2063`](https://github.com/sekka-go/SeKKa/commit/4ee2063914881f90c3cf693eba03fac2b405c8d2) — `Connect captain verification document uploads`
+- Preview: [https://cea73b4c.sekka-go.pages.dev](https://cea73b4c.sekka-go.pages.dev)
+- Cloudflare deployment ID: `cea73b4c-e465-4f05-9cfd-03b8e5ccd848` (build and deploy succeeded).
