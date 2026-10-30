@@ -22,7 +22,7 @@ type Props = { supabase: SupabaseClient | null; mode: "available" | "mine"; onHo
 type Order = "recent" | "price";
 const days = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
 
-function Icon({ name }: { name: "back" | "pin" | "calendar" | "clock" | "people" | "car" | "search" | "home" | "bag" }) {
+function Icon({ name }: { name: "back" | "pin" | "calendar" | "clock" | "people" | "car" | "search" | "home" | "bag" | "chat" | "user" }) {
   const common = { fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
   const paths = {
     back: <path d="m15 18-6-6 6-6" />,
@@ -34,6 +34,8 @@ function Icon({ name }: { name: "back" | "pin" | "calendar" | "clock" | "people"
     search: <><circle cx="10.8" cy="10.8" r="7.2"/><path d="m16 16 5 5"/></>,
     home: <><path d="m3 11 9-8 9 8M5 10v11h14V10M9 21v-7h6v7"/></>,
     bag: <><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a4 4 0 0 1 8 0v2"/></>,
+    chat: <><path d="M4 5h16v12H9l-5 4V5Z"/><path d="M8 11h.1M12 11h.1M16 11h.1"/></>,
+    user: <><circle cx="12" cy="7" r="4"/><path d="M4 21c0-5 3-8 8-8s8 3 8 8"/></>,
   };
   return <svg viewBox="0 0 24 24" aria-hidden="true" {...common}>{paths[name]}</svg>;
 }
@@ -139,7 +141,7 @@ export default function RiderTripsScreen({ supabase, mode, onHome }: Props) {
       {!mine && <p className="rider-search-limit-note">تعرض النتائج الخطوط المنشورة المطابقة. حالة المقاعد الفعلية وتقييمات الكباتن غير متاحة للقراءة العامة حاليًا.</p>}
       {loading ? <div className="rider-trips-state" role="status"><strong>جارٍ تحميل الرحلات</strong><p>نحمّل البيانات من حسابك.</p></div> : error ? <div className="rider-trips-state rider-trips-error" role="alert"><strong>تعذر تحميل الرحلات</strong><p>{error}</p><button onClick={retry}>إعادة المحاولة</button></div> : mine ? myRides.length ? <div className="rider-trips-results">{myRides.map((item) => <div key={item.id}>{card(item.group!.line!, item.id)}<p className="rider-member-status">حالة الارتباط: {item.status === "active" ? "نشطة" : item.status === "pending" ? "قيد الانتظار" : item.status}</p></div>)}</div> : <div className="rider-trips-state"><strong>لا توجد رحلات مرتبطة بحسابك بعد</strong><p>بعد قبول طلب انضمامك ستظهر رحلتك هنا.</p><button onClick={() => { window.location.assign("/trips"); }}>استكشف الرحلات</button></div> : results.length ? <div className="rider-trips-results">{results.map((line) => card(line, line.id))}</div> : <div className="rider-trips-state"><strong>{searched ? "لم نعثر على خطوط تطابق بحثك" : "لا توجد خطوط منشورة للعرض حاليًا"}</strong><p>{searched ? "جرّب تعديل نقطة الانطلاق أو الوصول أو التاريخ وعدد الركاب." : "ستظهر هنا الخطوط التي نشرها الكباتن عند توفرها."}</p></div>}
     </section>
-    <nav className="rider-trips-bottom-nav" aria-label="التنقل الرئيسي"><a href="/home"><Icon name="home"/><span>الرئيسية</span></a><a className={!mine ? "active" : ""} href="/trips"><Icon name="search"/><span>استكشاف</span></a><a className={mine ? "active" : ""} href="/my-trips"><Icon name="bag"/><span>رحلاتي</span></a></nav>
+    <nav className="rider-trips-bottom-nav" aria-label="التنقل الرئيسي"><a href="/home"><Icon name="home"/><span>الرئيسية</span></a><a className={!mine ? "active" : ""} aria-current={!mine ? "page" : undefined} href="/trips"><Icon name="search"/><span>البحث</span></a><a className={mine ? "active" : ""} aria-current={mine ? "page" : undefined} href="/my-trips"><Icon name="bag"/><span>طلباتي</span></a><a href="/journey/conversations"><Icon name="chat"/><span>المحادثات</span></a><a href="/journey/profile"><Icon name="user"/><span>المزيد</span></a></nav>
     {selected && <div className="rider-trip-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelected(null); }}><section className="rider-trip-modal" role="dialog" aria-modal="true" aria-labelledby="trip-detail-title"><button className="rider-trip-modal-close" onClick={() => setSelected(null)} aria-label="إغلاق">×</button><span className="rider-trip-published">خط منشور</span><h2 id="trip-detail-title">{selected.origin_name} ← {selected.destination_name}</h2><p><Icon name="calendar"/> أيام التشغيل: {selected.operating_days.map((day) => days[day]).filter(Boolean).join("، ") || "غير محددة"}</p><p><Icon name="clock"/> موعد الانطلاق: {selected.departure_time.slice(0, 5)}{selected.return_time ? ` · العودة ${selected.return_time.slice(0, 5)}` : ""}</p><p><Icon name="car"/> المركبة: {selected.vehicle?.name_ar ?? "غير محددة"}</p><p><Icon name="people"/> السعة الإجمالية المعلنة: {selected.seat_count ?? selected.vehicle?.capacity_max ?? "غير محددة"}</p><p>السعر: {formatPrice(selected.monthly_price, selected.currency)}{selected.monthly_price !== null ? " لكل راكب شهريًا" : ""}</p><p className="rider-trip-modal-note">تفاصيل المقاعد المتبقية وبيانات الكابتن غير معروضة لأن صلاحيات القراءة العامة الحالية لا توفرها. تقديم طلب الانضمام غير متاح بعد من الواجهة.</p></section></div>}
   </main>;
 }

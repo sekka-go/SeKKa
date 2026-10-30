@@ -5,6 +5,7 @@ import "./rider-home-screen.css";
 export type HomeAction =
   | "explore"
   | "myTrips"
+  | "conversations"
   | "mySubscriptions"
   | "myRequests"
   | "newTrip"
@@ -263,38 +264,10 @@ export default function RiderHomeScreen({ supabase, onAction }: Props) {
 
       {/* QUICK ACTIONS */}
 
-      <nav className="quick-actions">
-
-        <button onClick={() => go("explore")}>
-          <Icon name="pin" />
-          <span>استكشاف</span>
-        </button>
-
-        <button onClick={() => go("myTrips")}>
-          <Icon name="users" />
-          <span>رحلاتي</span>
-        </button>
-
-        <button onClick={() => go("mySubscriptions")}>
-          <Icon name="list" />
-          <span>اشتراكاتي</span>
-        </button>
-
-        <button onClick={() => go("myRequests")}>
-          <Icon name="list" />
-          <span>طلباتي</span>
-        </button>
-
-        <button onClick={() => go("newTrip")}>
-          <Icon name="route" />
-          <span>رحلة جديدة</span>
-        </button>
-
-        <button onClick={() => go("support")}>
-          <Icon name="headset" />
-          <span>الدعم</span>
-        </button>
-
+      <nav className="quick-actions" aria-label="اختصارات سريعة">
+        <button onClick={() => go("myRequests")}><Icon name="list" /><span>طلباتي</span></button>
+        <button onClick={() => go("mySubscriptions")}><Icon name="bag" /><span>اشتراكاتي</span></button>
+        <button onClick={() => go("support")}><Icon name="headset" /><span>الدعم</span></button>
       </nav>
 
       {/* FEATURED */}
@@ -415,36 +388,12 @@ export default function RiderHomeScreen({ supabase, onAction }: Props) {
 
       {/* BOTTOM NAVIGATION */}
 
-      <nav className="bottom-nav">
-
-        <button onClick={() => go("profile")}>
-          <Icon name="user" />
-          <span>حسابي</span>
-        </button>
-
-        <button onClick={() => go("support")}>
-          <Icon name="chat" />
-          <span>الدعم</span>
-        </button>
-
-        <button
-          className="selected"
-          onClick={() => go("explore")}
-        >
-          <Icon name="pin" />
-          <span>استكشاف</span>
-        </button>
-
-        <button onClick={() => go("myRequests")}>
-          <Icon name="bag" />
-          <span>طلباتي</span>
-        </button>
-
-        <button onClick={() => go("home")}>
-          <Icon name="home" />
-          <span>الرئيسية</span>
-        </button>
-
+      <nav className="bottom-nav" aria-label="التنقل الرئيسي">
+        <button className="selected" aria-current="page" onClick={() => go("home")}><Icon name="home" /><span>الرئيسية</span></button>
+        <button onClick={() => go("explore")}><Icon name="search" /><span>البحث</span></button>
+        <button onClick={() => go("myRequests")}><Icon name="bag" /><span>طلباتي</span></button>
+        <button onClick={() => go("conversations")}><Icon name="chat" /><span>المحادثات</span></button>
+        <button onClick={() => go("profile")}><Icon name="user" /><span>المزيد</span></button>
       </nav>
 
     </main>

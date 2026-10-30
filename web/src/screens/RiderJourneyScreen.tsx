@@ -103,7 +103,7 @@ export default function RiderJourneyScreen({ supabase, screen, onNavigate }: Pro
   const unavailableWrite = "هذه الخطوة تحتاج إلى تفعيل إجراء آمن على الخادم؛ لم يتم إرسال أو تسجيل أي طلب.";
 
   return <main className="rider-journey" dir="rtl" lang="ar">
-    <header className="journey-topbar"><button className="journey-back" onClick={() => onNavigate("/home")} aria-label="العودة للرئيسية">‹</button><a href="/home" className="journey-brand"><img src="/brand/sekka-mark.png" alt="سِكّة" /></a><button className="journey-avatar" onClick={() => onNavigate("/journey/profile")} aria-label="الملف الشخصي">{profile?.full_name?.slice(0, 1) ?? "س"}</button></header>
+    <header className="journey-topbar"><button className="journey-back" onClick={() => { if (document.referrer.startsWith(window.location.origin)) window.history.back(); else onNavigate("/home"); }} aria-label="رجوع">‹</button><a href="/home" className="journey-brand"><img src="/brand/sekka-mark.png" alt="سِكّة" /></a><button className="journey-avatar" onClick={() => onNavigate("/journey/profile")} aria-label="الملف الشخصي">{profile?.full_name?.slice(0, 1) ?? "س"}</button></header>
     <section className="journey-hero"><span className="journey-eyebrow">{meta.eyebrow}</span><h1>{meta.title}</h1><p>{meta.intro}</p><div className="journey-hero-icon" aria-hidden="true">{meta.icon}</div></section>
     <nav className="journey-shortcuts" aria-label="شاشات الراكب">{entries.map(([key, label]) => <a key={key} className={key === screen ? "active" : ""} href={`/journey/${key}`}>{label}</a>)}</nav>
     <section className="journey-content">
@@ -135,7 +135,7 @@ export default function RiderJourneyScreen({ supabase, screen, onNavigate }: Pro
         {screen === "profile" && <div className="journey-data-card profile-card"><span className="profile-initial">{profile?.full_name?.slice(0,1) ?? "س"}</span><h2>{profile?.full_name ?? "مستخدم سِكّة"}</h2><p>{profile?.phone ?? "رقم الهاتف غير متاح للعرض"}</p><div className="journey-info-grid"><Info label="نوع الحساب" value={profile?.role === "rider" ? "راكب" : profile?.role === "captain" ? "كابتن" : profile?.role === "admin" ? "إدارة" : "—"}/><Info label="اللغة" value={profile?.locale === "en" ? "English" : "العربية"}/></div><button className="journey-secondary" onClick={signOut}>تسجيل الخروج</button><div className="profile-links"><a href="/privacy">سياسة الخصوصية</a><a href="/terms">الشروط والأحكام</a><a href="/journey/notifications">إعدادات الإشعارات</a></div></div>}
       </>}
     </section>
-    <nav className="journey-bottom-nav"><a href="/home">⌂<span>الرئيسية</span></a><a href="/trips">⌕<span>استكشاف</span></a><a href="/my-trips">▤<span>رحلاتي</span></a><a href="/journey/notifications">♧<span>الإشعارات</span></a><a href="/journey/profile">◉<span>حسابي</span></a></nav>
+    <nav className="journey-bottom-nav" aria-label="التنقل الرئيسي"><a href="/home">⌂<span>الرئيسية</span></a><a href="/trips">⌕<span>البحث</span></a><a href="/my-trips">▤<span>طلباتي</span></a><a className={screen === "conversations" || screen === "conversation" ? "active" : ""} aria-current={screen === "conversations" || screen === "conversation" ? "page" : undefined} href="/journey/conversations">☏<span>المحادثات</span></a><a className={screen !== "conversations" && screen !== "conversation" ? "active" : ""} aria-current={screen !== "conversations" && screen !== "conversation" ? "page" : undefined} href="/journey/profile">⋯<span>المزيد</span></a></nav>
   </main>;
 }
 

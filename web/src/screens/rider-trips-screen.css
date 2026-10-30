@@ -77,7 +77,7 @@ html:has(.rider-trips-screen),body:has(.rider-trips-screen),#root:has(.rider-tri
 .rider-trip-modal p{display:flex;align-items:center;gap:8px;margin:12px 0;color:var(--sekka-text-secondary);font-size:14px;line-height:1.7}
 .rider-trip-modal p svg{width:18px;height:18px;flex:0 0 auto}
 .rider-trip-modal .rider-trip-modal-note{padding:10px 12px;border-radius:12px;background:var(--sekka-warning-bg);color:var(--sekka-primary-dark);font-size:12px}
-.rider-trips-bottom-nav{position:fixed;z-index:10;inset-inline:0;bottom:0;display:grid;grid-template-columns:repeat(3,1fr);width:min(100%,1080px);min-height:82px;margin:auto;padding:9px 12px max(9px,env(safe-area-inset-bottom));border-radius:28px 28px 0 0;background:var(--sekka-nav-bg);box-shadow:var(--sekka-shadow-card)}
+.rider-trips-bottom-nav{position:fixed;z-index:10;inset-inline:0;bottom:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));width:min(100%,1080px);min-height:82px;margin:auto;padding:9px 8px max(9px,env(safe-area-inset-bottom));border-radius:28px 28px 0 0;background:var(--sekka-nav-bg);box-shadow:var(--sekka-shadow-card)}
 .rider-trips-bottom-nav a{display:grid;justify-items:center;align-content:center;gap:3px;color:var(--sekka-nav-inactive);text-decoration:none;font-size:11px}
 .rider-trips-bottom-nav svg{width:23px;height:23px}
 .rider-trips-bottom-nav a.active{color:var(--sekka-primary);font-weight:850}
