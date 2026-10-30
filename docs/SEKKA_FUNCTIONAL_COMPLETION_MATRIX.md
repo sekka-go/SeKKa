@@ -126,3 +126,4 @@ No valid test accounts or isolated staging backend credentials were supplied. Th
 - `npm test`: **unavailable**; `web/package.json` has no test script. No test runner or isolated frontend test suite is configured.
 - Production data/schema: no changes made in this batch.
 - Deployment target: Cloudflare Preview only; production deployment is out of scope without explicit approval.
+- Commit `496b017` is pushed and Cloudflare Preview deployment `46f4f929` is online. UI route checks returned HTTP 200; API health returned 200 and unauthenticated `/auth/me` returned 401 as expected. The newly added report/contact API routes returned 404 because the deployed Supabase Edge Function remains version 61. The new migrations were not applied; these rows remain `IN PROGRESS`, not `E2E VERIFIED`.
