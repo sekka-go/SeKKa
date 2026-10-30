@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { sekkaApi, logoutSekkaSession } from "../lib/sekka-api";
 import "./rider-journey-screen.css";
 
 export type RiderJourneyKey = "group" | "subscriptions" | "subscription" | "receipt" | "payment-method" | "proof" | "captain-confirmation" | "payment-code" | "payment-result" | "renewal" | "replacement-captain" | "conversations" | "conversation" | "notifications" | "ratings" | "complaint" | "complaint-status" | "profile";
@@ -28,9 +29,8 @@ const screens: Record<RiderJourneyKey, ScreenMeta> = {
 const entries: Array<[RiderJourneyKey, string]> = [["group", "تفاصيل المجموعة"],["subscriptions", "اشتراكاتي"],["subscription", "تفاصيل الاشتراك"],["receipt", "إيصال سِكّة"],["payment-method", "وسيلة الدفع"],["proof", "إثبات التحويل"],["captain-confirmation", "تأكيد الكابتن"],["payment-code", "كود الدفع"],["payment-result", "نتيجة الدفع"],["renewal", "التجديد الشهري"],["replacement-captain", "كابتن بديل"],["conversations", "المحادثات"],["conversation", "تفاصيل المحادثة"],["notifications", "الإشعارات"],["ratings", "التقييمات"],["complaint", "تقديم شكوى"],["complaint-status", "متابعة الشكوى"],["profile", "الملف الشخصي"]];
 const entryGroups: Array<[string, RiderJourneyKey[]]> = [["الرحلة والاشتراك", ["group", "subscriptions", "subscription", "renewal", "replacement-captain"]], ["الدفع", ["receipt", "payment-method", "proof", "captain-confirmation", "payment-code", "payment-result"]], ["التواصل والمساندة", ["conversations", "conversation", "notifications", "ratings", "complaint", "complaint-status"]], ["الحساب", ["profile"]]];
 
-export default function RiderJourneyScreen({ supabase, screen, onNavigate }: Props) {
+export default function RiderJourneyScreen({ screen, onNavigate }: Props) {
   const meta = screens[screen];
-  const [userId, setUserId] = useState("");
   const [records, setRecords] = useState<Record<string, any>[]>([]);
   const [profile, setProfile] = useState<Record<string, any> | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,59 +43,40 @@ export default function RiderJourneyScreen({ supabase, screen, onNavigate }: Pro
     async function load() {
       setLoading(true); setError(""); setNotice("");
       try {
-        if (!supabase) throw new Error("إعدادات الاتصال بالخدمة غير مكتملة.");
-        const { data: auth, error: authError } = await supabase.auth.getUser();
-        if (authError) throw authError;
-        if (!auth.user) { onNavigate("/login"); return; }
-        if (!active) return;
-        setUserId(auth.user.id);
-        if (screen === "notifications") {
-          const { data, error: queryError } = await supabase.from("notifications").select("id,type,payload,read_at,created_at").eq("user_id", auth.user.id).order("created_at", { ascending: false }).limit(50);
-          if (queryError) throw queryError; if (active) setRecords(data ?? []);
-        } else if (screen === "conversations" || screen === "conversation") {
-          const { data, error: queryError } = await supabase.from("conversations").select("id,group_id,created_at,rider_id,captain_id").eq("rider_id", auth.user.id).order("created_at", { ascending: false });
-          if (queryError) throw queryError;
-          const wantedConversation = new URLSearchParams(window.location.search).get("id");
-          const convos = (data ?? []).filter((item: any) => screen !== "conversation" || !wantedConversation || item.id === wantedConversation);
-          if (convos.length) {
-            const ids = convos.map((item: any) => item.id);
-            const { data: messages, error: messageError } = await supabase.from("messages").select("id,conversation_id,sender_id,body,created_at,read_at").in("conversation_id", ids).order("created_at", { ascending: false }).limit(100);
-            if (messageError) throw messageError;
-            setRecords(convos.map((conversation: any) => ({ ...conversation, latest: messages?.find((m: any) => m.conversation_id === conversation.id) })));
-          } else setRecords([]);
+        const { user } = await sekkaApi<{ user: any }>("/auth/me");
+        if (user?.role !== "rider") { onNavigate(user?.role === "captain" ? "/captain/home" : "/login"); return; }
+        if (active) setProfile({ ...user, phone: user.phone_number });
+        let result: Record<string, any>[] = [];
+        if (screen === "profile") {
+          result = [];
+        } else if (screen === "notifications") {
+          const { notifications } = await sekkaApi<{ notifications: any[] }>("/pool/notifications");
+          result = (notifications ?? []).map((item) => ({ ...item, type: item.kind ?? "إشعار", payload: { message: item.body ?? item.title } }));
+        } else if (screen === "conversations") {
+          const { conversations } = await sekkaApi<{ conversations: any[] }>("/messages/conversations"); result = conversations ?? [];
+        } else if (screen === "conversation") {
+          const id = new URLSearchParams(window.location.search).get("id");
+          if (!id || !/^\d+$/.test(id)) { setNotice("اختر محادثة من قائمة المحادثات أولًا."); }
+          else { const { messages } = await sekkaApi<{ messages: any[] }>(`/messages/conversations/${id}/messages`); result = messages ?? []; }
         } else if (["subscriptions", "subscription", "receipt", "payment-method", "proof", "captain-confirmation", "payment-code", "payment-result", "renewal", "group", "replacement-captain"].includes(screen)) {
-          const { data, error: queryError } = await supabase.from("ride_group_members").select("id,status,joined_at,group:ride_groups(id,status,group_minimum,capacity_definition,starts_on,ends_on,line:captain_lines(id,captain_id,origin_name,destination_name,operating_days,departure_time,return_time,seat_count,monthly_price,currency,payment_methods,vehicle_details,vehicle:vehicle_types(name_ar,capacity_max)))").eq("rider_id", auth.user.id).order("joined_at", { ascending: false });
-          if (queryError) throw queryError;
-          let memberships = data ?? [];
-          const subIds = memberships.map((m: any) => m.id);
-          if (subIds.length) {
-            const { data: subs, error: subError } = await supabase.from("subscriptions").select("id,group_member_id,monthly_price,currency,starts_on,ends_on,status,created_at").in("group_member_id", subIds).order("created_at", { ascending: false });
-            if (subError) throw subError;
-            memberships = memberships.map((m: any) => ({ ...m, subscription: subs?.find((s: any) => s.group_member_id === m.id) }));
-          }
-          setRecords(memberships);
-        } else if (screen === "complaint-status") {
-          const { data, error: queryError } = await supabase.from("complaints").select("id,description,status,resolution_note,created_at,resolved_at").eq("reporter_id", auth.user.id).order("created_at", { ascending: false });
-          if (queryError) throw queryError; setRecords(data ?? []);
-        } else if (screen === "profile") {
-          const { data, error: queryError } = await supabase.from("profiles").select("id,full_name,role,phone,locale,avatar_url,created_at").eq("id", auth.user.id).maybeSingle();
-          if (queryError) throw queryError; setProfile(data);
-        } else if (screen === "ratings") {
-          const { data, error: queryError } = await supabase.from("ratings").select("id,group_id,score,comment,created_at").eq("reviewer_id", auth.user.id).order("created_at", { ascending: false });
-          if (queryError) throw queryError; setRecords(data ?? []);
-        } else setRecords([]);
-      } catch (cause) { if (active) setError(cause instanceof Error && cause.message.includes("إعدادات الاتصال") ? cause.message : "تعذر تحميل بيانات حسابك. تحقق من الاتصال أو سجّل الدخول مجددًا ثم حاول مرة أخرى."); }
+          const { requests } = await sekkaApi<{ requests: any[] }>("/rider/demand-requests");
+          result = (requests ?? []).map((item) => ({ ...item, id: String(item.id), joined_at: item.created_at, group: { status: item.demand_groups?.status ?? item.status, starts_on: item.trip_date, line: { origin_name: item.pickup_label, destination_name: item.dropoff_label, departure_time: item.arrival_time, return_time: item.return_arrival_time, monthly_price: item.line?.price_per_seat ?? null, currency: "EGP", payment_methods: [], vehicle_details: null, vehicle: null } } }));
+          if (["subscriptions", "subscription", "receipt", "payment-method", "proof", "captain-confirmation", "payment-code", "payment-result", "renewal", "replacement-captain"].includes(screen)) setNotice("واجهة الطلبات تعرض طلبات المسار الفعلية. إدارة الاشتراك والدفع غير متاحة من API الحالي، ولم نعرضها كعمليات مكتملة.");
+        } else {
+          setNotice("لا توجد واجهة API مفعّلة لهذه الشاشة بعد. لم يتم إنشاء بيانات أو إرسال طلب غير مدعوم.");
+        }
+        if (active) setRecords(result);
+      } catch (cause) { if (active) setError(journeyApiError(cause)); }
       finally { if (active) setLoading(false); }
     }
     void load(); return () => { active = false; };
-  }, [supabase, screen]);
+  }, [screen]);
 
   async function markRead(id: string) {
-    if (!supabase) return;
-    const { error: updateError } = await supabase.from("notifications").update({ read_at: new Date().toISOString() }).eq("id", id).eq("user_id", userId);
-    if (updateError) setError("تعذر تحديث الإشعار. حاول مرة أخرى."); else setRecords((items) => items.map((item) => item.id === id ? { ...item, read_at: new Date().toISOString() } : item));
+    try { await sekkaApi(`/pool/notifications/${id}/read`, { method: "POST" }); setRecords((items) => items.map((item) => String(item.id) === id ? { ...item, read_at: new Date().toISOString() } : item)); }
+    catch { setError("تعذر تحديث الإشعار. حاول مرة أخرى."); }
   }
-  async function signOut() { if (!supabase) return; const { error: signOutError } = await supabase.auth.signOut(); if (!signOutError) onNavigate("/login"); }
+  async function signOut() { try { await logoutSekkaSession(); } finally { onNavigate("/login"); } }
 
   const membership = records[0];
   const subscription = records.find((item) => item.subscription)?.subscription;
@@ -140,6 +121,12 @@ export default function RiderJourneyScreen({ supabase, screen, onNavigate }: Pro
   </main>;
 }
 
+function journeyApiError(cause: unknown) {
+  if (cause && typeof cause === "object" && "status" in cause && (cause as any).status === 401) return "انتهت جلسة الدخول. سجّل الدخول مجددًا.";
+  const message = cause instanceof Error ? cause.message : "";
+  if (message.includes("تعذر الاتصال") || message.includes("الإنترنت")) return "تعذر الاتصال بخدمة سِكّة. تحقق من الإنترنت ثم حاول مجددًا.";
+  return message || "تعذر تحميل بيانات حسابك الآن. حاول مرة أخرى.";
+}
 function DataCard({ title, badge, children }: { title: string; badge?: string; children: React.ReactNode }) { return <article className="journey-data-card"><header className="journey-card-heading"><h2>{title}</h2>{badge && <span className="journey-badge">{badge}</span>}</header>{children}</article>; }
 function Info({ label, value }: { label: string; value: string }) { return <div className="journey-info"><span>{label}</span><strong>{value}</strong></div>; }
 function Empty({ icon, title, body, action, actionLabel, navigate }: { icon: string; title: string; body: string; action?: string; actionLabel?: string; navigate?: (path: string) => void }) { return <div className="journey-empty"><span>{icon}</span><h2>{title}</h2><p>{body}</p>{action && <button className="journey-primary" onClick={() => navigate?.(action)}>{actionLabel}</button>}</div>; }

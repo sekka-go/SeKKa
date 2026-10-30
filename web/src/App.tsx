@@ -5,25 +5,26 @@ import LoginScreen from "./screens/LoginScreen";
 import PublicHomeScreen from "./screens/PublicHomeScreen";
 import RiderHomeScreen, { type HomeAction } from "./screens/RiderHomeScreen";
 import RiderTripsScreen from "./screens/RiderTripsScreen";
-import ForgotPasswordScreen, { ResetPasswordScreen } from "./screens/legal/ForgotPasswordScreen";
+import ForgotPasswordScreen from "./screens/legal/ForgotPasswordScreen";
 import LegalDocumentScreen from "./screens/legal/LegalDocumentScreen";
 import RiderJourneyScreen, { type RiderJourneyKey } from "./screens/RiderJourneyScreen";
 import CaptainJourneyScreen, { type CaptainJourneyKey } from "./screens/CaptainJourneyScreen";
 import type { AdminLiveScreenKey as AdminScreenKey, SharedLiveScreenKey as SharedScreenKey } from "./screens/AdminConsoleLiveScreen";
 import { adminApi, clearAdminApiToken, setAdminApiToken, type AdminApiSession } from "./lib/admin-api";
+import { clearSekkaSession, getSekkaSession, saveSekkaSession, sekkaApi, SekkaApiError, type SekkaSession, type SekkaUser } from "./lib/sekka-api";
 
 const AdminConsoleScreen = lazy(() => import("./screens/AdminConsoleLiveScreen"));
 const adminScreenKeys: AdminScreenKey[] = ["dashboard", "users", "user", "captains", "documents", "vehicles", "offers", "rider-requests", "groups", "group", "subscriptions", "payments", "payment", "disputes", "complaints", "ratings", "notifications", "commission", "settings", "reports", "audit-log", "admin-permissions", "trip-operations", "pool-overview", "finance", "pricing", "campaigns", "otp-settings", "ledger"];
 const sharedScreenKeys: SharedScreenKey[] = ["notifications", "loading", "error", "empty", "offline", "confirm", "access-denied", "not-found"];
 
-type RegistrationState = "form" | "verify" | "complete";
+type RegistrationState = "form" | "complete";
 type PublicRouteState = "checking" | "guest" | "redirecting" | "error";
 let cachedSupabaseClient: SupabaseClient | null | undefined;
 
 function makeSupabaseClient(): SupabaseClient | null {
   if (cachedSupabaseClient !== undefined) return cachedSupabaseClient;
   const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-  const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
+  const key = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY) as string | undefined;
   if (!url || !key) { cachedSupabaseClient = null; return cachedSupabaseClient; }
   try {
     cachedSupabaseClient = createClient(url, key, { auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true } });
@@ -37,13 +38,12 @@ function makeSupabaseClient(): SupabaseClient | null {
 export default function App() {
   const supabase = makeSupabaseClient();
   const [state, setState] = useState<RegistrationState>("form");
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
+  const [authSession, setAuthSession] = useState<SekkaSession | null>(() => getSekkaSession());
+  const [sessionReady, setSessionReady] = useState(false);
+  const [sessionMessage, setSessionMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [loginSuccess, setLoginSuccess] = useState("");
-  const [resetSessionReady, setResetSessionReady] = useState(false);
-  const [checkingResetSession, setCheckingResetSession] = useState(false);
   const path = window.location.pathname.replace(/\/+$/, "") || "/";
   const isLoginPage = path === "/login";
   const isAdminLoginPage = path === "/admin/login";
@@ -66,48 +66,54 @@ export default function App() {
   const isResetPasswordPage = path === "/reset-password";
   const isTermsPage = path === "/terms";
   const isPrivacyPage = path === "/privacy";
-  const [publicRouteState, setPublicRouteState] = useState<PublicRouteState>(() => isPublicHome && supabase ? "checking" : "guest");
+  const [publicRouteState, setPublicRouteState] = useState<PublicRouteState>(() => isPublicHome ? "checking" : "guest");
 
   useEffect(() => {
-    if (!isResetPasswordPage || !supabase) { setCheckingResetSession(false); return; }
-    let active = true;
-    setCheckingResetSession(true);
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "PASSWORD_RECOVERY" && session && active) {
-        setResetSessionReady(true);
-        setCheckingResetSession(false);
-      }
-    });
-    void supabase.auth.getSession().then(({ data, error: sessionError }) => {
-      if (!active) return;
-      if (!sessionError && data.session) setResetSessionReady(true);
-      setCheckingResetSession(false);
-    }).catch(() => { if (active) setCheckingResetSession(false); });
-    return () => { active = false; authListener.subscription.unsubscribe(); };
-  }, [isResetPasswordPage, supabase]);
+    const onExpired = () => { setAuthSession(null); if (window.location.pathname !== "/login" && !window.location.pathname.startsWith("/admin")) window.location.replace("/login?expired=1"); };
+    window.addEventListener("sekka:session-expired", onExpired);
+    return () => window.removeEventListener("sekka:session-expired", onExpired);
+  }, []);
 
   useEffect(() => {
-    if (!isPublicHome || !supabase) { setPublicRouteState("guest"); return; }
     let active = true;
-    async function redirectAuthenticatedUser() {
+    async function restoreSession() {
+      const saved = getSekkaSession();
+      if (!saved) { if (active) { setAuthSession(null); setSessionReady(true); } return; }
       try {
-        const { data: sessionData, error: sessionError } = await supabase!.auth.getSession();
-        if (sessionError) throw sessionError;
-        if (!sessionData.session) { if (active) setPublicRouteState("guest"); return; }
-        const { data: profile, error: profileError } = await supabase!.from("profiles").select("role").eq("id", sessionData.session.user.id).maybeSingle();
-        if (profileError) throw profileError;
-        const destinations: Record<string, string> = { rider: "/home", captain: "/captain/home", admin: "/admin" };
-        const destination = profile?.role ? destinations[profile.role] : undefined;
-        if (!destination) throw new Error("missing-role");
-        if (active) setPublicRouteState("redirecting");
-        window.location.replace(destination);
-      } catch {
-        if (active) setPublicRouteState("error");
-      }
+        const response = await sekkaApi<{ user: SekkaUser }>("/auth/me", { token: saved.token });
+        if (active) setAuthSession({ ...saved, user: response.user });
+      } catch (cause) {
+        if (active) {
+          if ((cause as { status?: number }).status === 401) { clearSekkaSession(); setAuthSession(null); }
+          else setSessionMessage("تعذر التحقق من جلستك الآن. تحقق من اتصال الإنترنت ثم أعد المحاولة.");
+        }
+      } finally { if (active) setSessionReady(true); }
     }
-    void redirectAuthenticatedUser();
+    void restoreSession();
     return () => { active = false; };
-  }, [isPublicHome, supabase]);
+  }, []);
+
+  useEffect(() => {
+    if (!sessionReady) return;
+    const protectedRider = isRiderHome || isRiderTripsPage || Boolean(journeyKey);
+    const protectedCaptain = isCaptainHome || Boolean(captainJourneyKey);
+    if (!protectedRider && !protectedCaptain) return;
+    if (!authSession) { window.location.replace("/login"); return; }
+    const correctRole = protectedRider ? "rider" : "captain";
+    if (authSession.user.role !== correctRole) {
+      const destinations = { rider: "/home", captain: "/captain/home", admin: "/admin" };
+      window.location.replace(destinations[authSession.user.role]);
+    }
+  }, [sessionReady, authSession, isRiderHome, isRiderTripsPage, journeyKey, isCaptainHome, captainJourneyKey]);
+
+  useEffect(() => {
+    if (!isPublicHome) return;
+    if (!sessionReady) { setPublicRouteState("checking"); return; }
+    if (!authSession) { setPublicRouteState("guest"); return; }
+    const destinations = { rider: "/home", captain: "/captain/home", admin: "/admin" };
+    setPublicRouteState("redirecting");
+    window.location.replace(destinations[authSession.user.role]);
+  }, [isPublicHome, sessionReady, authSession]);
 
   useEffect(() => {
     const journeyTitle: Partial<Record<RiderJourneyKey, string>> = { group: "تفاصيل المجموعة", subscriptions: "اشتراكاتي", subscription: "تفاصيل الاشتراك", receipt: "إيصال سِكّة", "payment-method": "اختيار وسيلة الدفع", proof: "رفع إثبات التحويل", "captain-confirmation": "انتظار تأكيد الكابتن", "payment-code": "تأكيد كود الدفع", "payment-result": "نتيجة الدفع", renewal: "التجديد الشهري", "replacement-captain": "البحث عن كابتن بديل", conversations: "المحادثات", conversation: "تفاصيل المحادثة", notifications: "الإشعارات", ratings: "التقييمات", complaint: "تقديم شكوى", "complaint-status": "متابعة الشكوى", profile: "الملف الشخصي والإعدادات" };
@@ -118,36 +124,22 @@ export default function App() {
 
   async function register(payload: SignupPayload) {
     setError("");
-    if (!supabase) {
-      setError("التسجيل غير متاح حاليًا. إعدادات الاتصال بالخدمة غير مكتملة.");
-      return;
-    }
     setLoading(true);
     try {
-      const { data, error: signupError } = await supabase.auth.signUp({
-        phone: `+20${payload.phone.slice(1)}`,
-        password: payload.password,
-        options: { data: { full_name: payload.fullName, requested_role: payload.role } },
+      await sekkaApi<{ user: SekkaUser }>("/auth/register", {
+        method: "POST",
+        body: {
+          full_name: payload.fullName,
+          phone_number: toEgyptianPhone(payload.phone),
+          password: payload.password,
+          role: payload.role,
+          accepted_terms: true,
+          acknowledged_privacy: true,
+          terms_version: "2026-10-24",
+          privacy_version: "2026-10-24",
+          policy_locale: "ar",
+        },
       });
-      if (signupError) throw signupError;
-      setPhone(`+20${payload.phone.slice(1)}`);
-      if (data.session) setState("complete");
-      else setState("verify");
-    } catch (cause) {
-      setError(authErrorMessage(cause));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function verifyPhone(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!supabase || loading) return;
-    setLoading(true);
-    setError("");
-    try {
-      const { error: verifyError } = await supabase.auth.verifyOtp({ phone, token: otp.trim(), type: "sms" });
-      if (verifyError) throw verifyError;
       setState("complete");
     } catch (cause) {
       setError(authErrorMessage(cause));
@@ -159,10 +151,6 @@ export default function App() {
   async function login(phoneNumber: string, password: string) {
     setError("");
     setLoginSuccess("");
-    if (!supabase) {
-      setError("تسجيل الدخول غير متاح حاليًا. إعدادات الاتصال بالخدمة غير مكتملة.");
-      return;
-    }
     setLoading(true);
     try {
       if (isAdminLoginPage) {
@@ -181,20 +169,15 @@ export default function App() {
         window.location.replace("/admin");
         return;
       }
-      const { error: loginError } = await supabase.auth.signInWithPassword({
-        phone: `+20${phoneNumber.slice(1)}`,
-        password,
+      const session = await sekkaApi<{ token: string; user: SekkaUser }>("/auth/login", {
+        method: "POST",
+        body: { phone_number: toEgyptianPhone(phoneNumber), password },
       });
-      if (loginError) throw loginError;
-      const { data: authData, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
-      if (!authData.user) throw new Error("Authenticated user was not returned");
-      const { data: profile, error: profileError } = await supabase.from("profiles").select("role").eq("id", authData.user.id).maybeSingle();
-      if (profileError) throw profileError;
       const destinations: Record<string, string> = { rider: "/home", captain: "/captain/home", admin: "/admin" };
-      const destination = profile?.role ? destinations[profile.role] : undefined;
-      if (destination) window.location.replace(destination);
-      else setError("تم تسجيل الدخول، لكن نوع الحساب غير محدد. تواصل مع الدعم لاستكمال بيانات حسابك.");
+      if (!session.token || !session.user || !destinations[session.user.role]) throw new Error("تعذر تأكيد بيانات الحساب.");
+      const saved = saveSekkaSession(session);
+      setAuthSession(saved);
+      window.location.replace(destinations[session.user.role]);
     } catch (cause) {
       setError(authErrorMessage(cause));
     } finally {
@@ -202,57 +185,38 @@ export default function App() {
     }
   }
 
+  async function logout() {
+    const token = authSession?.token;
+    try { if (token) await sekkaApi<unknown>("/auth/logout", { method: "POST", token }); }
+    finally { clearSekkaSession(); setAuthSession(null); window.location.replace("/login"); }
+  }
+
   async function sendRecoveryPhoneCode(phoneNumber: string) {
-    if (!supabase) throw new Error("service unavailable");
-    const { error: otpError } = await supabase.auth.signInWithOtp({ phone: toEgyptianPhone(phoneNumber), options: { shouldCreateUser: false } });
-    if (otpError) throw otpError;
+    const response = await sekkaApi<{ reset_url: string }>("/auth/password-reset/telegram", { method: "POST", body: { phone_number: toEgyptianPhone(phoneNumber) } });
+    return response.reset_url;
   }
 
-  async function verifyRecoveryPhoneCode(phoneNumber: string, token: string) {
-    if (!supabase) throw new Error("service unavailable");
-    const { error: verifyError } = await supabase.auth.verifyOtp({ phone: toEgyptianPhone(phoneNumber), token, type: "sms" });
-    if (verifyError) throw verifyError;
+  async function completePhonePasswordReset(phoneNumber: string, code: string, password: string) {
+    await sekkaApi("/auth/password-reset/complete", { method: "POST", body: { phone_number: toEgyptianPhone(phoneNumber), code, new_password: password } });
   }
 
-  async function sendEmailPasswordReset(email: string) {
-    if (!supabase) throw new Error("service unavailable");
-    const { error: recoveryError } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` });
-    if (recoveryError) throw recoveryError;
-  }
+  const needsRiderSession = isRiderHome || isRiderTripsPage || Boolean(journeyKey);
+  const needsCaptainSession = isCaptainHome || Boolean(captainJourneyKey);
+  if ((needsRiderSession || needsCaptainSession) && !sessionReady) return <main className="sekka-public-route-state" dir="rtl" lang="ar"><img src="/brand/sekka-mark.png" alt="سِكّة"/><span>جارٍ استعادة جلسة حسابك…</span></main>;
+  if ((needsRiderSession || needsCaptainSession) && sessionMessage) return <main className="sekka-public-route-state" dir="rtl" lang="ar"><img src="/brand/sekka-mark.png" alt="سِكّة"/><h1>تعذر الاتصال بحسابك</h1><p>{sessionMessage}</p><button onClick={() => window.location.reload()}>إعادة المحاولة</button></main>;
+  if ((needsRiderSession || needsCaptainSession) && !authSession) return <main className="sekka-public-route-state" dir="rtl" lang="ar"><img src="/brand/sekka-mark.png" alt="سِكّة"/><span>جارٍ فتح تسجيل الدخول…</span></main>;
+  if (needsRiderSession && authSession?.user.role !== "rider") return <main className="sekka-public-route-state" dir="rtl" lang="ar"><span>جارٍ فتح الصفحة المناسبة لحسابك…</span></main>;
+  if (needsCaptainSession && authSession?.user.role !== "captain") return <main className="sekka-public-route-state" dir="rtl" lang="ar"><span>جارٍ فتح الصفحة المناسبة لحسابك…</span></main>;
 
-  async function updateRecoveredPassword(password: string) {
-    if (!supabase) throw new Error("service unavailable");
-    const { error: updateError } = await supabase.auth.updateUser({ password });
-    if (updateError) throw updateError;
-    await supabase.auth.signOut();
-  }
-
-  if (state === "verify" || state === "complete") {
+  if (state === "complete") {
     return (
       <main className="sekka-register-screen" dir="rtl" lang="ar">
         <section className="sekka-register-card sekka-register-result" aria-live="polite">
           <a className="sekka-register-brand" href="/" aria-label="سِكّة"><img src="/brand/sekka-mark.png" alt="شعار سِكّة" /></a>
-          {state === "verify" ? (
-            <>
-              <p className="sekka-register-eyebrow">خطوة أخيرة</p>
-              <h1>تحقق من رقم هاتفك</h1>
-              <p className="sekka-register-result-copy">أرسلنا رمز التحقق إلى <bdi dir="ltr">{phone}</bdi></p>
-              <form className="sekka-register-form" onSubmit={verifyPhone}>
-                <label className="sekka-register-field"><span>رمز التحقق</span><input value={otp} onChange={(event) => setOtp(event.target.value)} inputMode="numeric" autoComplete="one-time-code" maxLength={8} required /></label>
-                {error && <p className="sekka-register-error" role="alert">{error}</p>}
-                <button className="sekka-register-submit" type="submit" disabled={loading}>{loading ? "جارٍ التحقق…" : "تأكيد رقم الهاتف"}</button>
-              </form>
-              <button className="sekka-register-back" type="button" onClick={() => { setError(""); setState("form"); }}>العودة للتسجيل</button>
-            </>
-          ) : (
-            <>
-              <div className="sekka-register-success-mark" aria-hidden="true">✓</div>
-              <h1>تم إنشاء حسابك</h1>
-              <p className="sekka-register-result-copy">تم التحقق من رقم هاتفك بنجاح. يمكنك الآن تسجيل الدخول.</p>
-              <a className="sekka-register-submit sekka-register-link-button" href="/login">الانتقال لتسجيل الدخول <span aria-hidden="true">←</span></a>
-              <p className="sekka-register-role-note">سيتم تفعيل صلاحيات الحساب بعد ربط اختيار الدور بإعدادات الحساب المعتمدة.</p>
-            </>
-          )}
+          <div className="sekka-register-success-mark" aria-hidden="true">✓</div>
+          <h1>تم إنشاء حسابك</h1>
+          <p className="sekka-register-result-copy">أصبح حسابك جاهزًا. سجّل الدخول برقم الهاتف وكلمة المرور للمتابعة.</p>
+          <a className="sekka-register-submit sekka-register-link-button" href="/login">الانتقال لتسجيل الدخول <span aria-hidden="true">←</span></a>
         </section>
       </main>
     );
@@ -267,8 +231,8 @@ export default function App() {
     return <RegisterScreen initialRole={initialRole} onRegister={register} onLogin={() => { window.location.assign("/login"); }} onTerms={() => { window.location.assign("/terms"); }} onPrivacy={() => { window.location.assign("/privacy"); }} loading={loading} error={error} />;
   }
 
-  if (isForgotPasswordPage) return <ForgotPasswordScreen onBack={() => { window.location.assign("/login"); }} onSendPhoneCode={sendRecoveryPhoneCode} onVerifyPhoneCode={verifyRecoveryPhoneCode} onSendEmailReset={sendEmailPasswordReset} onUpdatePassword={updateRecoveredPassword} />;
-  if (isResetPasswordPage) return <ResetPasswordScreen sessionReady={resetSessionReady} checkingSession={checkingResetSession} onBack={() => { window.location.assign("/login"); }} onUpdatePassword={updateRecoveredPassword} />;
+  if (isForgotPasswordPage) return <ForgotPasswordScreen onBack={() => { window.location.assign("/login"); }} onSendPhoneCode={sendRecoveryPhoneCode} onCompletePhoneReset={completePhonePasswordReset} />;
+  if (isResetPasswordPage) { window.location.replace("/forgot-password"); return null; }
   if (isTermsPage || isPrivacyPage) return <LegalDocumentScreen kind={isTermsPage ? "terms" : "privacy"} onBack={() => { if (window.history.length > 1) window.history.back(); else window.location.assign("/register"); }} />;
 
   if (isRiderHome) {
@@ -287,7 +251,7 @@ export default function App() {
       featuredTrips: "/trips",
       recentTrip: "/my-trips",
     };
-    return <RiderHomeScreen supabase={supabase} onAction={(action) => window.location.assign(routes[action])} />;
+    return <RiderHomeScreen supabase={supabase} user={authSession?.user ?? null} onLogout={logout} onAction={(action) => window.location.assign(routes[action])} />;
   }
 
   if (isCaptainHome) return <CaptainJourneyScreen supabase={supabase} screen="home" onNavigate={(target) => window.location.assign(target)} />;
@@ -307,6 +271,7 @@ export default function App() {
 }
 
 function authErrorMessage(error: unknown): string {
+  if (error instanceof SekkaApiError) return error.message;
   const rawMessage = error instanceof Error ? error.message : "";
   if (rawMessage.includes("مخصص لحسابات الإدارة")) return rawMessage;
   if (rawMessage.includes("رقم الهاتف أو كلمة السر غلط")) return "رقم الهاتف أو كلمة المرور غير صحيحة.";

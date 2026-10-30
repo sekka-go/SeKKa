@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { sekkaApi, logoutSekkaSession } from "../lib/sekka-api";
 import "./rider-journey-screen.css";
 
 export type CaptainJourneyKey = "home" | "approval" | "documents" | "vehicle" | "offers" | "new-offer" | "edit-offer" | "rider-requests" | "rider-request" | "groups" | "group" | "riders" | "subscriptions" | "payments" | "payment" | "confirm-receipt" | "send-code" | "payment-status" | "renewal" | "replacement" | "conversations" | "notifications" | "ratings-reports" | "profile";
@@ -12,24 +13,72 @@ const links: Array<[CaptainJourneyKey,string]> = [["home","الرئيسية"],["
 const linkGroups: Array<[string,CaptainJourneyKey[]]> = [["الحساب والجاهزية",["approval","documents","vehicle","profile"]],["العروض",["offers","new-offer","edit-offer"]],["طلبات الركاب والمجموعات",["rider-requests","rider-request","groups","group","riders","subscriptions"]],["المدفوعات",["payments","payment","confirm-receipt","send-code","payment-status","renewal"]],["التواصل",["replacement","conversations","notifications","ratings-reports"]]];
 const writeNotice = "هذه العملية تحتاج إلى إجراء آمن على الخادم، ولم يتم حفظ أي تغيير.";
 
-export default function CaptainJourneyScreen({supabase,screen,onNavigate}:Props){
-  const [userId,setUserId]=useState("");const [profile,setProfile]=useState<any>(null);const [captain,setCaptain]=useState<any>(null);const [records,setRecords]=useState<any[]>([]);const [loading,setLoading]=useState(true);const [error,setError]=useState("");const [notice,setNotice]=useState("");const [file,setFile]=useState<File|null>(null);
-  useEffect(()=>{let active=true;async function load(){setLoading(true);setError("");setNotice("");try{if(!supabase)throw new Error("إعدادات الاتصال بالخدمة غير مكتملة.");const {data:auth,error:authError}=await supabase.auth.getUser();if(authError)throw authError;if(!auth.user){onNavigate("/login");return;}const id=auth.user.id;if(active)setUserId(id);const [{data:p,error:profileError},{data:cp,error:captainError}]=await Promise.all([supabase.from("profiles").select("id,full_name,phone,role,locale,avatar_url").eq("id",id).maybeSingle(),supabase.from("captain_profiles").select("user_id,verification_status,review_note,reviewed_at,created_at").eq("user_id",id).maybeSingle()]);if(profileError)throw profileError;if(captainError)throw captainError;if(p?.role!=="captain"){onNavigate(p?.role==="rider"?"/home":"/login");return;}if(active){setProfile(p);setCaptain(cp);}const {data:lines,error:lineError}=await supabase.from("captain_lines").select("id,captain_id,vehicle_type_id,vehicle_details,origin_name,destination_name,operating_days,departure_time,return_time,seat_count,monthly_price,currency,payment_methods,status,published_at,vehicle:vehicle_types(id,name_ar,name_en,capacity_max)").eq("captain_id",id).order("updated_at",{ascending:false});if(lineError)throw lineError;const lineData=lines??[];const lineIds=lineData.map((x:any)=>x.id);let result:any[]=[];
-      if(screen==="home"||screen==="offers"||screen==="new-offer"||screen==="edit-offer"||screen==="vehicle")result=lineData;
-      else if(screen==="approval"){result=cp?[cp]:[];const {data:d,error:e}=await supabase.from("captain_documents").select("id,document_type,storage_path,verification_status,uploaded_at,reviewed_at").eq("captain_id",id).order("uploaded_at",{ascending:false});if(e)throw e;result=result.map((x)=>({...x,documents:d??[]}));}
-      else if(screen==="documents"){const {data:d,error:e}=await supabase.from("captain_documents").select("id,document_type,storage_path,verification_status,uploaded_at,reviewed_at").eq("captain_id",id).order("uploaded_at",{ascending:false});if(e)throw e;result=d??[];}
-      else if(screen==="rider-requests"||screen==="rider-request"){if(lineIds.length){const {data:d,error:e}=await supabase.from("line_join_requests").select("id,line_id,rider_id,rider_request_id,status,passenger_note,captain_note,created_at,updated_at").in("line_id",lineIds).order("created_at",{ascending:false});if(e)throw e;result=d??[];}}
-      else if(["groups","group","riders","subscriptions","renewal","replacement"].includes(screen)){if(lineIds.length){const {data:g,error:e}=await supabase.from("ride_groups").select("id,captain_line_id,status,group_minimum,capacity_definition,starts_on,ends_on,created_at,line:captain_lines(origin_name,destination_name,operating_days,departure_time,seat_count,monthly_price,currency,vehicle:vehicle_types(name_ar,capacity_max))").in("captain_line_id",lineIds).order("created_at",{ascending:false});if(e)throw e;const groupData=g??[];const groupIds=groupData.map((x:any)=>x.id);if(groupIds.length){const {data:m,error:me}=await supabase.from("ride_group_members").select("id,group_id,rider_id,status,joined_at").in("group_id",groupIds).order("joined_at",{ascending:false});if(me)throw me;const members=m??[];const memberIds=members.map((x:any)=>x.id);let subs:any[]=[];if(memberIds.length){const {data:s,error:se}=await supabase.from("subscriptions").select("id,group_member_id,monthly_price,currency,starts_on,ends_on,status").in("group_member_id",memberIds);if(se)throw se;subs=s??[];}result=groupData.map((group:any)=>({...group,members:members.filter((x:any)=>x.group_id===group.id).map((m:any)=>({...m,subscription:subs.find((s:any)=>s.group_member_id===m.id)}))}));}}}
-      else if(["payments","payment","confirm-receipt","send-code","payment-status"].includes(screen)){const {data:d,error:e}=await supabase.from("payment_requests").select("id,subscription_id,rider_id,captain_id,amount,currency,payment_method,status,captain_received_at,created_at,updated_at").eq("captain_id",id).order("created_at",{ascending:false});if(e)throw e;const payments=d??[];if(payments.length){const {data:proofs,error:proofError}=await supabase.from("payment_evidence").select("id,payment_request_id,created_at").in("payment_request_id",payments.map((x:any)=>x.id));if(proofError)throw proofError;result=payments.map((p:any)=>({...p,hasEvidence:(proofs??[]).some((proof:any)=>proof.payment_request_id===p.id)}));}else result=[];}
-      else if(screen==="notifications"){const {data:d,error:e}=await supabase.from("notifications").select("id,type,payload,read_at,created_at").eq("user_id",id).order("created_at",{ascending:false}).limit(50);if(e)throw e;result=d??[];}
-      else if(screen==="conversations"){const {data:d,error:e}=await supabase.from("conversations").select("id,group_id,created_at").eq("captain_id",id).order("created_at",{ascending:false});if(e)throw e;result=d??[];}
-      else if(screen==="ratings-reports"){const [{data:r,error:re},{data:c,error:ce}]=await Promise.all([supabase.from("ratings").select("id,group_id,reviewer_id,score,comment,created_at").eq("subject_id",id).order("created_at",{ascending:false}),supabase.from("complaints").select("id,description,status,resolution_note,created_at").eq("subject_user_id",id).order("created_at",{ascending:false})]);if(re)throw re;if(ce)throw ce;result=[...(r??[]).map((x:any)=>({...x,recordType:"rating"})),...(c??[]).map((x:any)=>({...x,recordType:"complaint"}))];}
-      if(active)setRecords(result);
-    }catch(cause){if(active)setError(cause instanceof Error&&cause.message.includes("إعدادات الاتصال")?cause.message:"تعذر تحميل بيانات الكابتن. تحقق من الاتصال أو سجّل الدخول مجددًا ثم حاول مرة أخرى.");}finally{if(active)setLoading(false);}}void load();return()=>{active=false;}},[supabase,screen]);
-  async function signOut(){if(!supabase)return;const {error:e}=await supabase.auth.signOut();if(!e)onNavigate("/login");}
-  async function markRead(id:string){if(!supabase)return;const {error:e}=await supabase.from("notifications").update({read_at:new Date().toISOString()}).eq("id",id).eq("user_id",userId);if(e)setError("تعذر تحديث الإشعار.");else setRecords((xs)=>xs.map((x)=>x.id===id?{...x,read_at:new Date().toISOString()}:x));}
+export default function CaptainJourneyScreen({screen,onNavigate}:Props){
+  const [profile,setProfile]=useState<any>(null);const [captain,setCaptain]=useState<any>(null);const [records,setRecords]=useState<any[]>([]);const [loading,setLoading]=useState(true);const [error,setError]=useState("");const [notice,setNotice]=useState("");const [file,setFile]=useState<File|null>(null);
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      setLoading(true); setError(""); setNotice("");
+      try {
+        const [{ user }, verification] = await Promise.all([
+          sekkaApi<{ user: any }>("/auth/me"),
+          sekkaApi<any>("/verification"),
+        ]);
+        if (user?.role !== "captain") { onNavigate(user?.role === "rider" ? "/home" : "/login"); return; }
+        if (active) {
+          setProfile({ ...user, phone: user.phone_number });
+          setCaptain({ verification_status: verification.verification_status, status: verification.captain_status, reviewed_at: null, review_note: null });
+        }
+        let result: any[] = [];
+        if (["home", "offers", "new-offer", "edit-offer", "vehicle"].includes(screen)) {
+          const { lines } = await sekkaApi<{ lines: any[] }>("/captain/lines");
+          result = (lines ?? []).map((line) => ({ ...line, id: String(line.id), captain_id: String(line.captain_user_id), origin_name: line.origin_label, destination_name: line.destination_label, operating_days: line.service_days ?? [], departure_time: line.arrival_time, return_time: line.return_arrival_time, seat_count: line.seats, monthly_price: line.price_per_seat, currency: "EGP", vehicle_details: null, vehicle: null }));
+          if (screen === "home") {
+            const { groups } = await sekkaApi<{ groups: any[] }>("/captain/demand-groups");
+            result = [...result, ...((groups ?? []).map((group) => ({ ...group, id: String(group.id), captain_line_id: String(group.captain_line_id), members: group.requests ?? [] })))];
+          }
+        } else if (["approval", "documents"].includes(screen)) {
+          result = (verification.documents ?? []).map((document: any) => ({ ...document, verification_status: document.status }));
+          if (active) setCaptain((value: any) => ({ ...value, verification_status: verification.verification_status, status: verification.captain_status, phone_verified: verification.phone_verified }));
+          if (screen === "documents" && !verification.telegram_enabled) setNotice("رفع الوثائق عبر Telegram غير مهيأ حاليًا. لا يمكن إرسال ملف من هذه الشاشة الآن.");
+        } else if (["rider-requests", "rider-request", "groups", "group", "riders", "subscriptions", "renewal", "replacement"].includes(screen)) {
+          const [{ groups }, { lines }] = await Promise.all([sekkaApi<{ groups: any[] }>("/captain/demand-groups"), sekkaApi<{ lines: any[] }>("/captain/lines")]);
+          const lineById = new Map((lines ?? []).map((line) => [String(line.id), line]));
+          const normalized = (groups ?? []).map((group) => { const line = lineById.get(String(group.captain_line_id)); return { ...group, id: String(group.id), captain_line_id: String(group.captain_line_id), line: { origin_name: line?.origin_label ?? "", destination_name: line?.destination_label ?? "", departure_time: group.arrival_time }, members: group.requests ?? [] }; });
+          result = ["rider-requests", "rider-request"].includes(screen) ? normalized.flatMap((group) => group.members.map((request: any) => ({ ...request, id: String(request.id), line_id: String(group.captain_line_id), group }))) : normalized;
+        } else if (screen === "profile") {
+          try { const { profile: captainProfile } = await sekkaApi<{ profile: any }>("/captain/profile"); if (active) setCaptain((value: any) => ({ ...value, ...captainProfile })); }
+          catch (cause) { if ((cause as any)?.status !== 404) throw cause; }
+        } else if (screen === "conversations") {
+          const { conversations } = await sekkaApi<{ conversations: any[] }>("/messages/conversations"); result = conversations ?? [];
+        } else if (screen === "notifications") {
+          const { notifications } = await sekkaApi<{ notifications: any[] }>("/pool/notifications"); result = (notifications ?? []).map((item) => ({ ...item, type: item.kind ?? "إشعار", payload: { message: item.body ?? item.title }, read_at: item.read_at }));
+        } else if (screen === "payments") {
+          const { earnings } = await sekkaApi<{ earnings: any[] }>("/captain/earnings"); result = earnings ?? [];
+        } else {
+          setNotice("لا توجد واجهة API مفعّلة لهذه العملية حتى الآن. لم يُرسل أي طلب أو يُعرض نجاح غير مؤكد.");
+        }
+        if (active) setRecords(result);
+      } catch (cause) {
+        if (active) setError(apiError(cause));
+      } finally { if (active) setLoading(false); }
+    }
+    void load(); return () => { active = false; };
+  }, [screen]);
+  async function signOut() { try { await logoutSekkaSession(); } finally { onNavigate("/login"); } }
+  async function markRead(id: string) {
+    try { await sekkaApi(`/pool/notifications/${id}/read`, { method: "POST" }); setRecords((items) => items.map((item) => String(item.id) === id ? { ...item, read_at: new Date().toISOString() } : item)); }
+    catch { setError("تعذر تحديث الإشعار. حاول مرة أخرى."); }
+  }
   const title=meta[screen];const action=(text:string)=>setNotice(`${text}: ${writeNotice}`);
   return <main className="rider-journey" dir="rtl" lang="ar"><header className="journey-topbar"><button className="journey-back" onClick={()=>{if(document.referrer.startsWith(window.location.origin))window.history.back();else onNavigate("/captain/home");}} aria-label="رجوع">‹</button><a href="/captain/home" className="journey-brand"><img src="/brand/sekka-mark.png" alt="سِكّة"/></a><button className="journey-avatar" onClick={()=>onNavigate("/captain/journey/profile")} aria-label="الملف الشخصي">{profile?.full_name?.slice(0,1)??"ك"}</button></header><section className="journey-hero"><span className="journey-eyebrow">لوحة الكابتن</span><h1>{title.title}</h1><p>{title.subtitle}</p><div className="journey-hero-icon" aria-hidden="true">{title.icon}</div></section><details className="journey-directory"><summary>خدمات الكابتن <span>استعرض الأقسام</span></summary><nav className="journey-shortcuts" aria-label="أقسام الكابتن">{linkGroups.map(([group,keys])=><section className="journey-link-group" key={group}><h2>{group}</h2><div>{links.filter(([key])=>keys.includes(key)).map(([key,label])=><a key={key} href={key==="home"?"/captain/home":`/captain/journey/${key}`} className={key===screen?"active":""} aria-current={key===screen?"page":undefined}>{label}</a>)}</div></section>)}</nav></details><section className="journey-content">{loading&&<div className="journey-state"><span className="journey-spinner"/> جارٍ تحميل بياناتك…</div>}{error&&!loading&&<div className="journey-alert error" role="alert">{error}<button onClick={()=>window.location.reload()}>إعادة المحاولة</button></div>}{notice&&<div className="journey-alert">{notice}</div>}{!loading&&!error&&<CaptainBody screen={screen} records={records} profile={profile} captain={captain} onNavigate={onNavigate} onAction={action} onSignOut={signOut} onMarkRead={markRead} file={file} setFile={setFile}/>}</section><nav className="journey-bottom-nav" aria-label="تنقل الكابتن"><a className={screen==="home"?"active":""} aria-current={screen==="home"?"page":undefined} href="/captain/home">⌂<span>الرئيسية</span></a><a className={["offers","new-offer","edit-offer"].includes(screen)?"active":""} aria-current={["offers","new-offer","edit-offer"].includes(screen)?"page":undefined} href="/captain/journey/offers">⇄<span>العروض</span></a><a className={["groups","group","riders","subscriptions"].includes(screen)?"active":""} aria-current={["groups","group","riders","subscriptions"].includes(screen)?"page":undefined} href="/captain/journey/groups">⌘<span>المجموعات</span></a><a className={screen==="notifications"?"active":""} aria-current={screen==="notifications"?"page":undefined} href="/captain/journey/notifications">♧<span>الإشعارات</span></a><a className={!['home','offers','new-offer','edit-offer','groups','group','riders','subscriptions','notifications'].includes(screen)?"active":""} aria-current={!['home','offers','new-offer','edit-offer','groups','group','riders','subscriptions','notifications'].includes(screen)?"page":undefined} href="/captain/journey/profile">⋯<span>المزيد</span></a></nav></main>
+}
+
+function apiError(cause: unknown) {
+  if (cause && typeof cause === "object" && "status" in cause && (cause as any).status === 401) return "انتهت جلسة الدخول. سجّل الدخول مجددًا.";
+  const message = cause instanceof Error ? cause.message : "";
+  if (message.includes("الاتصال") || message.includes("الإنترنت")) return "تعذر الاتصال بخدمة سِكّة. تحقق من الإنترنت وحاول مجددًا.";
+  return message || "تعذر تحميل بيانات الكابتن الآن. حاول مرة أخرى.";
 }
 
 function CaptainBody({screen,records,profile,captain,onNavigate,onAction,onSignOut,onMarkRead,file,setFile}:{screen:CaptainJourneyKey;records:any[];profile:any;captain:any;onNavigate:(path:string)=>void;onAction:(text:string)=>void;onSignOut:()=>void;onMarkRead:(id:string)=>void;file:File|null;setFile:(file:File|null)=>void}){

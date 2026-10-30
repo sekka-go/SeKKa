@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { sekkaApi, type SekkaUser } from "../lib/sekka-api";
 import "./rider-home-screen.css";
 
 export type HomeAction =
@@ -19,6 +20,8 @@ export type HomeAction =
 
 type Props = {
   supabase: SupabaseClient | null;
+  user: SekkaUser | null;
+  onLogout: () => Promise<void>;
   onAction?: (action: HomeAction) => void;
 };
 
@@ -161,32 +164,22 @@ function Icon({ name }: { name: string }) {
   }
 }
 
-export default function RiderHomeScreen({ supabase, onAction }: Props) {
+export default function RiderHomeScreen({ user, onAction }: Props) {
   const [userName, setUserName] = useState("ضيف");
   const [recentRide, setRecentRide] = useState<RecentRide | null>(null);
-  const [loading, setLoading] = useState(Boolean(supabase));
+  const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     let active = true;
     async function loadHome() {
-      if (!supabase) {
-        setLoading(false);
-        return;
-      }
       try {
-        const { data: authData, error: authError } = await supabase.auth.getUser();
-        if (authError) throw authError;
-        if (!authData.user) return;
-        const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", authData.user.id).maybeSingle();
-        const { data, error } = await supabase.from("ride_group_members")
-          .select("id, joined_at, group:ride_groups(status, starts_on, line:captain_lines(origin_name, destination_name, departure_time, operating_days))")
-          .eq("rider_id", authData.user.id).order("joined_at", { ascending: false }).limit(1).maybeSingle();
-        if (error) throw error;
+        const { requests } = await sekkaApi<{ requests: Array<Record<string, any>> }>("/rider/demand-requests");
         if (!active) return;
-        setUserName(profile?.full_name || "ضيف");
-        setRecentRide(data as unknown as RecentRide | null);
+        setUserName(user?.full_name || "ضيف");
+        const latest = requests[0];
+        setRecentRide(latest ? { id: String(latest.id), joined_at: latest.created_at, group: { status: latest.demand_groups?.status ?? latest.status, starts_on: latest.trip_date, line: latest.line ? { origin_name: latest.line.origin_label, destination_name: latest.line.destination_label, departure_time: latest.line.arrival_time, operating_days: [] } : null } } : null);
       } catch {
         if (active) setLoadError(true);
       } finally {
@@ -195,7 +188,7 @@ export default function RiderHomeScreen({ supabase, onAction }: Props) {
     }
     void loadHome();
     return () => { active = false; };
-  }, [supabase, refreshKey]);
+  }, [user, refreshKey]);
 
   const retry = () => {
     setLoading(true);
