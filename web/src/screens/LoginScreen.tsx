@@ -9,9 +9,10 @@ type LoginScreenProps = {
   loading?: boolean;
   error?: string;
   success?: string;
+  adminMode?: boolean;
 };
 
-export default function LoginScreen({ onLogin, onCreateAccount, onForgotPassword, loading = false, error = "", success = "" }: LoginScreenProps) {
+export default function LoginScreen({ onLogin, onCreateAccount, onForgotPassword, loading = false, error = "", success = "", adminMode = false }: LoginScreenProps) {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [visible, setVisible] = useState(false);
@@ -44,9 +45,9 @@ export default function LoginScreen({ onLogin, onCreateAccount, onForgotPassword
           <img src="/brand/sekka-mark.png" alt="شعار سِكّة" />
         </a>
         <header className="sekka-register-intro">
-          <p className="sekka-register-eyebrow">مرحبًا بعودتك</p>
-          <h1 id="sekka-login-title">تسجيل الدخول</h1>
-          <p>سجّل دخولك وكمّل من حيث توقفت</p>
+          <p className="sekka-register-eyebrow">{adminMode ? "دخول محمي" : "مرحبًا بعودتك"}</p>
+          <h1 id="sekka-login-title">{adminMode ? "دخول الإدارة" : "تسجيل الدخول"}</h1>
+          <p>{adminMode ? "هذه الصفحة مخصصة لحسابات فريق الإدارة فقط." : "سجّل دخولك وكمّل من حيث توقفت"}</p>
         </header>
 
         <form className="sekka-register-form" onSubmit={submit} noValidate>
@@ -60,7 +61,7 @@ export default function LoginScreen({ onLogin, onCreateAccount, onForgotPassword
           <Button type="submit" loading={loading} loadingLabel="جارٍ تسجيل الدخول…">تسجيل الدخول <span aria-hidden="true">←</span></Button>
         </form>
 
-        <p className="sekka-register-login">ليس لديك حساب؟ <button type="button" onClick={onCreateAccount}>سجّل الآن</button></p>
+        {!adminMode && <p className="sekka-register-login">ليس لديك حساب؟ <button type="button" onClick={onCreateAccount}>سجّل الآن</button></p>}
       </section>
     </main>
   );

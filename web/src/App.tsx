@@ -9,6 +9,7 @@ import ForgotPasswordScreen, { ResetPasswordScreen } from "./screens/legal/Forgo
 import LegalDocumentScreen from "./screens/legal/LegalDocumentScreen";
 import RiderJourneyScreen, { type RiderJourneyKey } from "./screens/RiderJourneyScreen";
 import CaptainJourneyScreen, { type CaptainJourneyKey } from "./screens/CaptainJourneyScreen";
+import AdminConsoleScreen, { type AdminScreenKey, type SharedScreenKey } from "./screens/AdminConsoleScreen";
 
 type RegistrationState = "form" | "verify" | "complete";
 type PublicRouteState = "checking" | "guest" | "redirecting" | "error";
@@ -36,12 +37,17 @@ export default function App() {
   const [checkingResetSession, setCheckingResetSession] = useState(false);
   const path = window.location.pathname.replace(/\/+$/, "") || "/";
   const isLoginPage = path === "/login";
+  const isAdminLoginPage = path === "/admin/login";
   const isRegisterPage = path === "/register";
   const isPublicHome = path === "/";
   const isRiderHome = path === "/home";
   const isCaptainHome = path === "/captain/home";
   const captainJourneyMatch = path.match(/^\/captain\/journey\/([a-z-]+)$/);
   const captainJourneyKey = captainJourneyMatch?.[1] as CaptainJourneyKey | undefined;
+  const adminPathMatch = path.match(/^\/admin\/([a-z-]+)$/);
+  const adminScreenKey = (path === "/admin" ? "dashboard" : adminPathMatch?.[1]) as AdminScreenKey | undefined;
+  const sharedPathMatch = path.match(/^\/shared\/([a-z-]+)$/);
+  const sharedScreenKey = sharedPathMatch?.[1] as SharedScreenKey | undefined;
   const isTripsPage = path === "/trips";
   const isMyTripsPage = path === "/my-trips";
   const journeyMatch = path.match(/^\/journey\/([a-z-]+)$/);
@@ -96,8 +102,10 @@ export default function App() {
 
   useEffect(() => {
     const journeyTitle: Partial<Record<RiderJourneyKey, string>> = { group: "تفاصيل المجموعة", subscriptions: "اشتراكاتي", subscription: "تفاصيل الاشتراك", receipt: "إيصال سِكّة", "payment-method": "اختيار وسيلة الدفع", proof: "رفع إثبات التحويل", "captain-confirmation": "انتظار تأكيد الكابتن", "payment-code": "تأكيد كود الدفع", "payment-result": "نتيجة الدفع", renewal: "التجديد الشهري", "replacement-captain": "البحث عن كابتن بديل", conversations: "المحادثات", conversation: "تفاصيل المحادثة", notifications: "الإشعارات", ratings: "التقييمات", complaint: "تقديم شكوى", "complaint-status": "متابعة الشكوى", profile: "الملف الشخصي والإعدادات" };
-    document.title = isLoginPage ? "تسجيل الدخول | سِكّة" : isRegisterPage ? "إنشاء حساب جديد | سِكّة" : isForgotPasswordPage ? "استعادة الحساب | سِكّة" : isResetPasswordPage ? "تعيين كلمة مرور | سِكّة" : isTermsPage ? "الشروط والأحكام | سِكّة" : isPrivacyPage ? "سياسة الخصوصية | سِكّة" : isRiderHome ? "الرئيسية | سِكّة" : isCaptainHome || captainJourneyKey === "home" ? "الرئيسية للكابتن | سِكّة" : isTripsPage ? "الرحلات المتاحة | سِكّة" : isMyTripsPage ? "رحلاتي | سِكّة" : journeyKey ? `${journeyTitle[journeyKey] ?? "حسابي"} | سِكّة` : captainJourneyKey ? `الكابتن | ${captainJourneyKey} | سِكّة` : isPublicHome ? "سِكّة | تنقّل منتظم" : "الصفحة غير موجودة | سِكّة";
-  }, [isLoginPage, isRegisterPage, isForgotPasswordPage, isResetPasswordPage, isTermsPage, isPrivacyPage, isRiderHome, isCaptainHome, isTripsPage, isMyTripsPage, isPublicHome, journeyKey, captainJourneyKey]);
+    const adminTitles: Partial<Record<AdminScreenKey,string>> = { dashboard:"لوحة المؤشرات",users:"إدارة المستخدمين",user:"تفاصيل المستخدم",captains:"إدارة الكباتن",documents:"مراجعة الوثائق",vehicles:"إدارة المركبات",offers:"إدارة العروض","rider-requests":"طلبات الركاب",groups:"إدارة المجموعات",group:"تفاصيل المجموعة",subscriptions:"إدارة الاشتراكات",payments:"مراقبة عمليات الدفع",payment:"تفاصيل الدفع",disputes:"النزاعات المالية",complaints:"الشكاوى والبلاغات",ratings:"إدارة التقييمات",notifications:"إدارة الإشعارات",commission:"العمولة المستقبلية",settings:"إعدادات التشغيل",reports:"التقارير والتحليلات","audit-log":"سجل التدقيق","admin-permissions":"صلاحيات الإدارة" };
+    const sharedTitles: Partial<Record<SharedScreenKey,string>> = { notifications:"مركز الإشعارات",loading:"حالة التحميل",error:"حالة الخطأ",empty:"حالة عدم وجود بيانات",offline:"حالة عدم الاتصال",confirm:"تأكيد إجراء حساس","access-denied":"الوصول مرفوض","not-found":"الصفحة غير موجودة" };
+    document.title = isLoginPage || isAdminLoginPage ? `${isAdminLoginPage ? "دخول الإدارة" : "تسجيل الدخول"} | سِكّة` : isRegisterPage ? "إنشاء حساب جديد | سِكّة" : isForgotPasswordPage ? "استعادة الحساب | سِكّة" : isResetPasswordPage ? "تعيين كلمة مرور | سِكّة" : isTermsPage ? "الشروط والأحكام | سِكّة" : isPrivacyPage ? "سياسة الخصوصية | سِكّة" : isRiderHome ? "الرئيسية | سِكّة" : isCaptainHome || captainJourneyKey === "home" ? "الرئيسية للكابتن | سِكّة" : isTripsPage ? "الرحلات المتاحة | سِكّة" : isMyTripsPage ? "رحلاتي | سِكّة" : journeyKey ? `${journeyTitle[journeyKey] ?? "حسابي"} | سِكّة` : captainJourneyKey ? `الكابتن | ${captainJourneyKey} | سِكّة` : adminScreenKey ? `${adminTitles[adminScreenKey] ?? "الإدارة"} | سِكّة` : sharedScreenKey ? `${sharedTitles[sharedScreenKey] ?? "سِكّة"} | سِكّة` : isPublicHome ? "سِكّة | تنقّل منتظم" : "الصفحة غير موجودة | سِكّة";
+  }, [isLoginPage, isAdminLoginPage, isRegisterPage, isForgotPasswordPage, isResetPasswordPage, isTermsPage, isPrivacyPage, isRiderHome, isCaptainHome, isTripsPage, isMyTripsPage, isPublicHome, journeyKey, captainJourneyKey, adminScreenKey, sharedScreenKey]);
 
   async function register(payload: SignupPayload) {
     setError("");
@@ -160,7 +168,10 @@ export default function App() {
       if (profileError) throw profileError;
       const destinations: Record<string, string> = { rider: "/home", captain: "/captain/home", admin: "/admin" };
       const destination = profile?.role ? destinations[profile.role] : undefined;
-      if (destination) window.location.replace(destination);
+      if (destination && isAdminLoginPage && profile?.role !== "admin") {
+        await supabase.auth.signOut();
+        setError("هذا المسار مخصص لحسابات الإدارة فقط.");
+      } else if (destination) window.location.replace(destination);
       else setError("تم تسجيل الدخول، لكن نوع الحساب غير محدد. تواصل مع الدعم لاستكمال بيانات حسابك.");
     } catch (cause) {
       setError(authErrorMessage(cause));
@@ -225,8 +236,8 @@ export default function App() {
     );
   }
 
-  if (isLoginPage) {
-    return <LoginScreen onLogin={login} onCreateAccount={() => { window.location.assign("/register"); }} onForgotPassword={() => { window.location.assign("/forgot-password"); }} loading={loading} error={error} success={loginSuccess} />;
+  if (isLoginPage || isAdminLoginPage) {
+    return <LoginScreen adminMode={isAdminLoginPage} onLogin={login} onCreateAccount={() => { window.location.assign("/register"); }} onForgotPassword={() => { window.location.assign("/forgot-password"); }} loading={loading} error={error} success={loginSuccess} />;
   }
 
   if (isRegisterPage) {
@@ -258,6 +269,8 @@ export default function App() {
 
   if (isCaptainHome) return <CaptainJourneyScreen supabase={supabase} screen="home" onNavigate={(target) => window.location.assign(target)} />;
   if (captainJourneyKey) return <CaptainJourneyScreen supabase={supabase} screen={captainJourneyKey} onNavigate={(target) => window.location.assign(target)} />;
+  if (adminScreenKey) return <AdminConsoleScreen supabase={supabase} screen={adminScreenKey} onNavigate={(target) => window.location.assign(target)} />;
+  if (sharedScreenKey) return <AdminConsoleScreen supabase={supabase} screen={sharedScreenKey} shared onNavigate={(target) => window.location.assign(target)} />;
 
   if (isRiderTripsPage) return <RiderTripsScreen supabase={supabase} mode={isMyTripsPage ? "mine" : "available"} onHome={() => window.location.assign("/home")} />;
   if (journeyKey) return <RiderJourneyScreen supabase={supabase} screen={journeyKey} onNavigate={(target) => window.location.assign(target)} />;
@@ -267,16 +280,7 @@ export default function App() {
   if (isPublicHome && publicRouteState === "error") return <main className="sekka-public-route-state" dir="rtl" lang="ar"><img src="/brand/sekka-mark.png" alt="سِكّة"/><h1>تعذر فتح الصفحة الرئيسية لحسابك</h1><p>تعذر التحقق من جلسة الدخول أو أن دور الحساب غير محدد. سجّل الدخول مجددًا أو تواصل مع الدعم.</p><a href="/login">الانتقال لتسجيل الدخول</a></main>;
   if (isPublicHome) return <PublicHomeScreen />;
 
-  return (
-    <main className="sekka-register-screen" dir="rtl" lang="ar">
-      <section className="sekka-register-card sekka-register-result">
-        <a className="sekka-register-brand" href="/" aria-label="سِكّة - الصفحة الرئيسية"><img src="/brand/sekka-mark.png" alt="شعار سِكّة" /></a>
-        <h1>الصفحة غير موجودة</h1>
-        <p className="sekka-register-result-copy">الرابط الذي فتحته غير متاح.</p>
-        <a className="sekka-register-submit sekka-register-link-button" href="/">العودة إلى الصفحة الرئيسية</a>
-      </section>
-    </main>
-  );
+  return <AdminConsoleScreen supabase={supabase} screen="not-found" shared onNavigate={(target) => window.location.assign(target)} />;
 }
 
 function authErrorMessage(error: unknown): string {
