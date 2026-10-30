@@ -23,7 +23,7 @@ The session token is stored in local storage with a seven-day client expiry matc
 | Session restore, protected routes, role separation, expiry, logout | Integrated | `GET /auth/me`, `/auth/logout`, local token handling, and role-based route guards. |
 | Rider home | Partially functional | Name from restored custom session; latest demand request from `GET /rider/demand-requests`. |
 | Rider trip search | Integrated | Location suggestions use `POST /locations/search`; search uses `POST /rider/lines/search` with selected coordinates, date, time, and vehicle category. |
-| Rider requests and completed trips | Integrated read; demand request submit connected | `/rider/demand-requests`, `/rider/requests`, and `/rider/trips` power account history. A matched result can submit a real `/rider/demand-requests` request using the selected route details; it is a search request, not a reservation or guarantee. |
+| Rider requests and completed trips | Integrated read/write | `/rider/demand-requests`, `/rider/requests`, and `/rider/trips` power account history. Matched results submit real demand requests. Open daily requests can be cancelled through `/rider/requests/{id}/cancel`; confirmed completed-trip payments can be disputed through `/rider/trips/{id}/dispute`. Server ownership, request state, payment state, and reason validation remain authoritative. |
 | Captain home and offers | Partially functional; line writes connected | Reads `/captain/lines`; home also reads `/captain/demand-groups`. Create/edit now submit selected Cairo map-search locations to `/captain/lines` and `/captain/lines/{id}`; pause/resume uses `/captain/lines/{id}/status`. Backend approval and phone-verification requirements remain enforced. |
 | Captain profile, vehicle, and verification | Read and create/upload integrated | Reads `/auth/me`, `/captain/profile`, and `/verification`. A missing vehicle profile can be created through `POST /captain/profile`; an existing one is read-only because the deployed API has no update route. Captains can submit the eight supported document kinds through multipart `POST /verification/documents/{kind}`; the UI validates file type and the 8 MB limit and shows success only after an API response. |
 | Captain rider requests and groups | Partially functional | Reads actual `/captain/demand-groups`; related membership operations were not integrated in this batch. |
@@ -59,6 +59,7 @@ The production CORS configuration was not changed.
 - Cloudflare Preview for captain messaging completed successfully: deployment `d13141b5-60c3-4f03-9793-135ab48fdd6d`; `/` and `/captain/journey/conversations` returned HTTP 200, `/__sekka-api/health` returned HTTP 200, unauthenticated `/__sekka-api/auth/me` returned the expected HTTP 401, and the browser redirected the protected conversation route to login with no console errors.
 - Unread-count refinement deployment `715ca82c-0f26-4793-a813-c42eefe46b90` completed successfully; the conversation route and API health checks returned HTTP 200, while unauthenticated identity remained HTTP 401.
 - Captain vehicle profile uses the deployed create-only `/captain/profile` contract. The vehicle route and API health returned HTTP 200 in Preview deployment `55368018-821c-4405-b2ba-f347e6bd7cc9`; unauthenticated identity returned HTTP 401. Positive-path profile creation was not attempted without a designated test captain account.
+- Rider request cancellation and trip dispute controls use the deployed endpoints and only appear for eligible open or confirmed records. Preview deployment `dac5c30b-6e0b-4f16-936b-d02aa81313f0` returned HTTP 200 for `/`, `/trips`, and `/my-trips`; proxy health returned HTTP 200 and unauthenticated identity returned HTTP 401. No mutation was tested without a designated rider account.
 - No Supabase product-table reads remain in `RiderHomeScreen`, `RiderTripsScreen`, `RiderJourneyScreen`, or `CaptainJourneyScreen`.
 - There is no test script in `web/package.json`.
 
@@ -71,6 +72,6 @@ The production CORS configuration was not changed.
 
 ## Delivery — current functional batch
 
-- Commit: [`cd69680`](https://github.com/sekka-go/SeKKa/commit/cd696809525391b7cf97616864edefe2b5e835c7) — `Connect captain vehicle profile to API`
-- Preview: [https://55368018.sekka-go.pages.dev](https://55368018.sekka-go.pages.dev)
-- Cloudflare deployment ID: `55368018-821c-4405-b2ba-f347e6bd7cc9` (build and deploy succeeded).
+- Commit: [`0ae71ef`](https://github.com/sekka-go/SeKKa/commit/0ae71efbf7b51046592dbf4df309e456416d3f28) — `Connect rider cancellation and trip disputes`
+- Preview: [https://dac5c30b.sekka-go.pages.dev](https://dac5c30b.sekka-go.pages.dev)
+- Cloudflare deployment ID: `dac5c30b-6e0b-4f16-936b-d02aa81313f0` (build and deploy succeeded).
