@@ -21,12 +21,13 @@ const previewStyles = import.meta.env.DEV
     "/redesign-admin": () => import("./redesign/admin-screens-preview.css"),
   } as Record<string, (() => Promise<unknown>) | undefined>)[window.location.pathname]?.() ?? Promise.resolve()
   : Promise.resolve();
+const isDesignPreview = import.meta.env.DEV && window.location.pathname.startsWith("/redesign-");
 
 void previewStyles.then(() => createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <LanguageProvider>
       <App />
-      <PwaNotice />
+      {!isDesignPreview && <PwaNotice />}
     </LanguageProvider>
   </StrictMode>,
 ));

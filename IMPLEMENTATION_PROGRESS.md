@@ -74,3 +74,12 @@
 - Existing matched demand groups, old vehicle-type foreign keys, and past payment/ledger rows remain readable; they are historical data and are not rewritten or deleted by this cleanup.
 - The older pool/commute feature remains available for its existing trip records. It is separate from the new published-ride request flow. Removing it would require a distinct product/data migration beyond retiring the conflicting new-ride behavior.
 - Existing untracked `SikkaMark.tsx`, `SikkaSplash.tsx`, and `light-theme.css` files remain untouched.
+
+## Mobile preview refinement — 2026-10-30
+
+- Made the development-only rider screen map behave like a mobile app at narrow widths: the desktop sidebar is hidden, a five-item fixed bottom navigation appears, and the hero, map illustration, search controls, and spacing use phone-sized proportions.
+- Replaced the preview's text-character brand mark with the unchanged original SeKKa logo asset.
+- Suppressed the PWA installation prompt only on development `/redesign-*` preview routes so it does not cover the preview navigation or screen content.
+- This is a preview-shell improvement only. It does not complete the 24 rider screens, connect preview forms to real data, or count as production UI delivery.
+- Verification: `pnpm lint`, `pnpm typecheck`, `pnpm test` (201/201), `pnpm build`, and `git diff --check` passed. Final screenshot verification was interrupted by the browser screenshot tool after HMR; the page DOM was inspected at 390×844 and confirmed to contain the new bottom navigation and original logo.
+- Figma screen creation remains incomplete: the original file is view-only, and the new file's screen-building call failed due to a font API error; subsequent retries reached the Starter-plan MCP call limit. The new file currently contains only its reference capture and design-system pages.
