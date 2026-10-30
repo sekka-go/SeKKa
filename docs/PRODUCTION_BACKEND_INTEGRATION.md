@@ -1,4 +1,4 @@
-# SeKKa Production Backend Integration — Batches 1–4
+# SeKKa Production Backend Integration — Batches 1–5
 
 Date: 2026-10-30
 Scope: custom authentication, rider trip discovery and requests, rider home data, captain dashboard/profile reads, and authenticated messaging/notification reads. No database schema, RLS policy, or production data was changed.
@@ -29,7 +29,8 @@ The session token is stored in local storage with a seven-day client expiry matc
 | Captain rider requests and groups | Partially functional | Reads actual `/captain/demand-groups`; related membership operations were not integrated in this batch. |
 | Rider/captain notifications | Integrated read/update | Uses `/pool/notifications` and `/pool/notifications/{id}/read`. |
 | Rider/captain conversations | Partially functional | Uses `/messages/conversations`; conversation history uses the deployed message endpoint where an ID is present. |
-| Subscriptions, receipts, proof upload, payment codes, complaints, ratings | Not integrated | These screens were not connected in this batch. Related routes exist for verification documents, trip payment confirmation, and trip disputes; each needs a separate screen-by-screen contract and business-rule review before use. No fake writes are sent. |
+| Captain completed-trip receipts | Integrated | `/captain/earnings` supplies completed trips and payment records. The UI now reads the nested response correctly and submits the captain’s actual received amount to `POST /captain/trips/{id}/confirm-payment`; backend ownership and trip-state checks remain authoritative. |
+| Subscriptions, subscription receipts, proof upload, payment codes, complaints, ratings | Not integrated | No deployed API route was verified for these subscription/payment-code flows. The UI does not claim these actions succeeded. |
 | Admin screens | Not audited in this batch | They were not changed; existing admin API/session handling is separate. |
 
 ## API routing and CORS
@@ -52,6 +53,8 @@ The production CORS configuration was not changed.
 - Captain line create/edit and pause/resume controls now call the verified line mutation endpoints; test accounts with approved captain profiles are needed to confirm the positive write path.
 - Captain verification documents use multipart upload with the authenticated custom bearer session. Client-side file checks match the deployed contract (JPEG, PNG, WebP, PDF; max 8 MB). The positive-path upload was not executed because no designated test captain account or test documents were provided.
 - Cloudflare Preview for the captain document upload commit completed successfully: deployment `cea73b4c-e465-4f05-9cfd-03b8e5ccd848`; `/` and `/captain/journey/documents` returned HTTP 200, `/__sekka-api/health` returned HTTP 200, and unauthenticated `/__sekka-api/auth/me` returned the expected HTTP 401.
+- Captain earnings/payment reads were matched against the deployed function’s nested `{ trip, stops, payment }` response. Confirm-receipt uses the deployed RPC-backed API endpoint and prevents duplicate client submissions. No payment write was attempted without a designated test captain account.
+- Cloudflare Preview for captain payment confirmation completed successfully: deployment `f1e4b718-f1e6-4da7-a608-665531ed5b26`; `/` and `/captain/journey/documents` returned HTTP 200, `/__sekka-api/health` returned HTTP 200, and unauthenticated `/__sekka-api/auth/me` returned the expected HTTP 401.
 - No Supabase product-table reads remain in `RiderHomeScreen`, `RiderTripsScreen`, `RiderJourneyScreen`, or `CaptainJourneyScreen`.
 - There is no test script in `web/package.json`.
 
@@ -64,6 +67,6 @@ The production CORS configuration was not changed.
 
 ## Delivery — current functional batch
 
-- Commit: [`4ee2063`](https://github.com/sekka-go/SeKKa/commit/4ee2063914881f90c3cf693eba03fac2b405c8d2) — `Connect captain verification document uploads`
-- Preview: [https://cea73b4c.sekka-go.pages.dev](https://cea73b4c.sekka-go.pages.dev)
-- Cloudflare deployment ID: `cea73b4c-e465-4f05-9cfd-03b8e5ccd848` (build and deploy succeeded).
+- Commit: [`3d2d98b`](https://github.com/sekka-go/SeKKa/commit/3d2d98b6c48ae43aa1e4d72227cad90d05d152a5) — `Connect captain trip payment confirmation`
+- Preview: [https://f1e4b718.sekka-go.pages.dev](https://f1e4b718.sekka-go.pages.dev)
+- Cloudflare deployment ID: `f1e4b718-f1e6-4da7-a608-665531ed5b26` (build and deploy succeeded).
