@@ -14,19 +14,6 @@ import PublicLanguageToggle from "../components/PublicLanguageToggle";
 const TERMS_VERSION = "2026-10-24";
 const PRIVACY_VERSION = "2026-10-24";
 
-function AuthJourneyBackdrop() {
-  return <div className="auth-journey-backdrop" aria-hidden="true">
-    <div className="auth-route-art">
-      <span className="auth-route-line" />
-      <span className="auth-route-stop auth-route-stop--start" />
-      <span className="auth-route-stop auth-route-stop--end" />
-      <span className="auth-route-node auth-route-node--one" />
-      <span className="auth-route-node auth-route-node--two" />
-      <span className="auth-route-car"><AppIcon name="car" size={25} /></span>
-    </div>
-  </div>;
-}
-
 export default function AuthScreen({ onSignedIn, notify, onStartupReady }: { onSignedIn: (session: Session) => void; notify: (text: string, tone?: Toast["tone"]) => void; onStartupReady: () => void }) {
   const mode = window.location.pathname === "/register" ? "register" : "login";
   const [role, setRole] = useState<"rider" | "captain">("rider");
@@ -132,7 +119,6 @@ export default function AuthScreen({ onSignedIn, notify, onStartupReady }: { onS
   />;
 
   return <main className={`auth-page ${mode === "login" ? "auth-login-page" : "auth-register-page"} ${mode === "register" && role === "captain" ? "auth-captain-journey" : ""}`}>
-    <AuthJourneyBackdrop />
     <header className="auth-page-header"><a href="/"><BrandLogo /></a><PublicLanguageToggle /></header>
     <section className="auth-page-content">
       <div className={`auth-card auth-page-card ${mode === "login" ? "auth-login-card" : "auth-register-card"}`}>

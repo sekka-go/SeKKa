@@ -89,3 +89,10 @@
 - Aligned the live rider home hero with the approved mobile reference by using the deep teal welcome surface and higher-contrast title, supporting copy, service-area marker, and mint highlight.
 - Added semantic hero color tokens for light and dark themes; no logo or trip/search behavior changed.
 - Verification: `pnpm lint`, `pnpm typecheck`, `pnpm build`, and `git diff --check` passed. The previous immediately preceding batch also passed all 201 server tests; this batch changes only CSS tokens and presentation rules.
+
+## Signup and startup art cleanup — 2026-10-30
+
+- Removed the unused animated route/car backdrop component from the login and registration screens, plus its unreferenced car/particle CSS and keyframes. The startup splash remains logo-only using the unchanged original PNG.
+- Suppressed the optional PWA install prompt while a login or signup screen is active so it cannot cover the form's primary action; it resumes when the auth screen is gone.
+- Verified the registration submit button is fully visible at a 390×844 mobile viewport, with the PWA prompt hidden for that auth state.
+- Verification: `pnpm lint`, `pnpm typecheck`, `pnpm test` (201/201), `pnpm build`, and `git diff --check` passed.
