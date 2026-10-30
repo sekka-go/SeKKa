@@ -87,6 +87,22 @@ export async function sekkaApi<T>(path: string, options: { method?: string; body
   return payload as T;
 }
 
+export async function sekkaApiForm<T>(path: string, form: FormData): Promise<T> {
+  const token = getSekkaSession()?.token;
+  const headers = new Headers({ apikey: apiKey() ?? "", Accept: "application/json" });
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  let response: Response;
+  try { response = await fetch(`${apiBase()}${path}`, { method: "POST", headers, body: form }); }
+  catch { throw new SekkaApiError("تعذر الاتصال بخدمة سِكّة. تحقق من الإنترنت ثم حاول مرة أخرى.", 0); }
+  const payload = response.status === 204 ? null : await response.json().catch(() => null);
+  if (!response.ok) {
+    const message = payload && typeof payload.error === "string" ? payload.error : "تعذر إكمال الطلب الآن. حاول مرة أخرى.";
+    if (response.status === 401 && token && getSekkaSession()?.token === token) { clearSekkaSession(); window.dispatchEvent(new Event("sekka:session-expired")); }
+    throw new SekkaApiError(message, response.status);
+  }
+  return payload as T;
+}
+
 export async function logoutSekkaSession() {
   const session = getSekkaSession();
   if (!session) return;

@@ -20,3 +20,4 @@
 .captain-line-grid, .captain-line-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
 .captain-line-actions .journey-primary, .captain-line-actions .journey-secondary { width: 100%; }
 @media (max-width: 420px) { .captain-line-grid, .captain-line-actions { grid-template-columns: 1fr; } }
+.journey-document-kind{display:block;width:100%;margin:8px 0 14px;padding:13px 14px;border:1px solid var(--j-border);border-radius:14px;background:var(--j-card);color:var(--j-text);font:inherit}
