@@ -14,7 +14,7 @@ type Line = {
   currency: string;
   vehicle_details: Record<string, unknown> | null;
   published_at: string | null;
-  vehicle: { name_ar: string; capacity_max: number } | null;
+  vehicle: { id: string; name_ar: string; capacity_max: number } | null;
 };
 
 type MemberRide = { id: string; status: string; joined_at: string; group: { status: string; starts_on: string | null; ends_on: string | null; line: Line | null } | null };
@@ -54,6 +54,7 @@ export default function RiderTripsScreen({ supabase, mode, onHome }: Props) {
   const [searched, setSearched] = useState(false);
   const [order, setOrder] = useState<Order>("recent");
   const [vehicleFilter, setVehicleFilter] = useState("all");
+  const [categoryOpen, setCategoryOpen] = useState(false);
   const [selected, setSelected] = useState<Line | null>(null);
   const [loading, setLoading] = useState(Boolean(supabase));
   const [error, setError] = useState("");
@@ -71,13 +72,13 @@ export default function RiderTripsScreen({ supabase, mode, onHome }: Props) {
           if (authError) throw authError;
           if (!auth.user) throw new Error("يجب تسجيل الدخول لعرض رحلاتك.");
           const { data, error: queryError } = await supabase.from("ride_group_members")
-            .select("id,status,joined_at,group:ride_groups(status,starts_on,ends_on,line:captain_lines(id,origin_name,destination_name,operating_days,departure_time,return_time,seat_count,monthly_price,currency,vehicle_details,published_at,vehicle:vehicle_types(name_ar,capacity_max)))")
+            .select("id,status,joined_at,group:ride_groups(status,starts_on,ends_on,line:captain_lines(id,origin_name,destination_name,operating_days,departure_time,return_time,seat_count,monthly_price,currency,vehicle_details,published_at,vehicle:vehicle_types(id,name_ar,capacity_max)))")
             .eq("rider_id", auth.user.id).eq("status", "active").order("joined_at", { ascending: false });
           if (queryError) throw queryError;
           if (active) setMemberships((data ?? []) as unknown as MemberRide[]);
         } else {
           const { data, error: queryError } = await supabase.from("captain_lines")
-            .select("id,origin_name,destination_name,operating_days,departure_time,return_time,seat_count,monthly_price,currency,vehicle_details,published_at,vehicle:vehicle_types(name_ar,capacity_max)")
+            .select("id,origin_name,destination_name,operating_days,departure_time,return_time,seat_count,monthly_price,currency,vehicle_details,published_at,vehicle:vehicle_types(id,name_ar,capacity_max)")
             .eq("status", "published").order("published_at", { ascending: false });
           if (queryError) throw queryError;
           if (active) setLines((data ?? []) as unknown as Line[]);
@@ -100,7 +101,7 @@ export default function RiderTripsScreen({ supabase, mode, onHome }: Props) {
       if (normalizedFrom && !line.origin_name.toLocaleLowerCase("ar").includes(normalizedFrom)) return false;
       if (normalizedTo && !line.destination_name.toLocaleLowerCase("ar").includes(normalizedTo)) return false;
       if (weekday !== undefined && !line.operating_days.includes(weekday)) return false;
-      if (vehicleFilter !== "all" && line.vehicle?.name_ar !== vehicleFilter) return false;
+      if (vehicleFilter !== "all" && line.vehicle?.id !== vehicleFilter) return false;
       const declaredCapacity = line.seat_count ?? line.vehicle?.capacity_max ?? null;
       if (declaredCapacity !== null && declaredCapacity < passengers) return false;
       if (chosenDate && chosenDate.toDateString() === today.toDateString() && line.departure_time <= `${String(today.getHours()).padStart(2, "0")}:${String(today.getMinutes()).padStart(2, "0")}`) return false;
@@ -110,7 +111,8 @@ export default function RiderTripsScreen({ supabase, mode, onHome }: Props) {
   }, [lines, from, to, date, passengers, order, vehicleFilter]);
 
   const myRides = memberships.filter((item) => item.group?.line);
-  const vehicleNames = Array.from(new Set(lines.map((line) => line.vehicle?.name_ar).filter((name): name is string => Boolean(name))));
+  const categories = [{ id: "prime", label: "Prime" }, { id: "daily", label: "Daily" }, { id: "space", label: "Space" }, { id: "max", label: "Max" }];
+  const selectedCategory = categories.find((category) => category.id === vehicleFilter);
   const retry = () => { setLoading(true); setQueryKey((key) => key + 1); };
   const submitSearch = (event: React.FormEvent) => { event.preventDefault(); setSearched(true); };
   const card = (line: Line, key: string) => {
@@ -133,7 +135,7 @@ export default function RiderTripsScreen({ supabase, mode, onHome }: Props) {
     </form>}
     <section className="rider-trips-list-section">
       <div className="rider-trips-results-heading"><div><span>{mine ? "الرحلات والاشتراكات المرتبطة بك" : "رحلات منشورة من الكباتن"}</span><h2>{mine ? "رحلاتي" : searched ? "الرحلات المناسبة لك" : "الرحلات المتاحة"}</h2></div>{!mine && !loading && !error && <span className="rider-results-count">{results.length} رحلة</span>}</div>
-      {!mine && <div className="rider-trip-filter-row" aria-label="ترتيب وتصفية الرحلات"><button className={order === "recent" && vehicleFilter === "all" ? "selected" : ""} onClick={() => { setOrder("recent"); setVehicleFilter("all"); }}>كل الرحلات <span>☷</span></button><button className={order === "price" ? "selected" : ""} onClick={() => setOrder("price")}>الأقل سعرًا <span>◉</span></button><button className={vehicleFilter !== "all" ? "selected" : ""} onClick={() => { const current = vehicleNames.indexOf(vehicleFilter); setVehicleFilter(vehicleNames.length ? vehicleNames[(current + 1) % vehicleNames.length] : "all"); }}>{vehicleFilter === "all" ? "تصفية بالمركبة" : vehicleFilter} <span>⚙</span></button></div>}
+      {!mine && <div className="rider-trip-filters"><div className="rider-trip-filter-row" aria-label="ترتيب وتصفية الرحلات"><button className={order === "recent" && vehicleFilter === "all" ? "selected" : ""} onClick={() => { setOrder("recent"); setVehicleFilter("all"); }}>كل الرحلات <span>☷</span></button><button className={order === "price" ? "selected" : ""} onClick={() => setOrder("price")}>الأقل سعرًا <span>◉</span></button><button aria-expanded={categoryOpen} aria-controls="trip-category-options" className={vehicleFilter !== "all" ? "selected" : ""} onClick={() => setCategoryOpen((open) => !open)}>{selectedCategory ? `الفئة: ${selectedCategory.label}` : "تصفية بالفئة"} <span>⚙</span></button></div>{categoryOpen && <div id="trip-category-options" className="rider-trip-category-options" role="group" aria-label="فئة المركبة"><button className={vehicleFilter === "all" ? "selected" : ""} onClick={() => { setVehicleFilter("all"); setCategoryOpen(false); }}>كل الفئات</button>{categories.map((category) => <button key={category.id} className={vehicleFilter === category.id ? "selected" : ""} onClick={() => { setVehicleFilter(category.id); setCategoryOpen(false); }}>{category.label}</button>)}</div>}</div>}
       {!mine && <p className="rider-search-limit-note">تعرض النتائج الخطوط المنشورة المطابقة. حالة المقاعد الفعلية وتقييمات الكباتن غير متاحة للقراءة العامة حاليًا.</p>}
       {loading ? <div className="rider-trips-state" role="status"><strong>جارٍ تحميل الرحلات</strong><p>نحمّل البيانات من حسابك.</p></div> : error ? <div className="rider-trips-state rider-trips-error" role="alert"><strong>تعذر تحميل الرحلات</strong><p>{error}</p><button onClick={retry}>إعادة المحاولة</button></div> : mine ? myRides.length ? <div className="rider-trips-results">{myRides.map((item) => <div key={item.id}>{card(item.group!.line!, item.id)}<p className="rider-member-status">حالة الارتباط: {item.status === "active" ? "نشطة" : item.status === "pending" ? "قيد الانتظار" : item.status}</p></div>)}</div> : <div className="rider-trips-state"><strong>لا توجد رحلات مرتبطة بحسابك بعد</strong><p>بعد قبول طلب انضمامك ستظهر رحلتك هنا.</p><button onClick={() => { window.location.assign("/trips"); }}>استكشف الرحلات</button></div> : results.length ? <div className="rider-trips-results">{results.map((line) => card(line, line.id))}</div> : <div className="rider-trips-state"><strong>{searched ? "لم نعثر على خطوط تطابق بحثك" : "لا توجد خطوط منشورة للعرض حاليًا"}</strong><p>{searched ? "جرّب تعديل نقطة الانطلاق أو الوصول أو التاريخ وعدد الركاب." : "ستظهر هنا الخطوط التي نشرها الكباتن عند توفرها."}</p></div>}
     </section>
