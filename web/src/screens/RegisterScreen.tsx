@@ -101,8 +101,8 @@ export default function RegisterScreen({
 
         <header className="sekka-register-intro">
           <p className="sekka-register-eyebrow">أهلًا بك في سِكّة</p>
-          <h1 id="sekka-register-title">أنشئ حسابك</h1>
-          <p>ابدأ رحلتك بسهولة وأمان</p>
+          <h1 id="sekka-register-title">{role === "captain" ? "أنشئ حساب كابتن" : "أنشئ حسابك"}</h1>
+          <p>{role === "captain" ? "انضم إلى الكباتن وانشر رحلاتك" : "ابدأ رحلتك بسهولة وأمان"}</p>
         </header>
 
         <form className="sekka-register-form" onSubmit={submit} noValidate>
@@ -133,32 +133,6 @@ export default function RegisterScreen({
               required
             />
           </label>
-
-          <fieldset className="sekka-register-roles">
-            <legend>هتستخدم سِكّة بصفتك؟</legend>
-            <label className={role === "rider" ? "is-active" : ""}>
-              <input
-                type="radio"
-                name="role"
-                value="rider"
-                checked={role === "rider"}
-                onChange={() => setRole("rider")}
-              />
-              <RiderIcon />
-              <span><strong>راكب</strong><small>أبحث عن رحلة</small></span>
-            </label>
-            <label className={role === "captain" ? "is-active" : ""}>
-              <input
-                type="radio"
-                name="role"
-                value="captain"
-                checked={role === "captain"}
-                onChange={() => setRole("captain")}
-              />
-              <CarIcon />
-              <span><strong>كابتن</strong><small>أنشر رحلاتي</small></span>
-            </label>
-          </fieldset>
 
           <label className="sekka-register-field">
             <span>كلمة المرور</span>
@@ -213,6 +187,15 @@ export default function RegisterScreen({
           </button>
         </form>
 
+        <div className="sekka-register-role-switch">
+          <div className="sekka-register-divider"><span>أو</span></div>
+          <button type="button" onClick={() => { setRole(role === "rider" ? "captain" : "rider"); setLocalError(""); }} disabled={loading}>
+            <CarIcon />
+            {role === "rider" ? "التسجيل ككابتن" : "التسجيل كراكب"}
+          </button>
+          <p>{role === "rider" ? "كابتن؟ أنشئ حسابك من هنا" : "راكب؟ أنشئ حسابك من هنا"}</p>
+        </div>
+
         {onGoogleRegister && (
           <>
             <div className="sekka-register-divider"><span>أو</span></div>
@@ -228,10 +211,6 @@ export default function RegisterScreen({
       </section>
     </main>
   );
-}
-
-function RiderIcon() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8c0-3.2 3.1-5.5 7-5.5s7 2.3 7 5.5v1H5v-1Z" fill="currentColor" /></svg>;
 }
 
 function CarIcon() {
