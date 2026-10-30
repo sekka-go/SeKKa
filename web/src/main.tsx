@@ -14,14 +14,22 @@ import PwaNotice from "./components/PwaNotice";
 import { registerPwa } from "./pwa";
 import { LanguageProvider } from "./i18n/runtime";
 
-createRoot(document.getElementById("root")!).render(
+const previewStyles = import.meta.env.DEV
+  ? ({
+    "/redesign-rider": () => import("./redesign/rider-screens-preview.css"),
+    "/redesign-preview": () => import("./redesign/public-screens-preview.css"),
+    "/redesign-admin": () => import("./redesign/admin-screens-preview.css"),
+  } as Record<string, (() => Promise<unknown>) | undefined>)[window.location.pathname]?.() ?? Promise.resolve()
+  : Promise.resolve();
+
+void previewStyles.then(() => createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <LanguageProvider>
       <App />
       <PwaNotice />
     </LanguageProvider>
   </StrictMode>,
-);
+));
 
 registerPwa();
 

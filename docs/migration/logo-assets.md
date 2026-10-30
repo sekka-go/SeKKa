@@ -9,7 +9,7 @@
 | `web/src/brand/sekka-mark.svg` | المصدر الوحيد لمسار S ونقطتي الوصول. |
 | `web/src/components/SekkaMark.tsx` | يرسم المصدر داخل React بألوان متوافقة مع الثيم. |
 | `web/src/components/BrandLogo.tsx` | قفل الشعار والنص الرسمي `سِكّة | SeKKa`. |
-| `web/src/components/SekkaSplash.tsx` | مشهد السيارة والسائق الذي يلوّح، مع علامة سِكّة نفسها. |
+| `web/src/components/SekkaSplash.tsx` | شاشة بداية بسيطة تعرض علامة سِكّة الأصلية في منتصف الشاشة، بلا رسوم أو نص إضافي. |
 | `web/public/brand/sekka-mark.svg`, `favicon.svg` | نسخة SVG ثابتة للموقع وfavicon. |
 | `web/public/brand/favicon-32.png`, `favicon-48.png` | Favicon PNG للأحجام الشائعة. |
 | `web/public/brand/apple-touch-icon-180.png` | أيقونة إضافة الشاشة الرئيسية على Apple. |

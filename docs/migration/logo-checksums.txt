@@ -1,4 +1,4 @@
-# SHA-256 baseline; generated 2026-10-24; paths relative to repository root.
+# SHA-256 checksums; updated 2026-10-30; paths relative to repository root.
 bfc33f37c932747258a86dad33451f953245741f1be065b07dcb45585b2fa929  web/index.html
 a0257a1d0fb5d02875976ac16a2b8df2f1069791f4131faf12fbf519ffb894ef  web/public/brand/apple-touch-icon-180.png
 25472a1c167d1f92f54df0e7708fe2cf9ecd7fb90e7a2f3806f93c1850368a15  web/public/brand/favicon-32.png
@@ -20,6 +20,6 @@ bbfdf6e0c47761843502b69d09846d071de18cc32ef9ae65327fd19bf4a452c2  web/scripts/ge
 ae89716bd387356bc342612006d982e7d38539a8396177493fecb277cbf74154  web/src/brand/sekka-mark.svg
 130ef96f3d4afcb21f54aefbdbdcabd9a85152add040fc7d9545b1093c5e6cbe  web/src/components/BrandLogo.tsx
 1467c47878d1ec8faf785270af51b2e9dca20779e4f0ac12df7c8272c87a7ccd  web/src/components/SekkaMark.tsx
-fa507686d4c30a2deb54ccf634ee5c5b64aaec906dde9d6a9b28d15404adf3d6  web/src/components/SekkaSplash.tsx
-3ab114ed0bf98e901de6f795898c4b9f1a18a2b3b17345c7dad276edea2d99a6  web/src/splash.css
+675b7b6ee90cf71cc37dda38f6ccff453624ba8318ec77179a527c25c7818edb  web/src/components/SekkaSplash.tsx
+5a0e4f3d28445d451a56341f87dcbf47eb3b51ee4e9c8aa62840d67aadbdbf5f  web/src/splash.css
 8a97718fb730336fc48690516aed25d76d4d87d58fd661ea80f7d5cabd8b1625  web/src/styles.css

@@ -91,10 +91,6 @@ export function getDirection(): Direction {
   return activeLanguage === "ar" ? "rtl" : "ltr";
 }
 
-export function getApplicationName(language: Language): string {
-  return applicationName(language);
-}
-
 export function t(sourceText: string): string {
   if (sourceText === "اسم التطبيق") return applicationName(activeLanguage);
   return messagesByLanguage[activeLanguage]?.[sourceText] ?? sourceText;
