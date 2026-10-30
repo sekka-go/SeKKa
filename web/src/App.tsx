@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import RegisterScreen, { type SignupPayload } from "./screens/RegisterScreen";
 import LoginScreen from "./screens/LoginScreen";
@@ -9,24 +9,33 @@ import ForgotPasswordScreen, { ResetPasswordScreen } from "./screens/legal/Forgo
 import LegalDocumentScreen from "./screens/legal/LegalDocumentScreen";
 import RiderJourneyScreen, { type RiderJourneyKey } from "./screens/RiderJourneyScreen";
 import CaptainJourneyScreen, { type CaptainJourneyKey } from "./screens/CaptainJourneyScreen";
-import AdminConsoleScreen, { type AdminScreenKey, type SharedScreenKey } from "./screens/AdminConsoleScreen";
+import type { AdminLiveScreenKey as AdminScreenKey, SharedLiveScreenKey as SharedScreenKey } from "./screens/AdminConsoleLiveScreen";
+import { adminApi, clearAdminApiToken, setAdminApiToken, type AdminApiSession } from "./lib/admin-api";
+
+const AdminConsoleScreen = lazy(() => import("./screens/AdminConsoleLiveScreen"));
+const adminScreenKeys: AdminScreenKey[] = ["dashboard", "users", "user", "captains", "documents", "vehicles", "offers", "rider-requests", "groups", "group", "subscriptions", "payments", "payment", "disputes", "complaints", "ratings", "notifications", "commission", "settings", "reports", "audit-log", "admin-permissions", "trip-operations", "pool-overview", "finance", "pricing", "campaigns", "otp-settings", "ledger"];
+const sharedScreenKeys: SharedScreenKey[] = ["notifications", "loading", "error", "empty", "offline", "confirm", "access-denied", "not-found"];
 
 type RegistrationState = "form" | "verify" | "complete";
 type PublicRouteState = "checking" | "guest" | "redirecting" | "error";
+let cachedSupabaseClient: SupabaseClient | null | undefined;
 
 function makeSupabaseClient(): SupabaseClient | null {
+  if (cachedSupabaseClient !== undefined) return cachedSupabaseClient;
   const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
   const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
-  if (!url || !key) return null;
+  if (!url || !key) { cachedSupabaseClient = null; return cachedSupabaseClient; }
   try {
-    return createClient(url, key, { auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true } });
+    cachedSupabaseClient = createClient(url, key, { auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true } });
+    return cachedSupabaseClient;
   } catch {
-    return null;
+    cachedSupabaseClient = null;
+    return cachedSupabaseClient;
   }
 }
 
 export default function App() {
-  const supabase = useMemo(makeSupabaseClient, []);
+  const supabase = makeSupabaseClient();
   const [state, setState] = useState<RegistrationState>("form");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
@@ -102,7 +111,7 @@ export default function App() {
 
   useEffect(() => {
     const journeyTitle: Partial<Record<RiderJourneyKey, string>> = { group: "تفاصيل المجموعة", subscriptions: "اشتراكاتي", subscription: "تفاصيل الاشتراك", receipt: "إيصال سِكّة", "payment-method": "اختيار وسيلة الدفع", proof: "رفع إثبات التحويل", "captain-confirmation": "انتظار تأكيد الكابتن", "payment-code": "تأكيد كود الدفع", "payment-result": "نتيجة الدفع", renewal: "التجديد الشهري", "replacement-captain": "البحث عن كابتن بديل", conversations: "المحادثات", conversation: "تفاصيل المحادثة", notifications: "الإشعارات", ratings: "التقييمات", complaint: "تقديم شكوى", "complaint-status": "متابعة الشكوى", profile: "الملف الشخصي والإعدادات" };
-    const adminTitles: Partial<Record<AdminScreenKey,string>> = { dashboard:"لوحة المؤشرات",users:"إدارة المستخدمين",user:"تفاصيل المستخدم",captains:"إدارة الكباتن",documents:"مراجعة الوثائق",vehicles:"إدارة المركبات",offers:"إدارة العروض","rider-requests":"طلبات الركاب",groups:"إدارة المجموعات",group:"تفاصيل المجموعة",subscriptions:"إدارة الاشتراكات",payments:"مراقبة عمليات الدفع",payment:"تفاصيل الدفع",disputes:"النزاعات المالية",complaints:"الشكاوى والبلاغات",ratings:"إدارة التقييمات",notifications:"إدارة الإشعارات",commission:"العمولة المستقبلية",settings:"إعدادات التشغيل",reports:"التقارير والتحليلات","audit-log":"سجل التدقيق","admin-permissions":"صلاحيات الإدارة" };
+    const adminTitles: Partial<Record<AdminScreenKey,string>> = { dashboard:"لوحة المؤشرات",users:"إدارة المستخدمين",user:"تفاصيل المستخدم",captains:"إدارة الكباتن",documents:"مراجعة الوثائق",vehicles:"إدارة المركبات",offers:"إدارة العروض","rider-requests":"طلبات الركاب",groups:"إدارة المجموعات",group:"تفاصيل المجموعة",subscriptions:"إدارة الاشتراكات",payments:"مراقبة عمليات الدفع",payment:"تفاصيل الدفع",disputes:"النزاعات المالية",complaints:"الشكاوى والبلاغات",ratings:"إدارة التقييمات",notifications:"إدارة الإشعارات",commission:"العمولة المستقبلية",settings:"إعدادات التشغيل",reports:"التقارير والتحليلات","audit-log":"سجل التدقيق","admin-permissions":"صلاحيات الإدارة","trip-operations":"إدارة الرحلات","pool-overview":"مؤشرات المجموعات",finance:"الملخص المالي",pricing:"إعدادات التسعير",campaigns:"الحملات","otp-settings":"إعدادات التحقق",ledger:"دفتر الحسابات" };
     const sharedTitles: Partial<Record<SharedScreenKey,string>> = { notifications:"مركز الإشعارات",loading:"حالة التحميل",error:"حالة الخطأ",empty:"حالة عدم وجود بيانات",offline:"حالة عدم الاتصال",confirm:"تأكيد إجراء حساس","access-denied":"الوصول مرفوض","not-found":"الصفحة غير موجودة" };
     document.title = isLoginPage || isAdminLoginPage ? `${isAdminLoginPage ? "دخول الإدارة" : "تسجيل الدخول"} | سِكّة` : isRegisterPage ? "إنشاء حساب جديد | سِكّة" : isForgotPasswordPage ? "استعادة الحساب | سِكّة" : isResetPasswordPage ? "تعيين كلمة مرور | سِكّة" : isTermsPage ? "الشروط والأحكام | سِكّة" : isPrivacyPage ? "سياسة الخصوصية | سِكّة" : isRiderHome ? "الرئيسية | سِكّة" : isCaptainHome || captainJourneyKey === "home" ? "الرئيسية للكابتن | سِكّة" : isTripsPage ? "الرحلات المتاحة | سِكّة" : isMyTripsPage ? "رحلاتي | سِكّة" : journeyKey ? `${journeyTitle[journeyKey] ?? "حسابي"} | سِكّة` : captainJourneyKey ? `الكابتن | ${captainJourneyKey} | سِكّة` : adminScreenKey ? `${adminTitles[adminScreenKey] ?? "الإدارة"} | سِكّة` : sharedScreenKey ? `${sharedTitles[sharedScreenKey] ?? "سِكّة"} | سِكّة` : isPublicHome ? "سِكّة | تنقّل منتظم" : "الصفحة غير موجودة | سِكّة";
   }, [isLoginPage, isAdminLoginPage, isRegisterPage, isForgotPasswordPage, isResetPasswordPage, isTermsPage, isPrivacyPage, isRiderHome, isCaptainHome, isTripsPage, isMyTripsPage, isPublicHome, journeyKey, captainJourneyKey, adminScreenKey, sharedScreenKey]);
@@ -156,6 +165,22 @@ export default function App() {
     }
     setLoading(true);
     try {
+      if (isAdminLoginPage) {
+        const session = await adminApi<AdminApiSession>("/auth/login", {
+          method: "POST",
+          body: { phone_number: toEgyptianPhone(phoneNumber), password },
+        });
+        if (session.user?.role !== "admin" || !session.token) {
+          if (session.token) {
+            await adminApi("/auth/logout", { token: session.token, method: "POST" }).catch(() => undefined);
+          }
+          throw new Error("هذا المسار مخصص لحسابات الإدارة فقط.");
+        }
+        clearAdminApiToken();
+        setAdminApiToken(session.token);
+        window.location.replace("/admin");
+        return;
+      }
       const { error: loginError } = await supabase.auth.signInWithPassword({
         phone: `+20${phoneNumber.slice(1)}`,
         password,
@@ -168,10 +193,7 @@ export default function App() {
       if (profileError) throw profileError;
       const destinations: Record<string, string> = { rider: "/home", captain: "/captain/home", admin: "/admin" };
       const destination = profile?.role ? destinations[profile.role] : undefined;
-      if (destination && isAdminLoginPage && profile?.role !== "admin") {
-        await supabase.auth.signOut();
-        setError("هذا المسار مخصص لحسابات الإدارة فقط.");
-      } else if (destination) window.location.replace(destination);
+      if (destination) window.location.replace(destination);
       else setError("تم تسجيل الدخول، لكن نوع الحساب غير محدد. تواصل مع الدعم لاستكمال بيانات حسابك.");
     } catch (cause) {
       setError(authErrorMessage(cause));
@@ -269,8 +291,8 @@ export default function App() {
 
   if (isCaptainHome) return <CaptainJourneyScreen supabase={supabase} screen="home" onNavigate={(target) => window.location.assign(target)} />;
   if (captainJourneyKey) return <CaptainJourneyScreen supabase={supabase} screen={captainJourneyKey} onNavigate={(target) => window.location.assign(target)} />;
-  if (adminScreenKey) return <AdminConsoleScreen supabase={supabase} screen={adminScreenKey} onNavigate={(target) => window.location.assign(target)} />;
-  if (sharedScreenKey) return <AdminConsoleScreen supabase={supabase} screen={sharedScreenKey} shared onNavigate={(target) => window.location.assign(target)} />;
+  if (adminScreenKey && adminScreenKeys.includes(adminScreenKey)) return <Suspense fallback={<main className="sekka-public-route-state" dir="rtl">جارٍ فتح لوحة الإدارة…</main>}><AdminConsoleScreen supabase={supabase} screen={adminScreenKey} onNavigate={(target) => window.location.assign(target)} /></Suspense>;
+  if (sharedScreenKey && sharedScreenKeys.includes(sharedScreenKey)) return <Suspense fallback={<main className="sekka-public-route-state" dir="rtl">جارٍ تحميل الصفحة…</main>}><AdminConsoleScreen supabase={supabase} screen={sharedScreenKey} shared onNavigate={(target) => window.location.assign(target)} /></Suspense>;
 
   if (isRiderTripsPage) return <RiderTripsScreen supabase={supabase} mode={isMyTripsPage ? "mine" : "available"} onHome={() => window.location.assign("/home")} />;
   if (journeyKey) return <RiderJourneyScreen supabase={supabase} screen={journeyKey} onNavigate={(target) => window.location.assign(target)} />;
@@ -284,6 +306,10 @@ export default function App() {
 }
 
 function authErrorMessage(error: unknown): string {
+  const rawMessage = error instanceof Error ? error.message : "";
+  if (rawMessage.includes("مخصص لحسابات الإدارة")) return rawMessage;
+  if (rawMessage.includes("رقم الهاتف أو كلمة السر غلط")) return "رقم الهاتف أو كلمة المرور غير صحيحة.";
+  if (rawMessage.includes("محاولات كتير")) return "تم إرسال محاولات كثيرة. انتظر قليلًا ثم حاول مجددًا.";
   const message = error instanceof Error ? error.message.toLowerCase() : "";
   if (message.includes("invalid login credentials")) return "رقم الهاتف أو كلمة المرور غير صحيحة.";
   if (message.includes("already registered") || message.includes("already been registered")) return "رقم الهاتف مسجل بالفعل. سجّل الدخول أو استخدم استعادة الحساب.";
