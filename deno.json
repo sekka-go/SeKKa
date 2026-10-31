@@ -1,0 +1,6 @@
+{
+  "tasks": {
+    "check:edge": "deno check supabase/functions/sekka-api/index.ts",
+    "test:edge": "deno test supabase/functions/sekka-api/"
+  }
+}

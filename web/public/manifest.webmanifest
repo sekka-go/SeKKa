@@ -1,0 +1,30 @@
+{
+  "id": "/",
+  "name": "سِكّة | تنقّل منتظم",
+  "short_name": "سِكّة",
+  "description": "اكتشف عروض التنقل المنتظم وتواصل مباشرة مع الكابتن عبر سِكّة.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#fbf8ef",
+  "theme_color": "#fbf8ef",
+  "categories": ["travel", "lifestyle"],
+  "icons": [
+    {
+      "src": "/brand/sekka-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/sekka-mark.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
