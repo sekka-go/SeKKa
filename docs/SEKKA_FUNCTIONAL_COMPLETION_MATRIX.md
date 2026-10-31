@@ -1,6 +1,6 @@
 # SeKKa Functional Completion Matrix
 
-Updated: 2026-10-31
+Updated: 2026-10-31 (Deno unit test setup)
 Scope: deployed `sekka-api` version 61 and the current web client. This is an implementation and contract inventory, not a claim of authenticated end-to-end validation.
 
 ## Status meaning
@@ -123,7 +123,8 @@ No valid test accounts or isolated staging backend credentials were supplied. Th
 - Authenticated E2E: **not run** (no test accounts/staging write credentials supplied).
 - `npm run typecheck`: **passed**.
 - `npm run build`: **passed**, with the existing Vite warning that the main minified chunk is over 500 kB.
-- `npm test`: **unavailable**; `web/package.json` has no test script. No test runner or isolated frontend test suite is configured.
+- `npm test`: **passed 4/4**; these existing rider-search unit tests are not end-to-end or report/contact tests.
 - Production data/schema: no changes made in this batch.
 - Deployment target: Cloudflare Preview only; production deployment is out of scope without explicit approval.
 - Commit `496b017` is pushed and Cloudflare Preview deployment `46f4f929` is online. UI route checks returned HTTP 200; API health returned 200 and unauthenticated `/auth/me` returned 401 as expected. The newly added report/contact API routes returned 404 because the deployed Supabase Edge Function remains version 61. The new migrations were not applied; these rows remain `IN PROGRESS`, not `E2E VERIFIED`.
+- Deno `2.9.7` setup adds `deno task check:edge` and `deno task test:edge`; 18 unit tests pass, covering report validation and evidence signatures, CORS, bounded multipart parsing, group-view identity, location normalization, and mocked routing. These do not verify database writes or the new report/contact endpoints.

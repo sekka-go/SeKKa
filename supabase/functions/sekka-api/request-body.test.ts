@@ -9,7 +9,9 @@ Deno.test("readFormDataBody parses bounded multipart requests", async () => {
   });
 
   const parsed = await readFormDataBody(request, 2_000);
-  if (parsed.get("description") !== "A sufficiently detailed report description.") {
+  if (
+    parsed.get("description") !== "A sufficiently detailed report description."
+  ) {
     throw new Error("Multipart field was not preserved.");
   }
 });

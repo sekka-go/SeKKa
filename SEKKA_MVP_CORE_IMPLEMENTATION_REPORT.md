@@ -5,7 +5,7 @@
 **نقطة البداية:** `f0b6af5609aaa411152c0b0b60488d9ac9db90ef`  
 **Supabase الصحيح:** `uorxfakceqnhxqnaawdy`  
 **Cloudflare Preview:** https://codex-sekka-ui-rebuild.sekka-go.pages.dev (deployment `46f4f929`)  
-**Commit:** `496b017` — `Implement offer contact and report workflows`  
+**Commits:** `496b017` — وظائف البلاغات والتواصل؛ `8b6be6a` — توثيق التحقق أونلاين
 **تطبيق Migration على أي قاعدة:** لم يحدث
 
 ## الملخص
@@ -22,6 +22,13 @@
 - Pages Function proxy يعمل: `GET /__sekka-api/health` أعاد 200، و`GET /__sekka-api/auth/me` أعاد 401 المتوقع دون جلسة.
 - العقود الجديدة ما زالت غير موجودة على الخادم البعيد: `GET /__sekka-api/reports/mine` و`GET /__sekka-api/rider/line-contact-requests` أعادا 404. لذلك واجهات البلاغات والتواصل موجودة في Preview لكن كتابات قاعدة البيانات الجديدة **غير قابلة للاستخدام بعد**.
 - لم يُختبر أي تدفق أعمال بحساب حقيقي، ولم تُرسل أي عملية كتابة إلى Supabase. لا توجد حالة **E2E VERIFIED**.
+
+## إعداد واختبار Deno
+
+- Deno `2.9.7` مثبت، وأُضيف `deno.json` بمهمتي `deno task check:edge` و`deno task test:edge`، دون استبدال npm أو تغيير الحزم.
+- `deno task check:edge`: **نجح**؛ `deno task test:edge`: **نجح 18/18**؛ `deno fmt --check`: **نجح**.
+- تغطي الاختبارات التحقق من البلاغ وتوقيعات المرفقات، وCORS، وهوية عضو المجموعة، وتنسيق المواقع، واستجابات OSRM المحاكية، وقراءة multipart وحد الحجم. هذه اختبارات وحدات محلية، وليست اختبارًا لقاعدة البيانات أو عقود Edge البعيدة.
+- كشف اختبار Nominatim أن `display_name` لا ينقسم بالفاصلة العربية؛ أُصلح المحلل ليدعم الفاصلتين العربية واللاتينية. التغيير محلي في Edge Function ولم يُنشر على Supabase.
 
 ## المراجع التي تمت مراجعتها
 
@@ -103,8 +110,7 @@
 - `npm run typecheck`: **نجح**.
 - `npm test`: **نجح 4/4**. هذه اختبارات محلية لفلترة عروض البحث الموجودة مسبقًا، ولا تغطي البلاغات أو قاعدة البيانات.
 - `npm run build`: **نجح**، مع تحذير الحزمة الرئيسية بحجم 585.86 KB بعد التصغير.
-- `deno check supabase/functions/sekka-api/index.ts`: **نجح**.
-- أُضيف `readFormDataBody` لفرض حد 16.5 ميجابايت أثناء قراءة multipart، حتى عند غياب `Content-Length` أو عدم دقته؛ `deno test supabase/functions/sekka-api/request-body.test.ts`: **نجح 2/2** (قراءة multipart ضمن الحد ورفض جسم يتجاوزه).
+- `deno task check:edge`: **نجح**؛ `deno task test:edge`: **نجح 14/14**؛ `deno fmt --check`: **نجح**.
 - أُضيف اختبار `supabase/tests/sekka_mvp_reports.test.sql` يغطي بدء البلاغ بحالة صحيحة، مراجعة المسؤول وتسجيل التدقيق، ورفض المسؤول غير المخوّل. **لم يُشغّل** لعدم وجود قاعدة اختبار.
 - أُضيف `supabase/tests/sekka_line_contact_requests.test.sql` لفحص حالة الطلب، إنشاء المحادثة، التكرار، عدم تغيير السعة، صلاحية المراسلة، ورفض العرض المتوقف/الدور غير الصحيح. **لم يُشغّل** لعدم وجود قاعدة اختبار.
 - لم يُنفذ أي اختبار كتابة على Supabase، أو اختبار رفع دليل/توقيع رابط، أو اختبار حسابات حقيقية. لا توجد أي عملية **E2E VERIFIED**.
@@ -113,6 +119,7 @@
 
 - `supabase/functions/sekka-api/index.ts`
 - `supabase/functions/sekka-api/request-body.ts` و`request-body.test.ts`
+- `supabase/functions/sekka-api/report-validation.ts` و`report-validation.test.ts`
 - `supabase/migrations/20261030222143_sekka_mvp_reports.sql` (جديد وغير مطبق)
 - `supabase/migrations/20261031230000_sekka_line_contact_requests.sql` (جديد وغير مطبق)
 - `supabase/tests/sekka_mvp_reports.test.sql` (جديد وغير مشغّل)

@@ -132,7 +132,7 @@ export function formatNominatimAddress(
       "state",
     ].map((key) => get(key)),
   );
-  const displayFocus = result.display_name?.split(",")[0]?.trim() ?? "";
+  const displayFocus = result.display_name?.split(/[,،]/, 1)[0]?.trim() ?? "";
   const primary = placeName || street || displayFocus || localities[0] ||
     "موقع محدد على الخريطة";
   const secondary = unique([
