@@ -168,8 +168,7 @@ export default function RiderJourneyScreen({ screen, onNavigate }: Props) {
   return <main className="rider-journey" dir="rtl" lang="ar">
     <header className="journey-topbar"><button className="journey-back" onClick={() => { if (document.referrer.startsWith(window.location.origin)) window.history.back(); else onNavigate("/home"); }} aria-label="رجوع">‹</button><a href="/home" className="journey-brand"><img src="/brand/sekka-mark.png" alt="سِكّة" /></a><button className="journey-avatar" onClick={() => onNavigate("/journey/profile")} aria-label="الملف الشخصي">{profile?.full_name?.slice(0, 1) ?? "س"}</button></header>
     <section className="journey-hero"><span className="journey-eyebrow">{meta.eyebrow}</span><h1>{meta.title}</h1><p>{meta.intro}</p><div className="journey-hero-icon" aria-hidden="true">{meta.icon}</div></section>
-    <details className="journey-directory"><summary>خدمات الراكب <span>استعرض الأقسام</span></summary><nav className="journey-shortcuts" aria-label="أقسام الراكب">{entryGroups.map(([group, keys]) => <section className="journey-link-group" key={group}><h2>{group}</h2><div>{entries.filter(([key]) => keys.includes(key)).map(([key, label]) => <a key={key} className={key === screen ? "active" : ""} aria-current={key === screen ? "page" : undefined} href={`/journey/${key}`}>{label}</a>)}</div></section>)}</nav></details>
-    <section className="journey-content">
+        <section className="journey-content">
       {loading && <div className="journey-state"><span className="journey-spinner"/> جارٍ تحميل بيانات حسابك…</div>}
       {error && !loading && <div className="journey-alert error" role="alert">{error}<button onClick={() => window.location.reload()}>إعادة المحاولة</button></div>}
       {notice && <div className="journey-alert">{notice}</div>}
