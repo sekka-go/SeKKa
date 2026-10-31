@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 220" role="img" aria-labelledby="title desc">
+  <title id="title">شعار سِكّة</title>
+  <desc id="desc">علامة مسار منتظم مع اسم سِكّة</desc>
+  <rect width="760" height="220" fill="none"/>
+  <g transform="translate(16 18)">
+    <rect x="0" y="0" width="184" height="184" rx="40" fill="#073f38"/>
+    <path d="M37 125C61 105 100 90 138 69C164 54 176 37 170 22" fill="none" stroke="#ffd21f" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M40 141C70 119 112 108 147 92C168 81 178 68 176 54" fill="none" stroke="#fff5c2" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+    <circle cx="40" cy="141" r="12" fill="#ffd21f"/>
+    <circle cx="170" cy="24" r="12" fill="#ffd21f"/>
+    <path d="M57 96C57 61 84 34 117 34C150 34 177 61 177 96C177 117 169 132 157 144C144 157 123 171 117 171C111 171 90 157 77 144C64 132 57 117 57 96Z" fill="#f8f7f2" opacity="0.08"/>
+  </g>
+  <g transform="translate(230 43)">
+    <text x="0" y="78" fill="#073f38" font-family="Tajawal,Segoe UI,Arial,sans-serif" font-size="94" font-weight="800" letter-spacing="-2">سِكّة</text>
+    <path d="M4 112H470" stroke="#ffd21f" stroke-width="10" stroke-linecap="round" opacity="0.9"/>
+  </g>
+</svg>
