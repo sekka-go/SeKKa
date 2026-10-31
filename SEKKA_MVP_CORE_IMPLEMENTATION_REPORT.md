@@ -4,8 +4,8 @@
 **الفرع:** `codex/sekka-ui-rebuild`  
 **نقطة البداية:** `f0b6af5609aaa411152c0b0b60488d9ac9db90ef`  
 **Supabase الصحيح:** `uorxfakceqnhxqnaawdy`  
-**Cloudflare Preview:** https://codex-sekka-ui-rebuild.sekka-go.pages.dev (deployment `46f4f929`)  
-**Commits:** `496b017` — وظائف البلاغات والتواصل؛ `8b6be6a` — توثيق التحقق أونلاين
+**Cloudflare Preview:** https://codex-sekka-ui-rebuild.sekka-go.pages.dev (deployment `c6c947f6`)
+**Commits:** `496b017` — وظائف البلاغات والتواصل؛ `8b6be6a` — توثيق التحقق؛ `5ff9711` و`e5ce098` — إعداد Deno واختبار البلاغات
 **تطبيق Migration على أي قاعدة:** لم يحدث
 
 ## الملخص
@@ -16,10 +16,11 @@
 
 ## النشر والتحقق أونلاين
 
-- Commit المرفوع إلى `origin/codex/sekka-ui-rebuild`: `496b017`.
-- رابط Preview: https://codex-sekka-ui-rebuild.sekka-go.pages.dev (deployment `46f4f929`).
+- آخر Commit مرفوع إلى `origin/codex/sekka-ui-rebuild`: `e5ce098`.
+- رابط Preview: https://codex-sekka-ui-rebuild.sekka-go.pages.dev (deployment `c6c947f6`).
 - عادت استجابة HTTP 200 لصفحات `/` و`/trips` و`/journey/complaint` و`/admin/complaints`؛ واختُبر التنقل في المتصفح من تسجيل الدخول إلى التسجيل.
 - Pages Function proxy يعمل: `GET /__sekka-api/health` أعاد 200، و`GET /__sekka-api/auth/me` أعاد 401 المتوقع دون جلسة.
+- بعد تحديث Deno، أُعيد فحص المعاينة: `/` و`/trips` أعادا 200، والصحة 200، والهوية دون جلسة 401.
 - العقود الجديدة ما زالت غير موجودة على الخادم البعيد: `GET /__sekka-api/reports/mine` و`GET /__sekka-api/rider/line-contact-requests` أعادا 404. لذلك واجهات البلاغات والتواصل موجودة في Preview لكن كتابات قاعدة البيانات الجديدة **غير قابلة للاستخدام بعد**.
 - لم يُختبر أي تدفق أعمال بحساب حقيقي، ولم تُرسل أي عملية كتابة إلى Supabase. لا توجد حالة **E2E VERIFIED**.
 
@@ -110,7 +111,7 @@
 - `npm run typecheck`: **نجح**.
 - `npm test`: **نجح 4/4**. هذه اختبارات محلية لفلترة عروض البحث الموجودة مسبقًا، ولا تغطي البلاغات أو قاعدة البيانات.
 - `npm run build`: **نجح**، مع تحذير الحزمة الرئيسية بحجم 585.86 KB بعد التصغير.
-- `deno task check:edge`: **نجح**؛ `deno task test:edge`: **نجح 14/14**؛ `deno fmt --check`: **نجح**.
+- `deno task check:edge`: **نجح**؛ `deno task test:edge`: **نجح 18/18**؛ `deno fmt --check`: **نجح**.
 - أُضيف اختبار `supabase/tests/sekka_mvp_reports.test.sql` يغطي بدء البلاغ بحالة صحيحة، مراجعة المسؤول وتسجيل التدقيق، ورفض المسؤول غير المخوّل. **لم يُشغّل** لعدم وجود قاعدة اختبار.
 - أُضيف `supabase/tests/sekka_line_contact_requests.test.sql` لفحص حالة الطلب، إنشاء المحادثة، التكرار، عدم تغيير السعة، صلاحية المراسلة، ورفض العرض المتوقف/الدور غير الصحيح. **لم يُشغّل** لعدم وجود قاعدة اختبار.
 - لم يُنفذ أي اختبار كتابة على Supabase، أو اختبار رفع دليل/توقيع رابط، أو اختبار حسابات حقيقية. لا توجد أي عملية **E2E VERIFIED**.
