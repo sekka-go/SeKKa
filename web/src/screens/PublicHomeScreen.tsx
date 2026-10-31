@@ -1,4 +1,5 @@
 import "./public-home-screen.css";
+import PwaInstallPrompt from "./PwaInstallPrompt";
 
 export default function PublicHomeScreen() {
   return (
@@ -24,6 +25,7 @@ export default function PublicHomeScreen() {
 
         <div className="welcome-route-mark" aria-hidden="true"><i /><span>◆</span><i /></div>
       </section>
+      <PwaInstallPrompt />
     </main>
   );
 }
