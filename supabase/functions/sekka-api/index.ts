@@ -5,6 +5,7 @@ import { dedupeLocationSuggestions, formatNominatimAddress, formatPhotonAddress,
 import { readFormDataBody, readJsonObjectBody, RequestBodyTooLargeError } from "./request-body.ts";
 import { activeMemberIdForRider } from "./group-view.ts";
 import { corsHeaders } from "./cors.ts";
+import { detectEvidenceMimeType, evidenceExtension, validateReportFields } from "./report-validation.ts";
 
 type Json = Record<string, unknown>;
 type User = { id: number; full_name: string; phone_number: string; role: "rider" | "captain" | "admin"; verified_at: string | null; created_at: string; account_status?: "active" | "suspended" | "banned" };
@@ -1903,14 +1904,7 @@ Deno.serve(async (req: Request) => {
       const description = String(form.get("description") ?? "").trim();
       const targetUserId = form.get("subject_user_id") ? Number(form.get("subject_user_id")) : null;
       const lineId = form.get("captain_line_id") ? Number(form.get("captain_line_id")) : null;
-      const allowedCategories = ["fraud", "harassment", "unsafe_behavior", "misleading_offer", "other"];
-      if (!["user", "offer", "behavior"].includes(subjectType) || !allowedCategories.includes(category)
-        || description.length < 20 || description.length > 5000
-        || (targetUserId !== null && (!Number.isSafeInteger(targetUserId) || targetUserId < 1 || targetUserId === user.id))
-        || (lineId !== null && (!Number.isSafeInteger(lineId) || lineId < 1))
-        || (subjectType === "user" && (targetUserId === null || lineId !== null))
-        || (subjectType === "offer" && (lineId === null || targetUserId !== null))
-        || (subjectType === "behavior" && targetUserId === null && lineId === null)) return error("راجع نوع البلاغ والهدف والوصف. يجب أن يكون الوصف بين 20 و5000 حرف.", 400, origin);
+      if (!validateReportFields({ subjectType, category, description, targetUserId, lineId, reporterUserId: user.id })) return error("راجع نوع البلاغ والهدف والوصف. يجب أن يكون الوصف بين 20 و5000 حرف.", 400, origin);
       if (targetUserId !== null) {
         const { data: target, error: targetError } = await db.from("users").select("id").eq("id", targetUserId).is("deleted_at", null).maybeSingle();
         if (targetError) throw targetError;
@@ -1933,12 +1927,10 @@ Deno.serve(async (req: Request) => {
       try {
         for (const file of files) {
           const bytes = new Uint8Array(await file.arrayBuffer());
-          const mimeType = bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff ? "image/jpeg"
-            : bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47 ? "image/png"
-            : bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 && String.fromCharCode(...bytes.slice(8, 12)) === "WEBP" ? "image/webp"
-            : String.fromCharCode(...bytes.slice(0, 5)) === "%PDF-" ? "application/pdf" : null;
+          const mimeType = detectEvidenceMimeType(bytes);
           if (!mimeType || file.type !== mimeType) throw new Error("صيغة أحد الأدلة غير مدعومة. استخدم JPEG أو PNG أو WebP أو PDF.");
-          const extension = mimeType === "image/jpeg" ? "jpg" : mimeType === "application/pdf" ? "pdf" : mimeType.split("/")[1];
+          const extension = evidenceExtension(mimeType);
+          if (!extension) throw new Error("صيغة أحد الأدلة غير مدعومة. استخدم JPEG أو PNG أو WebP أو PDF.");
           const objectPath = `${report.id}/${user.id}/${crypto.randomUUID()}.${extension}`;
           const { error: uploadError } = await db.storage.from("sekka-report-evidence").upload(objectPath, bytes, { contentType: mimeType, upsert: false });
           if (uploadError) throw uploadError;
