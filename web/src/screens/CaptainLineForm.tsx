@@ -1,11 +1,12 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { sekkaApi } from "../lib/sekka-api";
+import { captainLinePricingError, isCaptainLinePaymentMethod, validateCaptainLinePricing } from "../../../shared/captainLinePricing.ts";
 
 type Place = { label: string; primary: string; secondary: string; lat: number; lng: number };
 type Line = { id: string; vehicle_type_id: string; origin_label: string; origin_lat: number; origin_lng: number; destination_label: string; destination_lat: number; destination_lng: number; arrival_time: string; return_arrival_time: string | null; service_days: number[]; seats: number; price_per_seat: number | null; payment_methods: string[] };
 type Props = { mode: "new" | "edit"; line?: Line; onBack: () => void; onSaved: () => void };
 const days = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
-const paymentOptions = [{ id: "cash", name: "نقدًا" }, { id: "instapay", name: "InstaPay" }, { id: "wallet", name: "محفظة إلكترونية" }];
+const paymentOptions = [{ id: "cash", name: "نقدًا" }, { id: "wallet", name: "محفظة إلكترونية خارجية" }, { id: "instapay", name: "InstaPay" }];
 
 export default function CaptainLineForm({ mode, line, onBack, onSaved }: Props) {
   const editing = mode === "edit";
@@ -21,7 +22,7 @@ export default function CaptainLineForm({ mode, line, onBack, onSaved }: Props) 
   const [returnArrival, setReturnArrival] = useState(line?.return_arrival_time?.slice(0, 5) ?? "");
   const [seats, setSeats] = useState(String(line?.seats ?? 1));
   const [price, setPrice] = useState(line?.price_per_seat == null ? "" : String(line.price_per_seat));
-  const [paymentMethods, setPaymentMethods] = useState<string[]>(line?.payment_methods?.length ? line.payment_methods : ["cash"]);
+  const [paymentMethods, setPaymentMethods] = useState<string[]>(() => line ? line.payment_methods.filter(isCaptainLinePaymentMethod) : ["cash"]);
   const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(false); const [error, setError] = useState("");
 
   useEffect(() => { let active = true; sekkaApi<{ profile: any }>("/captain/profile").then(({ profile: data }) => { if (active) setProfile(data); }).catch((cause) => { if (active) setError(message(cause)); }).finally(() => { if (active) setLoading(false); }); return () => { active = false; }; }, []);
@@ -37,9 +38,10 @@ export default function CaptainLineForm({ mode, line, onBack, onSaved }: Props) 
     if (!profile?.vehicle_type_id) { setError("أكمل بيانات المركبة في ملف الكابتن أولًا."); return; }
     if (editing && !line) { setError("لم يتم العثور على العرض المطلوب تعديله. ارجع إلى قائمة العروض واختر عرضًا صالحًا."); return; }
     if (!origin || !destination) { setError("اختر نقطتي البداية والوصول من نتائج البحث عن المواقع."); return; }
-    if (!serviceDays.length || !paymentMethods.length) { setError("اختر يوم تشغيل ووسيلة دفع واحدة على الأقل."); return; }
-    if (editing && !price) { setError("سعر المقعد مطلوب عند تعديل العرض."); return; }
-    const body = { vehicle_type_id: profile.vehicle_type_id, origin_label: origin.label, origin_lat: origin.lat, origin_lng: origin.lng, destination_label: destination.label, destination_lat: destination.lat, destination_lng: destination.lng, service_days: serviceDays, arrival_time: arrival, return_arrival_time: returnArrival || null, seats: Number(seats), price_per_seat: price ? Number(price) : null, payment_methods: paymentMethods };
+    if (!serviceDays.length) { setError("اختر يوم تشغيل واحدًا على الأقل."); return; }
+    const pricing = validateCaptainLinePricing(price, paymentMethods);
+    if (!pricing.ok) { setError(captainLinePricingError(pricing.reason)); return; }
+    const body = { vehicle_type_id: profile.vehicle_type_id, origin_label: origin.label, origin_lat: origin.lat, origin_lng: origin.lng, destination_label: destination.label, destination_lat: destination.lat, destination_lng: destination.lng, service_days: serviceDays, arrival_time: arrival, return_arrival_time: returnArrival || null, seats: Number(seats), price_per_seat: pricing.pricePerSeat, payment_methods: pricing.paymentMethods };
     setSaving(true);
     try { await sekkaApi(editing ? `/captain/lines/${line!.id}` : "/captain/lines", { method: editing ? "PUT" : "POST", body }); onSaved(); }
     catch (cause) { setError(message(cause)); }
@@ -57,8 +59,10 @@ export default function CaptainLineForm({ mode, line, onBack, onSaved }: Props) 
       {renderPlace(true)}{renderPlace(false)}
       <fieldset className="captain-line-checks"><legend>أيام التشغيل</legend>{days.map((label, index) => <label key={label}><input type="checkbox" checked={serviceDays.includes(index)} onChange={() => toggle(index, serviceDays, setServiceDays)}/>{label}</label>)}</fieldset>
       <div className="captain-line-grid"><label className="journey-form-label">موعد الوصول<input type="time" value={arrival} onChange={(event) => setArrival(event.target.value)} required/></label><label className="journey-form-label">موعد العودة (اختياري)<input type="time" value={returnArrival} onChange={(event) => setReturnArrival(event.target.value)}/></label></div>
-      <div className="captain-line-grid"><label className="journey-form-label">عدد المقاعد<input type="number" min="1" max="13" value={seats} onChange={(event) => setSeats(event.target.value)} required/></label><label className="journey-form-label">سعر المقعد بالجنيه<input type="number" min="0.01" step="0.01" value={price} onChange={(event) => setPrice(event.target.value)} placeholder="اختياري عند الإنشاء" required={editing}/></label></div>
-      <fieldset className="captain-line-checks"><legend>وسائل الدفع المباشر</legend>{paymentOptions.map((item) => <label key={item.id}><input type="checkbox" checked={paymentMethods.includes(item.id)} onChange={() => toggle(item.id, paymentMethods, setPaymentMethods)}/>{item.name}</label>)}</fieldset>
+      <div className="captain-line-grid"><label className="journey-form-label">سعر الرحلة الواحدة لكل مقعد (جنيه)<input type="number" min="0.01" max="99999999.99" step="0.01" value={price} onChange={(event) => setPrice(event.target.value)} placeholder="أدخل سعر الرحلة لكل مقعد" required/></label><label className="journey-form-label">عدد المقاعد<input type="number" min="1" max="13" value={seats} onChange={(event) => setSeats(event.target.value)} required/></label></div>
+      {line?.payment_methods.some((method) => !isCaptainLinePaymentMethod(method)) && <p className="journey-note" role="status">يتضمن العرض وسيلة دفع غير معروفة في النموذج الحالي. راجع الوسائل قبل الحفظ.</p>}
+      <fieldset className="captain-line-checks"><legend>وسائل الدفع المباشر خارج سِكّة</legend>{paymentOptions.map((item) => <label key={item.id}><input type="checkbox" checked={paymentMethods.includes(item.id)} onChange={() => toggle(item.id, paymentMethods, setPaymentMethods)}/>{item.name}</label>)}</fieldset>
+      <p className="journey-note">تدفع مباشرة للكابتن. لا تستقبل سِكّة الأموال ولا تحتفظ بها، والمحفظة الإلكترونية لدى مزود خارجي.</p>
       <p className="journey-note">النشر متاح بعد توثيق الهاتف واعتماد الحساب. تسجيل العرض لا يضمن قبول طلب أو اكتمال مجموعة.</p>
     </>}</>}
     {error && <p className="journey-alert error" role="alert">{error}</p>}
