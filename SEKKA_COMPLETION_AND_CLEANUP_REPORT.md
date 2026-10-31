@@ -43,4 +43,7 @@ Changes are in the separate integration worktree for review. The source worktree
 
 ## Follow-up delivery
 
-Pending at report creation; update this section after the requested branch push and Cloudflare Preview verification.
+- Commit `fc72c01ace102277ed1fb1dcfe852373b2312747` pushed to [integration/sekka-stable](https://github.com/sekka-go/SeKKa/tree/integration/sekka-stable).
+- Cloudflare Preview deployed at [c5510ffa.sekka-go.pages.dev](https://c5510ffa.sekka-go.pages.dev); `/`, `/login`, and `/captain/home` returned HTTP 200.
+- GitHub Actions run [41178115267](https://github.com/sekka-go/SeKKa/actions/runs/41178115267): web and Edge checks passed; full-history Gitleaks scan failed on the four pre-existing findings described in `SECURITY_REMEDIATION.md`.
+- No migration, production deployment, Edge Function deployment, or merge to `main` was performed.

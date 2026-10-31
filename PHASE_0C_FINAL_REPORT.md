@@ -1,8 +1,9 @@
 # SeKKa — Phase 0C Final Report
 
 **التاريخ:** 2026-10-31
-**الحالة:** **INTEGRATION BLOCKED** — التكامل المحلي جاهز للمراجعة، لكن لا يُدفع إلى GitHub بسبب نتائج Gitleaks التاريخية وعدم إثبات تدوير/إبطال credentials.
-**لا نشر:** لم تُطبق SQL/Migrations، ولم يُنشر Edge Function أو Cloudflare، ولم يحدث Merge إلى remote أو commit.
+**ملاحظة زمنية:** هذا التقرير يسجل حالة Phase 0C قبل طلب المستخدم اللاحق برفع الفرع ونشر Preview. انظر تحديث التسليم في القسم 8.
+**الحالة الحالية:** Preview منشور على فرع التكامل. ما زال فحص Gitleaks التاريخي يفشل، ولا تعد هذه النسخة جاهزة للـbeta أو لدمجها إلى `main`.
+**حدود النشر:** لم تُطبق SQL/Migrations، ولم يُنشر Edge Function، ولم يحدث Merge إلى `main` أو Production.
 
 ## 1. ما تم
 
@@ -76,9 +77,11 @@
 ## 8. CI/GitHub والتسليم
 
 - أضيف `.github/workflows/ci.yml` إلى نتيجة التكامل المحلية. يضم typecheck, web tests, build, `npm audit`, Deno check/tests، وفحص Gitleaks history. لا يحتوي على خطوات Deploy؛ صلاحياته `contents: read` والتعليقات/رفع تقارير Gitleaks معطلة.
-- يستعمل CI صورة Gitleaks الرسمية المثبتة على `v8.30.1` لفحص Git history كاملًا بلا حاجة إلى license secret أو صلاحية كتابة؛ أمر Docker متوافق مع طريقة التشغيل المنشورة في [README الرسمي](https://github.com/gitleaks/gitleaks). إعداد الملف جرى فحصه محليًا، ولم يُشغّل GitHub Actions لعدم دفع الفرع.
-- لم أنشئ commit أو أدفع الفرع أو أفتح PR؛ Gitleaks history ما زال يفشل ولا توجد إفادة بإبطال المفاتيح. لذلك لا يمكن أن أصف الفرع بأنه READY FOR REVIEW على GitHub أو READY FOR BETA VALIDATION.
-- لا رابط Preview جديد: لم يتم Deploy.
+- يستعمل CI صورة Gitleaks الرسمية المثبتة على `v8.30.1` لفحص Git history كاملًا بلا حاجة إلى license secret أو صلاحية كتابة؛ أمر Docker متوافق مع طريقة التشغيل المنشورة في [README الرسمي](https://github.com/gitleaks/gitleaks).
+- بناء على طلب المستخدم، تم إنشاء commit `fc72c01ace102277ed1fb1dcfe852373b2312747` ودفعه إلى [فرع integration/sekka-stable](https://github.com/sekka-go/SeKKa/tree/integration/sekka-stable). لم يُجرَ force-push أو إعادة كتابة للتاريخ.
+- تشغيل GitHub Actions `41178115267`: فحوص Web وEdge نجحت؛ فشل Gitleaks فقط بسبب النتائج التاريخية الأربع الموثقة. لم تُعرض القيم.
+- نشر Cloudflare Pages Preview تلقائيًا من الفرع: [c5510ffa.sekka-go.pages.dev](https://c5510ffa.sekka-go.pages.dev). تحقق HTTP 200 للمسارات `/`, `/login`, و`/captain/home`.
+- لم تُطبق Migration ولم يُنشر Edge Function أو Production. لم يُنشأ PR أو دمج إلى `main`.
 
 ## 9. المطلوب من مالك المشروع قبل استكمال الإطلاق
 
@@ -90,4 +93,4 @@
 
 ## الحكم
 
-**INTEGRATION BLOCKED.** اختبارات البناء والنوع والاختبارات المحلية نجحت، لكن نتائج Gitleaks التاريخية تمنع الدفع الآمن، ولا تزال الوظائف الجديدة غير منشورة أو غير قابلة لإثبات E2E. التكامل موجود محليًا في worktree منفصل للمراجعة؛ قاعدة Supabase وProduction لم تتغيرا.
+**PREVIEW PUBLISHED — BETA READINESS BLOCKED.** اختبارات البناء والنوع والاختبارات المحلية وCI للويب والـEdge نجحت. فحص Gitleaks التاريخي ما زال يفشل، واختبارات E2E بحسابات staging غير متاحة. لم تتغير قاعدة Supabase أو Production ولم يُنشر Edge Function.
