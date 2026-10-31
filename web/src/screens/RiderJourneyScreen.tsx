@@ -26,8 +26,6 @@ const screens: Record<RiderJourneyKey, ScreenMeta> = {
   "complaint-status": { title: "متابعة الشكوى", eyebrow: "طلب الدعم", intro: "تابع حالة الشكوى والقرار بعد تحديثه.", icon: "◎" },
   profile: { title: "الملف الشخصي والإعدادات", eyebrow: "حسابك في سِكّة", intro: "بيانات الحساب وخيارات الخصوصية والإشعارات والمساعدة.", icon: "◉" },
 };
-const entries: Array<[RiderJourneyKey, string]> = [["group", "تفاصيل المجموعة"],["subscriptions", "اشتراكاتي"],["subscription", "تفاصيل الاشتراك"],["receipt", "إيصال سِكّة"],["payment-method", "وسيلة الدفع"],["proof", "إثبات التحويل"],["captain-confirmation", "تأكيد الكابتن"],["payment-code", "كود الدفع"],["payment-result", "نتيجة الدفع"],["renewal", "التجديد الشهري"],["replacement-captain", "كابتن بديل"],["conversations", "المحادثات"],["conversation", "تفاصيل المحادثة"],["notifications", "الإشعارات"],["ratings", "التقييمات"],["complaint", "تقديم شكوى"],["complaint-status", "متابعة الشكوى"],["profile", "الملف الشخصي"]];
-const entryGroups: Array<[string, RiderJourneyKey[]]> = [["الرحلة والاشتراك", ["group", "subscriptions", "subscription", "renewal", "replacement-captain"]], ["الدفع", ["receipt", "payment-method", "proof", "captain-confirmation", "payment-code", "payment-result"]], ["التواصل والمساندة", ["conversations", "conversation", "notifications", "ratings", "complaint", "complaint-status"]], ["الحساب", ["profile"]]];
 
 export default function RiderJourneyScreen({ screen, onNavigate }: Props) {
   const meta = screens[screen];
