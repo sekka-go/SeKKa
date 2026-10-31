@@ -1,0 +1,5 @@
+project_id = "sekka"
+
+[functions.sekka-api]
+verify_jwt = false
+import_map = "./functions/sekka-api/import_map.json"

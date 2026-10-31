@@ -4,17 +4,17 @@ import RegisterScreen, { type SignupPayload } from "./screens/RegisterScreen";
 import LoginScreen from "./screens/LoginScreen";
 import PublicHomeScreen from "./screens/PublicHomeScreen";
 import RiderHomeScreen, { type HomeAction } from "./screens/RiderHomeScreen";
-import RiderTripsScreen from "./screens/RiderTripsScreen";
+import RiderTripsScreen, { SharedOfferScreen } from "./screens/RiderTripsScreen";
 import ForgotPasswordScreen from "./screens/legal/ForgotPasswordScreen";
 import LegalDocumentScreen from "./screens/legal/LegalDocumentScreen";
 import RiderJourneyScreen, { type RiderJourneyKey } from "./screens/RiderJourneyScreen";
 import CaptainJourneyScreen, { type CaptainJourneyKey } from "./screens/CaptainJourneyScreen";
 import type { AdminLiveScreenKey as AdminScreenKey, SharedLiveScreenKey as SharedScreenKey } from "./screens/AdminConsoleLiveScreen";
 import { adminApi, clearAdminApiToken, setAdminApiToken, type AdminApiSession } from "./lib/admin-api";
-import { clearSekkaSession, getSekkaSession, saveSekkaSession, sekkaApi, SekkaApiError, type SekkaSession, type SekkaUser } from "./lib/sekka-api";
+import { clearSekkaSession, getSekkaSession, normalizeEgyptianPhone, saveSekkaSession, sekkaApi, SekkaApiError, type SekkaSession, type SekkaUser } from "./lib/sekka-api";
 
 const AdminConsoleScreen = lazy(() => import("./screens/AdminConsoleLiveScreen"));
-const adminScreenKeys: AdminScreenKey[] = ["dashboard", "users", "user", "captains", "documents", "vehicles", "offers", "rider-requests", "groups", "group", "subscriptions", "payments", "payment", "disputes", "complaints", "ratings", "notifications", "commission", "settings", "reports", "audit-log", "admin-permissions", "trip-operations", "pool-overview", "finance", "pricing", "campaigns", "otp-settings", "ledger"];
+const adminScreenKeys: AdminScreenKey[] = ["dashboard", "users", "user", "captains", "documents", "vehicles", "offers", "rider-requests", "groups", "group", "subscriptions", "complaints", "ratings", "notifications", "settings", "reports", "audit-log", "admin-permissions", "trip-operations", "pool-overview", "otp-settings"];
 const sharedScreenKeys: SharedScreenKey[] = ["notifications", "loading", "error", "empty", "offline", "confirm", "access-denied", "not-found"];
 
 type RegistrationState = "form" | "complete";
@@ -58,6 +58,7 @@ export default function App() {
   const sharedPathMatch = path.match(/^\/shared\/([a-z-]+)$/);
   const sharedScreenKey = sharedPathMatch?.[1] as SharedScreenKey | undefined;
   const isTripsPage = path === "/trips";
+  const isSharedOfferPage = path === "/share/offer";
   const isMyTripsPage = path === "/my-trips";
   const isRequestCreatePage = path === "/requests/new";
   const journeyMatch = path.match(/^\/journey\/([a-z-]+)$/);
@@ -86,7 +87,7 @@ export default function App() {
       } catch (cause) {
         if (active) {
           if ((cause as { status?: number }).status === 401) { clearSekkaSession(); setAuthSession(null); }
-          else setSessionMessage("تعذر التحقق من جلستك الآن. تحقق من اتصال الإنترنت ثم أعد المحاولة.");
+          else setSessionMessage("مش قادرين نتحقق من دخولك دلوقتي. اتأكد من النت وجرّب تاني.");
         }
       } finally { if (active) setSessionReady(true); }
     }
@@ -118,10 +119,10 @@ export default function App() {
 
   useEffect(() => {
     const journeyTitle: Partial<Record<RiderJourneyKey, string>> = { group: "تفاصيل المجموعة", subscriptions: "اشتراكاتي", subscription: "تفاصيل الاشتراك", receipt: "إيصال سِكّة", "payment-method": "اختيار وسيلة الدفع", proof: "رفع إثبات التحويل", "captain-confirmation": "انتظار تأكيد الكابتن", "payment-code": "تأكيد كود الدفع", "payment-result": "نتيجة الدفع", renewal: "التجديد الشهري", "replacement-captain": "البحث عن كابتن بديل", conversations: "المحادثات", conversation: "تفاصيل المحادثة", notifications: "الإشعارات", ratings: "التقييمات", complaint: "تقديم شكوى", "complaint-status": "متابعة الشكوى", profile: "الملف الشخصي والإعدادات" };
-    const adminTitles: Partial<Record<AdminScreenKey,string>> = { dashboard:"لوحة المؤشرات",users:"إدارة المستخدمين",user:"تفاصيل المستخدم",captains:"إدارة الكباتن",documents:"مراجعة الوثائق",vehicles:"إدارة المركبات",offers:"إدارة العروض","rider-requests":"طلبات الركاب",groups:"إدارة المجموعات",group:"تفاصيل المجموعة",subscriptions:"إدارة الاشتراكات",payments:"مراقبة عمليات الدفع",payment:"تفاصيل الدفع",disputes:"النزاعات المالية",complaints:"الشكاوى والبلاغات",ratings:"إدارة التقييمات",notifications:"إدارة الإشعارات",commission:"العمولة المستقبلية",settings:"إعدادات التشغيل",reports:"التقارير والتحليلات","audit-log":"سجل التدقيق","admin-permissions":"صلاحيات الإدارة","trip-operations":"إدارة الرحلات","pool-overview":"مؤشرات المجموعات",finance:"الملخص المالي",pricing:"إعدادات التسعير",campaigns:"الحملات","otp-settings":"إعدادات التحقق",ledger:"دفتر الحسابات" };
+    const adminTitles: Partial<Record<AdminScreenKey,string>> = { dashboard:"لوحة المؤشرات",users:"إدارة المستخدمين",user:"تفاصيل المستخدم",captains:"إدارة الكباتن",documents:"مراجعة الوثائق",vehicles:"إدارة المركبات",offers:"إدارة العروض","rider-requests":"طلبات الركاب",groups:"إدارة المجموعات",group:"تفاصيل المجموعة",subscriptions:"إدارة الاشتراكات",complaints:"الشكاوى والبلاغات",ratings:"إدارة التقييمات",notifications:"إدارة الإشعارات",settings:"إعدادات التشغيل",reports:"التقارير والتحليلات","audit-log":"سجل التدقيق","admin-permissions":"صلاحيات الإدارة","trip-operations":"إدارة الرحلات","pool-overview":"مؤشرات المجموعات","otp-settings":"إعدادات التحقق" };
     const sharedTitles: Partial<Record<SharedScreenKey,string>> = { notifications:"مركز الإشعارات",loading:"حالة التحميل",error:"حالة الخطأ",empty:"حالة عدم وجود بيانات",offline:"حالة عدم الاتصال",confirm:"تأكيد إجراء حساس","access-denied":"الوصول مرفوض","not-found":"الصفحة غير موجودة" };
-    document.title = isLoginPage || isAdminLoginPage ? `${isAdminLoginPage ? "دخول الإدارة" : "تسجيل الدخول"} | سِكّة` : isRegisterPage ? "إنشاء حساب جديد | سِكّة" : isForgotPasswordPage ? "استعادة الحساب | سِكّة" : isResetPasswordPage ? "تعيين كلمة مرور | سِكّة" : isTermsPage ? "الشروط والأحكام | سِكّة" : isPrivacyPage ? "سياسة الخصوصية | سِكّة" : isRiderHome ? "الرئيسية | سِكّة" : isCaptainHome || captainJourneyKey === "home" ? "الرئيسية للكابتن | سِكّة" : isTripsPage || isRequestCreatePage ? "الرحلات المتاحة | سِكّة" : isMyTripsPage ? "رحلاتي | سِكّة" : journeyKey ? `${journeyTitle[journeyKey] ?? "حسابي"} | سِكّة` : captainJourneyKey ? `الكابتن | ${captainJourneyKey} | سِكّة` : adminScreenKey ? `${adminTitles[adminScreenKey] ?? "الإدارة"} | سِكّة` : sharedScreenKey ? `${sharedTitles[sharedScreenKey] ?? "سِكّة"} | سِكّة` : isPublicHome ? "سِكّة | تنقّل منتظم" : "الصفحة غير موجودة | سِكّة";
-  }, [isLoginPage, isAdminLoginPage, isRegisterPage, isForgotPasswordPage, isResetPasswordPage, isTermsPage, isPrivacyPage, isRiderHome, isCaptainHome, isTripsPage, isMyTripsPage, isRequestCreatePage, isPublicHome, journeyKey, captainJourneyKey, adminScreenKey, sharedScreenKey]);
+    document.title = isLoginPage || isAdminLoginPage ? `${isAdminLoginPage ? "دخول الإدارة" : "تسجيل الدخول"} | سِكّة` : isRegisterPage ? "إنشاء حساب جديد | سِكّة" : isForgotPasswordPage ? "استعادة الحساب | سِكّة" : isResetPasswordPage ? "تعيين كلمة مرور | سِكّة" : isTermsPage ? "الشروط والأحكام | سِكّة" : isPrivacyPage ? "سياسة الخصوصية | سِكّة" : isSharedOfferPage ? "تفاصيل عرض رحلة | سِكّة" : isRiderHome ? "الرئيسية | سِكّة" : isCaptainHome || captainJourneyKey === "home" ? "الرئيسية للكابتن | سِكّة" : isTripsPage || isRequestCreatePage ? "الرحلات المتاحة | سِكّة" : isMyTripsPage ? "رحلاتي | سِكّة" : journeyKey ? `${journeyTitle[journeyKey] ?? "حسابي"} | سِكّة` : captainJourneyKey ? `الكابتن | ${captainJourneyKey} | سِكّة` : adminScreenKey ? `${adminTitles[adminScreenKey] ?? "الإدارة"} | سِكّة` : sharedScreenKey ? `${sharedTitles[sharedScreenKey] ?? "سِكّة"} | سِكّة` : isPublicHome ? "سِكّة | تنقّل منتظم" : "الصفحة غير موجودة | سِكّة";
+  }, [isLoginPage, isAdminLoginPage, isRegisterPage, isForgotPasswordPage, isResetPasswordPage, isTermsPage, isPrivacyPage, isSharedOfferPage, isRiderHome, isCaptainHome, isTripsPage, isMyTripsPage, isRequestCreatePage, isPublicHome, journeyKey, captainJourneyKey, adminScreenKey, sharedScreenKey]);
 
   async function register(payload: SignupPayload) {
     setError("");
@@ -131,7 +132,7 @@ export default function App() {
         method: "POST",
         body: {
           full_name: payload.fullName,
-          phone_number: toEgyptianPhone(payload.phone),
+          phone_number: normalizeEgyptianPhone(payload.phone),
           password: payload.password,
           role: payload.role,
           accepted_terms: true,
@@ -157,7 +158,7 @@ export default function App() {
       if (isAdminLoginPage) {
         const session = await adminApi<AdminApiSession>("/auth/login", {
           method: "POST",
-          body: { phone_number: toEgyptianPhone(phoneNumber), password },
+          body: { phone_number: normalizeEgyptianPhone(phoneNumber), password },
         });
         if (session.user?.role !== "admin" || !session.token) {
           if (session.token) {
@@ -172,10 +173,10 @@ export default function App() {
       }
       const session = await sekkaApi<{ token: string; user: SekkaUser }>("/auth/login", {
         method: "POST",
-        body: { phone_number: toEgyptianPhone(phoneNumber), password },
+        body: { phone_number: normalizeEgyptianPhone(phoneNumber), password },
       });
       const destinations: Record<string, string> = { rider: "/home", captain: "/captain/home", admin: "/admin" };
-      if (!session.token || !session.user || !destinations[session.user.role]) throw new Error("تعذر تأكيد بيانات الحساب.");
+      if (!session.token || !session.user || !destinations[session.user.role]) throw new Error("مش قادرين نأكد بيانات حسابك. جرّب تاني.");
       const saved = saveSekkaSession(session);
       setAuthSession(saved);
       window.location.replace(destinations[session.user.role]);
@@ -193,19 +194,19 @@ export default function App() {
   }
 
   async function sendRecoveryPhoneCode(phoneNumber: string) {
-    const response = await sekkaApi<{ reset_url: string }>("/auth/password-reset/telegram", { method: "POST", body: { phone_number: toEgyptianPhone(phoneNumber) } });
+    const response = await sekkaApi<{ reset_url: string }>("/auth/password-reset/telegram", { method: "POST", body: { phone_number: normalizeEgyptianPhone(phoneNumber) } });
     return response.reset_url;
   }
 
   async function completePhonePasswordReset(phoneNumber: string, code: string, password: string) {
-    await sekkaApi("/auth/password-reset/complete", { method: "POST", body: { phone_number: toEgyptianPhone(phoneNumber), code, new_password: password } });
+    await sekkaApi("/auth/password-reset/complete", { method: "POST", body: { phone_number: normalizeEgyptianPhone(phoneNumber), code, new_password: password } });
   }
 
   const needsRiderSession = isRiderHome || isRiderTripsPage || Boolean(journeyKey);
   const needsCaptainSession = isCaptainHome || Boolean(captainJourneyKey);
-  if ((needsRiderSession || needsCaptainSession) && !sessionReady) return <main className="sekka-public-route-state" dir="rtl" lang="ar"><img src="/brand/sekka-mark.png" alt="سِكّة"/><span>جارٍ استعادة جلسة حسابك…</span></main>;
-  if ((needsRiderSession || needsCaptainSession) && sessionMessage) return <main className="sekka-public-route-state" dir="rtl" lang="ar"><img src="/brand/sekka-mark.png" alt="سِكّة"/><h1>تعذر الاتصال بحسابك</h1><p>{sessionMessage}</p><button onClick={() => window.location.reload()}>إعادة المحاولة</button></main>;
-  if ((needsRiderSession || needsCaptainSession) && !authSession) return <main className="sekka-public-route-state" dir="rtl" lang="ar"><img src="/brand/sekka-mark.png" alt="سِكّة"/><span>جارٍ فتح تسجيل الدخول…</span></main>;
+  if ((needsRiderSession || needsCaptainSession) && !sessionReady) return <main className="sekka-public-route-state" dir="rtl" lang="ar"><img src="/brand/sekka-mark.svg" alt="سِكّة"/><span>بنرجّع حسابك…</span></main>;
+  if ((needsRiderSession || needsCaptainSession) && sessionMessage) return <main className="sekka-public-route-state" dir="rtl" lang="ar"><img src="/brand/sekka-mark.svg" alt="سِكّة"/><h1>مش قادرين نوصل لحسابك</h1><p>{sessionMessage}</p><button onClick={() => window.location.reload()}>جرّب تاني</button></main>;
+  if ((needsRiderSession || needsCaptainSession) && !authSession) return <main className="sekka-public-route-state" dir="rtl" lang="ar"><img src="/brand/sekka-mark.svg" alt="سِكّة"/><span>بنفتح صفحة الدخول…</span></main>;
   if (needsRiderSession && authSession?.user.role !== "rider") return <main className="sekka-public-route-state" dir="rtl" lang="ar"><span>جارٍ فتح الصفحة المناسبة لحسابك…</span></main>;
   if (needsCaptainSession && authSession?.user.role !== "captain") return <main className="sekka-public-route-state" dir="rtl" lang="ar"><span>جارٍ فتح الصفحة المناسبة لحسابك…</span></main>;
 
@@ -213,11 +214,11 @@ export default function App() {
     return (
       <main className="sekka-register-screen" dir="rtl" lang="ar">
         <section className="sekka-register-card sekka-register-result" aria-live="polite">
-          <a className="sekka-register-brand" href="/" aria-label="سِكّة"><img src="/brand/sekka-mark.png" alt="شعار سِكّة" /></a>
+          <a className="sekka-register-brand" href="/" aria-label="سِكّة"><img src="/brand/sekka-mark.svg" alt="شعار سِكّة" /></a>
           <div className="sekka-register-success-mark" aria-hidden="true">✓</div>
-          <h1>تم إنشاء حسابك</h1>
-          <p className="sekka-register-result-copy">أصبح حسابك جاهزًا. سجّل الدخول برقم الهاتف وكلمة المرور للمتابعة.</p>
-          <a className="sekka-register-submit sekka-register-link-button" href="/login">الانتقال لتسجيل الدخول <span aria-hidden="true">←</span></a>
+          <h1>حسابك جاهز</h1>
+          <p className="sekka-register-result-copy">سجّل دخول برقم الموبايل وكلمة السر عشان تكمّل.</p>
+          <a className="sekka-register-submit sekka-register-link-button" href="/login">سجّل دخول <span aria-hidden="true">←</span></a>
         </section>
       </main>
     );
@@ -260,12 +261,13 @@ export default function App() {
   if (adminScreenKey && adminScreenKeys.includes(adminScreenKey)) return <Suspense fallback={<main className="sekka-public-route-state" dir="rtl">جارٍ فتح لوحة الإدارة…</main>}><AdminConsoleScreen supabase={supabase} screen={adminScreenKey} onNavigate={(target) => window.location.assign(target)} /></Suspense>;
   if (sharedScreenKey && sharedScreenKeys.includes(sharedScreenKey)) return <Suspense fallback={<main className="sekka-public-route-state" dir="rtl">جارٍ تحميل الصفحة…</main>}><AdminConsoleScreen supabase={supabase} screen={sharedScreenKey} shared onNavigate={(target) => window.location.assign(target)} /></Suspense>;
 
+  if (isSharedOfferPage) return <SharedOfferScreen />;
   if (isRiderTripsPage) return <RiderTripsScreen supabase={supabase} mode={isMyTripsPage ? "mine" : isRequestCreatePage ? "daily" : "available"} onHome={() => window.location.assign("/home")} />;
   if (journeyKey) return <RiderJourneyScreen supabase={supabase} screen={journeyKey} onNavigate={(target) => window.location.assign(target)} />;
 
-  if (isPublicHome && publicRouteState === "checking") return <main className="sekka-public-route-state" dir="rtl" lang="ar"><img src="/brand/sekka-mark.png" alt="سِكّة"/><span>جارٍ التحقق من حسابك…</span></main>;
-  if (isPublicHome && publicRouteState === "redirecting") return <main className="sekka-public-route-state" dir="rtl" lang="ar"><img src="/brand/sekka-mark.png" alt="سِكّة"/><span>جارٍ فتح صفحتك الرئيسية…</span></main>;
-  if (isPublicHome && publicRouteState === "error") return <main className="sekka-public-route-state" dir="rtl" lang="ar"><img src="/brand/sekka-mark.png" alt="سِكّة"/><h1>تعذر فتح الصفحة الرئيسية لحسابك</h1><p>تعذر التحقق من جلسة الدخول أو أن دور الحساب غير محدد. سجّل الدخول مجددًا أو تواصل مع الدعم.</p><a href="/login">الانتقال لتسجيل الدخول</a></main>;
+  if (isPublicHome && publicRouteState === "checking") return <main className="sekka-public-route-state" dir="rtl" lang="ar"><img src="/brand/sekka-mark.svg" alt="سِكّة"/><span>بنتأكد من حسابك…</span></main>;
+  if (isPublicHome && publicRouteState === "redirecting") return <main className="sekka-public-route-state" dir="rtl" lang="ar"><img src="/brand/sekka-mark.svg" alt="سِكّة"/><span>بنفتح صفحتك…</span></main>;
+  if (isPublicHome && publicRouteState === "error") return <main className="sekka-public-route-state" dir="rtl" lang="ar"><img src="/brand/sekka-mark.svg" alt="سِكّة"/><h1>مش قادرين نفتح صفحتك دلوقتي</h1><p>مش قادرين نتحقق من دخولك أو نحدد نوع حسابك. سجّل دخول تاني أو كلم الدعم.</p><a href="/login">سجّل دخول</a></main>;
   if (isPublicHome) return <PublicHomeScreen />;
 
   return <AdminConsoleScreen supabase={supabase} screen="not-found" shared onNavigate={(target) => window.location.assign(target)} />;
@@ -274,20 +276,16 @@ export default function App() {
 function authErrorMessage(error: unknown): string {
   if (error instanceof SekkaApiError) return error.message;
   const rawMessage = error instanceof Error ? error.message : "";
-  if (rawMessage.includes("مخصص لحسابات الإدارة")) return rawMessage;
-  if (rawMessage.includes("رقم الهاتف أو كلمة السر غلط")) return "رقم الهاتف أو كلمة المرور غير صحيحة.";
-  if (rawMessage.includes("محاولات كتير")) return "تم إرسال محاولات كثيرة. انتظر قليلًا ثم حاول مجددًا.";
+  if (rawMessage.includes("مخصص لحسابات الإدارة")) return "الحساب ده مخصص للإدارة.";
+  if (rawMessage.includes("رقم الهاتف أو كلمة السر غلط")) return "رقم الموبايل أو كلمة السر مش مظبوط. راجعهم وجرّب تاني.";
+  if (rawMessage.includes("محاولات كتير")) return "حاولت كذا مرة. استنى شوية وجرّب تاني.";
   const message = error instanceof Error ? error.message.toLowerCase() : "";
-  if (message.includes("invalid login credentials")) return "رقم الهاتف أو كلمة المرور غير صحيحة.";
-  if (message.includes("already registered") || message.includes("already been registered")) return "رقم الهاتف مسجل بالفعل. سجّل الدخول أو استخدم استعادة الحساب.";
-  if (message.includes("password") && (message.includes("weak") || message.includes("short"))) return "كلمة المرور ضعيفة. استخدم كلمة مرور أطول وأكثر أمانًا.";
-  if (message.includes("phone") && (message.includes("invalid") || message.includes("not supported"))) return "تعذر قبول رقم الهاتف. تأكد من الرقم وحاول مرة أخرى.";
-  if (message.includes("rate limit") || message.includes("too many")) return "تم إرسال محاولات كثيرة. انتظر قليلًا ثم حاول مجددًا.";
-  if (message.includes("fetch") || message.includes("network")) return "تعذر الاتصال بالخدمة. تحقق من الإنترنت وحاول مجددًا.";
-  return "تعذر إتمام العملية. تحقق من البيانات وحاول مرة أخرى.";
+  if (message.includes("invalid login credentials")) return "رقم الموبايل أو كلمة السر مش مظبوط. راجعهم وجرّب تاني.";
+  if (message.includes("already registered") || message.includes("already been registered")) return "الرقم ده مسجل قبل كده. سجّل دخول أو استرجع حسابك.";
+  if (message.includes("password") && (message.includes("weak") || message.includes("short"))) return "كلمة السر ضعيفة. خلّيها 8 أحرف أو أكتر.";
+  if (message.includes("phone") && (message.includes("invalid") || message.includes("not supported"))) return "رقم الموبايل مش مقبول. اتأكد منه وجرّب تاني.";
+  if (message.includes("rate limit") || message.includes("too many")) return "حاولت كذا مرة. استنى شوية وجرّب تاني.";
+  if (message.includes("fetch") || message.includes("network")) return "النت فاصل؟ اتأكد منه وجرّب تاني.";
+  return "حصلت مشكلة. راجع بياناتك وجرّب تاني.";
 }
 
-function toEgyptianPhone(phoneNumber: string) {
-  const normalized = phoneNumber.replace(/[\s()-]/g, "");
-  return normalized.startsWith("+20") ? normalized : `+20${normalized.replace(/^0/, "")}`;
-}

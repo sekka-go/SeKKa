@@ -1,10 +1,11 @@
 type PagesFunctionContext = {
   request: Request;
+  env: {
+    SEKKA_API_ORIGIN: string;
+  };
 };
 
-const API_ORIGIN = "https://uorxfakceqnhxqnaawdy.supabase.co/functions/v1/sekka-api";
-
-export async function onRequest({ request }: PagesFunctionContext) {
+export async function onRequest({ request, env }: PagesFunctionContext) {
   const incoming = new URL(request.url);
   const suffix = incoming.pathname.slice("/__sekka-api".length).replace(/^\/+/, "");
   if (!suffix || suffix.split("/").some((part) => part === "." || part === "..")) {
@@ -14,7 +15,8 @@ export async function onRequest({ request }: PagesFunctionContext) {
     });
   }
 
-  const target = new URL(`${API_ORIGIN}/${suffix}`);
+  const apiOrigin = env.SEKKA_API_ORIGIN.replace(/\/+$/, "");
+  const target = new URL(`${apiOrigin}/${suffix}`);
   target.search = incoming.search;
   const upstream = new Request(target, request);
   return fetch(upstream);

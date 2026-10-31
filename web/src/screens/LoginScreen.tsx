@@ -23,17 +23,17 @@ export default function LoginScreen({ onLogin, onCreateAccount, onForgotPassword
     setFormError("");
     const normalizedPhone = phone.replace(/[\s()-]/g, "");
     if (!/^01[0125]\d{8}$/.test(normalizedPhone)) {
-      setFormError("من فضلك أدخل رقم هاتف مصري صحيحًا.");
+      setFormError("اكتب رقم موبايل مصري من 11 رقم.");
       return;
     }
     if (!password) {
-      setFormError("أدخل كلمة المرور للمتابعة.");
+      setFormError("اكتب كلمة السر عشان تكمّل.");
       return;
     }
     try {
       await onLogin(normalizedPhone, password);
     } catch {
-      setFormError("تعذر تسجيل الدخول. تحقق من رقم الهاتف وكلمة المرور وحاول مجددًا.");
+      setFormError("الدخول ما تمّش. راجع رقم الموبايل وكلمة السر وجرّب تاني.");
     }
   }
 
@@ -42,26 +42,26 @@ export default function LoginScreen({ onLogin, onCreateAccount, onForgotPassword
       <div className="sekka-register-screen__accent" aria-hidden="true" />
       <section className="sekka-register-card sekka-login-card" aria-labelledby="sekka-login-title">
         <a className="sekka-register-brand" href="/" aria-label="سِكّة - الصفحة الرئيسية">
-          <img src="/brand/sekka-mark.png" alt="شعار سِكّة" />
+          <img src="/brand/sekka-mark.svg" alt="شعار سِكّة" />
         </a>
         <header className="sekka-register-intro">
-          <p className="sekka-register-eyebrow">{adminMode ? "دخول محمي" : "مرحبًا بعودتك"}</p>
-          <h1 id="sekka-login-title">{adminMode ? "دخول الإدارة" : "تسجيل الدخول"}</h1>
-          <p>{adminMode ? "هذه الصفحة مخصصة لحسابات فريق الإدارة فقط." : "سجّل دخولك وكمّل من حيث توقفت"}</p>
+          <p className="sekka-register-eyebrow">{adminMode ? "دخول الإدارة" : "أهلًا برجوعك"}</p>
+          <h1 id="sekka-login-title">{adminMode ? "دخول الإدارة" : "سجّل دخول"}</h1>
+          <p>{adminMode ? "الدخول هنا لحسابات الإدارة بس." : "سجّل دخول وكمّل من آخر مرة."}</p>
         </header>
 
         <form className="sekka-register-form" onSubmit={submit} noValidate>
-          <TextField label="رقم الهاتف" type="tel" name="phone" inputMode="tel" autoComplete="tel-national" dir="ltr" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="01xxxxxxxxx" required />
-          <TextField label="كلمة المرور" name="password" type={visible ? "text" : "password"} autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="أدخل كلمة المرور" required trailing={<><button type="button" className="sekka-register-toggle" onClick={() => setVisible((value) => !value)} aria-label={visible ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"} aria-pressed={visible} /><PasswordIcon visible={visible} /></>} />
+          <TextField label="رقم الموبايل" type="tel" name="phone" inputMode="tel" autoComplete="tel-national" dir="ltr" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="01xxxxxxxxx" required />
+          <TextField label="كلمة السر" name="password" type={visible ? "text" : "password"} autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="اكتب كلمة السر" required trailing={<><button type="button" className="sekka-register-toggle" onClick={() => setVisible((value) => !value)} aria-label={visible ? "اخفي كلمة السر" : "اظهر كلمة السر"} aria-pressed={visible} /><PasswordIcon visible={visible} /></>} />
 
-          <button className="auth-forgot-link" type="button" onClick={onForgotPassword}>نسيت كلمة المرور؟</button>
+          <button className="auth-forgot-link" type="button" onClick={onForgotPassword}>نسيت كلمة السر؟</button>
 
           {(formError || error) && <InlineAlert>{formError || error}</InlineAlert>}
           {success && <InlineAlert tone="success">{success}</InlineAlert>}
-          <Button type="submit" loading={loading} loadingLabel="جارٍ تسجيل الدخول…">تسجيل الدخول <span aria-hidden="true">←</span></Button>
+          <Button type="submit" loading={loading} loadingLabel="بنسجّل دخولك…">دخول <span aria-hidden="true">←</span></Button>
         </form>
 
-        {!adminMode && <p className="sekka-register-login">ليس لديك حساب؟ <button type="button" onClick={onCreateAccount}>سجّل الآن</button></p>}
+        {!adminMode && <p className="sekka-register-login">لسه معندكش حساب؟ <button type="button" onClick={onCreateAccount}>اعمل حساب</button></p>}
       </section>
     </main>
   );

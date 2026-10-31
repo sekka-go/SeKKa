@@ -37,7 +37,7 @@ const documents: Record<Kind, { title: string; intro: string; sections: Section[
 export default function LegalDocumentScreen({ kind, onBack }: { kind: Kind; onBack: () => void }) {
   const document = documents[kind];
   return <main className="sekka-legal-page document-page" dir="rtl" lang="ar">
-    <header className="legal-header"><button className="legal-back" type="button" onClick={onBack} aria-label="عودة">←</button><a className="legal-brand" href="/"><img src="/brand/sekka-mark.png" alt=""/><strong>سِكّة</strong></a></header>
+    <header className="legal-header"><button className="legal-back" type="button" onClick={onBack} aria-label="عودة">←</button><a className="legal-brand" href="/"><img src="/brand/sekka-mark.svg" alt=""/><strong>سِكّة</strong></a></header>
     <article className="legal-document">
       <h1>{document.title}</h1>
       <p className="legal-updated">آخر تحديث: أكتوبر 2026</p>

@@ -18,5 +18,5 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src/main.tsx", "src/App.tsx", "src/screens/RegisterScreen.tsx", "src/vite-env.d.ts"]
+  "include": ["src"]
 }

@@ -47,7 +47,7 @@ export default function ForgotPasswordScreen({ onBack, onSendPhoneCode, onComple
 
   return (
     <main className="sekka-legal-page" dir="rtl" lang="ar">
-      <header className="legal-header"><button className="legal-back" type="button" onClick={onBack} aria-label="العودة لتسجيل الدخول">←</button><a className="legal-brand" href="/"><img src="/brand/sekka-mark.png" alt=""/><strong>سِكّة</strong></a></header>
+      <header className="legal-header"><button className="legal-back" type="button" onClick={onBack} aria-label="العودة لتسجيل الدخول">←</button><a className="legal-brand" href="/"><img src="/brand/sekka-mark.svg" alt=""/><strong>سِكّة</strong></a></header>
       <section className="recovery-content" aria-labelledby="recovery-title">
         <div className="recovery-icon" aria-hidden="true"><RecoveryIcon/></div>
         <h1 id="recovery-title">{titles[stage]}</h1>
@@ -94,7 +94,7 @@ export function ResetPasswordScreen({ sessionReady, checkingSession, onBack, onU
     finally { setLoading(false); }
   }
   return <main className="sekka-legal-page" dir="rtl" lang="ar">
-    <header className="legal-header"><button className="legal-back" type="button" onClick={onBack} aria-label="العودة لتسجيل الدخول">←</button><a className="legal-brand" href="/"><img src="/brand/sekka-mark.png" alt=""/><strong>سِكّة</strong></a></header>
+    <header className="legal-header"><button className="legal-back" type="button" onClick={onBack} aria-label="العودة لتسجيل الدخول">←</button><a className="legal-brand" href="/"><img src="/brand/sekka-mark.svg" alt=""/><strong>سِكّة</strong></a></header>
     <section className="recovery-content">
       <div className="recovery-icon" aria-hidden="true"><RecoveryIcon/></div>
       <h1>{complete ? "تم تحديث كلمة المرور" : "تعيين كلمة مرور جديدة"}</h1>

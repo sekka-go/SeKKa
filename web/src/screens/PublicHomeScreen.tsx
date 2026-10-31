@@ -8,7 +8,7 @@ export default function PublicHomeScreen() {
         <div className="welcome-photo" role="img" aria-label="أفق القاهرة ونهر النيل وقت الغروب" />
 
         <div className="welcome-brand-lockup">
-          <img src="/brand/sekka-mark.png" alt="" />
+          <img src="/brand/sekka-mark.svg" alt="" />
           <strong>سِكّة</strong>
         </div>
 

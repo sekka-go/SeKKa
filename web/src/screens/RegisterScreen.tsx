@@ -99,7 +99,7 @@ export default function RegisterScreen({
 
       <section className="sekka-register-card" aria-labelledby="sekka-register-title">
         <a className="sekka-register-brand" href="/" aria-label="سِكّة - الصفحة الرئيسية">
-          <img src="/brand/sekka-mark.png" alt="شعار سِكّة" />
+          <img src="/brand/sekka-mark.svg" alt="شعار سِكّة" />
         </a>
 
         <header className="sekka-register-intro">

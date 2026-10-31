@@ -17,9 +17,12 @@ export type SekkaSession = {
 };
 
 export class SekkaApiError extends Error {
-  constructor(message: string, readonly status: number) {
+  status: number;
+
+  constructor(message: string, status: number) {
     super(message);
     this.name = "SekkaApiError";
+    this.status = status;
   }
 }
 
@@ -114,8 +117,22 @@ export async function logoutSekkaSession() {
 }
 
 export function normalizeEgyptianPhone(value: string) {
-  const compact = value.trim().replace(/[\s()-]/g, "");
-  if (/^01[0125]\d{8}$/.test(compact)) return `+20${compact.slice(1)}`;
-  if (/^20?1[0125]\d{8}$/.test(compact.replace(/^\+/, ""))) return `+${compact.replace(/^\+/, "")}`;
+  const compact = value.trim().replace(/[\s().-]/g, "");
+  if (!compact) return compact;
+
+  let digits = compact.replace(/\D/g, "");
+  if (!digits) return compact;
+
+  if (digits.startsWith("+")) digits = digits.slice(1);
+
+  if (digits.startsWith("00")) {
+    const international = digits.slice(2);
+    if (/^20(?:1[0125]\d{8})$/.test(international)) return `+${international}`;
+    return compact;
+  }
+
+  if (/^01[0125]\d{8}$/.test(digits)) return `+20${digits.slice(1)}`;
+  if (/^20(?:1[0125]\d{8})$/.test(digits)) return `+${digits}`;
+
   return compact;
 }

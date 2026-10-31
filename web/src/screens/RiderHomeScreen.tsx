@@ -220,7 +220,7 @@ export default function RiderHomeScreen({ user, onAction }: Props) {
 
         <div className="brand-logo">
           <img
-            src="/brand/sekka-mark.png"
+            src="/brand/sekka-mark.svg"
             alt="SeKKa"
           />
         </div>
