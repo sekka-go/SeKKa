@@ -961,3 +961,11 @@
   overflow: hidden;
   border-radius: 50%;
 }
+
+/* Keep artwork above card backgrounds and copy within the illustrated cards. */
+.phase-role-art { z-index: 0; }
+.phase-role-copy, .phase-radio { z-index: 1; }
+.phase-role-copy > strong { font-size: 5cqw; margin-bottom: 1.5cqw; }
+.phase-role-copy > span { font-size: 3.2cqw; line-height: 1.45; }
+.phase-wordmark .wordmark-dark { mix-blend-mode: lighten; }
+.phase-wordmark .wordmark-light { mix-blend-mode: multiply; }
