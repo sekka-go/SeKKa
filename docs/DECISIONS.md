@@ -10,3 +10,5 @@
 - No holiday dates invented. Admin-approved coverage plus official source is required; pricing fails closed outside coverage. Fixtures are clearly TEST ONLY.
 - New legal terms, real-money processing and renewals are disabled until approvals. A second active captain route is conservatively blocked until schedule-duration overlap policy is defined; not described as implemented multi-line support.
 - Existing official logo file is reused unchanged. New numbered screen map is a shared UI registry, not a claim that 75 journeys have passed acceptance.
+
+- 2026-11-12 phase-one reference batch: owner explicitly chose appearance-only for password/Google/Facebook registration. SMS, OTP verification, registration and social-provider linking remain disabled. Screen 06 is now a labeled success-state design and screen 07 a registration design; no identity state change is implied.

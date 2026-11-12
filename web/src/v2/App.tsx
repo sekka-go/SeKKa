@@ -9,6 +9,8 @@ import {
 import { screenTitles, publicScreens, adminResources } from "./screens";
 import { copy, errorCopy } from "./copy";
 import "./theme.css";
+import Onboarding, { readAppearance, Wordmark } from "./Onboarding";
+import type { Appearance } from "./Onboarding";
 type Row = Record<string, unknown>;
 const money = (n: number) =>
   new Intl.NumberFormat("ar-EG", {
@@ -158,9 +160,25 @@ const labels: Record<string, string> = {
 };
 export default function SubscriptionApp() {
   const getScreen = () => {
-    const n = Number(new URLSearchParams(location.search).get("screen") ?? 8);
+    const n = Number(new URLSearchParams(location.search).get("screen") ?? 1);
     return Number.isInteger(n) && n >= 1 && n <= 75 ? n : 8;
   };
+  const [theme, setTheme] = useState<Appearance>(readAppearance);
+  function changeTheme(value: Appearance) {
+    setTheme(value);
+    const url = new URL(location.href);
+    url.searchParams.set("theme", value);
+    history.replaceState(null, "", url);
+    document.documentElement.dataset.theme = value;
+    try {
+      localStorage.setItem("sekka.appearance", value);
+    } catch {
+      /* storage optional */
+    }
+  }
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
   const [screen, setScreen] = useState(getScreen),
     [profile, setProfile] = useState<Profile | null>(null),
     [signedIn, setSignedIn] = useState(false),
@@ -210,7 +228,8 @@ export default function SubscriptionApp() {
     setScreen(id);
     setError("");
     setNotice("");
-    const params = new URLSearchParams({ screen: String(id) });
+    const params = new URLSearchParams({ screen: String(id), theme });
+    if (id <= 7) params.set("inspect", "1");
     if (routeId) params.set("route", routeId);
     if (bookingId) params.set("booking", bookingId);
     history.pushState({}, "", `?${params}`);
@@ -1540,6 +1559,25 @@ export default function SubscriptionApp() {
       );
     return <Empty />;
   }
+  if ([1, 2, 3, 4, 5, 6, 7, 37].includes(screen))
+    return (
+      <Onboarding
+        screen={screen}
+        theme={theme}
+        onTheme={changeTheme}
+        go={go}
+        role={role}
+        onRole={setRole}
+      >
+        {error && (
+          <div className="status error" role="alert">
+            {error}
+          </div>
+        )}
+        {busy && <p role="status">{copy.loading}</p>}
+        {![1, 2, 3, 37].includes(screen) && content()}
+      </Onboarding>
+    );
   return (
     <div className="app">
       <a className="skip" href="#content">
@@ -1554,7 +1592,7 @@ export default function SubscriptionApp() {
           }}
           className="brand"
         >
-          <img src="/brand/sekka-mark.png" alt="" />
+          <Wordmark />
           <span>
             {copy.brand}
             <small>{copy.tagline}</small>
@@ -1563,12 +1601,7 @@ export default function SubscriptionApp() {
         <div className="header-actions">
           <button
             className="text-button"
-            onClick={() =>
-              (document.documentElement.dataset.theme =
-                document.documentElement.dataset.theme === "light"
-                  ? "dark"
-                  : "light")
-            }
+            onClick={() => changeTheme(theme === "light" ? "dark" : "light")}
             aria-label="تغيير المظهر"
           >
             ◐

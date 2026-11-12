@@ -79,3 +79,7 @@ Source: PRD section 12 and current owner instruction. Technical route is `/?scre
 | 73 | الإشعارات | /?screen=73 | Partial admin read/review UX; full operations pending |
 | 74 | التقارير والتحليلات | /?screen=74 | UI + API coded; acceptance pending |
 | 75 | الإعدادات والصلاحيات | /?screen=75 | Partial admin read/review UX; full operations pending |
+
+## Owner phase-one reference override
+
+The latest seven-image batch defines 01 splash, 02 welcome, 03 account role, 04 phone, 05 OTP, 06 success-state preview, 07 account-registration preview. This visual map supersedes the earlier phase-one naming; backend profile/consent requirements remain pending and are not silently removed. Account actions are intentionally disabled following the owner's explicit appearance-only decision. Phase two awaits its own reference batch.

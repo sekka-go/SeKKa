@@ -31,5 +31,5 @@ jobs:
         with:
           name: subscription-ui-evidence
           path: |
-            docs/audit/home-*.png
+            docs/audit/*.png
             web/test-results/
