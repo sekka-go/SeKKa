@@ -332,10 +332,14 @@ test("phase four wallet states stay isolated from money operations", async ({
   await expect(page.locator(".w-balance")).toHaveText("50 ج.م");
   await page.getByRole("button", { name: "شحن الرصيد", exact: true }).click();
   await page.getByLabel("مبلغ الشحن بالجنيه").fill("-1");
-  await expect(page.getByRole("alert")).toContainText("أكبر من صفر");
+  await expect(page.getByRole("alert")).toContainText("أقل مبلغ شحن 100 جنيه");
   await expect(
     page.getByRole("button", { name: "متابعة للدفع — غير مفعّل" }),
   ).toBeDisabled();
+  await expect(page.getByRole("button", {name:"معاينة حالات الشحن"})).toBeDisabled();
+  await page.getByLabel("مبلغ الشحن بالجنيه").fill("99");
+  await expect(page.getByRole("button", {name:"معاينة حالات الشحن"})).toBeDisabled();
+  await page.getByLabel("مبلغ الشحن بالجنيه").fill("100");
   await page.getByRole("button", { name: "معاينة حالات الشحن" }).click();
   await page.getByLabel("حالة الشحن التجريبية").selectOption("success");
   await expect(page.getByText("نموذج شحن ناجح")).toBeVisible();

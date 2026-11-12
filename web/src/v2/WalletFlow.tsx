@@ -17,12 +17,12 @@ const titles = [
 const money = (n: number) => `${n.toLocaleString("en-US")} ج.م`;
 const kinds: Record<string, string> = {
   provider_credit: "شحن الرصيد",
-  reserve: "حجز تأمين",
+  reserve: "تخصيص تأمين جدية الحجز",
   release: "إتاحة التأمين",
   withdrawal: "سحب الرصيد",
 };
 const states: Record<string, string> = {
-  reserved: "التأمين محجوز",
+  reserved: "تأمين جدية الحجز محجوز",
   released: "التأمين متاح",
   confirmed: "مؤكد",
   completed: "منتهي",
@@ -232,7 +232,7 @@ export default function WalletFlow(p: {
                     {money(balance.available)}
                   </strong>
                   <div className="b-row">
-                    <span>تأمين محجوز</span>
+                    <span>تأمين جدية الحجز</span>
                     <strong>{money(balance.reserved)}</strong>
                   </div>
                   <p>
@@ -247,7 +247,7 @@ export default function WalletFlow(p: {
                 <Box>
                   <h2>تأمينك محفوظ</h2>
                   <p>
-                    الـ100 جنيه تأمين مسترد. قيمة الاشتراك بتدفعها كاملة للكابتن
+                    الـ100 جنيه لتأمين جدية الحجز، ومبلغ مسترد. قيمة الاشتراك بتدفعها كاملة للكابتن
                     أول يوم، والتأمين مش بيتخصم منها.
                   </p>
                 </Box>
@@ -259,20 +259,21 @@ export default function WalletFlow(p: {
               <>
                 <Box>
                   <h2>تحب تشحن بكام؟</h2>
+                  <p>الحد الأدنى للشحن 100 جنيه.</p>
                   <p>المتاح حاليًا: {money(balance.available)}</p>
                   <label className="w-field">
                     مبلغ الشحن بالجنيه
                     <input
                       inputMode="decimal"
                       type="number"
-                      min="1"
+                      min="100"
                       step="1"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                     />
                   </label>
                   <div className="w-presets">
-                    {[50, 100, 200].map((n) => (
+                    {[100, 200, 300].map((n) => (
                       <button
                         key={n}
                         aria-pressed={amount === String(n)}
@@ -282,8 +283,8 @@ export default function WalletFlow(p: {
                       </button>
                     ))}
                   </div>
-                  {(!Number.isFinite(+amount) || +amount <= 0) && (
-                    <p role="alert">اكتب مبلغ أكبر من صفر.</p>
+                  {(!Number.isInteger(+amount) || +amount < 100) && (
+                    <p role="alert">أقل مبلغ شحن 100 جنيه. اكتب المبلغ بالجنيه من غير كسور.</p>
                   )}
                 </Box>
                 <Box>
@@ -296,7 +297,7 @@ export default function WalletFlow(p: {
                 <button className="d-primary b-primary" disabled>
                   متابعة للدفع — غير مفعّل
                 </button>
-                {demo && button("معاينة حالات الشحن", 26)}
+                {demo && <button className="d-primary b-primary" disabled={!Number.isInteger(+amount) || +amount < 100} onClick={()=>nav(26)}>معاينة حالات الشحن</button>}
               </>
             )}
             {p.screen === 26 && (
@@ -329,7 +330,7 @@ export default function WalletFlow(p: {
                   {demo && (
                     <div className="b-row">
                       <span>مبلغ المثال</span>
-                      <strong>{money(+amount > 0 ? +amount : 100)}</strong>
+                      <strong>{money(Number.isInteger(+amount) && +amount >= 100 ? +amount : 100)}</strong>
                     </div>
                   )}
                 </Box>

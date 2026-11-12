@@ -58,3 +58,7 @@ Implemented WalletFlow 24–30 with shared dark/light branding, available versus
 Local typecheck, lint and production build passed. Added Playwright coverage for all fourteen views, overflow, state isolation, negative amount validation, transaction filter/details, empty history and guest protection; hosted CI pending at commit time. No production cutover or resource retirement.
 
 Phase-four CI evidence: commit 633237a98dc414eaaf47144c552d66636fdcfaf1, Actions run 43246005067, all checks including all seven Playwright suites passed. Preview bbbbe44c deployed successfully. Browser review checked dark wallet and light transaction layout; follow-up compacts the preview-only checkbox and reconciles the illustrative ledger to the displayed EGP 50 available / 100 reserved balance.
+
+## Wallet wording/minimum correction
+
+Renamed reserved wallet security to «تأمين جدية الحجز» with explicit refundable, separate-from-subscription copy. Top-up minimum is EGP 100, quick amounts 100/200/300; invalid amounts cannot advance the preview. No financial activation or balance-floor restriction. Typecheck/lint/build passed locally; browser regression includes rejection of 99 and acceptance of 100 for preview only. Hosted server/provider enforcement remains a prerequisite for future real-money activation.

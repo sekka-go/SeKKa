@@ -115,7 +115,7 @@ const valueLabels: Record<string, string> = {
   active: "متاح",
   draft: "مسودة",
   paused: "متوقف مؤقتًا",
-  reserved: "التأمين محجوز",
+  reserved: "تأمين جدية الحجز محجوز",
   released: "التأمين متاح",
   confirmed: "مؤكد ماليًا",
   disputed: "قيد المراجعة",
