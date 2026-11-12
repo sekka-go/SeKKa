@@ -40,3 +40,6 @@ Stage two is paused until owner supplies its references. Remaining hosted authen
 
 ### Phase-one captain card correction
 Owner reported broken Arabic in the captain card on mobile. Kept the description in three intact RTL lines, adjusted its available width and font scale, and tightened the captain illustration crop to exclude rasterized text from the reference. The text is editable HTML, not duplicated in the illustration. Typecheck/lint/build passed for the text-layout change; browser geometry verified three lines fit within their bounds and the card, without horizontal overflow. Preview-only update; no authentication/backend changes.
+
+## Phase two — owner-supplied discovery batch
+Implemented native React planner/time inputs, filters, fixed-offer results/details, confirmed-booking visual, favorites, subscriptions and demand form. Shared layouts, SVG icons and tokens serve both themes. Only isolated supplied illustrations use raster crop windows. Explicit preview fixtures are isolated from live service data and cannot create bookings or submit requests. No hosted schema, production or legacy resources changed. Pending: browser QA, preview acceptance and phase-three booking/schema work. See REFERENCE_SCREENS for mapping and mockup discrepancies.

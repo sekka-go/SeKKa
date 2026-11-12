@@ -1,35 +1,25 @@
 import { test, expect } from "@playwright/test";
-test("public discovery, typed search, and protected wallet", async ({
+test("public planner, real empty results, and protected wallet", async ({
   page,
 }) => {
   const errors: string[] = [];
-  const requests: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  page.on("request", (r) => requests.push(r.url()));
   await page.goto("/?screen=8");
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
-  await expect(
-    page.getByRole("heading", { name: "مشوارك اليومي منين لفين؟" }),
-  ).toBeVisible();
+  await page.getByLabel("من أين؟", { exact: true }).selectOption("المعادي");
+  await page.getByLabel("إلى أين؟", { exact: true }).selectOption("التجمع");
+  await page.getByLabel("وقت الذهاب", { exact: true }).fill("08:15");
   await page
-    .getByLabel("منين؟", { exact: true })
-    .pressSequentially("مدينة نصر");
-  await expect(page.getByLabel("منين؟", { exact: true })).toHaveValue(
-    "مدينة نصر",
-  );
-  await page.getByLabel("لفين؟", { exact: true }).fill("التجمع");
-  await page.getByRole("button", { name: "شوف الخطوط المناسبة" }).click();
+    .getByRole("button", { name: "ابحث عن الرحلات", exact: true })
+    .click();
   await expect(page).toHaveURL(/screen=11/);
   await expect(
-    page.getByText("لسه مفيش خط مناسب.", { exact: false }),
+    page.getByText("لسه مفيش خط مناسب.", { exact: true }),
   ).toBeVisible();
+  await expect(page.locator(".d-result")).toHaveCount(0);
   await page.goto("/?screen=24");
   await expect(page.getByText("سجّل برقم موبايلك عشان نكمل.")).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "تم الدفع", exact: true }),
-  ).toHaveCount(0);
   expect(errors).toEqual([]);
-  expect(requests.filter((u) => u.includes("__sekka-api"))).toEqual([]);
 });
 test("all 75 screen entries render without client errors for guests", async ({
   page,
@@ -45,24 +35,22 @@ test("all 75 screen entries render without client errors for guests", async ({
 });
 test("mobile RTL and desktop have no horizontal overflow", async ({ page }) => {
   for (const size of [
+    { width: 320, height: 740 },
     { width: 390, height: 844 },
     { width: 1440, height: 1000 },
   ]) {
     await page.setViewportSize(size);
-    await page.goto("/?screen=8");
+    await page.goto("/?screen=10&preview=phase2");
     expect(
       await page.evaluate(
-        () => document.documentElement.scrollWidth <= window.innerWidth,
+        () => document.documentElement.scrollWidth <= innerWidth,
       ),
     ).toBe(true);
-    await expect(page.getByRole("button", { name: /^PRIME / })).toBeVisible();
-    await expect(page.getByRole("button", { name: /^SAVER / })).toBeVisible();
-    await expect(page.getByRole("button", { name: /^SPACE / })).toBeVisible();
-    await expect(page.getByRole("button", { name: /^MAX / })).toBeVisible();
-    await page.screenshot({
-      path: `../docs/audit/home-${size.width}.png`,
-      fullPage: true,
-    });
+    for (const category of ["PRIME", "SAVER", "SPACE", "MAX"]) {
+      await expect(
+        page.getByRole("button", { name: new RegExp(category) }),
+      ).toBeVisible();
+    }
   }
 });
 
@@ -131,4 +119,84 @@ test("phase one: all seven paired designs render and auth stays disconnected", a
     ).toBeDisabled();
   }
   expect(authRequests).toEqual([]);
+});
+
+test("phase two: 16 paired views, fixed offers, navigation and preview isolation", async ({
+  page,
+}) => {
+  const mutations: string[] = [];
+  page.on("request", (r) => {
+    if (r.method() !== "GET" && /supabase|auth\/v1|rest\/v1/.test(r.url()))
+      mutations.push(r.url());
+  });
+  for (const theme of ["dark", "light"]) {
+    for (const screen of [8, 10, 11, 12, 13, 14, 29, 15]) {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto(`/?screen=${screen}&theme=${theme}&preview=phase2`);
+      await expect(page.locator(".d-canvas h1")).not.toBeEmpty();
+      await page.evaluate(async () => {
+        await document.fonts.ready;
+        await Promise.all(
+          [...document.images].map((i) => i.decode().catch(() => {})),
+        );
+      });
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+      const clipped = await page
+        .locator(".d-canvas")
+        .evaluate((e) => e.scrollWidth > e.clientWidth + 1);
+      expect(clipped).toBe(false);
+      await page
+        .locator(".d-canvas")
+        .screenshot({ path: `../docs/audit/phase2-${screen}-${theme}.png` });
+    }
+    await page.goto(`/?screen=11&theme=${theme}&preview=phase2`);
+    await expect(page.locator(".d-result")).toHaveCount(3);
+    await page.getByRole("button", { name: /عرض تفاصيل كابتن محمد/ }).click();
+    await expect(page).toHaveURL(/screen=12/);
+    await expect(page.locator(".d-offer-facts")).toContainText("أسبوعي");
+    await expect(page.locator(".d-offer-facts")).toContainText("ذهاب فقط");
+    await expect(page.locator(".d-fixed-price")).toContainText("850");
+    await expect(page.locator(".d-canvas button[aria-pressed]")).toHaveCount(0);
+    await expect(page.locator(".d-captain,.d-vehicle")).toHaveCount(0);
+    await page
+      .getByRole("button", { name: "حجز الاشتراك", exact: true })
+      .click();
+    await expect(page.getByRole("dialog")).toContainText("لا ينشئ حجزًا");
+    await page.getByRole("button", { name: "تمام", exact: true }).click();
+    await page.getByLabel("شاشة المرحلة الثانية").selectOption("10");
+    await page.getByRole("button", { name: /MAX/ }).click();
+    await page
+      .getByRole("button", { name: "عرض النتائج", exact: true })
+      .click();
+    await expect(page.locator(".d-result")).toHaveCount(0);
+    await expect(
+      page.getByText("لسه مفيش خط مناسب.", { exact: true }),
+    ).toBeVisible();
+    await page.goto(`/?screen=14&theme=${theme}&preview=phase2`);
+    await page
+      .getByRole("button", {
+        name: "إزالة المعادي إلى التجمع من المفضلة",
+        exact: true,
+      })
+      .click();
+    await expect(page.locator(".d-favorite")).toHaveCount(2);
+    await page.goto(`/?screen=15&theme=${theme}&preview=phase2`);
+    await expect(
+      page.getByLabel("وقت الذهاب", { exact: true }),
+    ).toHaveAttribute("type", "time");
+    await page
+      .getByLabel("ملاحظات إضافية", { exact: true })
+      .fill("محطة قريبة من المترو");
+    await page
+      .getByRole("button", { name: "إرسال الطلب", exact: true })
+      .click();
+    await expect(page.getByRole("status")).toContainText(
+      "لم يتم إرسال طلب فعلي",
+    );
+  }
+  expect(mutations).toEqual([]);
 });

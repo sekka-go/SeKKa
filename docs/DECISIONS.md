@@ -12,3 +12,5 @@
 - Existing official logo file is reused unchanged. New numbered screen map is a shared UI registry, not a claim that 75 journeys have passed acceptance.
 
 - 2026-11-12 phase-one reference batch: owner explicitly chose appearance-only for password/Google/Facebook registration. SMS, OTP verification, registration and social-provider linking remain disabled. Screen 06 is now a labeled success-state design and screen 07 a registration design; no identity state change is implied.
+
+- Phase two: owner replaced 11/12 with 1000636594/1000636595. Period, direction and price belong to the captain's offer. Rider filters and chooses an offer; view 12 has no editable offer terms. Capacity rules override impossible seat counts in mockups. Supplied subscriptions view maps to screen 29. Stage three not started.

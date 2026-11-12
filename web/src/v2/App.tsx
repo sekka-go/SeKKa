@@ -11,6 +11,7 @@ import { copy, errorCopy } from "./copy";
 import "./theme.css";
 import Onboarding, { readAppearance, Wordmark } from "./Onboarding";
 import type { Appearance } from "./Onboarding";
+import Discovery, { discoveryScreens } from "./Discovery";
 type Row = Record<string, unknown>;
 const money = (n: number) =>
   new Intl.NumberFormat("ar-EG", {
@@ -230,6 +231,8 @@ export default function SubscriptionApp() {
     setNotice("");
     const params = new URLSearchParams({ screen: String(id), theme });
     if (id <= 7) params.set("inspect", "1");
+    if (new URLSearchParams(location.search).get("preview") === "phase2")
+      params.set("preview", "phase2");
     if (routeId) params.set("route", routeId);
     if (bookingId) params.set("booking", bookingId);
     history.pushState({}, "", `?${params}`);
@@ -297,7 +300,11 @@ export default function SubscriptionApp() {
     let active = true;
     setRows([]);
     setError("");
-    if (!client) return;
+    if (
+      !client ||
+      new URLSearchParams(location.search).get("preview") === "phase2"
+    )
+      return;
     const load = async () => {
       const h = await api<typeof health>("health");
       const params = new URLSearchParams(location.search);
@@ -1559,6 +1566,42 @@ export default function SubscriptionApp() {
       );
     return <Empty />;
   }
+  if (discoveryScreens.includes(screen) || screen === 9)
+    return (
+      <Discovery
+        screen={screen}
+        theme={theme}
+        onTheme={changeTheme}
+        go={go}
+        routes={routes}
+        route={route}
+        bookings={bookings}
+        signedIn={signedIn}
+        busy={busy}
+        error={error}
+        onSearch={(q) => {
+          setOrigin(q.origin);
+          setDestination(q.destination);
+          setDeparture(q.outbound);
+          setReturnTime(q.returnTime);
+          setPeriod(q.period);
+          setCategory(q.category);
+        }}
+        onSelect={(r, offerPeriod, offerDirection) => {
+          setRoute(r);
+          setPeriod(offerPeriod);
+          setDirection(offerDirection);
+          go(12, r.id);
+        }}
+        onRequest={async (payload) => {
+          await api("request.create", payload);
+        }}
+        onFavorite={async (routeId) => {
+          await api("favorite.toggle", { routeId });
+          setRevision((v) => v + 1);
+        }}
+      />
+    );
   if ([1, 2, 3, 4, 5, 6, 7, 37].includes(screen))
     return (
       <Onboarding

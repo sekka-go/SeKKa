@@ -29,3 +29,32 @@ Arabic Tajawal is self-hosted at pinned versions and 400/500/700/800/900 weights
 Type checking, lint and production build. Browser suite captures all 14 screen/theme combinations, checks role selection in both themes, phone/OTP editing, password reveal, disabled auth actions, absence of auth network requests and horizontal overflow. Build/CI evidence must be recorded after the actual run.
 
 This update does not apply hosted database migrations, change production, claim successful identity verification, or implement phase two.
+
+## Phase two — supplied batch and corrected 11/12
+
+Owner started phase two, paused it for corrected references 11/12, then supplied 1000636594.png (11) and 1000636595.png (12). Older 11/12 designs are superseded.
+
+| Screen | Function | Repository reference |
+|---|---|---|
+| 08 / 09 | Journey planner, area search and times | phase-2/08.png |
+| 10 | Four-category and duration filters | phase-2/10.png |
+| 11 | Captain-defined subscription offers | phase-2/11.png (corrected) |
+| 12 | Fixed offer details; no duration/direction picker | phase-2/12.png (corrected) |
+| 13 | Confirmed booking, captain and vehicle illustration | phase-2/13.png |
+| 14 | Favorites | phase-2/14.png |
+| 29 | Current/previous subscriptions | phase-2/29.png |
+| 15 | Request a route | phase-2/15.png |
+
+`?preview=phase2` explicitly enables isolated example data. Gallery labels state that names, prices and bookings are illustrative. Preview booking buttons explain that no booking is created. Preview requests never transmit. Outside preview, search uses configured V2 service data with empty/error/loading states; example routes and confirmed bookings are not injected. Authentication integration remains held.
+
+### Resolved discrepancies
+
+- Corrected 11 shows PRIME with four available seats; capacity is three. Sample availability is three.
+- Corrected 12 shows SAVER with five seats; capacity is four. Selection supplies consistent category/availability within the approved limits.
+- Offer price, direction and duration are read-only. Filters only choose which offers appear. Examples use corrected 11 prices EGP 2,800 / 850 / 3,400. Actual rendered offer count is displayed instead of screenshot's unexplained eight.
+- Return-only examples omit outbound time; outbound-only omit return time, displaying a dash.
+- Example offer cards show captain display names/ratings as in updated reference. Contact and vehicle identity remain confined to explicitly labelled confirmed-booking preview, not public live details.
+- Supplied subscriptions view is canonical screen 29, included because owner supplied it; registry is not renumbered.
+- All four categories are available in filters. Request form has no preferred-category selector or extra note. Feature claims from superseded view 12 are removed.
+
+Hosted fixed-offer schema acceptance and phase-three booking remain pending. Existing API price configurations render as distinct offer rows; this does not certify hosted migration. Live booking is held pending that flow. No production cutover or database migration occurred.
