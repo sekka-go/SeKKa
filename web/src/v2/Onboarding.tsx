@@ -387,11 +387,9 @@ export default function Onboarding({
                   title: "كابتن",
                   description: (
                     <>
-                      سجل ككابتن، أضف عربيتك
-                      <br />
-                      وخطوطك، واستقبل
-                      <br />
-                      مشتركين جدد.
+                      <span className="phase-copy-line">سجل ككابتن، أضف عربيتك</span>
+                      <span className="phase-copy-line">وخطوطك، واستقبل</span>
+                      <span className="phase-copy-line">مشتركين جدد.</span>
                     </>
                   ),
                   crop: [395, 593, 329, 220] as Crop,
