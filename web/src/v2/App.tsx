@@ -14,6 +14,7 @@ import type { Appearance } from "./Onboarding";
 import Discovery, { discoveryScreens } from "./Discovery";
 import type { Line } from "./Discovery";
 import BookingFlow, { bookingScreens } from "./BookingFlow";
+import WalletFlow, { walletScreens } from "./WalletFlow";
 type Row = Record<string, unknown>;
 const money = (n: number) =>
   new Intl.NumberFormat("ar-EG", {
@@ -240,8 +241,15 @@ export default function SubscriptionApp() {
     const params = new URLSearchParams({ screen: String(id), theme });
     if (id <= 7) params.set("inspect", "1");
     const previous = new URLSearchParams(location.search);
-    if (["phase2", "phase3"].includes(previous.get("preview") || ""))
-      params.set("preview", bookingScreens.includes(id) ? "phase3" : "phase2");
+    if (["phase2", "phase3", "phase4"].includes(previous.get("preview") || ""))
+      params.set(
+        "preview",
+        walletScreens.includes(id)
+          ? "phase4"
+          : bookingScreens.includes(id)
+            ? "phase3"
+            : "phase2",
+      );
     for (const key of ["offer", "offerPeriod", "offerDirection"]) {
       const value = previous.get(key);
       if (value) params.set(key, value);
@@ -262,7 +270,7 @@ export default function SubscriptionApp() {
   async function refreshProfile() {
     if (
       !client ||
-      ["phase2", "phase3"].includes(
+      ["phase2", "phase3", "phase4"].includes(
         new URLSearchParams(location.search).get("preview") || "",
       )
     )
@@ -321,7 +329,7 @@ export default function SubscriptionApp() {
     setError("");
     if (
       !client ||
-      ["phase2", "phase3"].includes(
+      ["phase2", "phase3", "phase4"].includes(
         new URLSearchParams(location.search).get("preview") || "",
       )
     )
@@ -1589,6 +1597,24 @@ export default function SubscriptionApp() {
       );
     return <Empty />;
   }
+  if (
+    walletScreens.includes(screen) &&
+    (screen !== 29 ||
+      new URLSearchParams(location.search).get("preview") !== "phase2")
+  )
+    return (
+      <WalletFlow
+        screen={screen}
+        theme={theme}
+        onTheme={changeTheme}
+        go={go}
+        signedIn={signedIn}
+        balance={balance}
+        transactions={rows}
+        bookings={bookings}
+        error={error}
+      />
+    );
   if (bookingScreens.includes(screen) || screen === 23)
     return (
       <BookingFlow

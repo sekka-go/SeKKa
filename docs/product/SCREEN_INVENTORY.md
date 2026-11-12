@@ -97,3 +97,7 @@ The latest seven-image batch defines 01 splash, 02 welcome, 03 account role, 04 
 | 22 | إدارة الاشتراك | Details, policy-gated renewal/cancellation, support review |
 
 This explicitly replaces the former 16–23 map without shifting later IDs. 23 is a compatibility alias to management (22). Phase-two view 29 remains the subscription list. No additional images are required: owner authorized continuing the established style, shared components and dark/light tokens. No official logo redesign.
+
+## Phase four — wallet and subscription records
+
+Continuing the established map: 24 wallet, 25 top-up, 26 top-up status, 27 withdrawal, 28 transactions, 29 current subscriptions, 30 subscription history. Screen 23 remains the management alias; subsequent IDs are not shifted. Phase-two preview of 29 is preserved. Phase-four preview is `?screen=24&theme=dark&preview=phase4`.

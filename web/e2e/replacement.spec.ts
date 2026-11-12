@@ -306,3 +306,55 @@ test("phase three: approved seven screens, fixed quote, security and confirmatio
   ).toBeVisible();
   expect(mutations).toEqual([]);
 });
+
+test("phase four wallet states stay isolated from money operations", async ({
+  page,
+}) => {
+  const writes: string[] = [];
+  page.on("request", (r) => {
+    if (r.method() === "POST") writes.push(r.url());
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const theme of ["dark", "light"])
+    for (let screen = 24; screen <= 30; screen++) {
+      await page.goto(`/?screen=${screen}&theme=${theme}&preview=phase4`);
+      await expect(page.locator(".w-canvas h1")).not.toBeEmpty();
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+      await page
+        .locator(".w-canvas")
+        .screenshot({ path: `../docs/audit/phase4-${screen}-${theme}.png` });
+    }
+  await page.goto("/?screen=24&preview=phase4");
+  await expect(page.locator(".w-balance")).toHaveText("50 ج.م");
+  await page.getByRole("button", { name: "شحن الرصيد", exact: true }).click();
+  await page.getByLabel("مبلغ الشحن بالجنيه").fill("-1");
+  await expect(page.getByRole("alert")).toContainText("أكبر من صفر");
+  await expect(
+    page.getByRole("button", { name: "متابعة للدفع — غير مفعّل" }),
+  ).toBeDisabled();
+  await page.getByRole("button", { name: "معاينة حالات الشحن" }).click();
+  await page.getByLabel("حالة الشحن التجريبية").selectOption("success");
+  await expect(page.getByText("نموذج شحن ناجح")).toBeVisible();
+  await page.getByRole("button", { name: "الرجوع للمحفظة" }).click();
+  await expect(page.locator(".w-balance")).toHaveText("50 ج.م");
+  await page
+    .getByRole("button", { name: "سجل المعاملات", exact: true })
+    .click();
+  await page.getByLabel("نوع العملية").selectOption("reserve");
+  await expect(page.locator(".w-transaction")).toHaveCount(1);
+  await page.locator(".w-transaction").click();
+  await expect(page.getByText("demo-3", { exact: true })).toBeVisible();
+  await page.getByLabel("معاينة السجل الفارغ").check();
+  await expect(page.getByText("لسه مفيش معاملات هنا.")).toBeVisible();
+  await page.goto("/?screen=29&preview=phase4");
+  await expect(page.getByText("المعادي", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "السابقة", exact: true }).click();
+  await expect(page.getByText("الزمالك", { exact: true })).toBeVisible();
+  await page.goto("/?screen=26");
+  await expect(page.getByText("سجّل برقم موبايلك عشان نكمل.")).toBeVisible();
+  expect(writes).toEqual([]);
+});

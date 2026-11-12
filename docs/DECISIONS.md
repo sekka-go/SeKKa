@@ -17,3 +17,5 @@
 
 - Owner-approved phase three replaces 16–22 as documented in SCREEN_INVENTORY; 23 compatibility alias renders management. Extend established dark/light style without new reference images. Preserve captain-defined offer terms at handoff; do not reintroduce subscription selection.
 - Real top-up and booking reservation remain disabled pending existing provider/policy/holiday/auth launch blockers. Preview actions cannot submit financial writes. Receipt release UI requires both declarations and no dispute; missing confirmation/attendance never forfeits security.
+
+- Phase four continues the existing wallet/account map with screens 24–30, retaining 23 as an alias. The owner requested starting the next stage without new image references; extend established dark/light components. Money activation remains held. Screen 29 keeps its old explicit phase-two preview while the new phase-four gallery uses the wallet family.
