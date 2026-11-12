@@ -392,7 +392,7 @@ export default function Onboarding({
                       <span className="phase-copy-line">مشتركين جدد.</span>
                     </>
                   ),
-                  crop: [395, 593, 329, 220] as Crop,
+                  crop: [425, 593, 299, 220] as Crop,
                 },
               ].map((r) => (
                 <button
