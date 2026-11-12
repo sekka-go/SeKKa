@@ -101,3 +101,7 @@ This explicitly replaces the former 16–23 map without shifting later IDs. 23 i
 ## Phase four — wallet and subscription records
 
 Continuing the established map: 24 wallet, 25 top-up, 26 top-up status, 27 withdrawal, 28 transactions, 29 current subscriptions, 30 subscription history. Screen 23 remains the management alias; subsequent IDs are not shifted. Phase-two preview of 29 is preserved. Phase-four preview is `?screen=24&theme=dark&preview=phase4`.
+
+## Phase five — communication and account
+
+31 conversations, 32 chat, 33 notifications, 34 account, 35 profile editing, 36 help. Shared AccountFlow with both themes. Explicit `preview=phase5` is isolated local demonstration data. Existing authenticated message/support adapters retained; legal-gated profile saves remain disabled. FAQs public; personal data requires sign-in. Notification read action is preview-only until server support exists.

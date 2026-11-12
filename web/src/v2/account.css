@@ -1,0 +1,175 @@
+.a-preview-empty {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: auto !important;
+  color: var(--phase-muted);
+  font-size: 14px;
+  margin: 8px auto 16px;
+}
+.a-preview-empty input {
+  width: 20px;
+  min-height: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  appearance: auto;
+  accent-color: #ffc400;
+}
+.a-canvas .b-box p {
+  font-size: 3.3cqw;
+  line-height: 1.8;
+}
+.a-canvas small {
+  font-size: 2.8cqw;
+  color: var(--phase-muted);
+}
+.a-menu {
+  width: 100%;
+  background: transparent;
+  color: inherit;
+  border: 0;
+  border-bottom: 1px solid #83868e33;
+  padding: 3cqw 1cqw;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 3.7cqw;
+}
+.a-menu .discovery-icon {
+  width: 4cqw;
+  height: 4cqw;
+}
+.a-thread {
+  display: flex;
+  align-items: center;
+  gap: 3cqw;
+  text-align: right;
+  background: transparent;
+  color: inherit;
+  width: 100%;
+  border: 0;
+  padding: 2cqw 0;
+  font-size: 3.7cqw;
+  min-height: 60px;
+}
+.a-thread > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+.a-thread small {
+  display: block;
+  line-height: 1.7;
+}
+.a-avatar {
+  display: grid;
+  place-items: center;
+  width: 12cqw;
+  height: 12cqw;
+  flex: 0 0 12cqw;
+  border: 1px solid #ffc400;
+  border-radius: 50%;
+  background: #ffc40020;
+  color: var(--d-gold);
+  font-size: 5cqw;
+  font-weight: 800;
+}
+.a-profile {
+  text-align: center;
+}
+.a-profile .a-avatar {
+  margin: 2cqw auto;
+}
+.a-chat-heading {
+  display: flex;
+  gap: 3cqw;
+  align-items: center;
+}
+.a-chat {
+  margin: 0 4.4%;
+  padding: 2cqw 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3cqw;
+  min-height: 35cqw;
+}
+.a-bubble {
+  align-self: flex-start;
+  max-width: 85%;
+  padding: 2.5cqw 3cqw;
+  border: 1px solid #83868e66;
+  border-radius: 4cqw 4cqw 1cqw 4cqw;
+  background: #83868e15;
+  overflow-wrap: anywhere;
+}
+.a-bubble.mine {
+  align-self: flex-end;
+  background: #ffc4001c;
+  border-color: #c49e36;
+  border-radius: 4cqw 4cqw 4cqw 1cqw;
+}
+.a-bubble p {
+  margin: 0 0 2cqw;
+  font-size: 3.6cqw;
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+.a-compose {
+  margin: 4cqw 4.4%;
+  display: grid;
+  gap: 3cqw;
+}
+.a-compose .d-primary {
+  width: 100%;
+  margin: 0;
+  font-size: 3.8cqw;
+}
+.a-canvas textarea {
+  background: transparent;
+  color: inherit;
+  border: 1px solid var(--phase-muted);
+  border-radius: 3cqw;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 3cqw;
+  font: inherit;
+  resize: vertical;
+  min-height: 100px;
+}
+.a-notification {
+  display: flex;
+  gap: 3cqw;
+  align-items: baseline;
+}
+.a-dot {
+  width: 2.2cqw;
+  height: 2.2cqw;
+  flex: 0 0 2.2cqw;
+  background: #ffc400;
+  border-radius: 50%;
+}
+.a-dot.seen {
+  background: #83868e;
+}
+.a-faq {
+  padding: 3cqw 0;
+  border-bottom: 1px solid #83868e44;
+}
+.a-faq summary {
+  cursor: pointer;
+  font-size: 3.5cqw;
+  line-height: 1.6;
+  min-height: 44px;
+}
+.a-canvas form > .a-menu {
+  width: 90%;
+  margin: 3cqw auto;
+}
+.account-stage.light .a-avatar {
+  color: #806000;
+}
+.a-canvas button:disabled {
+  opacity: 0.6;
+}

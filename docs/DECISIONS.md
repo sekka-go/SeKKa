@@ -21,3 +21,5 @@
 - Phase four continues the existing wallet/account map with screens 24–30, retaining 23 as an alias. The owner requested starting the next stage without new image references; extend established dark/light components. Money activation remains held. Screen 29 keeps its old explicit phase-two preview while the new phase-four gallery uses the wallet family.
 
 - Owner wallet correction: label reserved security as «تأمين جدية الحجز», refundable and separate from the subscription. Minimum top-up is EGP 100; quick amounts 100/200/300. This is a top-up minimum, not a permanent available-balance floor (reservations can reduce available funds). Real money stays disabled; future provider/server integration must enforce the same minimum before credit creation.
+
+- Phase five follows canonical IDs 31–36 and existing visual language. Do not invent presence, delivery receipts, contact numbers, or legal approval. Preview message sending, notification-read changes and name edits are local demonstrations. Real profile mutation remains held; real support/message writes require an authenticated user action and successful API response.

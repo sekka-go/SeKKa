@@ -336,9 +336,13 @@ test("phase four wallet states stay isolated from money operations", async ({
   await expect(
     page.getByRole("button", { name: "متابعة للدفع — غير مفعّل" }),
   ).toBeDisabled();
-  await expect(page.getByRole("button", {name:"معاينة حالات الشحن"})).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "معاينة حالات الشحن" }),
+  ).toBeDisabled();
   await page.getByLabel("مبلغ الشحن بالجنيه").fill("99");
-  await expect(page.getByRole("button", {name:"معاينة حالات الشحن"})).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "معاينة حالات الشحن" }),
+  ).toBeDisabled();
   await page.getByLabel("مبلغ الشحن بالجنيه").fill("100");
   await page.getByRole("button", { name: "معاينة حالات الشحن" }).click();
   await page.getByLabel("حالة الشحن التجريبية").selectOption("success");
@@ -361,4 +365,83 @@ test("phase four wallet states stay isolated from money operations", async ({
   await page.goto("/?screen=26");
   await expect(page.getByText("سجّل برقم موبايلك عشان نكمل.")).toBeVisible();
   expect(writes).toEqual([]);
+});
+
+test("phase five communication and account previews are isolated", async ({
+  page,
+}) => {
+  const writes: string[] = [];
+  const errors: string[] = [];
+  page.on("request", (r) => {
+    if (r.method() === "POST") writes.push(r.url());
+  });
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const theme of ["dark", "light"])
+    for (let screen = 31; screen <= 36; screen++) {
+      await page.goto(`/?screen=${screen}&theme=${theme}&preview=phase5`);
+      await expect(page.locator(".a-canvas h1")).not.toBeEmpty();
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+      await page
+        .locator(".a-canvas")
+        .screenshot({ path: `../docs/audit/phase5-${screen}-${theme}.png` });
+    }
+  await page.goto("/?screen=31&preview=phase5");
+  await page.getByLabel("دوّر في المحادثات").fill("كريم");
+  await expect(page.locator(".a-thread")).toHaveCount(1);
+  await page.locator(".a-thread").click();
+  await expect(page).toHaveURL(/screen=32/);
+  await expect(
+    page.getByRole("button", { name: "إضافة للمعاينة" }),
+  ).toBeDisabled();
+  await page
+    .getByLabel("رسالتك", { exact: true })
+    .fill("ممكن تفاصيل نقطة الالتقاء؟");
+  await page.getByRole("button", { name: "إضافة للمعاينة" }).click();
+  await expect(page.locator(".a-bubble.mine")).toContainText(
+    "ممكن تفاصيل نقطة الالتقاء؟",
+  );
+  await expect(page.getByRole("status")).toContainText("ماتبعتتش");
+  await page.getByLabel("شاشة المرحلة الخامسة").selectOption("33");
+  await page.getByRole("button", { name: "غير المقروءة", exact: true }).click();
+  await page
+    .getByRole("button", { name: "اعتباره مقروءًا في المعاينة" })
+    .click();
+  await expect(page.getByText("مفيش إشعارات جديدة.")).toBeVisible();
+  await page.getByLabel("شاشة المرحلة الخامسة").selectOption("35");
+  await page.getByLabel("الاسم الكامل").fill("منى أحمد");
+  await page
+    .getByRole("button", { name: "حفظ في المعاينة", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "الرجوع لحسابي", exact: true })
+    .click();
+  await expect(page.locator(".a-profile h2")).toHaveText("منى أحمد");
+  await page.getByLabel("شاشة المرحلة الخامسة").selectOption("36");
+  await page
+    .getByText("تأمين جدية الحجز ده مقابل إيه؟", { exact: true })
+    .click();
+  await expect(
+    page.getByText(
+      "هو مبلغ مسترد 100 جنيه، منفصل عن سعر الاشتراك. بيتاح بعد تأكيد الدفع والاستلام من الطرفين، لو مفيش نزاع.",
+    ),
+  ).toBeVisible();
+  await page
+    .getByLabel("قولنا نساعدك إزاي؟")
+    .fill("محتاج مساعدة في تفاصيل الاشتراك");
+  await page.getByRole("button", { name: "معاينة طلب المساعدة" }).click();
+  await expect(page.getByRole("status")).toContainText("ماتبعتش للدعم");
+  await page.goto("/?screen=31");
+  await expect(page.getByText("سجّل برقم موبايلك عشان نكمل.")).toBeVisible();
+  await expect(page.locator(".a-thread")).toHaveCount(0);
+  await page.goto("/?screen=36");
+  await expect(
+    page.getByRole("button", { name: "ابعت للدعم", exact: true }),
+  ).toBeDisabled();
+  expect(writes).toEqual([]);
+  expect(errors).toEqual([]);
 });

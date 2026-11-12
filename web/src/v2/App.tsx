@@ -15,6 +15,7 @@ import Discovery, { discoveryScreens } from "./Discovery";
 import type { Line } from "./Discovery";
 import BookingFlow, { bookingScreens } from "./BookingFlow";
 import WalletFlow, { walletScreens } from "./WalletFlow";
+import AccountFlow, { accountScreens } from "./AccountFlow";
 type Row = Record<string, unknown>;
 const money = (n: number) =>
   new Intl.NumberFormat("ar-EG", {
@@ -218,7 +219,9 @@ export default function SubscriptionApp() {
     [maxPrice, setMaxPrice] = useState("");
   const [balance, setBalance] = useState({ available: 0, reserved: 0 }),
     [body, setBody] = useState(""),
-    [conversation, setConversation] = useState("");
+    [conversation, setConversation] = useState(
+      new URLSearchParams(location.search).get("conversation") || "",
+    );
   const [model, setModel] = useState(""),
     [plate, setPlate] = useState(""),
     [seats, setSeats] = useState("3"),
@@ -241,16 +244,27 @@ export default function SubscriptionApp() {
     const params = new URLSearchParams({ screen: String(id), theme });
     if (id <= 7) params.set("inspect", "1");
     const previous = new URLSearchParams(location.search);
-    if (["phase2", "phase3", "phase4"].includes(previous.get("preview") || ""))
+    if (
+      ["phase2", "phase3", "phase4", "phase5"].includes(
+        previous.get("preview") || "",
+      )
+    )
       params.set(
         "preview",
-        walletScreens.includes(id)
-          ? "phase4"
-          : bookingScreens.includes(id)
-            ? "phase3"
-            : "phase2",
+        accountScreens.includes(id)
+          ? "phase5"
+          : walletScreens.includes(id)
+            ? "phase4"
+            : bookingScreens.includes(id)
+              ? "phase3"
+              : "phase2",
       );
-    for (const key of ["offer", "offerPeriod", "offerDirection"]) {
+    for (const key of [
+      "offer",
+      "offerPeriod",
+      "offerDirection",
+      "conversation",
+    ]) {
       const value = previous.get(key);
       if (value) params.set(key, value);
     }
@@ -270,7 +284,7 @@ export default function SubscriptionApp() {
   async function refreshProfile() {
     if (
       !client ||
-      ["phase2", "phase3", "phase4"].includes(
+      ["phase2", "phase3", "phase4", "phase5"].includes(
         new URLSearchParams(location.search).get("preview") || "",
       )
     )
@@ -329,7 +343,7 @@ export default function SubscriptionApp() {
     setError("");
     if (
       !client ||
-      ["phase2", "phase3", "phase4"].includes(
+      ["phase2", "phase3", "phase4", "phase5"].includes(
         new URLSearchParams(location.search).get("preview") || "",
       )
     )
@@ -1597,6 +1611,67 @@ export default function SubscriptionApp() {
       );
     return <Empty />;
   }
+  if (accountScreens.includes(screen))
+    return (
+      <AccountFlow
+        screen={screen}
+        theme={theme}
+        onTheme={changeTheme}
+        go={go}
+        profile={profile}
+        signedIn={signedIn}
+        rows={rows}
+        conversation={conversation}
+        onConversation={(id) => {
+          setConversation(id);
+          const u = new URL(location.href);
+          u.searchParams.set("conversation", id);
+          history.replaceState(null, "", u);
+        }}
+        busy={busy}
+        error={error}
+        onRefresh={() => setRevision((v) => v + 1)}
+        onSend={async (body) => {
+          setBusy(true);
+          setError("");
+          try {
+            if (!signedIn || !conversation) throw new Error("AUTH_REQUIRED");
+            await api("message.send", { conversationId: conversation, body });
+            setRevision((v) => v + 1);
+          } catch (e) {
+            setError(errorCopy(e));
+            throw e;
+          } finally {
+            setBusy(false);
+          }
+        }}
+        onSupport={async (body) => {
+          setBusy(true);
+          setError("");
+          try {
+            if (!signedIn) throw new Error("AUTH_REQUIRED");
+            await api("support.create", { body });
+          } catch (e) {
+            setError(errorCopy(e));
+            throw e;
+          } finally {
+            setBusy(false);
+          }
+        }}
+        onLogout={async () => {
+          if (client) {
+            const { error } = await client.auth.signOut();
+            if (error) {
+              setError(errorCopy(error));
+              throw error;
+            }
+          }
+          setProfile(null);
+          setSignedIn(false);
+          go(8);
+        }}
+      />
+    );
   if (
     walletScreens.includes(screen) &&
     (screen !== 29 ||
