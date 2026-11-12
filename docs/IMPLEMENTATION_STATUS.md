@@ -18,10 +18,10 @@ New private schema, server-owned subscription quotes and atomic reservations; ty
 - Generic admin list views are not equivalent to finished operational workflows. Screen registry is not completion evidence.
 
 ## Phase H — QA
-32 independent domain and real PostgreSQL integration tests initially passed, including simultaneous clients. Latest run: 32/32 passed on PostgreSQL 17.11. Typecheck/lint/build passed. Local Playwright could not start Chromium because this runtime denies its Unix socket; this is an environment blocker, not a passed E2E suite. CI includes browser installation and the three UI suites. Type check, lint and build run on new active application. Hosted OTP/provider/mobile acceptance not completed. Test fixtures never uploaded as real routes/bookings.
+32 independent domain and real PostgreSQL integration tests initially passed, including simultaneous clients. Latest run: 32/32 passed on PostgreSQL 17.11. Typecheck/lint/build passed. Local Playwright could not start Chromium because this runtime denies its Unix socket; this is an environment blocker, not a passed E2E suite. CI build/typecheck/lint and all 32 domain/DB tests passed. Guest discovery and rendering of the 75 screen entries passed. The mobile suite initially found a duplicate test locator (option and card share category name); the locator was corrected for rerun. These checks do not validate authenticated backend journeys. Type check, lint and build run on new active application. Hosted OTP/provider/mobile acceptance not completed. Test fixtures never uploaded as real routes/bookings.
 
 ## Phase I — Preview
-Preview deployment pending publication and verification. The hosted migration confirmation expired; a read-back verified sekka_v2 does not exist. No hosted schema or bucket was created. A fresh explicit tool confirmation is required; no execute_sql workaround will bypass it.
+Preview published and verified: https://c44b45a2.sekka-go.pages.dev/ (UI/code only), draft PR #168, commit 3970d0c. Remote browser verified public search and wallet guard. The hosted migration confirmation expired; a read-back verified sekka_v2 does not exist. No hosted schema or bucket was created. A fresh explicit tool confirmation is required; no execute_sql workaround will bypass it.
 
 ## Phases J–K — Not performed
 Production cutover, legacy endpoint revocation, data migration and retirement require future explicit resource-specific approval after complete acceptance. Current main and old production deployment remain active.

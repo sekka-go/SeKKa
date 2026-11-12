@@ -55,10 +55,10 @@ test("mobile RTL and desktop have no horizontal overflow", async ({ page }) => {
         () => document.documentElement.scrollWidth <= window.innerWidth,
       ),
     ).toBe(true);
-    await expect(page.getByText("PRIME", { exact: true })).toBeVisible();
-    await expect(page.getByText("SAVER", { exact: true })).toBeVisible();
-    await expect(page.getByText("SPACE", { exact: true })).toBeVisible();
-    await expect(page.getByText("MAX", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^PRIME / })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^SAVER / })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^SPACE / })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^MAX / })).toBeVisible();
     await page.screenshot({
       path: `../docs/audit/home-${size.width}.png`,
       fullPage: true,

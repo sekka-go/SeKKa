@@ -21,3 +21,13 @@ No production cutover or legacy retirement is authorized by a successful preview
 
 First migration attempt returned `status: expired` from the confirmation form. Read-back: `sekka_v2` absent. No hosted data, schema or bucket changed. Fresh tool confirmation remains required. Do not call a DDL operation through a different tool to bypass that gate.
 Local Playwright blocked by Unix socket permissions; do not report UI acceptance as passed until CI/remote browser verification.
+
+## Verified preview
+
+Initial replacement commit: `3970d0c442943ecdfb90426b7427ab6ee7332ce6`.
+Draft PR: https://github.com/sekka-go/SeKKa/pull/168
+Cloudflare deploy `c44b45a2-b8f5-4946-8868-a95755d6a42f` succeeded:
+https://c44b45a2.sekka-go.pages.dev/
+Branch alias returned by Cloudflare: https://rebuild-subscriptions-202611.sekka-go.pages.dev
+Remote browser verified rendering, guest text search navigation and wallet authentication guard. Backend staging remains unconfigured; this is a UI/code preview, not a live booking service.
+Production canonical deployment remains `4a3504d9-96c5-4d78-9855-bf21fe4072ff`, commit `f605e1e`, branch main.
