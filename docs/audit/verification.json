@@ -1,0 +1,30 @@
+{
+  "checkedAt": "2026-11-12",
+  "baseCommit": "f605e1ecc108d12b3e20776159ee67866ced66e7",
+  "branch": "rebuild/subscriptions-20261112",
+  "unitAndDatabaseTests": {
+    "passed": 32,
+    "failed": 0,
+    "database": "real temporary PostgreSQL 17.11",
+    "scope": [
+      "calendar and pricing",
+      "RLS and direct privilege denial",
+      "two-client last-seat contention",
+      "wallet contention",
+      "same-idempotency-key contention",
+      "cross-period and direction seat inventory",
+      "snapshot immutability",
+      "one-time dual-confirmation release",
+      "private document ownership",
+      "messages ownership"
+    ]
+  },
+  "typecheck": "passed",
+  "lint": "passed for active v2 frontend",
+  "productionBuild": "passed",
+  "playwright": "blocked locally: Unix-domain socket denied before browser startup; CI configured",
+  "hostedMigration": "not applied: confirmation expired; read-back v2 schema absent",
+  "legacyDataMigrated": false,
+  "productionCutover": false,
+  "resourcesDeleted": []
+}

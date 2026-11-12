@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "useDefineForClassFields": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
@@ -18,5 +17,10 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src/main.tsx", "src/App.tsx", "src/screens/RegisterScreen.tsx", "src/vite-env.d.ts"]
+  "include": [
+    "src/main.tsx",
+    "src/v2",
+    "src/vite-env.d.ts",
+    "../packages/domain/*.ts"
+  ]
 }
