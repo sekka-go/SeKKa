@@ -16,6 +16,9 @@ import type { Line } from "./Discovery";
 import BookingFlow, { bookingScreens } from "./BookingFlow";
 import WalletFlow, { walletScreens } from "./WalletFlow";
 import AccountFlow, { accountScreens } from "./AccountFlow";
+import CaptainOnboarding, {
+  captainOnboardingScreens,
+} from "./CaptainOnboarding";
 type Row = Record<string, unknown>;
 const money = (n: number) =>
   new Intl.NumberFormat("ar-EG", {
@@ -245,19 +248,21 @@ export default function SubscriptionApp() {
     if (id <= 7) params.set("inspect", "1");
     const previous = new URLSearchParams(location.search);
     if (
-      ["phase2", "phase3", "phase4", "phase5"].includes(
+      ["phase2", "phase3", "phase4", "phase5", "phase6"].includes(
         previous.get("preview") || "",
       )
     )
       params.set(
         "preview",
-        accountScreens.includes(id)
-          ? "phase5"
-          : walletScreens.includes(id)
-            ? "phase4"
-            : bookingScreens.includes(id)
-              ? "phase3"
-              : "phase2",
+        captainOnboardingScreens.includes(id)
+          ? "phase6"
+          : accountScreens.includes(id)
+            ? "phase5"
+            : walletScreens.includes(id)
+              ? "phase4"
+              : bookingScreens.includes(id)
+                ? "phase3"
+                : "phase2",
       );
     for (const key of [
       "offer",
@@ -284,7 +289,7 @@ export default function SubscriptionApp() {
   async function refreshProfile() {
     if (
       !client ||
-      ["phase2", "phase3", "phase4", "phase5"].includes(
+      ["phase2", "phase3", "phase4", "phase5", "phase6"].includes(
         new URLSearchParams(location.search).get("preview") || "",
       )
     )
@@ -343,7 +348,7 @@ export default function SubscriptionApp() {
     setError("");
     if (
       !client ||
-      ["phase2", "phase3", "phase4", "phase5"].includes(
+      ["phase2", "phase3", "phase4", "phase5", "phase6"].includes(
         new URLSearchParams(location.search).get("preview") || "",
       )
     )
@@ -1611,6 +1616,21 @@ export default function SubscriptionApp() {
       );
     return <Empty />;
   }
+  if (captainOnboardingScreens.includes(screen))
+    return (
+      <CaptainOnboarding
+        screen={screen}
+        theme={theme}
+        onTheme={changeTheme}
+        go={go}
+        profile={profile}
+        signedIn={signedIn}
+        rows={rows}
+        busy={busy}
+        error={error}
+        onRefresh={() => setRevision((v) => v + 1)}
+      />
+    );
   if (accountScreens.includes(screen))
     return (
       <AccountFlow

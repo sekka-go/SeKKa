@@ -445,3 +445,56 @@ test("phase five communication and account previews are isolated", async ({
   expect(writes).toEqual([]);
   expect(errors).toEqual([]);
 });
+
+test("phase six captain onboarding validates locally without uploads", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const writes: string[] = [];
+  page.on("request", (r) => {
+    if (r.method() === "POST") writes.push(r.url());
+  });
+  for (const theme of ["dark", "light"])
+    for (let screen = 37; screen <= 43; screen++) {
+      await page.goto(`/?screen=${screen}&theme=${theme}&preview=phase6`);
+      await expect(page.locator("main h1")).toBeVisible();
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+    }
+  await page.goto("/?screen=38&preview=phase6");
+  await expect(
+    page.getByRole("button", { name: "متابعة", exact: true }),
+  ).toBeDisabled();
+  await page.getByLabel("الاسم الكامل").fill("كابتن تجريبي");
+  await page.getByRole("button", { name: "متابعة", exact: true }).click();
+  const upload = async () => {
+    for (const input of await page.locator("input[type=file]").all())
+      await input.setInputFiles({
+        name: "test.pdf",
+        mimeType: "application/pdf",
+        buffer: Buffer.from("demo only"),
+      });
+  };
+  await upload();
+  await page.getByRole("button", { name: "متابعة", exact: true }).click();
+  await page.getByLabel("موديل العربية").fill("تويوتا كورولا");
+  await page.getByLabel("رقم اللوحة").fill("أ ب ج 123");
+  await page.getByRole("button", { name: /SAVER/ }).click();
+  await page.getByRole("button", { name: "متابعة", exact: true }).click();
+  await upload();
+  await page.getByRole("button", { name: "متابعة", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "معاينة حالة الطلب" }),
+  ).toBeDisabled();
+  await page.getByLabel("راجعت البيانات التجريبية").check();
+  await page.getByRole("button", { name: "معاينة حالة الطلب" }).click();
+  await expect(
+    page.getByRole("heading", { name: "مثال: طلبك قيد المراجعة" }),
+  ).toBeVisible();
+  expect(writes).toEqual([]);
+  await page.goto("/?screen=39");
+  await expect(page.getByText("سجّل بحساب كابتن عشان نكمل.")).toBeVisible();
+});

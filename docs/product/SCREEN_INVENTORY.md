@@ -105,3 +105,8 @@ Continuing the established map: 24 wallet, 25 top-up, 26 top-up status, 27 withd
 ## Phase five — communication and account
 
 31 conversations, 32 chat, 33 notifications, 34 account, 35 profile editing, 36 help. Shared AccountFlow with both themes. Explicit `preview=phase5` is isolated local demonstration data. Existing authenticated message/support adapters retained; legal-gated profile saves remain disabled. FAQs public; personal data requires sign-in. Notification read action is preview-only until server support exists.
+
+### Phase 6 delivered UI scope
+37 Captain welcome; 38 Captain information; 39 Captain documents; 40 Vehicle information;
+41 Vehicle documents; 42 Review application; 43 Approval status. Both themes supported.
+Preview navigation supports all seven screens; live submission remains policy-gated.

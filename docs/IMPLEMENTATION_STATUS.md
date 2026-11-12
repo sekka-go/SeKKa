@@ -66,3 +66,16 @@ Renamed reserved wallet security to «تأمين جدية الحجز» with expl
 ## Phase five — communication and account
 
 Implemented six dark/light screens (31–36): searchable conversation list, threaded chat with whitespace/length guard, unread notification filtering, profile navigation/theme preferences, preview name editing, FAQ accordions and support form. Added empty, guest, error/retry and busy states. URL retains live conversation selection across refresh. Existing authenticated conversation/message/notification/support reads and sends remain adapters; no hosted-backend acceptance claim. No fake online presence, message receipts, live notifications, or successful real profile update. Added 12-view Playwright screenshots and interaction/isolation regression. Typecheck/lint passed locally; deployment and hosted browser verification pending at commit time.
+
+## Phase 6 — captain onboarding, screens 37–43
+Implemented dark/light native welcome, captain information, local document selection,
+vehicle information, vehicle documents, review and status screens. Preview uses
+`?screen=37&theme=dark&preview=phase6`. Drafts exist only in component memory;
+files are never read or uploaded, and only their names are displayed. Reload clears drafts.
+Category capacities are PRIME 3, SAVER 4, SPACE 9, MAX 13. Missing fields/documents block review.
+Live application submission remains gated pending identity-verification, retention and
+private-storage policies. Existing application status is read through the authenticated
+captain API; captain approval alone does not imply vehicle/document approval.
+No database migration or production cutover. Added a mobile, both-theme E2E journey
+including validation, all four file selections and zero POST requests. CI pending this commit.
+Previous phase 5 CI run 43298400773 passed all checks and 8 E2E suites.

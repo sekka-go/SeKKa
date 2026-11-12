@@ -23,3 +23,10 @@
 - Owner wallet correction: label reserved security as «تأمين جدية الحجز», refundable and separate from the subscription. Minimum top-up is EGP 100; quick amounts 100/200/300. This is a top-up minimum, not a permanent available-balance floor (reservations can reduce available funds). Real money stays disabled; future provider/server integration must enforce the same minimum before credit creation.
 
 - Phase five follows canonical IDs 31–36 and existing visual language. Do not invent presence, delivery receipts, contact numbers, or legal approval. Preview message sending, notification-read changes and name edits are local demonstrations. Real profile mutation remains held; real support/message writes require an authenticated user action and successful API response.
+
+## Phase 6 implementation boundary
+Captain onboarding uses screens 37–43 with the established dark/light visual system.
+Local document selection accepts nonempty JPEG/PNG/PDF up to 5 MB as a preview limit,
+not an approved production document policy. No sensitive document contents are read,
+persisted, uploaded or logged. Production submission stays unavailable until document
+verification, retention and secure upload policies are approved. No simulated approval.
