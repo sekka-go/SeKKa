@@ -36,3 +36,10 @@ Validated code commit: ad48c6bd50398e4e7a5e8dc49ea3c0612935f903.
 Latest successful preview: https://3897cdaa.sekka-go.pages.dev
 Successful complete CI run: https://github.com/sekka-go/SeKKa/actions/runs/43190565818
 All 3 guest UI suites passed including 390px/1440px overflow checks. Authenticated live acceptance remains blocked by hosted migration/OTP/policy gates.
+
+## Map74 branch preview
+Canonical URLs use screen=1..74. Preview scopes: phase2 discovery8–15, phase3 booking16–22,
+phase4 account/wallet23–35, phase5 captain onboarding36–42. Existing immutable preview
+URLs preserve previous versions; new deployments use the new numbering. Hosted database
+migration20261112214616 is not applied by this change. Release requires it before enabling
+live discovery/contact APIs. Tests include the baseline plus this forward migration.

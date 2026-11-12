@@ -14,3 +14,11 @@ Authority: `PRD.md` and owner replacement instruction, 12 November 2026.
 - Renewals, cancellation/timeout policy, financial operations, legal text and official calendar require unresolved decisions. Do not substitute sample data as approval.
 - Phase-three offer terms are read-only: captain-defined duration, direction and full-cycle price carry from results/details into booking. Rider never chooses new terms in summary. Proration changes the payable amount according to eligible days, not the captain's published terms.
 - Approved phase-three screen IDs are 16 summary, 17 security, 18 confirmation, 19 subscription, 20 rider paid, 21 receipt follow-up, 22 management. The EGP 100 is never subtracted from captain payment.
+
+## Owner update: map74
+Public screen IDs and stages follow SCREEN_INVENTORY.md and SCREEN_SPECIFICATIONS.md.
+Screen13 and conversations require an owned committed booking. Public discovery never
+returns captain identity or identifying vehicle fields. Captain onboarding is36–42;
+route management is43–50. Wallet top-ups must be at least EGP100; the available balance
+itself may be below100. Both dark/light layouts are supported. Screens6/7 are profile
+completion/permissions, not a success screen/password signup screen.

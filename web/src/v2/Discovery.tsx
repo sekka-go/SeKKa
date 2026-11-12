@@ -1,3 +1,4 @@
+import { publicScreen } from "./screenMap";
 import { useState } from "react";
 import type { CSSProperties, FormEvent, ReactNode } from "react";
 import { Wordmark } from "./Onboarding";
@@ -7,12 +8,12 @@ import "./discovery.css";
 
 export const discoveryScreens = [8, 10, 11, 12, 13, 14, 29, 15];
 const titles: Record<number, string> = {
-  8: "تخطيط رحلة",
-  9: "تخطيط رحلة",
+  8: "الرئيسية للراكب",
+  9: "البحث عن خط",
   10: "تصفية البحث",
   11: "نتائج البحث",
   12: "تفاصيل الخط",
-  13: "تفاصيل الحجز",
+  13: "بيانات الكابتن والعربية",
   14: "المفضلة",
   29: "اشتراكاتي",
   15: "اطلب خط",
@@ -399,6 +400,8 @@ export type DiscoveryProps = {
   route: Route | null;
   bookings: Booking[];
   signedIn: boolean;
+  contact?: Record<string, unknown> | null;
+  onContactChat?: () => void;
   busy: boolean;
   error: string;
   onSearch: (p: {
@@ -408,6 +411,8 @@ export type DiscoveryProps = {
     returnTime: string;
     period: string;
     category: string;
+    direction?: string;
+    maxPrice?: string;
   }) => void;
   onSelect: (r: Route, period: string, direction: string) => void;
   onRequest: (p: Record<string, unknown>) => Promise<void>;
@@ -454,11 +459,18 @@ export default function Discovery(p: DiscoveryProps) {
     outbound,
     returnTime,
   };
+  const [filterDirection, setFilterDirection] = useState("");
+  const [filterPrice, setFilterPrice] = useState("");
+  const [onlyAvailable, setOnlyAvailable] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState(false);
   const filtered = lines.filter(
     (l) =>
       (!categories.length || categories.includes(l.category)) &&
-      (!appliedFilters || l.period === period),
+      (!appliedFilters || l.period === period) &&
+      (!filterDirection || l.direction === filterDirection) &&
+      (!filterPrice ||
+        (l.amount !== null && l.amount <= Number(filterPrice))) &&
+      (!onlyAvailable || l.available > 0),
   );
   const favoritesList = demo
     ? favoriteExamples.filter((l) => favorites.includes(l.id))
@@ -508,6 +520,8 @@ export default function Discovery(p: DiscoveryProps) {
         returnTime,
         period,
         category: categories.length === 1 ? categories[0] : "",
+        direction: filterDirection || "outbound",
+        maxPrice: filterPrice,
       });
       nav(11);
     }
@@ -622,7 +636,7 @@ export default function Discovery(p: DiscoveryProps) {
             >
               {discoveryScreens.map((id) => (
                 <option key={id} value={id}>
-                  {String(id).padStart(2, "0")} · {titles[id]}
+                  {String(publicScreen(id)).padStart(2, "0")} · {titles[id]}
                 </option>
               ))}
             </select>
@@ -801,6 +815,48 @@ export default function Discovery(p: DiscoveryProps) {
               </h2>
               {periodChoices}
             </section>
+            <section className="d-box">
+              <label className="w-field">
+                <span>اتجاه الاشتراك</span>
+                <select
+                  value={filterDirection}
+                  onChange={(e) => setFilterDirection(e.target.value)}
+                >
+                  <option value="">كل الاتجاهات</option>
+                  <option value="outbound">ذهاب فقط</option>
+                  <option value="return">عودة فقط</option>
+                  <option value="round_trip">ذهاب وعودة</option>
+                </select>
+              </label>
+              <label className="w-field">
+                <span>أقصى سعر للاشتراك</span>
+                <input
+                  type="number"
+                  min="0"
+                  value={filterPrice}
+                  onChange={(e) => setFilterPrice(e.target.value)}
+                />
+              </label>
+              <button
+                className="d-outline"
+                aria-pressed={onlyAvailable}
+                onClick={() => setOnlyAvailable(!onlyAvailable)}
+              >
+                مقاعد متاحة فقط
+              </button>
+              <button
+                className="d-outline"
+                onClick={() => {
+                  setCategories([]);
+                  setFilterDirection("");
+                  setFilterPrice("");
+                  setOnlyAvailable(false);
+                  setAppliedFilters(false);
+                }}
+              >
+                مسح الفلاتر
+              </button>
+            </section>
             <section className="d-filter-section">
               <h2>
                 <DiscoveryIcon name="pin" />
@@ -826,6 +882,8 @@ export default function Discovery(p: DiscoveryProps) {
                     returnTime,
                     period,
                     category: categories.length === 1 ? categories[0] : "",
+                    direction: filterDirection || "outbound",
+                    maxPrice: filterPrice,
                   });
                 nav(11);
               }}
@@ -833,6 +891,18 @@ export default function Discovery(p: DiscoveryProps) {
               عرض النتائج
             </Action>
           </>
+        )}
+        {screen === 8 && (
+          <section className="d-box">
+            <h2>أهلًا بيك في سِكّة</h2>
+            <p>مشوارك المنتظم يبدأ من هنا.</p>
+            <div className="d-period-options">
+              <button onClick={() => nav(29)}>اشتراكاتي</button>
+              <button onClick={() => nav(14)}>المفضلة</button>
+              <button onClick={() => nav(24)}>المحفظة</button>
+              <button onClick={() => nav(33)}>الإشعارات</button>
+            </div>
+          </section>
         )}
         {screen === 11 && (
           <>
@@ -855,14 +925,8 @@ export default function Discovery(p: DiscoveryProps) {
                   <div className="d-offer-top">
                     <strong>
                       <DiscoveryIcon name="user" />
-                      {l.captain || "عرض خط"}
+                      {"عرض اشتراك"}
                     </strong>
-                    {l.rating && (
-                      <b>
-                        <DiscoveryIcon name="star" />
-                        {l.rating}
-                      </b>
-                    )}
                     <span className="d-available">
                       <DiscoveryIcon name="seat" />
                       متاح {l.available} مقاعد
@@ -871,7 +935,7 @@ export default function Discovery(p: DiscoveryProps) {
                   <button
                     className="d-offer-select"
                     onClick={() => openLine(l)}
-                    aria-label={`عرض تفاصيل ${l.captain || l.category} ${periodLabel(l.period)} ${directionLabel(l.direction)}`}
+                    aria-label={`عرض تفاصيل ${l.category} ${periodLabel(l.period)} ${directionLabel(l.direction)}`}
                   >
                     <span className="d-category-badge">
                       <DiscoveryIcon
@@ -947,8 +1011,8 @@ export default function Discovery(p: DiscoveryProps) {
               </div>
               <div className="d-box d-information">
                 <p>
-                  الاشتراك يشمل الرحلات اليومية وفق المواعيد المحددة طوال مدة
-                  الاشتراك.
+                  الاشتراك من الأحد للخميس، باستثناء الإجازات الرسمية المصرية،
+                  وفق مواعيد العرض طوال مدة الاشتراك.
                 </p>
                 <DiscoveryIcon name="info" />
               </div>
@@ -1066,6 +1130,16 @@ export default function Discovery(p: DiscoveryProps) {
                 <DiscoveryIcon name="back" />
               </button>
             </>
+          ) : p.contact ? (
+            <section className="d-box">
+              <h2>بيانات الكابتن والعربية</h2>
+              <p>{String(p.contact.captain_name || "")}</p>
+              <p>{String(p.contact.vehicle_model || "")}</p>
+              <p>اللوحة: {String(p.contact.plate || "")}</p>
+              <button className="d-primary" onClick={p.onContactChat}>
+                محادثة الكابتن
+              </button>
+            </section>
           ) : (
             <Empty>
               بيانات الكابتن والعربية بتظهر بعد تأكيد حجزك. مفيش حجز مؤكد مختار
@@ -1074,7 +1148,9 @@ export default function Discovery(p: DiscoveryProps) {
           ))}
         {screen === 14 && (
           <>
-            <p className="d-subtitle">الخطوط التي قمت بحفظها</p>
+            <p className="d-subtitle">
+              حفظ العرض مش حجز مقعد، والسعر والتوافر ممكن يتغيروا.
+            </p>
             <div className="d-favorites">
               {favoritesList.map((l) => (
                 <article key={l.id} className="d-box d-favorite">

@@ -1,112 +1,127 @@
-# Approved 75-screen map
+# خريطة شاشات سِكّة المعتمدة — 74 شاشة
 
-Source: PRD section 12 and current owner instruction. Technical route is `/?screen=NN`. Shared components are intentional. A coded screen is not a passed end-to-end journey.
+تحديث المالك: 12 نوفمبر 2026. هذه الخريطة تلغي ترقيم 75 شاشة وتقسيم مراحل التنفيذ السابق.
 
-| # | Screen | Route | Status |
-|---|---|---|---|
-| 01 | البداية | /?screen=1 | UI + API coded; acceptance pending |
-| 02 | أهلًا بيك في سِكّة | /?screen=2 | UI + API coded; acceptance pending |
-| 03 | نوع الحساب | /?screen=3 | UI + API coded; acceptance pending |
-| 04 | رقم موبايلك | /?screen=4 | OTP adapter; live provider/terms approval blocked |
-| 05 | تأكيد الموبايل | /?screen=5 | OTP adapter; live provider/terms approval blocked |
-| 06 | كمّل بياناتك | /?screen=6 | Form; approved legal terms blocked |
-| 07 | الموافقات والصلاحيات | /?screen=7 | Form; approved legal terms blocked |
-| 08 | مشوارك اليومي | /?screen=8 | UI + API coded; acceptance pending |
-| 09 | دوّر على خط | /?screen=9 | Text/time filters coded; spatial matching pending |
-| 10 | ظبّط البحث | /?screen=10 | Text/time filters coded; spatial matching pending |
-| 11 | الخطوط المناسبة | /?screen=11 | Text/time filters coded; spatial matching pending |
-| 12 | تفاصيل الخط | /?screen=12 | UI + API coded; acceptance pending |
-| 13 | الكابتن والعربية | /?screen=13 | UI + API coded; acceptance pending |
-| 14 | المفضلة | /?screen=14 | UI + API coded; acceptance pending |
-| 15 | اطلب خط | /?screen=15 | UI + API coded; acceptance pending |
-| 16 | اختار اشتراكك | /?screen=16 | UI + API coded; acceptance pending |
-| 17 | راجع حجزك | /?screen=17 | Guarded flow; provider/policy gate closed |
-| 18 | تأمين الحجز | /?screen=18 | Guarded flow; provider/policy gate closed |
-| 19 | حجزك اتسجل. | /?screen=19 | Guarded flow; provider/policy gate closed |
-| 20 | اشتراكي | /?screen=20 | UI + API coded; acceptance pending |
-| 21 | دفعت؟ أكد الدفع. | /?screen=21 | UI + API coded; acceptance pending |
-| 22 | تأكيد الكابتن | /?screen=22 | UI + API coded; acceptance pending |
-| 23 | إدارة الاشتراك | /?screen=23 | Renewal policy blocked; not implemented |
-| 24 | محفظتي | /?screen=24 | UI + API coded; acceptance pending |
-| 25 | شحن الرصيد | /?screen=25 | Guarded flow; provider/policy gate closed |
-| 26 | نتيجة الشحن | /?screen=26 | Guarded flow; provider/policy gate closed |
-| 27 | سحب الرصيد | /?screen=27 | Guarded flow; provider/policy gate closed |
-| 28 | سجل المعاملات | /?screen=28 | UI + API coded; acceptance pending |
-| 29 | اشتراكاتي | /?screen=29 | UI + API coded; acceptance pending |
-| 30 | سجل الاشتراكات | /?screen=30 | UI + API coded; acceptance pending |
-| 31 | المحادثات | /?screen=31 | UI + API coded; acceptance pending |
-| 32 | المحادثة | /?screen=32 | UI + API coded; acceptance pending |
-| 33 | الإشعارات | /?screen=33 | UI + API coded; acceptance pending |
-| 34 | حسابي | /?screen=34 | UI + API coded; acceptance pending |
-| 35 | تعديل بياناتي | /?screen=35 | Form; approved legal terms blocked |
-| 36 | المساعدة | /?screen=36 | UI + API coded; acceptance pending |
-| 37 | أهلًا يا كابتن | /?screen=37 | UI + API coded; acceptance pending |
-| 38 | بيانات الكابتن | /?screen=38 | UI + API coded; acceptance pending |
-| 39 | مستنداتك | /?screen=39 | UI + API coded; acceptance pending |
-| 40 | بيانات العربية | /?screen=40 | UI + API coded; acceptance pending |
-| 41 | مستندات العربية | /?screen=41 | UI + API coded; acceptance pending |
-| 42 | راجع طلبك | /?screen=42 | UI + API coded; acceptance pending |
-| 43 | حالة الاعتماد | /?screen=43 | UI + API coded; acceptance pending |
-| 44 | الرئيسية للكابتن | /?screen=44 | UI + API coded; acceptance pending |
-| 45 | خطوطي | /?screen=45 | UI + API coded; acceptance pending |
-| 46 | مسار الخط | /?screen=46 | Shared route wizard; stop editor/multiple-line validation pending |
-| 47 | مواعيد الخط | /?screen=47 | Shared route wizard; stop editor/multiple-line validation pending |
-| 48 | التشغيل والدورة | /?screen=48 | Shared route wizard; stop editor/multiple-line validation pending |
-| 49 | الفئة والمقاعد | /?screen=49 | Shared route wizard; stop editor/multiple-line validation pending |
-| 50 | أسعار الاشتراك | /?screen=50 | Shared route wizard; stop editor/multiple-line validation pending |
-| 51 | راجع خطك | /?screen=51 | Shared route wizard; stop editor/multiple-line validation pending |
-| 52 | طلبات الحجز | /?screen=52 | UI + API coded; acceptance pending |
-| 53 | تفاصيل الحجز | /?screen=53 | UI + API coded; acceptance pending |
-| 54 | أكد الاستلام يا كابتن | /?screen=54 | UI + API coded; acceptance pending |
-| 55 | المشتركون الحاليون | /?screen=55 | UI + API coded; acceptance pending |
-| 56 | الاشتراكات الجاية | /?screen=56 | UI + API coded; acceptance pending |
-| 57 | قائمة الانتظار | /?screen=57 | UI + API coded; acceptance pending |
-| 58 | سجل الحجوزات | /?screen=58 | UI + API coded; acceptance pending |
-| 59 | ملف الكابتن | /?screen=59 | UI + API coded; acceptance pending |
-| 60 | بيانات العربية | /?screen=60 | UI + API coded; acceptance pending |
-| 61 | ملخص الاشتراكات | /?screen=61 | UI + API coded; acceptance pending |
-| 62 | الإشعارات | /?screen=62 | UI + API coded; acceptance pending |
-| 63 | المساعدة والمحادثات | /?screen=63 | UI + API coded; acceptance pending |
-| 64 | لوحة الإدارة | /?screen=64 | UI + API coded; acceptance pending |
-| 65 | مراجعة الكباتن | /?screen=65 | Partial admin read/review UX; full operations pending |
-| 66 | مراجعة العربيات | /?screen=66 | Partial admin read/review UX; full operations pending |
-| 67 | إدارة الخطوط | /?screen=67 | UI + API coded; acceptance pending |
-| 68 | المستخدمون | /?screen=68 | UI + API coded; acceptance pending |
-| 69 | الحجوزات والاشتراكات | /?screen=69 | UI + API coded; acceptance pending |
-| 70 | تأمينات الحجز | /?screen=70 | Partial admin read/review UX; full operations pending |
-| 71 | النزاعات | /?screen=71 | Partial admin read/review UX; full operations pending |
-| 72 | الطلب غير الملبّى | /?screen=72 | UI + API coded; acceptance pending |
-| 73 | الإشعارات | /?screen=73 | Partial admin read/review UX; full operations pending |
-| 74 | التقارير والتحليلات | /?screen=74 | UI + API coded; acceptance pending |
-| 75 | الإعدادات والصلاحيات | /?screen=75 | Partial admin read/review UX; full operations pending |
+## المرحلة 1 — التسجيل والتهيئة
 
-## Owner phase-one reference override
+| الرقم | الشاشة |
+|---|---|
+| 1 | البداية |
+| 2 | الترحيب |
+| 3 | اختيار نوع الحساب |
+| 4 | رقم الموبايل |
+| 5 | التحقق من الكود |
+| 6 | استكمال الملف الشخصي |
+| 7 | الأذونات |
 
-The latest seven-image batch defines 01 splash, 02 welcome, 03 account role, 04 phone, 05 OTP, 06 success-state preview, 07 account-registration preview. This visual map supersedes the earlier phase-one naming; backend profile/consent requirements remain pending and are not silently removed. Account actions are intentionally disabled following the owner's explicit appearance-only decision. Phase two awaits its own reference batch.
+## المرحلة 2 — اكتشاف الخطوط
 
-## Owner-approved phase-three replacement — 12 November 2026
+| الرقم | الشاشة |
+|---|---|
+| 8 | الرئيسية للراكب |
+| 9 | البحث عن خط |
+| 10 | فلاتر البحث |
+| 11 | نتائج البحث |
+| 12 | تفاصيل الخط |
+| 13 | بيانات الكابتن والعربية |
+| 14 | المفضلة |
+| 15 | اطلب خط |
 
-| ID | Approved screen | Purpose |
-|---|---|---|
-| 16 | ملخص الحجز والتكلفة النهائية | Fixed captain offer, automatic start, eligible days, final quote and refundable security |
-| 17 | تأمين الحجز | Check EGP 100 available security; top-up availability/shortfall |
-| 18 | تم تأكيد الحجز | Reserved-seat snapshot, start and direct-captain payment instructions |
-| 19 | تفاصيل اشتراكي | Snapshot dates, amount, payment/security status |
-| 20 | تأكيد الدفع | Rider declaration after paying captain |
-| 21 | متابعة تأكيد الاستلام | Rider/captain confirmations and security release status |
-| 22 | إدارة الاشتراك | Details, policy-gated renewal/cancellation, support review |
+## المرحلة 3 — الحجز والاشتراكات
 
-This explicitly replaces the former 16–23 map without shifting later IDs. 23 is a compatibility alias to management (22). Phase-two view 29 remains the subscription list. No additional images are required: owner authorized continuing the established style, shared components and dark/light tokens. No official logo redesign.
+| الرقم | الشاشة |
+|---|---|
+| 16 | ملخص الحجز والتكلفة النهائية |
+| 17 | تأمين الحجز |
+| 18 | تم تأكيد الحجز |
+| 19 | تفاصيل اشتراكي |
+| 20 | تأكيد دفع الاشتراك |
+| 21 | حالة تأكيد الاستلام |
+| 22 | إدارة الاشتراك |
 
-## Phase four — wallet and subscription records
+## المرحلة 4 — حساب الراكب والمحفظة
 
-Continuing the established map: 24 wallet, 25 top-up, 26 top-up status, 27 withdrawal, 28 transactions, 29 current subscriptions, 30 subscription history. Screen 23 remains the management alias; subsequent IDs are not shifted. Phase-two preview of 29 is preserved. Phase-four preview is `?screen=24&theme=dark&preview=phase4`.
+| الرقم | الشاشة |
+|---|---|
+| 23 | المحفظة |
+| 24 | شحن المحفظة |
+| 25 | نتيجة الشحن |
+| 26 | سحب الرصيد |
+| 27 | سجل المعاملات |
+| 28 | اشتراكاتي |
+| 29 | سجل الاشتراكات السابقة |
+| 30 | المحادثات |
+| 31 | المحادثة |
+| 32 | الإشعارات |
+| 33 | حسابي |
+| 34 | تعديل البيانات الشخصية |
+| 35 | المساعدة والدعم |
 
-## Phase five — communication and account
+## المرحلة 5 — تسجيل وتجهيز الكابتن
 
-31 conversations, 32 chat, 33 notifications, 34 account, 35 profile editing, 36 help. Shared AccountFlow with both themes. Explicit `preview=phase5` is isolated local demonstration data. Existing authenticated message/support adapters retained; legal-gated profile saves remain disabled. FAQs public; personal data requires sign-in. Notification read action is preview-only until server support exists.
+| الرقم | الشاشة |
+|---|---|
+| 36 | بداية تسجيل الكابتن |
+| 37 | بيانات الكابتن |
+| 38 | بيانات العربية |
+| 39 | رفع المستندات |
+| 40 | مراجعة الطلب |
+| 41 | حالة مراجعة الحساب |
+| 42 | تفعيل حساب الكابتن |
 
-### Phase 6 delivered UI scope
-37 Captain welcome; 38 Captain information; 39 Captain documents; 40 Vehicle information;
-41 Vehicle documents; 42 Review application; 43 Approval status. Both themes supported.
-Preview navigation supports all seven screens; live submission remains policy-gated.
+## المرحلة 6 — إنشاء وإدارة الخطوط
+
+| الرقم | الشاشة |
+|---|---|
+| 43 | خطوطي |
+| 44 | إنشاء خط جديد |
+| 45 | تحديد المسار |
+| 46 | تحديد المواعيد |
+| 47 | نوع الاشتراك واتجاهه |
+| 48 | السعر والمقاعد |
+| 49 | مراجعة ونشر العرض |
+| 50 | إدارة الخط وتعديله |
+
+## المرحلة 7 — التشغيل اليومي للكابتن
+
+| الرقم | الشاشة |
+|---|---|
+| 51 | الرئيسية للكابتن |
+| 52 | الحجوزات الجديدة |
+| 53 | قائمة المشتركين |
+| 54 | تفاصيل اشتراك راكب |
+| 55 | التشغيل اليومي |
+| 56 | تأكيد استلام الاشتراك |
+| 57 | المحادثات |
+| 58 | المحادثة مع الراكب |
+| 59 | إشعارات الكابتن |
+| 60 | الحساب المالي والمعاملات |
+| 61 | حساب الكابتن |
+| 62 | الدعم والمساعدة |
+
+## المرحلة 8 — لوحة الإدارة
+
+| الرقم | الشاشة |
+|---|---|
+| 63 | لوحة التحكم |
+| 64 | إدارة المستخدمين |
+| 65 | إدارة الكباتن |
+| 66 | مراجعة المستندات |
+| 67 | إدارة العربيات والفئات |
+| 68 | مراقبة الخطوط |
+| 69 | الحجوزات والاشتراكات |
+| 70 | المحافظ والتأمينات |
+| 71 | المعاملات المالية |
+| 72 | الشكاوى والدعم |
+| 73 | الإشعارات والإعلانات |
+| 74 | الإعدادات والصلاحيات |
+
+## قواعد مشتركة ملزمة
+
+القاهرة والجيزة داخل القاهرة الكبرى فقط. PRIME 3، SAVER 4، SPACE 9، MAX 13. الكابتن يحدد سعر العرض ومدته واتجاهه مسبقًا؛ الراكب يختار عرضًا ثابتًا. الأحد–الخميس باستثناء الإجازات الرسمية المصرية. السعر والتواريخ تثبت وقت الحجز. الأسبوعي 7 أيام تقويمية والشهري شهر تقويمي. البداية بتوقيت القاهرة: الدقيقة الأولى من يوم تشغيل مؤهل تسمح بنفس اليوم؛ بعدها أول يوم تشغيل مؤهل تالٍ. التسعير النسبي = السعر الكامل × الأيام المؤهلة المتبقية ÷ إجمالي الأيام المؤهلة، لأقرب جنيه، دون سقف 22 يومًا.
+
+تأمين جدية الحجز 100 جنيه مسترد ومنفصل عن الاشتراك، والحد الأدنى للشحن 100 جنيه. الاشتراك يُدفع للكابتن مباشرة أول يوم. تحرير التأمين بعد الإقرارين، بلا مصادرة تلقائية للغياب. لا أموال حقيقية قبل اعتماد الشريك والسياسات.
+
+لا هوية للكابتن أو بيانات تعريف العربية في البحث والتفاصيل العامة. الشاشة 13 والمحادثات تتطلب حجزًا مؤكدًا وعلاقة مملوكة للمستخدم. المستندات للمخولين فقط. لا نشر للكابتن قبل اعتماد الحساب والعربية. لا تغييرات رجعية على حجوزات مؤكدة. لا تجديد مدفوع تلقائي.
+
+نفس المكونات والتوزيع في الدارك واللايت، RTL والشعار الأصلي والأصفر #FFC400 والأسود #0B0B0D.

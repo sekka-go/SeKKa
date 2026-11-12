@@ -1,3 +1,4 @@
+import { publicScreen } from "./screenMap";
 import { useState, type ReactNode } from "react";
 import { Wordmark, type Appearance } from "./Onboarding";
 import { DiscoveryIcon } from "./Discovery";
@@ -30,7 +31,13 @@ const states: Record<string, string> = {
   disputed: "قيد المراجعة",
 };
 const samples = [
-  {id: "demo-previous-reserve", kind: "reserve", available_delta: -100, reserved_delta:100, created_at:"2026-11-09T10:00:00Z"},
+  {
+    id: "demo-previous-reserve",
+    kind: "reserve",
+    available_delta: -100,
+    reserved_delta: 100,
+    created_at: "2026-11-09T10:00:00Z",
+  },
   {
     id: "demo-3",
     kind: "reserve",
@@ -100,9 +107,9 @@ export default function WalletFlow(p: {
   const balance = demo ? { available: 50, reserved: 100 } : p.balance;
   const transactions = demo ? (empty ? [] : samples) : p.transactions;
   const bookings = demo ? (empty ? [] : subscriptions) : p.bookings;
-  const shown = [...transactions].sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at))).filter(
-    (t) => filter === "all" || t.kind === filter,
-  );
+  const shown = [...transactions]
+    .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))
+    .filter((t) => filter === "all" || t.kind === filter);
   const nav = (n: number) => {
     setDetail(null);
     p.go(n);
@@ -137,7 +144,7 @@ export default function WalletFlow(p: {
           >
             {walletScreens.map((id, i) => (
               <option key={id} value={id}>
-                {id} · {titles[i]}
+                {publicScreen(id)} · {titles[i]}
               </option>
             ))}
           </select>
@@ -247,8 +254,8 @@ export default function WalletFlow(p: {
                 <Box>
                   <h2>تأمينك محفوظ</h2>
                   <p>
-                    الـ100 جنيه لتأمين جدية الحجز، ومبلغ مسترد. قيمة الاشتراك بتدفعها كاملة للكابتن
-                    أول يوم، والتأمين مش بيتخصم منها.
+                    الـ100 جنيه لتأمين جدية الحجز، ومبلغ مسترد. قيمة الاشتراك
+                    بتدفعها كاملة للكابتن أول يوم، والتأمين مش بيتخصم منها.
                   </p>
                 </Box>
                 {button("سجل المعاملات", 28)}
@@ -284,7 +291,9 @@ export default function WalletFlow(p: {
                     ))}
                   </div>
                   {(!Number.isInteger(+amount) || +amount < 100) && (
-                    <p role="alert">أقل مبلغ شحن 100 جنيه. اكتب المبلغ بالجنيه من غير كسور.</p>
+                    <p role="alert">
+                      أقل مبلغ شحن 100 جنيه. اكتب المبلغ بالجنيه من غير كسور.
+                    </p>
                   )}
                 </Box>
                 <Box>
@@ -297,7 +306,15 @@ export default function WalletFlow(p: {
                 <button className="d-primary b-primary" disabled>
                   متابعة للدفع — غير مفعّل
                 </button>
-                {demo && <button className="d-primary b-primary" disabled={!Number.isInteger(+amount) || +amount < 100} onClick={()=>nav(26)}>معاينة حالات الشحن</button>}
+                {demo && (
+                  <button
+                    className="d-primary b-primary"
+                    disabled={!Number.isInteger(+amount) || +amount < 100}
+                    onClick={() => nav(26)}
+                  >
+                    معاينة حالات الشحن
+                  </button>
+                )}
               </>
             )}
             {p.screen === 26 && (
@@ -330,7 +347,13 @@ export default function WalletFlow(p: {
                   {demo && (
                     <div className="b-row">
                       <span>مبلغ المثال</span>
-                      <strong>{money(Number.isInteger(+amount) && +amount >= 100 ? +amount : 100)}</strong>
+                      <strong>
+                        {money(
+                          Number.isInteger(+amount) && +amount >= 100
+                            ? +amount
+                            : 100,
+                        )}
+                      </strong>
                     </div>
                   )}
                 </Box>

@@ -730,6 +730,9 @@ export default function BookingFlow(p: BookingFlowProps) {
                 <p>الـ100 جنيه تأمين منفصل، مش خصم من الاشتراك.</p>
               </Box>
               <Primary onClick={() => nav(19)}>شوف تفاصيل اشتراكي</Primary>
+              <button className="b-secondary" onClick={() => nav(13)}>
+                بيانات الكابتن والعربية
+              </button>
             </>
           ) : (
             empty
@@ -786,6 +789,9 @@ export default function BookingFlow(p: BookingFlowProps) {
               <Primary onClick={() => nav(riderReported ? 21 : 20)}>
                 {riderReported ? "متابعة تأكيد الاستلام" : "تأكيد الدفع"}
               </Primary>
+              <button className="b-secondary" onClick={() => nav(13)}>
+                بيانات الكابتن والعربية
+              </button>
               <button className="b-secondary" onClick={() => nav(22)}>
                 <DiscoveryIcon name="settings" />
                 إدارة الاشتراك
@@ -913,6 +919,9 @@ export default function BookingFlow(p: BookingFlowProps) {
               <Primary disabled={working} onClick={() => void refresh()}>
                 تحديث الحالة
               </Primary>
+              <button className="b-secondary" onClick={() => nav(13)}>
+                بيانات الكابتن والعربية
+              </button>
               <button className="b-secondary" onClick={() => nav(22)}>
                 محتاج مساعدة في الاشتراك؟
               </button>

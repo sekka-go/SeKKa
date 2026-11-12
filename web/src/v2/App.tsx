@@ -1,3 +1,4 @@
+import { internalScreen, publicScreen, screenTitle } from "./screenMap";
 import { useEffect, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { api, client } from "./api";
@@ -6,7 +7,7 @@ import {
   categories,
   normalizePhone,
 } from "../../../packages/domain/subscriptions";
-import { screenTitles, publicScreens, adminResources } from "./screens";
+import { publicScreens, adminResources } from "./screens";
 import { copy, errorCopy } from "./copy";
 import "./theme.css";
 import Onboarding, { readAppearance, Wordmark } from "./Onboarding";
@@ -167,9 +168,10 @@ const labels: Record<string, string> = {
   realMoneyEnabled: "تفعيل الأموال الحقيقية",
 };
 export default function SubscriptionApp() {
+  const [contact, setContact] = useState<Row | null>(null);
   const getScreen = () => {
     const n = Number(new URLSearchParams(location.search).get("screen") ?? 1);
-    return Number.isInteger(n) && n >= 1 && n <= 75 ? n : 8;
+    return Number.isInteger(n) && n >= 1 && n <= 74 ? internalScreen(n) : 8;
   };
   const [theme, setTheme] = useState<Appearance>(readAppearance);
   function changeTheme(value: Appearance) {
@@ -242,9 +244,13 @@ export default function SubscriptionApp() {
   } | null>(null);
   function go(id: number, routeId = route?.id, bookingId = booking?.id) {
     setScreen(id);
+    setContact(null);
     setError("");
     setNotice("");
-    const params = new URLSearchParams({ screen: String(id), theme });
+    const params = new URLSearchParams({
+      screen: String(publicScreen(id)),
+      theme,
+    });
     if (id <= 7) params.set("inspect", "1");
     const previous = new URLSearchParams(location.search);
     if (
@@ -255,9 +261,9 @@ export default function SubscriptionApp() {
       params.set(
         "preview",
         captainOnboardingScreens.includes(id)
-          ? "phase6"
+          ? "phase5"
           : accountScreens.includes(id)
-            ? "phase5"
+            ? "phase4"
             : walletScreens.includes(id)
               ? "phase4"
               : bookingScreens.includes(id)
@@ -284,7 +290,7 @@ export default function SubscriptionApp() {
     return () => removeEventListener("popstate", h);
   }, []);
   useEffect(() => {
-    document.title = `${screenTitles[screen - 1]} | سِكّة`;
+    document.title = `${screenTitle(screen)} | سِكّة`;
   }, [screen]);
   async function refreshProfile() {
     if (
@@ -376,6 +382,15 @@ export default function SubscriptionApp() {
         });
         if (active) setRoutes(rs);
       }
+      if (screen === 13) {
+        if (active) setContact(null);
+        if (signedIn && params.get("booking")) {
+          const contactData = await api<Row>("booking.contact", {
+            bookingId: params.get("booking"),
+          });
+          if (active) setContact(contactData);
+        }
+      }
       if (!signedIn) return;
       if ([14].includes(screen)) {
         const rs = await api<Route[]>("favorites");
@@ -416,7 +431,7 @@ export default function SubscriptionApp() {
         const rr = await api<Row[]>("notifications");
         if (active) setRows(rr);
       }
-      if ([43, 59, 60].includes(screen)) {
+      if ([43, 76, 59, 60].includes(screen)) {
         const c = await api<Row>("captain");
         if (active)
           setRows(
@@ -437,7 +452,7 @@ export default function SubscriptionApp() {
         const rr = await api<Row[]>("captain.waitlist");
         if (active) setRows(rr);
       }
-      if (screen >= 64) {
+      if (publicScreen(screen) >= 63) {
         const rr = await api<Row[] | Row>("admin.list", {
           resource: adminResources[screen],
         });
@@ -462,8 +477,11 @@ export default function SubscriptionApp() {
     ![6, 7].includes(screen) &&
     (!signedIn || !profile);
   const captainBlocked =
-    screen >= 38 && screen < 64 && profile?.role !== "captain";
-  const adminBlocked = screen >= 64 && !profile?.permissions?.length;
+    publicScreen(screen) >= 37 &&
+    publicScreen(screen) <= 62 &&
+    profile?.role !== "captain";
+  const adminBlocked =
+    publicScreen(screen) >= 63 && !profile?.permissions?.length;
   const selectedRoute = route;
   function RouteCard({ r }: { r: Route }) {
     return (
@@ -1403,7 +1421,7 @@ export default function SubscriptionApp() {
           <button disabled={busy}>احفظ وكمّل</button>
         </form>
       );
-    if ([43, 59, 60].includes(screen))
+    if ([43, 76, 59, 60].includes(screen))
       return (
         <>
           <JsonRows rows={rows} />
@@ -1558,7 +1576,7 @@ export default function SubscriptionApp() {
           </button>
         </form>
       );
-    if (screen >= 64)
+    if (publicScreen(screen) >= 63)
       return (
         <>
           <div className="admin-tabs">
@@ -1568,7 +1586,7 @@ export default function SubscriptionApp() {
                 key={id}
                 onClick={() => go(Number(id))}
               >
-                {screenTitles[Number(id) - 1]}
+                {screenTitle(Number(id))}
               </button>
             ))}
           </div>
@@ -1616,6 +1634,25 @@ export default function SubscriptionApp() {
       );
     return <Empty />;
   }
+  if ([77, 78, 79, 80, 81, 82, 83].includes(screen))
+    return (
+      <div className={`phase-one-stage discovery-stage ${theme}`}>
+        <main className="phase-canvas d-canvas">
+          <Wordmark />
+          <h1>{screenTitle(screen)}</h1>
+          <p>
+            الشاشة دي ضمن الخريطة المعتمدة، ولسه تنفيذها الكامل في المرحلة
+            الخاصة بيها.
+          </p>
+          <button
+            className="d-primary"
+            onClick={() => go(publicScreen(screen) >= 63 ? 64 : 44)}
+          >
+            رجوع للوحة التحكم
+          </button>
+        </main>
+      </div>
+    );
   if (captainOnboardingScreens.includes(screen))
     return (
       <CaptainOnboarding
@@ -1772,6 +1809,20 @@ export default function SubscriptionApp() {
         theme={theme}
         onTheme={changeTheme}
         go={go}
+        contact={contact}
+        onContactChat={() =>
+          void run(async () => {
+            if (!contact?.captain_id) throw new Error("AUTH_REQUIRED");
+            const c = await api<{ id: string }>("conversation.open", {
+              captainId: contact.captain_id,
+            });
+            setConversation(c.id);
+            go(32);
+            const url = new URL(location.href);
+            url.searchParams.set("conversation", c.id);
+            history.replaceState({}, "", url);
+          })
+        }
         routes={routes}
         route={route}
         bookings={bookings}
@@ -1785,6 +1836,8 @@ export default function SubscriptionApp() {
           setReturnTime(q.returnTime);
           setPeriod(q.period);
           setCategory(q.category);
+          setDirection(q.direction || "outbound");
+          setMaxPrice(q.maxPrice || "");
         }}
         onSelect={(r, offerPeriod, offerDirection) => {
           setRoute(r);
@@ -1885,7 +1938,7 @@ export default function SubscriptionApp() {
               key={id}
               onClick={() => go(id)}
             >
-              {screenTitles[id - 1]}
+              {screenTitle(id)}
             </button>
           ))}
           {Boolean(profile?.permissions?.length) && (
@@ -1903,9 +1956,9 @@ export default function SubscriptionApp() {
           <div className="page-heading">
             <div>
               <p className="eyebrow">
-                seKKa / {String(screen).padStart(2, "0")}
+                seKKa / {String(publicScreen(screen)).padStart(2, "0")}
               </p>
-              <h2>{screenTitles[screen - 1]}</h2>
+              <h2>{screenTitle(screen)}</h2>
             </div>
             {screen !== 8 && (
               <button
@@ -1955,7 +2008,7 @@ export default function SubscriptionApp() {
               className={screen === id ? "active" : "text-button"}
               onClick={() => go(id)}
             >
-              {screenTitles[id - 1]}
+              {screenTitle(id)}
             </button>
           ),
         )}

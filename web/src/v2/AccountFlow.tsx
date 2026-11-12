@@ -1,3 +1,4 @@
+import { publicScreen } from "./screenMap";
 import { useEffect, useState, type ReactNode } from "react";
 import { Wordmark, type Appearance } from "./Onboarding";
 import { DiscoveryIcon } from "./Discovery";
@@ -82,7 +83,7 @@ export default function AccountFlow(p: {
   onRefresh: () => void;
   onLogout: () => Promise<void>;
 }) {
-  const demo = new URLSearchParams(location.search).get("preview") === "phase5";
+  const demo = new URLSearchParams(location.search).get("preview") === "phase4";
   const [empty, setEmpty] = useState(false),
     [query, setQuery] = useState(""),
     [draft, setDraft] = useState(""),
@@ -158,7 +159,7 @@ export default function AccountFlow(p: {
     <div
       className={`phase-one-stage discovery-stage booking-stage account-stage ${p.theme}`}
     >
-      <nav className="phase-review-bar" aria-label="معاينة المرحلة الخامسة">
+      <nav className="phase-review-bar" aria-label="معاينة المرحلة الرابعة">
         <div className="review-screen-nav">
           <button
             aria-label="الشاشة السابقة"
@@ -168,13 +169,13 @@ export default function AccountFlow(p: {
             ‹
           </button>
           <select
-            aria-label="شاشة المرحلة الخامسة"
+            aria-label="شاشة المرحلة الرابعة"
             value={p.screen}
             onChange={(e) => nav(+e.target.value)}
           >
             {accountScreens.map((n, i) => (
               <option key={n} value={n}>
-                {n} · {titles[i]}
+                {publicScreen(n)} · {titles[i]}
               </option>
             ))}
           </select>
@@ -200,7 +201,7 @@ export default function AccountFlow(p: {
       </nav>
       <p className="w-preview">
         {demo
-          ? "معاينة المرحلة الخامسة · بيانات توضيحية فقط"
+          ? "معاينة المرحلة الرابعة · بيانات توضيحية فقط"
           : "حسابك والتواصل"}
       </p>
       {demo && (

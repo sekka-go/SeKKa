@@ -13,3 +13,12 @@
 11. Retirement is a separate approval covering exact Edge functions, RPCs, cron jobs, tables, buckets and Pages deployments. Verify call logs and references first. Do not claim retirement while direct old API paths still respond.
 
 No irreversible data transfer or cleanup is performed by this plan.
+
+### Map74 privacy migration
+Apply `20261112214616_map74_booking_privacy.sql` only to the isolated V2 staging
+schema after its baseline. It preserves the previous implementation under a private,
+non-callable name and rebinds the public RPC to privacy filtering and booking checks.
+No records/tables/storage objects are deleted. Verify anonymous discovery lacks captain
+and vehicle identifiers; owner contacts succeed; unrelated user contacts and unbooked
+chat fail. Do not roll back by re-exposing the previous API. Recovery is a forward fix
+while keeping identity fields hidden. Hosted application is not part of this UI change.

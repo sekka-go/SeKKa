@@ -155,8 +155,8 @@ const names = [
   "نوع الحساب",
   "رقم الموبايل",
   "كود التحقق",
-  "نجاح التحقق",
-  "إنشاء حساب",
+  "استكمال الملف الشخصي",
+  "الأذونات",
 ];
 const held = "الربط معلّق حسب طلبك. المعاينة لا ترسل رسائل ولا تنشئ حسابات.";
 export default function Onboarding({
@@ -178,8 +178,6 @@ export default function Onboarding({
   const id = screen === 37 ? 2 : screen;
   const [phone, setPhone] = useState(""),
     [fullName, setFullName] = useState(""),
-    [password, setPassword] = useState(""),
-    [showPassword, setShowPassword] = useState(false),
     [digits, setDigits] = useState(["", "", "", ""]);
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
   const frozen = new URLSearchParams(location.search).get("inspect") === "1";
@@ -210,8 +208,8 @@ export default function Onboarding({
     3: "اختر نوع حسابك",
     4: "أدخل رقم موبايلك",
     5: "أدخل كود التحقق",
-    6: "تم التحقق بنجاح!",
-    7: "إنشاء حساب جديد",
+    6: "استكمال الملف الشخصي",
+    7: "الأذونات",
   }[id];
   return (
     <div className={`phase-one-stage ${theme}`}>
@@ -318,7 +316,7 @@ export default function Onboarding({
               </span>
             </h1>
             <p className="phase-subtitle">
-              أسهل طريقة لحجز مشوارك اليومي
+              أسهل طريقة للاشتراك في خطك اليومي
               <br />
               والاشتراك في خطوط موثوقة
             </p>
@@ -387,7 +385,9 @@ export default function Onboarding({
                   title: "كابتن",
                   description: (
                     <>
-                      <span className="phase-copy-line">سجل ككابتن، أضف عربيتك</span>
+                      <span className="phase-copy-line">
+                        سجل ككابتن، أضف عربيتك
+                      </span>
                       <span className="phase-copy-line">وخطوطك، واستقبل</span>
                       <span className="phase-copy-line">مشتركين جدد.</span>
                     </>
@@ -527,121 +527,62 @@ export default function Onboarding({
           </>
         ) : id === 6 ? (
           <>
-            <ReferenceArt
-              source={6}
-              crop={[167, 192, 453, 306]}
-              theme={theme}
-              className="phase-success-art"
-              label="رسم توضيحي لعلامة تحقق ناجحة — معاينة فقط"
-            />
             <h1 className="phase-title">{heading}</h1>
             <p className="phase-subtitle">
-              تم تأكيد رقم موبايلك،
-              <br />
-              يمكنك الآن متابعة إنشاء حسابك.
+              كمّل اسمك عشان نجهّز حسابك. بيانات الكابتن ومستنداته ليها خطوات
+              منفصلة.
+            </p>
+            <label className="phase-register-field">
+              <span>الاسم الكامل</span>
+              <input
+                aria-label="الاسم الكامل"
+                value={fullName}
+                minLength={2}
+                maxLength={100}
+                autoComplete="name"
+                onChange={(e) => setFullName(e.target.value)}
+              />
+            </label>
+            <label className="phase-register-field">
+              <span>الصورة الشخصية (اختياري — معاينة محلية)</span>
+              <input
+                type="file"
+                accept="image/png,image/jpeg"
+                aria-label="الصورة الشخصية الاختيارية"
+              />
+            </label>
+            <p className="phase-subtitle">
+              البيانات هنا للمعاينة؛ حفظ الحساب محتاج تحقق الموبايل الفعلي.
             </p>
             <button
-              className="phase-primary phase-success-next"
+              className="phase-primary"
+              disabled={fullName.trim().length < 2}
               onClick={() => go(7)}
             >
-              متابعة <Arrow />
+              متابعة للمعاينة <Arrow />
             </button>
           </>
         ) : (
           <>
-            <h1 className="phase-title">
-              {heading}
-              <span className="phase-rays" aria-hidden="true">
-                <i />
-                <i />
-                <i />
-              </span>
-            </h1>
-            <p className="phase-subtitle">أنشئ حسابك في سكة في خطوات بسيطة</p>
-            <div className="phase-register-fields">
-              <label className="phase-register-field">
-                <SvgIcon name="person" />
-                <span className="sr-only">الاسم الكامل</span>
-                <input
-                  aria-label="الاسم الكامل"
-                  autoComplete="name"
-                  placeholder="الاسم الكامل"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                />
-              </label>
-              <label className="phase-register-field">
-                <SvgIcon name="phone" />
-                <span className="sr-only">رقم الموبايل</span>
-                <input
-                  type="tel"
-                aria-label="رقم الموبايل"
-                  autoComplete="tel-national"
-                  inputMode="tel"
-                  placeholder="رقم الموبايل"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
-              </label>
-              <label className="phase-register-field">
-                <SvgIcon name="lock" />
-                <span className="sr-only">كلمة المرور</span>
-                <input
-                  aria-label="كلمة المرور"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="new-password"
-                  placeholder="كلمة المرور"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                <button
-                  type="button"
-                  className="phase-show-password"
-                  onClick={() => setShowPassword((v) => !v)}
-                  aria-label={
-                    showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"
-                  }
-                >
-                  <SvgIcon name="eye" />
-                </button>
-              </label>
-            </div>
-            <button
-              className="phase-primary phase-create-account"
-              disabled
-              title={held}
-            >
-              إنشاء حساب <Arrow />
-            </button>
-            <div className="phase-or">
-              <span />
-              أو
-              <span />
-            </div>
-            <div className="phase-social">
-              <button disabled title={held}>
-                <ReferenceArt
-                  source={7}
-                  crop={[431, 781, 45, 45]}
-                  theme={theme}
-                />
-                متابعة بفيسبوك
-              </button>
-              <button disabled title={held}>
-                <ReferenceArt
-                  source={7}
-                  crop={[94, 780, 50, 50]}
-                  theme={theme}
-                />
-                متابعة بجوجل
-              </button>
-            </div>
-            <p className="phase-login">
-              لديك حساب بالفعل؟{" "}
-              <button disabled title={held}>
-                سجل الدخول
-              </button>
+            <h1 className="phase-title">{heading}</h1>
+            <p className="phase-subtitle">
+              الأذونات باختيارك، وتقدر تكمل من غيرها.
             </p>
+            <section className="phase-register-fields">
+              <h2>الإشعارات</h2>
+              <p>
+                عشان توصلك تحديثات الحجز والدفع. تفعيلها هيكون متاح بعد تجهيز
+                خدمة الإشعارات.
+              </p>
+              <h2>الموقع</h2>
+              <p>مش مطلوب للتسجيل. هنطلبه وقت استخدام ميزة محتاجاه بس.</p>
+            </section>
+            <button
+              className="phase-primary"
+              onClick={() => go(role === "captain" ? 37 : 8)}
+            >
+              تخطي ومتابعة <Arrow />
+            </button>
           </>
         )}
         {id !== 1 && id !== 2 && (

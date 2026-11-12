@@ -98,6 +98,7 @@ before(async () => {
     "utf8",
   );
   await db.query(migration);
+  await db.query(await readFile(new URL("../migrations/20261112214616_map74_booking_privacy.sql", import.meta.url), "utf8"));
   await db.query("update sekka_v2.settings set legal_terms_approved=true");
   for (const [id, role] of [
     [captain, "captain"],
@@ -420,7 +421,7 @@ test("document storage ownership policies enforce private paths", async () => {
 });
 
 test("remaining RPC reads and mutations are real and owned", async () => {
-  assert.ok((await as(db, null, "route", { id: route })).plate);
+  assert.equal((await as(db, null, "route", { id: route })).plate, undefined);
   await as(db, rider, "favorite.toggle", { routeId: route });
   assert.equal((await as(db, rider, "favorites")).length, 1);
   await as(db, rider, "favorite.toggle", { routeId: route });
@@ -514,3 +515,17 @@ test("concurrent identical booking retries return the same reservation", async (
   }
   assert.equal((await as(db, user, "wallet")).transactions.length, 2);
 });
+
+ test("map74 hides identity on public reads and gates contacts by owned booking", async()=>{
+  const publicRoutes=await as(db,null,"search",{});
+  const detail=await as(db,null,"route",{id:route});
+  for(const row of [...publicRoutes,detail]) for(const key of ["captain_id","captain_name","vehicle_id","vehicle_model","model","plate"]) assert.equal(row[key],undefined);
+  await assert.rejects(as(db,null,"booking.contact",{bookingId:reserved.id}),/AUTH_REQUIRED/);
+  await assert.rejects(as(db,admin,"booking.contact",{bookingId:reserved.id}),/CONFIRMED_BOOKING_REQUIRED/);
+  await assert.rejects(as(db,admin,"conversation.open",{captainId:captain}),/CONFIRMED_BOOKING_REQUIRED/);
+  const contact=await as(db,rider,"booking.contact",{bookingId:reserved.id});
+  assert.equal(contact.captain_id,captain);
+  assert.equal(contact.plate,"test plate");
+  const grants=await db.query("select has_function_privilege('authenticated','sekka_v2.api_before_map74(text,jsonb)','execute') allowed");
+  assert.equal(grants.rows[0].allowed,false);
+ });

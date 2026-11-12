@@ -79,3 +79,25 @@ captain API; captain approval alone does not imply vehicle/document approval.
 No database migration or production cutover. Added a mobile, both-theme E2E journey
 including validation, all four file selections and zero POST requests. CI pending this commit.
 Previous phase 5 CI run 43298400773 passed all checks and 8 E2E suites.
+
+## Approved map74 reconciliation — 12 November 2026
+This section supersedes the historical phase numbering above. Product stages are now
+1 onboarding 1–7, 2 discovery 8–15, 3 booking 16–22, 4 rider account/wallet 23–35,
+5 captain onboarding 36–42, 6 routes 43–50, 7 operations 51–62, 8 admin 63–74.
+
+Reviewed all existing themed screens. Changed 6 to profile completion and 7 to optional
+permissions, consolidated captain documents into39, moved vehicle details to38, added
+color, and added guarded activation42. Public URLs/titles/pickers now use map74.
+A central adapter preserves internal view keys; those are not public screen numbers.
+Old numeric bookmarks may now identify a different screen, as required by the new map.
+Removed captain identity from public results and added filters for direction, price and
+availability. Added a protected contact read used by13 and links from confirmed booking.
+A forward-only migration strips identities from search/route/favorites and requires an
+owned committed booking for contact and messaging. Verified on embedded PostgreSQL;
+NOT applied to hosted Supabase or production. Existing data is untouched.
+
+Scope remains staged: 43–74 are registered but not all rebuilt. Newly specified views
+without implementation display an honest pending-state page, not fabricated operations.
+Authentication/SMS, live profile saving, private document submission, payment partner,
+withdrawal, renewal and offer amendment policies remain pending. No claim of production
+readiness or full74-screen completion. See SCREEN_MAP74_REVIEW.md for the review matrix.

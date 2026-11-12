@@ -1,3 +1,4 @@
+import { publicScreen, screenTitle } from "./screenMap";
 import { useState } from "react";
 import { Wordmark, type Appearance } from "./Onboarding";
 import { DiscoveryIcon } from "./Discovery";
@@ -5,16 +6,7 @@ import type { Profile } from "./api";
 import "./booking.css";
 import "./wallet.css";
 import "./captain.css";
-export const captainOnboardingScreens = [37, 38, 39, 40, 41, 42, 43];
-const titles = [
-  "أهلًا بيك يا كابتن",
-  "بيانات الكابتن",
-  "مستندات الكابتن",
-  "بيانات العربية",
-  "مستندات العربية",
-  "راجع طلبك",
-  "حالة الطلب",
-];
+export const captainOnboardingScreens = [37, 38, 40, 39, 42, 43, 76];
 const capacities = { PRIME: 3, SAVER: 4, SPACE: 9, MAX: 13 };
 const documentNames = {
   identity: "إثبات الهوية",
@@ -35,10 +27,11 @@ export default function CaptainOnboarding(p: {
   error: string;
   onRefresh: () => void;
 }) {
-  const demo = new URLSearchParams(location.search).get("preview") === "phase6";
+  const demo = new URLSearchParams(location.search).get("preview") === "phase5";
   const [name, setName] = useState("");
   const [experience, setExperience] = useState("");
   const [model, setModel] = useState("");
+  const [color, setColor] = useState("");
   const [plate, setPlate] = useState("");
   const [category, setCategory] = useState<keyof typeof capacities>("PRIME");
   const [docs, setDocs] = useState<Partial<Record<DocKind, string>>>({});
@@ -53,7 +46,8 @@ export default function CaptainOnboarding(p: {
     name.trim().length >= 2 &&
     model.trim().length >= 2 &&
     plate.trim().length >= 3 &&
-    Object.keys(docs).length === 4;
+    Object.keys(docs).length === 4 &&
+    color.trim().length > 0;
   const blocked = !demo && (!p.signedIn || p.profile?.role !== "captain");
   const actual = p.rows.find((r) => r.kind === "captain");
   const statusLabels: Record<string, string> = {
@@ -124,7 +118,13 @@ export default function CaptainOnboarding(p: {
         <button
           className="d-primary b-primary"
           disabled={!demo || kinds.some((k) => !docs[k])}
-          onClick={() => nav(p.screen + 1)}
+          onClick={() =>
+            nav(
+              captainOnboardingScreens[
+                captainOnboardingScreens.indexOf(p.screen) + 1
+              ],
+            )
+          }
         >
           متابعة <DiscoveryIcon name="arrow" />
         </button>
@@ -135,30 +135,42 @@ export default function CaptainOnboarding(p: {
     <div
       className={`phase-one-stage discovery-stage booking-stage captain-stage ${p.theme}`}
     >
-      <nav className="phase-review-bar" aria-label="معاينة المرحلة السادسة">
+      <nav className="phase-review-bar" aria-label="معاينة المرحلة الخامسة">
         <div className="review-screen-nav">
           <button
             aria-label="الشاشة السابقة"
             disabled={p.screen === 37}
-            onClick={() => nav(p.screen - 1)}
+            onClick={() =>
+              nav(
+                captainOnboardingScreens[
+                  captainOnboardingScreens.indexOf(p.screen) - 1
+                ],
+              )
+            }
           >
             ‹
           </button>
           <select
-            aria-label="شاشة المرحلة السادسة"
+            aria-label="شاشة المرحلة الخامسة"
             value={p.screen}
             onChange={(e) => nav(+e.target.value)}
           >
-            {captainOnboardingScreens.map((n, i) => (
+            {captainOnboardingScreens.map((n) => (
               <option key={n} value={n}>
-                {n} · {titles[i]}
+                {publicScreen(n)} · {screenTitle(n)}
               </option>
             ))}
           </select>
           <button
             aria-label="الشاشة التالية"
-            disabled={p.screen === 43}
-            onClick={() => nav(p.screen + 1)}
+            disabled={p.screen === 76}
+            onClick={() =>
+              nav(
+                captainOnboardingScreens[
+                  captainOnboardingScreens.indexOf(p.screen) + 1
+                ],
+              )
+            }
           >
             ›
           </button>
@@ -177,7 +189,7 @@ export default function CaptainOnboarding(p: {
       </nav>
       {demo && (
         <p className="w-preview">
-          معاينة المرحلة السادسة · 7 شاشات · مفيش إرسال طلبات أو مستندات حقيقية
+          معاينة المرحلة الخامسة · 7 شاشات · مفيش إرسال طلبات أو مستندات حقيقية
         </p>
       )}
       <main className="phase-canvas d-canvas b-canvas c-canvas">
@@ -185,16 +197,24 @@ export default function CaptainOnboarding(p: {
           <button
             className="phase-back"
             aria-label="رجوع"
-            onClick={() => nav(p.screen === 37 ? 3 : p.screen - 1)}
+            onClick={() =>
+              nav(
+                p.screen === 37
+                  ? 3
+                  : captainOnboardingScreens[
+                      captainOnboardingScreens.indexOf(p.screen) - 1
+                    ],
+              )
+            }
           >
             <DiscoveryIcon name="back" />
           </button>
           <Wordmark />
         </header>
         <div className="b-stage-label">
-          انضم لسِكّة <span dir="ltr">{p.screen - 36} / 7</span>
+          انضم لسِكّة <span dir="ltr">{publicScreen(p.screen) - 35} / 7</span>
         </div>
-        <h1 className="b-title">{titles[p.screen - 37]}</h1>
+        <h1 className="b-title">{screenTitle(p.screen)}</h1>
         {p.error && (
           <div role="alert">
             <p>{p.error}</p>
@@ -241,7 +261,7 @@ export default function CaptainOnboarding(p: {
           </section>
         ) : (
           <>
-            {!demo && p.screen !== 43 ? (
+            {!demo && ![43, 76].includes(p.screen) ? (
               <section className="d-box b-box">
                 <h2>تقديم الطلب لسه مش متاح</h2>
                 <p>
@@ -259,7 +279,7 @@ export default function CaptainOnboarding(p: {
                     onSubmit={(e) => {
                       e.preventDefault();
                       setSubmitted(false);
-                      nav(39);
+                      nav(40);
                     }}
                   >
                     <label className="w-field">
@@ -293,13 +313,19 @@ export default function CaptainOnboarding(p: {
                     </button>
                   </form>
                 )}
-                {p.screen === 39 && files(["identity", "driving_license"])}
+                {p.screen === 39 &&
+                  files([
+                    "identity",
+                    "driving_license",
+                    "vehicle_license",
+                    "vehicle_photo",
+                  ])}
                 {p.screen === 40 && (
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
                       setSubmitted(false);
-                      nav(41);
+                      nav(39);
                     }}
                   >
                     <label className="w-field">
@@ -327,6 +353,14 @@ export default function CaptainOnboarding(p: {
                           setPlate(e.target.value);
                           setSubmitted(false);
                         }}
+                      />
+                    </label>
+                    <label className="w-field">
+                      <span>لون العربية</span>
+                      <input
+                        value={color}
+                        maxLength={40}
+                        onChange={(e) => setColor(e.target.value)}
                       />
                     </label>
                     <fieldset className="c-categories">
@@ -360,14 +394,16 @@ export default function CaptainOnboarding(p: {
                     <button
                       className="d-primary b-primary"
                       disabled={
-                        model.trim().length < 2 || plate.trim().length < 3
+                        model.trim().length < 2 ||
+                        plate.trim().length < 3 ||
+                        !color.trim()
                       }
                     >
                       متابعة <DiscoveryIcon name="arrow" />
                     </button>
                   </form>
                 )}
-                {p.screen === 41 && files(["vehicle_license", "vehicle_photo"])}
+
                 {p.screen === 42 && (
                   <>
                     <section className="d-box b-box">
@@ -382,6 +418,7 @@ export default function CaptainOnboarding(p: {
                       <h2>عربيتك</h2>
                       <p>
                         {model || "الموديل لسه ناقص"} ·{" "}
+                        {color || "اللون لسه ناقص"} ·{" "}
                         {plate || "اللوحة لسه ناقصة"}
                       </p>
                       <p>
@@ -402,7 +439,7 @@ export default function CaptainOnboarding(p: {
                       <button className="w-link" onClick={() => nav(39)}>
                         راجع مستنداتك
                       </button>
-                      <button className="w-link" onClick={() => nav(41)}>
+                      <button className="w-link" onClick={() => nav(39)}>
                         راجع مستندات العربية
                       </button>
                     </section>
@@ -464,6 +501,36 @@ export default function CaptainOnboarding(p: {
               </>
             )}
           </>
+        )}
+        {p.screen === 76 && !blocked && (
+          <section className="d-box b-box">
+            <h2>
+              {!demo &&
+              actual?.status === "approved" &&
+              p.rows.some(
+                (r) => r.kind === "vehicle" && r.status === "approved",
+              )
+                ? "حساب الكابتن والعربية معتمدين"
+                : "التفعيل مستني اعتماد الإدارة"}
+            </h2>
+            <p>
+              الدخول لإدارة الخطوط مش بديل عن اعتماد الكابتن والعربية. المعاينة
+              ما بتمنحش صلاحيات نشر.
+            </p>
+            {!demo &&
+            actual?.status === "approved" &&
+            p.rows.some(
+              (r) => r.kind === "vehicle" && r.status === "approved",
+            ) ? (
+              <button className="d-primary" onClick={() => nav(45)}>
+                إدارة خطوطي
+              </button>
+            ) : (
+              <button className="w-link" onClick={() => nav(43)}>
+                متابعة حالة الطلب
+              </button>
+            )}
+          </section>
         )}
         <p className="w-footnote">سِكّة — معاك في السِكّة</p>
       </main>

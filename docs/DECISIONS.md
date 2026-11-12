@@ -30,3 +30,13 @@ Local document selection accepts nonempty JPEG/PNG/PDF up to 5 MB as a preview l
 not an approved production document policy. No sensitive document contents are read,
 persisted, uploaded or logged. Production submission stays unavailable until document
 verification, retention and secure upload policies are approved. No simulated approval.
+
+## Owner approved map74 replaces all earlier phase numbering
+The 12 November 2026 detailed eight-stage /74-screen specification is authoritative.
+SCREEN_SPECIFICATIONS.md records components, actions and rules for every screen.
+Use canonical IDs at the URL boundary and in visible labels; retain stable private view
+keys during staged replacement. Account/wallet is one stage4; captain onboarding is5;
+route creation/management is6. Contacts require committed seat/security booking, not
+rider payment completion: current backend `reserved` is a committed booking with its
+security reservation, whereas `confirmed` denotes both payment confirmations.
+No live activation, money operations or deletion is authorized by this map update.
