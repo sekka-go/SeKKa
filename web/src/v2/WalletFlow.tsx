@@ -30,6 +30,7 @@ const states: Record<string, string> = {
   disputed: "قيد المراجعة",
 };
 const samples = [
+  {id: "demo-previous-reserve", kind: "reserve", available_delta: -100, reserved_delta:100, created_at:"2026-11-09T10:00:00Z"},
   {
     id: "demo-3",
     kind: "reserve",
@@ -99,7 +100,7 @@ export default function WalletFlow(p: {
   const balance = demo ? { available: 50, reserved: 100 } : p.balance;
   const transactions = demo ? (empty ? [] : samples) : p.transactions;
   const bookings = demo ? (empty ? [] : subscriptions) : p.bookings;
-  const shown = transactions.filter(
+  const shown = [...transactions].sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at))).filter(
     (t) => filter === "all" || t.kind === filter,
   );
   const nav = (n: number) => {

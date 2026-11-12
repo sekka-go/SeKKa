@@ -345,8 +345,8 @@ test("phase four wallet states stay isolated from money operations", async ({
     .getByRole("button", { name: "سجل المعاملات", exact: true })
     .click();
   await page.getByLabel("نوع العملية").selectOption("reserve");
-  await expect(page.locator(".w-transaction")).toHaveCount(1);
-  await page.locator(".w-transaction").click();
+  await expect(page.locator(".w-transaction")).toHaveCount(2);
+  await page.locator(".w-transaction").first().click();
   await expect(page.getByText("demo-3", { exact: true })).toBeVisible();
   await page.getByLabel("معاينة السجل الفارغ").check();
   await expect(page.getByText("لسه مفيش معاملات هنا.")).toBeVisible();
