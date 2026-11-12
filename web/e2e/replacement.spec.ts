@@ -165,8 +165,12 @@ test("phase two: 16 paired views, fixed offers, navigation and preview isolation
     await page
       .getByRole("button", { name: "حجز الاشتراك", exact: true })
       .click();
-    await expect(page.getByRole("dialog")).toContainText("لا ينشئ حجزًا");
-    await page.getByRole("button", { name: "تمام", exact: true }).click();
+    await expect(page).toHaveURL(/screen=16/);
+    await expect(page).toHaveURL(/preview=phase3/);
+    await expect(page.locator(".b-offer-tags")).toContainText("أسبوعي");
+    await expect(page.locator(".b-offer-tags")).toContainText("ذهاب فقط");
+    await expect(page.locator(".b-price-summary")).toContainText("850");
+    await page.goto(`/?screen=10&theme=${theme}&preview=phase2`);
     await page.getByLabel("شاشة المرحلة الثانية").selectOption("10");
     await page.getByRole("button", { name: /MAX/ }).click();
     await page
@@ -198,5 +202,107 @@ test("phase two: 16 paired views, fixed offers, navigation and preview isolation
       "لم يتم إرسال طلب فعلي",
     );
   }
+  expect(mutations).toEqual([]);
+});
+
+test("phase three: approved seven screens, fixed quote, security and confirmations", async ({
+  page,
+}) => {
+  test.setTimeout(90000);
+  const mutations: string[] = [];
+  page.on("request", (r) => {
+    if (r.method() !== "GET" && /supabase|rest\/v1|auth\/v1/.test(r.url()))
+      mutations.push(r.url());
+  });
+  for (const theme of ["dark", "light"]) {
+    for (let screen = 16; screen <= 22; screen++) {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto(`/?screen=${screen}&theme=${theme}&preview=phase3`);
+      await expect(page.locator(".b-title")).not.toBeEmpty();
+      await page.evaluate(() => document.fonts.ready);
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+      expect(
+        await page
+          .locator(".b-canvas")
+          .evaluate((e) => e.scrollWidth <= e.clientWidth + 1),
+      ).toBe(true);
+      await page
+        .locator(".b-canvas")
+        .screenshot({ path: `../docs/audit/phase3-${screen}-${theme}.png` });
+    }
+    await page.goto(`/?screen=16&theme=${theme}&preview=phase3`);
+    await expect(page.locator(".b-price-summary")).toContainText("1,527");
+    await expect(page.locator(".b-calendar")).toContainText("12 من 22");
+    await expect(page.locator(".b-calendar input")).toHaveCount(0);
+    await page
+      .getByRole("button", { name: "متابعة لتأمين الحجز", exact: true })
+      .click();
+    await page.getByRole("button", { name: "غير كافي", exact: true }).click();
+    await expect(
+      page.getByRole("button", { name: "معاينة تأكيد الحجز", exact: true }),
+    ).toBeDisabled();
+    await expect(page.locator(".b-balance-state")).toContainText("60");
+    await page.getByRole("button", { name: "شحن الرصيد", exact: true }).click();
+    await expect(page.getByRole("dialog")).toContainText("لم يتم شحن أي مبلغ");
+    await page.getByRole("button", { name: "تمام", exact: true }).click();
+    await page.getByRole("button", { name: "كافي", exact: true }).click();
+    await page
+      .getByRole("button", { name: "معاينة تأكيد الحجز", exact: true })
+      .click();
+    await expect(page).toHaveURL(/screen=18/);
+    await page
+      .getByRole("button", { name: "شوف تفاصيل اشتراكي", exact: true })
+      .click();
+    await page
+      .getByRole("button", { name: "تأكيد الدفع", exact: true })
+      .click();
+    await expect(
+      page.getByRole("button", { name: "معاينة متابعة الاستلام", exact: true }),
+    ).toBeDisabled();
+    await page
+      .getByRole("checkbox", {
+        name: "دفعت للكابتن قيمة الاشتراك كاملة.",
+        exact: true,
+      })
+      .check();
+    await page
+      .getByRole("button", { name: "معاينة متابعة الاستلام", exact: true })
+      .click();
+    await expect(page).toHaveURL(/screen=21/);
+    await expect(page.locator(".b-timeline")).toContainText("بتفضل محجوزة");
+    await page
+      .getByRole("button", { name: "تأكيد الطرفين", exact: true })
+      .click();
+    await expect(page.locator(".b-timeline")).toContainText(
+      "100 ج.م رجعت للرصيد المتاح",
+    );
+    await page
+      .getByRole("button", { name: "قيد المراجعة", exact: true })
+      .click();
+    await expect(page.locator(".b-callout")).toContainText(
+      "مفيش مصادرة تلقائية",
+    );
+    await page
+      .getByRole("button", { name: "محتاج مساعدة في الاشتراك؟", exact: true })
+      .click();
+    await page
+      .getByLabel("سبب مراجعة الاشتراك", { exact: true })
+      .fill("الكابتن لسه مأكّدش الاستلام");
+    await page
+      .getByRole("button", { name: "معاينة طلب المراجعة", exact: true })
+      .click();
+    await expect(page.getByRole("status")).toContainText(
+      "لم يتم إرسال طلب دعم فعلي",
+    );
+  }
+  await page.goto("/?screen=18");
+  await expect(page.locator(".b-success-tag")).toHaveCount(0);
+  await expect(
+    page.getByText("سجّل الدخول الأول عشان تشوف اشتراكك.", { exact: true }),
+  ).toBeVisible();
   expect(mutations).toEqual([]);
 });

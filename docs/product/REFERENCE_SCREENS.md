@@ -58,3 +58,11 @@ Owner started phase two, paused it for corrected references 11/12, then supplied
 - All four categories are available in filters. Request form has no preferred-category selector or extra note. Feature claims from superseded view 12 are removed.
 
 Hosted fixed-offer schema acceptance and phase-three booking remain pending. Existing API price configurations render as distinct offer rows; this does not certify hosted migration. Live booking is held pending that flow. No production cutover or database migration occurred.
+
+## Phase three — approved functional map, shared visual system
+
+Owner approved screens 16–22 and authorized extending the established button/card/icon/theme style without supplying each mockup. BookingFlow shares the existing wordmark, tokens and SVG icon language, adds code-native wallet/phone/confirmation illustrations, and uses reusable offer/snapshot/price/timeline components. No image was invented as an official brand logo.
+
+Explicit `?preview=phase3` is an isolated demonstration. Its deterministic November 2026 quote reuses the domain calendar/proration function with a clearly labelled **unapproved example calendar without holiday exclusions**. It is never passed as a real quote, used for a booking request, or offered as approved Egyptian holiday coverage. Example monthly EGP 2,800 gives 12/22 eligible days = EGP 1,527; 22 is this example's counted result, not a monthly cap. Weekly and one-direction offers carry their own immutable terms. Offer ID preserves example selection across refresh.
+
+Demo actions are labelled as previews; sample confirmation never creates a seat reservation, wallet credit/debit or real payment declaration. Balance/receipt scenarios live outside the product canvas. Real top-up and reservation remain disabled, with provider/policy blockers explained. Cancellation and renewal open honest unavailability explanations without mutation. Actual authenticated quote/read, rider declaration and dispute adapters use existing server endpoints; they have not been certified against a hosted migrated database. Guest views cannot show a real confirmation or personal booking data.

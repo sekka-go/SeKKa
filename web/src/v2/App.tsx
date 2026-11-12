@@ -12,6 +12,8 @@ import "./theme.css";
 import Onboarding, { readAppearance, Wordmark } from "./Onboarding";
 import type { Appearance } from "./Onboarding";
 import Discovery, { discoveryScreens } from "./Discovery";
+import type { Line } from "./Discovery";
+import BookingFlow, { bookingScreens } from "./BookingFlow";
 type Row = Record<string, unknown>;
 const money = (n: number) =>
   new Intl.NumberFormat("ar-EG", {
@@ -194,6 +196,7 @@ export default function SubscriptionApp() {
     [bookings, setBookings] = useState<Booking[]>([]),
     [booking, setBooking] = useState<Booking | null>(null),
     [quote, setQuote] = useState<Quote | null>(null);
+  const [bookingOffer, setBookingOffer] = useState<Line | null>(null);
   const [role, setRole] = useState("rider"),
     [phone, setPhone] = useState(""),
     [otp, setOtp] = useState(""),
@@ -204,8 +207,13 @@ export default function SubscriptionApp() {
     [category, setCategory] = useState(""),
     [departure, setDeparture] = useState("07:30"),
     [returnTime, setReturnTime] = useState("17:00"),
-    [period, setPeriod] = useState("monthly"),
-    [direction, setDirection] = useState("round_trip"),
+    [period, setPeriod] = useState(
+      new URLSearchParams(location.search).get("offerPeriod") || "monthly",
+    ),
+    [direction, setDirection] = useState(
+      new URLSearchParams(location.search).get("offerDirection") ||
+        "round_trip",
+    ),
     [maxPrice, setMaxPrice] = useState("");
   const [balance, setBalance] = useState({ available: 0, reserved: 0 }),
     [body, setBody] = useState(""),
@@ -231,8 +239,13 @@ export default function SubscriptionApp() {
     setNotice("");
     const params = new URLSearchParams({ screen: String(id), theme });
     if (id <= 7) params.set("inspect", "1");
-    if (new URLSearchParams(location.search).get("preview") === "phase2")
-      params.set("preview", "phase2");
+    const previous = new URLSearchParams(location.search);
+    if (["phase2", "phase3"].includes(previous.get("preview") || ""))
+      params.set("preview", bookingScreens.includes(id) ? "phase3" : "phase2");
+    for (const key of ["offer", "offerPeriod", "offerDirection"]) {
+      const value = previous.get(key);
+      if (value) params.set(key, value);
+    }
     if (routeId) params.set("route", routeId);
     if (bookingId) params.set("booking", bookingId);
     history.pushState({}, "", `?${params}`);
@@ -247,7 +260,13 @@ export default function SubscriptionApp() {
     document.title = `${screenTitles[screen - 1]} | سِكّة`;
   }, [screen]);
   async function refreshProfile() {
-    if (!client) return;
+    if (
+      !client ||
+      ["phase2", "phase3"].includes(
+        new URLSearchParams(location.search).get("preview") || "",
+      )
+    )
+      return;
     const { data } = await client.auth.getSession();
     setSignedIn(Boolean(data.session));
     if (data.session) {
@@ -302,7 +321,9 @@ export default function SubscriptionApp() {
     setError("");
     if (
       !client ||
-      new URLSearchParams(location.search).get("preview") === "phase2"
+      ["phase2", "phase3"].includes(
+        new URLSearchParams(location.search).get("preview") || "",
+      )
     )
       return;
     const load = async () => {
@@ -334,7 +355,9 @@ export default function SubscriptionApp() {
         if (active) setRoutes(rs);
       }
       if (
-        [20, 21, 22, 23, 29, 30, 52, 53, 54, 55, 56, 58, 61].includes(screen)
+        [18, 19, 20, 21, 22, 23, 29, 30, 52, 53, 54, 55, 56, 58, 61].includes(
+          screen,
+        )
       ) {
         const bs = await api<Booking[]>("bookings");
         if (active) {
@@ -343,7 +366,7 @@ export default function SubscriptionApp() {
           if (selected) setBooking(bs.find((b) => b.id === selected) ?? null);
         }
       }
-      if ([18, 24, 25, 26, 27, 28].includes(screen)) {
+      if ([17, 18, 24, 25, 26, 27, 28].includes(screen)) {
         const w = await api<{ balance: typeof balance; transactions: Row[] }>(
           "wallet",
         );
@@ -1566,6 +1589,61 @@ export default function SubscriptionApp() {
       );
     return <Empty />;
   }
+  if (bookingScreens.includes(screen) || screen === 23)
+    return (
+      <BookingFlow
+        screen={screen === 23 ? 22 : screen}
+        theme={theme}
+        onTheme={changeTheme}
+        go={go}
+        offer={bookingOffer}
+        route={route}
+        period={period}
+        direction={direction}
+        quote={quote}
+        booking={booking}
+        balance={balance}
+        signedIn={signedIn}
+        busy={busy}
+        error={error}
+        onQuote={async () => {
+          if (!signedIn) throw new Error("AUTH_REQUIRED");
+          if (!route) throw new Error("ROUTE_UNAVAILABLE");
+          const next = await api<Quote>("quote", {
+            routeId: route.id,
+            period,
+            direction,
+          });
+          setQuote(next);
+          return next;
+        }}
+        onPaid={async () => {
+          if (!booking || !signedIn || profile?.role !== "rider")
+            throw new Error("AUTH_REQUIRED");
+          const result = await api<Booking>("payment.paid", {
+            bookingId: booking.id,
+          });
+          const next = { ...booking, ...result };
+          setBooking(next);
+          setRevision((v) => v + 1);
+          return next;
+        }}
+        onRefresh={async () => {
+          if (!booking || !signedIn) throw new Error("AUTH_REQUIRED");
+          const items = await api<Booking[]>("bookings");
+          const next = items.find((b) => b.id === booking.id) || null;
+          setBookings(items);
+          setBooking(next);
+          return next;
+        }}
+        onDispute={async (reason) => {
+          if (!booking || !signedIn) throw new Error("AUTH_REQUIRED");
+          await api("dispute.open", { bookingId: booking.id, reason });
+          setBooking({ ...booking, status: "disputed" });
+          setRevision((v) => v + 1);
+        }}
+      />
+    );
   if (discoveryScreens.includes(screen) || screen === 9)
     return (
       <Discovery
@@ -1592,6 +1670,26 @@ export default function SubscriptionApp() {
           setPeriod(offerPeriod);
           setDirection(offerDirection);
           go(12, r.id);
+        }}
+        onBook={(offer) => {
+          setBookingOffer(offer);
+          setPeriod(offer.period);
+          setDirection(offer.direction);
+          setQuote(null);
+          go(16, offer.routeId);
+          const url = new URL(location.href);
+          if (offer.id.startsWith("preview-"))
+            url.searchParams.set("offer", offer.id);
+          url.searchParams.set("offerPeriod", offer.period);
+          url.searchParams.set("offerDirection", offer.direction);
+          history.replaceState({}, "", url);
+        }}
+        onBooking={(id) => {
+          const b = bookings.find((b) => b.id === id);
+          if (b) {
+            setBooking(b);
+            go(19, undefined, b.id);
+          }
         }}
         onRequest={async (payload) => {
           await api("request.create", payload);

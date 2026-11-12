@@ -12,3 +12,5 @@ Authority: `PRD.md` and owner replacement instruction, 12 November 2026.
 - Seat and balance reservations are atomic and idempotent. No funds API activation before partner/policy approval.
 - Public discovery without login; auth needed for bookings, favorites, messaging and route demand. Captain/vehicle verification before route publication. Staff capabilities are server-assigned.
 - Renewals, cancellation/timeout policy, financial operations, legal text and official calendar require unresolved decisions. Do not substitute sample data as approval.
+- Phase-three offer terms are read-only: captain-defined duration, direction and full-cycle price carry from results/details into booking. Rider never chooses new terms in summary. Proration changes the payable amount according to eligible days, not the captain's published terms.
+- Approved phase-three screen IDs are 16 summary, 17 security, 18 confirmation, 19 subscription, 20 rider paid, 21 receipt follow-up, 22 management. The EGP 100 is never subtracted from captain payment.

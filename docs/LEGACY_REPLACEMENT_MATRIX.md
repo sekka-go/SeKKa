@@ -15,3 +15,9 @@
 | Old frontend | New dark RTL tokenized shell | web/src/v2 | Build/type/lint and UI checks | Not production-approved |
 | Existing D1 | No new dependence | audit only | API reports zero tables | RETIRE only with separate approval |
 | Existing Edge/cron/legacy SQL | Inert after approved future retirement | none mutated | Inventory only | Not replaced/retired yet |
+
+| Previous behavior | New expected behavior | Implementation | Migration / deployment |
+|---|---|---|---|
+| Legacy 16–18 duration/direction controls and booking form | Fixed captain offer summary 16, security 17, confirmed snapshot 18 | BookingFlow.tsx, App.tsx handoff | UI replaced; hosted acceptance and financial activation held |
+| Legacy 19–23 booking/payment screens | 19 details, 20 rider paid, 21 receipt timeline, 22 management; 23 alias | BookingFlow.tsx, screen registry | UI replaced; API/ledger contracts unchanged, no retirement claim |
+| Phase-two booking placeholder modal | Navigate to approved summary carrying selected offer | Discovery onBook, URL offer metadata | Preview navigation; no reservation mutation |

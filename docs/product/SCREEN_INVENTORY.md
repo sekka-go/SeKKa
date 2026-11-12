@@ -83,3 +83,17 @@ Source: PRD section 12 and current owner instruction. Technical route is `/?scre
 ## Owner phase-one reference override
 
 The latest seven-image batch defines 01 splash, 02 welcome, 03 account role, 04 phone, 05 OTP, 06 success-state preview, 07 account-registration preview. This visual map supersedes the earlier phase-one naming; backend profile/consent requirements remain pending and are not silently removed. Account actions are intentionally disabled following the owner's explicit appearance-only decision. Phase two awaits its own reference batch.
+
+## Owner-approved phase-three replacement — 12 November 2026
+
+| ID | Approved screen | Purpose |
+|---|---|---|
+| 16 | ملخص الحجز والتكلفة النهائية | Fixed captain offer, automatic start, eligible days, final quote and refundable security |
+| 17 | تأمين الحجز | Check EGP 100 available security; top-up availability/shortfall |
+| 18 | تم تأكيد الحجز | Reserved-seat snapshot, start and direct-captain payment instructions |
+| 19 | تفاصيل اشتراكي | Snapshot dates, amount, payment/security status |
+| 20 | تأكيد الدفع | Rider declaration after paying captain |
+| 21 | متابعة تأكيد الاستلام | Rider/captain confirmations and security release status |
+| 22 | إدارة الاشتراك | Details, policy-gated renewal/cancellation, support review |
+
+This explicitly replaces the former 16–23 map without shifting later IDs. 23 is a compatibility alias to management (22). Phase-two view 29 remains the subscription list. No additional images are required: owner authorized continuing the established style, shared components and dark/light tokens. No official logo redesign.

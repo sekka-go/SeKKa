@@ -38,7 +38,7 @@ const categoryList = [
   { name: "SPACE", seats: 9 },
   { name: "MAX", seats: 13 },
 ];
-type Line = {
+export type Line = {
   id: string;
   routeId?: string;
   origin: string;
@@ -53,7 +53,7 @@ type Line = {
   captain?: string;
   rating?: number;
 };
-const examples: Line[] = [
+export const examples: Line[] = [
   {
     id: "preview-prime",
     origin: "المعادي",
@@ -97,10 +97,11 @@ const examples: Line[] = [
     rating: 4.9,
   },
 ];
-const favoriteExamples: Line[] = [
-  { ...examples[0], amount: 3200 },
+export const favoriteExamples: Line[] = [
+  { ...examples[0], id: "preview-favorite-prime", amount: 3200 },
   {
     ...examples[2],
+    id: "preview-favorite-space",
     origin: "الزمالك",
     destination: "الشيخ زايد",
     outbound: "08:00",
@@ -110,6 +111,7 @@ const favoriteExamples: Line[] = [
   },
   {
     ...examples[1],
+    id: "preview-favorite-saver",
     origin: "مدينة نصر",
     destination: "6 أكتوبر",
     outbound: "07:00",
@@ -410,6 +412,8 @@ export type DiscoveryProps = {
   onSelect: (r: Route, period: string, direction: string) => void;
   onRequest: (p: Record<string, unknown>) => Promise<void>;
   onFavorite: (id: string) => Promise<void>;
+  onBook: (offer: Line) => void;
+  onBooking: (id: string) => void;
 };
 export default function Discovery(p: DiscoveryProps) {
   const { screen, theme, onTheme, go } = p;
@@ -949,15 +953,8 @@ export default function Discovery(p: DiscoveryProps) {
                 <DiscoveryIcon name="info" />
               </div>
               <Action
-                onClick={() =>
-                  demo
-                    ? setModal(
-                        "الحجز مش مفعّل في المعاينة. اختيارك لا ينشئ حجزًا ولا يحجز مقعدًا.",
-                      )
-                    : setModal(
-                        "الحجز موقوف لحين تفعيل الخدمة واعتماد مسار الحجز. مواصفات العرض المعروضة محددة من الكابتن.",
-                      )
-                }
+                onClick={() => p.onBook(current)}
+                disabled={current.amount === null}
               >
                 حجز الاشتراك
               </Action>
@@ -1194,7 +1191,10 @@ export default function Discovery(p: DiscoveryProps) {
                     <p>
                       {money(b.price)} · {b.starts_on} — {b.ends_before}
                     </p>
-                    <button className="d-outline" onClick={() => nav(20)}>
+                    <button
+                      className="d-outline"
+                      onClick={() => p.onBooking(b.id)}
+                    >
                       تفاصيل اشتراكي
                     </button>
                   </article>

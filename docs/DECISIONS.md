@@ -14,3 +14,6 @@
 - 2026-11-12 phase-one reference batch: owner explicitly chose appearance-only for password/Google/Facebook registration. SMS, OTP verification, registration and social-provider linking remain disabled. Screen 06 is now a labeled success-state design and screen 07 a registration design; no identity state change is implied.
 
 - Phase two: owner replaced 11/12 with 1000636594/1000636595. Period, direction and price belong to the captain's offer. Rider filters and chooses an offer; view 12 has no editable offer terms. Capacity rules override impossible seat counts in mockups. Supplied subscriptions view maps to screen 29. Stage three not started.
+
+- Owner-approved phase three replaces 16–22 as documented in SCREEN_INVENTORY; 23 compatibility alias renders management. Extend established dark/light style without new reference images. Preserve captain-defined offer terms at handoff; do not reintroduce subscription selection.
+- Real top-up and booking reservation remain disabled pending existing provider/policy/holiday/auth launch blockers. Preview actions cannot submit financial writes. Receipt release UI requires both declarations and no dispute; missing confirmation/attendance never forfeits security.
