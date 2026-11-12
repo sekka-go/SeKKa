@@ -31,3 +31,8 @@ https://c44b45a2.sekka-go.pages.dev/
 Branch alias returned by Cloudflare: https://rebuild-subscriptions-202611.sekka-go.pages.dev
 Remote browser verified rendering, guest text search navigation and wallet authentication guard. Backend staging remains unconfigured; this is a UI/code preview, not a live booking service.
 Production canonical deployment remains `4a3504d9-96c5-4d78-9855-bf21fe4072ff`, commit `f605e1e`, branch main.
+
+Validated code commit: ad48c6bd50398e4e7a5e8dc49ea3c0612935f903.
+Latest successful preview: https://3897cdaa.sekka-go.pages.dev
+Successful complete CI run: https://github.com/sekka-go/SeKKa/actions/runs/43190565818
+All 3 guest UI suites passed including 390px/1440px overflow checks. Authenticated live acceptance remains blocked by hosted migration/OTP/policy gates.

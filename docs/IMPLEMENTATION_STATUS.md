@@ -25,3 +25,9 @@ Preview published and verified: https://c44b45a2.sekka-go.pages.dev/ (UI/code on
 
 ## Phases J–K — Not performed
 Production cutover, legacy endpoint revocation, data migration and retirement require future explicit resource-specific approval after complete acceptance. Current main and old production deployment remain active.
+
+## Final verification checkpoint
+
+Code commit `ad48c6bd50398e4e7a5e8dc49ea3c0612935f903`: GitHub Actions run 43190565818 succeeded, including install, typecheck, lint, 32 domain/PostgreSQL tests, build and all 3 Playwright suites. Playwright covers guest rendering/navigation and RTL/responsive layout, not authenticated hosted journeys or payment-provider integration. Screenshots are in the `subscription-ui-evidence` CI artifact.
+Latest verified preview deploy: https://3897cdaa.sekka-go.pages.dev (Cloudflare status success).
+Second Supabase confirmation also expired. Read-back: no sekka_v2 schema, 54 legacy public tables, 11 existing objects. No database mutation, data migration, production cutover or retirement occurred.
