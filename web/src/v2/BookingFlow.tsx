@@ -539,7 +539,7 @@ export default function BookingFlow(p: BookingFlowProps) {
         </header>
         <div className="b-stage-label">
           <span>الحجز والاشتراكات</span>
-          <span>{screen - 15} / 7</span>
+          <span dir="ltr">{screen - 15} / 7</span>
         </div>
         <h1 className="b-title">
           <DiscoveryIcon

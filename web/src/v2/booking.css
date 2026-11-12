@@ -610,3 +610,16 @@
     min-height: 32px;
   }
 }
+
+/* Review scenarios are a compact toolbar, not the legacy app sidebar. */
+.booking-stage .b-scenario {
+  flex-direction: row;
+  position: static;
+  width: auto;
+  max-width: calc(100% - 24px);
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  align-self: center;
+}
