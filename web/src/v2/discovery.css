@@ -1408,3 +1408,13 @@
     background: #ffc40008;
   }
 }
+
+/* Scope query-sized inherited text inside its own canvas, not the browser viewport. */
+.d-canvas { font-size: 20px; }
+.d-canvas > * { font-size: 3.4cqw; }
+.d-header { display: block; padding: 0; border: 0; background: transparent; }
+.d-header .phase-back { display: grid; place-items: center; padding: 0; }
+.d-periods > button { font-size: 3.8cqw; }
+.d-planner-places { padding-left: 0; padding-right: 13%; }
+.d-swap { left: auto; right: 0; }
+.light .d-region .reference-art { mix-blend-mode: multiply; }
