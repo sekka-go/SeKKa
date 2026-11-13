@@ -587,3 +587,63 @@ test("phase seven captain operations isolate previews and confirm receipt once",
     page.getByText("سجّل بحساب كابتن عشان تشوف بيانات تشغيلك."),
   ).toBeVisible();
 });
+
+test("phase eight admin preview is responsive and mutations remain local", async ({
+  page,
+}) => {
+  const writes: string[] = [];
+  page.on("request", (r) => {
+    if (r.method() === "POST") writes.push(r.url());
+  });
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const theme of ["dark", "light"]) {
+      for (let screen = 63; screen <= 74; screen++) {
+        await page.goto(`/?screen=${screen}&theme=${theme}&preview=phase8`);
+        await expect(page.locator("main h1")).toBeVisible();
+        expect(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= innerWidth,
+          ),
+        ).toBe(true);
+      }
+    }
+  }
+  await page.goto("/?screen=66&preview=phase8");
+  await page
+    .getByRole("button", { name: "عرض التفاصيل", exact: true })
+    .first()
+    .click();
+  await page.getByLabel("قرار المعاينة").selectOption("مطلوب تعديل");
+  const confirm = page.getByRole("button", {
+    name: "تأكيد التغيير في المعاينة",
+  });
+  await expect(confirm).toBeDisabled();
+  await page.getByLabel("سبب الإجراء").fill("الصورة غير واضحة — اختبار محلي");
+  await confirm.click();
+  await expect(page.getByRole("status")).toContainText(
+    "لم يتغير أي حساب حقيقي",
+  );
+  await expect(page.locator(".ad-audit")).toContainText("D-301");
+  await page.getByLabel("بحث السجلات").fill("غير موجود");
+  await expect(page.getByText("مفيش نتائج مطابقة")).toBeVisible();
+  await page.getByLabel("محاكاة صلاحية").selectOption("المالية");
+  await expect(page.getByText("الصلاحية غير متاحة في المعاينة")).toBeVisible();
+  await page.goto("/?screen=73&preview=phase8");
+  await page.getByLabel("عنوان الرسالة", { exact: true }).fill("تحديث توضيحي");
+  await page.getByLabel("المحتوى", { exact: true }).fill("رسالة للمعاينة فقط");
+  await page
+    .getByRole("button", { name: "معاينة الرسالة", exact: true })
+    .click();
+  await page.getByRole("button", { name: "حفظ مسودة في المعاينة" }).click();
+  await expect(page.locator(".ad-audit")).toContainText("حفظ مسودة");
+  await expect(
+    page.getByRole("button", { name: "الإرسال الجماعي غير مفعّل" }),
+  ).toBeDisabled();
+  expect(writes).toEqual([]);
+  await page.goto("/?screen=66");
+  await expect(page.getByText("دخول الإدارة محمي")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "عرض التفاصيل", exact: true }),
+  ).toHaveCount(0);
+});

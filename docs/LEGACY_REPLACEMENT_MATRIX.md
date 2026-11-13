@@ -29,3 +29,5 @@
 | Generic captain JSON / pending pages | Themed operations 51–62 | web/src/v2/CaptainOperations.tsx | PostgreSQL role/privacy test; mobile E2E | Hosted migration/auth |
 | Captain chat could only follow existing rider thread | Owned-booking captain chat open | captain_operations migration | Unrelated actor and unknown booking rejected | Staging migration |
 | Receipt list shown as generic bookings | Direct-payment receipt history | Screen 60 | No wallet credit assumptions | Live transaction data |
+
+| Generic admin JSON / missing screens | Desktop/mobile themed administration 63–74 | web/src/v2/AdminDashboard.tsx | Both-theme desktop/mobile E2E; no POST | Live staff auth, scoped APIs and durable audit |

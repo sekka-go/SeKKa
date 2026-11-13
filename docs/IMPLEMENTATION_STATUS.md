@@ -124,3 +124,21 @@ Local typecheck, lint, build and 34 domain/PostgreSQL tests passed. Added a mobi
 12-screen E2E suite with receipt-once, messaging/support isolation and guest protection;
 CI result must be checked on the published commit. Phase 6 and admin remaining scope are
 not implied complete by this phase. No production cutover or resource retirement.
+
+## Phase 8 — Administration UI (63–74), 13 November 2026
+Implemented desktop-first, mobile-responsive RTL/dark/light AdminDashboard replacing
+raw JSON and placeholder admin screens. Includes computed demo metrics, users, captains,
+document review, vehicle capacities, routes, bookings, balances/security, wallet transactions,
+support, notification composer/preview and configuration/permissions display.
+Search/status filters, details, reason-required local review changes and local audit history
+are interactive. Permission selector is explicitly simulation, never an authorization grant.
+No real documents are embedded. Broadcast send, money movement and real role changes
+are disabled; live admin entry shows a protected unavailable state rather than exposing data.
+Preview phase8 bypasses backend loading and performs no POST requests. No database/schema
+changes in this phase. No production cutover, data migration or retirement.
+Typecheck/lint/build passed locally. E2E added for all 12 screens in both themes at mobile
+and desktop widths, review validation, audit trace, filters, permissions simulation, draft
+notification and guest protection. Publication CI must confirm passing results.
+Remaining: actual staff authentication, endpoint-specific permissions, private document
+retrieval, durable ticket assignment/audit and audited administrative actions before live use.
+The existing 74-screen numbering in this repository is retained for this requested phase.

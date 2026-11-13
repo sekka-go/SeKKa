@@ -48,3 +48,8 @@ live discovery/contact APIs. Tests include the baseline plus this forward migrat
 Entry: `?screen=51&theme=dark&preview=phase7` (or theme=light).
 Branch remains rebuild/subscriptions-20261112 / draft PR168. Preview actions are local only.
 The operations migration is committed and tested, not applied to hosted production.
+
+### Phase 8 admin UI preview
+Entry: `?screen=63&theme=dark&preview=phase8`; switch theme in the header.
+All administrative changes are in-memory simulations. No backend migration or production
+change. Real broadcasts, wallet transfers and privilege grants remain disabled.

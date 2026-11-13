@@ -1,3 +1,4 @@
+import AdminDashboard, { adminScreens } from "./AdminDashboard";
 import CaptainOperations, {
   operationsScreens,
   type OperationsData,
@@ -261,23 +262,31 @@ export default function SubscriptionApp() {
     if (id <= 7) params.set("inspect", "1");
     const previous = new URLSearchParams(location.search);
     if (
-      ["phase2", "phase3", "phase4", "phase5", "phase6", "phase7"].includes(
-        previous.get("preview") || "",
-      )
+      [
+        "phase2",
+        "phase3",
+        "phase4",
+        "phase5",
+        "phase6",
+        "phase7",
+        "phase8",
+      ].includes(previous.get("preview") || "")
     )
       params.set(
         "preview",
-        operationsScreens.includes(id)
-          ? "phase7"
-          : captainOnboardingScreens.includes(id)
-            ? "phase5"
-            : accountScreens.includes(id)
-              ? "phase4"
-              : walletScreens.includes(id)
+        adminScreens.includes(id)
+          ? "phase8"
+          : operationsScreens.includes(id)
+            ? "phase7"
+            : captainOnboardingScreens.includes(id)
+              ? "phase5"
+              : accountScreens.includes(id)
                 ? "phase4"
-                : bookingScreens.includes(id)
-                  ? "phase3"
-                  : "phase2",
+                : walletScreens.includes(id)
+                  ? "phase4"
+                  : bookingScreens.includes(id)
+                    ? "phase3"
+                    : "phase2",
       );
     for (const key of [
       "offer",
@@ -304,9 +313,15 @@ export default function SubscriptionApp() {
   async function refreshProfile() {
     if (
       !client ||
-      ["phase2", "phase3", "phase4", "phase5", "phase6", "phase7"].includes(
-        new URLSearchParams(location.search).get("preview") || "",
-      )
+      [
+        "phase2",
+        "phase3",
+        "phase4",
+        "phase5",
+        "phase6",
+        "phase7",
+        "phase8",
+      ].includes(new URLSearchParams(location.search).get("preview") || "")
     )
       return;
     const { data } = await client.auth.getSession();
@@ -364,9 +379,15 @@ export default function SubscriptionApp() {
     setError("");
     if (
       !client ||
-      ["phase2", "phase3", "phase4", "phase5", "phase6", "phase7"].includes(
-        new URLSearchParams(location.search).get("preview") || "",
-      )
+      [
+        "phase2",
+        "phase3",
+        "phase4",
+        "phase5",
+        "phase6",
+        "phase7",
+        "phase8",
+      ].includes(new URLSearchParams(location.search).get("preview") || "")
     )
       return;
     const load = async () => {
@@ -401,7 +422,7 @@ export default function SubscriptionApp() {
           if (active) setContact(contactData);
         }
       }
-      if (!signedIn) return;
+      if (!signedIn || adminScreens.includes(screen)) return;
       if (operationsScreens.includes(screen)) {
         const data = await api<OperationsData>("captain.operations");
         if (active) setOperationsData(data);
@@ -1649,6 +1670,15 @@ export default function SubscriptionApp() {
       );
     return <Empty />;
   }
+  if (adminScreens.includes(screen))
+    return (
+      <AdminDashboard
+        screen={screen}
+        theme={theme}
+        onTheme={changeTheme}
+        go={go}
+      />
+    );
   if (operationsScreens.includes(screen))
     return (
       <CaptainOperations
