@@ -52,4 +52,6 @@ Added an explicit English catalog and translated onboarding 1–7 plus rider acc
 
 An interactive search-to-booking preview now stores a cloned offer, selected stops and calculated quote in session storage on confirmation. Its separate virtual EGP 100 security requires both simulated acknowledgements to release and repeated confirmations cannot duplicate the release. Pure domain tests cover snapshot independence, insufficient balance, capacity and both acknowledgement orders. Direct screen-review fixtures remain explicitly illustrative. This session-only state is **not** a real reservation, durable database or wallet; captain operations and wallet overview still use separate fixtures and need consolidation before full acceptance. The preview uses the documented fixed fixture date/calendar, not a claim of approved current holidays.
 
-Localization CI run 43527334833 passed all checks including 21 browser tests. The new booking interaction test is added for the next run.
+Localization CI run 43527334833 passed all checks including 21 browser tests. The booking interaction test also passed in run 43527661792: all 22 browser tests and 40 domain/historical database checks passed at `98bbffac`.
+
+Historical decisions and phase completion reports were also moved into `docs/archive/pre-v3.1/`. Current `DECISIONS.md` and `IMPLEMENTATION_STATUS.md` now describe only v3.1 implementation status. Other useful historical engineering documents carry explicit non-authoritative labels.

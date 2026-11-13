@@ -1,3 +1,5 @@
+> Historical engineering context — not current product requirements or evidence of active frontend integration. [PRD v3.1](PRD.md) is the sole authority; [current status](IMPLEMENTATION_STATUS.md) records today’s implementation gaps.
+
 # Legacy replacement verification matrix
 
 | Legacy behavior/resource | New behavior | Implementation | Migration/test evidence | Deployment / remaining dependency |

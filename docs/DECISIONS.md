@@ -1,42 +1,13 @@
-# Decisions
+# Current implementation decisions
 
-- 2026-11-12: Current owner instruction and checked-in `docs/PRD.md` supersede historical trip/ride models. PRIME 3, SAVER 4, SPACE 9, MAX 13.
-- Preserve React/Vite; PRD section 14.2 explicitly calls framework choices proposals. Avoid introducing a Next.js runtime migration into the Pages cutover.
-- Use a private new schema and a single invoker public API wrapper into a narrowly granted private definer dispatcher, fixed empty search_path and explicit auth.uid ownership checks. Clients get no direct new-table grants; RLS is enabled on every new table. Service access is not based on editable user_metadata.
-- Canonical dates are ISO civil dates; cycle end is EXCLUSIVE. Monthly boundaries always derive from the original anchor, clamping to month end without drift. This deterministic implementation convention must be reviewed in acceptance.
-- Server timestamp is authoritative. Browser previews never set booking start dates, price, or user id. Submitted quote must match server recomputation; idempotency keys cannot be reused with different route/period/direction.
-- Route row locking protects inventory across weekly/monthly overlaps and direction legs. Ledger account locking prevents simultaneous reservations from overspending a wallet. Lock order is account before route/booking.
-- Price rounding is exact numeric half-up to whole EGP. A price rounded to zero is permitted; security is still independent EGP 100.
-- No holiday dates invented. Admin-approved coverage plus official source is required; pricing fails closed outside coverage. Fixtures are clearly TEST ONLY.
-- New legal terms, real-money processing and renewals are disabled until approvals. A second active captain route is conservatively blocked until schedule-duration overlap policy is defined; not described as implemented multi-line support.
-- Existing official logo file is reused unchanged. New numbered screen map is a shared UI registry, not a claim that 75 journeys have passed acceptance.
+Authority: [PRD v3.1](PRD.md), 73 screens across eight stages. These notes record implementation choices; they do not change the PRD.
 
-- 2026-11-12 phase-one reference batch: owner explicitly chose appearance-only for password/Google/Facebook registration. SMS, OTP verification, registration and social-provider linking remain disabled. Screen 06 is now a labeled success-state design and screen 07 a registration design; no identity state change is implied.
+- Preserve React, TypeScript, Vite and existing official assets.
+- Keep stable internal view IDs behind the 73-screen public registry. Captain identity belongs inside post-booking subscription details.
+- Theme and language are independent: device defaults, persistent manual override, instant application. Settings remain in rider 32 and captain 60.
+- Monthly calculations end at the end of the starting calendar month, not the anniversary date. Cairo time and approved eligible-day rules remain mandatory.
+- This task is frontend-only. Authentication, real booking inventory, financial providers and production backend operations remain disconnected.
+- Local preview booking snapshots are session-only simulations. They cannot authorize real transfers or prove a real booking.
+- Full English coverage and consolidated cross-stage preview state are still incomplete; see the [current audit](PRD_V31_AUDIT.md).
 
-- Phase two: owner replaced 11/12 with 1000636594/1000636595. Period, direction and price belong to the captain's offer. Rider filters and chooses an offer; view 12 has no editable offer terms. Capacity rules override impossible seat counts in mockups. Supplied subscriptions view maps to screen 29. Stage three not started.
-
-- Owner-approved phase three replaces 16–22 as documented in SCREEN_INVENTORY; 23 compatibility alias renders management. Extend established dark/light style without new reference images. Preserve captain-defined offer terms at handoff; do not reintroduce subscription selection.
-- Real top-up and booking reservation remain disabled pending existing provider/policy/holiday/auth launch blockers. Preview actions cannot submit financial writes. Receipt release UI requires both declarations and no dispute; missing confirmation/attendance never forfeits security.
-
-- Phase four continues the existing wallet/account map with screens 24–30, retaining 23 as an alias. The owner requested starting the next stage without new image references; extend established dark/light components. Money activation remains held. Screen 29 keeps its old explicit phase-two preview while the new phase-four gallery uses the wallet family.
-
-- Owner wallet correction: label reserved security as «تأمين جدية الحجز», refundable and separate from the subscription. Minimum top-up is EGP 100; quick amounts 100/200/300. This is a top-up minimum, not a permanent available-balance floor (reservations can reduce available funds). Real money stays disabled; future provider/server integration must enforce the same minimum before credit creation.
-
-- Phase five follows canonical IDs 31–36 and existing visual language. Do not invent presence, delivery receipts, contact numbers, or legal approval. Preview message sending, notification-read changes and name edits are local demonstrations. Real profile mutation remains held; real support/message writes require an authenticated user action and successful API response.
-
-## Phase 6 implementation boundary
-Captain onboarding uses screens 37–43 with the established dark/light visual system.
-Local document selection accepts nonempty JPEG/PNG/PDF up to 5 MB as a preview limit,
-not an approved production document policy. No sensitive document contents are read,
-persisted, uploaded or logged. Production submission stays unavailable until document
-verification, retention and secure upload policies are approved. No simulated approval.
-
-## Owner approved map74 replaces all earlier phase numbering
-The 12 November 2026 detailed eight-stage /74-screen specification is authoritative.
-SCREEN_SPECIFICATIONS.md records components, actions and rules for every screen.
-Use canonical IDs at the URL boundary and in visible labels; retain stable private view
-keys during staged replacement. Account/wallet is one stage4; captain onboarding is5;
-route creation/management is6. Contacts require committed seat/security booking, not
-rider payment completion: current backend `reserved` is a committed booking with its
-security reservation, whereas `confirmed` denotes both payment confirmations.
-No live activation, money operations or deletion is authorized by this map update.
+[Historical decisions](archive/pre-v3.1/DECISIONS.md) are retained for context only and are superseded.
