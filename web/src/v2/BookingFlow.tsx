@@ -1,3 +1,4 @@
+import {readPreviewBookings, reservePreviewBooking, confirmPreviewBooking} from "./previewBookingStore";
 import { publicScreen } from "./screenMap";
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
@@ -279,10 +280,14 @@ export default function BookingFlow(p: BookingFlowProps) {
   const params = new URLSearchParams(location.search);
   const demo = params.get("preview") === "phase3";
   const offerId = params.get("offer");
-  const demoOffer =
+  const [previewLedger,setPreviewLedger] = useState(readPreviewBookings);
+  const previewBooking = previewLedger.bookings.find(b => b.offerId === offerId);
+  const interactivePreview = demo && Boolean(readSelectedPreview(offerId));
+  const currentOffer =
     p.offer || readSelectedPreview(offerId) ||
     [...examples, ...favoriteExamples].find((o) => o.id === offerId) ||
     examples[0];
+  const demoOffer = screen >= 18 && previewBooking ? previewBooking.offer : currentOffer;
   const config = p.route?.prices.find(
     (v) => v.period === p.period && v.direction === p.direction,
   );
@@ -325,10 +330,10 @@ export default function BookingFlow(p: BookingFlowProps) {
       lastFocus.current?.focus();
     }
   }, [modal]);
-  const q = demo ? sampleQuote(demoOffer) : localQuote || p.quote;
+  const q = demo ? (screen >= 18 && previewBooking ? previewBooking.quote : sampleQuote(demoOffer)) : localQuote || p.quote;
   const b = p.booking;
   const hasSnapshot =
-    demo ||
+    (demo && (!interactivePreview || Boolean(previewBooking))) ||
     Boolean(
       b &&
       ["reserved", "confirmed", "disputed", "completed"].includes(b.status),
@@ -338,15 +343,15 @@ export default function BookingFlow(p: BookingFlowProps) {
   const snapshotEnd = demo ? q!.endExclusive : b?.ends_before;
   const disputed = demo ? receipt === "disputed" : b?.status === "disputed";
   const riderReported = demo
-    ? demoPayment || screen === 21 || receipt === "received"
+    ? interactivePreview ? Boolean(previewBooking?.riderPaid) : demoPayment || screen === 21 || receipt === "received"
     : Boolean(b?.rider_paid_at);
   const captainReported = demo
-    ? receipt === "received"
+    ? interactivePreview ? Boolean(previewBooking?.captainReceived) : receipt === "received"
     : Boolean(b?.captain_received_at);
   const released = hasSnapshot && riderReported && captainReported && !disputed;
   const available = demo
     ? balanceMode === "enough"
-      ? 150
+      ? interactivePreview ? previewLedger.available : 150
       : 40
     : p.balance.available;
   const sufficient = available >= 100;
@@ -370,6 +375,7 @@ export default function BookingFlow(p: BookingFlowProps) {
   async function paid() {
     if (!paidChecked) return;
     if (demo) {
+      if (interactivePreview && previewBooking) setPreviewLedger(confirmPreviewBooking(previewBooking.id,"rider"));
       setDemoPayment(true);
       nav(21);
       return;
@@ -491,7 +497,7 @@ export default function BookingFlow(p: BookingFlowProps) {
           ? "معاينة المرحلة الثالثة · البيانات والأحداث توضيحية. لا حجز ولا دفع ولا تغيير رصيد فعلي."
           : "سِكّة · حجزك واشتراكك"}
       </p>
-      {demo && [17, 21].includes(screen) && (
+      {demo && !interactivePreview && [17, 21].includes(screen) && (
         <aside className="b-scenario" aria-label="حالات المعاينة">
           {screen === 17 ? (
             <>
@@ -693,13 +699,18 @@ export default function BookingFlow(p: BookingFlowProps) {
               )}
               <Primary
                 disabled={!sufficient || !q || !demo}
-                onClick={() => nav(18)}
+                onClick={() => {
+                  try {
+                    if(interactivePreview && offer && q) setPreviewLedger(reservePreviewBooking(offer,q));
+                    nav(18);
+                  } catch(error){setNotice(errorCopy(error));}
+                }}
               >
-                {demo ? "معاينة تأكيد الحجز" : "تأكيد حجز المقعد"}
+                {demo ? interactivePreview ? "تأكيد الحجز التجريبي وحجز 100 جنيه افتراضية" : "معاينة تأكيد الحجز" : "تأكيد حجز المقعد"}
               </Primary>
               <p className="b-hint">
                 {demo
-                  ? "الزر بيفتح نموذج التأكيد للمراجعة؛ مش بيحجز مقعد ولا بيخصم رصيد."
+                  ? interactivePreview ? "محاكاة محلية فقط: يتم تثبيت الشروط وتحديث الرصيد التجريبي، من غير حجز حقيقي أو حركة أموال." : "الزر بيفتح نموذج التأكيد للمراجعة؛ مش بيحجز مقعد ولا بيخصم رصيد."
                   : copy.moneyDisabled}
               </p>
             </>
@@ -923,6 +934,7 @@ export default function BookingFlow(p: BookingFlowProps) {
                   </p>
                 </div>
               )}
+              {interactivePreview && previewBooking && !captainReported && <button className="b-secondary" onClick={() => setPreviewLedger(confirmPreviewBooking(previewBooking.id,"captain"))}>محاكاة تأكيد الكابتن — لا دفع حقيقي</button>}
               <Primary disabled={working} onClick={() => void refresh()}>
                 تحديث الحالة
               </Primary>

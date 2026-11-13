@@ -47,3 +47,9 @@ Typecheck, lint and production build passed locally. All 37 domain/historical Po
 ## Localization continuation
 
 Added an explicit English catalog and translated onboarding 1–7 plus rider account/communication 29–34, including accessibility names, support copy and dates. User-entered names and messages remain unchanged. All 73 browser page titles have English counterparts. This is partial localization: other stage content remains to translate, and full visual acceptance is still outstanding. Added browser tests for unsupported locale fallback, English onboarding, draft retention across language changes and captain settings persistence.
+
+## Booking simulation continuation
+
+An interactive search-to-booking preview now stores a cloned offer, selected stops and calculated quote in session storage on confirmation. Its separate virtual EGP 100 security requires both simulated acknowledgements to release and repeated confirmations cannot duplicate the release. Pure domain tests cover snapshot independence, insufficient balance, capacity and both acknowledgement orders. Direct screen-review fixtures remain explicitly illustrative. This session-only state is **not** a real reservation, durable database or wallet; captain operations and wallet overview still use separate fixtures and need consolidation before full acceptance. The preview uses the documented fixed fixture date/calendar, not a claim of approved current holidays.
+
+Localization CI run 43527334833 passed all checks including 21 browser tests. The new booking interaction test is added for the next run.

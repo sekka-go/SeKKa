@@ -91,3 +91,25 @@ test('captain settings persist independent manual choices',async({browser})=>{
  await page.getByLabel('theme_preference',{exact:true}).selectOption('system');
  await expect(page.locator('html')).toHaveAttribute('data-theme','dark');await expect(page.locator('html')).toHaveAttribute('dir','rtl');await context.close();
 });
+
+test('interactive preview locks booking terms and persists dual-confirmation security release',async({page})=>{
+ await page.goto('/?screen=9&preview=phase2');await page.getByRole('button',{name:'ابحث عن الرحلات',exact:true}).click();
+ await page.getByRole('button',{name:/عرض تفاصيل PRIME/}).click();
+ await page.getByLabel('نقطة الركوب',{exact:true}).selectOption('maadi');await page.getByLabel('نقطة النزول',{exact:true}).selectOption('tagamoa');
+ await page.getByRole('button',{name:'حجز الاشتراك',exact:true}).click();
+ await page.getByRole('button',{name:'متابعة لتأمين الحجز',exact:true}).click();
+ await page.getByRole('button',{name:'تأكيد الحجز التجريبي وحجز 100 جنيه افتراضية',exact:true}).click();
+ await expect(page).toHaveURL(/screen=17/);
+ const snapshot=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('sekka.preview.bookingLedger.v31')!));
+ expect(snapshot.available).toBe(50);expect(snapshot.reserved).toBe(100);expect(snapshot.bookings).toHaveLength(1);
+ // Simulate a later edit of the source offer. The confirmed snapshot must stay fixed.
+ await page.evaluate(()=>{const offer=JSON.parse(sessionStorage.getItem('sekka.preview.selectedOffer')!);offer.amount=99999;offer.selectedStops.pickup.name='نقطة معدلة';sessionStorage.setItem('sekka.preview.selectedOffer',JSON.stringify(offer));});
+ await page.reload();await expect(page.locator('.b-stops')).toContainText('ميدان الجزائر');await expect(page.locator('.b-stops')).not.toContainText('نقطة معدلة');
+ await page.getByRole('button',{name:'شوف تفاصيل اشتراكي',exact:true}).click();
+ await page.getByRole('button',{name:'تأكيد الدفع',exact:true}).click();
+ await page.getByLabel('دفعت للكابتن قيمة الاشتراك كاملة.',{exact:true}).check();await page.getByRole('button',{name:'معاينة متابعة الاستلام',exact:true}).click();
+ expect(await page.evaluate(()=>JSON.parse(sessionStorage.getItem('sekka.preview.bookingLedger.v31')!).reserved)).toBe(100);
+ await page.getByRole('button',{name:'محاكاة تأكيد الكابتن — لا دفع حقيقي',exact:true}).click();await page.reload();
+ const released=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('sekka.preview.bookingLedger.v31')!));expect(released.available).toBe(150);expect(released.reserved).toBe(0);expect(released.bookings[0].quote).toEqual(snapshot.bookings[0].quote);
+ await expect(page.getByRole('button',{name:'محاكاة تأكيد الكابتن — لا دفع حقيقي',exact:true})).toHaveCount(0);
+});
