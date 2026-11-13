@@ -1,3 +1,5 @@
+import { usePreferences } from "./preferences";
+import { translate } from "./translations";
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import "./onboarding.css";
@@ -164,6 +166,8 @@ export default function Onboarding({
   onRole: (r: string) => void;
   children?: ReactNode;
 }) {
+  const {language} = usePreferences();
+  const t = (text:string) => translate(text,language);
   const id = screen === 37 ? 2 : screen;
   const [phone, setPhone] = useState(""),
     [fullName, setFullName] = useState(""),
@@ -192,31 +196,31 @@ export default function Onboarding({
   }
   const back = () => go(id === 6 ? 5 : id === 7 ? 6 : Math.max(1, id - 1));
   const heading = {
-    1: "معاك في السِكّة",
-    2: "معاك في السِكّة",
-    3: "اختر نوع حسابك",
-    4: "أدخل رقم موبايلك",
-    5: "أدخل كود التحقق",
-    6: "استكمال الملف الشخصي",
-    7: "الأذونات",
+    1: t("معاك في السِكّة"),
+    2: t("معاك في السِكّة"),
+    3: t("اختر نوع حسابك"),
+    4: t("أدخل رقم موبايلك"),
+    5: t("أدخل كود التحقق"),
+    6: t("استكمال الملف الشخصي"),
+    7: t("الأذونات"),
   }[id];
   return (
     <div className={`phase-one-stage ${theme}`}>
-      <nav className="phase-review-bar" aria-label="معاينة المرحلة الأولى">
+      <nav className="phase-review-bar" aria-label={t("معاينة المرحلة الأولى")}>
         <div className="review-screen-nav">
           <button
             onClick={() => go(Math.max(1, id - 1))}
             disabled={id === 1}
-            aria-label="الشاشة السابقة"
+            aria-label={t("الشاشة السابقة")}
           >
             ‹
           </button>
           <label>
-            <span className="sr-only">الشاشة</span>
+            <span className="sr-only">{t("الشاشة")}</span>
             <select value={id} onChange={(e) => go(Number(e.target.value))}>
               {names.map((name, i) => (
                 <option value={i + 1} key={name}>
-                  {String(i + 1).padStart(2, "0")} · {name}
+                  {String(i + 1).padStart(2, "0")} · {t(name)}
                 </option>
               ))}
             </select>
@@ -224,7 +228,7 @@ export default function Onboarding({
           <button
             onClick={() => go(Math.min(7, id + 1))}
             disabled={id === 7}
-            aria-label="الشاشة التالية"
+            aria-label={t("الشاشة التالية")}
           >
             ›
           </button>
@@ -234,26 +238,24 @@ export default function Onboarding({
             aria-pressed={theme === "dark"}
             onClick={() => onTheme("dark")}
           >
-            دارك
-          </button>
+            {t("دارك")}</button>
           <button
             aria-pressed={theme === "light"}
             onClick={() => onTheme("light")}
           >
-            لايت
-          </button>
+            {t("لايت")}</button>
         </div>
       </nav>
       <p className="phase-preview-note" id="phase-preview-note">
         {id === 6
-          ? "معاينة استكمال الملف الشخصي — لم يتم حفظ حساب أو التحقق من رقم."
+          ? t("معاينة استكمال الملف الشخصي — لم يتم حفظ حساب أو التحقق من رقم.")
           : id >= 4
-            ? "معاينة التصميم — إرسال الرسائل وإنشاء الحسابات غير مفعّلين."
-            : "معاينة المرحلة الأولى · 7 شاشات"}
+            ? t("معاينة التصميم — إرسال الرسائل وإنشاء الحسابات غير مفعّلين.")
+            : t("معاينة المرحلة الأولى · 7 شاشات")}
       </p>
       <main
         className={`phase-canvas phase-screen-${id}`}
-        aria-label={`المرحلة الأولى — ${names[id - 1]}`}
+        aria-label={`${t("المرحلة الأولى")} — ${t(names[id - 1])}`}
       >
         {id !== 1 && (
           <>
@@ -262,7 +264,7 @@ export default function Onboarding({
               <Wordmark />
             </div>
             {id !== 2 && (
-              <button className="phase-back" onClick={back} aria-label="رجوع">
+              <button className="phase-back" onClick={back} aria-label={t("رجوع")}>
                 <svg viewBox="0 0 20 30" aria-hidden="true">
                   <path
                     d="m16 3-12 12 12 12"
@@ -282,7 +284,7 @@ export default function Onboarding({
             <button
               className="phase-splash-brand"
               onClick={() => go(2)}
-              aria-label="ابدأ مع سِكّة"
+              aria-label={t("ابدأ مع سِكّة")}
             >
               <Wordmark />
               <h1>{heading}</h1>
@@ -305,22 +307,20 @@ export default function Onboarding({
               </span>
             </h1>
             <p className="phase-subtitle">
-              أسهل طريقة للاشتراك في خطك اليومي
-              <br />
-              والاشتراك في خطوط موثوقة
-            </p>
+              {t("أسهل طريقة للاشتراك في خطك اليومي")}<br />
+              {t("والاشتراك في خطوط موثوقة")}</p>
             <ReferenceArt
               source={2}
               theme={theme}
               crop={[54, 310, 662, 326]}
               className="phase-welcome-art"
-              label="راكب مستعد لمشواره اليومي بجوار خط سِكّة"
+              label={t("راكب مستعد لمشواره اليومي بجوار خط سِكّة")}
             />
             <div className="phase-benefits">
               {[
-                ["bus", "خطوط متنوعة"],
-                ["calendar", "اشتراكات مرنة"],
-                ["shield", "موثوق وآمن"],
+                ["bus", t("خطوط متنوعة")],
+                ["calendar", t("اشتراكات مرنة")],
+                ["shield", t("موثوق وآمن")],
               ].map(([icon, text]) => (
                 <div key={icon}>
                   <span>
@@ -331,15 +331,14 @@ export default function Onboarding({
               ))}
             </div>
             <button className="phase-primary phase-start" onClick={() => go(3)}>
-              ابدأ الآن <Arrow />
+              {t("ابدأ الآن")}<Arrow />
             </button>
             <p className="phase-login">
-              لديك حساب بالفعل؟{" "}
-              <button disabled title={held}>
-                سجل الدخول
-              </button>
+              {t("لديك حساب بالفعل؟")}{" "}
+              <button disabled title={t(held)}>
+                {t("سجل الدخول")}</button>
             </p>
-            <div className="phase-dots" aria-label="صفحة الترحيب الأولى">
+            <div className="phase-dots" aria-label={t("صفحة الترحيب الأولى")}>
               <i />
               <i />
               <i />
@@ -348,37 +347,33 @@ export default function Onboarding({
         ) : id === 3 ? (
           <>
             <h1 className="phase-title">{heading}</h1>
-            <p className="phase-subtitle">قولنا هتستخدم سكة كراكب ولا كابتن؟</p>
+            <p className="phase-subtitle">{t("قولنا هتستخدم سكة كراكب ولا كابتن؟")}</p>
             <div
               className="phase-roles"
               role="radiogroup"
-              aria-label="نوع الحساب"
+              aria-label={t("نوع الحساب")}
             >
               {[
                 {
                   value: "rider",
-                  title: "راكب",
+                  title: t("راكب"),
                   description: (
                     <>
-                      احجز مكانك في خطوط
-                      <br />
-                      مواصلات ثابتة واشترك
-                      <br />
-                      أسبوعي أو شهري.
-                    </>
+                      {t("احجز مكانك في خطوط")}<br />
+                      {t("مواصلات ثابتة واشترك")}<br />
+                      {t("أسبوعي أو شهري.")}</>
                   ),
                   crop: [445, 337, 277, 217] as Crop,
                 },
                 {
                   value: "captain",
-                  title: "كابتن",
+                  title: t("كابتن"),
                   description: (
                     <>
                       <span className="phase-copy-line">
-                        سجل ككابتن، أضف عربيتك
-                      </span>
-                      <span className="phase-copy-line">وخطوطك، واستقبل</span>
-                      <span className="phase-copy-line">مشتركين جدد.</span>
+                        {t("سجل ككابتن، أضف عربيتك")}</span>
+                      <span className="phase-copy-line">{t("وخطوطك، واستقبل")}</span>
+                      <span className="phase-copy-line">{t("مشتركين جدد.")}</span>
                     </>
                   ),
                   crop: [425, 593, 299, 220] as Crop,
@@ -409,27 +404,26 @@ export default function Onboarding({
               className="phase-primary phase-role-next"
               onClick={() => go(4)}
             >
-              متابعة <Arrow />
+              {t("متابعة")}<Arrow />
             </button>
           </>
         ) : id === 4 ? (
           <>
             <h1 className="phase-title">{heading}</h1>
             <p className="phase-subtitle">
-              هنبعتلك كود التحقق في رسالة قصيرة (SMS)
-            </p>
+              {t("هنبعتلك كود التحقق في رسالة قصيرة (SMS)")}</p>
             <ReferenceArt
               source={4}
               crop={[202, 331, 362, 243]}
               theme={theme}
               className="phase-phone-art"
-              label="رسم موبايل ورسالة كود تحقق"
+              label={t("رسم موبايل ورسالة كود تحقق")}
             />
             <label className="phase-phone-input">
-              <span className="sr-only">رقم الموبايل</span>
+              <span className="sr-only">{t("رقم الموبايل")}</span>
               <span
                 className="phase-country"
-                aria-label="مصر، كود الدولة زائد 20"
+                aria-label={t("مصر، كود الدولة زائد 20")}
               >
                 <b>+20</b>
                 <span aria-hidden="true">🇪🇬</span>
@@ -439,7 +433,7 @@ export default function Onboarding({
               </span>
               <input
                 type="tel"
-                aria-label="رقم الموبايل"
+                aria-label={t("رقم الموبايل")}
                 inputMode="tel"
                 autoComplete="tel-national"
                 placeholder="010 1234 5678"
@@ -448,16 +442,15 @@ export default function Onboarding({
                 aria-describedby="phase-preview-note"
               />
             </label>
-            <button className="phase-primary phase-send" disabled title={held}>
-              إرسال كود التحقق <Arrow />
+            <button className="phase-primary phase-send" disabled title={t(held)}>
+              {t("إرسال كود التحقق")}<Arrow />
             </button>
           </>
         ) : id === 5 ? (
           <>
             <h1 className="phase-title">{heading}</h1>
             <p className="phase-subtitle">
-              تم إرسال كود من 4 أرقام إلى رقمك
-              <br />
+              {t("تم إرسال كود من 4 أرقام إلى رقمك")}<br />
               <strong dir="ltr">{phone || "010 1234 5678"}</strong>
             </p>
             <ReferenceArt
@@ -465,25 +458,23 @@ export default function Onboarding({
               crop={[207, 335, 354, 220]}
               theme={theme}
               className="phase-otp-art"
-              label="رسم موبايل ورسالة كود تحقق"
+              label={t("رسم موبايل ورسالة كود تحقق")}
             />
             <div
               className="phase-otp-inputs"
               dir="ltr"
               role="group"
-              aria-label="كود التحقق — معاينة"
+              aria-label={t("كود التحقق — معاينة")}
             >
               <div className="sr-only" id="otp-hint">
-                معاينة أربع خانات فقط؛ طول الكود الفعلي يتحدد عند ربط مزوّد
-                التحقق.
-              </div>
+                {t("معاينة أربع خانات فقط؛ طول الكود الفعلي يتحدد عند ربط مزوّد التحقق.")}</div>
               {digits.map((value, i) => (
                 <input
                   key={i}
                   ref={(node) => {
                     otpRefs.current[i] = node;
                   }}
-                  aria-label={`الرقم ${i + 1} من كود التحقق`}
+                  aria-label={language === "en" ? `Verification code digit ${i + 1}` : `الرقم ${i + 1} من كود التحقق`}
                   inputMode="numeric"
                   autoComplete={i === 0 ? "one-time-code" : "off"}
                   placeholder="_"
@@ -502,29 +493,26 @@ export default function Onboarding({
                 <SvgIcon name="clock" />
                 00:59
               </span>
-              <button disabled title={held}>
-                أعد إرسال الكود
-              </button>
+              <button disabled title={t(held)}>
+                {t("أعد إرسال الكود")}</button>
             </div>
             <button
               className="phase-primary phase-verify"
               disabled
-              title={held}
+              title={t(held)}
             >
-              تحقق <Arrow />
+              {t("تحقق")}<Arrow />
             </button>
           </>
         ) : id === 6 ? (
           <div className="phase-flow-content">
             <h1 className="phase-title">{heading}</h1>
             <p className="phase-subtitle">
-              كمّل اسمك عشان نجهّز حسابك. بيانات الكابتن ومستنداته ليها خطوات
-              منفصلة.
-            </p>
+              {t("كمّل اسمك عشان نجهّز حسابك. بيانات الكابتن ومستنداته ليها خطوات منفصلة.")}</p>
             <label className="phase-register-field">
-              <span>الاسم الكامل</span>
+              <span>{t("الاسم الكامل")}</span>
               <input
-                aria-label="الاسم الكامل"
+                aria-label={t("الاسم الكامل")}
                 value={fullName}
                 minLength={2}
                 maxLength={100}
@@ -533,44 +521,40 @@ export default function Onboarding({
               />
             </label>
             <label className="phase-register-field">
-              <span>الصورة الشخصية (اختياري — معاينة محلية)</span>
+              <span>{t("الصورة الشخصية (اختياري — معاينة محلية)")}</span>
               <input
                 type="file"
                 accept="image/png,image/jpeg"
-                aria-label="الصورة الشخصية الاختيارية"
+                aria-label={t("الصورة الشخصية الاختيارية")}
               />
             </label>
             <p className="phase-subtitle">
-              البيانات هنا للمعاينة؛ حفظ الحساب محتاج تحقق الموبايل الفعلي.
-            </p>
+              {t("البيانات هنا للمعاينة؛ حفظ الحساب محتاج تحقق الموبايل الفعلي.")}</p>
             <button
               className="phase-primary"
               disabled={fullName.trim().length < 2}
               onClick={() => go(7)}
             >
-              متابعة للمعاينة <Arrow />
+              {t("متابعة للمعاينة")}<Arrow />
             </button>
           </div>
         ) : (
           <div className="phase-flow-content">
             <h1 className="phase-title">{heading}</h1>
             <p className="phase-subtitle">
-              الأذونات باختيارك، وتقدر تكمل من غيرها.
-            </p>
+              {t("الأذونات باختيارك، وتقدر تكمل من غيرها.")}</p>
             <section className="phase-register-fields">
-              <h2>الإشعارات</h2>
+              <h2>{t("الإشعارات")}</h2>
               <p>
-                عشان توصلك تحديثات الحجز والدفع. تفعيلها هيكون متاح بعد تجهيز
-                خدمة الإشعارات.
-              </p>
-              <h2>الموقع</h2>
-              <p>مش مطلوب للتسجيل. هنطلبه وقت استخدام ميزة محتاجاه بس.</p>
+                {t("عشان توصلك تحديثات الحجز والدفع. تفعيلها هيكون متاح بعد تجهيز خدمة الإشعارات.")}</p>
+              <h2>{t("الموقع")}</h2>
+              <p>{t("مش مطلوب للتسجيل. هنطلبه وقت استخدام ميزة محتاجاه بس.")}</p>
             </section>
             <button
               className="phase-primary"
               onClick={() => go(role === "captain" ? 37 : 8)}
             >
-              تخطي ومتابعة <Arrow />
+              {t("تخطي ومتابعة")}<Arrow />
             </button>
           </div>
         )}

@@ -1,3 +1,5 @@
+import { usePreferences } from "./preferences";
+import { translate } from "./translations";
 import { PreferenceSettings } from "./preferences";
 import { publicScreen } from "./screenMap";
 import { useEffect, useState, type ReactNode } from "react";
@@ -58,7 +60,7 @@ const faq = [
     "أقدر أغيّر مدة الاشتراك أو اتجاهه؟",
     "الكابتن بيحدد مدة العرض واتجاهه وسعره. اختار العرض المناسب ليك قبل الحجز.",
   ],
-  ["لو ملقيتش خط مناسب؟", "استخدم «اطلب خط» وسجّل احتياجك."],
+  ["لو ملقيتش خط مناسب؟", "بعد البحث، لو مفيش عروض مطابقة، اختار «اطلب رحلة» وراجع بيانات بحثك ثم أكد الطلب."],
   [
     "الإلغاء والتجديد متاحين؟",
     "لسه محتاجين اعتماد السياسات قبل تفعيل الإلغاء والتجديد. مفيش خصم تلقائي من التأمين بسبب غياب أو تأكيد متأخر.",
@@ -84,6 +86,8 @@ export default function AccountFlow(p: {
   onRefresh: () => void;
   onLogout: () => Promise<void>;
 }) {
+  const {language} = usePreferences();
+  const tr = (text:string) => translate(text,language);
   const demo = new URLSearchParams(location.search).get("preview") === "phase4";
   const [empty, setEmpty] = useState(false),
     [query, setQuery] = useState(""),
@@ -144,13 +148,13 @@ export default function AccountFlow(p: {
           },
         ],
       }));
-      setNote("الرسالة اتضافت للمعاينة بس، وماتبعتتش لأي حد.");
+      setNote(tr("الرسالة اتضافت للمعاينة بس، وماتبعتتش لأي حد."));
       setDraft("");
     } else {
       try {
         await p.onSend(value);
         setDraft("");
-        setNote("رسالتك اتبعتت.");
+        setNote(tr("رسالتك اتبعتت."));
       } catch {
         /* parent displays error */
       }
@@ -160,28 +164,28 @@ export default function AccountFlow(p: {
     <div
       className={`phase-one-stage discovery-stage booking-stage account-stage ${p.theme}`}
     >
-      <nav className="phase-review-bar" aria-label="معاينة المرحلة الرابعة">
+      <nav className="phase-review-bar" aria-label={tr("معاينة المرحلة الرابعة")}>
         <div className="review-screen-nav">
           <button
-            aria-label="الشاشة السابقة"
+            aria-label={tr("الشاشة السابقة")}
             disabled={p.screen === 31}
             onClick={() => nav(p.screen - 1)}
           >
             ‹
           </button>
           <select
-            aria-label="شاشة المرحلة الرابعة"
+            aria-label={tr("شاشة المرحلة الرابعة")}
             value={p.screen}
             onChange={(e) => nav(+e.target.value)}
           >
             {accountScreens.map((n, i) => (
               <option key={n} value={n}>
-                {publicScreen(n)} · {titles[i]}
+                {publicScreen(n)} · {tr(titles[i])}
               </option>
             ))}
           </select>
           <button
-            aria-label="الشاشة التالية"
+            aria-label={tr("الشاشة التالية")}
             disabled={p.screen === 36}
             onClick={() => nav(p.screen + 1)}
           >
@@ -195,15 +199,15 @@ export default function AccountFlow(p: {
               aria-pressed={p.theme === t}
               onClick={() => p.onTheme(t)}
             >
-              {t === "dark" ? "دارك" : "لايت"}
+              {t === "dark" ? tr("دارك") : tr("لايت")}
             </button>
           ))}
         </div>
       </nav>
       <p className="w-preview">
         {demo
-          ? "معاينة المرحلة الرابعة · بيانات توضيحية فقط"
-          : "حسابك والتواصل"}
+          ? tr("معاينة المرحلة الرابعة · بيانات توضيحية فقط")
+          : tr("حسابك والتواصل")}
       </p>
       {demo && (
         <label className="a-preview-empty">
@@ -212,14 +216,13 @@ export default function AccountFlow(p: {
             checked={empty}
             onChange={(e) => setEmpty(e.target.checked)}
           />
-          معاينة القوائم الفارغة
-        </label>
+          {tr("معاينة القوائم الفارغة")}</label>
       )}
       <main className="phase-canvas d-canvas b-canvas a-canvas">
         <header className="d-header">
           <button
             className="phase-back"
-            aria-label="رجوع"
+            aria-label={tr("رجوع")}
             onClick={() => nav(p.screen === 32 ? 31 : p.screen === 35 ? 34 : 8)}
           >
             <DiscoveryIcon name="back" />
@@ -227,21 +230,20 @@ export default function AccountFlow(p: {
           <Wordmark />
         </header>
         <div className="b-stage-label">
-          <span>حسابك والتواصل</span>
+          <span>{tr("حسابك والتواصل")}</span>
           <span dir="ltr">{p.screen - 30} / 6</span>
         </div>
-        <h1 className="b-title">{titles[p.screen - 31]}</h1>
+        <h1 className="b-title">{tr(titles[p.screen - 31])}</h1>
         {p.busy && !demo && (
           <Box>
-            <p role="status">جاري التحميل…</p>
+            <p role="status">{tr("جاري التحميل…")}</p>
           </Box>
         )}
         {p.error && (
           <Box>
             <p role="alert">{p.error}</p>
             <button className="w-link" onClick={p.onRefresh}>
-              حاول تاني
-            </button>
+              {tr("حاول تاني")}</button>
           </Box>
         )}
         {note && (
@@ -251,8 +253,8 @@ export default function AccountFlow(p: {
         )}
         {!(demo || p.signedIn) && p.screen !== 36 ? (
           <Box>
-            <p>سجّل برقم موبايلك عشان نكمل.</p>
-            {action("تسجيل الدخول", 4)}
+            <p>{tr("سجّل برقم موبايلك عشان نكمل.")}</p>
+            {action(tr("تسجيل الدخول"), 4)}
           </Box>
         ) : (
           <>
@@ -260,17 +262,16 @@ export default function AccountFlow(p: {
               <>
                 <Box>
                   <label className="w-field">
-                    دوّر في المحادثات
-                    <input
+                    {tr("دوّر في المحادثات")}<input
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
-                      placeholder="اسم الكابتن أو الخط"
+                      placeholder={tr("اسم الكابتن أو الخط")}
                     />
                   </label>
                 </Box>
                 {rows
                   .filter((r) =>
-                    `${r.name || "محادثة الخط"} ${r.route || ""}`.includes(
+                    `${r.name || tr("محادثة الخط")} ${r.route || ""}`.includes(
                       query.trim(),
                     ),
                   )
@@ -288,11 +289,11 @@ export default function AccountFlow(p: {
                           {demo ? "ك" : "↔"}
                         </span>
                         <span>
-                          <strong>{String(r.name || "محادثة الخط")}</strong>
+                          <strong>{String(r.name || tr("محادثة الخط"))}</strong>
                           {Boolean(r.route) && <small>{String(r.route)}</small>}
                           <small>
                             {String(
-                              r.body || "افتح المحادثة عشان تشوف الرسائل.",
+                              r.body || tr("افتح المحادثة عشان تشوف الرسائل."),
                             )}
                           </small>
                         </span>
@@ -301,16 +302,16 @@ export default function AccountFlow(p: {
                     </Box>
                   ))}
                 {!rows.filter((r) =>
-                  `${r.name || "محادثة الخط"} ${r.route || ""}`.includes(
+                  `${r.name || tr("محادثة الخط")} ${r.route || ""}`.includes(
                     query.trim(),
                   ),
                 ).length && (
                   <Box>
                     <h2>
-                      {query ? "مفيش محادثة بالبحث ده." : "لسه مفيش محادثات."}
+                      {query ? tr("مفيش محادثة بالبحث ده.") : tr("لسه مفيش محادثات.")}
                     </h2>
-                    <p>اختار خط عشان تفتح محادثة مع الكابتن.</p>
-                    {action("دوّر على خط", 8)}
+                    <p>{tr("اختار خط عشان تفتح محادثة مع الكابتن.")}</p>
+                    {action(tr("دوّر على خط"), 8)}
                   </Box>
                 )}
               </>
@@ -322,18 +323,18 @@ export default function AccountFlow(p: {
                     <div className="a-chat-heading">
                       <span className="a-avatar">ك</span>
                       <div>
-                        <h2>{demo ? thread.name : "محادثة الخط"}</h2>
+                        <h2>{demo ? thread.name : tr("محادثة الخط")}</h2>
                         <p>
                           {demo
                             ? thread.route
-                            : "الرسائل بينك وبين الطرف التاني في المحادثة."}
+                            : tr("الرسائل بينك وبين الطرف التاني في المحادثة.")}
                         </p>
                       </div>
                     </div>
                   </Box>
                   <section
                     className="a-chat"
-                    aria-label="رسائل المحادثة"
+                    aria-label={tr("رسائل المحادثة")}
                     aria-live="polite"
                   >
                     {messages.length ? (
@@ -345,7 +346,7 @@ export default function AccountFlow(p: {
                           <p>{String(m.body)}</p>
                           <small>
                             {new Date(String(m.created_at)).toLocaleTimeString(
-                              "ar-EG-u-nu-latn",
+                              language === "en" ? "en-GB" : "ar-EG-u-nu-latn",
                               {
                                 hour: "2-digit",
                                 minute: "2-digit",
@@ -356,7 +357,7 @@ export default function AccountFlow(p: {
                         </article>
                       ))
                     ) : (
-                      <p>ابدأ المحادثة برسالة.</p>
+                      <p>{tr("ابدأ المحادثة برسالة.")}</p>
                     )}
                   </section>
                   <form
@@ -367,12 +368,11 @@ export default function AccountFlow(p: {
                     }}
                   >
                     <label className="w-field">
-                      رسالتك
-                      <textarea
+                      {tr("رسالتك")}<textarea
                         maxLength={2000}
                         value={draft}
                         onChange={(e) => setDraft(e.target.value)}
-                        placeholder="اكتب رسالتك هنا"
+                        placeholder={tr("اكتب رسالتك هنا")}
                       />
                     </label>
                     <button
@@ -380,17 +380,17 @@ export default function AccountFlow(p: {
                       disabled={p.busy || !draft.trim()}
                     >
                       {p.busy
-                        ? "جاري الإرسال…"
+                        ? tr("جاري الإرسال…")
                         : demo
-                          ? "إضافة للمعاينة"
-                          : "ابعت الرسالة"}
+                          ? tr("إضافة للمعاينة")
+                          : tr("ابعت الرسالة")}
                     </button>
                   </form>
                 </>
               ) : (
                 <Box>
-                  <p>اختار محادثة الأول.</p>
-                  {action("المحادثات", 31)}
+                  <p>{tr("اختار محادثة الأول.")}</p>
+                  {action(tr("المحادثات"), 31)}
                 </Box>
               ))}
             {p.screen === 33 && (
@@ -400,11 +400,9 @@ export default function AccountFlow(p: {
                     aria-pressed={!unread}
                     onClick={() => setUnread(false)}
                   >
-                    الكل
-                  </button>
+                    {tr("الكل")}</button>
                   <button aria-pressed={unread} onClick={() => setUnread(true)}>
-                    غير المقروءة
-                  </button>
+                    {tr("غير المقروءة")}</button>
                 </div>
                 {notifications
                   .filter(
@@ -418,15 +416,15 @@ export default function AccountFlow(p: {
                           className={`a-dot ${n.read_at || read.includes(String(n.id)) ? "seen" : ""}`}
                           aria-label={
                             n.read_at || read.includes(String(n.id))
-                              ? "مقروء"
-                              : "غير مقروء"
+                              ? tr("مقروء")
+                              : tr("غير مقروء")
                           }
                         />
-                        <p>{String(n.body)}</p>
+                        <p>{demo ? tr(String(n.body)) : String(n.body)}</p>
                       </div>
                       <small>
                         {new Date(String(n.created_at)).toLocaleDateString(
-                          "ar-EG-u-nu-latn",
+                          language === "en" ? "en-GB" : "ar-EG-u-nu-latn",
                           { timeZone: "Africa/Cairo" },
                         )}
                       </small>
@@ -435,8 +433,7 @@ export default function AccountFlow(p: {
                           className="w-link"
                           onClick={() => setRead((v) => [...v, String(n.id)])}
                         >
-                          اعتباره مقروءًا في المعاينة
-                        </button>
+                          {tr("اعتباره مقروءًا في المعاينة")}</button>
                       )}
                     </Box>
                   ))}
@@ -445,8 +442,8 @@ export default function AccountFlow(p: {
                     !unread || (!n.read_at && !read.includes(String(n.id))),
                 ).length && (
                   <Box>
-                    <h2>مفيش إشعارات جديدة.</h2>
-                    <p>تحديثات حسابك واشتراكاتك هتظهر هنا.</p>
+                    <h2>{tr("مفيش إشعارات جديدة.")}</h2>
+                    <p>{tr("تحديثات حسابك واشتراكاتك هتظهر هنا.")}</p>
                   </Box>
                 )}
               </>
@@ -460,18 +457,18 @@ export default function AccountFlow(p: {
                     </span>
                     <h2>{displayName}</h2>
                     <p>
-                      {p.profile?.role === "captain" ? "كابتن" : "راكب"}
-                      {demo ? " · حساب توضيحي" : ""}
+                      {p.profile?.role === "captain" ? tr("كابتن") : tr("راكب")}
+                      {demo ? tr("· حساب توضيحي") : ""}
                     </p>
                   </div>
                 </Box>
                 <Box>
-                  {action("تعديل بياناتي", 35)}
-                  {action("اشتراكاتي", 29)}
-                  {action("محفظتي", 24)}
-                  {action("المحادثات", 31)}
-                  {action("الإشعارات", 33)}
-                  {action("المساعدة", 36)}
+                  {action(tr("تعديل بياناتي"), 35)}
+                  {action(tr("اشتراكاتي"), 29)}
+                  {action(tr("محفظتي"), 24)}
+                  {action(tr("المحادثات"), 31)}
+                  {action(tr("الإشعارات"), 33)}
+                  {action(tr("المساعدة"), 36)}
                 </Box>
                 <PreferenceSettings />
                 <Box>
@@ -481,13 +478,12 @@ export default function AccountFlow(p: {
                     onClick={() => {
                       if (demo)
                         setNote(
-                          "دي معاينة. مفيش جلسة حساب حقيقية لتسجيل خروجها.",
+                          tr("دي معاينة. مفيش جلسة حساب حقيقية لتسجيل خروجها."),
                         );
                       else void p.onLogout().catch(() => {});
                     }}
                   >
-                    تسجيل الخروج
-                  </button>
+                    {tr("تسجيل الخروج")}</button>
                 </Box>
               </>
             )}
@@ -497,14 +493,13 @@ export default function AccountFlow(p: {
                   e.preventDefault();
                   if (demo && name.trim().length >= 2) {
                     setSavedName(name.trim());
-                    setNote("الاسم اتغيّر في المعاينة بس.");
+                    setNote(tr("الاسم اتغيّر في المعاينة بس."));
                   }
                 }}
               >
                 <Box>
                   <label className="w-field">
-                    الاسم الكامل
-                    <input
+                    {tr("الاسم الكامل")}<input
                       value={demo ? name : p.profile?.full_name || ""}
                       readOnly={!demo}
                       onChange={(e) => setName(e.target.value)}
@@ -513,33 +508,32 @@ export default function AccountFlow(p: {
                       maxLength={100}
                     />
                   </label>
-                  <p>تغيير رقم الموبايل محتاج تحقق جديد، ومش متاح دلوقتي.</p>
+                  <p>{tr("تغيير رقم الموبايل محتاج تحقق جديد، ومش متاح دلوقتي.")}</p>
                 </Box>
                 {!demo && (
                   <Box>
                     <p>
-                      حفظ تعديلات الحساب متوقف لحد اعتماد مسار الحساب وشروطه.
-                    </p>
+                      {tr("حفظ تعديلات الحساب متوقف لحد اعتماد مسار الحساب وشروطه.")}</p>
                   </Box>
                 )}
                 <button
                   className="d-primary b-primary"
                   disabled={!demo || name.trim().length < 2}
                 >
-                  {demo ? "حفظ في المعاينة" : "حفظ البيانات — غير مفعّل"}
+                  {demo ? tr("حفظ في المعاينة") : tr("حفظ البيانات — غير مفعّل")}
                 </button>
-                {action("الرجوع لحسابي", 34)}
+                {action(tr("الرجوع لحسابي"), 34)}
               </form>
             )}
             {p.screen === 36 && (
               <>
                 <Box>
-                  <h2>نساعدك إزاي؟</h2>
-                  <p>إجابات سريعة عن الحجز والاشتراك والتأمين.</p>
+                  <h2>{tr("نساعدك إزاي؟")}</h2>
+                  <p>{tr("إجابات سريعة عن الحجز والاشتراك والتأمين.")}</p>
                   {faq.map(([q, a]) => (
-                    <details className="a-faq" key={q}>
-                      <summary>{q}</summary>
-                      <p>{a}</p>
+                    <details className="a-faq" key={tr(q)}>
+                      <summary>{tr(q)}</summary>
+                      <p>{tr(a)}</p>
                     </details>
                   ))}
                 </Box>
@@ -549,13 +543,13 @@ export default function AccountFlow(p: {
                     if (support.trim().length < 5) return;
                     if (demo) {
                       setNote(
-                        "طلب المساعدة اتجهّز في المعاينة فقط، وماتبعتش للدعم.",
+                        tr("طلب المساعدة اتجهّز في المعاينة فقط، وماتبعتش للدعم."),
                       );
                       setSupport("");
                     } else {
                       try {
                         await p.onSupport(support.trim());
-                        setNote("رسالتك وصلت للدعم.");
+                        setNote(tr("رسالتك وصلت للدعم."));
                         setSupport("");
                       } catch {
                         /* parent error */
@@ -564,15 +558,14 @@ export default function AccountFlow(p: {
                   }}
                 >
                   <Box>
-                    <h2>لسه محتاج مساعدة؟</h2>
+                    <h2>{tr("لسه محتاج مساعدة؟")}</h2>
                     <label className="w-field">
-                      قولنا نساعدك إزاي؟
-                      <textarea
+                      {tr("قولنا نساعدك إزاي؟")}<textarea
                         minLength={5}
                         maxLength={4000}
                         value={support}
                         onChange={(e) => setSupport(e.target.value)}
-                        placeholder="اكتب تفاصيل المشكلة، من غير كلمات مرور أو أكواد تحقق."
+                        placeholder={tr("اكتب تفاصيل المشكلة، من غير كلمات مرور أو أكواد تحقق.")}
                       />
                     </label>
                     <button
@@ -584,13 +577,13 @@ export default function AccountFlow(p: {
                       }
                     >
                       {demo
-                        ? "معاينة طلب المساعدة"
+                        ? tr("معاينة طلب المساعدة")
                         : p.busy
-                          ? "جاري الإرسال…"
-                          : "ابعت للدعم"}
+                          ? tr("جاري الإرسال…")
+                          : tr("ابعت للدعم")}
                     </button>
                     {!demo && !p.signedIn && (
-                      <p>سجّل دخولك عشان تبعت طلب للدعم.</p>
+                      <p>{tr("سجّل دخولك عشان تبعت طلب للدعم.")}</p>
                     )}
                   </Box>
                 </form>
@@ -598,7 +591,7 @@ export default function AccountFlow(p: {
             )}
           </>
         )}
-        <p className="w-footnote">معاك في السِكّة</p>
+        <p className="w-footnote">{tr("معاك في السِكّة")}</p>
       </main>
     </div>
   );

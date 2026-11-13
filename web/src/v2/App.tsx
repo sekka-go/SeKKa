@@ -179,7 +179,7 @@ export default function SubscriptionApp() {
     const n = Number(new URLSearchParams(location.search).get("screen") ?? 1);
     return Number.isInteger(n) && n >= 1 && n <= 73 ? internalScreen(n) : 8;
   };
-  const { theme, setThemePreference: changeTheme } = usePreferences();
+  const { theme, language, setThemePreference: changeTheme } = usePreferences();
   const [screen, setScreen] = useState(getScreen),
     [profile, setProfile] = useState<Profile | null>(null),
     [signedIn, setSignedIn] = useState(false),
@@ -297,8 +297,8 @@ export default function SubscriptionApp() {
     return () => removeEventListener("popstate", h);
   }, []);
   useEffect(() => {
-    document.title = `${screenTitle(screen)} | سِكّة`;
-  }, [screen]);
+    document.title = `${screenTitle(screen, language)} | سِكّة`;
+  }, [screen, language]);
   async function refreshProfile() {
     if (
       !client ||
@@ -1609,7 +1609,7 @@ export default function SubscriptionApp() {
                 key={id}
                 onClick={() => go(Number(id))}
               >
-                {screenTitle(Number(id))}
+                {screenTitle(Number(id), language)}
               </button>
             ))}
           </div>
@@ -1687,7 +1687,7 @@ export default function SubscriptionApp() {
       <div className={`phase-one-stage discovery-stage ${theme}`}>
         <main className="phase-canvas d-canvas">
           <Wordmark />
-          <h1>{screenTitle(screen)}</h1>
+          <h1>{screenTitle(screen, language)}</h1>
           <p>
             الشاشة دي ضمن الخريطة المعتمدة، ولسه تنفيذها الكامل في المرحلة
             الخاصة بيها.
@@ -1987,7 +1987,7 @@ export default function SubscriptionApp() {
               key={id}
               onClick={() => go(id)}
             >
-              {screenTitle(id)}
+              {screenTitle(id, language)}
             </button>
           ))}
           {Boolean(profile?.permissions?.length) && (
@@ -2007,7 +2007,7 @@ export default function SubscriptionApp() {
               <p className="eyebrow">
                 seKKa / {String(publicScreen(screen)).padStart(2, "0")}
               </p>
-              <h2>{screenTitle(screen)}</h2>
+              <h2>{screenTitle(screen, language)}</h2>
             </div>
             {screen !== 8 && (
               <button
@@ -2057,7 +2057,7 @@ export default function SubscriptionApp() {
               className={screen === id ? "active" : "text-button"}
               onClick={() => go(id)}
             >
-              {screenTitle(id)}
+              {screenTitle(id, language)}
             </button>
           ),
         )}

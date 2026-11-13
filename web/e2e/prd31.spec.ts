@@ -54,3 +54,40 @@ test('captain route preview enforces approval and capacity before local publicat
  await page.getByLabel('شاشة خطوط الكابتن').selectOption('47');await page.getByLabel('المقاعد المعروضة',{exact:true}).fill('3');await page.getByRole('button',{name:'حفظ المسودة ومتابعة',exact:true}).click();
  await page.getByRole('button',{name:'نشر في المعاينة',exact:true}).click();await expect(page).toHaveURL(/screen=49/);await expect(page.getByRole('button',{name:'إيقاف الحجوزات الجديدة في المعاينة'})).toBeEnabled();
 });
+
+test('English device translates onboarding; unsupported device language falls back to Arabic',async({browser})=>{
+ const en=await browser.newContext({locale:'en-GB',colorScheme:'light'}),page=await en.newPage();
+ const headings=['With you on your commute','With you on your commute','Choose your account type','Enter your mobile number','Enter the verification code','Complete profile','Permissions'];
+ for(let n=1;n<=7;n++){
+  await page.goto(`/?screen=${n}&inspect=1`);
+  await expect(page.locator('html')).toHaveAttribute('lang','en');
+  await expect(page.locator('main h1')).toHaveText(headings[n-1]);
+ }
+ await page.goto('/?screen=3');await expect(page.getByRole('radio',{name:/Register as a captain/})).toBeVisible();
+ await en.close();
+ const fallback=await browser.newContext({locale:'fr-FR'}),other=await fallback.newPage();await other.goto('/?screen=2');
+ await expect(other.locator('html')).toHaveAttribute('lang','ar');await expect(other.locator('html')).toHaveAttribute('dir','rtl');await fallback.close();
+});
+
+test('manual language changes keep rider draft details and translate account controls',async({page})=>{
+ await page.goto('/?screen=32&preview=phase4');await page.getByRole('button',{name:'تعديل بياناتي',exact:true}).click();
+ await page.getByLabel('الاسم الكامل',{exact:true}).fill('عبد الرحمن');
+ await page.getByRole('button',{name:'الرجوع لحسابي',exact:true}).click();
+ await page.getByLabel('language_preference',{exact:true}).selectOption('en');
+ await expect(page.getByRole('heading',{name:'My account',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Edit my details',exact:true}).click();
+ await expect(page.getByLabel('Full name',{exact:true})).toHaveValue('عبد الرحمن');
+ await page.getByRole('button',{name:'Back to my account',exact:true}).click();
+ await page.getByLabel('language_preference',{exact:true}).selectOption('ar');
+ await expect(page.getByRole('heading',{name:'حسابي',exact:true})).toBeVisible();
+});
+
+test('captain settings persist independent manual choices',async({browser})=>{
+ const context=await browser.newContext({locale:'en-US',colorScheme:'dark'}),page=await context.newPage();
+ await page.goto('/?screen=60&preview=phase7');
+ await page.getByLabel('language_preference',{exact:true}).selectOption('ar');
+ await page.getByLabel('theme_preference',{exact:true}).selectOption('light');await page.reload();
+ await expect(page.locator('html')).toHaveAttribute('lang','ar');await expect(page.locator('html')).toHaveAttribute('data-theme','light');
+ await page.getByLabel('theme_preference',{exact:true}).selectOption('system');
+ await expect(page.locator('html')).toHaveAttribute('data-theme','dark');await expect(page.locator('html')).toHaveAttribute('dir','rtl');await context.close();
+});

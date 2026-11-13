@@ -24,7 +24,7 @@ Authority: [PRD.md](PRD.md), preserved byte-for-byte from the owner attachment.
 - [x] Replace route wizard placeholders with local stop authoring, single fixed price/period/direction, capacity validation, approval simulation, publication and pause. Full UI acceptance still pending.
 - [ ] Shared preview booking snapshot persisted through reload, robust seat/security simulation and renewal.
 - [ ] Validate each of 73 screens against complete functional acceptance (see screen inventory).
-- [ ] Full updated E2E suite on CI; local browser launch blocked by host socket restrictions.
+- [x] Baseline updated E2E suite on CI (18/18 at `3f9a44a`); local browser launch blocked by host socket restrictions. Further translation tests are tracked separately.
 
 ## Archived instead of discarded
 
@@ -42,4 +42,8 @@ Old documents contain backend designs, migration/runbook details, pricing anchor
 
 ## Executed checks
 
-Typecheck, lint and production build passed locally. All 37 domain/historical PostgreSQL tests passed (17 domain + 20 historical database tests; not evidence of backend integration). Registry uniqueness E2E passed. Browser-dependent E2E could not launch locally (`socket() failed: Operation not permitted`); CI verification pending. No claim of full translation or all-screen acceptance.
+Typecheck, lint and production build passed locally. All 37 domain/historical PostgreSQL tests passed (17 domain + 20 historical database tests; not evidence of backend integration). All 18 browser E2E tests passed in GitHub Actions run 43526866452, including 73 guest entries, failed-search request reuse, stop selection, theme/language persistence and captain offer publication. Browser-dependent E2E cannot launch locally (`socket() failed: Operation not permitted`). No claim of full translation or all-screen acceptance.
+
+## Localization continuation
+
+Added an explicit English catalog and translated onboarding 1–7 plus rider account/communication 29–34, including accessibility names, support copy and dates. User-entered names and messages remain unchanged. All 73 browser page titles have English counterparts. This is partial localization: other stage content remains to translate, and full visual acceptance is still outstanding. Added browser tests for unsupported locale fallback, English onboarding, draft retention across language changes and captain settings persistence.

@@ -1,3 +1,4 @@
+import {translate} from "./translations";
 // Public screen IDs follow the approved 73-screen map. Internal view IDs remain stable.
 export const canonicalTitles = [
   "البداية",
@@ -86,5 +87,5 @@ export const publicScreen = (view: number) => {
   return i >= 0 ? i + 1 : aliases[view] || 8;
 };
 export const internalScreen = (id: number): number => viewIds[id - 1] || 8;
-export const screenTitle = (view: number) =>
-  canonicalTitles[publicScreen(view) - 1];
+export const screenTitle = (view: number, language: "ar"|"en" = "ar") =>
+  translate(canonicalTitles[publicScreen(view) - 1],language);
