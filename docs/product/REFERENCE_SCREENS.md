@@ -1,3 +1,5 @@
+> Historical reference. Superseded wherever it conflicts with `docs/PRD.md` v3.1. Not an active product specification.
+
 # Phase one — approved seven paired references
 
 Owner supplied 7 full screen images, each containing dark (left) and light (right), 12 November 2026. These supersede earlier framed mockups and the initial generic onboarding. Scope is PHASE ONE ONLY. Do not start phase two without its reference batch.

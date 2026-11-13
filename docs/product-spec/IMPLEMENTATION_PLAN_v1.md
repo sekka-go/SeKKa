@@ -1,3 +1,5 @@
+> Historical reference. Superseded wherever it conflicts with `docs/PRD.md` v3.1. Not an active product specification.
+
 # SeKKa (سِكّة) — Implementation Plan
 ## الخطة الرئيسية لتنفيذ المشروع والتحقق من جاهزيته
 

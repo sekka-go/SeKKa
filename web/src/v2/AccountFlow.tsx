@@ -1,3 +1,4 @@
+import { PreferenceSettings } from "./preferences";
 import { publicScreen } from "./screenMap";
 import { useEffect, useState, type ReactNode } from "react";
 import { Wordmark, type Appearance } from "./Onboarding";
@@ -472,20 +473,7 @@ export default function AccountFlow(p: {
                   {action("الإشعارات", 33)}
                   {action("المساعدة", 36)}
                 </Box>
-                <Box>
-                  <h2>مظهر التطبيق</h2>
-                  <div className="w-tabs">
-                    {(["dark", "light"] as const).map((t) => (
-                      <button
-                        key={t}
-                        aria-pressed={p.theme === t}
-                        onClick={() => p.onTheme(t)}
-                      >
-                        {t === "dark" ? "دارك" : "لايت"}
-                      </button>
-                    ))}
-                  </div>
-                </Box>
+                <PreferenceSettings />
                 <Box>
                   <button
                     className="w-link"

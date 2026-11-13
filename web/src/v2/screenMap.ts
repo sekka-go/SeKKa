@@ -1,4 +1,4 @@
-// Public screen IDs follow the approved 74-screen map. Internal view IDs remain stable.
+// Public screen IDs follow the approved 73-screen map. Internal view IDs remain stable.
 export const canonicalTitles = [
   "البداية",
   "الترحيب",
@@ -12,9 +12,8 @@ export const canonicalTitles = [
   "فلاتر البحث",
   "نتائج البحث",
   "تفاصيل الخط",
-  "بيانات الكابتن والعربية",
   "المفضلة",
-  "اطلب خط",
+  "مراجعة طلب رحلة",
   "ملخص الحجز والتكلفة النهائية",
   "تأمين الحجز",
   "تم تأكيد الحجز",
@@ -76,28 +75,15 @@ export const canonicalTitles = [
   "الإعدادات والصلاحيات",
 ] as const;
 export const viewIds = [
-  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22,
   24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 40, 39, 42, 43,
   76, 45, 77, 46, 47, 48, 50, 51, 78, 44, 52, 55, 53, 79, 54, 80, 81, 62, 61,
   59, 63, 64, 68, 65, 82, 66, 67, 69, 70, 83, 71, 73, 75,
 ] as const;
 export const publicScreen = (view: number) => {
   const i = (viewIds as readonly number[]).indexOf(view);
-  return i >= 0
-    ? i + 1
-    : (
-        {
-          23: 22,
-          41: 39,
-          49: 48,
-          56: 53,
-          57: 53,
-          58: 54,
-          60: 61,
-          72: 68,
-          74: 63,
-        } as Record<number, number>
-      )[view] || 8;
+  const aliases: Record<number, number> = {13:18,23:21,41:38,49:47,56:52,57:52,58:53,60:60,72:67,74:62};
+  return i >= 0 ? i + 1 : aliases[view] || 8;
 };
 export const internalScreen = (id: number): number => viewIds[id - 1] || 8;
 export const screenTitle = (view: number) =>

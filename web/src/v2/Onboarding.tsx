@@ -2,17 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import "./onboarding.css";
 export type Appearance = "dark" | "light";
-export function readAppearance(): Appearance {
-  const value = new URLSearchParams(location.search).get("theme");
-  if (value === "dark" || value === "light") return value;
-  try {
-    return localStorage.getItem("sekka.appearance") === "light"
-      ? "light"
-      : "dark";
-  } catch {
-    return "dark";
-  }
-}
 type Crop = [number, number, number, number];
 // Original paired references are preserved. CSS windows show ONLY illustration/logo regions.
 function ReferenceArt({

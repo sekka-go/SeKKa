@@ -1,3 +1,5 @@
+import { readPublishedPreviews } from "./CaptainRoutes";
+import { selectStops, matchesStops, type Stop } from "../../../packages/domain/stops";
 import { publicScreen } from "./screenMap";
 import { useState } from "react";
 import type { CSSProperties, FormEvent, ReactNode } from "react";
@@ -6,7 +8,7 @@ import type { Appearance } from "./Onboarding";
 import type { Route, Booking } from "./api";
 import "./discovery.css";
 
-export const discoveryScreens = [8, 10, 11, 12, 13, 14, 29, 15];
+export const discoveryScreens = [8, 9, 10, 11, 12, 14];
 const titles: Record<number, string> = {
   8: "الرئيسية للراكب",
   9: "البحث عن خط",
@@ -16,7 +18,7 @@ const titles: Record<number, string> = {
   13: "بيانات الكابتن والعربية",
   14: "المفضلة",
   29: "اشتراكاتي",
-  15: "اطلب خط",
+  15: "مراجعة طلب رحلة",
 };
 const areas = [
   "المعادي",
@@ -51,6 +53,9 @@ export type Line = {
   period: string;
   direction: string;
   amount: number | null;
+  stops?: Stop[];
+  returnStops?: Stop[];
+  selectedStops?: ReturnType<typeof selectStops>;
   captain?: string;
   rating?: number;
 };
@@ -98,6 +103,16 @@ export const examples: Line[] = [
     rating: 4.9,
   },
 ];
+// Published fixture stops, not inferred for real offers.
+examples.forEach(line => {
+  const stops: Stop[] = [
+    {id: 'maadi', name: 'ميدان الجزائر', area: 'المعادي', pickup: true, dropoff: false},
+    {id: 'nasr', name: 'مدينة نصر', area: 'مدينة نصر', pickup: true, dropoff: true},
+    {id: 'tagamoa', name: 'شارع التسعين', area: 'التجمع', pickup: false, dropoff: true},
+  ];
+  line.stops = line.direction === 'return' ? [...stops].reverse().map(s => ({...s, pickup: s.dropoff, dropoff: s.pickup})) : stops;
+  if (line.direction === 'round_trip') line.returnStops = [...stops].reverse().map(s => ({...s, pickup: s.dropoff, dropoff: s.pickup}));
+});
 export const favoriteExamples: Line[] = [
   { ...examples[0], id: "preview-favorite-prime", amount: 3200 },
   {
@@ -432,14 +447,17 @@ export default function Discovery(p: DiscoveryProps) {
     [selectedId, setSelectedId] = useState(examples[0].id),
     [favorites, setFavorites] = useState(favoriteExamples.map((r) => r.id));
   const [favoriteDetail, setFavoriteDetail] = useState<Line | null>(null);
+  const [searched, setSearched] = useState(false);
+  const [requestSent, setRequestSent] = useState(false);
+  const [pickup, setPickup] = useState("");
+  const [dropoff, setDropoff] = useState("");
   const [past, setPast] = useState(false),
     [notes, setNotes] = useState(""),
     [message, setMessage] = useState(""),
-    [sending, setSending] = useState(false),
     [modal, setModal] = useState("");
-  const lines = demo ? examples : p.routes.flatMap(toLines);
+  const lines = demo ? [...examples, ...readPublishedPreviews()].filter(l => l.available > 0) : p.routes.flatMap(toLines);
   const selected = demo
-    ? favoriteDetail || examples.find((l) => l.id === selectedId) || examples[0]
+    ? favoriteDetail || lines.find((l) => l.id === selectedId) || examples[0]
     : p.route
       ? toLines(p.route).find((l) => l.id === selectedId) ||
         toLines(p.route)[0] ||
@@ -465,6 +483,7 @@ export default function Discovery(p: DiscoveryProps) {
   const [appliedFilters, setAppliedFilters] = useState(false);
   const filtered = lines.filter(
     (l) =>
+      (!searched || (matchesStops(l.stops || [], origin, destination) && (!outbound || l.outbound === outbound) && (!returnTime || l.returnTime === returnTime))) &&
       (!categories.length || categories.includes(l.category)) &&
       (!appliedFilters || l.period === period) &&
       (!filterDirection || l.direction === filterDirection) &&
@@ -494,6 +513,7 @@ export default function Discovery(p: DiscoveryProps) {
     go(id);
   }
   function openLine(l: Line) {
+    setPickup(""); setDropoff("");
     setFavoriteDetail(l);
     setSelectedId(l.id);
     if (!demo) {
@@ -511,6 +531,7 @@ export default function Discovery(p: DiscoveryProps) {
       setMessage("اختار منطقتين مختلفتين.");
       return;
     }
+    setSearched(true); setRequestSent(false);
     if (demo) nav(11);
     else {
       p.onSearch({
@@ -541,36 +562,9 @@ export default function Discovery(p: DiscoveryProps) {
   }
   async function request(e: FormEvent) {
     e.preventDefault();
-    setMessage("");
-    if (!origin || !destination || origin === destination) {
-      setMessage("اختار منطقتين مختلفتين للانطلاق والوصول.");
-      return;
-    }
-    if (demo) {
-      setMessage("دي معاينة للطلب بس. لم يتم إرسال طلب فعلي.");
-      return;
-    }
-    if (!p.signedIn) {
-      setMessage("سجّل الدخول الأول عشان تبعت طلبك.");
-      return;
-    }
-    setSending(true);
-    try {
-      await p.onRequest({
-        origin,
-        destination,
-        departure: outbound,
-        returnTime,
-        period,
-        direction: "round_trip",
-        body: notes,
-      });
-      setMessage("طلبك اتسجل. هنبلغك لما يظهر خط مناسب.");
-    } catch {
-      setMessage("الطلب متبعتش. جرّب تاني لما الخدمة تبقى متاحة.");
-    } finally {
-      setSending(false);
-    }
+    if (!searched || filtered.length || requestSent) return;
+    setRequestSent(true);
+    setMessage("تم تأكيد الطلب في المعاينة فقط. لا يوجد حجز مقعد أو تأمين.");
   }
   const areaSelect = (
     value: string,
@@ -631,7 +625,7 @@ export default function Discovery(p: DiscoveryProps) {
             الشاشة{" "}
             <select
               aria-label="شاشة المرحلة الثانية"
-              value={screen === 9 ? 8 : screen}
+              value={screen}
               onChange={(e) => nav(Number(e.target.value))}
             >
               {discoveryScreens.map((id) => (
@@ -645,7 +639,7 @@ export default function Discovery(p: DiscoveryProps) {
             onClick={() =>
               nav(
                 discoveryScreens[
-                  Math.min(7, discoveryScreens.indexOf(screen) + 1)
+                  Math.min(discoveryScreens.length - 1, discoveryScreens.indexOf(screen) + 1)
                 ],
               )
             }
@@ -977,9 +971,7 @@ export default function Discovery(p: DiscoveryProps) {
               ))}
             </div>
             {!filtered.length && <Empty>لسه مفيش خط مناسب.</Empty>}
-            <button className="d-text-action" onClick={() => nav(15)}>
-              لسه ملقتش خط مناسب؟ اطلب خط
-            </button>
+            {searched && !filtered.length && <button className="d-text-action" onClick={() => nav(15)}>اطلب رحلة</button>}
           </>
         )}
         {screen === 12 &&
@@ -1016,9 +1008,16 @@ export default function Discovery(p: DiscoveryProps) {
                 </p>
                 <DiscoveryIcon name="info" />
               </div>
+              <section className="d-box"><h2>نقاط المسار</h2>
+                <ol>{(current.stops || []).map(s => <li key={s.id}>{s.name}</li>)}</ol>
+                <label>نقطة الركوب<select value={pickup} onChange={e => {setPickup(e.target.value); setDropoff("");}}><option value="">اختر نقطة الركوب</option>{(current.stops || []).filter(s => s.pickup).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
+                <label>نقطة النزول<select value={dropoff} onChange={e => setDropoff(e.target.value)}><option value="">اختر نقطة النزول</option>{(current.stops || []).filter((s,i) => s.dropoff && i > (current.stops || []).findIndex(p => p.id === pickup)).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
+                {current.direction === "round_trip" && pickup && dropoff && <p>العودة تلقائيًا: {current.stops?.find(s => s.id === dropoff)?.name} ← {current.stops?.find(s => s.id === pickup)?.name}</p>}
+                {!current.stops?.length && <p>نقاط العرض غير متاحة؛ الحجز غير متاح حتى نشر النقاط.</p>}
+              </section>
               <Action
-                onClick={() => p.onBook(current)}
-                disabled={current.amount === null}
+                onClick={() => {try {const selectedStops = selectStops(current.stops || [], pickup, dropoff, current.direction === "round_trip" ? current.returnStops || [] : undefined); p.onBook({...current, selectedStops});} catch {setMessage("اختار نقطتين صالحين؛ يجب أن يدعم مسار العودة عكس النقطتين.");}}}
+                disabled={current.amount === null || !pickup || !dropoff}
               >
                 حجز الاشتراك
               </Action>
@@ -1032,119 +1031,6 @@ export default function Discovery(p: DiscoveryProps) {
             </>
           ) : (
             <Empty>اختار خط من نتائج البحث عشان تشوف تفاصيله.</Empty>
-          ))}
-        {screen === 13 &&
-          (demo ? (
-            <>
-              <div className="d-booked-banner">
-                <DiscoveryIcon name="check" />
-                تم تأكيد حجزك
-              </div>
-              <section className="d-box">
-                <Journey line={examples[0]} />
-              </section>
-              <section className="d-box d-three-meta">
-                <Meta label="الاشتراك" icon="calendar">
-                  شهري
-                </Meta>
-                <Meta label="الفئة" icon="car">
-                  PRIME
-                </Meta>
-                <Meta label="عدد المقاعد" icon="seat">
-                  3
-                </Meta>
-              </section>
-              <section>
-                <h2>
-                  <DiscoveryIcon name="user" />
-                  بيانات الكابتن
-                </h2>
-                <div className="d-box d-captain">
-                  <Art
-                    source={13}
-                    crop={[602, 606, 99, 100]}
-                    theme={theme}
-                    className="d-avatar"
-                  />
-                  <div>
-                    <strong>أحمد مصطفى</strong>
-                    <span>
-                      <DiscoveryIcon name="star" />
-                      4.8 <small>(286 تقييمًا)</small>
-                    </span>
-                  </div>
-                  <button
-                    className="d-icon-button"
-                    aria-label="محادثة الكابتن"
-                    onClick={() =>
-                      setModal("المحادثة مش متاحة لبيانات المعاينة.")
-                    }
-                  >
-                    <DiscoveryIcon name="chat" />
-                  </button>
-                  <button
-                    className="d-icon-button"
-                    aria-label="اتصال بالكابتن"
-                    onClick={() =>
-                      setModal("بيانات الكابتن توضيحية. مفيش رقم فعلي للاتصال.")
-                    }
-                  >
-                    <DiscoveryIcon name="phone" />
-                  </button>
-                </div>
-              </section>
-              <section>
-                <h2>
-                  <DiscoveryIcon name="car" />
-                  بيانات السيارة
-                </h2>
-                <div className="d-box d-vehicle">
-                  <Art
-                    source={13}
-                    crop={[500, 784, 215, 104]}
-                    theme={theme}
-                    className="d-car-art"
-                  />
-                  <div>
-                    <strong>تويوتا كورولا</strong>
-                    <span>
-                      أبيض <i className="d-color-dot" />
-                    </span>
-                  </div>
-                  <div className="d-plate">
-                    <small>ر ل م</small>
-                    <strong>7284</strong>
-                  </div>
-                </div>
-              </section>
-              <button
-                className="d-outline"
-                onClick={() =>
-                  setModal(
-                    "موقع الالتقاء بيتحدد من بيانات الحجز الفعلية. المعاينة لا تعرض موقعًا حقيقيًا.",
-                  )
-                }
-              >
-                <DiscoveryIcon name="pin" />
-                موقع الالتقاء
-                <DiscoveryIcon name="back" />
-              </button>
-            </>
-          ) : p.contact ? (
-            <section className="d-box">
-              <h2>بيانات الكابتن والعربية</h2>
-              <p>{String(p.contact.captain_name || "")}</p>
-              <p>{String(p.contact.vehicle_model || "")}</p>
-              <p>اللوحة: {String(p.contact.plate || "")}</p>
-              <button className="d-primary" onClick={p.onContactChat}>
-                محادثة الكابتن
-              </button>
-            </section>
-          ) : (
-            <Empty>
-              بيانات الكابتن والعربية بتظهر بعد تأكيد حجزك. مفيش حجز مؤكد مختار
-              دلوقتي.
-            </Empty>
           ))}
         {screen === 14 && (
           <>
@@ -1285,97 +1171,12 @@ export default function Discovery(p: DiscoveryProps) {
             )}
           </>
         )}
-        {screen === 15 && (
-          <>
-            <p className="d-subtitle">
-              لم تجد الخط المناسب؟ اطلب خط جديد وسنقوم
-              <br />
-              بدراسة الطلب وإعلامك عند توفره.
-            </p>
-            <form className="d-request" onSubmit={(e) => void request(e)}>
-              <section className="d-box d-request-areas">
-                <label>
-                  <span>
-                    <DiscoveryIcon name="pin" />
-                    من (منطقة الانطلاق)
-                  </span>
-                  {areaSelect(origin, setOrigin, "منطقة الانطلاق")}
-                </label>
-                <button
-                  type="button"
-                  aria-label="تبديل مناطق الطلب"
-                  onClick={() => {
-                    setOrigin(destination);
-                    setDestination(origin);
-                  }}
-                >
-                  <DiscoveryIcon name="swap" />
-                </button>
-                <label>
-                  <span>
-                    <DiscoveryIcon name="pin" />
-                    إلى (منطقة الوصول)
-                  </span>
-                  {areaSelect(destination, setDestination, "منطقة الوصول")}
-                </label>
-              </section>
-              <section className="d-box d-request-times">
-                <label>
-                  <span>
-                    <DiscoveryIcon name="sun" />
-                    وقت الذهاب
-                  </span>
-                  <input
-                    type="time"
-                    aria-label="وقت الذهاب"
-                    value={outbound}
-                    onChange={(e) => setOutbound(e.target.value)}
-                    required
-                  />
-                </label>
-                <label>
-                  <span>
-                    <DiscoveryIcon name="moon" />
-                    وقت العودة
-                  </span>
-                  <input
-                    type="time"
-                    aria-label="وقت العودة"
-                    value={returnTime}
-                    onChange={(e) => setReturnTime(e.target.value)}
-                    required
-                  />
-                </label>
-              </section>
-              <section className="d-box">
-                <h2>
-                  <DiscoveryIcon name="calendar" />
-                  نوع الاشتراك
-                </h2>
-                {periodChoices}
-              </section>
-              <section className="d-box">
-                <label className="d-notes">
-                  <span>
-                    <DiscoveryIcon name="pen" />
-                    ملاحظات إضافية (اختياري)
-                  </span>
-                  <textarea
-                    aria-label="ملاحظات إضافية"
-                    placeholder="مثال: أفضل وجود محطة في مدينة نصر…"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    maxLength={1000}
-                  />
-                </label>
-              </section>
-              <button className="d-primary" type="submit" disabled={sending}>
-                {sending ? "جاري الإرسال…" : "إرسال الطلب"}
-                <DiscoveryIcon name="send" />
-              </button>
-            </form>
-          </>
-        )}
+        {screen === 15 && (searched && !filtered.length ? <form className="d-request" onSubmit={e => void request(e)}>
+          <section className="d-box"><h2>راجع بيانات البحث</h2><Journey line={queryLine} />
+          <p>الطلب لا يحجز مقعدًا ولا يخصم تأمينًا ولا يضمن توافر كابتن.</p></section>
+          <label>ملاحظات اختيارية<textarea value={notes} onChange={e => setNotes(e.target.value)} maxLength={1000}/></label>
+          <button className="d-primary" disabled={requestSent} type="submit">{requestSent ? "تم تأكيد الطلب في المعاينة" : "تأكيد الطلب"}</button>
+        </form> : <Empty>ابدأ بالبحث؛ طلب الرحلة متاح فقط عندما لا توجد عروض مطابقة.</Empty>)}
       </main>
       {modal && (
         <div className="d-modal-backdrop">

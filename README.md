@@ -1,30 +1,26 @@
-# سِكّة — seKKa
+# سِكّة | seKKa
 
-معاك في السِكّة. Fixed-route weekly/monthly commuting subscriptions for Greater Cairo.
+معاك في السِكّة.
 
-This branch is an **in-progress product replacement**, not a production release.
-The current authority is [docs/product/PRD.md](docs/product/PRD.md), supplemented by the owner's 12 November 2026 rebuild instruction.
+**The sole authoritative product specification is [PRD v3.1](docs/PRD.md): 73 screens across 8 stages.**
 
-- [Implementation status](docs/IMPLEMENTATION_STATUS.md)
-- [Actual legacy audit](docs/LEGACY_AUDIT.md)
-- [Migration/recovery plan](docs/MIGRATION_PLAN.md)
-- [75-screen registry and honest acceptance status](docs/product/SCREEN_INVENTORY.md)
-- [Open policies and blockers](docs/OPEN_QUESTIONS.md)
-- [Deployment and verification](docs/DEPLOYMENT.md)
+This iteration is frontend-only. Authentication, document review, booking, wallet balances, payments, messages and administration are previews or disabled states, not production services. Existing SQL and old integration sources are historical engineering work, not evidence of a connected backend.
 
-`web/src/v2` is the active replacement frontend; older screens remain only as historical recovery sources.
-The new additive migration creates a private `sekka_v2` schema and new document bucket, without deleting or rewriting existing data. It must pass the hosted migration confirmation before application; never use blind `supabase db push` against the existing project.
+- [v3.1 audit and implementation checklist](docs/PRD_V31_AUDIT.md)
+- [Screen-by-screen audit](docs/product/SCREEN_INVENTORY.md)
+- [Historical documents (not active requirements)](docs/archive/pre-v3.1/README.md)
+- [Deployment history](docs/DEPLOYMENT.md)
 
-```bash
+Active frontend: `web/src/v2`, React 19 + TypeScript + Vite. URL screen IDs follow the PRD; component view IDs remain stable internally. React state holds preview flows; preferences use local storage.
+
+```sh
 cd web
 npm ci
 npm run typecheck
 npm run lint
 npm test
 npm run build
-# In a normal browser-capable environment:
-npx playwright install chromium
-npm run test:e2e
+PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:e2e
 ```
 
-Thirty-two domain/PostgreSQL tests cover calendar pricing, ownership/RLS, simultaneous last-seat reservations, idempotency, immutable snapshots and one-time security release. No real financial operations are enabled. No provider integration or production acceptance is claimed.
+No production migration or cutover is authorized by this frontend synchronization.

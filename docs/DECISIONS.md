@@ -1,6 +1,6 @@
 # Decisions
 
-- 2026-11-12: Current owner instruction and checked-in `docs/product/PRD.md` supersede historical trip/ride models. PRIME 3, SAVER 4, SPACE 9, MAX 13.
+- 2026-11-12: Current owner instruction and checked-in `docs/PRD.md` supersede historical trip/ride models. PRIME 3, SAVER 4, SPACE 9, MAX 13.
 - Preserve React/Vite; PRD section 14.2 explicitly calls framework choices proposals. Avoid introducing a Next.js runtime migration into the Pages cutover.
 - Use a private new schema and a single invoker public API wrapper into a narrowly granted private definer dispatcher, fixed empty search_path and explicit auth.uid ownership checks. Clients get no direct new-table grants; RLS is enabled on every new table. Service access is not based on editable user_metadata.
 - Canonical dates are ISO civil dates; cycle end is EXCLUSIVE. Monthly boundaries always derive from the original anchor, clamping to month end without drift. This deterministic implementation convention must be reviewed in acceptance.

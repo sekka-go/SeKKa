@@ -1,18 +1,7 @@
-import { createClient } from "@supabase/supabase-js";
-const url = import.meta.env.VITE_V2_SUPABASE_URL;
-const key = import.meta.env.VITE_V2_SUPABASE_PUBLISHABLE_KEY;
-// Never fall back to the legacy production project in a preview.
-export const client =
-  url && key
-    ? createClient(url, key, {
-        auth: {
-          storageKey: "sekka_subscriptions_auth_v2",
-          persistSession: true,
-          autoRefreshToken: true,
-          detectSessionInUrl: false,
-        },
-      })
-    : null;
+import type { SupabaseClient } from "@supabase/supabase-js";
+// PRD v3.1 frontend-only build. Historical integration is deliberately disconnected.
+function frontendClient(): SupabaseClient | null { return null; }
+export const client = frontendClient();
 export async function api<T = unknown>(
   operation: string,
   payload: Record<string, unknown> = {},

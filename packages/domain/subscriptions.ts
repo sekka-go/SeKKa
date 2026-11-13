@@ -18,22 +18,11 @@ export function parseDate(value: string): Date {
 export const iso = (date: Date) => date.toISOString().slice(0, 10);
 export const addDays = (day: string, count: number) =>
   iso(new Date(+parseDate(day) + count * DAY));
-// Always derive from the ORIGINAL anchor: Jan 31 -> Feb 28 -> Mar 31.
-export function boundary(
-  anchor: string,
-  period: Period,
-  offset: number,
-): string {
+// Monthly cycles use calendar months; endExclusive is the first of the next month.
+export function boundary(anchor: string, period: Period, offset: number): string {
   const date = parseDate(anchor);
   if (period === "weekly") return addDays(anchor, offset * 7);
-  const target = new Date(
-    Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + offset, 1),
-  );
-  const last = new Date(
-    Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0),
-  ).getUTCDate();
-  target.setUTCDate(Math.min(date.getUTCDate(), last));
-  return iso(target);
+  return iso(new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + offset, 1)));
 }
 export function eligible(day: string, calendar: HolidayCalendar): boolean {
   parseDate(day);

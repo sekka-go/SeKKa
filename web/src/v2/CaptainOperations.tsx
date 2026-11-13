@@ -1,3 +1,4 @@
+import { PreferenceSettings } from "./preferences";
 import { useState, type ReactNode } from "react";
 import { Wordmark, type Appearance } from "./Onboarding";
 import { DiscoveryIcon } from "./Discovery";
@@ -8,7 +9,7 @@ import "./wallet.css";
 import "./account.css";
 import "./operations.css";
 export const operationsScreens = Array.from({ length: 12 }, (_, i) =>
-  internalScreen(i + 51),
+  internalScreen(i + 50),
 );
 type Row = Record<string, unknown>;
 export type OperationsData = {
@@ -66,6 +67,7 @@ const demoData: OperationsData = {
   bookings: [
     {
       id: "demo-1",
+      pickup_stop: "ميدان الجزائر", dropoff_stop: "شارع التسعين",
       rider_id: "r1",
       rider_name: "أحمد محمد",
       route_id: "route-1",
@@ -84,6 +86,7 @@ const demoData: OperationsData = {
     },
     {
       id: "demo-2",
+      pickup_stop: "الزمالك", dropoff_stop: "الشيخ زايد",
       rider_id: "r2",
       rider_name: "مريم علي",
       route_id: "route-2",
@@ -157,7 +160,7 @@ export default function CaptainOperations(p: {
   refresh: () => void;
 }) {
   const demo = new URLSearchParams(location.search).get("preview") === "phase7";
-  const n = publicScreen(p.screen);
+  const n = publicScreen(p.screen) + 1;
   const [local, setLocal] = useState(demoData),
     [empty, setEmpty] = useState(false),
     [query, setQuery] = useState(""),
@@ -183,7 +186,7 @@ export default function CaptainOperations(p: {
     setNote("");
     setError("");
     setConfirm(false);
-    p.go(internalScreen(v));
+    p.go(internalScreen(v - 1));
   };
   const booking = d.bookings.find((b) => b.id === selected);
   const active = d.bookings.filter((b) =>
@@ -268,7 +271,7 @@ export default function CaptainOperations(p: {
             onChange={(e) => nav(+e.target.value)}
           >
             {operationsScreens.map((s) => (
-              <option key={s} value={publicScreen(s)}>
+              <option key={s} value={publicScreen(s) + 1}>
                 {publicScreen(s)} · {screenTitle(s)}
               </option>
             ))}
@@ -450,6 +453,7 @@ export default function CaptainOperations(p: {
               ) : (
                 <>
                   {card(booking)}
+                  <Box><h2>نقاط الراكب</h2><p>الركوب: {str(booking, "pickup_stop")}</p><p>النزول: {str(booking, "dropoff_stop")}</p>{booking.direction === "round_trip" && <p>العودة تلقائيًا: {str(booking, "dropoff_stop")} ← {str(booking, "pickup_stop")}</p>}</Box>
                   <Box>
                     <div className="b-row">
                       <span>نهاية الفترة (غير شامل)</span>
@@ -836,20 +840,7 @@ export default function CaptainOperations(p: {
                   <p>تعديل العربية أو المستندات يحتاج مراجعة الإدارة.</p>
                   {action("طلب تعديل البيانات", 62)}
                 </Box>
-                <Box>
-                  <h2>مظهر التطبيق</h2>
-                  <div className="w-tabs">
-                    {(["dark", "light"] as const).map((t) => (
-                      <button
-                        key={t}
-                        aria-pressed={p.theme === t}
-                        onClick={() => p.onTheme(t)}
-                      >
-                        {t === "dark" ? "دارك" : "لايت"}
-                      </button>
-                    ))}
-                  </div>
-                </Box>
+                <PreferenceSettings />
               </>
             )}
             {n === 62 && (

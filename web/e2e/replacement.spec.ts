@@ -1,5 +1,7 @@
 import { publicScreen } from "../src/v2/screenMap";
 import { test, expect } from "@playwright/test";
+test.use({ locale: "ar-EG" });
+test.beforeEach(async ({page}) => {await page.addInitScript(() => {const t=new URLSearchParams(location.search).get('theme');if(t==='dark'||t==='light')localStorage.setItem('theme_preference',t);});});
 test("public planner, real empty results, and protected wallet", async ({
   page,
 }) => {
@@ -18,16 +20,16 @@ test("public planner, real empty results, and protected wallet", async ({
     page.getByText("لسه مفيش خط مناسب.", { exact: true }),
   ).toBeVisible();
   await expect(page.locator(".d-result")).toHaveCount(0);
-  await page.goto("/?screen=23");
+  await page.goto("/?screen=22");
   await expect(page.getByText("سجّل برقم موبايلك عشان نكمل.")).toBeVisible();
   expect(errors).toEqual([]);
 });
-test("all 74 screen entries render without client errors for guests", async ({
+test("all 73 screen entries render without client errors for guests", async ({
   page,
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  for (let i = 1; i <= 74; i++) {
+  for (let i = 1; i <= 73; i++) {
     await page.goto(`/?screen=${i}`);
     await expect(page.locator("main")).toBeVisible();
     await expect(page.locator("main h1, main h2").first()).not.toBeEmpty();
@@ -121,7 +123,7 @@ test("phase one: all seven paired designs render and auth stays disconnected", a
   expect(authRequests).toEqual([]);
 });
 
-test("phase two: 16 paired views, fixed offers, navigation and preview isolation", async ({
+test("phase two: v3.1 paired views, fixed offers, navigation and preview isolation", async ({
   page,
 }) => {
   const mutations: string[] = [];
@@ -130,7 +132,7 @@ test("phase two: 16 paired views, fixed offers, navigation and preview isolation
       mutations.push(r.url());
   });
   for (const theme of ["dark", "light"]) {
-    for (const screen of [8, 10, 11, 12, 13, 14, 29, 15]) {
+    for (const screen of [8, 9, 10, 11, 12, 14, 15]) {
       await page.setViewportSize({ width: 390, height: 844 });
       await page.goto(
         `/?screen=${publicScreen(screen)}&theme=${theme}&preview=phase2`,
@@ -164,10 +166,12 @@ test("phase two: 16 paired views, fixed offers, navigation and preview isolation
     await expect(page.locator(".d-fixed-price")).toContainText("850");
     await expect(page.locator(".d-canvas button[aria-pressed]")).toHaveCount(0);
     await expect(page.locator(".d-captain,.d-vehicle")).toHaveCount(0);
+    await page.getByLabel("نقطة الركوب", {exact:true}).selectOption("maadi");
+    await page.getByLabel("نقطة النزول", {exact:true}).selectOption("tagamoa");
     await page
       .getByRole("button", { name: "حجز الاشتراك", exact: true })
       .click();
-    await expect(page).toHaveURL(/screen=16/);
+    await expect(page).toHaveURL(/screen=15/);
     await expect(page).toHaveURL(/preview=phase3/);
     await expect(page.locator(".b-offer-tags")).toContainText("أسبوعي");
     await expect(page.locator(".b-offer-tags")).toContainText("ذهاب فقط");
@@ -182,7 +186,7 @@ test("phase two: 16 paired views, fixed offers, navigation and preview isolation
     await expect(
       page.getByText("لسه مفيش خط مناسب.", { exact: true }),
     ).toBeVisible();
-    await page.goto(`/?screen=14&theme=${theme}&preview=phase2`);
+    await page.goto(`/?screen=13&theme=${theme}&preview=phase2`);
     await page
       .getByRole("button", {
         name: "إزالة المعادي إلى التجمع من المفضلة",
@@ -190,19 +194,8 @@ test("phase two: 16 paired views, fixed offers, navigation and preview isolation
       })
       .click();
     await expect(page.locator(".d-favorite")).toHaveCount(2);
-    await page.goto(`/?screen=15&theme=${theme}&preview=phase2`);
-    await expect(
-      page.getByLabel("وقت الذهاب", { exact: true }),
-    ).toHaveAttribute("type", "time");
-    await page
-      .getByLabel("ملاحظات إضافية", { exact: true })
-      .fill("محطة قريبة من المترو");
-    await page
-      .getByRole("button", { name: "إرسال الطلب", exact: true })
-      .click();
-    await expect(page.getByRole("status")).toContainText(
-      "لم يتم إرسال طلب فعلي",
-    );
+    await page.goto(`/?screen=14&theme=${theme}&preview=phase2`);
+    await expect(page.getByRole("button", {name:"تأكيد الطلب",exact:true})).toHaveCount(0);
   }
   expect(mutations).toEqual([]);
 });
@@ -238,7 +231,7 @@ test("phase three: approved seven screens, fixed quote, security and confirmatio
         .locator(".b-canvas")
         .screenshot({ path: `../docs/audit/phase3-${screen}-${theme}.png` });
     }
-    await page.goto(`/?screen=16&theme=${theme}&preview=phase3`);
+    await page.goto(`/?screen=15&theme=${theme}&preview=phase3`);
     await expect(page.locator(".b-price-summary")).toContainText("1,527");
     await expect(page.locator(".b-calendar")).toContainText("12 من 22");
     await expect(page.locator(".b-calendar input")).toHaveCount(0);
@@ -257,7 +250,7 @@ test("phase three: approved seven screens, fixed quote, security and confirmatio
     await page
       .getByRole("button", { name: "معاينة تأكيد الحجز", exact: true })
       .click();
-    await expect(page).toHaveURL(/screen=18/);
+    await expect(page).toHaveURL(/screen=17/);
     await page
       .getByRole("button", { name: "شوف تفاصيل اشتراكي", exact: true })
       .click();
@@ -276,7 +269,7 @@ test("phase three: approved seven screens, fixed quote, security and confirmatio
     await page
       .getByRole("button", { name: "معاينة متابعة الاستلام", exact: true })
       .click();
-    await expect(page).toHaveURL(/screen=21/);
+    await expect(page).toHaveURL(/screen=20/);
     await expect(page.locator(".b-timeline")).toContainText("بتفضل محجوزة");
     await page
       .getByRole("button", { name: "تأكيد الطرفين", exact: true })
@@ -303,7 +296,7 @@ test("phase three: approved seven screens, fixed quote, security and confirmatio
       "لم يتم إرسال طلب دعم فعلي",
     );
   }
-  await page.goto("/?screen=18");
+  await page.goto("/?screen=17");
   await expect(page.locator(".b-success-tag")).toHaveCount(0);
   await expect(
     page.getByText("سجّل الدخول الأول عشان تشوف اشتراكك.", { exact: true }),
@@ -334,7 +327,7 @@ test("phase four wallet states stay isolated from money operations", async ({
         .locator(".w-canvas")
         .screenshot({ path: `../docs/audit/phase4-${screen}-${theme}.png` });
     }
-  await page.goto("/?screen=23&preview=phase4");
+  await page.goto("/?screen=22&preview=phase4");
   await expect(page.locator(".w-balance")).toHaveText("50 ج.م");
   await page.getByRole("button", { name: "شحن الرصيد", exact: true }).click();
   await page.getByLabel("مبلغ الشحن بالجنيه").fill("-1");
@@ -364,11 +357,11 @@ test("phase four wallet states stay isolated from money operations", async ({
   await expect(page.getByText("demo-3", { exact: true })).toBeVisible();
   await page.getByLabel("معاينة السجل الفارغ").check();
   await expect(page.getByText("لسه مفيش معاملات هنا.")).toBeVisible();
-  await page.goto("/?screen=28&preview=phase4");
+  await page.goto("/?screen=27&preview=phase4");
   await expect(page.getByText("المعادي", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "السابقة", exact: true }).click();
   await expect(page.getByText("الزمالك", { exact: true })).toBeVisible();
-  await page.goto("/?screen=25");
+  await page.goto("/?screen=24");
   await expect(page.getByText("سجّل برقم موبايلك عشان نكمل.")).toBeVisible();
   expect(writes).toEqual([]);
 });
@@ -398,11 +391,11 @@ test("phase five communication and account previews are isolated", async ({
         .locator(".a-canvas")
         .screenshot({ path: `../docs/audit/phase5-${screen}-${theme}.png` });
     }
-  await page.goto("/?screen=30&preview=phase4");
+  await page.goto("/?screen=29&preview=phase4");
   await page.getByLabel("دوّر في المحادثات").fill("كريم");
   await expect(page.locator(".a-thread")).toHaveCount(1);
   await page.locator(".a-thread").click();
-  await expect(page).toHaveURL(/screen=31/);
+  await expect(page).toHaveURL(/screen=30/);
   await expect(
     page.getByRole("button", { name: "إضافة للمعاينة" }),
   ).toBeDisabled();
@@ -443,10 +436,10 @@ test("phase five communication and account previews are isolated", async ({
     .fill("محتاج مساعدة في تفاصيل الاشتراك");
   await page.getByRole("button", { name: "معاينة طلب المساعدة" }).click();
   await expect(page.getByRole("status")).toContainText("ماتبعتش للدعم");
-  await page.goto("/?screen=30");
+  await page.goto("/?screen=29");
   await expect(page.getByText("سجّل برقم موبايلك عشان نكمل.")).toBeVisible();
   await expect(page.locator(".a-thread")).toHaveCount(0);
-  await page.goto("/?screen=35");
+  await page.goto("/?screen=34");
   await expect(
     page.getByRole("button", { name: "ابعت للدعم", exact: true }),
   ).toBeDisabled();
@@ -474,7 +467,7 @@ test("phase five captain onboarding validates locally without uploads", async ({
         ),
       ).toBe(true);
     }
-  await page.goto("/?screen=37&preview=phase5");
+  await page.goto("/?screen=36&preview=phase5");
   await expect(
     page.getByRole("button", { name: "متابعة", exact: true }),
   ).toBeDisabled();
@@ -504,11 +497,11 @@ test("phase five captain onboarding validates locally without uploads", async ({
     page.getByRole("heading", { name: "مثال: طلبك قيد المراجعة" }),
   ).toBeVisible();
   expect(writes).toEqual([]);
-  await page.goto("/?screen=39");
+  await page.goto("/?screen=38");
   await expect(page.getByText("سجّل بحساب كابتن عشان نكمل.")).toBeVisible();
 });
 
-test("canonical map has exactly 74 unique destinations and public results hide identity", async ({
+test("canonical map has exactly 73 unique destinations and public results hide identity", async ({
   page,
 }) => {
   await page.goto("/?screen=11&preview=phase2");
@@ -516,9 +509,9 @@ test("canonical map has exactly 74 unique destinations and public results hide i
   for (const card of await page.locator(".d-result").all()) {
     await expect(card).not.toContainText(/كابتن|أحمد|محمد|كريم/);
   }
-  await page.goto("/?screen=23&preview=phase4");
+  await page.goto("/?screen=22&preview=phase4");
   await expect(page.locator("main h1")).toContainText("محفظتي");
-  await page.goto("/?screen=42&preview=phase5");
+  await page.goto("/?screen=41&preview=phase5");
   await expect(page.getByText("التفعيل مستني اعتماد الإدارة")).toBeVisible();
   await expect(
     page.getByRole("button", { name: "إدارة خطوطي", exact: true }),
@@ -534,7 +527,7 @@ test("phase seven captain operations isolate previews and confirm receipt once",
   });
   await page.setViewportSize({ width: 390, height: 844 });
   for (const theme of ["dark", "light"]) {
-    for (let screen = 51; screen <= 62; screen++) {
+    for (let screen = 50; screen <= 61; screen++) {
       await page.goto(`/?screen=${screen}&theme=${theme}&preview=phase7`);
       await expect(page.locator("main h1")).toBeVisible();
       expect(
@@ -544,7 +537,7 @@ test("phase seven captain operations isolate previews and confirm receipt once",
       ).toBe(true);
     }
   }
-  await page.goto("/?screen=52&preview=phase7");
+  await page.goto("/?screen=51&preview=phase7");
   await page
     .getByRole("button", { name: "تفاصيل الاشتراك", exact: true })
     .first()
@@ -582,7 +575,7 @@ test("phase seven captain operations isolate previews and confirm receipt once",
   await page.getByRole("button", { name: "معاينة طلب الدعم" }).click();
   await expect(page.getByText("طلب الدعم اتضاف للمعاينة فقط.")).toBeVisible();
   expect(writes).toEqual([]);
-  await page.goto("/?screen=51");
+  await page.goto("/?screen=50");
   await expect(
     page.getByText("سجّل بحساب كابتن عشان تشوف بيانات تشغيلك."),
   ).toBeVisible();
@@ -598,7 +591,7 @@ test("phase eight admin preview is responsive and mutations remain local", async
   for (const width of [390, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     for (const theme of ["dark", "light"]) {
-      for (let screen = 63; screen <= 74; screen++) {
+      for (let screen = 62; screen <= 73; screen++) {
         await page.goto(`/?screen=${screen}&theme=${theme}&preview=phase8`);
         await expect(page.locator("main h1")).toBeVisible();
         expect(
@@ -609,7 +602,7 @@ test("phase eight admin preview is responsive and mutations remain local", async
       }
     }
   }
-  await page.goto("/?screen=66&preview=phase8");
+  await page.goto("/?screen=65&preview=phase8");
   await page
     .getByRole("button", { name: "عرض التفاصيل", exact: true })
     .first()
@@ -629,7 +622,7 @@ test("phase eight admin preview is responsive and mutations remain local", async
   await expect(page.getByText("مفيش نتائج مطابقة")).toBeVisible();
   await page.getByLabel("محاكاة صلاحية").selectOption("المالية");
   await expect(page.getByText("الصلاحية غير متاحة في المعاينة")).toBeVisible();
-  await page.goto("/?screen=73&preview=phase8");
+  await page.goto("/?screen=72&preview=phase8");
   await page.getByLabel("عنوان الرسالة", { exact: true }).fill("تحديث توضيحي");
   await page.getByLabel("المحتوى", { exact: true }).fill("رسالة للمعاينة فقط");
   await page
@@ -641,7 +634,7 @@ test("phase eight admin preview is responsive and mutations remain local", async
     page.getByRole("button", { name: "الإرسال الجماعي غير مفعّل" }),
   ).toBeDisabled();
   expect(writes).toEqual([]);
-  await page.goto("/?screen=66");
+  await page.goto("/?screen=65");
   await expect(page.getByText("دخول الإدارة محمي")).toBeVisible();
   await expect(
     page.getByRole("button", { name: "عرض التفاصيل", exact: true }),

@@ -457,3 +457,15 @@ footer {
     transition: none !important;
   }
 }
+
+/* PRD v3.1: theme tokens and direction follow independent preferences. */
+html[dir="ltr"] .phase-one-stage, html[dir="ltr"] .b-offer { direction: ltr; }
+html .phase-one-stage {--phase-bg:#0B0B0D;--phase-card:#1B2027;--phase-line:#343B45;}
+html .phase-one-stage.light {--phase-bg:#FAFAF8;--phase-card:#FFFFFF;--phase-line:#DDE0E4;}
+html .admin-stage {--ad-card:#1B2027;--ad-line:#343B45;}
+html .admin-stage.light {--ad-bg:#FAFAF8;--ad-line:#DDE0E4;}
+.preference-settings {display:grid; gap:16px;}
+.preference-settings label {display:grid;gap:8px;}
+.preference-settings select {width:100%;min-height:44px;}
+
+html[dir="ltr"] :is(.phase-review-bar,.phase-benefits,.phase-resend,.phase-resend>span,.phase-register-field input,.d-canvas select,.b-canvas .b-formula) {direction:ltr;text-align:start;}

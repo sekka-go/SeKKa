@@ -1,3 +1,11 @@
+# Current status — PRD v3.1 synchronization
+
+Canonical authority: [PRD.md](PRD.md). 73 functional screens. See [current audit](PRD_V31_AUDIT.md) and [per-screen inventory](product/SCREEN_INVENTORY.md).
+
+Synchronization is in progress. Complete English translation and full cross-stage simulation acceptance remain outstanding. Frontend client is disconnected. Previous phase reports below are historical implementation evidence and do not define current requirements.
+
+---
+
 # Implementation status — replacement in progress
 
 This is NOT a completed 75-screen product or a production launch claim.

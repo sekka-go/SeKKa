@@ -1,7 +1,7 @@
 export { canonicalTitles as screenTitles } from "./screenMap";
 export type Screen = number;
 export const screenRole = (id: number) =>
-  id >= 63 ? "admin" : id >= 36 ? "captain" : "rider";
+  id >= 62 ? "admin" : id >= 35 ? "captain" : "rider";
 export const publicScreens = new Set([1, 2, 3, 4, 5, 8, 9, 10, 11, 12, 16, 37]);
 export const adminResources: Record<number, string> = {
   64: "analytics",

@@ -1,3 +1,4 @@
+import { publicScreen } from "./screenMap";
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Wordmark } from "./Onboarding";
@@ -42,6 +43,9 @@ const timeText = (v: string) => {
 };
 // A deterministic illustration calendar, NEVER used to approve a live quote.
 // No official-holiday coverage is claimed by this UI fixture.
+function readSelectedPreview(id: string | null): Line | null {
+  try { const offer = JSON.parse(sessionStorage.getItem("sekka.preview.selectedOffer") || "null") as Line | null; return offer?.id === id ? offer : null; } catch {return null;}
+}
 function sampleQuote(offer: Line): Quote {
   return calculateQuote({
     anchor: "2026-11-01",
@@ -231,6 +235,7 @@ function Offer({ offer }: { offer: Line }) {
           {offer.destination}
         </span>
       </div>
+      {offer.selectedStops && <div className="b-stops"><p>الركوب: {offer.selectedStops.pickup.name}</p><p>النزول: {offer.selectedStops.dropoff.name}</p>{offer.selectedStops.returnPickup && <p>العودة تلقائيًا: {offer.selectedStops.returnPickup.name} ← {offer.selectedStops.returnDropoff?.name}</p>}</div>}
       <div className="b-offer-tags">
         <span>{offer.category}</span>
         <span>{periodText(offer.period)}</span>
@@ -275,7 +280,7 @@ export default function BookingFlow(p: BookingFlowProps) {
   const demo = params.get("preview") === "phase3";
   const offerId = params.get("offer");
   const demoOffer =
-    p.offer ||
+    p.offer || readSelectedPreview(offerId) ||
     [...examples, ...favoriteExamples].find((o) => o.id === offerId) ||
     examples[0];
   const config = p.route?.prices.find(
@@ -454,7 +459,7 @@ export default function BookingFlow(p: BookingFlowProps) {
           >
             {bookingScreens.map((id, i) => (
               <option key={id} value={id}>
-                {id} · {bookingTitles[i]}
+                {publicScreen(id)} · {bookingTitles[i]}
               </option>
             ))}
           </select>
@@ -730,9 +735,10 @@ export default function BookingFlow(p: BookingFlowProps) {
                 <p>الـ100 جنيه تأمين منفصل، مش خصم من الاشتراك.</p>
               </Box>
               <Primary onClick={() => nav(19)}>شوف تفاصيل اشتراكي</Primary>
-              <button className="b-secondary" onClick={() => nav(13)}>
-                بيانات الكابتن والعربية
-              </button>
+              <Box>
+                <h2>بيانات الكابتن والعربية</h2>
+                {demo ? <><p>كابتن أحمد — بيانات توضيحية بعد الحجز</p><p>تويوتا كورولا · أبيض · لوحة توضيحية 7284</p><p>التواصل غير مفعّل في المعاينة.</p></> : <p>ستظهر البيانات المصرح بها هنا بعد ربط خدمة الحجز المؤكد.</p>}
+              </Box>
             </>
           ) : (
             empty
@@ -789,9 +795,10 @@ export default function BookingFlow(p: BookingFlowProps) {
               <Primary onClick={() => nav(riderReported ? 21 : 20)}>
                 {riderReported ? "متابعة تأكيد الاستلام" : "تأكيد الدفع"}
               </Primary>
-              <button className="b-secondary" onClick={() => nav(13)}>
-                بيانات الكابتن والعربية
-              </button>
+              <Box>
+                <h2>بيانات الكابتن والعربية</h2>
+                {demo ? <><p>كابتن أحمد — بيانات توضيحية بعد الحجز</p><p>تويوتا كورولا · أبيض · لوحة توضيحية 7284</p><p>التواصل غير مفعّل في المعاينة.</p></> : <p>ستظهر البيانات المصرح بها هنا بعد ربط خدمة الحجز المؤكد.</p>}
+              </Box>
               <button className="b-secondary" onClick={() => nav(22)}>
                 <DiscoveryIcon name="settings" />
                 إدارة الاشتراك
@@ -919,9 +926,10 @@ export default function BookingFlow(p: BookingFlowProps) {
               <Primary disabled={working} onClick={() => void refresh()}>
                 تحديث الحالة
               </Primary>
-              <button className="b-secondary" onClick={() => nav(13)}>
-                بيانات الكابتن والعربية
-              </button>
+              <Box>
+                <h2>بيانات الكابتن والعربية</h2>
+                {demo ? <><p>كابتن أحمد — بيانات توضيحية بعد الحجز</p><p>تويوتا كورولا · أبيض · لوحة توضيحية 7284</p><p>التواصل غير مفعّل في المعاينة.</p></> : <p>ستظهر البيانات المصرح بها هنا بعد ربط خدمة الحجز المؤكد.</p>}
+              </Box>
               <button className="b-secondary" onClick={() => nav(22)}>
                 محتاج مساعدة في الاشتراك؟
               </button>

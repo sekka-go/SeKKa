@@ -1,127 +1,81 @@
-# خريطة شاشات سِكّة المعتمدة — 74 شاشة
+# PRD v3.1 — 73-screen implementation audit
 
-تحديث المالك: 12 نوفمبر 2026. هذه الخريطة تلغي ترقيم 75 شاشة وتقسيم مراحل التنفيذ السابق.
+Authority: [PRD v3.1](../PRD.md). This is implementation evidence, not an alternative specification. No screen is marked fully compliant while complete bilingual acceptance remains outstanding. Internal view IDs are implementation details; public URLs follow these IDs.
 
-## المرحلة 1 — التسجيل والتهيئة
+| ID | Functional screen | Classification | Implementation | Remaining validation / gap |
+|---|---|---|---|---|
+| 1 | Splash | Implemented but needs modification | `web/src/v2/Onboarding.tsx` | OTP and session integration disabled; English copy and live-state acceptance pending. |
+| 2 | Welcome | Implemented but needs modification | `web/src/v2/Onboarding.tsx` | OTP and session integration disabled; English copy and live-state acceptance pending. |
+| 3 | Account Type | Implemented but needs modification | `web/src/v2/Onboarding.tsx` | OTP and session integration disabled; English copy and live-state acceptance pending. |
+| 4 | Phone Number | Implemented but needs modification | `web/src/v2/Onboarding.tsx` | OTP and session integration disabled; English copy and live-state acceptance pending. |
+| 5 | OTP | Implemented but needs modification | `web/src/v2/Onboarding.tsx` | OTP and session integration disabled; English copy and live-state acceptance pending. |
+| 6 | Complete Profile | Implemented but needs modification | `web/src/v2/Onboarding.tsx` | OTP and session integration disabled; English copy and live-state acceptance pending. |
+| 7 | Permissions | Implemented but needs modification | `web/src/v2/Onboarding.tsx` | OTP and session integration disabled; English copy and live-state acceptance pending. |
+| 8 | Rider Home | Implemented but needs modification | `web/src/v2/Discovery.tsx` | Stops/request corrections implemented; matching alternatives, mock persistence and complete English copy pending. |
+| 9 | Route Search | Implemented but needs modification | `web/src/v2/Discovery.tsx` | Stops/request corrections implemented; matching alternatives, mock persistence and complete English copy pending. |
+| 10 | Filters | Implemented but needs modification | `web/src/v2/Discovery.tsx` | Stops/request corrections implemented; matching alternatives, mock persistence and complete English copy pending. |
+| 11 | Search Results / No Results | Implemented but needs modification | `web/src/v2/Discovery.tsx` | Stops/request corrections implemented; matching alternatives, mock persistence and complete English copy pending. |
+| 12 | Offer Details & Route Stops | Implemented but needs modification | `web/src/v2/Discovery.tsx` | Stops/request corrections implemented; matching alternatives, mock persistence and complete English copy pending. |
+| 13 | Favorites | Implemented but needs modification | `web/src/v2/Discovery.tsx` | Stops/request corrections implemented; matching alternatives, mock persistence and complete English copy pending. |
+| 14 | Route Request Review & Confirmation | Implemented but needs modification | `web/src/v2/Discovery.tsx` | Stops/request corrections implemented; matching alternatives, mock persistence and complete English copy pending. |
+| 15 | Booking Summary | Implemented but needs modification | `web/src/v2/BookingFlow.tsx` | Monthly rule corrected; immutable preview snapshot and selected-stop recovery across reload pending. |
+| 16 | Booking Security | Implemented but needs modification | `web/src/v2/BookingFlow.tsx` | Monthly rule corrected; immutable preview snapshot and selected-stop recovery across reload pending. |
+| 17 | Booking Confirmation | Implemented but needs modification | `web/src/v2/BookingFlow.tsx` | Monthly rule corrected; immutable preview snapshot and selected-stop recovery across reload pending. |
+| 18 | Subscription Details & Captain/Vehicle Information | Implemented but needs modification | `web/src/v2/BookingFlow.tsx` | Monthly rule corrected; immutable preview snapshot and selected-stop recovery across reload pending. |
+| 19 | Rider Payment Confirmation | Implemented but needs modification | `web/src/v2/BookingFlow.tsx` | Monthly rule corrected; immutable preview snapshot and selected-stop recovery across reload pending. |
+| 20 | Captain Receipt Confirmation / Security Status | Implemented but needs modification | `web/src/v2/BookingFlow.tsx` | Monthly rule corrected; immutable preview snapshot and selected-stop recovery across reload pending. |
+| 21 | Subscription Management & Renewal | Implemented but needs modification | `web/src/v2/BookingFlow.tsx` | Monthly rule corrected; immutable preview snapshot and selected-stop recovery across reload pending. |
+| 22 | Wallet | Implemented but needs modification | `web/src/v2/WalletFlow.tsx` | Simulated balances only; complete English copy pending. |
+| 23 | Top Up | Implemented but needs modification | `web/src/v2/WalletFlow.tsx` | Simulated balances only; complete English copy pending. |
+| 24 | Top-Up Result | Implemented but needs modification | `web/src/v2/WalletFlow.tsx` | Simulated balances only; complete English copy pending. |
+| 25 | Withdraw | Implemented but needs modification | `web/src/v2/WalletFlow.tsx` | Simulated balances only; complete English copy pending. |
+| 26 | Transactions | Implemented but needs modification | `web/src/v2/WalletFlow.tsx` | Simulated balances only; complete English copy pending. |
+| 27 | My Subscriptions | Implemented but needs modification | `web/src/v2/AccountFlow.tsx` | Preference controls at 32; complete English copy and end-to-end flow review pending. |
+| 28 | Past Subscriptions | Implemented but needs modification | `web/src/v2/AccountFlow.tsx` | Preference controls at 32; complete English copy and end-to-end flow review pending. |
+| 29 | Chats | Implemented but needs modification | `web/src/v2/AccountFlow.tsx` | Preference controls at 32; complete English copy and end-to-end flow review pending. |
+| 30 | Captain Chat | Implemented but needs modification | `web/src/v2/AccountFlow.tsx` | Preference controls at 32; complete English copy and end-to-end flow review pending. |
+| 31 | Notifications | Implemented but needs modification | `web/src/v2/AccountFlow.tsx` | Preference controls at 32; complete English copy and end-to-end flow review pending. |
+| 32 | My Account & Settings | Implemented but needs modification | `web/src/v2/AccountFlow.tsx` | Preference controls at 32; complete English copy and end-to-end flow review pending. |
+| 33 | Edit Profile | Implemented but needs modification | `web/src/v2/AccountFlow.tsx` | Preference controls at 32; complete English copy and end-to-end flow review pending. |
+| 34 | Help & Support | Implemented but needs modification | `web/src/v2/AccountFlow.tsx` | Preference controls at 32; complete English copy and end-to-end flow review pending. |
+| 35 | Captain Registration | Implemented but needs modification | `web/src/v2/CaptainOnboarding.tsx` | Local previews only; full localization and dual-role journey review pending. |
+| 36 | Personal Details | Implemented but needs modification | `web/src/v2/CaptainOnboarding.tsx` | Local previews only; full localization and dual-role journey review pending. |
+| 37 | Vehicle & Category | Implemented but needs modification | `web/src/v2/CaptainOnboarding.tsx` | Local previews only; full localization and dual-role journey review pending. |
+| 38 | Documents | Implemented but needs modification | `web/src/v2/CaptainOnboarding.tsx` | Local previews only; full localization and dual-role journey review pending. |
+| 39 | Review Submission | Implemented but needs modification | `web/src/v2/CaptainOnboarding.tsx` | Local previews only; full localization and dual-role journey review pending. |
+| 40 | Approval Status | Implemented but needs modification | `web/src/v2/CaptainOnboarding.tsx` | Local previews only; full localization and dual-role journey review pending. |
+| 41 | Activation | Implemented but needs modification | `web/src/v2/CaptainOnboarding.tsx` | Local previews only; full localization and dual-role journey review pending. |
+| 42 | My Routes | Implemented but needs modification | `web/src/v2/CaptainRoutes.tsx` | Route wizard now provides ordered stop authoring, fixed offer, capacity/approval validation and local publication. English titles and full acceptance pending. |
+| 43 | Create Route | Implemented but needs modification | `web/src/v2/CaptainRoutes.tsx` | Route wizard now provides ordered stop authoring, fixed offer, capacity/approval validation and local publication. English titles and full acceptance pending. |
+| 44 | Origin, Destination & Stops | Implemented but needs modification | `web/src/v2/CaptainRoutes.tsx` | Route wizard now provides ordered stop authoring, fixed offer, capacity/approval validation and local publication. English titles and full acceptance pending. |
+| 45 | Outbound/Return Schedule | Implemented but needs modification | `web/src/v2/CaptainRoutes.tsx` | Route wizard now provides ordered stop authoring, fixed offer, capacity/approval validation and local publication. English titles and full acceptance pending. |
+| 46 | Direction & Duration | Implemented but needs modification | `web/src/v2/CaptainRoutes.tsx` | Route wizard now provides ordered stop authoring, fixed offer, capacity/approval validation and local publication. English titles and full acceptance pending. |
+| 47 | Price & Capacity | Implemented but needs modification | `web/src/v2/CaptainRoutes.tsx` | Route wizard now provides ordered stop authoring, fixed offer, capacity/approval validation and local publication. English titles and full acceptance pending. |
+| 48 | Review & Publish | Implemented but needs modification | `web/src/v2/CaptainRoutes.tsx` | Route wizard now provides ordered stop authoring, fixed offer, capacity/approval validation and local publication. English titles and full acceptance pending. |
+| 49 | Edit/Pause/Manage Route | Implemented but needs modification | `web/src/v2/CaptainRoutes.tsx` | Route wizard now provides ordered stop authoring, fixed offer, capacity/approval validation and local publication. English titles and full acceptance pending. |
+| 50 | Captain Home | Implemented but needs modification | `web/src/v2/CaptainOperations.tsx` | Local previews; preferences at 60; selected rider stop snapshots and complete English copy pending. |
+| 51 | New Bookings | Implemented but needs modification | `web/src/v2/CaptainOperations.tsx` | Local previews; preferences at 60; selected rider stop snapshots and complete English copy pending. |
+| 52 | Subscribers | Implemented but needs modification | `web/src/v2/CaptainOperations.tsx` | Local previews; preferences at 60; selected rider stop snapshots and complete English copy pending. |
+| 53 | Subscription Details | Implemented but needs modification | `web/src/v2/CaptainOperations.tsx` | Local previews; preferences at 60; selected rider stop snapshots and complete English copy pending. |
+| 54 | Daily Operations | Implemented but needs modification | `web/src/v2/CaptainOperations.tsx` | Local previews; preferences at 60; selected rider stop snapshots and complete English copy pending. |
+| 55 | Confirm Payment Received | Implemented but needs modification | `web/src/v2/CaptainOperations.tsx` | Local previews; preferences at 60; selected rider stop snapshots and complete English copy pending. |
+| 56 | Chats | Implemented but needs modification | `web/src/v2/CaptainOperations.tsx` | Local previews; preferences at 60; selected rider stop snapshots and complete English copy pending. |
+| 57 | Rider Chat | Implemented but needs modification | `web/src/v2/CaptainOperations.tsx` | Local previews; preferences at 60; selected rider stop snapshots and complete English copy pending. |
+| 58 | Notifications | Implemented but needs modification | `web/src/v2/CaptainOperations.tsx` | Local previews; preferences at 60; selected rider stop snapshots and complete English copy pending. |
+| 59 | Payment Acknowledgment Records | Implemented but needs modification | `web/src/v2/CaptainOperations.tsx` | Local previews; preferences at 60; selected rider stop snapshots and complete English copy pending. |
+| 60 | Captain Profile & Settings | Implemented but needs modification | `web/src/v2/CaptainOperations.tsx` | Local previews; preferences at 60; selected rider stop snapshots and complete English copy pending. |
+| 61 | Support | Implemented but needs modification | `web/src/v2/CaptainOperations.tsx` | Local previews; preferences at 60; selected rider stop snapshots and complete English copy pending. |
+| 62 | Admin Dashboard | Implemented but needs modification | `web/src/v2/AdminDashboard.tsx` | Local previews only; full English copy and cross-stage shared mock data pending. |
+| 63 | Users | Implemented but needs modification | `web/src/v2/AdminDashboard.tsx` | Local previews only; full English copy and cross-stage shared mock data pending. |
+| 64 | Captains | Implemented but needs modification | `web/src/v2/AdminDashboard.tsx` | Local previews only; full English copy and cross-stage shared mock data pending. |
+| 65 | Document Review | Implemented but needs modification | `web/src/v2/AdminDashboard.tsx` | Local previews only; full English copy and cross-stage shared mock data pending. |
+| 66 | Vehicles & Categories | Implemented but needs modification | `web/src/v2/AdminDashboard.tsx` | Local previews only; full English copy and cross-stage shared mock data pending. |
+| 67 | Routes | Implemented but needs modification | `web/src/v2/AdminDashboard.tsx` | Local previews only; full English copy and cross-stage shared mock data pending. |
+| 68 | Bookings | Implemented but needs modification | `web/src/v2/AdminDashboard.tsx` | Local previews only; full English copy and cross-stage shared mock data pending. |
+| 69 | Wallets & Security | Implemented but needs modification | `web/src/v2/AdminDashboard.tsx` | Local previews only; full English copy and cross-stage shared mock data pending. |
+| 70 | Financial Transactions | Implemented but needs modification | `web/src/v2/AdminDashboard.tsx` | Local previews only; full English copy and cross-stage shared mock data pending. |
+| 71 | Complaints & Support | Implemented but needs modification | `web/src/v2/AdminDashboard.tsx` | Local previews only; full English copy and cross-stage shared mock data pending. |
+| 72 | Announcements | Implemented but needs modification | `web/src/v2/AdminDashboard.tsx` | Local previews only; full English copy and cross-stage shared mock data pending. |
+| 73 | Settings & Permissions | Implemented but needs modification | `web/src/v2/AdminDashboard.tsx` | Local previews only; full English copy and cross-stage shared mock data pending. |
 
-| الرقم | الشاشة |
-|---|---|
-| 1 | البداية |
-| 2 | الترحيب |
-| 3 | اختيار نوع الحساب |
-| 4 | رقم الموبايل |
-| 5 | التحقق من الكود |
-| 6 | استكمال الملف الشخصي |
-| 7 | الأذونات |
-
-## المرحلة 2 — اكتشاف الخطوط
-
-| الرقم | الشاشة |
-|---|---|
-| 8 | الرئيسية للراكب |
-| 9 | البحث عن خط |
-| 10 | فلاتر البحث |
-| 11 | نتائج البحث |
-| 12 | تفاصيل الخط |
-| 13 | بيانات الكابتن والعربية |
-| 14 | المفضلة |
-| 15 | اطلب خط |
-
-## المرحلة 3 — الحجز والاشتراكات
-
-| الرقم | الشاشة |
-|---|---|
-| 16 | ملخص الحجز والتكلفة النهائية |
-| 17 | تأمين الحجز |
-| 18 | تم تأكيد الحجز |
-| 19 | تفاصيل اشتراكي |
-| 20 | تأكيد دفع الاشتراك |
-| 21 | حالة تأكيد الاستلام |
-| 22 | إدارة الاشتراك |
-
-## المرحلة 4 — حساب الراكب والمحفظة
-
-| الرقم | الشاشة |
-|---|---|
-| 23 | المحفظة |
-| 24 | شحن المحفظة |
-| 25 | نتيجة الشحن |
-| 26 | سحب الرصيد |
-| 27 | سجل المعاملات |
-| 28 | اشتراكاتي |
-| 29 | سجل الاشتراكات السابقة |
-| 30 | المحادثات |
-| 31 | المحادثة |
-| 32 | الإشعارات |
-| 33 | حسابي |
-| 34 | تعديل البيانات الشخصية |
-| 35 | المساعدة والدعم |
-
-## المرحلة 5 — تسجيل وتجهيز الكابتن
-
-| الرقم | الشاشة |
-|---|---|
-| 36 | بداية تسجيل الكابتن |
-| 37 | بيانات الكابتن |
-| 38 | بيانات العربية |
-| 39 | رفع المستندات |
-| 40 | مراجعة الطلب |
-| 41 | حالة مراجعة الحساب |
-| 42 | تفعيل حساب الكابتن |
-
-## المرحلة 6 — إنشاء وإدارة الخطوط
-
-| الرقم | الشاشة |
-|---|---|
-| 43 | خطوطي |
-| 44 | إنشاء خط جديد |
-| 45 | تحديد المسار |
-| 46 | تحديد المواعيد |
-| 47 | نوع الاشتراك واتجاهه |
-| 48 | السعر والمقاعد |
-| 49 | مراجعة ونشر العرض |
-| 50 | إدارة الخط وتعديله |
-
-## المرحلة 7 — التشغيل اليومي للكابتن
-
-| الرقم | الشاشة |
-|---|---|
-| 51 | الرئيسية للكابتن |
-| 52 | الحجوزات الجديدة |
-| 53 | قائمة المشتركين |
-| 54 | تفاصيل اشتراك راكب |
-| 55 | التشغيل اليومي |
-| 56 | تأكيد استلام الاشتراك |
-| 57 | المحادثات |
-| 58 | المحادثة مع الراكب |
-| 59 | إشعارات الكابتن |
-| 60 | الحساب المالي والمعاملات |
-| 61 | حساب الكابتن |
-| 62 | الدعم والمساعدة |
-
-## المرحلة 8 — لوحة الإدارة
-
-| الرقم | الشاشة |
-|---|---|
-| 63 | لوحة التحكم |
-| 64 | إدارة المستخدمين |
-| 65 | إدارة الكباتن |
-| 66 | مراجعة المستندات |
-| 67 | إدارة العربيات والفئات |
-| 68 | مراقبة الخطوط |
-| 69 | الحجوزات والاشتراكات |
-| 70 | المحافظ والتأمينات |
-| 71 | المعاملات المالية |
-| 72 | الشكاوى والدعم |
-| 73 | الإشعارات والإعلانات |
-| 74 | الإعدادات والصلاحيات |
-
-## قواعد مشتركة ملزمة
-
-القاهرة والجيزة داخل القاهرة الكبرى فقط. PRIME 3، SAVER 4، SPACE 9، MAX 13. الكابتن يحدد سعر العرض ومدته واتجاهه مسبقًا؛ الراكب يختار عرضًا ثابتًا. الأحد–الخميس باستثناء الإجازات الرسمية المصرية. السعر والتواريخ تثبت وقت الحجز. الأسبوعي 7 أيام تقويمية والشهري شهر تقويمي. البداية بتوقيت القاهرة: الدقيقة الأولى من يوم تشغيل مؤهل تسمح بنفس اليوم؛ بعدها أول يوم تشغيل مؤهل تالٍ. التسعير النسبي = السعر الكامل × الأيام المؤهلة المتبقية ÷ إجمالي الأيام المؤهلة، لأقرب جنيه، دون سقف 22 يومًا.
-
-تأمين جدية الحجز 100 جنيه مسترد ومنفصل عن الاشتراك، والحد الأدنى للشحن 100 جنيه. الاشتراك يُدفع للكابتن مباشرة أول يوم. تحرير التأمين بعد الإقرارين، بلا مصادرة تلقائية للغياب. لا أموال حقيقية قبل اعتماد الشريك والسياسات.
-
-لا هوية للكابتن أو بيانات تعريف العربية في البحث والتفاصيل العامة. الشاشة 13 والمحادثات تتطلب حجزًا مؤكدًا وعلاقة مملوكة للمستخدم. المستندات للمخولين فقط. لا نشر للكابتن قبل اعتماد الحساب والعربية. لا تغييرات رجعية على حجوزات مؤكدة. لا تجديد مدفوع تلقائي.
-
-نفس المكونات والتوزيع في الدارك واللايت، RTL والشعار الأصلي والأصفر #FFC400 والأسود #0B0B0D.
+Redundant: former standalone captain/vehicle view 13 is removed from discovery and maps to subscription details, public 18. Existing historical source files are not additional active screens.

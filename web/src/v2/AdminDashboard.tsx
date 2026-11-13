@@ -3,7 +3,7 @@ import { Wordmark, type Appearance } from "./Onboarding";
 import { internalScreen, publicScreen, screenTitle } from "./screenMap";
 import "./admin.css";
 export const adminScreens = Array.from({ length: 12 }, (_, i) =>
-  internalScreen(i + 63),
+  internalScreen(i + 62),
 );
 type Item = {
   id: string;
@@ -192,7 +192,7 @@ export default function AdminDashboard(p: {
   go: (v: number) => void;
 }) {
   const demo = new URLSearchParams(location.search).get("preview") === "phase8",
-    n = publicScreen(p.screen);
+    n = publicScreen(p.screen) + 1;
   const [data, setData] = useState(seed),
     [query, setQuery] = useState(""),
     [filter, setFilter] = useState(""),
@@ -222,7 +222,7 @@ export default function AdminDashboard(p: {
     setFilter("");
     setNote("");
     setMessagePreview(false);
-    p.go(internalScreen(id));
+    p.go(internalScreen(id - 1));
   }
   function record(text: string) {
     setAudit((a) => [
@@ -245,7 +245,7 @@ export default function AdminDashboard(p: {
     setReason("");
   }
   return (
-    <div className={`admin-stage ${p.theme}`} dir="rtl">
+    <div className={`admin-stage ${p.theme}`} >
       <header className="ad-top">
         <div className="ad-brand">
           <Wordmark />
@@ -289,7 +289,7 @@ export default function AdminDashboard(p: {
                   <button
                     key={s}
                     aria-current={s === p.screen ? "page" : undefined}
-                    onClick={() => nav(publicScreen(s))}
+                    onClick={() => nav(publicScreen(s) + 1)}
                   >
                     <span className="ad-number">{publicScreen(s)}</span>
                     {screenTitle(s)}
@@ -300,7 +300,7 @@ export default function AdminDashboard(p: {
             <main className="ad-content">
               <div className="ad-heading">
                 <div>
-                  <span className="ad-eyebrow">سِكّة / الإدارة / {n}</span>
+                  <span className="ad-eyebrow">سِكّة / الإدارة / {publicScreen(p.screen)}</span>
                   <h1>{screenTitle(p.screen)}</h1>
                   <p>{intro[n]}</p>
                 </div>

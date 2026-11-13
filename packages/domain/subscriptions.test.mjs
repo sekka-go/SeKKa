@@ -17,10 +17,10 @@ const calendar = {
 const at = (s) => new Date(s);
 test("approved categories and capacities", () =>
   assert.deepEqual(categories, { PRIME: 3, SAVER: 4, SPACE: 9, MAX: 13 }));
-test("month boundaries clamp but never drift", () => {
-  assert.equal(boundary("2025-01-31", "monthly", 1), "2025-02-28");
-  assert.equal(boundary("2025-01-31", "monthly", 2), "2025-03-31");
-  assert.equal(boundary("2024-01-31", "monthly", 1), "2024-02-29");
+test("monthly cycle ends at calendar month end", () => {
+  assert.equal(boundary("2025-01-31", "monthly", 1), "2025-02-01");
+  assert.equal(boundary("2025-01-31", "monthly", 2), "2025-03-01");
+  assert.equal(boundary("2024-01-31", "monthly", 1), "2024-02-01");
 });
 test("weekly uses seven calendar days", () =>
   assert.equal(boundary("2026-11-01", "weekly", 1), "2026-11-08"));

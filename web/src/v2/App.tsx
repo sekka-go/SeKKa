@@ -1,3 +1,5 @@
+import CaptainRoutes, { captainRouteScreens } from "./CaptainRoutes";
+import { usePreferences } from "./preferences";
 import AdminDashboard, { adminScreens } from "./AdminDashboard";
 import CaptainOperations, {
   operationsScreens,
@@ -15,8 +17,7 @@ import {
 import { publicScreens, adminResources } from "./screens";
 import { copy, errorCopy } from "./copy";
 import "./theme.css";
-import Onboarding, { readAppearance, Wordmark } from "./Onboarding";
-import type { Appearance } from "./Onboarding";
+import Onboarding, { Wordmark } from "./Onboarding";
 import Discovery, { discoveryScreens } from "./Discovery";
 import type { Line } from "./Discovery";
 import BookingFlow, { bookingScreens } from "./BookingFlow";
@@ -176,24 +177,9 @@ export default function SubscriptionApp() {
   const [contact, setContact] = useState<Row | null>(null);
   const getScreen = () => {
     const n = Number(new URLSearchParams(location.search).get("screen") ?? 1);
-    return Number.isInteger(n) && n >= 1 && n <= 74 ? internalScreen(n) : 8;
+    return Number.isInteger(n) && n >= 1 && n <= 73 ? internalScreen(n) : 8;
   };
-  const [theme, setTheme] = useState<Appearance>(readAppearance);
-  function changeTheme(value: Appearance) {
-    setTheme(value);
-    const url = new URL(location.href);
-    url.searchParams.set("theme", value);
-    history.replaceState(null, "", url);
-    document.documentElement.dataset.theme = value;
-    try {
-      localStorage.setItem("sekka.appearance", value);
-    } catch {
-      /* storage optional */
-    }
-  }
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-  }, [theme]);
+  const { theme, setThemePreference: changeTheme } = usePreferences();
   const [screen, setScreen] = useState(getScreen),
     [profile, setProfile] = useState<Profile | null>(null),
     [signedIn, setSignedIn] = useState(false),
@@ -251,6 +237,7 @@ export default function SubscriptionApp() {
     null,
   );
   function go(id: number, routeId = route?.id, bookingId = booking?.id) {
+    if (id === 13) id = 19;
     setScreen(id);
     setContact(null);
     setError("");
@@ -274,7 +261,9 @@ export default function SubscriptionApp() {
     )
       params.set(
         "preview",
-        adminScreens.includes(id)
+        captainRouteScreens.includes(id)
+          ? "phase6"
+          : adminScreens.includes(id)
           ? "phase8"
           : operationsScreens.includes(id)
             ? "phase7"
@@ -488,7 +477,7 @@ export default function SubscriptionApp() {
         const rr = await api<Row[]>("captain.waitlist");
         if (active) setRows(rr);
       }
-      if (publicScreen(screen) >= 63) {
+      if (publicScreen(screen) >= 62) {
         const rr = await api<Row[] | Row>("admin.list", {
           resource: adminResources[screen],
         });
@@ -513,11 +502,11 @@ export default function SubscriptionApp() {
     ![6, 7].includes(screen) &&
     (!signedIn || !profile);
   const captainBlocked =
-    publicScreen(screen) >= 37 &&
-    publicScreen(screen) <= 62 &&
+    publicScreen(screen) >= 36 &&
+    publicScreen(screen) <= 61 &&
     profile?.role !== "captain";
   const adminBlocked =
-    publicScreen(screen) >= 63 && !profile?.permissions?.length;
+    publicScreen(screen) >= 62 && !profile?.permissions?.length;
   const selectedRoute = route;
   function RouteCard({ r }: { r: Route }) {
     return (
@@ -536,7 +525,7 @@ export default function SubscriptionApp() {
           {r.return_time && ` · العودة ${r.return_time.slice(0, 5)}`}
         </p>
         <div className="row">
-          <span>{r.captain_name ?? "خط ثابت"}</span>
+          <span>{"عرض اشتراك"}</span>
           <button
             onClick={() =>
               void run(async () => {
@@ -866,9 +855,7 @@ export default function SubscriptionApp() {
           {!busy && !routes.length && (
             <Empty>
               {copy.empty}{" "}
-              <button className="text-button" onClick={() => go(15)}>
-                قولنا محتاج تروح فين
-              </button>
+
             </Empty>
           )}
         </>
@@ -1612,7 +1599,7 @@ export default function SubscriptionApp() {
           </button>
         </form>
       );
-    if (publicScreen(screen) >= 63)
+    if (publicScreen(screen) >= 62)
       return (
         <>
           <div className="admin-tabs">
@@ -1670,6 +1657,7 @@ export default function SubscriptionApp() {
       );
     return <Empty />;
   }
+  if (captainRouteScreens.includes(screen)) return <CaptainRoutes screen={screen} theme={theme} onTheme={changeTheme} go={go}/>;
   if (adminScreens.includes(screen))
     return (
       <AdminDashboard
@@ -1706,7 +1694,7 @@ export default function SubscriptionApp() {
           </p>
           <button
             className="d-primary"
-            onClick={() => go(publicScreen(screen) >= 63 ? 64 : 44)}
+            onClick={() => go(publicScreen(screen) >= 62 ? 64 : 44)}
           >
             رجوع للوحة التحكم
           </button>
@@ -1862,7 +1850,7 @@ export default function SubscriptionApp() {
         }}
       />
     );
-  if (discoveryScreens.includes(screen) || screen === 9)
+  if (discoveryScreens.includes(screen) || screen === 9 || screen === 15)
     return (
       <Discovery
         screen={screen}
@@ -1907,6 +1895,7 @@ export default function SubscriptionApp() {
         }}
         onBook={(offer) => {
           setBookingOffer(offer);
+          if (offer.id.startsWith("preview-")) {try {sessionStorage.setItem("sekka.preview.selectedOffer", JSON.stringify(offer));} catch {/* in-memory selection still works */}}
           setPeriod(offer.period);
           setDirection(offer.direction);
           setQuote(null);
