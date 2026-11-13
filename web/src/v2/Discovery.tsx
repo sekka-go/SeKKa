@@ -1010,8 +1010,8 @@ export default function Discovery(p: DiscoveryProps) {
               </div>
               <section className="d-box"><h2>نقاط المسار</h2>
                 <ol>{(current.stops || []).map(s => <li key={s.id}>{s.name}</li>)}</ol>
-                <label>نقطة الركوب<select value={pickup} onChange={e => {setPickup(e.target.value); setDropoff("");}}><option value="">اختر نقطة الركوب</option>{(current.stops || []).filter(s => s.pickup).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
-                <label>نقطة النزول<select value={dropoff} onChange={e => setDropoff(e.target.value)}><option value="">اختر نقطة النزول</option>{(current.stops || []).filter((s,i) => s.dropoff && i > (current.stops || []).findIndex(p => p.id === pickup)).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
+                <label>نقطة الركوب<select aria-label="نقطة الركوب" value={pickup} onChange={e => {setPickup(e.target.value); setDropoff("");}}><option value="">اختر نقطة الركوب</option>{(current.stops || []).filter(s => s.pickup).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
+                <label>نقطة النزول<select aria-label="نقطة النزول" value={dropoff} onChange={e => setDropoff(e.target.value)}><option value="">اختر نقطة النزول</option>{(current.stops || []).filter((s,i) => s.dropoff && i > (current.stops || []).findIndex(p => p.id === pickup)).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
                 {current.direction === "round_trip" && pickup && dropoff && <p>العودة تلقائيًا: {current.stops?.find(s => s.id === dropoff)?.name} ← {current.stops?.find(s => s.id === pickup)?.name}</p>}
                 {!current.stops?.length && <p>نقاط العرض غير متاحة؛ الحجز غير متاح حتى نشر النقاط.</p>}
               </section>
