@@ -257,7 +257,7 @@ export default function Onboarding({
       </nav>
       <p className="phase-preview-note" id="phase-preview-note">
         {id === 6
-          ? "معاينة شكل شاشة النجاح فقط — لم يتم التحقق من أي رقم."
+          ? "معاينة استكمال الملف الشخصي — لم يتم حفظ حساب أو التحقق من رقم."
           : id >= 4
             ? "معاينة التصميم — إرسال الرسائل وإنشاء الحسابات غير مفعّلين."
             : "معاينة المرحلة الأولى · 7 شاشات"}
@@ -526,7 +526,7 @@ export default function Onboarding({
             </button>
           </>
         ) : id === 6 ? (
-          <>
+          <div className="phase-flow-content">
             <h1 className="phase-title">{heading}</h1>
             <p className="phase-subtitle">
               كمّل اسمك عشان نجهّز حسابك. بيانات الكابتن ومستنداته ليها خطوات
@@ -561,9 +561,9 @@ export default function Onboarding({
             >
               متابعة للمعاينة <Arrow />
             </button>
-          </>
+          </div>
         ) : (
-          <>
+          <div className="phase-flow-content">
             <h1 className="phase-title">{heading}</h1>
             <p className="phase-subtitle">
               الأذونات باختيارك، وتقدر تكمل من غيرها.
@@ -583,7 +583,7 @@ export default function Onboarding({
             >
               تخطي ومتابعة <Arrow />
             </button>
-          </>
+          </div>
         )}
         {id !== 1 && id !== 2 && (
           <ReferenceArt

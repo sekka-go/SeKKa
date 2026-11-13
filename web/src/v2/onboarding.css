@@ -983,3 +983,19 @@
 }
 .phase-wordmark .wordmark-dark { mix-blend-mode: lighten; }
 .phase-wordmark .wordmark-light { mix-blend-mode: multiply; }
+
+/* Profile and permissions use natural document flow, not the retired success layout. */
+.phase-screen-6, .phase-screen-7 { aspect-ratio: auto; min-height: min(800px, 133vw); padding: 0; }
+.phase-flow-content { display: flex; flex-direction: column; gap: 4cqw; padding: 25cqw 6cqw 20cqw; }
+.phase-flow-content .phase-title, .phase-flow-content .phase-subtitle,
+.phase-flow-content .phase-primary, .phase-flow-content .phase-register-fields {
+  position: static; width: 100%; height: auto; margin: 0;
+}
+.phase-canvas .phase-flow-content .phase-title { font-size: 6cqw; white-space: normal; }
+.phase-canvas .phase-flow-content .phase-subtitle { font-size: 3.5cqw; }
+.phase-flow-content .phase-register-field { flex-direction: column; align-items: stretch; height: auto; padding: 3cqw; gap: 2cqw; font-size: 3.5cqw; }
+.phase-flow-content .phase-register-field input { min-height: 44px; height: auto; padding: 2cqw; background: var(--phase-bg); border: 1px solid var(--phase-line); border-radius: 2cqw; font-size: 3.5cqw; }
+.phase-flow-content .phase-primary { min-height: 48px; padding: 3cqw !important; }
+.phase-flow-content .phase-register-fields { gap: 3cqw; border: 1px solid var(--phase-line); border-radius: 3cqw; padding: 4cqw; }
+.phase-flow-content h2 { margin: 0; font-size: 4.5cqw; }
+.phase-flow-content .phase-register-fields p { font-size: 3.5cqw; text-align: right; }
