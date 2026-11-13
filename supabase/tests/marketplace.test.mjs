@@ -523,7 +523,7 @@ test("concurrent identical booking retries return the same reservation", async (
   await assert.rejects(as(db,null,"booking.contact",{bookingId:reserved.id}),/AUTH_REQUIRED/);
   await assert.rejects(as(db,admin,"booking.contact",{bookingId:reserved.id}),/CONFIRMED_BOOKING_REQUIRED/);
   await assert.rejects(as(db,admin,"conversation.open",{captainId:captain}),/CONFIRMED_BOOKING_REQUIRED/);
-  const contact=await as(db,rider,"booking.contact",{bookingId:reserved.id});
+  const contact=await as(db,reserved.rider_id,"booking.contact",{bookingId:reserved.id});
   assert.equal(contact.captain_id,captain);
   assert.equal(contact.plate,"test plate");
   const grants=await db.query("select has_function_privilege('authenticated','sekka_v2.api_before_map74(text,jsonb)','execute') allowed");
