@@ -513,7 +513,9 @@ test("canonical map has exactly 74 unique destinations and public results hide i
 }) => {
   await page.goto("/?screen=11&preview=phase2");
   await expect(page.locator(".d-result")).toHaveCount(3);
-  await expect(page.locator(".d-result")).not.toContainText("كابتن أحمد");
+  for (const card of await page.locator(".d-result").all()) {
+    await expect(card).not.toContainText(/كابتن|أحمد|محمد|كريم/);
+  }
   await page.goto("/?screen=23&preview=phase4");
   await expect(page.locator("main h1")).toContainText("محفظتي");
   await page.goto("/?screen=42&preview=phase5");
