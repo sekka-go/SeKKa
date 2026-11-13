@@ -23,3 +23,9 @@
 | Phase-two booking placeholder modal | Navigate to approved summary carrying selected offer | Discovery onBook, URL offer metadata | Preview navigation; no reservation mutation |
 
 | Captain onboarding 37–43 | Generic legacy forms and direct upload | Shared themed flow, local preview selections, guarded real status | web/src/v2/CaptainOnboarding.tsx | No data migrated | Phase-six E2E added | Branch preview pending | Verification/storage policy; production activation |
+
+| Previous | Phase 7 replacement | Location | Verification | Remaining dependency |
+|---|---|---|---|---|
+| Generic captain JSON / pending pages | Themed operations 51–62 | web/src/v2/CaptainOperations.tsx | PostgreSQL role/privacy test; mobile E2E | Hosted migration/auth |
+| Captain chat could only follow existing rider thread | Owned-booking captain chat open | captain_operations migration | Unrelated actor and unknown booking rejected | Staging migration |
+| Receipt list shown as generic bookings | Direct-payment receipt history | Screen 60 | No wallet credit assumptions | Live transaction data |

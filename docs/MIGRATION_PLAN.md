@@ -22,3 +22,10 @@ No records/tables/storage objects are deleted. Verify anonymous discovery lacks 
 and vehicle identifiers; owner contacts succeed; unrelated user contacts and unbooked
 chat fail. Do not roll back by re-exposing the previous API. Recovery is a forward fix
 while keeping identity fields hidden. Hosted application is not part of this UI change.
+
+### Phase 7 operations migration
+Apply 20261113054728_captain_operations.sql after map74_booking_privacy in staging only.
+It adds owner-scoped reads and a booking-gated captain chat entry via the existing RPC.
+No data conversion or deletions. Verify two separate captain accounts cannot read/open
+one another's bookings. Forward-fix on failure; do not restore an earlier public API that
+would bypass the privacy wrapper. Hosted application remains pending staging approval/config.

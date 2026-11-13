@@ -101,3 +101,26 @@ without implementation display an honest pending-state page, not fabricated oper
 Authentication/SMS, live profile saving, private document submission, payment partner,
 withdrawal, renewal and offer amendment policies remain pending. No claim of production
 readiness or full74-screen completion. See SCREEN_MAP74_REVIEW.md for the review matrix.
+
+## Phase 7 — Captain operations (51–62), 13 November 2026
+Implemented CaptainOperations with the existing RTL/dark/light design system, canonical
+navigation, booking/subscriber filters, selected subscription, daily operating calendar,
+receipt acknowledgement, conversations/messages, notifications, receipt history, account
+and support tickets. Replaces raw JSON/placeholder views for these twelve screens.
+Preview `?screen=51&preview=phase7` uses isolated illustrative state: receipt, message and
+support interactions never send requests. Reload clears simulation. Receipt requires
+rider acknowledgement, start date, eligible booking state and explicit captain assertion;
+server retains transactional dual confirmation and idempotent security release.
+
+New forward migration `20261113054728_captain_operations.sql` returns owner-scoped
+operations data and permits captains to open a conversation only through an owned
+committed booking. All predecessor functions remain private. No table grants, destructive
+changes or production migration. Daily service fails closed outside approved calendar.
+Financial screen is direct-payment receipt history, never a fictitious wallet balance.
+Read receipts/unread message counts, vehicle changes and notification delivery are not
+fabricated. Changes to vehicle/documents are requested through support. Live availability
+requires applying tested migrations to the isolated backend; authentication remains gated.
+Local typecheck, lint, build and 34 domain/PostgreSQL tests passed. Added a mobile both-theme
+12-screen E2E suite with receipt-once, messaging/support isolation and guest protection;
+CI result must be checked on the published commit. Phase 6 and admin remaining scope are
+not implied complete by this phase. No production cutover or resource retirement.

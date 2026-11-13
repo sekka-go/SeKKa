@@ -524,3 +524,66 @@ test("canonical map has exactly 74 unique destinations and public results hide i
     page.getByRole("button", { name: "إدارة خطوطي", exact: true }),
   ).toHaveCount(0);
 });
+
+test("phase seven captain operations isolate previews and confirm receipt once", async ({
+  page,
+}) => {
+  const writes: string[] = [];
+  page.on("request", (r) => {
+    if (r.method() === "POST") writes.push(r.url());
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const theme of ["dark", "light"]) {
+    for (let screen = 51; screen <= 62; screen++) {
+      await page.goto(`/?screen=${screen}&theme=${theme}&preview=phase7`);
+      await expect(page.locator("main h1")).toBeVisible();
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+    }
+  }
+  await page.goto("/?screen=52&preview=phase7");
+  await page
+    .getByRole("button", { name: "تفاصيل الاشتراك", exact: true })
+    .first()
+    .click();
+  await expect(page.locator("main h1")).toHaveText("تفاصيل اشتراك راكب");
+  await page.getByRole("button", { name: "متابعة تأكيد الاستلام" }).click();
+  const receive = page.getByRole("button", {
+    name: "محاكاة تم الاستلام",
+    exact: true,
+  });
+  await expect(receive).toBeDisabled();
+  await page.getByLabel("أقر باستلام المبلغ الموضح").check();
+  await expect(receive).toBeEnabled();
+  await receive.click();
+  await expect(
+    page.getByText("تمت محاكاة الاستلام وتحرير التأمين في المعاينة فقط."),
+  ).toBeVisible();
+  await expect(receive).toBeDisabled();
+  await page.getByLabel("شاشة المرحلة السابعة").selectOption("60");
+  await expect(page.getByText("سجل إقرارات الاستلام")).toBeVisible();
+  await expect(page.getByText("تم الإقرار باستلام")).toBeVisible();
+  await page.getByLabel("شاشة المرحلة السابعة").selectOption("57");
+  await page.locator(".a-thread").first().click();
+  await page
+    .getByLabel("رسالتك", { exact: true })
+    .fill("اختبار معاينة بدون إرسال");
+  await page
+    .getByRole("button", { name: "إضافة للمعاينة", exact: true })
+    .click();
+  await expect(
+    page.getByText("الرسالة في المعاينة فقط، ماتبعتتش."),
+  ).toBeVisible();
+  await page.getByLabel("شاشة المرحلة السابعة").selectOption("62");
+  await page.getByLabel("تفاصيل المشكلة").fill("مراجعة تأكيد استلام الاشتراك");
+  await page.getByRole("button", { name: "معاينة طلب الدعم" }).click();
+  await expect(page.getByText("طلب الدعم اتضاف للمعاينة فقط.")).toBeVisible();
+  expect(writes).toEqual([]);
+  await page.goto("/?screen=51");
+  await expect(
+    page.getByText("سجّل بحساب كابتن عشان تشوف بيانات تشغيلك."),
+  ).toBeVisible();
+});

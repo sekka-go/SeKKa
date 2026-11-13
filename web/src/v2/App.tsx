@@ -1,3 +1,7 @@
+import CaptainOperations, {
+  operationsScreens,
+  type OperationsData,
+} from "./CaptainOperations";
 import { internalScreen, publicScreen, screenTitle } from "./screenMap";
 import { useEffect, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
@@ -242,6 +246,9 @@ export default function SubscriptionApp() {
     calendarApproved: boolean;
     realMoneyEnabled: boolean;
   } | null>(null);
+  const [operationsData, setOperationsData] = useState<OperationsData | null>(
+    null,
+  );
   function go(id: number, routeId = route?.id, bookingId = booking?.id) {
     setScreen(id);
     setContact(null);
@@ -254,21 +261,23 @@ export default function SubscriptionApp() {
     if (id <= 7) params.set("inspect", "1");
     const previous = new URLSearchParams(location.search);
     if (
-      ["phase2", "phase3", "phase4", "phase5", "phase6"].includes(
+      ["phase2", "phase3", "phase4", "phase5", "phase6", "phase7"].includes(
         previous.get("preview") || "",
       )
     )
       params.set(
         "preview",
-        captainOnboardingScreens.includes(id)
-          ? "phase5"
-          : accountScreens.includes(id)
-            ? "phase4"
-            : walletScreens.includes(id)
+        operationsScreens.includes(id)
+          ? "phase7"
+          : captainOnboardingScreens.includes(id)
+            ? "phase5"
+            : accountScreens.includes(id)
               ? "phase4"
-              : bookingScreens.includes(id)
-                ? "phase3"
-                : "phase2",
+              : walletScreens.includes(id)
+                ? "phase4"
+                : bookingScreens.includes(id)
+                  ? "phase3"
+                  : "phase2",
       );
     for (const key of [
       "offer",
@@ -295,7 +304,7 @@ export default function SubscriptionApp() {
   async function refreshProfile() {
     if (
       !client ||
-      ["phase2", "phase3", "phase4", "phase5", "phase6"].includes(
+      ["phase2", "phase3", "phase4", "phase5", "phase6", "phase7"].includes(
         new URLSearchParams(location.search).get("preview") || "",
       )
     )
@@ -351,10 +360,11 @@ export default function SubscriptionApp() {
   useEffect(() => {
     let active = true;
     setRows([]);
+    setOperationsData(null);
     setError("");
     if (
       !client ||
-      ["phase2", "phase3", "phase4", "phase5", "phase6"].includes(
+      ["phase2", "phase3", "phase4", "phase5", "phase6", "phase7"].includes(
         new URLSearchParams(location.search).get("preview") || "",
       )
     )
@@ -392,6 +402,11 @@ export default function SubscriptionApp() {
         }
       }
       if (!signedIn) return;
+      if (operationsScreens.includes(screen)) {
+        const data = await api<OperationsData>("captain.operations");
+        if (active) setOperationsData(data);
+        return;
+      }
       if ([14].includes(screen)) {
         const rs = await api<Route[]>("favorites");
         if (active) setRoutes(rs);
@@ -1634,7 +1649,22 @@ export default function SubscriptionApp() {
       );
     return <Empty />;
   }
-  if ([77, 78, 79, 80, 81, 82, 83].includes(screen))
+  if (operationsScreens.includes(screen))
+    return (
+      <CaptainOperations
+        screen={screen}
+        theme={theme}
+        onTheme={changeTheme}
+        go={go}
+        profile={profile}
+        signedIn={signedIn}
+        data={operationsData}
+        busy={busy}
+        error={error}
+        refresh={() => setRevision((v) => v + 1)}
+      />
+    );
+  if ([77, 78, 82, 83].includes(screen))
     return (
       <div className={`phase-one-stage discovery-stage ${theme}`}>
         <main className="phase-canvas d-canvas">

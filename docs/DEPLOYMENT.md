@@ -43,3 +43,8 @@ phase4 account/wallet23–35, phase5 captain onboarding36–42. Existing immutab
 URLs preserve previous versions; new deployments use the new numbering. Hosted database
 migration20261112214616 is not applied by this change. Release requires it before enabling
 live discovery/contact APIs. Tests include the baseline plus this forward migration.
+
+### Phase 7 preview
+Entry: `?screen=51&theme=dark&preview=phase7` (or theme=light).
+Branch remains rebuild/subscriptions-20261112 / draft PR168. Preview actions are local only.
+The operations migration is committed and tested, not applied to hosted production.
