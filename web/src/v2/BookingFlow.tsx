@@ -636,8 +636,11 @@ const dateText = (v: string) =>
                   {tr("احسب التكلفة من الخدمة")}</Primary>
               )}
               {!demo && !p.signedIn && (
-                <p className="b-hint">{tr("سجّل الدخول عشان نراجع السعر والتواريخ.")}</p>
-              )}
+                <Box className="b-empty">
+                  <p className="b-hint">{tr("سجّل الدخول عشان نراجع السعر والتواريخ.")}</p>
+                  <Primary onClick={() => nav(4)}>{tr("تسجيل الدخول أو إنشاء حساب")}</Primary>
+                </Box>
+              )
               <Primary disabled={!q} onClick={() => nav(17)}>
                 {tr("متابعة لتأمين الحجز")}</Primary>
             </>
@@ -679,15 +682,20 @@ const dateText = (v: string) =>
               </Box>
               {securityNote}
               {!sufficient && (
-                <Primary
-                  onClick={() =>
-                    setModal(
-                      tr("شحن المحفظة لسه مش مفعّل. محتاجين ربط شريك الدفع واعتماد سياسة الرصيد والاسترداد. لم يتم شحن أي مبلغ."),
-                    )
-                  }
-                >
-                  {tr("شحن الرصيد")}</Primary>
-              )}
+                <>
+                  <Primary
+                    onClick={() =>
+                      setModal(
+                        tr("شحن المحفظة لسه مش مفعّل. محتاجين ربط شريك الدفع واعتماد سياسة الرصيد والاسترداد. لم يتم شحن أي مبلغ."),
+                      )
+                    }
+                  >
+                    {tr("شحن الرصيد")}</Primary>
+                  <button type="button" className="b-secondary" onClick={() => nav(24)}>
+                    {tr("راجع المحفظة")}
+                  </button>
+                </>
+              )
               <Primary
                 disabled={!sufficient || !q || !demo}
                 onClick={() => {
