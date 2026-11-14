@@ -8,7 +8,6 @@ This iteration is frontend-only. Authentication, document review, booking, walle
 
 - [v3.1 audit and implementation checklist](docs/PRD_V31_AUDIT.md)
 - [Screen-by-screen audit](docs/product/SCREEN_INVENTORY.md)
-- [Historical documents (not active requirements)](docs/archive/pre-v3.1/README.md)
 - [Deployment history](docs/DEPLOYMENT.md)
 - [Current UI/UX design reference](web/DESIGN.md)
 
@@ -27,4 +26,4 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:e2e
 
 The v3.1 frontend has replaced the former app on the production `main` branch. **This is a frontend deployment, not a production backend release**: OTP, authentication, paid bookings, wallets and persistent admin operations are unavailable or illustrative. The historical `__sekka-api` path intentionally returns HTTP 410. No database migrations or real finance integrations are activated.
 
-The obsolete frontend was retired from the active source tree. See [legacy frontend retirement](docs/LEGACY_FRONTEND_RETIREMENT.md).
+Old 74/78-screen specifications and unused legacy assets have been removed from the active repository tree. The authoritative PRD and current 73-screen code remain in place.

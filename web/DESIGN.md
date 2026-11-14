@@ -14,4 +14,4 @@
 - Booking, refundable EGP 100 security and captain confirmations are **frontend-only** previews until an explicitly approved live backend is connected.
 - Do not claim full 73-screen visual approval just because screens render or tests pass.
 
-**Current implementation:** `src/v2/`; [screen inventory](../docs/product/SCREEN_INVENTORY.md); [UX audit](../docs/UX_ACTIONABILITY_PROGRESS.md). Old green-theme design references are archived in `../docs/archive/pre-v3.1/`.
+**Current implementation:** `src/v2/`; [screen inventory](../docs/product/SCREEN_INVENTORY.md); [UX audit](../docs/UX_ACTIONABILITY_PROGRESS.md). Superseded green-theme and 74/78-screen documents have been removed from the active repository.

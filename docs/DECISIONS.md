@@ -10,4 +10,4 @@ Authority: [PRD v3.1](PRD.md), 73 screens across eight stages. These notes recor
 - Local preview booking snapshots are session-only simulations. They cannot authorize real transfers or prove a real booking.
 - Full English coverage and consolidated cross-stage preview state are still incomplete; see the [current audit](PRD_V31_AUDIT.md).
 
-[Historical decisions](archive/pre-v3.1/DECISIONS.md) are retained for context only and are superseded.
+Superseded decisions have been removed from the current tree; only PRD v3.1 and these implementation decisions are active.

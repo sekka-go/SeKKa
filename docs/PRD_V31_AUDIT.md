@@ -14,7 +14,7 @@ Authority: [PRD.md](PRD.md), preserved byte-for-byte from the owner attachment.
 ## Priority checklist
 
 - [x] Read all of attached PRD v3.1 before editing.
-- [x] Preserve canonical document at `docs/PRD.md` and archive verified older PRDs/maps.
+- [x] Preserve canonical `docs/PRD.md` and remove superseded 74/78-screen PRDs/maps from the active repository.
 - [x] Public registry: exactly 73 unique IDs, standalone captain details merged into public 18.
 - [x] Monthly frontend cycle ends at first day of next month (exclusive); retain Cairo cutoff, service days, holiday coverage and rounding checks.
 - [x] Request action only after search with zero matching offers; review reuses input and duplicate confirmation is disabled; no booking/wallet write.
@@ -26,11 +26,11 @@ Authority: [PRD.md](PRD.md), preserved byte-for-byte from the owner attachment.
 - [ ] Validate each of 73 screens against complete functional acceptance (see screen inventory).
 - [x] Baseline updated E2E suite on CI (18/18 at `3f9a44a`); local browser launch blocked by host socket restrictions. Further translation tests are tracked separately.
 
-## Archived instead of discarded
+## Removed obsolete documents
 
-`docs/archive/pre-v3.1/` contains prior `product/PRD.md`, screen inventory/specifications, `SCREEN_MAP74_REVIEW.md`, and old product-spec PRD/screen map. Other useful historical engineering documents are explicitly labelled historical. Git retains all originals.
+The superseded pre-v3.1 PRDs, 74/78-screen maps, October design documents and historical deployment reports have been removed from the active Git tree by owner request. Git commit history retains earlier versions, but no old PRD or screen map is an active source of truth.
 
-Old documents contain backend designs, migration/runbook details, pricing anchors, policy proposals and earlier auth decisions not approved by v3.1. They remain historical; none were silently merged into the new PRD. In particular, older SQL monthly anniversary calculations are not the approved frontend month-end rule and must be redesigned in a future backend task.
+No old pricing, finance or backend policies were silently approved. Historical SQL migration files were deliberately kept intact pending an explicit database migration plan; the old monthly-anniversary calculations remain ineligible for v3.1 backend use.
 
 ## Open details and dependencies
 
@@ -54,7 +54,7 @@ An interactive search-to-booking preview now stores a cloned offer, selected sto
 
 Localization CI run 43527334833 passed all checks including 21 browser tests. The booking interaction test also passed in run 43527661792: all 22 browser tests and 40 domain/historical database checks passed at `98bbffac`.
 
-Historical decisions and phase completion reports were also moved into `docs/archive/pre-v3.1/`. Current `DECISIONS.md` and `IMPLEMENTATION_STATUS.md` now describe only v3.1 implementation status. Other useful historical engineering documents carry explicit non-authoritative labels.
+Earlier decisions and phase completion reports were removed from the current tree. The active `DECISIONS.md` and `IMPLEMENTATION_STATUS.md` describe only v3.1 implementation status.
 
 ### Cross-stage preview state
 
