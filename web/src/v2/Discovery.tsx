@@ -3,7 +3,7 @@ import {translate} from "./translations";
 import { readPublishedPreviews } from "./CaptainRoutes";
 import { selectStops, matchesStops, type Stop } from "../../../packages/domain/stops";
 import { publicScreen } from "./screenMap";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties, FormEvent, ReactNode } from "react";
 import { Wordmark } from "./Onboarding";
 import type { Appearance } from "./Onboarding";
@@ -441,18 +441,35 @@ export type DiscoveryProps = {
   onBook: (offer: Line) => void;
   onBooking: (id: string) => void;
 };
+// Keep the rider's unfinished search and stop selections when a prerequisite
+// (such as sign-in) temporarily unmounts the discovery screen. Session only.
+const riderDraftKey = "sekka.rider.discoveryDraft.v31";
+type RiderDraft = {
+  origin?: string; destination?: string; outbound?: string; returnTime?: string;
+  period?: string; categories?: string[]; selectedId?: string; favoriteDetail?: Line | null;
+  searched?: boolean; pickup?: string; dropoff?: string; filterDirection?: string;
+  filterPrice?: string; onlyAvailable?: boolean; appliedFilters?: boolean;
+};
+function readRiderDraft(): RiderDraft {
+  try {
+    const value: unknown = JSON.parse(sessionStorage.getItem(riderDraftKey) || "null");
+    if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+    return value as RiderDraft;
+  } catch { return {}; }
+}
 export default function Discovery(p: DiscoveryProps) {
   const { screen, theme, onTheme, go } = p;
   const {language}=usePreferences();
   const tr=(text:string)=>translate(text,language);
   const demo = new URLSearchParams(location.search).get("preview") === "phase2";
-  const [origin, setOrigin] = useState(demo ? "المعادي" : ""),
-    [destination, setDestination] = useState(demo ? "التجمع" : "");
-  const [outbound, setOutbound] = useState("07:30"),
-    [returnTime, setReturnTime] = useState("17:00"),
-    [period, setPeriod] = useState("monthly");
-  const [categories, setCategories] = useState<string[]>([]),
-    [selectedId, setSelectedId] = useState(examples[0].id),
+  const restored = useMemo(readRiderDraft, []);
+  const [origin, setOrigin] = useState(restored.origin ?? (demo ? "المعادي" : "")),
+    [destination, setDestination] = useState(restored.destination ?? (demo ? "التجمع" : ""));
+  const [outbound, setOutbound] = useState(restored.outbound ?? "07:30"),
+    [returnTime, setReturnTime] = useState(restored.returnTime ?? "17:00"),
+    [period, setPeriod] = useState(restored.period ?? "monthly");
+  const [categories, setCategories] = useState<string[]>(Array.isArray(restored.categories) ? restored.categories.filter(v => typeof v === "string") : []),
+    [selectedId, setSelectedId] = useState(restored.selectedId ?? examples[0].id),
     [favorites, setFavorites] = useState<string[]>(() => {
       try {
         const stored: unknown = JSON.parse(sessionStorage.getItem("sekka.preview.favoriteOfferIds") || "null");
@@ -460,13 +477,13 @@ export default function Discovery(p: DiscoveryProps) {
       } catch { /* Fall back to the sample favorites. */ }
       return favoriteExamples.map(row => row.id);
     });
-  const [favoriteDetail, setFavoriteDetail] = useState<Line | null>(null);
-  const [searched, setSearched] = useState(false);
+  const [favoriteDetail, setFavoriteDetail] = useState<Line | null>(restored.favoriteDetail ?? null);
+  const [searched, setSearched] = useState(() => new URLSearchParams(location.search).get("screen") === "11" && restored.searched === true);
   const [favoriteSignInRequired, setFavoriteSignInRequired] = useState(false);
   const [favoriteRetryId, setFavoriteRetryId] = useState<string | null>(null);
   const [requestSent, setRequestSent] = useState(false);
-  const [pickup, setPickup] = useState("");
-  const [dropoff, setDropoff] = useState("");
+  const [pickup, setPickup] = useState(restored.pickup ?? "");
+  const [dropoff, setDropoff] = useState(restored.dropoff ?? "");
   const [past, setPast] = useState(false),
     [notes, setNotes] = useState(""),
     [message, setMessage] = useState(""),
@@ -493,10 +510,18 @@ export default function Discovery(p: DiscoveryProps) {
     outbound,
     returnTime,
   };
-  const [filterDirection, setFilterDirection] = useState("");
-  const [filterPrice, setFilterPrice] = useState("");
-  const [onlyAvailable, setOnlyAvailable] = useState(false);
-  const [appliedFilters, setAppliedFilters] = useState(false);
+  const [filterDirection, setFilterDirection] = useState(restored.filterDirection ?? "");
+  const [filterPrice, setFilterPrice] = useState(restored.filterPrice ?? "");
+  const [onlyAvailable, setOnlyAvailable] = useState(restored.onlyAvailable ?? false);
+  const [appliedFilters, setAppliedFilters] = useState(restored.appliedFilters ?? false);
+  useEffect(() => {
+    const draft: RiderDraft = {origin,destination,outbound,returnTime,period,categories,selectedId,
+      favoriteDetail:demo ? favoriteDetail : null,searched,pickup,dropoff,filterDirection,
+      filterPrice,onlyAvailable,appliedFilters};
+    try { sessionStorage.setItem(riderDraftKey, JSON.stringify(draft)); }
+    catch { /* Keep the active screen usable when session storage is unavailable. */ }
+  }, [origin,destination,outbound,returnTime,period,categories,selectedId,favoriteDetail,
+      demo,searched,pickup,dropoff,filterDirection,filterPrice,onlyAvailable,appliedFilters]);
   const filtered = lines.filter(
     (l) =>
       (!searched || (matchesStops(l.stops || [], origin, destination) && (!outbound || l.outbound === outbound) && (!returnTime || l.returnTime === returnTime))) &&
