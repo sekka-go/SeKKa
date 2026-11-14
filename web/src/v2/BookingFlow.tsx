@@ -328,6 +328,7 @@ const dateText = (v: string) =>
   const [modalAction, setModalAction] = useState<"support" | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const supportRequestRef = useRef<HTMLTextAreaElement>(null);
+  const focusSupportOnClose = useRef(false);
   const lastFocus = useRef<HTMLElement | null>(null);
   useEffect(() => {
     if (modal) {
@@ -335,7 +336,12 @@ const dateText = (v: string) =>
       dialog.current?.showModal();
     } else {
       dialog.current?.close();
-      lastFocus.current?.focus();
+      if (focusSupportOnClose.current) {
+        focusSupportOnClose.current = false;
+        supportRequestRef.current?.focus();
+      } else {
+        lastFocus.current?.focus();
+      }
     }
   }, [modal]);
   const q = demo ? (screen >= 18 && previewBooking ? previewBooking.quote : sampleQuote(demoOffer)) : localQuote || p.quote;
@@ -1023,10 +1029,9 @@ const dateText = (v: string) =>
         <p>{modal}</p>
         {modalAction === "support" && (
           <button type="button" className="d-primary" onClick={() => {
-            dialog.current?.close();
+            focusSupportOnClose.current = true;
             setModal("");
             setModalAction(null);
-            supportRequestRef.current?.focus();
           }}>
             {tr("اكتب طلب مراجعة")}
           </button>
