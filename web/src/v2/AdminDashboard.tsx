@@ -1,4 +1,5 @@
 import {usePreferences} from "./preferences";
+import {readPreviewBookings, previewSubscriberRows, previewSecurityTransactions} from "./previewBookingStore";
 import {translate} from "./translations";
 import { useState } from "react";
 import { Wordmark, type Appearance } from "./Onboarding";
@@ -211,8 +212,46 @@ export default function AdminDashboard(p: {
     [body, setBody] = useState(""),
     [audience, setAudience] = useState("الركاب"),
     [messagePreview, setMessagePreview] = useState(false);
+  // Read the same session-only booking/security snapshot as rider, captain and wallet.
+  // Never blend these records with illustrative fixed examples once a booking exists.
+  const ledger = demo ? readPreviewBookings() : null;
+  const shared = ledger && ledger.bookings.length > 0 ? ledger : null;
+  const money = (value: number) =>
+    language === "en" ? `EGP ${value.toLocaleString("en-GB")}` : `${value.toLocaleString("en-US")} ج.م`;
+  const itemsFor = (id: number): Item[] => {
+    if (!shared) return data[id] || [];
+    if (id === 69) {
+      return previewSubscriberRows(shared).map(b => ({
+        id: String(b.id),
+        name: `${tr("راكب المعاينة")} · ${tr(b.origin)} ← ${tr(b.destination)}`,
+        detail: `${tr("البداية")} ${b.starts_on} · ${tr("نهاية الدورة")} ${b.ends_before} · ${tr("الراكب:")} ${b.rider_paid_at ? tr("تم الدفع") : tr("انتظار الدفع")} · ${tr("الكابتن:")} ${b.captain_received_at ? tr("تم الاستلام") : tr("انتظار الاستلام")}`,
+        status: b.security_state === "released" ? "الدفع مؤكد" : "حجز مؤكد",
+        value: money(Number(b.price)),
+      }));
+    }
+    if (id === 70) {
+      const total = shared.available + shared.reserved;
+      return [{
+        id: "PREVIEW-WALLET",
+        name: tr("محفظة الراكب التجريبية"),
+        detail: `${tr("الرصيد المتاح")} ${money(shared.available)} · ${tr("التأمين المحجوز")} ${money(shared.reserved)}`,
+        status: shared.reserved > 0 ? "تأمين محجوز" : "التأمين متاح",
+        value: money(total),
+      }];
+    }
+    if (id === 71) {
+      return previewSecurityTransactions(shared).map(t => ({
+        id: String(t.id),
+        name: t.kind === "reserve" ? "حجز تأمين جدية الحجز" : "تحرير تأمين جدية الحجز",
+        detail: `${tr("راكب المعاينة")} · ${String(t.id).replace(/-(reserve|release)$/, "")} · ${String(t.created_at).slice(0, 10)}`,
+        status: "مكتملة",
+        value: money(100),
+      }));
+    }
+    return data[id] || [];
+  };
   const allowed = role === "الكل" || role === required(n),
-    items = empty ? [] : data[n] || [],
+    items = empty ? [] : itemsFor(n),
     filtered = items.filter(
       (i) =>
         (!filter || i.status === filter) &&
@@ -328,7 +367,7 @@ export default function AdminDashboard(p: {
                     onChange={(e) => setEmpty(e.target.checked)}
                   />
                   {tr("عرض الحالة الفارغة")}</label>
-                <span>{tr("البيانات تتصفّر عند إعادة التحميل")}</span>
+                <span>{shared ? tr("حجوزات المعاينة موحّدة مع حساب الراكب والكابتن والمحفظة") : tr("البيانات تتصفّر عند إعادة التحميل")}</span>
               </div>
               {note && (
                 <p className="ad-feedback" role="status">
@@ -354,7 +393,7 @@ export default function AdminDashboard(p: {
                           ["حجوزات مثبتة", 69],
                           ["تأمينات معلّقة", 70],
                         ].map(([label, id]) => {
-                          const rows = empty ? [] : data[Number(id)];
+                          const rows = empty ? [] : itemsFor(Number(id));
                           const count =
                             Number(id) === 65
                               ? rows.filter((i) => i.status === "معتمد").length
