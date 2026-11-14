@@ -1,3 +1,4 @@
+import {readPreviewBookings, previewSubscriberRows, confirmPreviewBooking} from "./previewBookingStore";
 import { PreferenceSettings } from "./preferences";
 import { useState, type ReactNode } from "react";
 import { Wordmark, type Appearance } from "./Onboarding";
@@ -176,10 +177,12 @@ export default function CaptainOperations(p: {
     [unread, setUnread] = useState(false),
     [support, setSupport] = useState(""),
     [topic, setTopic] = useState("الدفع والتأمين");
+  const ledger = demo ? readPreviewBookings() : null;
+  const shared = ledger && ledger.bookings.length > 0 ? ledger : null;
   const d = demo
     ? empty
       ? { ...emptyData, today: demoData.today, eligible: true }
-      : local
+      : shared ? {...local, bookings: previewSubscriberRows(shared)} : local
     : p.data || emptyData;
   const allowed = demo || (p.signedIn && p.profile?.role === "captain");
   const nav = (v: number) => {
@@ -533,7 +536,10 @@ export default function CaptainOperations(p: {
                         }
                         onClick={() =>
                           void perform(async () => {
-                            if (demo) {
+                            if (shared) {
+                              confirmPreviewBooking(str(booking,"id"),"captain");
+                              setNote("تم تسجيل الاستلام وتحرير تأمين الحجز في المحفظة التجريبية.");
+                            } else if (demo) {
                               setLocal((v) => ({
                                 ...v,
                                 bookings: v.bookings.map((b) =>

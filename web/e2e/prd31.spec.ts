@@ -109,7 +109,16 @@ test('interactive preview locks booking terms and persists dual-confirmation sec
  await page.getByRole('button',{name:'تأكيد الدفع',exact:true}).click();
  await page.getByLabel('دفعت للكابتن قيمة الاشتراك كاملة.',{exact:true}).check();await page.getByRole('button',{name:'معاينة متابعة الاستلام',exact:true}).click();
  expect(await page.evaluate(()=>JSON.parse(sessionStorage.getItem('sekka.preview.bookingLedger.v31')!).reserved)).toBe(100);
- await page.getByRole('button',{name:'محاكاة تأكيد الكابتن — لا دفع حقيقي',exact:true}).click();await page.reload();
+ const receiptUrl=page.url();
+ await page.goto('/?screen=51&preview=phase7');
+ await expect(page.getByText('راكب المعاينة',{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'تفاصيل الاشتراك',exact:true}).click();
+ await expect(page.getByText('نقاط الراكب',{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'متابعة تأكيد الاستلام',exact:true}).click();
+ await page.getByLabel('أقر باستلام المبلغ الموضح').check();
+ await page.getByRole('button',{name:'محاكاة تم الاستلام',exact:true}).click();
+ await expect(page.getByRole('button',{name:'محاكاة تم الاستلام',exact:true})).toBeDisabled();
+ await page.goto(receiptUrl);await expect(page.locator('.b-status-tag')).toContainText('الكابتن أكد الاستلام');
  const released=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('sekka.preview.bookingLedger.v31')!));expect(released.available).toBe(150);expect(released.reserved).toBe(0);expect(released.bookings[0].quote).toEqual(snapshot.bookings[0].quote);
  await expect(page.getByRole('button',{name:'محاكاة تأكيد الكابتن — لا دفع حقيقي',exact:true})).toHaveCount(0);
 });

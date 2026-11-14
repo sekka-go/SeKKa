@@ -10,8 +10,32 @@ export function readPreviewBookings():PreviewBookingLedger {
 function save(state:PreviewBookingLedger){sessionStorage.setItem(key,JSON.stringify(state));return state;}
 export function reservePreviewBooking(offer:Line,quote:Quote){
  if(!offer.selectedStops)throw Error('INVALID_STOP_ORDER');
- return save(reservePreview(readPreviewBookings(),{id:`preview-${offer.id}`,offerId:offer.id,offer,quote,availableSeats:offer.available}));
+ return save(reservePreview(readPreviewBookings(),{id:`preview-${offer.id}`,offerId:offer.id,offer,quote,availableSeats:offer.available,reservedAt:new Date().toISOString()}));
 }
 export function confirmPreviewBooking(id:string,actor:'rider'|'captain'){
- return save(confirmPreview(readPreviewBookings(),id,actor));
+ return save(confirmPreview(readPreviewBookings(),id,actor,new Date().toISOString()));
+}
+
+export function previewSubscriberRows(ledger: PreviewBookingLedger) {
+  return ledger.bookings.map(b => ({
+    id: b.id, route_id: b.offer.routeId || b.offerId, rider_name: "راكب المعاينة",
+    origin: b.offer.origin, destination: b.offer.destination,
+    price: b.quote.price, starts_on: b.quote.start, ends_before: b.quote.endExclusive,
+    period: b.offer.period, direction: b.offer.direction, category: b.offer.category,
+    pickup_stop: b.offer.selectedStops?.pickup.name, dropoff_stop: b.offer.selectedStops?.dropoff.name,
+    status: b.securityReleased ? "confirmed" : "reserved",
+    security_state: b.securityReleased ? "released" : "reserved",
+    rider_paid_at: b.riderPaid ? b.riderPaidAt || b.quote.start : null,
+    captain_received_at: b.captainReceived ? b.captainReceivedAt || b.quote.start : null,
+    created_at: b.reservedAt || b.quote.start,
+  }));
+}
+
+export function previewSecurityTransactions(ledger: PreviewBookingLedger) {
+  return ledger.bookings.flatMap(b => {
+    const reserve = {id: b.id + "-reserve", kind: "reserve", available_delta: -100,
+      reserved_delta: 100, created_at: b.reservedAt || b.quote.start};
+    return b.securityReleased ? [reserve, {id: b.id + "-release", kind: "release",
+      available_delta: 100, reserved_delta: -100, created_at: b.releasedAt || b.quote.start}] : [reserve];
+  });
 }

@@ -391,6 +391,11 @@ export default function BookingFlow(p: BookingFlowProps) {
     }
   }
   async function refresh() {
+    if (interactivePreview) {
+      setPreviewLedger(readPreviewBookings());
+      setNotice("تم تحديث حالة الحجز التجريبي.");
+      return;
+    }
     if (demo) {
       setNotice("دي حالة توضيحية. تقدر تختار حالة الاستلام من شريط المعاينة.");
       return;
@@ -934,7 +939,6 @@ export default function BookingFlow(p: BookingFlowProps) {
                   </p>
                 </div>
               )}
-              {interactivePreview && previewBooking && !captainReported && <button className="b-secondary" onClick={() => setPreviewLedger(confirmPreviewBooking(previewBooking.id,"captain"))}>محاكاة تأكيد الكابتن — لا دفع حقيقي</button>}
               <Primary disabled={working} onClick={() => void refresh()}>
                 تحديث الحالة
               </Primary>

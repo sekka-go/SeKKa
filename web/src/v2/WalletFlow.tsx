@@ -1,3 +1,4 @@
+import {readPreviewBookings, previewSubscriberRows, previewSecurityTransactions} from "./previewBookingStore";
 import { publicScreen } from "./screenMap";
 import { useState, type ReactNode } from "react";
 import { Wordmark, type Appearance } from "./Onboarding";
@@ -104,9 +105,11 @@ export default function WalletFlow(p: {
     [scenario, setScenario] = useState("pending"),
     [empty, setEmpty] = useState(false),
     [detail, setDetail] = useState<string | null>(null);
-  const balance = demo ? { available: 50, reserved: 100 } : p.balance;
-  const transactions = demo ? (empty ? [] : samples) : p.transactions;
-  const bookings = demo ? (empty ? [] : subscriptions) : p.bookings;
+  const ledger = demo ? readPreviewBookings() : null;
+  const shared = ledger && ledger.bookings.length > 0 ? ledger : null;
+  const balance = demo ? shared || {available:50,reserved:100} : p.balance;
+  const transactions = demo ? (empty ? [] : shared ? previewSecurityTransactions(shared) : samples) : p.transactions;
+  const bookings = demo ? (empty ? [] : shared ? previewSubscriberRows(shared) : subscriptions) : p.bookings;
   const shown = [...transactions]
     .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))
     .filter((t) => filter === "all" || t.kind === filter);
