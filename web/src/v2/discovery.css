@@ -1587,3 +1587,174 @@
  .discovery-stage .d-screen-11 .d-result { padding-inline:2.4cqw; }
  .booking-stage .b-screen-16 .b-price-breakdown { padding:2cqw; }
 }
+
+
+/* Phase 2 — rider interaction and responsive polish (public screens 8–21).
+   Scoped intentionally: approved onboarding (1–7) is unchanged.
+   Motion is optional; layout, status and active states must also work without it. */
+.discovery-stage .d-canvas,
+.booking-stage .b-canvas {
+  --rider-shadow: 0 16px 38px rgba(0, 0, 0, .18);
+  --rider-active-ring: rgba(255, 196, 0, .36);
+  -webkit-tap-highlight-color: transparent;
+}
+.discovery-stage.light .d-canvas,
+.booking-stage.light .b-canvas {
+  --rider-shadow: 0 12px 34px rgba(25, 34, 46, .08);
+}
+.discovery-stage .d-canvas .d-result,
+.discovery-stage .d-canvas .d-box,
+.discovery-stage .d-canvas .d-subscription,
+.booking-stage .b-canvas .b-box {
+  position: relative;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  box-shadow: var(--rider-shadow);
+}
+.discovery-stage .d-canvas .d-result {
+  isolation: isolate;
+  border-color: rgba(255, 196, 0, .24);
+}
+.discovery-stage .d-canvas .d-result:focus-within,
+.discovery-stage .d-canvas .d-box:focus-within,
+.booking-stage .b-canvas .b-box:focus-within {
+  border-color: var(--d-gold);
+  box-shadow: 0 0 0 2px var(--rider-active-ring), var(--rider-shadow);
+}
+.discovery-stage .d-canvas .d-offer-price,
+.discovery-stage .d-canvas .d-fixed-price,
+.booking-stage .b-canvas .b-amount-card > strong,
+.booking-stage .b-canvas .b-price-breakdown > strong {
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.discovery-stage .d-canvas .d-offer-select,
+.discovery-stage .d-canvas .d-primary,
+.booking-stage .b-canvas .b-primary {
+  position: relative;
+  box-shadow: 0 6px 20px rgba(255,196,0,.14);
+}
+.discovery-stage .d-canvas .d-primary:disabled,
+.booking-stage .b-canvas .b-primary:disabled {
+  opacity: .55;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+.discovery-stage .d-canvas .d-tabs,
+.booking-stage .b-canvas .b-offer-tags {
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.discovery-stage .d-canvas .d-tabs button,
+.discovery-stage .d-canvas .d-filter-section button,
+.booking-stage .b-canvas .b-scenario button {
+  transition: background-color .16s ease, color .16s ease, border-color .16s ease;
+}
+.discovery-stage .d-canvas .d-tabs button[aria-pressed="true"],
+.discovery-stage .d-canvas .d-filter-section button[aria-pressed="true"],
+.booking-stage .b-canvas .b-scenario button[aria-pressed="true"] {
+  border-color: var(--d-gold);
+  box-shadow: inset 0 0 0 1px rgba(255,196,0,.32);
+}
+.discovery-stage .d-canvas .d-empty,
+.booking-stage .b-canvas .b-empty {
+  border: 1px dashed rgba(255,196,0,.4);
+  background: linear-gradient(135deg, rgba(255,196,0,.08), transparent 80%);
+  padding-block: max(18px, 4cqw);
+}
+.discovery-stage .d-canvas .d-empty p,
+.booking-stage .b-canvas .b-empty p {
+  max-width: 38ch;
+  margin-inline: auto;
+  line-height: 1.65;
+}
+.discovery-stage .d-canvas button,
+.booking-stage .b-canvas button {
+  touch-action: manipulation;
+}
+.discovery-stage .d-canvas button:focus-visible,
+.booking-stage .b-canvas button:focus-visible,
+.discovery-stage .d-canvas input:focus-visible,
+.booking-stage .b-canvas input:focus-visible {
+  outline: 3px solid var(--d-gold);
+  outline-offset: 3px;
+}
+html[dir="ltr"] .discovery-stage .d-canvas select {
+  direction: ltr;
+  text-align: left;
+}
+html[dir="ltr"] .booking-stage .b-canvas .b-row > strong {
+  text-align: right;
+}
+html[dir="ltr"] .booking-stage .b-canvas .b-hint,
+html[dir="ltr"] .booking-stage .b-canvas .b-fixture-note,
+html[dir="ltr"] .booking-stage .b-canvas .b-timeline p {
+  text-align: left;
+}
+html[dir="ltr"] .booking-stage .b-canvas .b-timeline > div:not(:last-child)::before {
+  right: auto;
+  left: 3.1cqw;
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .discovery-stage .d-canvas .d-result,
+  .discovery-stage .d-canvas .d-primary,
+  .discovery-stage .d-canvas .d-outline,
+  .booking-stage .b-canvas .b-primary {
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+  }
+  .discovery-stage .d-canvas .d-result:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 40px rgba(0,0,0,.19);
+  }
+  .discovery-stage .d-canvas .d-primary:hover:not(:disabled),
+  .discovery-stage .d-canvas .d-outline:hover:not(:disabled),
+  .booking-stage .b-canvas .b-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(255,196,0,.2);
+  }
+}
+.discovery-stage .d-canvas button:active:not(:disabled),
+.booking-stage .b-canvas button:active:not(:disabled) {
+  filter: brightness(.96);
+}
+@media (max-width: 390px) {
+  .discovery-stage .d-canvas .d-title,
+  .booking-stage .b-canvas .b-title {
+    white-space: normal;
+    text-wrap: balance;
+    max-width: 94%;
+    margin-inline: auto;
+    text-align: center;
+  }
+  .discovery-stage .d-canvas .d-result,
+  .discovery-stage .d-canvas .d-box,
+  .booking-stage .b-canvas .b-box {
+    min-width: 0;
+  }
+  .booking-stage .b-canvas .b-route > span,
+  .booking-stage .b-canvas .b-offer-tags > span {
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: center;
+  }
+  .booking-stage .b-canvas .b-row {
+    flex-wrap: wrap;
+  }
+  .booking-stage .b-canvas .b-row > span {
+    flex-shrink: 1;
+  }
+  .discovery-stage .d-canvas .d-primary,
+  .discovery-stage .d-canvas .d-outline,
+  .booking-stage .b-canvas .b-primary {
+    min-height: 44px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .discovery-stage .d-canvas *,
+  .booking-stage .b-canvas * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
