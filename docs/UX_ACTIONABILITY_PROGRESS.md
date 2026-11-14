@@ -1,7 +1,7 @@
 # seKKa v3.1 — UX actionability verification (ongoing)
 
 Canonical product rules: [PRD v3.1](PRD.md).
-Review branch: `rebuild/subscriptions-navigation-fix-20261114`, based on the unfinished PR #168 (not production).
+Status: targeted actionability review implemented and verified in PR #170, merged through PR #168 into the production frontend. Open items below remain incomplete; this is not a full 73-screen manual UX sign-off.
 
 This is **targeted functional review**, not certification that all 73 screens or all 359 currently indexed controls are usable.
 

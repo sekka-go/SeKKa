@@ -7,6 +7,21 @@ const retired = [
   'src/design-system', 'src/sekka-system.css', 'src/auth-login-screen-two.css',
 ];
 const stillThere = retired.filter(name => fs.existsSync(path.join(root, name)));
+const retiredRepositoryPaths = [
+  'docs/archive/pre-v3.1', 'docs/product-spec',
+  'docs/LEGACY_AUDIT.md', 'docs/LEGACY_REPLACEMENT_MATRIX.md',
+  'docs/RESET_AUDIT.md', 'docs/OPEN_QUESTIONS.md',
+  'docs/PRODUCTION_BACKEND_INTEGRATION.md',
+  'web/public/assets/sekka', 'web/public/images/sekka-login-skyline.jpg',
+];
+const repositoryRoot = path.resolve(root, '..');
+const obsolete = retiredRepositoryPaths.filter(name =>
+  fs.existsSync(path.join(repositoryRoot, name)));
+if (obsolete.length) {
+  console.error('Superseded PRD / historical files have returned:', obsolete.join(', '));
+  process.exitCode = 1;
+}
+
 if (stillThere.length) {
   console.error('Retired frontend paths must stay out of the active source tree:', stillThere.join(', '));
   process.exitCode = 1;
