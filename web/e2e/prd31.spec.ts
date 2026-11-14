@@ -416,3 +416,33 @@ test('screen heading gets keyboard focus on navigation and browser Back',async({
  await expect(page).toHaveURL(/screen=9/);
  await expect(page.locator('main h1,main h2').first()).toBeFocused();
 });
+
+
+test('English preview chat localizes fixture text without translating a typed message',async({browser})=>{
+ const context=await browser.newContext({locale:'en-GB',viewport:{width:390,height:844}});
+ const page=await context.newPage();
+ await page.goto('/?screen=29&preview=phase4');
+ await expect(page.getByText('Captain Ahmed',{exact:true})).toBeVisible();
+ await expect(page.getByText('Maadi to New Cairo',{exact:true})).toBeVisible();
+ await expect(page.getByText("Let's meet at the agreed meeting point.",{exact:true})).toBeVisible();
+ await page.locator('.a-thread').first().click();
+ await expect(page).toHaveURL(/screen=30/);
+ await expect(page.locator('.a-chat-heading')).toContainText('Captain Ahmed');
+ await expect(page.locator('.a-chat')).toContainText("Let's meet at the agreed meeting point.");
+ await page.locator('.a-compose textarea').fill('رسالة مكتوبة من الراكب');
+ await page.locator('.a-compose button').click();
+ await expect(page.locator('.a-chat')).toContainText('رسالة مكتوبة من الراكب');
+ await context.close();
+});
+
+test('subscription preview localizes known route areas without changing recorded data',async({browser})=>{
+ const context=await browser.newContext({locale:'en-GB',viewport:{width:390,height:844}});
+ const page=await context.newPage();
+ await page.goto('/?screen=27&preview=phase4');
+ await expect(page.getByText('Maadi',{exact:true})).toBeVisible();
+ await expect(page.getByText('New Cairo',{exact:true})).toBeVisible();
+ await page.goto('/?screen=28&preview=phase4');
+ await expect(page.getByText('Zamalek',{exact:true})).toBeVisible();
+ await expect(page.getByText('Sheikh Zayed',{exact:true})).toBeVisible();
+ await context.close();
+});
