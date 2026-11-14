@@ -476,9 +476,9 @@ export default function WalletFlow(p: {
                     items.map((b) => (
                       <Box key={b.id}>
                         <div className="b-row">
-                          <strong>{b.origin}</strong>
+                          <strong>{demo ? tr(b.origin) : b.origin}</strong>
                           <DiscoveryIcon name="arrow" />
-                          <strong>{b.destination}</strong>
+                          <strong>{demo ? tr(b.destination) : b.destination}</strong>
                         </div>
                         <p className="w-status">
                           {tr(states[b.status] || "حالة الاشتراك قيد التحديث")}
