@@ -43,6 +43,19 @@ const categoryList = [
   { name: "SPACE", seats: 9 },
   { name: "MAX", seats: 13 },
 ];
+function AreaPicker({value,onChange,label,language}:{value:string;onChange:(v:string)=>void;label:string;language:string}) {
+  const [query,setQuery]=useState('');
+  const filtered=servedAreas.filter(a=>translate(a,language as 'ar'|'en').toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
+  return <span className="d-area-picker">
+    <input type="search" className="d-area-search" aria-label={language==='en'?'Filter districts':'فلترة المناطق'} placeholder={language==='en'?'Find a district…':'ابحث عن منطقة…'} value={query} onChange={e=>setQuery(e.target.value)} />
+    <select aria-label={label} value={value} onChange={e=>{onChange(e.target.value);setQuery('');}} required>
+      <option value="" disabled>{label}</option>
+      {value!==''&&!filtered.includes(value)&&<option value={value}>{translate(value,language as 'ar'|'en')}</option>}
+      {filtered.map(a=><option key={a} value={a}>{translate(a,language as 'ar'|'en')}</option>)}
+    </select>
+    {filtered.length===0&&<small role="status">{language==='en'?'No matching districts':'مفيش مناطق مطابقة'}</small>}
+  </span>;
+}
 export type Line = {
   id: string;
   routeId?: string;
@@ -621,19 +634,7 @@ export default function Discovery(p: DiscoveryProps) {
     onChange: (v: string) => void,
     label: string,
   ) => (
-    <select
-      aria-label={label}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      required
-    >
-      <option value="" disabled>
-        {label}
-      </option>
-      {servedAreas.map((a) => (
-        <option key={a} value={a}>{tr(a)}</option>
-      ))}
-    </select>
+    <AreaPicker value={value} onChange={onChange} label={label} language={language} />
   );
   const periodChoices = (
     <div className="d-periods">

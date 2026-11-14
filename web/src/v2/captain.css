@@ -139,3 +139,8 @@
     transition: transform .16s ease, border-color .16s ease;
   }
 }
+
+.captain-routes-canvas .d-box input[type="search"] { width:100%; min-height:44px; }
+.captain-routes-canvas .d-box p[role="alert"] { color:#e49b53; font-weight:700; }
+.captain-routes-canvas .d-box p[role="status"] { line-height:1.6; }
+.captain-routes-canvas .d-box button:disabled { opacity:.45; cursor:not-allowed; }
