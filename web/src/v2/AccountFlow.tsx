@@ -19,6 +19,30 @@ const titles = [
   "المساعدة",
 ];
 type Row = Record<string, unknown>;
+const riderChatHistoryKey = "sekka.preview.riderChatHistory.v31";
+const riderChatThreadKey = "sekka.preview.riderChatThread.v31";
+function restoreRiderChatHistory(): Record<string, Row[]> {
+  try {
+    const parsed: unknown = JSON.parse(sessionStorage.getItem(riderChatHistoryKey) || "null");
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    const validEntries = Object.entries(parsed).filter(
+      ([key, value]) => key.startsWith("demo-") && Array.isArray(value),
+    );
+    return Object.fromEntries(validEntries.map(([key, values]) => [key,
+      (values as unknown[]).filter((value): value is Row =>
+        Boolean(value) && typeof value === "object" && !Array.isArray(value) &&
+        typeof (value as Row).body === "string" &&
+        typeof (value as Row).id === "string",
+      ).slice(-50),
+    ]));
+  } catch { return {}; }
+}
+function restoreRiderChatThread() {
+  try {
+    const saved = sessionStorage.getItem(riderChatThreadKey);
+    return saved === "demo-karim" ? saved : "demo-ahmed";
+  } catch { return "demo-ahmed"; }
+}
 const threads = [
   {
     id: "demo-ahmed",
@@ -100,8 +124,15 @@ export default function AccountFlow(p: {
     [savedName, setSavedName] = useState("أحمد محمد"),
     [unread, setUnread] = useState(false),
     [read, setRead] = useState<string[]>([]),
-    [localMessages, setLocalMessages] = useState<Record<string, Row[]>>({});
-  const [selected, setSelected] = useState("demo-ahmed");
+    [localMessages, setLocalMessages] = useState<Record<string, Row[]>>(() => demo ? restoreRiderChatHistory() : {});
+  const [selected, setSelected] = useState(() => demo ? restoreRiderChatThread() : "demo-ahmed");
+  useEffect(() => {
+    if (!demo) return;
+    try {
+      sessionStorage.setItem(riderChatHistoryKey, JSON.stringify(localMessages));
+      sessionStorage.setItem(riderChatThreadKey, selected);
+    } catch { /* Keep messages in current React state if session storage is unavailable. */ }
+  }, [demo, localMessages, selected]);
   useEffect(() => {
     setNote("");
     setDraft("");

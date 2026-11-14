@@ -464,3 +464,36 @@ test('captain preview service dates follow language instead of exposing ISO stri
  await expect(page.locator('main .b-row b[dir="ltr"]').first()).toContainText('2026');
  await context.close();
 });
+
+
+test('rider preview chat and selected captain persist after full reload without sending remotely',async({browser})=>{
+ const context=await browser.newContext({locale:'en-GB'});
+ const page=await context.newPage();
+ await page.goto('/?screen=29&preview=phase4');
+ await page.locator('.a-thread').nth(1).click();
+ await expect(page).toHaveURL(/screen=30/);
+ await expect(page.locator('.a-chat-heading')).toContainText('Captain Karim');
+ await page.locator('.a-compose textarea').fill('رجوع');
+ await page.getByRole('button',{name:'Add to preview',exact:true}).click();
+ await expect(page.locator('.a-chat .a-bubble.mine')).toContainText('رجوع');
+ await page.reload();
+ await expect(page.locator('.a-chat-heading')).toContainText('Captain Karim');
+ await expect(page.locator('.a-chat .a-bubble.mine')).toContainText('رجوع');
+ await page.goto('/?screen=29&preview=phase4');
+ await page.locator('.a-thread').nth(1).click();
+ await expect(page.locator('.a-chat .a-bubble.mine')).toContainText('رجوع');
+ await context.close();
+});
+
+test('captain preview does not translate rider-authored or captain-authored chat text',async({browser})=>{
+ const context=await browser.newContext({locale:'en-GB'});
+ const page=await context.newPage();
+ await page.goto('/?screen=56&preview=phase7');
+ await page.locator('.a-thread').first().click();
+ await page.getByLabel('Your message').fill('رجوع');
+ await page.getByRole('button',{name:'Add to preview',exact:true}).click();
+ await expect(page.locator('.a-chat .a-bubble.mine')).toContainText('رجوع');
+ await page.reload();
+ await expect(page.locator('.a-chat .a-bubble.mine')).toContainText('رجوع');
+ await context.close();
+});
