@@ -613,10 +613,12 @@ const money = (v: unknown) =>
                   <Box>
                     <p>
                       {tr("تقويم التشغيل غير معتمد لليوم؛ مش هنفترض إن فيه تشغيل.")}</p>
+                    {action("قائمة المشتركين", 53)}
                   </Box>
                 ) : !d.eligible ? (
                   <Box>
                     <p>{tr("النهارده إجازة تشغيل.")}</p>
+                    {action("قائمة المشتركين", 53)}
                   </Box>
                 ) : (
                   d.routes.map((r) => {
@@ -656,6 +658,7 @@ const money = (v: unknown) =>
                   ) && (
                     <Box>
                       <p>{tr("مفيش اشتراكات تشغيل النهارده.")}</p>
+                      {action("قائمة المشتركين", 53)}
                     </Box>
                   )}
               </>
@@ -802,6 +805,11 @@ const money = (v: unknown) =>
                   .length && (
                   <Box>
                     <p>{tr("مفيش إشعارات جديدة.")}</p>
+                    {unread ? (
+                      <button type="button" className="a-menu" onClick={() => setUnread(false)}>
+                        {tr("عرض كل الإشعارات")}<DiscoveryIcon name="back" />
+                      </button>
+                    ) : action("الحجوزات الجديدة", 52)}
                   </Box>
                 )}
                 <Box>
@@ -833,6 +841,7 @@ const money = (v: unknown) =>
                 {!d.bookings.some((b) => b.captain_received_at) && (
                   <Box>
                     <p>{tr("لسه مفيش إقرارات استلام مسجلة.")}</p>
+                    {action("الحجوزات الجديدة", 52)}
                   </Box>
                 )}
               </>
