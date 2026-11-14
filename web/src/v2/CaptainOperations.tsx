@@ -131,6 +131,27 @@ const demoData: OperationsData = {
   ],
   tickets: [],
 };
+// Demo conversations are session-local; no real chat messages are sent or stored remotely.
+const previewChatHistoryKey = "sekka.preview.captainChatHistory";
+const previewChatThreadKey = "sekka.preview.captainChatThread";
+function restorePreviewChatHistory(): Record<string, Row[]> {
+  try {
+    const parsed: unknown = JSON.parse(sessionStorage.getItem(previewChatHistoryKey) || "{}");
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    return Object.fromEntries(
+      Object.entries(parsed).filter(([, messages]) =>
+        Array.isArray(messages) &&
+        messages.every((message) => message && typeof message === "object" && typeof message.body === "string"),
+      ),
+    ) as Record<string, Row[]>;
+  } catch {
+    return {};
+  }
+}
+const restorePreviewChatThread = () => {
+  try { return sessionStorage.getItem(previewChatThreadKey) || ""; }
+  catch { return ""; }
+};
 const str = (r: Row, k: string, f = "—") => String(r[k] ?? f);
 const state = (v: unknown) =>
   ({
@@ -166,14 +187,18 @@ const money = (v: unknown) =>
   `${Number(v || 0).toLocaleString(language==="en"?"en-GB":"ar-EG-u-nu-latn")} ${language==="en"?"EGP":"ج.م"}`;
   const demo = new URLSearchParams(location.search).get("preview") === "phase7";
   const n = publicScreen(p.screen) + 1;
-  const [chatHistory,setChatHistory] = useState<Record<string,Row[]>>({});
+  const [chatHistory,setChatHistory] = useState<Record<string,Row[]>>(() => demo ? restorePreviewChatHistory() : {});
   const [local, setLocal] = useState(demoData),
     [empty, setEmpty] = useState(false),
     [query, setQuery] = useState(""),
     [filter, setFilter] = useState(""),
     [selected, setSelected] = useState(""),
-    [thread, setThread] = useState(""),
-    [messages, setMessages] = useState<Row[]>([]),
+    [thread, setThread] = useState(() => demo ? restorePreviewChatThread() : ""),
+    [messages, setMessages] = useState<Row[]>(() => {
+      if (!demo) return [];
+      const threadId = restorePreviewChatThread();
+      return restorePreviewChatHistory()[threadId] || [];
+    }),
     [draft, setDraft] = useState(""),
     [note, setNote] = useState(""),
     [error, setError] = useState(""),
@@ -235,6 +260,10 @@ const money = (v: unknown) =>
         ]);
       } else setMessages(await api<Row[]>("messages", { conversationId: id }));
       setThread(id);
+      if (demo) {
+        try { sessionStorage.setItem(previewChatThreadKey, id); }
+        catch { /* Session persistence is optional. */ }
+      }
       if (shouldNavigate) nav(58);
     });
   }
@@ -701,7 +730,10 @@ const money = (v: unknown) =>
                               ),
                             },
                           ];
-                          setChatHistory(v=>({...v,[thread]:next}));
+                          const nextHistory = {...chatHistory, [thread]: next};
+                          setChatHistory(nextHistory);
+                          try { sessionStorage.setItem(previewChatHistoryKey, JSON.stringify(nextHistory)); }
+                          catch { /* Messages still remain available within this preview. */ }
                           setMessages(next);
                         } else {
                           await api("message.send", {
