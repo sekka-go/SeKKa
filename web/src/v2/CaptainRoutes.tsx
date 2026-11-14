@@ -5,6 +5,7 @@ import { categories, type Category } from '../../../packages/domain/subscription
 import type { Stop } from '../../../packages/domain/stops';
 import { usePreferences } from './preferences';
 import type { Line } from './Discovery';
+import './captain.css';
 export const captainRouteScreens = Array.from({length:8},(_,i)=>internalScreen(i+42));
 const areaNames: Record<string,string> = {'المعادي':'Maadi','التجمع':'New Cairo','مدينة نصر':'Nasr City','الدقي':'Dokki','المهندسين':'Mohandessin','الزمالك':'Zamalek','الشيخ زايد':'Sheikh Zayed','6 أكتوبر':'6th of October','مصر الجديدة':'Heliopolis'};
 const areas=['المعادي','التجمع','مدينة نصر','الدقي','المهندسين','الزمالك','الشيخ زايد','6 أكتوبر','مصر الجديدة'];
@@ -53,7 +54,7 @@ export default function CaptainRoutes(p:{screen:number;theme:Appearance;onTheme:
  const selectedOffer=offers.find(o=>o.id===selected);
  return <div className={`phase-one-stage discovery-stage ${p.theme}`}>
  <nav className="phase-review-bar"><select aria-label={t('شاشة خطوط الكابتن','Captain routes screen')} value={n} onChange={e=>go(+e.target.value)}>{captainRouteScreens.map(s=><option key={s} value={publicScreen(s)}>{publicScreen(s)} · {screenTitle(s,language)}</option>)}</select><button onClick={()=>p.onTheme(p.theme==='dark'?'light':'dark')}>{t('تبديل المظهر','Switch theme')}</button></nav>
- <main className="phase-canvas d-canvas"><Wordmark/><h1>{screenTitle(p.screen,language)}</h1><p>{t('معاينة محلية فقط — لا يتم نشر عروض حقيقية.','Local preview only — no real offers are published.')}</p>{message&&<p role="status">{message}</p>}
+ <main className="phase-canvas d-canvas captain-routes-canvas"><Wordmark/><h1>{screenTitle(p.screen,language)}</h1><p>{t('معاينة محلية فقط — لا يتم نشر عروض حقيقية.','Local preview only — no real offers are published.')}</p>{message&&<p role="status">{message}</p>}
  {!demo?<section className="d-box"><p>{t('إدارة العروض الحقيقية غير مفعّلة.','Live route management is not enabled.')}</p><button className="d-primary" onClick={()=>go(50)}>{t('ارجع لرئيسية الكابتن','Back to captain home')}</button></section>:<>
  {n===42&&<><button className="d-primary" onClick={()=>go(43)}>{t('إنشاء خط جديد','Create route')}</button>{offers.length===0&&<p>{t('لا توجد عروض منشورة في هذه المعاينة.','No offers published in this preview.')}</p>}{offers.map(o=><section className="d-box" key={o.id}><h2>{o.origin} ← {o.destination}</h2><p>{o.category} · {o.amount} EGP · {o.available}</p><button onClick={()=>{setSelected(o.id);go(49);}}>{t('إدارة العرض','Manage offer')}</button></section>)}</>}
  {n===43&&<section className="d-box"><label>{t('وصف الخط','Route description')}<input value={title} onChange={e=>change('title',e.target.value)} maxLength={120}/></label><p>{t('أكمل المسار والمواعيد والشروط قبل النشر.','Complete the stops, schedule and offer terms before publishing.')}</p></section>}
