@@ -585,10 +585,19 @@ export default function SubscriptionApp() {
   function authScreen() {
     return (
       <Panel>
-        <p>
-          {!signedIn ? "سجّل برقم موبايلك عشان نكمل." : copy.profileRequired}
+        <p role="alert">
+          {!signedIn
+            ? language === "en" ? "Sign in or create an account to continue." : "سجّل دخولك أو اعمل حساب عشان تكمل."
+            : language === "en" ? "Complete your profile to continue." : copy.profileRequired}
         </p>
-        <button onClick={() => go(signedIn ? 6 : 3)}>كمّل</button>
+        <button onClick={() => go(signedIn ? 6 : 3)}>
+          {signedIn
+            ? language === "en" ? "Complete profile" : "استكمال الملف الشخصي"
+            : language === "en" ? "Sign in or create an account" : "تسجيل الدخول أو إنشاء حساب"}
+        </button>
+        <button type="button" className="secondary" onClick={() => go(8)}>
+          {language === "en" ? "Back to home" : "الرجوع للرئيسية"}
+        </button>
       </Panel>
     );
   }
@@ -677,7 +686,21 @@ export default function SubscriptionApp() {
     if (!authReady) return <Empty>{copy.loading}</Empty>;
     if (guarded) return authScreen();
     if (captainBlocked || adminBlocked)
-      return <Empty>الصفحة دي مش متاحة لحسابك.</Empty>;
+      return (
+        <Panel>
+          <p role="alert">
+            {language === "en"
+              ? "Your account does not have access to this page."
+              : "الصفحة دي مش متاحة لنوع حسابك أو صلاحياتك."}
+          </p>
+          <button onClick={() => go(profile?.role === "captain" ? 44 : 8)}>
+            {language === "en" ? "Back to home" : "الرجوع للرئيسية"}
+          </button>
+          <button type="button" className="secondary" onClick={() => go(34)}>
+            {language === "en" ? "Review my account" : "راجع حسابي"}
+          </button>
+        </Panel>
+      );
     if ([1, 2].includes(screen))
       return (
         <Panel className="hero">
