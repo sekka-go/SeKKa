@@ -149,7 +149,6 @@ const names = [
   "استكمال الملف الشخصي",
   "الأذونات",
 ];
-const held = "الربط معلّق حسب طلبك. المعاينة لا ترسل رسائل ولا تنشئ حسابات.";
 export default function Onboarding({
   screen,
   theme,
@@ -174,6 +173,26 @@ export default function Onboarding({
   const [phone, setPhone] = useState(""),
     [fullName, setFullName] = useState(""),
     [digits, setDigits] = useState(["", "", "", ""]);
+  const [issuedAt, setIssuedAt] = useState(0);
+  const [now, setNow] = useState(Date.now);
+  const [wrongCode, setWrongCode] = useState(false);
+  const normalizedPhone = phone.replace(/[٠-٩]/g, c => String(c.charCodeAt(0)-1632)).replace(/[ -]/g, "");
+  const validPhone = /^01[0125]\d{8}$/.test(normalizedPhone);
+  const remaining = Math.max(0, 59 - Math.floor((now - issuedAt) / 1000));
+  useEffect(() => {
+    if (id !== 5 || !issuedAt || remaining === 0) return;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [id, issuedAt, remaining]);
+  function issueDemoCode() {
+    const time = Date.now();
+    setIssuedAt(time);
+    setNow(time);
+    setWrongCode(false);
+    setDigits(["", "", "", ""]);
+    if (id !== 5) go(5);
+    else otpRefs.current[0]?.focus();
+  }
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
   const frozen = new URLSearchParams(location.search).get("inspect") === "1";
   useEffect(() => {
@@ -338,7 +357,7 @@ export default function Onboarding({
             </button>
             <p className="phase-login">
               {t("لديك حساب بالفعل؟")}{" "}
-              <button disabled title={t(held)}>
+              <button onClick={() => go(4)}>
                 {t("سجل الدخول")}</button>
             </p>
             <div className="phase-dots" aria-label={t("صفحة الترحيب الأولى")}>
@@ -414,7 +433,7 @@ export default function Onboarding({
           <>
             <h1 className="phase-title">{heading}</h1>
             <p className="phase-subtitle">
-              {t("هنبعتلك كود التحقق في رسالة قصيرة (SMS)")}</p>
+              {t("استخدم رقم موبايل مصري لتجربة التحقق محليًا.")}</p>
             <ReferenceArt
               source={4}
               crop={[202, 331, 362, 243]}
@@ -445,15 +464,15 @@ export default function Onboarding({
                 aria-describedby="phase-preview-note"
               />
             </label>
-            <button className="phase-primary phase-send" disabled title={t(held)}>
-              {t("إرسال كود التحقق")}<Arrow />
+            <button className="phase-primary phase-send" disabled={!validPhone} onClick={issueDemoCode}>
+              {t("إنشاء كود تجريبي")}<Arrow />
             </button>
           </>
         ) : id === 5 ? (
           <>
             <h1 className="phase-title">{heading}</h1>
             <p className="phase-subtitle">
-              {t("تم إرسال كود من 4 أرقام إلى رقمك")}<br />
+              {t("كود المعاينة 1234. مفيش رسالة SMS هتتبعت.")}<br />
               <strong dir="ltr">{phone || "010 1234 5678"}</strong>
             </p>
             <ReferenceArt
@@ -491,18 +510,23 @@ export default function Onboarding({
                 />
               ))}
             </div>
+            {wrongCode && <p role="alert">{t("الكود غير صحيح. جرّب كود المعاينة 1234.")}</p>}
+            {!issuedAt && <button onClick={() => go(4)}>{t("ارجع وأدخل رقم الموبايل")}</button>}
             <div className="phase-resend">
               <span>
                 <SvgIcon name="clock" />
-                00:59
+                {`00:${String(remaining).padStart(2,"0")}`}
               </span>
-              <button disabled title={t(held)}>
+              <button disabled={!issuedAt || remaining > 0} onClick={issueDemoCode}>
                 {t("أعد إرسال الكود")}</button>
             </div>
             <button
               className="phase-primary phase-verify"
-              disabled
-              title={t(held)}
+              disabled={!issuedAt || digits.some(d => !d)}
+              onClick={() => {
+                if (digits.join("") === "1234") { setIssuedAt(0); go(6); }
+                else { setWrongCode(true); setDigits(["", "", "", ""]); otpRefs.current[0]?.focus(); }
+              }}
             >
               {t("تحقق")}<Arrow />
             </button>

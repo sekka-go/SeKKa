@@ -2818,7 +2818,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 213,
+    "line": 232,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(Math.max(1, id - 1))}",
@@ -2827,7 +2827,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 222,
+    "line": 241,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => go(Number(e.target.value))}",
@@ -2836,7 +2836,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 230,
+    "line": 249,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(Math.min(7, id + 1))}",
@@ -2845,7 +2845,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 239,
+    "line": 258,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => onTheme(\"dark\")}",
@@ -2854,7 +2854,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 244,
+    "line": 263,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => onTheme(\"light\")}",
@@ -2863,7 +2863,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 258,
+    "line": 277,
     "tag": "button",
     "action": "onClick",
     "handler": "{onReturn}",
@@ -2872,7 +2872,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 270,
+    "line": 289,
     "tag": "button",
     "action": "onClick",
     "handler": "{back}",
@@ -2881,7 +2881,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 287,
+    "line": 306,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(2)}",
@@ -2890,7 +2890,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 336,
+    "line": 355,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(3)}",
@@ -2899,25 +2899,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 341,
-    "tag": "button",
-    "action": "implicit or inherited",
-    "handler": "",
-    "disabled": "true",
-    "label": ""
-  },
-  {
-    "file": "Onboarding.tsx",
-    "line": 385,
-    "tag": "button",
-    "action": "onClick",
-    "handler": "{() => onRole(r.value)}",
-    "disabled": "",
-    "label": ""
-  },
-  {
-    "file": "Onboarding.tsx",
-    "line": 406,
+    "line": 360,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(4)}",
@@ -2926,7 +2908,25 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 437,
+    "line": 404,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => onRole(r.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Onboarding.tsx",
+    "line": 425,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(4)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Onboarding.tsx",
+    "line": 456,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setPhone(e.target.value)}",
@@ -2935,16 +2935,16 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 448,
+    "line": 467,
     "tag": "button",
-    "action": "implicit or inherited",
-    "handler": "",
-    "disabled": "true",
+    "action": "onClick",
+    "handler": "{issueDemoCode}",
+    "disabled": "{!validPhone}",
     "label": ""
   },
   {
     "file": "Onboarding.tsx",
-    "line": 475,
+    "line": 494,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => otpChange(i, e.target.value)}",
@@ -2953,25 +2953,34 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 499,
+    "line": 514,
     "tag": "button",
-    "action": "implicit or inherited",
-    "handler": "",
-    "disabled": "true",
+    "action": "onClick",
+    "handler": "{() => go(4)}",
+    "disabled": "",
     "label": ""
   },
   {
     "file": "Onboarding.tsx",
-    "line": 502,
+    "line": 520,
     "tag": "button",
-    "action": "implicit or inherited",
-    "handler": "",
-    "disabled": "true",
+    "action": "onClick",
+    "handler": "{issueDemoCode}",
+    "disabled": "{!issuedAt || remaining > 0}",
     "label": ""
   },
   {
     "file": "Onboarding.tsx",
-    "line": 517,
+    "line": 523,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => {\n                if (digits.join(\"\") === \"1234\") { setIssuedAt(0); go(6); }\n                else { setWrongCode(true); setDigits([\"\", \"\", \"\", \"\"]); otpRefs.current[0]?.focus(); }\n              }}",
+    "disabled": "{!issuedAt || digits.some(d => !d)}",
+    "label": ""
+  },
+  {
+    "file": "Onboarding.tsx",
+    "line": 541,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setFullName(e.target.value)}",
@@ -2980,7 +2989,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 536,
+    "line": 560,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(7)}",
@@ -2989,7 +2998,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 556,
+    "line": 580,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => onReturn ? onReturn() : go(role === \"captain\" ? 37 : 8)}",

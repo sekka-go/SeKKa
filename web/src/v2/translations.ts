@@ -340,6 +340,11 @@ export const english: Readonly<Record<string,string>> = {
   "الدخول لإدارة الخطوط مش بديل عن اعتماد الكابتن والعربية. المعاينة ما بتمنحش صلاحيات نشر.": "Route management requires approval for the captain and vehicle. Previewing it does not grant publishing permissions.",
   "إدارة خطوطي": "Manage my routes",
   "متابعة حالة الطلب": "Track application status",
-  "سِكّة — معاك في السِكّة": "seKKa — With you on your commute"
+  "سِكّة — معاك في السِكّة": "seKKa — With you on your commute",
+  "إنشاء كود تجريبي": "Generate demo code",
+  "استخدم رقم موبايل مصري لتجربة التحقق محليًا.": "Enter an Egyptian mobile number to try local verification.",
+  "كود المعاينة 1234. مفيش رسالة SMS هتتبعت.": "The demo code is 1234. No SMS is sent.",
+  "الكود غير صحيح. جرّب كود المعاينة 1234.": "Incorrect code. Try the demo code 1234.",
+  "ارجع وأدخل رقم الموبايل": "Return to mobile number"
 };
 export function translate(text:string,language:"ar"|"en"){return language==="en" ? english[text] ?? text : text;}

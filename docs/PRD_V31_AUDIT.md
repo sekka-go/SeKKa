@@ -70,3 +70,5 @@ The reproducible TypeScript source inventory (`node web/scripts/audit-controls.c
 - Outstanding: exhaustive bilingual acceptance, app-wide preservation of in-progress forms across prerequisites, mock OTP/resend and provider-dependent submit states, and exhaustive role-by-role failure/retry auditing. Frontend simulations cannot validate real payment, identity or multi-user concurrency.
 
 English wallet retry and amount preservation passed in CI run 43577020386 alongside the existing browser suite. Captain onboarding screens 35–41 now render English form labels, vehicle categories, document names and review states. Independent bilingual visual verification and role-wide interaction testing remain open.
+
+Phone verification now has a local demo code, a retry path after an incorrect code and a resend cooldown. Direct entry without a challenge links to phone entry. This simulates navigation and local validation only. It does not grant an authenticated session.

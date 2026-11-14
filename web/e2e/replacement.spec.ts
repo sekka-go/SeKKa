@@ -93,9 +93,12 @@ test("phase one: all seven paired designs render and auth stays disconnected", a
     ).toBeVisible();
     await page.getByLabel("رقم الموبايل", { exact: true }).fill("01012345678");
     await expect(
-      page.getByRole("button", { name: "إرسال كود التحقق", exact: false }),
-    ).toBeDisabled();
-    await page.goto(`/?screen=5&theme=${theme}&inspect=1`);
+      page.getByRole("button", { name: "إنشاء كود تجريبي", exact: false }),
+    ).toBeEnabled();
+    await page.getByRole("button", { name: "إنشاء كود تجريبي" }).click();
+    await page.getByLabel("الرقم 1 من كود التحقق", { exact: true }).fill("1111");
+    await page.getByRole("button", { name: "تحقق", exact: true }).click();
+    await expect(page.getByRole("alert")).toContainText("الكود غير صحيح");
     await page
       .getByLabel("الرقم 1 من كود التحقق", { exact: true })
       .fill("1234");
@@ -104,8 +107,9 @@ test("phase one: all seven paired designs render and auth stays disconnected", a
     ).toHaveValue("4");
     await expect(
       page.getByRole("button", { name: "تحقق", exact: true }),
-    ).toBeDisabled();
-    await page.goto(`/?screen=6&theme=${theme}&inspect=1`);
+    ).toBeEnabled();
+    await page.getByRole("button", { name: "تحقق", exact: true }).click();
+    await expect(page).toHaveURL(/screen=6/);
     await page
       .getByLabel("الاسم الكامل", { exact: true })
       .fill("مستخدم تجريبي");
