@@ -451,7 +451,13 @@ export default function Discovery(p: DiscoveryProps) {
     [period, setPeriod] = useState("monthly");
   const [categories, setCategories] = useState<string[]>([]),
     [selectedId, setSelectedId] = useState(examples[0].id),
-    [favorites, setFavorites] = useState(favoriteExamples.map((r) => r.id));
+    [favorites, setFavorites] = useState<string[]>(() => {
+      try {
+        const stored: unknown = JSON.parse(sessionStorage.getItem("sekka.preview.favoriteOfferIds") || "null");
+        if (Array.isArray(stored) && stored.every(id => typeof id === "string")) return stored;
+      } catch { /* Fall back to the sample favorites. */ }
+      return favoriteExamples.map(row => row.id);
+    });
   const [favoriteDetail, setFavoriteDetail] = useState<Line | null>(null);
   const [searched, setSearched] = useState(false);
   const [requestSent, setRequestSent] = useState(false);
@@ -498,7 +504,7 @@ export default function Discovery(p: DiscoveryProps) {
       (!onlyAvailable || l.available > 0),
   );
   const favoritesList = demo
-    ? favoriteExamples.filter((l) => favorites.includes(l.id))
+    ? [...favoriteExamples, ...lines].filter((line) => favorites.includes(line.id))
     : lines;
   const heading = tr(titles[screen]);
   const titleIcon = (
@@ -555,9 +561,9 @@ export default function Discovery(p: DiscoveryProps) {
   }
   async function favorite(id: string) {
     if (demo) {
-      setFavorites((v) =>
-        v.includes(id) ? v.filter((x) => x !== id) : [...v, id],
-      );
+      const next = favorites.includes(id) ? favorites.filter(value => value !== id) : [...favorites, id];
+      setFavorites(next);
+      try { sessionStorage.setItem("sekka.preview.favoriteOfferIds", JSON.stringify(next)); } catch { /* Keep the current session view usable. */ }
     } else {
       try {
         await p.onFavorite(id);
@@ -1010,10 +1016,10 @@ export default function Discovery(p: DiscoveryProps) {
                 {tr("حجز الاشتراك")}</Action>
               <button
                 className="d-text-action"
-                onClick={() => void favorite(current.routeId || current.id)}
+                onClick={() => void favorite(demo ? current.id : current.routeId || current.id)}
               >
                 <DiscoveryIcon name="heart" />
-                {tr("حفظ في المفضلة")}</button>
+                {demo && favorites.includes(current.id) ? (language==="en" ? "Remove from favorites" : "إزالة من المفضلة") : tr("حفظ في المفضلة")}</button>
             </>
           ) : (
             <><Empty>{tr("اختار خط من نتائج البحث عشان تشوف تفاصيله.")}</Empty><Action onClick={() => nav(9)}>{tr("البحث عن خط")}</Action></>
@@ -1042,7 +1048,7 @@ export default function Discovery(p: DiscoveryProps) {
                     </Meta>
                     <Meta label={tr("المقاعد المتاحة")} icon="seat">
                       {l.available} {tr("مقاعد")}</Meta>
-                    <Meta label={tr("اشتراك شهري")} icon="">
+                    <Meta label={tr(periodLabel(l.period))} icon="">
                       {money(l.amount,language)}
                     </Meta>
                   </div>
