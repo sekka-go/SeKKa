@@ -311,6 +311,11 @@ export default function AccountFlow(p: {
                       {query ? tr("مفيش محادثة بالبحث ده.") : tr("لسه مفيش محادثات.")}
                     </h2>
                     <p>{tr("اختار خط عشان تفتح محادثة مع الكابتن.")}</p>
+                    {query.trim() && (
+                      <button type="button" className="d-primary b-primary" onClick={() => setQuery("")}>
+                        {tr("مسح البحث")}
+                      </button>
+                    )}
                     {action(tr("دوّر على خط"), 8)}
                   </Box>
                 )}
@@ -444,6 +449,11 @@ export default function AccountFlow(p: {
                   <Box>
                     <h2>{tr("مفيش إشعارات جديدة.")}</h2>
                     <p>{tr("تحديثات حسابك واشتراكاتك هتظهر هنا.")}</p>
+                    {unread && (
+                      <button type="button" className="d-primary b-primary" onClick={() => setUnread(false)}>
+                        {tr("عرض كل الإشعارات")}
+                      </button>
+                    )}
                   </Box>
                 )}
               </>
