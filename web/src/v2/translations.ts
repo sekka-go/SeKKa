@@ -818,6 +818,7 @@ export const english: Readonly<Record<string,string>> = {
   "تعذّر حفظ العرض. جرّب تاني.": "Could not save this offer. Please try again.",
   "ارجع للبحث": "Back to search",
   "راجع المحفظة": "Review wallet",
+  "اكتب طلب مراجعة": "Write a review request",
   "الحالة:": "Status:"
 };
 export function translate(text:string,language:"ar"|"en"){return language==="en" ? english[text] ?? text : text;}
