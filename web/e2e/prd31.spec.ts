@@ -212,3 +212,13 @@ test('captain preview retains an English conversation through refresh and back',
  await expect(page.locator('.a-bubble.mine')).toContainText('Meet me at the published stop.');
  await context.close();
 });
+
+
+test('insufficient security balance offers a direct wallet action without claiming a top-up',async({page})=>{
+ await page.goto('/?screen=16&preview=phase3');
+ await page.getByRole('button',{name:'غير كافي',exact:true}).click();
+ await expect(page.getByRole('button',{name:'معاينة تأكيد الحجز',exact:true})).toBeDisabled();
+ await page.getByRole('button',{name:'راجع المحفظة',exact:true}).click();
+ await expect(page).toHaveURL(/screen=22/);
+ await expect(page.getByRole('heading',{name:'محفظتي'})).toBeVisible();
+});
