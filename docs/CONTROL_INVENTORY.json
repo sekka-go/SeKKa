@@ -1369,7 +1369,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 84,
+    "line": 77,
     "tag": "button",
     "action": "onClick",
     "handler": "{onClick}",
@@ -1378,7 +1378,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 438,
+    "line": 444,
     "tag": "Primary",
     "action": "onClick",
     "handler": "{() => nav(!p.signedIn ? 4 : 29)}",
@@ -1387,34 +1387,34 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 459,
+    "line": 463,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(screen - 1)}",
     "disabled": "{screen === 16}",
-    "label": "\"الشاشة السابقة\""
+    "label": "{tr(\"الشاشة السابقة\")}"
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 466,
+    "line": 470,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => nav(+e.target.value)}",
     "disabled": "",
-    "label": "\"شاشة المرحلة الثالثة\""
+    "label": "{tr(\"شاشة المرحلة الثالثة\")}"
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 477,
+    "line": 481,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(screen + 1)}",
     "disabled": "{screen === 22}",
-    "label": "\"الشاشة التالية\""
+    "label": "{tr(\"الشاشة التالية\")}"
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 486,
+    "line": 490,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => onTheme(\"dark\")}",
@@ -1423,7 +1423,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 492,
+    "line": 495,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => onTheme(\"light\")}",
@@ -1432,7 +1432,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 510,
+    "line": 512,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => setBalanceMode(\"enough\")}",
@@ -1441,7 +1441,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 516,
+    "line": 517,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => setBalanceMode(\"short\")}",
@@ -1464,11 +1464,11 @@
     "action": "onClick",
     "handler": "{() =>\n              nav(screen === 16 ? 12 : screen === 19 ? 29 : screen - 1)\n            }",
     "disabled": "",
-    "label": "\"رجوع\""
+    "label": "{tr(\"رجوع\")}"
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 639,
+    "line": 632,
     "tag": "Primary",
     "action": "onClick",
     "handler": "{() => void getQuote()}",
@@ -1477,7 +1477,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 649,
+    "line": 641,
     "tag": "Primary",
     "action": "onClick",
     "handler": "{() => nav(17)}",
@@ -1486,7 +1486,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 658,
+    "line": 648,
     "tag": "Primary",
     "action": "onClick",
     "handler": "{() => nav(11)}",
@@ -1495,16 +1495,16 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 695,
+    "line": 682,
     "tag": "Primary",
     "action": "onClick",
-    "handler": "{() =>\n                    setModal(\n                      \"شحن المحفظة لسه مش مفعّل. محتاجين ربط شريك الدفع واعتماد سياسة الرصيد والاسترداد. لم يتم شحن أي مبلغ.\",\n                    )\n                  }",
+    "handler": "{() =>\n                    setModal(\n                      tr(\"شحن المحفظة لسه مش مفعّل. محتاجين ربط شريك الدفع واعتماد سياسة الرصيد والاسترداد. لم يتم شحن أي مبلغ.\"),\n                    )\n                  }",
     "disabled": "",
     "label": ""
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 705,
+    "line": 691,
     "tag": "Primary",
     "action": "onClick",
     "handler": "{() => {\n                  try {\n                    if(interactivePreview && offer && q) setPreviewLedger(reservePreviewBooking(offer,q));\n                    nav(18);\n                  } catch(error){setNotice(errorCopy(error));}\n                }}",
@@ -1513,7 +1513,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 753,
+    "line": 735,
     "tag": "Primary",
     "action": "onClick",
     "handler": "{() => nav(19)}",
@@ -1522,7 +1522,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 811,
+    "line": 792,
     "tag": "Primary",
     "action": "onClick",
     "handler": "{() => nav(riderReported ? 21 : 20)}",
@@ -1531,7 +1531,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 818,
+    "line": 799,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(22)}",
@@ -1540,7 +1540,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 845,
+    "line": 823,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setPaidChecked(e.target.checked)}",
@@ -1549,7 +1549,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 854,
+    "line": 832,
     "tag": "Primary",
     "action": "onClick",
     "handler": "{() => void paid()}",
@@ -1558,7 +1558,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 867,
+    "line": 845,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(21)}",
@@ -1567,7 +1567,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 942,
+    "line": 915,
     "tag": "Primary",
     "action": "onClick",
     "handler": "{() => void refresh()}",
@@ -1576,7 +1576,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 949,
+    "line": 921,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(22)}",
@@ -1585,7 +1585,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 970,
+    "line": 941,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(19)}",
@@ -1594,34 +1594,34 @@
   },
   {
     "file": "BookingFlow.tsx",
+    "line": 946,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() =>\n                    setModal(\n                      tr(\"التجديد هيتاح بعد اعتماد قواعد أولوية التجديد. لم يتم إنشاء تجديد أو حجز جديد.\"),\n                    )\n                  }",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 957,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() =>\n                    setModal(\n                      tr(\"إلغاء الاشتراك متوقف لحد اعتماد سياسة الإلغاء والاسترداد. مفيش مقعد أو رصيد اتغيّر. تقدر تطلب مراجعة من الدعم.\"),\n                    )\n                  }",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
     "line": 975,
-    "tag": "button",
-    "action": "onClick",
-    "handler": "{() =>\n                    setModal(\n                      \"التجديد هيتاح بعد اعتماد قواعد أولوية التجديد. لم يتم إنشاء تجديد أو حجز جديد.\",\n                    )\n                  }",
-    "disabled": "",
-    "label": ""
-  },
-  {
-    "file": "BookingFlow.tsx",
-    "line": 986,
-    "tag": "button",
-    "action": "onClick",
-    "handler": "{() =>\n                    setModal(\n                      \"إلغاء الاشتراك متوقف لحد اعتماد سياسة الإلغاء والاسترداد. مفيش مقعد أو رصيد اتغيّر. تقدر تطلب مراجعة من الدعم.\",\n                    )\n                  }",
-    "disabled": "",
-    "label": ""
-  },
-  {
-    "file": "BookingFlow.tsx",
-    "line": 1005,
     "tag": "textarea",
     "action": "onChange",
     "handler": "{(e) => setReason(e.target.value)}",
     "disabled": "",
-    "label": "\"سبب مراجعة الاشتراك\""
+    "label": "{tr(\"سبب مراجعة الاشتراك\")}"
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 1014,
+    "line": 984,
     "tag": "Primary",
     "action": "onClick",
     "handler": "{() => void support()}",
@@ -1630,7 +1630,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 1041,
+    "line": 1010,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => setModal(\"\")}",

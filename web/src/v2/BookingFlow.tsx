@@ -1,3 +1,5 @@
+import {usePreferences} from "./preferences";
+import {translate} from "./translations";
 import {readPreviewBookings, reservePreviewBooking, confirmPreviewBooking} from "./previewBookingStore";
 import { publicScreen } from "./screenMap";
 import { useEffect, useRef, useState } from "react";
@@ -28,19 +30,10 @@ export const bookingTitles = [
 const periodText = (v: string) => (v === "weekly" ? "أسبوعي" : "شهري");
 const directionText = (v: string) =>
   v === "outbound" ? "ذهاب فقط" : v === "return" ? "عودة فقط" : "ذهاب وعودة";
-const egp = (v: number) => `${v.toLocaleString("en-US")} ج.م`;
-const dateText = (v: string) =>
-  new Intl.DateTimeFormat("ar-EG-u-nu-latn", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(new Date(`${v}T12:00:00Z`));
-const timeText = (v: string) => {
+const timeText = (v: string, language: "en" | "ar") => {
   if (!v) return "—";
   const [h, m] = v.split(":");
-  return `${String(+h % 12 || 12).padStart(2, "0")}:${m} ${+h < 12 ? "ص" : "م"}`;
+  return `${String(+h % 12 || 12).padStart(2, "0")}:${m} ${translate(+h < 12 ? "ص" : "م", language)}`;
 };
 // A deterministic illustration calendar, NEVER used to approve a live quote.
 // No official-holiday coverage is claimed by this UI fixture.
@@ -223,33 +216,35 @@ function Illustration({
   );
 }
 function Offer({ offer }: { offer: Line }) {
+  const {language}=usePreferences();
+  const tr=(text:string)=>translate(text,language);
   return (
     <Box className="b-offer">
       <div className="b-route">
         <span>
           <DiscoveryIcon name="pin" />
-          {offer.origin}
+          {tr(offer.origin)}
         </span>
         <DiscoveryIcon name="swap" />
         <span>
           <DiscoveryIcon name="pin" />
-          {offer.destination}
+          {tr(offer.destination)}
         </span>
       </div>
-      {offer.selectedStops && <div className="b-stops"><p>الركوب: {offer.selectedStops.pickup.name}</p><p>النزول: {offer.selectedStops.dropoff.name}</p>{offer.selectedStops.returnPickup && <p>العودة تلقائيًا: {offer.selectedStops.returnPickup.name} ← {offer.selectedStops.returnDropoff?.name}</p>}</div>}
+      {offer.selectedStops && <div className="b-stops"><p>{tr("الركوب:")} {tr(offer.selectedStops.pickup.name)}</p><p>{tr("النزول:")} {tr(offer.selectedStops.dropoff.name)}</p>{offer.selectedStops.returnPickup && <p>{tr("العودة تلقائيًا:")} {tr(offer.selectedStops.returnPickup.name)} ← {tr(offer.selectedStops.returnDropoff?.name || "")}</p>}</div>}
       <div className="b-offer-tags">
         <span>{offer.category}</span>
-        <span>{periodText(offer.period)}</span>
-        <span>{directionText(offer.direction)}</span>
+        <span>{tr(periodText(offer.period))}</span>
+        <span>{tr(directionText(offer.direction))}</span>
       </div>
       <div className="b-offer-times">
         <span>
           <DiscoveryIcon name="sun" />
-          الذهاب <b dir="auto">{timeText(offer.outbound)}</b>
+          {tr("الذهاب")} <b dir="auto">{timeText(offer.outbound,language)}</b>
         </span>
         <span>
           <DiscoveryIcon name="moon" />
-          العودة <b dir="auto">{timeText(offer.returnTime)}</b>
+          {tr("العودة")} <b dir="auto">{timeText(offer.returnTime,language)}</b>
         </span>
       </div>
     </Box>
@@ -278,6 +273,17 @@ export type BookingFlowProps = {
 export default function BookingFlow(p: BookingFlowProps) {
   const { screen, theme, onTheme, go } = p;
   const params = new URLSearchParams(location.search);
+  const {language}=usePreferences();
+  const tr=(text:string)=>translate(text,language);
+const egp = (v: number) => `${v.toLocaleString("en-US")} ${language === "en" ? "EGP" : "ج.م"}`;
+const dateText = (v: string) =>
+  new Intl.DateTimeFormat(language==="en"?"en-GB":"ar-EG-u-nu-latn", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${v}T12:00:00Z`));
   const demo = params.get("preview") === "phase3";
   const offerId = params.get("offer");
   const [previewLedger,setPreviewLedger] = useState(readPreviewBookings);
@@ -356,7 +362,7 @@ export default function BookingFlow(p: BookingFlowProps) {
     : p.balance.available;
   const sufficient = available >= 100;
   const heading =
-    screen === 18 && !hasSnapshot ? "تأكيد الحجز" : bookingTitles[screen - 16];
+    screen === 18 && !hasSnapshot ? tr("تأكيد الحجز") : tr(bookingTitles[screen - 16]);
   function nav(id: number) {
     setNotice("");
     go(id);
@@ -393,17 +399,17 @@ export default function BookingFlow(p: BookingFlowProps) {
   async function refresh() {
     if (interactivePreview) {
       setPreviewLedger(readPreviewBookings());
-      setNotice("تم تحديث حالة الحجز التجريبي.");
+      setNotice(tr("تم تحديث حالة الحجز التجريبي."));
       return;
     }
     if (demo) {
-      setNotice("دي حالة توضيحية. تقدر تختار حالة الاستلام من شريط المعاينة.");
+      setNotice(tr("دي حالة توضيحية. تقدر تختار حالة الاستلام من شريط المعاينة."));
       return;
     }
     setWorking(true);
     try {
       await p.onRefresh();
-      setNotice("تم تحديث حالة الاشتراك من الخدمة.");
+      setNotice(tr("تم تحديث حالة الاشتراك من الخدمة."));
     } catch (e) {
       setNotice(errorCopy(e));
     } finally {
@@ -413,13 +419,13 @@ export default function BookingFlow(p: BookingFlowProps) {
   async function support() {
     if (reason.trim().length < 5) return;
     if (demo) {
-      setNotice("دي معاينة للمراجعة فقط. لم يتم إرسال طلب دعم فعلي.");
+      setNotice(tr("دي معاينة للمراجعة فقط. لم يتم إرسال طلب دعم فعلي."));
       return;
     }
     setWorking(true);
     try {
       await p.onDispute(reason.trim());
-      setNotice("المراجعة اتسجلت. الدعم هيتابع معاك.");
+      setNotice(tr("المراجعة اتسجلت. الدعم هيتابع معاك."));
       setReason("");
     } catch (e) {
       setNotice(errorCopy(e));
@@ -432,11 +438,11 @@ export default function BookingFlow(p: BookingFlowProps) {
       <DiscoveryIcon name="info" />
       <p>
         {!p.signedIn
-          ? "سجّل الدخول الأول عشان تشوف اشتراكك."
-          : "اختار حجزك من اشتراكاتي عشان نكمل."}
+          ? tr("سجّل الدخول الأول عشان تشوف اشتراكك.")
+          : tr("اختار حجزك من اشتراكاتي عشان نكمل.")}
       </p>
       <Primary onClick={() => nav(!p.signedIn ? 4 : 29)}>
-        {!p.signedIn ? "تسجيل الدخول" : "اشتراكاتي"}
+        {!p.signedIn ? tr("تسجيل الدخول") : tr("اشتراكاتي")}
       </Primary>
     </Box>
   );
@@ -444,38 +450,36 @@ export default function BookingFlow(p: BookingFlowProps) {
     <div className="b-callout">
       <DiscoveryIcon name="info" />
       <p>
-        تأمينك 100 جنيه قابل للاسترداد، منفصل عن الاشتراك. مش رسوم خدمة، ومش خصم
-        من المبلغ اللي هتدفعه للكابتن.
-      </p>
+        {tr("تأمينك 100 جنيه قابل للاسترداد، منفصل عن الاشتراك. مش رسوم خدمة، ومش خصم من المبلغ اللي هتدفعه للكابتن.")}</p>
     </div>
   );
   return (
     <div className={`phase-one-stage discovery-stage booking-stage ${theme}`}>
       <nav
         className="phase-review-bar b-review"
-        aria-label="معاينة المرحلة الثالثة"
+        aria-label={tr("معاينة المرحلة الثالثة")}
       >
         <div className="review-screen-nav">
           <button
-            aria-label="الشاشة السابقة"
+            aria-label={tr("الشاشة السابقة")}
             disabled={screen === 16}
             onClick={() => nav(screen - 1)}
           >
             ‹
           </button>
           <select
-            aria-label="شاشة المرحلة الثالثة"
+            aria-label={tr("شاشة المرحلة الثالثة")}
             value={screen}
             onChange={(e) => nav(+e.target.value)}
           >
             {bookingScreens.map((id, i) => (
               <option key={id} value={id}>
-                {publicScreen(id)} · {bookingTitles[i]}
+                {publicScreen(id)} · {tr(bookingTitles[i])}
               </option>
             ))}
           </select>
           <button
-            aria-label="الشاشة التالية"
+            aria-label={tr("الشاشة التالية")}
             disabled={screen === 22}
             onClick={() => nav(screen + 1)}
           >
@@ -487,46 +491,42 @@ export default function BookingFlow(p: BookingFlowProps) {
             aria-pressed={theme === "dark"}
             onClick={() => onTheme("dark")}
           >
-            دارك
-          </button>
+            {tr("دارك")}</button>
           <button
             aria-pressed={theme === "light"}
             onClick={() => onTheme("light")}
           >
-            لايت
-          </button>
+            {tr("لايت")}</button>
         </div>
       </nav>
       <p className="phase-preview-note">
         {demo
-          ? "معاينة المرحلة الثالثة · البيانات والأحداث توضيحية. لا حجز ولا دفع ولا تغيير رصيد فعلي."
-          : "سِكّة · حجزك واشتراكك"}
+          ? tr("معاينة المرحلة الثالثة · البيانات والأحداث توضيحية. لا حجز ولا دفع ولا تغيير رصيد فعلي.")
+          : tr("سِكّة · حجزك واشتراكك")}
       </p>
       {demo && !interactivePreview && [17, 21].includes(screen) && (
-        <aside className="b-scenario" aria-label="حالات المعاينة">
+        <aside className="b-scenario" aria-label={tr("حالات المعاينة")}>
           {screen === 17 ? (
             <>
-              <span>رصيد تجريبي:</span>
+              <span>{tr("رصيد تجريبي:")}</span>
               <button
                 aria-pressed={balanceMode === "enough"}
                 onClick={() => setBalanceMode("enough")}
               >
-                كافي
-              </button>
+                {tr("كافي")}</button>
               <button
                 aria-pressed={balanceMode === "short"}
                 onClick={() => setBalanceMode("short")}
               >
-                غير كافي
-              </button>
+                {tr("غير كافي")}</button>
             </>
           ) : (
             <>
-              <span>حالة توضيحية:</span>
+              <span>{tr("حالة توضيحية:")}</span>
               {[
-                { id: "waiting", text: "في الانتظار" },
-                { id: "received", text: "تأكيد الطرفين" },
-                { id: "disputed", text: "قيد المراجعة" },
+                { id: "waiting", text: tr("في الانتظار") },
+                { id: "received", text: tr("تأكيد الطرفين") },
+                { id: "disputed", text: tr("قيد المراجعة") },
               ].map((v) => (
                 <button
                   key={v.id}
@@ -544,7 +544,7 @@ export default function BookingFlow(p: BookingFlowProps) {
         <header className="d-header">
           <button
             className="phase-back"
-            aria-label="رجوع"
+            aria-label={tr("رجوع")}
             onClick={() =>
               nav(screen === 16 ? 12 : screen === 19 ? 29 : screen - 1)
             }
@@ -554,7 +554,7 @@ export default function BookingFlow(p: BookingFlowProps) {
           <Wordmark />
         </header>
         <div className="b-stage-label">
-          <span>الحجز والاشتراكات</span>
+          <span>{tr("الحجز والاشتراكات")}</span>
           <span dir="ltr">{screen - 15} / 7</span>
         </div>
         <h1 className="b-title">
@@ -573,58 +573,51 @@ export default function BookingFlow(p: BookingFlowProps) {
         </h1>
         {(notice || (p.error && !demo)) && (
           <p className="d-feedback" role="status">
-            {notice || "الخدمة مش متاحة دلوقتي. جرّب تاني بعد شوية."}
+            {notice || tr("الخدمة مش متاحة دلوقتي. جرّب تاني بعد شوية.")}
           </p>
         )}
         {(p.busy || working) && (
           <p className="b-loading" role="status">
-            بنراجع بيانات اشتراكك…
-          </p>
+            {tr("بنراجع بيانات اشتراكك…")}</p>
         )}
         {screen === 16 &&
           (offer ? (
             <>
               <p className="b-subtitle">
-                راجع عرض الكابتن وتكلفة اشتراكك قبل ما تكمل.
-              </p>
+                {tr("راجع عرض الكابتن وتكلفة اشتراكك قبل ما تكمل.")}</p>
               <Offer offer={offer} />
               <Box className="b-calendar">
                 <h2>
                   <DiscoveryIcon name="calendar" />
-                  مواعيد اشتراكك
-                </h2>
-                <Row label="تاريخ البداية التلقائي">
-                  {q ? dateText(q.start) : "مستنيين حساب الخدمة"}
+                  {tr("مواعيد اشتراكك")}</h2>
+                <Row label={tr("تاريخ البداية التلقائي")}>
+                  {q ? dateText(q.start) : tr("مستنيين حساب الخدمة")}
                 </Row>
-                <Row label="آخر يوم في الدورة">
+                <Row label={tr("آخر يوم في الدورة")}>
                   {q
                     ? dateText(addDays(q.endExclusive, -1))
-                    : "مستنيين حساب الخدمة"}
+                    : tr("مستنيين حساب الخدمة")}
                 </Row>
-                <Row label="أيام التشغيل المستحقة">
-                  {q ? `${q.remainingDays} من ${q.totalDays} يوم تشغيل` : "—"}
+                <Row label={tr("أيام التشغيل المستحقة")}>
+                  {q ? (language==="en" ? `${q.remainingDays} of ${q.totalDays} service days` : `${q.remainingDays} من ${q.totalDays} يوم تشغيل`) : "—"}
                 </Row>
                 <p className="b-hint">
-                  البداية بتتحسب بتوقيت مصر. من الأحد للخميس، مع استبعاد
-                  الإجازات الرسمية المعتمدة.
-                </p>
+                  {tr("البداية بتتحسب بتوقيت مصر. من الأحد للخميس، مع استبعاد الإجازات الرسمية المعتمدة.")}</p>
                 {demo && (
                   <p className="b-fixture-note">
-                    الحساب المعروض مثال بتقويم تجريبي من غير إجازات؛ مش تسعيرًا
-                    معتمدًا لحجز فعلي.
-                  </p>
+                    {tr("الحساب المعروض مثال بتقويم تجريبي من غير إجازات؛ مش تسعيرًا معتمدًا لحجز فعلي.")}</p>
                 )}
               </Box>
               <Box className="b-price-summary">
-                <Row label="سعر دورة العرض الكاملة">
+                <Row label={tr("سعر دورة العرض الكاملة")}>
                   {egp(offer.amount || 0)}
                 </Row>
-                <Row label="اشتراكك للأيام المستحقة" emphasis>
-                  {q ? egp(q.price) : "لم يُحسب بعد"}
+                <Row label={tr("اشتراكك للأيام المستحقة")} emphasis>
+                  {q ? egp(q.price) : tr("لم يُحسب بعد")}
                 </Row>
-                <Row label="تأمين مسترد من المحفظة">100 ج.م</Row>
+                <Row label={tr("تأمين مسترد من المحفظة")}>{tr("100 ج.م")}</Row>
                 <div className="b-price-breakdown">
-                  <span>تدفع للكابتن أول يوم</span>
+                  <span>{tr("تدفع للكابتن أول يوم")}</span>
                   <strong>{q ? egp(q.price) : "—"}</strong>
                 </div>
                 {q && (
@@ -640,22 +633,19 @@ export default function BookingFlow(p: BookingFlowProps) {
                   disabled={working || !p.signedIn}
                   onClick={() => void getQuote()}
                 >
-                  احسب التكلفة من الخدمة
-                </Primary>
+                  {tr("احسب التكلفة من الخدمة")}</Primary>
               )}
               {!demo && !p.signedIn && (
-                <p className="b-hint">سجّل الدخول عشان نراجع السعر والتواريخ.</p>
+                <p className="b-hint">{tr("سجّل الدخول عشان نراجع السعر والتواريخ.")}</p>
               )}
               <Primary disabled={!q} onClick={() => nav(17)}>
-                متابعة لتأمين الحجز
-              </Primary>
+                {tr("متابعة لتأمين الحجز")}</Primary>
             </>
           ) : (
             <Box className="b-empty">
               <p>
-                اختار عرض الكابتن الأول. المدة والاتجاه والسعر محددين في العرض.
-              </p>
-              <Primary onClick={() => nav(11)}>شوف العروض</Primary>
+                {tr("اختار عرض الكابتن الأول. المدة والاتجاه والسعر محددين في العرض.")}</p>
+              <Primary onClick={() => nav(11)}>{tr("شوف العروض")}</Primary>
             </Box>
           ))}
         {screen === 17 &&
@@ -663,30 +653,27 @@ export default function BookingFlow(p: BookingFlowProps) {
             <>
               <Illustration kind="wallet" />
               <p className="b-subtitle">
-                تأمين بسيط لحجز مكانك. بيتاح بعد تأكيد الدفع والاستلام من
-                الطرفين.
-              </p>
+                {tr("تأمين بسيط لحجز مكانك. بيتاح بعد تأكيد الدفع والاستلام من الطرفين.")}</p>
               <Box className="b-wallet">
                 <div className="b-wallet-label">
                   <DiscoveryIcon name="seat" />
-                  رصيد المحفظة المتاح
-                </div>
+                  {tr("رصيد المحفظة المتاح")}</div>
                 <strong className="b-balance">{egp(available)}</strong>
                 <div
                   className={`b-balance-state ${sufficient ? "positive" : "warning"}`}
                 >
                   <DiscoveryIcon name={sufficient ? "check" : "info"} />
                   {sufficient
-                    ? "رصيدك كافي للتأمين"
-                    : `محتاج تضيف ${egp(100 - available)} للتأمين`}
+                    ? tr("رصيدك كافي للتأمين")
+                    : language==="en" ? `Add ${egp(100 - available)} to cover security` : `محتاج تضيف ${egp(100 - available)} للتأمين`}
                 </div>
               </Box>
               <Box>
-                <Row label="التأمين المطلوب">100 ج.م</Row>
-                <Row label="الحجز من الرصيد" emphasis>
-                  {sufficient ? "متاح بعد تأكيد الحجز" : "الرصيد مش كافي"}
+                <Row label={tr("التأمين المطلوب")}>{tr("100 ج.م")}</Row>
+                <Row label={tr("الحجز من الرصيد")} emphasis>
+                  {sufficient ? tr("متاح بعد تأكيد الحجز") : tr("الرصيد مش كافي")}
                 </Row>
-                <Row label="المتبقي بعد الحجز">
+                <Row label={tr("المتبقي بعد الحجز")}>
                   {sufficient ? egp(available - 100) : "—"}
                 </Row>
               </Box>
@@ -695,12 +682,11 @@ export default function BookingFlow(p: BookingFlowProps) {
                 <Primary
                   onClick={() =>
                     setModal(
-                      "شحن المحفظة لسه مش مفعّل. محتاجين ربط شريك الدفع واعتماد سياسة الرصيد والاسترداد. لم يتم شحن أي مبلغ.",
+                      tr("شحن المحفظة لسه مش مفعّل. محتاجين ربط شريك الدفع واعتماد سياسة الرصيد والاسترداد. لم يتم شحن أي مبلغ."),
                     )
                   }
                 >
-                  شحن الرصيد
-                </Primary>
+                  {tr("شحن الرصيد")}</Primary>
               )}
               <Primary
                 disabled={!sufficient || !q || !demo}
@@ -711,11 +697,11 @@ export default function BookingFlow(p: BookingFlowProps) {
                   } catch(error){setNotice(errorCopy(error));}
                 }}
               >
-                {demo ? interactivePreview ? "تأكيد الحجز التجريبي وحجز 100 جنيه افتراضية" : "معاينة تأكيد الحجز" : "تأكيد حجز المقعد"}
+                {demo ? interactivePreview ? tr("تأكيد الحجز التجريبي وحجز 100 جنيه افتراضية") : tr("معاينة تأكيد الحجز") : tr("تأكيد حجز المقعد")}
               </Primary>
               <p className="b-hint">
                 {demo
-                  ? interactivePreview ? "محاكاة محلية فقط: يتم تثبيت الشروط وتحديث الرصيد التجريبي، من غير حجز حقيقي أو حركة أموال." : "الزر بيفتح نموذج التأكيد للمراجعة؛ مش بيحجز مقعد ولا بيخصم رصيد."
+                  ? interactivePreview ? tr("محاكاة محلية فقط: يتم تثبيت الشروط وتحديث الرصيد التجريبي، من غير حجز حقيقي أو حركة أموال.") : tr("الزر بيفتح نموذج التأكيد للمراجعة؛ مش بيحجز مقعد ولا بيخصم رصيد.")
                   : copy.moneyDisabled}
               </p>
             </>
@@ -728,32 +714,28 @@ export default function BookingFlow(p: BookingFlowProps) {
               <Illustration kind="success" />
               <div className="b-success-tag">
                 <DiscoveryIcon name="check" />
-                {demo ? "نموذج حجز مؤكد — معاينة" : "حجزك اتسجل."}
+                {demo ? tr("نموذج حجز مؤكد — معاينة") : tr("حجزك اتسجل.")}
               </div>
               <p className="b-subtitle">
-                مكانك في السِكّة جاهز. راجع موعد البداية وتعليمات الدفع.
-              </p>
+                {tr("مكانك في السِكّة جاهز. راجع موعد البداية وتعليمات الدفع.")}</p>
               <Box className="b-start">
-                <span>اشتراكك يبدأ</span>
+                <span>{tr("اشتراكك يبدأ")}</span>
                 <strong>{snapshotStart ? dateText(snapshotStart) : "—"}</strong>
               </Box>
               {offer && <Offer offer={offer} />}
               <Box className="b-payment-instruction">
                 <h2>
                   <DiscoveryIcon name="phone" />
-                  ادفع للكابتن أول يوم.
-                </h2>
+                  {tr("ادفع للكابتن أول يوم.")}</h2>
                 <p>
-                  ادفع قيمة اشتراكك كاملة:{" "}
-                  <strong>{egp(snapshotPrice || 0)}</strong>، وبعدها أكد الدفع
-                  من التطبيق.
-                </p>
-                <p>الـ100 جنيه تأمين منفصل، مش خصم من الاشتراك.</p>
+                  {tr("ادفع قيمة اشتراكك كاملة:")}{" "}
+                  <strong>{egp(snapshotPrice || 0)}</strong>{tr("، وبعدها أكد الدفع من التطبيق.")}</p>
+                <p>{tr("الـ100 جنيه تأمين منفصل، مش خصم من الاشتراك.")}</p>
               </Box>
-              <Primary onClick={() => nav(19)}>شوف تفاصيل اشتراكي</Primary>
+              <Primary onClick={() => nav(19)}>{tr("شوف تفاصيل اشتراكي")}</Primary>
               <Box>
-                <h2>بيانات الكابتن والعربية</h2>
-                {demo ? <><p>كابتن أحمد — بيانات توضيحية بعد الحجز</p><p>تويوتا كورولا · أبيض · لوحة توضيحية 7284</p><p>التواصل غير مفعّل في المعاينة.</p></> : <p>ستظهر البيانات المصرح بها هنا بعد ربط خدمة الحجز المؤكد.</p>}
+                <h2>{tr("بيانات الكابتن والعربية")}</h2>
+                {demo ? <><p>{tr("كابتن أحمد — بيانات توضيحية بعد الحجز")}</p><p>{tr("تويوتا كورولا · أبيض · لوحة توضيحية 7284")}</p><p>{tr("التواصل غير مفعّل في المعاينة.")}</p></> : <p>{tr("ستظهر البيانات المصرح بها هنا بعد ربط خدمة الحجز المؤكد.")}</p>}
               </Box>
             </>
           ) : (
@@ -767,10 +749,10 @@ export default function BookingFlow(p: BookingFlowProps) {
               >
                 <DiscoveryIcon name={disputed ? "info" : "check"} />
                 {disputed
-                  ? "الحجز قيد المراجعة"
+                  ? tr("الحجز قيد المراجعة")
                   : demo
-                    ? "اشتراك تجريبي مؤكد"
-                    : "تفاصيل حجزك"}
+                    ? tr("اشتراك تجريبي مؤكد")
+                    : tr("تفاصيل حجزك")}
               </div>
               {offer ? (
                 <Offer offer={offer} />
@@ -782,43 +764,41 @@ export default function BookingFlow(p: BookingFlowProps) {
                 </Box>
               )}
               <Box>
-                <Row label="بداية الخدمة">
+                <Row label={tr("بداية الخدمة")}>
                   {snapshotStart ? dateText(snapshotStart) : "—"}
                 </Row>
-                <Row label="نهاية الاشتراك">
+                <Row label={tr("نهاية الاشتراك")}>
                   {snapshotEnd ? dateText(addDays(snapshotEnd, -1)) : "—"}
                 </Row>
-                <Row label="قيمة الاشتراك">{egp(snapshotPrice || 0)}</Row>
+                <Row label={tr("قيمة الاشتراك")}>{egp(snapshotPrice || 0)}</Row>
               </Box>
               <Box className="b-status-card">
                 <h2>
                   <DiscoveryIcon name="clipboard" />
-                  حالة الدفع
-                </h2>
+                  {tr("حالة الدفع")}</h2>
                 <p>
                   {released
-                    ? "الكابتن أكد الاستلام."
+                    ? tr("الكابتن أكد الاستلام.")
                     : riderReported
-                      ? "مستنيين تأكيد الكابتن."
-                      : "ادفع للكابتن أول يوم، وبعدها أكد الدفع."}
+                      ? tr("مستنيين تأكيد الكابتن.")
+                      : tr("ادفع للكابتن أول يوم، وبعدها أكد الدفع.")}
                 </p>
                 <span className="b-security-pill">
                   {released
-                    ? "تأمينك متاح دلوقتي."
-                    : "تأمين الحجز: 100 ج.م محجوزة"}
+                    ? tr("تأمينك متاح دلوقتي.")
+                    : tr("تأمين الحجز: 100 ج.م محجوزة")}
                 </span>
               </Box>
               <Primary onClick={() => nav(riderReported ? 21 : 20)}>
-                {riderReported ? "متابعة تأكيد الاستلام" : "تأكيد الدفع"}
+                {riderReported ? tr("متابعة تأكيد الاستلام") : tr("تأكيد الدفع")}
               </Primary>
               <Box>
-                <h2>بيانات الكابتن والعربية</h2>
-                {demo ? <><p>كابتن أحمد — بيانات توضيحية بعد الحجز</p><p>تويوتا كورولا · أبيض · لوحة توضيحية 7284</p><p>التواصل غير مفعّل في المعاينة.</p></> : <p>ستظهر البيانات المصرح بها هنا بعد ربط خدمة الحجز المؤكد.</p>}
+                <h2>{tr("بيانات الكابتن والعربية")}</h2>
+                {demo ? <><p>{tr("كابتن أحمد — بيانات توضيحية بعد الحجز")}</p><p>{tr("تويوتا كورولا · أبيض · لوحة توضيحية 7284")}</p><p>{tr("التواصل غير مفعّل في المعاينة.")}</p></> : <p>{tr("ستظهر البيانات المصرح بها هنا بعد ربط خدمة الحجز المؤكد.")}</p>}
               </Box>
               <button className="b-secondary" onClick={() => nav(22)}>
                 <DiscoveryIcon name="settings" />
-                إدارة الاشتراك
-              </button>
+                {tr("إدارة الاشتراك")}</button>
             </>
           ) : (
             empty
@@ -827,19 +807,17 @@ export default function BookingFlow(p: BookingFlowProps) {
           (hasSnapshot ? (
             <>
               <Illustration kind="payment" />
-              <p className="b-subtitle">دفعت؟ أكد الدفع.</p>
+              <p className="b-subtitle">{tr("دفعت؟ أكد الدفع.")}</p>
               <Box className="b-amount-card">
-                <span>قيمة الاشتراك للكابتن</span>
+                <span>{tr("قيمة الاشتراك للكابتن")}</span>
                 <strong>{egp(snapshotPrice || 0)}</strong>
-                <small>تدفعها مباشرة للكابتن أول يوم خدمة.</small>
+                <small>{tr("تدفعها مباشرة للكابتن أول يوم خدمة.")}</small>
               </Box>
               <Box>
                 <div className="b-callout">
                   <DiscoveryIcon name="info" />
                   <p>
-                    الخطوة دي بتسجّل تأكيدك بس. مش بتسحب فلوس من محفظتك، ومش بديل
-                    عن تأكيد الكابتن.
-                  </p>
+                    {tr("الخطوة دي بتسجّل تأكيدك بس. مش بتسحب فلوس من محفظتك، ومش بديل عن تأكيد الكابتن.")}</p>
                 </div>
                 <label className="b-check-label">
                   <input
@@ -848,7 +826,7 @@ export default function BookingFlow(p: BookingFlowProps) {
                     onChange={(e) => setPaidChecked(e.target.checked)}
                     disabled={riderReported || disputed}
                   />
-                  <span>دفعت للكابتن قيمة الاشتراك كاملة.</span>
+                  <span>{tr("دفعت للكابتن قيمة الاشتراك كاملة.")}</span>
                 </label>
               </Box>
               <Primary
@@ -861,17 +839,14 @@ export default function BookingFlow(p: BookingFlowProps) {
                 }
                 onClick={() => void paid()}
               >
-                {demo ? "معاينة متابعة الاستلام" : "تم الدفع"}
+                {demo ? tr("معاينة متابعة الاستلام") : tr("تم الدفع")}
               </Primary>
               {riderReported && (
                 <button className="b-secondary" onClick={() => nav(21)}>
-                  شوف حالة التأكيد
-                </button>
+                  {tr("شوف حالة التأكيد")}</button>
               )}
               <p className="b-hint">
-                ما تأكدش الدفع إلا بعد ما تدفع فعلًا. التأمين بيتاح بعد تأكيد
-                الطرفين.
-              </p>
+                {tr("ما تأكدش الدفع إلا بعد ما تدفع فعلًا. التأمين بيتاح بعد تأكيد الطرفين.")}</p>
             </>
           ) : (
             empty
@@ -884,10 +859,10 @@ export default function BookingFlow(p: BookingFlowProps) {
                 className={`b-status-tag ${released ? "positive" : disputed ? "warning" : "pending"}`}
               >
                 {disputed
-                  ? "الحالة قيد المراجعة"
+                  ? tr("الحالة قيد المراجعة")
                   : released
-                    ? "الكابتن أكد الاستلام."
-                    : "مستنيين تأكيد الكابتن."}
+                    ? tr("الكابتن أكد الاستلام.")
+                    : tr("مستنيين تأكيد الكابتن.")}
               </div>
               <Box className="b-timeline">
                 <div className={riderReported ? "done" : ""}>
@@ -895,11 +870,11 @@ export default function BookingFlow(p: BookingFlowProps) {
                     <DiscoveryIcon name="check" />
                   </span>
                   <div>
-                    <strong>تأكيد الراكب</strong>
+                    <strong>{tr("تأكيد الراكب")}</strong>
                     <p>
                       {riderReported
-                        ? "تأكيد الدفع اتسجل."
-                        : "مستنيين تأكيدك بعد الدفع."}
+                        ? tr("تأكيد الدفع اتسجل.")
+                        : tr("مستنيين تأكيدك بعد الدفع.")}
                     </p>
                   </div>
                 </div>
@@ -908,11 +883,11 @@ export default function BookingFlow(p: BookingFlowProps) {
                     <DiscoveryIcon name={captainReported ? "check" : "user"} />
                   </span>
                   <div>
-                    <strong>تأكيد الكابتن</strong>
+                    <strong>{tr("تأكيد الكابتن")}</strong>
                     <p>
                       {captainReported
-                        ? "الكابتن أكد استلام قيمة الاشتراك."
-                        : "الكابتن هيراجع ويأكد الاستلام."}
+                        ? tr("الكابتن أكد استلام قيمة الاشتراك.")
+                        : tr("الكابتن هيراجع ويأكد الاستلام.")}
                     </p>
                   </div>
                 </div>
@@ -921,11 +896,11 @@ export default function BookingFlow(p: BookingFlowProps) {
                     <DiscoveryIcon name="seat" />
                   </span>
                   <div>
-                    <strong>إتاحة تأمين الحجز</strong>
+                    <strong>{tr("إتاحة تأمين الحجز")}</strong>
                     <p>
                       {released
-                        ? "تأمينك متاح دلوقتي. 100 ج.م رجعت للرصيد المتاح."
-                        : "100 ج.م بتفضل محجوزة لحد تأكيد الطرفين."}
+                        ? tr("تأمينك متاح دلوقتي. 100 ج.م رجعت للرصيد المتاح.")
+                        : tr("100 ج.م بتفضل محجوزة لحد تأكيد الطرفين.")}
                     </p>
                   </div>
                 </div>
@@ -934,21 +909,17 @@ export default function BookingFlow(p: BookingFlowProps) {
                 <div className="b-callout">
                   <DiscoveryIcon name="info" />
                   <p>
-                    الدعم بيراجع الحالة. مفيش مصادرة تلقائية للتأمين بسبب غياب
-                    أو تأخير التأكيد.
-                  </p>
+                    {tr("الدعم بيراجع الحالة. مفيش مصادرة تلقائية للتأمين بسبب غياب أو تأخير التأكيد.")}</p>
                 </div>
               )}
               <Primary disabled={working} onClick={() => void refresh()}>
-                تحديث الحالة
-              </Primary>
+                {tr("تحديث الحالة")}</Primary>
               <Box>
-                <h2>بيانات الكابتن والعربية</h2>
-                {demo ? <><p>كابتن أحمد — بيانات توضيحية بعد الحجز</p><p>تويوتا كورولا · أبيض · لوحة توضيحية 7284</p><p>التواصل غير مفعّل في المعاينة.</p></> : <p>ستظهر البيانات المصرح بها هنا بعد ربط خدمة الحجز المؤكد.</p>}
+                <h2>{tr("بيانات الكابتن والعربية")}</h2>
+                {demo ? <><p>{tr("كابتن أحمد — بيانات توضيحية بعد الحجز")}</p><p>{tr("تويوتا كورولا · أبيض · لوحة توضيحية 7284")}</p><p>{tr("التواصل غير مفعّل في المعاينة.")}</p></> : <p>{tr("ستظهر البيانات المصرح بها هنا بعد ربط خدمة الحجز المؤكد.")}</p>}
               </Box>
               <button className="b-secondary" onClick={() => nav(22)}>
-                محتاج مساعدة في الاشتراك؟
-              </button>
+                {tr("محتاج مساعدة في الاشتراك؟")}</button>
             </>
           ) : (
             empty
@@ -958,57 +929,56 @@ export default function BookingFlow(p: BookingFlowProps) {
             <>
               {offer && <Offer offer={offer} />}
               <Box>
-                <Row label="موعد البداية">
+                <Row label={tr("موعد البداية")}>
                   {snapshotStart ? dateText(snapshotStart) : "—"}
                 </Row>
-                <Row label="قيمة الاشتراك">{egp(snapshotPrice || 0)}</Row>
-                <Row label="حالة التأمين">
-                  {released ? "متاح" : "محجوز لحد اكتمال التأكيد"}
+                <Row label={tr("قيمة الاشتراك")}>{egp(snapshotPrice || 0)}</Row>
+                <Row label={tr("حالة التأمين")}>
+                  {released ? tr("متاح") : tr("محجوز لحد اكتمال التأكيد")}
                 </Row>
               </Box>
               <div className="b-manage-actions">
                 <button onClick={() => nav(19)}>
                   <DiscoveryIcon name="clipboard" />
-                  <span>راجع تفاصيل اشتراكك</span>
+                  <span>{tr("راجع تفاصيل اشتراكك")}</span>
                   <DiscoveryIcon name="back" />
                 </button>
                 <button
                   onClick={() =>
                     setModal(
-                      "التجديد هيتاح بعد اعتماد قواعد أولوية التجديد. لم يتم إنشاء تجديد أو حجز جديد.",
+                      tr("التجديد هيتاح بعد اعتماد قواعد أولوية التجديد. لم يتم إنشاء تجديد أو حجز جديد."),
                     )
                   }
                 >
                   <DiscoveryIcon name="calendar" />
-                  <span>تجديد الاشتراك</span>
-                  <small>قريبًا</small>
+                  <span>{tr("تجديد الاشتراك")}</span>
+                  <small>{tr("قريبًا")}</small>
                 </button>
                 <button
                   onClick={() =>
                     setModal(
-                      "إلغاء الاشتراك متوقف لحد اعتماد سياسة الإلغاء والاسترداد. مفيش مقعد أو رصيد اتغيّر. تقدر تطلب مراجعة من الدعم.",
+                      tr("إلغاء الاشتراك متوقف لحد اعتماد سياسة الإلغاء والاسترداد. مفيش مقعد أو رصيد اتغيّر. تقدر تطلب مراجعة من الدعم."),
                     )
                   }
                 >
                   <DiscoveryIcon name="info" />
-                  <span>طلب إلغاء الاشتراك</span>
-                  <small>محتاج مراجعة</small>
+                  <span>{tr("طلب إلغاء الاشتراك")}</span>
+                  <small>{tr("محتاج مراجعة")}</small>
                 </button>
               </div>
               <Box className="b-support">
                 <h2>
                   <DiscoveryIcon name="chat" />
-                  فيه مشكلة؟ احكي لنا.
-                </h2>
+                  {tr("فيه مشكلة؟ احكي لنا.")}</h2>
                 <label>
-                  <span className="sr-only">سبب مراجعة الاشتراك</span>
+                  <span className="sr-only">{tr("سبب مراجعة الاشتراك")}</span>
                   <textarea
-                    aria-label="سبب مراجعة الاشتراك"
+                    aria-label={tr("سبب مراجعة الاشتراك")}
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
                     minLength={5}
                     maxLength={1000}
-                    placeholder="اكتب المشكلة عشان نعرف نساعدك…"
+                    placeholder={tr("اكتب المشكلة عشان نعرف نساعدك…")}
                   />
                 </label>
                 <Primary
@@ -1019,11 +989,10 @@ export default function BookingFlow(p: BookingFlowProps) {
                   }
                   onClick={() => void support()}
                 >
-                  {demo ? "معاينة طلب المراجعة" : "إرسال طلب مراجعة"}
+                  {demo ? tr("معاينة طلب المراجعة") : tr("إرسال طلب مراجعة")}
                 </Primary>
                 <p className="b-hint">
-                  التأمين مش بيتصادر تلقائيًا بسبب غياب أو تأخير التأكيد.
-                </p>
+                  {tr("التأمين مش بيتصادر تلقائيًا بسبب غياب أو تأخير التأكيد.")}</p>
               </Box>
             </>
           ) : (
@@ -1036,11 +1005,10 @@ export default function BookingFlow(p: BookingFlowProps) {
         onCancel={() => setModal("")}
         aria-labelledby="b-dialog-title"
       >
-        <h2 id="b-dialog-title">خلّيك على علم</h2>
+        <h2 id="b-dialog-title">{tr("خلّيك على علم")}</h2>
         <p>{modal}</p>
         <button className="d-primary" onClick={() => setModal("")}>
-          تمام
-        </button>
+          {tr("تمام")}</button>
       </dialog>
     </div>
   );
