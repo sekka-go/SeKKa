@@ -325,7 +325,9 @@ const dateText = (v: string) =>
     [receipt, setReceipt] = useState("waiting");
   const [demoPayment, setDemoPayment] = useState(false);
   const [modal, setModal] = useState("");
+  const [modalAction, setModalAction] = useState<"support" | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
+  const supportRequestRef = useRef<HTMLTextAreaElement>(null);
   const lastFocus = useRef<HTMLElement | null>(null);
   useEffect(() => {
     if (modal) {
@@ -963,11 +965,10 @@ const dateText = (v: string) =>
                   <small>{tr("قريبًا")}</small>
                 </button>
                 <button
-                  onClick={() =>
-                    setModal(
-                      tr("إلغاء الاشتراك متوقف لحد اعتماد سياسة الإلغاء والاسترداد. مفيش مقعد أو رصيد اتغيّر. تقدر تطلب مراجعة من الدعم."),
-                    )
-                  }
+                  onClick={() => {
+                    setModalAction("support");
+                    setModal(tr("إلغاء الاشتراك متوقف لحد اعتماد سياسة الإلغاء والاسترداد. مفيش مقعد أو رصيد اتغيّر. تقدر تطلب مراجعة من الدعم."));
+                  }}
                 >
                   <DiscoveryIcon name="info" />
                   <span>{tr("طلب إلغاء الاشتراك")}</span>
@@ -981,6 +982,7 @@ const dateText = (v: string) =>
                 <label>
                   <span className="sr-only">{tr("سبب مراجعة الاشتراك")}</span>
                   <textarea
+                    ref={supportRequestRef}
                     aria-label={tr("سبب مراجعة الاشتراك")}
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
@@ -999,6 +1001,9 @@ const dateText = (v: string) =>
                 >
                   {demo ? tr("معاينة طلب المراجعة") : tr("إرسال طلب مراجعة")}
                 </Primary>
+                {!demo && !p.signedIn && (
+                  <Primary onClick={() => nav(4)}>{tr("تسجيل الدخول أو إنشاء حساب")}</Primary>
+                )}
                 <p className="b-hint">
                   {tr("التأمين مش بيتصادر تلقائيًا بسبب غياب أو تأخير التأكيد.")}</p>
               </Box>
@@ -1010,12 +1015,23 @@ const dateText = (v: string) =>
       <dialog
         ref={dialog}
         className="b-dialog"
-        onCancel={() => setModal("")}
+        onCancel={() => { setModal(""); setModalAction(null); }}
+        onClose={() => setModalAction(null)}
         aria-labelledby="b-dialog-title"
       >
         <h2 id="b-dialog-title">{tr("خلّيك على علم")}</h2>
         <p>{modal}</p>
-        <button className="d-primary" onClick={() => setModal("")}>
+        {modalAction === "support" && (
+          <button type="button" className="d-primary" onClick={() => {
+            dialog.current?.close();
+            setModal("");
+            setModalAction(null);
+            supportRequestRef.current?.focus();
+          }}>
+            {tr("اكتب طلب مراجعة")}
+          </button>
+        )}
+        <button className="d-primary" onClick={() => { setModal(""); setModalAction(null); }}>
           {tr("تمام")}</button>
       </dialog>
     </div>
