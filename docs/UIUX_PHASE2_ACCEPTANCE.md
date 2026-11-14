@@ -112,3 +112,7 @@ P0: data/security/financial misleading action or blocked critical journey. P1: n
 ## Deployment rules
 
 This branch is for isolated review work. **Do not merge to main, deploy Cloudflare production, write to Supabase, or enable real payments.** Require independent evidence and explicit owner approval before any release.
+
+## First automated visual-evidence pass (2026-11-15)
+
+Created `web/e2e/uiux-phase2-rider.spec.ts` on this review branch. It iterates rider screens 8–21 at 320/390px, Arabic/English, Light/Dark (112 combinations), captures full-page PNG evidence, checks language/direction/theme, page JS errors, unnamed buttons, and document-level horizontal overflow. The test does **not** auto-approve visual design, text quality or accessibility, and screenshots need human review. Its execution and CI outcome must be independently confirmed; never mark it passed from the commit alone. The initial per-screen status remains unchanged pending screenshots and manual signoff.
