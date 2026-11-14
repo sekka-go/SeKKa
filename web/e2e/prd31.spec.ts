@@ -198,8 +198,10 @@ test('captain preview retains an English conversation through refresh and back',
  await page.getByLabel('Your message').fill('Meet me at the published stop.');
  await page.getByRole('button',{name:'Add to preview',exact:true}).click();
  await page.getByRole('button',{name:'Refresh conversation',exact:true}).click();
+ await expect(page).toHaveURL(/screen=57/);
  await expect(page.locator('.a-bubble.mine')).toContainText('Meet me at the published stop.');
  await page.goBack();
+ await expect(page).toHaveURL(/screen=56/);
  await page.locator('.a-thread').first().click();
  await expect(page.locator('.a-bubble.mine')).toContainText('Meet me at the published stop.');
  await context.close();
