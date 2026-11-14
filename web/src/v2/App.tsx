@@ -10,10 +10,7 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { api, client } from "./api";
 import type { Profile, Route, Quote, Booking } from "./api";
-import {
-  categories,
-  normalizePhone,
-} from "../../../packages/domain/subscriptions";
+import { categories } from "../../../packages/domain/subscriptions";
 import { publicScreens, adminResources } from "./screens";
 import { copy, errorCopy } from "./copy";
 import "./theme.css";
@@ -196,8 +193,6 @@ export default function SubscriptionApp() {
     [quote, setQuote] = useState<Quote | null>(null);
   const [bookingOffer, setBookingOffer] = useState<Line | null>(null);
   const [role, setRole] = useState("rider"),
-    [phone, setPhone] = useState(""),
-    [otp, setOtp] = useState(""),
     [name, setName] = useState(""),
     [consent, setConsent] = useState(false);
   const [origin, setOrigin] = useState(""),
