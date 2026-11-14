@@ -1758,3 +1758,29 @@ html[dir="ltr"] .booking-stage .b-canvas .b-timeline > div:not(:last-child)::bef
     scroll-behavior: auto !important;
   }
 }
+
+/* Rider home quick actions (screen 8): consistent 12px gutters and no touching pills.
+   Scoped to this group to preserve period selectors elsewhere. */
+.discovery-stage .d-screen-8 .d-home-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-block: 16px 4px;
+  min-width: 0;
+}
+.discovery-stage .d-screen-8 .d-home-quick-actions > button {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  margin: 0;
+  padding: 12px 10px;
+  border-radius: 14px;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  line-height: 1.35;
+}
+@media (max-width: 340px) {
+  .discovery-stage .d-screen-8 .d-home-quick-actions {
+    gap: 12px;
+  }
+}
