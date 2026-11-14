@@ -89,6 +89,8 @@ export default function AccountFlow(p: {
   const {language} = usePreferences();
   const tr = (text:string) => translate(text,language);
   const demo = new URLSearchParams(location.search).get("preview") === "phase4";
+  // Only translate authored preview fixtures, never user-entered messages.
+  const threadLabel = (value: unknown) => demo ? tr(String(value ?? "")) : String(value ?? "");
   const [empty, setEmpty] = useState(false),
     [query, setQuery] = useState(""),
     [draft, setDraft] = useState(""),
@@ -271,8 +273,8 @@ export default function AccountFlow(p: {
                 </Box>
                 {rows
                   .filter((r) =>
-                    `${r.name || tr("محادثة الخط")} ${r.route || ""}`.includes(
-                      query.trim(),
+                    `${threadLabel(r.name || tr("محادثة الخط"))} ${threadLabel(r.route || "")}`.toLocaleLowerCase().includes(
+                      query.trim().toLocaleLowerCase(),
                     ),
                   )
                   .map((r) => (
@@ -289,12 +291,10 @@ export default function AccountFlow(p: {
                           {demo ? "ك" : "↔"}
                         </span>
                         <span>
-                          <strong>{String(r.name || tr("محادثة الخط"))}</strong>
-                          {Boolean(r.route) && <small>{String(r.route)}</small>}
+                          <strong>{threadLabel(r.name || tr("محادثة الخط"))}</strong>
+                          {Boolean(r.route) && <small>{threadLabel(r.route)}</small>}
                           <small>
-                            {String(
-                              r.body || tr("افتح المحادثة عشان تشوف الرسائل."),
-                            )}
+                            {threadLabel(r.body || tr("افتح المحادثة عشان تشوف الرسائل."))}
                           </small>
                         </span>
                         <DiscoveryIcon name="back" />
@@ -302,8 +302,8 @@ export default function AccountFlow(p: {
                     </Box>
                   ))}
                 {!rows.filter((r) =>
-                  `${r.name || tr("محادثة الخط")} ${r.route || ""}`.includes(
-                    query.trim(),
+                  `${threadLabel(r.name || tr("محادثة الخط"))} ${threadLabel(r.route || "")}`.toLocaleLowerCase().includes(
+                    query.trim().toLocaleLowerCase(),
                   ),
                 ).length && (
                   <Box>
@@ -328,10 +328,10 @@ export default function AccountFlow(p: {
                     <div className="a-chat-heading">
                       <span className="a-avatar">ك</span>
                       <div>
-                        <h2>{demo ? thread.name : tr("محادثة الخط")}</h2>
+                        <h2>{demo ? tr(thread.name) : tr("محادثة الخط")}</h2>
                         <p>
                           {demo
-                            ? thread.route
+                            ? tr(thread.route)
                             : tr("الرسائل بينك وبين الطرف التاني في المحادثة.")}
                         </p>
                       </div>
@@ -348,7 +348,7 @@ export default function AccountFlow(p: {
                           key={String(m.id)}
                           className={`a-bubble ${m.sender_id === (demo ? "me" : p.profile?.id) ? "mine" : ""}`}
                         >
-                          <p>{String(m.body)}</p>
+                          <p>{demo && m.id === "greeting" ? tr(String(m.body)) : String(m.body)}</p>
                           <small>
                             {new Date(String(m.created_at)).toLocaleTimeString(
                               language === "en" ? "en-GB" : "ar-EG-u-nu-latn",
