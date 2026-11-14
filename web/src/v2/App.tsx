@@ -6,7 +6,7 @@ import CaptainOperations, {
   type OperationsData,
 } from "./CaptainOperations";
 import { internalScreen, publicScreen, screenTitle } from "./screenMap";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { api, client } from "./api";
 import type { Profile, Route, Quote, Booking } from "./api";
@@ -307,6 +307,20 @@ export default function SubscriptionApp() {
   useEffect(() => {
     document.title = `${screenTitle(screen, language)} | سِكّة`;
   }, [screen, language]);
+  // Client-side navigation never reloads the document. Put keyboard/screen-reader
+  // focus on the new page heading after navigation (including browser Back).
+  // Don't steal focus on the initial page load or when editing controls.
+  const initialRoute = useRef(true);
+  useEffect(() => {
+    if (initialRoute.current) {
+      initialRoute.current = false;
+      return;
+    }
+    const heading = document.querySelector<HTMLElement>("main h1, main h2");
+    if (!heading) return;
+    heading.tabIndex = -1;
+    heading.focus({ preventScroll: true });
+  }, [screen]);
   async function refreshProfile() {
     if (
       !client ||
