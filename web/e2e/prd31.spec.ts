@@ -190,3 +190,17 @@ test('English admin can recover from restricted preview permissions and empty re
  await expect(page.getByLabel('Search records')).toHaveValue('Mostafa');
  await context.close();
 });
+
+test('captain preview retains an English conversation through refresh and back',async({browser})=>{
+ const context=await browser.newContext({locale:'en-GB'}), page=await context.newPage();
+ await page.goto('/?screen=56&preview=phase7');
+ await page.locator('.a-thread').first().click();
+ await page.getByLabel('Your message').fill('Meet me at the published stop.');
+ await page.getByRole('button',{name:'Add to preview',exact:true}).click();
+ await page.getByRole('button',{name:'Refresh conversation',exact:true}).click();
+ await expect(page.locator('.a-bubble.mine')).toContainText('Meet me at the published stop.');
+ await page.goBack();
+ await page.locator('.a-thread').first().click();
+ await expect(page.locator('.a-bubble.mine')).toContainText('Meet me at the published stop.');
+ await context.close();
+});
