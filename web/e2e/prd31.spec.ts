@@ -122,3 +122,25 @@ test('interactive preview locks booking terms and persists dual-confirmation sec
  const released=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('sekka.preview.bookingLedger.v31')!));expect(released.available).toBe(150);expect(released.reserved).toBe(0);expect(released.bookings[0].quote).toEqual(snapshot.bookings[0].quote);
  await expect(page.getByRole('button',{name:'محاكاة تأكيد الكابتن — لا دفع حقيقي',exact:true})).toHaveCount(0);
 });
+
+test('favorite sign-in prerequisite returns to its original screen',async({page})=>{
+ await page.goto('/?screen=13');
+ await page.getByRole('button',{name:'تسجيل الدخول',exact:true}).click();
+ await expect(page).toHaveURL(/screen=4/);
+ await page.getByRole('button',{name:'ارجع للخطوة السابقة',exact:true}).click();
+ await expect(page).toHaveURL(/screen=13/);
+ await expect(page.getByRole('heading',{name:'المفضلة',exact:true})).toBeVisible();
+});
+
+test('captain draft survives reload and incomplete publication links to its missing step',async({page})=>{
+ await page.goto('/?screen=43&preview=phase6');
+ await page.getByLabel('وصف الخط',{exact:true}).fill('خط المعادي اليومي');
+ await page.getByRole('button',{name:'حفظ المسودة ومتابعة',exact:true}).click();
+ await page.getByLabel('اسم النقطة',{exact:true}).fill('ميدان الجزائر');
+ await page.reload();await expect(page.getByLabel('اسم النقطة',{exact:true})).toHaveValue('ميدان الجزائر');
+ await page.getByLabel('شاشة خطوط الكابتن').selectOption('48');
+ await page.getByRole('button',{name:'راجع البيانات الناقصة',exact:true}).click();
+ await expect(page).toHaveURL(/screen=44/);
+ await page.getByRole('button',{name:'رجوع',exact:true}).click();
+ await expect(page.getByLabel('وصف الخط',{exact:true})).toHaveValue('خط المعادي اليومي');
+});

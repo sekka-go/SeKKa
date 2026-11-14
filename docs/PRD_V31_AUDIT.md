@@ -59,3 +59,12 @@ Historical decisions and phase completion reports were also moved into `docs/arc
 ### Cross-stage preview state
 
 Interactive bookings are now visible to the demo captain with their locked price, period, selected stops and payment status. The captain acknowledges receipt on public screen 55. Rider screen 20 reads the resulting status; wallet balances and transaction history derive from the same session ledger. Unused demo galleries keep their sample fixtures when the session has no interactive bookings.
+
+### Interaction review checkpoint
+
+The reproducible TypeScript source inventory (`node web/scripts/audit-controls.cjs` from the repository root) lists 354 control declarations, including conditional disabled states and implicit/form actions. It is a source index, not evidence that every possible action has been exercised.
+
+- Favorites now links unauthenticated riders to registration and empty saved lists to search. Direct request-review entry without an eligible search links back to search.
+- Registration/profile prerequisites retain the originating query and provide a return action. Captain route fields and unpublished stop input survive navigation and reload in the same browser session. Successful publication clears the draft; failed persistence keeps it for retry.
+- Incomplete publication links to the relevant missing step. Automated coverage includes return from favorites sign-in and captain draft reload, back navigation and missing-stop recovery.
+- Outstanding: exhaustive bilingual acceptance, app-wide preservation of in-progress forms across prerequisites, mock OTP/resend and provider-dependent submit states, and exhaustive role-by-role failure/retry auditing. Frontend simulations cannot validate real payment, identity or multi-user concurrency.

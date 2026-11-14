@@ -1,0 +1,3188 @@
+[
+  {
+    "file": "AccountFlow.tsx",
+    "line": 130,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(id)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AccountFlow.tsx",
+    "line": 169,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(p.screen - 1)}",
+    "disabled": "{p.screen === 31}",
+    "label": "{tr(\"الشاشة السابقة\")}"
+  },
+  {
+    "file": "AccountFlow.tsx",
+    "line": 176,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{(e) => nav(+e.target.value)}",
+    "disabled": "",
+    "label": "{tr(\"شاشة المرحلة الرابعة\")}"
+  },
+  {
+    "file": "AccountFlow.tsx",
+    "line": 187,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(p.screen + 1)}",
+    "disabled": "{p.screen === 36}",
+    "label": "{tr(\"الشاشة التالية\")}"
+  },
+  {
+    "file": "AccountFlow.tsx",
+    "line": 197,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => p.onTheme(t)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AccountFlow.tsx",
+    "line": 214,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{(e) => setEmpty(e.target.checked)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AccountFlow.tsx",
+    "line": 223,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(p.screen === 32 ? 31 : p.screen === 35 ? 34 : 8)}",
+    "disabled": "",
+    "label": "{tr(\"رجوع\")}"
+  },
+  {
+    "file": "AccountFlow.tsx",
+    "line": 245,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{p.onRefresh}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AccountFlow.tsx",
+    "line": 265,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{(e) => setQuery(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AccountFlow.tsx",
+    "line": 280,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => {\n                          if (demo) setSelected(String(r.id));\n                          else p.onConversation(String(r.id));\n                          nav(32);\n                        }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AccountFlow.tsx",
+    "line": 363,
+    "tag": "form",
+    "action": "onSubmit",
+    "handler": "{(e) => {\n                      e.preventDefault();\n                      void send();\n                    }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AccountFlow.tsx",
+    "line": 371,
+    "tag": "textarea",
+    "action": "onChange",
+    "handler": "{(e) => setDraft(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AccountFlow.tsx",
+    "line": 378,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "{p.busy || !draft.trim()}",
+    "label": ""
+  },
+  {
+    "file": "AccountFlow.tsx",
+    "line": 399,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => setUnread(false)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AccountFlow.tsx",
+    "line": 404,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => setUnread(true)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AccountFlow.tsx",
+    "line": 432,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => setRead((v) => [...v, String(n.id)])}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AccountFlow.tsx",
+    "line": 475,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => {\n                      if (demo)\n                        setNote(\n                          tr(\"دي معاينة. مفيش جلسة حساب حقيقية لتسجيل خروجها.\"),\n                        );\n                      else void p.onLogout().catch(() => {});\n                    }}",
+    "disabled": "{p.busy}",
+    "label": ""
+  },
+  {
+    "file": "AccountFlow.tsx",
+    "line": 491,
+    "tag": "form",
+    "action": "onSubmit",
+    "handler": "{(e) => {\n                  e.preventDefault();\n                  if (demo && name.trim().length >= 2) {\n                    setSavedName(name.trim());\n                    setNote(tr(\"الاسم اتغيّر في المعاينة بس.\"));\n                  }\n                }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AccountFlow.tsx",
+    "line": 502,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{(e) => setName(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AccountFlow.tsx",
+    "line": 519,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "{!demo || name.trim().length < 2}",
+    "label": ""
+  },
+  {
+    "file": "AccountFlow.tsx",
+    "line": 540,
+    "tag": "form",
+    "action": "onSubmit",
+    "handler": "{async (e) => {\n                    e.preventDefault();\n                    if (support.trim().length < 5) return;\n                    if (demo) {\n                      setNote(\n                        tr(\"طلب المساعدة اتجهّز في المعاينة فقط، وماتبعتش للدعم.\"),\n                      );\n                      setSupport(\"\");\n                    } else {\n                      try {\n                        await p.onSupport(support.trim());\n                        setNote(tr(\"رسالتك وصلت للدعم.\"));\n                        setSupport(\"\");\n                      } catch {\n                        /* parent error */\n                      }\n                    }\n                  }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AccountFlow.tsx",
+    "line": 563,
+    "tag": "textarea",
+    "action": "onChange",
+    "handler": "{(e) => setSupport(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AccountFlow.tsx",
+    "line": 571,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "{\n                        p.busy ||\n                        support.trim().length < 5 ||\n                        (!demo && !p.signedIn)\n                      }",
+    "label": ""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 256,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => p.onTheme(t)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 275,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => p.go(4)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 289,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(publicScreen(s) + 1)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 312,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{(e) => {\n                      setRole(e.target.value);\n                      setSelected(null);\n                    }}",
+    "disabled": "",
+    "label": "\"محاكاة صلاحية\""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 326,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{(e) => setEmpty(e.target.checked)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 372,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(Number(id))}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 387,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(66)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 393,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(72)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 439,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{(e) => setQuery(e.target.value)}",
+    "disabled": "",
+    "label": "\"بحث السجلات\""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 448,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{(e) => setFilter(e.target.value)}",
+    "disabled": "",
+    "label": "\"تصفية الحالة\""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 486,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => {\n                                      setSelected(i);\n                                      setDecision(\"\");\n                                      setReason(\"\");\n                                    }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 509,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => {\n                              setQuery(\"\");\n                              setFilter(\"\");\n                            }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 526,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => setSelected(null)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 562,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{(e) => setDecision(e.target.value)}",
+    "disabled": "",
+    "label": "\"قرار المعاينة\""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 582,
+    "tag": "textarea",
+    "action": "onChange",
+    "handler": "{(e) => setReason(e.target.value)}",
+    "disabled": "",
+    "label": "\"سبب الإجراء\""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 595,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{apply}",
+    "disabled": "{!decision || reason.trim().length < 5}",
+    "label": ""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 608,
+    "tag": "form",
+    "action": "onSubmit",
+    "handler": "{(e) => {\n                          e.preventDefault();\n                          setMessagePreview(true);\n                        }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 618,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{(e) => {\n                              setTitle(e.target.value);\n                              setMessagePreview(false);\n                            }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 630,
+    "tag": "textarea",
+    "action": "onChange",
+    "handler": "{(e) => {\n                              setBody(e.target.value);\n                              setMessagePreview(false);\n                            }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 642,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{(e) => {\n                              setAudience(e.target.value);\n                              setMessagePreview(false);\n                            }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 654,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "{!title.trim() || !body.trim()}",
+    "label": ""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 668,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => {\n                                record(\n                                  `حفظ مسودة إشعار إلى ${audience}: ${title}`,\n                                );\n                                setMessagePreview(false);\n                              }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 682,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "true",
+    "label": ""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 704,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "true",
+    "label": ""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 715,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "true",
+    "label": ""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 719,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => p.onTheme(t)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 64,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{(e) => onChange(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 532,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() =>\n              void run(async () => {\n                const detail = await api<Route>(\"route\", { id: r.id });\n                setRoute(detail);\n                setQuote(null);\n                go(12, r.id);\n              })\n            }",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 565,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => {\n            setBooking(b);\n            go(profile?.role === \"captain\" ? 53 : 20);\n          }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 582,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(signedIn ? 6 : 3)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 588,
+    "tag": "form",
+    "action": "onSubmit",
+    "handler": "{(e) => {\n          e.preventDefault();\n          if (screen === 11) setRevision((v) => v + 1);\n          else go(11);\n        }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 596,
+    "tag": "Field",
+    "action": "onChange",
+    "handler": "{(e) => setOrigin(e.target.value)}",
+    "disabled": "",
+    "label": "\"منين؟\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 602,
+    "tag": "Field",
+    "action": "onChange",
+    "handler": "{(e) => setDestination(e.target.value)}",
+    "disabled": "",
+    "label": "\"لفين؟\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 609,
+    "tag": "Field",
+    "action": "onChange",
+    "handler": "{(e) => setDeparture(e.target.value)}",
+    "disabled": "",
+    "label": "\"ميعاد الذهاب\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 616,
+    "tag": "Field",
+    "action": "onChange",
+    "handler": "{(e) => setReturnTime(e.target.value)}",
+    "disabled": "",
+    "label": "\"ميعاد العودة\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 625,
+    "tag": "Select",
+    "action": "onChange",
+    "handler": "{setDirection}",
+    "disabled": "",
+    "label": "\"المشوار\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 635,
+    "tag": "Select",
+    "action": "onChange",
+    "handler": "{setPeriod}",
+    "disabled": "",
+    "label": "\"الاشتراك\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 643,
+    "tag": "Select",
+    "action": "onChange",
+    "handler": "{setCategory}",
+    "disabled": "",
+    "label": "\"الفئة\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 655,
+    "tag": "Field",
+    "action": "onChange",
+    "handler": "{(e) => setMaxPrice(e.target.value)}",
+    "disabled": "",
+    "label": "\"أقصى سعر للدورة\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 663,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 683,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => {\n              if (screen === 37) setRole(\"captain\");\n              go(screen === 37 ? 3 : 8);\n            }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 691,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(3)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 702,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => {\n                  setRole(r);\n                  go(4);\n                }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 715,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(8)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 722,
+    "tag": "form",
+    "action": "onSubmit",
+    "handler": "{submit(async () => {\n            if (!client) throw new Error(\"V2_BACKEND_NOT_CONFIGURED\");\n            const { error } = await client.auth.signInWithOtp({\n              phone: normalizePhone(phone),\n            });\n            if (error) throw error;\n            go(5);\n          })}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 733,
+    "tag": "Field",
+    "action": "onChange",
+    "handler": "{(e) => setPhone(e.target.value)}",
+    "disabled": "",
+    "label": "\"رقم الموبايل\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 743,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "{busy}",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 748,
+    "tag": "form",
+    "action": "onSubmit",
+    "handler": "{submit(async () => {\n            if (!client) throw new Error(\"V2_BACKEND_NOT_CONFIGURED\");\n            const { error } = await client.auth.verifyOtp({\n              phone: normalizePhone(phone),\n              token: otp,\n              type: \"sms\",\n            });\n            if (error) throw error;\n            await refreshProfile();\n            go(6);\n          })}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 762,
+    "tag": "Field",
+    "action": "onChange",
+    "handler": "{(e) => setOtp(e.target.value)}",
+    "disabled": "",
+    "label": "\"كود التأكيد\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 770,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "{busy}",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 771,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(4)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 778,
+    "tag": "form",
+    "action": "onSubmit",
+    "handler": "{submit(async () => {\n            if (!consent) throw new Error(\"INVALID_PROFILE\");\n            await api(\"profile.save\", {\n              name,\n              role,\n              policyVersion: \"2026-11-12\",\n            });\n            await refreshProfile();\n            go(role === \"captain\" ? 38 : 8);\n          })}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 791,
+    "tag": "Field",
+    "action": "onChange",
+    "handler": "{(e) => setName(e.target.value)}",
+    "disabled": "",
+    "label": "\"اسمك\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 804,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{(e) => setConsent(e.target.checked)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 816,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "true",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 836,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => {\n                  setCategory(c);\n                  setRevision((v) => v + 1);\n                }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 880,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(8)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 890,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(17)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 925,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() =>\n                  void run(async () => {\n                    await api(\"favorite.toggle\", { routeId: selectedRoute.id });\n                    setNotice(\"المفضلة اتحدثت.\");\n                  })\n                }",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 936,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() =>\n                  void run(async () => {\n                    await api(\"waitlist.join\", { routeId: selectedRoute.id });\n                    setNotice(\"اسمك اتسجل في قائمة الانتظار.\");\n                  })\n                }",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 947,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() =>\n                  void run(async () => {\n                    const c = await api<{ id: string }>(\"conversation.open\", {\n                      captainId: selectedRoute.captain_id,\n                    });\n                    setConversation(c.id);\n                    go(32);\n                  })\n                }",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 963,
+    "tag": "form",
+    "action": "onSubmit",
+    "handler": "{submit(async () => {\n              const q = await api<Quote>(\"quote\", {\n                routeId: selectedRoute.id,\n                period,\n                direction,\n              });\n              setQuote(q);\n              setIdempotencyKey(crypto.randomUUID());\n              if (screen !== 17) go(17);\n            })}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 977,
+    "tag": "Select",
+    "action": "onChange",
+    "handler": "{(v) => {\n                setPeriod(v);\n                setQuote(null);\n              }}",
+    "disabled": "",
+    "label": "\"المدة\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 986,
+    "tag": "Select",
+    "action": "onChange",
+    "handler": "{(v) => {\n                setDirection(v);\n                setQuote(null);\n              }}",
+    "disabled": "",
+    "label": "\"الاتجاه\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1003,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "{busy}",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1026,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() =>\n                  void run(async () => {\n                    const b = await api<Booking>(\"book\", {\n                      routeId: selectedRoute.id,\n                      period,\n                      direction,\n                      expectedQuote: quote,\n                      idempotencyKey,\n                    });\n                    setBooking({\n                      ...b,\n                      origin: selectedRoute.origin,\n                      destination: selectedRoute.destination,\n                    });\n                    go(19);\n                  })\n                }",
+    "disabled": "{busy || !health?.realMoneyEnabled}",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1068,
+    "tag": "form",
+    "action": "onSubmit",
+    "handler": "{submit(async () => {\n            await api(\"request.create\", {\n              origin,\n              destination,\n              departure,\n              direction,\n            });\n            setNotice(\"طلب خطك اتسجل.\");\n          })}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1080,
+    "tag": "Field",
+    "action": "onChange",
+    "handler": "{(e) => setOrigin(e.target.value)}",
+    "disabled": "",
+    "label": "\"منين؟\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1087,
+    "tag": "Field",
+    "action": "onChange",
+    "handler": "{(e) => setDestination(e.target.value)}",
+    "disabled": "",
+    "label": "\"لفين؟\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1094,
+    "tag": "Field",
+    "action": "onChange",
+    "handler": "{(e) => setDeparture(e.target.value)}",
+    "disabled": "",
+    "label": "\"الميعاد\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1101,
+    "tag": "Select",
+    "action": "onChange",
+    "handler": "{setDirection}",
+    "disabled": "",
+    "label": "\"المشوار\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1111,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "{busy}",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1119,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(profile?.role === \"captain\" ? 52 : 29)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1139,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() =>\n                void run(async () => {\n                  const b = await api<Booking>(\n                    profile?.role === \"captain\"\n                      ? \"payment.received\"\n                      : \"payment.paid\",\n                    { bookingId: booking.id },\n                  );\n                  setBooking({ ...booking, ...b });\n                  setRevision((v) => v + 1);\n                })\n              }",
+    "disabled": "{\n                busy ||\n                booking.status === \"disputed\" ||\n                (profile?.role === \"captain\"\n                  ? Boolean(booking.captain_received_at)\n                  : Boolean(booking.rider_paid_at))\n              }",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1163,
+    "tag": "Field",
+    "action": "onChange",
+    "handler": "{(e) => setBody(e.target.value)}",
+    "disabled": "",
+    "label": "\"فيه مشكلة؟ وضّحها للدعم\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1169,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() =>\n                void run(async () => {\n                  await api(\"dispute.open\", {\n                    bookingId: booking.id,\n                    reason: body,\n                  });\n                  setBooking({ ...booking, status: \"disputed\" });\n                  setNotice(\"الحالة اتبعتت للمراجعة.\");\n                })\n              }",
+    "disabled": "{busy || body.trim().length < 5}",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1222,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "true",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1223,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "true",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1226,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(28)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1244,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => {\n                  setConversation(String(row.id));\n                  go(32);\n                }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1255,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(36)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1262,
+    "tag": "form",
+    "action": "onSubmit",
+    "handler": "{submit(async () => {\n              await api(\"message.send\", { conversationId: conversation, body });\n              setBody(\"\");\n              setRevision((v) => v + 1);\n            })}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1270,
+    "tag": "Field",
+    "action": "onChange",
+    "handler": "{(e) => setBody(e.target.value)}",
+    "disabled": "",
+    "label": "\"رسالتك\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1277,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "{busy}",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1290,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(35)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1291,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(24)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1292,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(36)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1293,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() =>\n                void run(async () => {\n                  if (client) await client.auth.signOut();\n                  setProfile(null);\n                  go(8);\n                })\n              }",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1310,
+    "tag": "form",
+    "action": "onSubmit",
+    "handler": "{submit(async () => {\n            await api(\"support.create\", { body });\n            setBody(\"\");\n            setNotice(\"رسالتك وصلت للدعم.\");\n          })}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1320,
+    "tag": "textarea",
+    "action": "onChange",
+    "handler": "{(e) => setBody(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1328,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "{busy}",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1333,
+    "tag": "form",
+    "action": "onSubmit",
+    "handler": "{submit(async () => {\n            await api(\"captain.save\", { experience: body });\n            go(39);\n          })}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1340,
+    "tag": "Field",
+    "action": "onChange",
+    "handler": "{(e) => setBody(e.target.value)}",
+    "disabled": "",
+    "label": "\"عرّفنا بخبرتك وخطوطك\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1345,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "{busy}",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1346,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(43)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1354,
+    "tag": "Select",
+    "action": "onChange",
+    "handler": "{setDocumentKind}",
+    "disabled": "",
+    "label": "\"نوع المستند\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1367,
+    "tag": "Field",
+    "action": "onChange",
+    "handler": "{(e) => setExpiresOn(e.target.value)}",
+    "disabled": "",
+    "label": "\"تاريخ الانتهاء — لو موجود\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1373,
+    "tag": "Field",
+    "action": "onChange",
+    "handler": "{(e) => {\n              const file = e.target.files?.[0];\n              if (!file) return;\n              void run(async () => {\n                if (!client || !profile) throw new Error(\"AUTH_REQUIRED\");\n                if (\n                  file.size > 5 * 1024 * 1024 ||\n                  ![\"image/jpeg\", \"image/png\", \"application/pdf\"].includes(\n                    file.type,\n                  )\n                )\n                  throw new Error(\"INVALID_FILE\");\n                const path = `${profile.id}/${crypto.randomUUID()}`;\n                const { error } = await client.storage\n                  .from(\"sekka-v2-documents\")\n                  .upload(path, file, {\n                    contentType: file.type,\n                    upsert: false,\n                  });\n                if (error) throw error;\n                await api(\"document.save\", {\n                  kind: documentKind,\n                  path,\n                  expiresOn,\n                });\n                setNotice(\"المستند اترفع للمراجعة.\");\n              });\n            }}",
+    "disabled": "",
+    "label": "\"صورة المستند — حتى 5 ميجابايت\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1406,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(screen === 39 ? 40 : 42)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1413,
+    "tag": "form",
+    "action": "onSubmit",
+    "handler": "{submit(async () => {\n            await api(\"vehicle.save\", {\n              category: category || \"PRIME\",\n              model,\n              plate,\n            });\n            go(41);\n          })}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1424,
+    "tag": "Select",
+    "action": "onChange",
+    "handler": "{setCategory}",
+    "disabled": "",
+    "label": "\"الفئة\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1435,
+    "tag": "Field",
+    "action": "onChange",
+    "handler": "{(e) => setModel(e.target.value)}",
+    "disabled": "",
+    "label": "\"موديل العربية\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1441,
+    "tag": "Field",
+    "action": "onChange",
+    "handler": "{(e) => setPlate(e.target.value)}",
+    "disabled": "",
+    "label": "\"رقم اللوحة\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1447,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "{busy}",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1454,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(38)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1460,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(46)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1467,
+    "tag": "form",
+    "action": "onSubmit",
+    "handler": "{submit(async () => {\n            if (screen < 51) {\n              go(screen + 1);\n              return;\n            }\n            await api(\"route.create\", {\n              origin,\n              destination,\n              outbound: departure,\n              returnTime: direction === \"outbound\" ? \"\" : returnTime,\n              anchor,\n              seats: Number(seats),\n              prices: [\n                { period: \"weekly\", direction, amount: Number(weekly) },\n                { period: \"monthly\", direction, amount: Number(monthly) },\n              ],\n            });\n            go(45);\n          })}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1491,
+    "tag": "Field",
+    "action": "onChange",
+    "handler": "{(e) => setOrigin(e.target.value)}",
+    "disabled": "",
+    "label": "\"نقطة الانطلاق\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1497,
+    "tag": "Field",
+    "action": "onChange",
+    "handler": "{(e) => setDestination(e.target.value)}",
+    "disabled": "",
+    "label": "\"الوجهة\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1507,
+    "tag": "Select",
+    "action": "onChange",
+    "handler": "{setDirection}",
+    "disabled": "",
+    "label": "\"الاتجاه المتاح\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1517,
+    "tag": "Field",
+    "action": "onChange",
+    "handler": "{(e) => setDeparture(e.target.value)}",
+    "disabled": "",
+    "label": "\"ميعاد الذهاب\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1525,
+    "tag": "Field",
+    "action": "onChange",
+    "handler": "{(e) => setReturnTime(e.target.value)}",
+    "disabled": "",
+    "label": "\"ميعاد العودة\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1538,
+    "tag": "Field",
+    "action": "onChange",
+    "handler": "{(e) => setAnchor(e.target.value)}",
+    "disabled": "",
+    "label": "\"بداية دورة تشغيل الخط القائم\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1553,
+    "tag": "Field",
+    "action": "onChange",
+    "handler": "{(e) => setSeats(e.target.value)}",
+    "disabled": "",
+    "label": "\"المقاعد اللي هتتيحها على سِكّة\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1566,
+    "tag": "Field",
+    "action": "onChange",
+    "handler": "{(e) => setWeekly(e.target.value)}",
+    "disabled": "",
+    "label": "\"السعر الأسبوعي — جنيه\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1574,
+    "tag": "Field",
+    "action": "onChange",
+    "handler": "{(e) => setMonthly(e.target.value)}",
+    "disabled": "",
+    "label": "\"السعر الشهري — جنيه\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1600,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "{busy}",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1610,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(Number(id))}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1627,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() =>\n                          void run(async () => {\n                            await api(\"admin.review\", {\n                              resource: adminResources[screen],\n                              id: row.id ?? row.user_id,\n                              status,\n                            });\n                            setRevision((v) => v + 1);\n                          })\n                        }",
+    "disabled": "{busy}",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1698,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(publicScreen(screen) >= 62 ? 64 : 44)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1958,
+    "tag": "a",
+    "action": "href",
+    "handler": "\"#content\"",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1962,
+    "tag": "a",
+    "action": "onClick",
+    "handler": "{(e) => {\n            e.preventDefault();\n            go(8);\n          }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1977,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => changeTheme(theme === \"light\" ? \"dark\" : \"light\")}",
+    "disabled": "",
+    "label": "\"تغيير المظهر\""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1984,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(signedIn ? 34 : 3)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1996,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(id)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 2005,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(64)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 2024,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(profile?.role === \"captain\" ? 44 : 8)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 2041,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => setRevision((v) => v + 1)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 2066,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(id)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 84,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{onClick}",
+    "disabled": "{disabled}",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 438,
+    "tag": "Primary",
+    "action": "onClick",
+    "handler": "{() => nav(!p.signedIn ? 4 : 29)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 459,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(screen - 1)}",
+    "disabled": "{screen === 16}",
+    "label": "\"الشاشة السابقة\""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 466,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{(e) => nav(+e.target.value)}",
+    "disabled": "",
+    "label": "\"شاشة المرحلة الثالثة\""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 477,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(screen + 1)}",
+    "disabled": "{screen === 22}",
+    "label": "\"الشاشة التالية\""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 486,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => onTheme(\"dark\")}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 492,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => onTheme(\"light\")}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 510,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => setBalanceMode(\"enough\")}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 516,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => setBalanceMode(\"short\")}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 531,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => setReceipt(v.id)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 545,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() =>\n              nav(screen === 16 ? 12 : screen === 19 ? 29 : screen - 1)\n            }",
+    "disabled": "",
+    "label": "\"رجوع\""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 639,
+    "tag": "Primary",
+    "action": "onClick",
+    "handler": "{() => void getQuote()}",
+    "disabled": "{working || !p.signedIn}",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 649,
+    "tag": "Primary",
+    "action": "onClick",
+    "handler": "{() => nav(17)}",
+    "disabled": "{!q}",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 658,
+    "tag": "Primary",
+    "action": "onClick",
+    "handler": "{() => nav(11)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 695,
+    "tag": "Primary",
+    "action": "onClick",
+    "handler": "{() =>\n                    setModal(\n                      \"شحن المحفظة لسه مش مفعّل. محتاجين ربط شريك الدفع واعتماد سياسة الرصيد والاسترداد. لم يتم شحن أي مبلغ.\",\n                    )\n                  }",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 705,
+    "tag": "Primary",
+    "action": "onClick",
+    "handler": "{() => {\n                  try {\n                    if(interactivePreview && offer && q) setPreviewLedger(reservePreviewBooking(offer,q));\n                    nav(18);\n                  } catch(error){setNotice(errorCopy(error));}\n                }}",
+    "disabled": "{!sufficient || !q || !demo}",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 753,
+    "tag": "Primary",
+    "action": "onClick",
+    "handler": "{() => nav(19)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 811,
+    "tag": "Primary",
+    "action": "onClick",
+    "handler": "{() => nav(riderReported ? 21 : 20)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 818,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(22)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 845,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{(e) => setPaidChecked(e.target.checked)}",
+    "disabled": "{riderReported || disputed}",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 854,
+    "tag": "Primary",
+    "action": "onClick",
+    "handler": "{() => void paid()}",
+    "disabled": "{\n                  !paidChecked ||\n                  working ||\n                  riderReported ||\n                  disputed ||\n                  (!demo && !p.signedIn)\n                }",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 867,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(21)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 942,
+    "tag": "Primary",
+    "action": "onClick",
+    "handler": "{() => void refresh()}",
+    "disabled": "{working}",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 949,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(22)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 970,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(19)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 975,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() =>\n                    setModal(\n                      \"التجديد هيتاح بعد اعتماد قواعد أولوية التجديد. لم يتم إنشاء تجديد أو حجز جديد.\",\n                    )\n                  }",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 986,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() =>\n                    setModal(\n                      \"إلغاء الاشتراك متوقف لحد اعتماد سياسة الإلغاء والاسترداد. مفيش مقعد أو رصيد اتغيّر. تقدر تطلب مراجعة من الدعم.\",\n                    )\n                  }",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 1005,
+    "tag": "textarea",
+    "action": "onChange",
+    "handler": "{(e) => setReason(e.target.value)}",
+    "disabled": "",
+    "label": "\"سبب مراجعة الاشتراك\""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 1014,
+    "tag": "Primary",
+    "action": "onClick",
+    "handler": "{() => void support()}",
+    "disabled": "{\n                    reason.trim().length < 5 ||\n                    working ||\n                    (!demo && !p.signedIn)\n                  }",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 1041,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => setModal(\"\")}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 68,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{(e) => {\n                  const file = e.target.files?.[0];\n                  if (!file) return;\n                  setSubmitted(false);\n                  if (\n                    ![\"image/jpeg\", \"image/png\", \"application/pdf\"].includes(\n                      file.type,\n                    ) ||\n                    file.size > 5 * 1024 * 1024 ||\n                    file.size === 0\n                  ) {\n                    setNote(\n                      \"اختار صورة JPG أو PNG أو ملف PDF، بحجم أكبر من صفر ولحد 5 ميجا.\",\n                    );\n                    e.target.value = \"\";\n                    return;\n                  }\n                  setDocs((d) => ({ ...d, [kind]: file.name }));\n                  setNote(\"الملف اتحدد على جهازك فقط. مفيش رفع أو إرسال.\");\n                }}",
+    "disabled": "{!demo}",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 97,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => {\n                    setDocs((d) => {\n                      const next = { ...d };\n                      delete next[kind];\n                      return next;\n                    });\n                    setSubmitted(false);\n                  }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 118,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() =>\n            nav(\n              captainOnboardingScreens[\n                captainOnboardingScreens.indexOf(p.screen) + 1\n              ],\n            )\n          }",
+    "disabled": "{!demo || kinds.some((k) => !docs[k])}",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 140,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() =>\n              nav(\n                captainOnboardingScreens[\n                  captainOnboardingScreens.indexOf(p.screen) - 1\n                ],\n              )\n            }",
+    "disabled": "{p.screen === 37}",
+    "label": "\"الشاشة السابقة\""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 153,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{(e) => nav(+e.target.value)}",
+    "disabled": "",
+    "label": "\"شاشة المرحلة الخامسة\""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 164,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() =>\n              nav(\n                captainOnboardingScreens[\n                  captainOnboardingScreens.indexOf(p.screen) + 1\n                ],\n              )\n            }",
+    "disabled": "{p.screen === 76}",
+    "label": "\"الشاشة التالية\""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 180,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => p.onTheme(t)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 197,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() =>\n              nav(\n                p.screen === 37\n                  ? 3\n                  : captainOnboardingScreens[\n                      captainOnboardingScreens.indexOf(p.screen) - 1\n                    ],\n              )\n            }",
+    "disabled": "",
+    "label": "\"رجوع\""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 221,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{p.onRefresh}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 246,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() =>\n                nav(demo || p.profile?.role === \"captain\" ? 38 : 3)\n              }",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 258,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(3)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 271,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(43)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 278,
+    "tag": "form",
+    "action": "onSubmit",
+    "handler": "{(e) => {\n                      e.preventDefault();\n                      setSubmitted(false);\n                      nav(40);\n                    }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 287,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{(e) => {\n                          setName(e.target.value);\n                          setSubmitted(false);\n                        }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 301,
+    "tag": "textarea",
+    "action": "onChange",
+    "handler": "{(e) => setExperience(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 308,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "{name.trim().length < 2}",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 324,
+    "tag": "form",
+    "action": "onSubmit",
+    "handler": "{(e) => {\n                      e.preventDefault();\n                      setSubmitted(false);\n                      nav(39);\n                    }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 333,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{(e) => {\n                          setModel(e.target.value);\n                          setSubmitted(false);\n                        }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 347,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{(e) => {\n                          setPlate(e.target.value);\n                          setSubmitted(false);\n                        }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 360,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{(e) => setColor(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 371,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => {\n                            setCategory(c);\n                            setSubmitted(false);\n                          }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 394,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "{\n                        model.trim().length < 2 ||\n                        plate.trim().length < 3 ||\n                        !color.trim()\n                      }",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 413,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(38)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 427,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(40)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 439,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(39)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 442,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(39)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 447,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{(e) => setReviewed(e.target.checked)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 455,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => {\n                        setSubmitted(true);\n                        nav(43);\n                      }}",
+    "disabled": "{!complete || !reviewed}",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 493,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => (demo ? nav(42) : p.onRefresh())}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 525,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(45)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 529,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(43)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 203,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(target)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 253,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => choose(b)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 264,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(n - 1)}",
+    "disabled": "{n === 51}",
+    "label": "\"الشاشة السابقة\""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 271,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{(e) => nav(+e.target.value)}",
+    "disabled": "",
+    "label": "\"شاشة المرحلة السابعة\""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 282,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(n + 1)}",
+    "disabled": "{n === 62}",
+    "label": "\"الشاشة التالية\""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 292,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => p.onTheme(t)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 309,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{(e) => setEmpty(e.target.checked)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 319,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(n === 58 ? 57 : 51)}",
+    "disabled": "",
+    "label": "\"رجوع\""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 336,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => p.go(4)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 350,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{p.refresh}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 382,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(Number(target))}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 409,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{(e) => setQuery(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 416,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{(e) => setFilter(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 490,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(56)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 496,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() =>\n                          void perform(async () => {\n                            const c = demo\n                              ? { id: \"thread-1\" }\n                              : await api<{ id: string }>(\n                                  \"captain.conversation.open\",\n                                  { bookingId: booking.id },\n                                );\n                            await openChat(c.id);\n                          })\n                        }",
+    "disabled": "{busy}",
+    "label": ""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 520,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{(e) => setConfirm(e.target.checked)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 527,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() =>\n                          void perform(async () => {\n                            if (shared) {\n                              confirmPreviewBooking(str(booking,\"id\"),\"captain\");\n                              setNote(\"تم تسجيل الاستلام وتحرير تأمين الحجز في المحفظة التجريبية.\");\n                            } else if (demo) {\n                              setLocal((v) => ({\n                                ...v,\n                                bookings: v.bookings.map((b) =>\n                                  b.id === booking.id\n                                    ? {\n                                        ...b,\n                                        captain_received_at:\n                                          \"2026-11-15T08:00:00Z\",\n                                        status: \"confirmed\",\n                                        security_state: \"released\",\n                                      }\n                                    : b,\n                                ),\n                              }));\n                              setNote(\n                                \"تمت محاكاة الاستلام وتحرير التأمين في المعاينة فقط.\",\n                              );\n                            } else {\n                              await api(\"payment.received\", {\n                                bookingId: booking.id,\n                              });\n                              p.refresh();\n                              setNote(\"تم تسجيل تأكيد الاستلام.\");\n                            }\n                            setConfirm(false);\n                          })\n                        }",
+    "disabled": "{\n                          busy ||\n                          !confirm ||\n                          !booking.rider_paid_at ||\n                          !!booking.captain_received_at ||\n                          booking.status !== \"reserved\" ||\n                          str(booking, \"starts_on\") > d.today\n                        }",
+    "label": ""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 619,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => {\n                            setFilter(str(r, \"id\"));\n                            nav(53);\n                          }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 648,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => void openChat(str(c, \"id\"))}",
+    "disabled": "{busy}",
+    "label": ""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 695,
+    "tag": "form",
+    "action": "onSubmit",
+    "handler": "{(e) => {\n                      e.preventDefault();\n                      void perform(async () => {\n                        const body = draft.trim();\n                        if (!body) return;\n                        if (demo)\n                          setMessages((v) => [\n                            ...v,\n                            {\n                              id: crypto.randomUUID(),\n                              body,\n                              sender_id: \"me\",\n                              created_at: new Date().toLocaleTimeString(\n                                \"ar-EG\",\n                              ),\n                            },\n                          ]);\n                        else {\n                          await api(\"message.send\", {\n                            conversationId: thread,\n                            body,\n                          });\n                          setMessages(\n                            await api<Row[]>(\"messages\", {\n                              conversationId: thread,\n                            }),\n                          );\n                        }\n                        setDraft(\"\");\n                        setNote(\n                          demo\n                            ? \"الرسالة في المعاينة فقط، ماتبعتتش.\"\n                            : \"تم إرسال الرسالة.\",\n                        );\n                      });\n                    }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 736,
+    "tag": "textarea",
+    "action": "onChange",
+    "handler": "{(e) => setDraft(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 742,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "{busy || !draft.trim()}",
+    "label": ""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 748,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => void openChat(thread)}",
+    "disabled": "{busy}",
+    "label": ""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 762,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => setUnread(false)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 768,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => setUnread(true)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 811,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => choose(b)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 872,
+    "tag": "form",
+    "action": "onSubmit",
+    "handler": "{(e) => {\n                    e.preventDefault();\n                    void perform(async () => {\n                      const body = `${topic}: ${support.trim()}`;\n                      if (demo) {\n                        setLocal((v) => ({\n                          ...v,\n                          tickets: [\n                            ...v.tickets,\n                            {\n                              id: crypto.randomUUID(),\n                              body,\n                              status: \"معاينة فقط\",\n                            },\n                          ],\n                        }));\n                        setNote(\"طلب الدعم اتضاف للمعاينة فقط.\");\n                      } else {\n                        await api(\"support.create\", { body });\n                        p.refresh();\n                        setNote(\"تم إرسال طلبك للدعم.\");\n                      }\n                      setSupport(\"\");\n                    });\n                  }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 902,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{(e) => setTopic(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 918,
+    "tag": "textarea",
+    "action": "onChange",
+    "handler": "{(e) => setSupport(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 926,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "{busy || support.trim().length < 5}",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 55,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{e=>go(+e.target.value)}",
+    "disabled": "",
+    "label": "{t('شاشة خطوط الكابتن','Captain routes screen')}"
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 55,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>p.onTheme(p.theme==='dark'?'light':'dark')}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 58,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>go(43)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 58,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>{setSelected(o.id);go(49);}}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 59,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>change('title',e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 60,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>change('stopName',e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 60,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{e=>change('area',e.target.value)}",
+    "disabled": "",
+    "label": "{t(\"المنطقة\",\"Area\")}"
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 60,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>{change('stops',[...stops,{id:crypto.randomUUID(),name:stopName.trim(),area,pickup:true,dropoff:true}]);change('stopName','');}}",
+    "disabled": "{!stopName.trim()}",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 60,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>change('stops',stops.map(x=>x.id===s.id?{...x,pickup:e.target.checked}:x))}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 60,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>change('stops',stops.map(x=>x.id===s.id?{...x,dropoff:e.target.checked}:x))}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 60,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>{const next=[...stops];[next[i-1],next[i]]=[next[i],next[i-1]];change('stops',next);}}",
+    "disabled": "{i===0}",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 60,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>change('stops',stops.filter(x=>x.id!==s.id))}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 61,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>change('outbound',e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 61,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>change('returnTime',e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 62,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{e=>change('period',e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 62,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{e=>change('direction',e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 62,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>change('returnSupported',e.target.checked)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 63,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{e=>{const c=e.target.value as Category;change('category',c);change('capacity',String(categories[c]));}}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 63,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>change('capacity',e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 63,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>change('price',e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 64,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>setApproved(e.target.checked)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 64,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{publish}",
+    "disabled": "{!valid||!approved}",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 64,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>go(title.trim().length<3?43:stops.length<2||stops[0].area===stops.at(-1)?.area?44:direction!=='return'&&!outbound||direction!=='outbound'&&!returnTime?45:direction==='round_trip'&&!returnSupported?46:47)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 65,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>save(offers.map(o=>o.id===selected?{...o,available:0}:o))}",
+    "disabled": "{selectedOffer.available===0}",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 65,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>go(42)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 66,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>go(n===43?42:n-1)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 66,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>go(n+1)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 340,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{onClick}",
+    "disabled": "{disabled}",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 574,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{(e) => onChange(e.target.value)}",
+    "disabled": "",
+    "label": "{label}"
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 591,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => setPeriod(v)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 612,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() =>\n              nav(\n                discoveryScreens[\n                  Math.max(0, discoveryScreens.indexOf(screen) - 1)\n                ],\n              )\n            }",
+    "disabled": "",
+    "label": "\"الشاشة السابقة\""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 626,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{(e) => nav(Number(e.target.value))}",
+    "disabled": "",
+    "label": "\"شاشة المرحلة الثانية\""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 638,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() =>\n              nav(\n                discoveryScreens[\n                  Math.min(discoveryScreens.length - 1, discoveryScreens.indexOf(screen) + 1)\n                ],\n              )\n            }",
+    "disabled": "",
+    "label": "\"الشاشة التالية\""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 652,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => onTheme(\"dark\")}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 658,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => onTheme(\"light\")}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 673,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() =>\n              nav(\n                screen === 8 ? 2 : screen === 13 ? 29 : screen === 12 ? 11 : 8,\n              )\n            }",
+    "disabled": "",
+    "label": "\"رجوع\""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 710,
+    "tag": "form",
+    "action": "onSubmit",
+    "handler": "{(e) => {\n                e.preventDefault();\n                search();\n              }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 723,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => {\n                    setOrigin(destination);\n                    setDestination(origin);\n                  }}",
+    "disabled": "",
+    "label": "\"تبديل الانطلاق والوصول\""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 744,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{(e) => setOutbound(e.target.value)}",
+    "disabled": "",
+    "label": "\"وقت الذهاب\""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 755,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{(e) => setReturnTime(e.target.value)}",
+    "disabled": "",
+    "label": "\"وقت العودة\""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 764,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 784,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() =>\n                      setCategories((v) =>\n                        v.includes(c.name)\n                          ? v.filter((x) => x !== c.name)\n                          : [...v, c.name],\n                      )\n                    }",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 815,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{(e) => setFilterDirection(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 827,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{(e) => setFilterPrice(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 834,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => setOnlyAvailable(!onlyAvailable)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 841,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => {\n                  setCategories([]);\n                  setFilterDirection(\"\");\n                  setFilterPrice(\"\");\n                  setOnlyAvailable(false);\n                  setAppliedFilters(false);\n                }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 868,
+    "tag": "Action",
+    "action": "onClick",
+    "handler": "{() => {\n                setAppliedFilters(true);\n                if (!demo)\n                  p.onSearch({\n                    origin,\n                    destination,\n                    outbound,\n                    returnTime,\n                    period,\n                    category: categories.length === 1 ? categories[0] : \"\",\n                    direction: filterDirection || \"outbound\",\n                    maxPrice: filterPrice,\n                  });\n                nav(11);\n              }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 894,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(29)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 895,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(14)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 896,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(24)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 897,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(33)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 911,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(10)}",
+    "disabled": "",
+    "label": "\"تعديل الفلاتر\""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 929,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => openLine(l)}",
+    "disabled": "",
+    "label": "{`عرض تفاصيل ${l.category} ${periodLabel(l.period)} ${directionLabel(l.direction)}`}"
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 974,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(15)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 1013,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{e => {setPickup(e.target.value); setDropoff(\"\");}}",
+    "disabled": "",
+    "label": "\"نقطة الركوب\""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 1014,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{e => setDropoff(e.target.value)}",
+    "disabled": "",
+    "label": "\"نقطة النزول\""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 1018,
+    "tag": "Action",
+    "action": "onClick",
+    "handler": "{() => {try {const selectedStops = selectStops(current.stops || [], pickup, dropoff, current.direction === \"round_trip\" ? current.returnStops || [] : undefined); p.onBook({...current, selectedStops});} catch {setMessage(\"اختار نقطتين صالحين؛ يجب أن يدعم مسار العودة عكس النقطتين.\");}}}",
+    "disabled": "{current.amount === null || !pickup || !dropoff}",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 1024,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => void favorite(current.routeId || current.id)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 1043,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => void favorite(l.id)}",
+    "disabled": "",
+    "label": "{`إزالة ${l.origin} إلى ${l.destination} من المفضلة`}"
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 1065,
+    "tag": "Action",
+    "action": "onClick",
+    "handler": "{() => openLine(l)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 1074,
+    "tag": "Action",
+    "action": "onClick",
+    "handler": "{()=>go(p.signedIn || demo ? 9 : 4)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 1082,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => setPast(false)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 1089,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => setPast(true)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 1126,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() =>\n                          setModal(\n                            \"إدارة الاشتراك محتاجة حجزًا فعليًا. البيانات المعروضة توضيحية فقط.\",\n                          )\n                        }",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 1157,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => p.onBooking(b.id)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 1175,
+    "tag": "form",
+    "action": "onSubmit",
+    "handler": "{e => void request(e)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 1178,
+    "tag": "textarea",
+    "action": "onChange",
+    "handler": "{e => setNotes(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 1179,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "{requestSent}",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 1180,
+    "tag": "Action",
+    "action": "onClick",
+    "handler": "{()=>go(9)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 1192,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => setModal(\"\")}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Onboarding.tsx",
+    "line": 213,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(Math.max(1, id - 1))}",
+    "disabled": "{id === 1}",
+    "label": "{t(\"الشاشة السابقة\")}"
+  },
+  {
+    "file": "Onboarding.tsx",
+    "line": 222,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{(e) => go(Number(e.target.value))}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Onboarding.tsx",
+    "line": 230,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(Math.min(7, id + 1))}",
+    "disabled": "{id === 7}",
+    "label": "{t(\"الشاشة التالية\")}"
+  },
+  {
+    "file": "Onboarding.tsx",
+    "line": 239,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => onTheme(\"dark\")}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Onboarding.tsx",
+    "line": 244,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => onTheme(\"light\")}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Onboarding.tsx",
+    "line": 258,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{onReturn}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Onboarding.tsx",
+    "line": 270,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{back}",
+    "disabled": "",
+    "label": "{t(\"رجوع\")}"
+  },
+  {
+    "file": "Onboarding.tsx",
+    "line": 287,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(2)}",
+    "disabled": "",
+    "label": "{t(\"ابدأ مع سِكّة\")}"
+  },
+  {
+    "file": "Onboarding.tsx",
+    "line": 336,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(3)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Onboarding.tsx",
+    "line": 341,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "true",
+    "label": ""
+  },
+  {
+    "file": "Onboarding.tsx",
+    "line": 385,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => onRole(r.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Onboarding.tsx",
+    "line": 406,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(4)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Onboarding.tsx",
+    "line": 437,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{(e) => setPhone(e.target.value)}",
+    "disabled": "",
+    "label": "{t(\"رقم الموبايل\")}"
+  },
+  {
+    "file": "Onboarding.tsx",
+    "line": 448,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "true",
+    "label": ""
+  },
+  {
+    "file": "Onboarding.tsx",
+    "line": 475,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{(e) => otpChange(i, e.target.value)}",
+    "disabled": "",
+    "label": "{language === \"en\" ? `Verification code digit ${i + 1}` : `الرقم ${i + 1} من كود التحقق`}"
+  },
+  {
+    "file": "Onboarding.tsx",
+    "line": 499,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "true",
+    "label": ""
+  },
+  {
+    "file": "Onboarding.tsx",
+    "line": 502,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "true",
+    "label": ""
+  },
+  {
+    "file": "Onboarding.tsx",
+    "line": 517,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{(e) => setFullName(e.target.value)}",
+    "disabled": "",
+    "label": "{t(\"الاسم الكامل\")}"
+  },
+  {
+    "file": "Onboarding.tsx",
+    "line": 536,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(7)}",
+    "disabled": "{fullName.trim().length < 2}",
+    "label": ""
+  },
+  {
+    "file": "Onboarding.tsx",
+    "line": 556,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => onReturn ? onReturn() : go(role === \"captain\" ? 37 : 8)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "WalletFlow.tsx",
+    "line": 121,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(n)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "WalletFlow.tsx",
+    "line": 136,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(p.screen - 1)}",
+    "disabled": "{p.screen === 24}",
+    "label": "\"الشاشة السابقة\""
+  },
+  {
+    "file": "WalletFlow.tsx",
+    "line": 143,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{(e) => nav(+e.target.value)}",
+    "disabled": "",
+    "label": "\"شاشة المرحلة الرابعة\""
+  },
+  {
+    "file": "WalletFlow.tsx",
+    "line": 154,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(p.screen + 1)}",
+    "disabled": "{p.screen === 30}",
+    "label": "\"الشاشة التالية\""
+  },
+  {
+    "file": "WalletFlow.tsx",
+    "line": 164,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => p.onTheme(t)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "WalletFlow.tsx",
+    "line": 182,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{(e) => setEmpty(e.target.checked)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "WalletFlow.tsx",
+    "line": 190,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{(e) => setScenario(e.target.value)}",
+    "disabled": "",
+    "label": "\"حالة الشحن التجريبية\""
+  },
+  {
+    "file": "WalletFlow.tsx",
+    "line": 204,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(p.screen === 24 ? 19 : 24)}",
+    "disabled": "",
+    "label": "\"رجوع\""
+  },
+  {
+    "file": "WalletFlow.tsx",
+    "line": 276,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{(e) => setAmount(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "WalletFlow.tsx",
+    "line": 287,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => setAmount(String(n))}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "WalletFlow.tsx",
+    "line": 309,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "true",
+    "label": ""
+  },
+  {
+    "file": "WalletFlow.tsx",
+    "line": 313,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(26)}",
+    "disabled": "{!Number.isInteger(+amount) || +amount < 100}",
+    "label": ""
+  },
+  {
+    "file": "WalletFlow.tsx",
+    "line": 389,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "true",
+    "label": ""
+  },
+  {
+    "file": "WalletFlow.tsx",
+    "line": 400,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{(e) => setFilter(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "WalletFlow.tsx",
+    "line": 416,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() =>\n                          setDetail(detail === t.id ? null : String(t.id))\n                        }",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "WalletFlow.tsx",
+    "line": 463,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(29)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "WalletFlow.tsx",
+    "line": 469,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(30)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "WalletFlow.tsx",
+    "line": 506,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() =>\n                              setDetail(detail === b.id ? null : b.id)\n                            }",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "WalletFlow.tsx",
+    "line": 515,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => p.go(19, undefined, b.id)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "preferences.tsx",
+    "line": 32,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{e=>p.setThemePreference(e.target.value as ThemePreference)}",
+    "disabled": "",
+    "label": "\"theme_preference\""
+  },
+  {
+    "file": "preferences.tsx",
+    "line": 33,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{e=>p.setLanguagePreference(e.target.value as LanguagePreference)}",
+    "disabled": "",
+    "label": "\"language_preference\""
+  }
+]

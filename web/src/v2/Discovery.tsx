@@ -1071,6 +1071,7 @@ export default function Discovery(p: DiscoveryProps) {
                 {p.signedIn || demo
                   ? "لسه مفيش خطوط محفوظة."
                   : "سجّل الدخول عشان تشوف المفضلة."}
+                <Action onClick={()=>go(p.signedIn || demo ? 9 : 4)}>{p.signedIn || demo ? "البحث عن خط" : "تسجيل الدخول"}</Action>
               </Empty>
             )}
           </>
@@ -1176,7 +1177,7 @@ export default function Discovery(p: DiscoveryProps) {
           <p>الطلب لا يحجز مقعدًا ولا يخصم تأمينًا ولا يضمن توافر كابتن.</p></section>
           <label>ملاحظات اختيارية<textarea value={notes} onChange={e => setNotes(e.target.value)} maxLength={1000}/></label>
           <button className="d-primary" disabled={requestSent} type="submit">{requestSent ? "تم تأكيد الطلب في المعاينة" : "تأكيد الطلب"}</button>
-        </form> : <Empty>ابدأ بالبحث؛ طلب الرحلة متاح فقط عندما لا توجد عروض مطابقة.</Empty>)}
+        </form> : <><Empty>ابدأ بالبحث؛ طلب الرحلة متاح فقط عندما لا توجد عروض مطابقة.</Empty><Action onClick={()=>go(9)}>البحث عن خط</Action></>)}
       </main>
       {modal && (
         <div className="d-modal-backdrop">

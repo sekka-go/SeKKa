@@ -157,6 +157,7 @@ export default function Onboarding({
   go,
   role,
   onRole,
+  onReturn,
 }: {
   screen: number;
   theme: Appearance;
@@ -164,6 +165,7 @@ export default function Onboarding({
   go: (id: number) => void;
   role: string;
   onRole: (r: string) => void;
+  onReturn?: () => void;
   children?: ReactNode;
 }) {
   const {language} = usePreferences();
@@ -253,6 +255,7 @@ export default function Onboarding({
             ? t("معاينة التصميم — إرسال الرسائل وإنشاء الحسابات غير مفعّلين.")
             : t("معاينة المرحلة الأولى · 7 شاشات")}
       </p>
+      {onReturn && <button className="d-outline" onClick={onReturn}>{language==="en" ? "Return to previous step" : "ارجع للخطوة السابقة"}</button>}
       <main
         className={`phase-canvas phase-screen-${id}`}
         aria-label={`${t("المرحلة الأولى")} — ${t(names[id - 1])}`}
@@ -552,7 +555,7 @@ export default function Onboarding({
             </section>
             <button
               className="phase-primary"
-              onClick={() => go(role === "captain" ? 37 : 8)}
+              onClick={() => onReturn ? onReturn() : go(role === "captain" ? 37 : 8)}
             >
               {t("تخطي ومتابعة")}<Arrow />
             </button>

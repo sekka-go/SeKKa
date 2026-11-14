@@ -238,6 +238,9 @@ export default function SubscriptionApp() {
   );
   function go(id: number, routeId = route?.id, bookingId = booking?.id) {
     if (id === 13) id = 19;
+    if (screen > 7 && [3,4,6].includes(id)) {
+      sessionStorage.setItem("sekka.prerequisiteReturn",location.search);
+    }
     setScreen(id);
     setContact(null);
     setError("");
@@ -1930,6 +1933,14 @@ export default function SubscriptionApp() {
         theme={theme}
         onTheme={changeTheme}
         go={go}
+        onReturn={sessionStorage.getItem("sekka.prerequisiteReturn") ? () => {
+          const saved = sessionStorage.getItem("sekka.prerequisiteReturn");
+          sessionStorage.removeItem("sekka.prerequisiteReturn");
+          if (!saved || !saved.startsWith("?")) return;
+          history.pushState({}, "", location.pathname + saved);
+          setScreen(getScreen());
+          window.scrollTo(0,0);
+        } : undefined}
         role={role}
         onRole={setRole}
       >
