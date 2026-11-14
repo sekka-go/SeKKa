@@ -186,6 +186,19 @@ export default function CaptainOperations(p: {
 const money = (v: unknown) =>
   `${Number(v || 0).toLocaleString(language==="en"?"en-GB":"ar-EG-u-nu-latn")} ${language==="en"?"EGP":"ج.م"}`;
   const demo = new URLSearchParams(location.search).get("preview") === "phase7";
+  const dateLabel = (value: unknown, withTime = false) => {
+    const raw = String(value ?? "");
+    if (!raw) return language === "en" ? "Not available" : "غير متاح";
+    // Treat a calendar date as local date, not midnight UTC; preserve its day.
+    const normalized = /^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw + "T12:00:00Z" : raw;
+    const parsed = new Date(normalized);
+    if (Number.isNaN(parsed.getTime())) return raw; // Old time-only preview data.
+    return new Intl.DateTimeFormat(language === "en" ? "en-GB" : "ar-EG-u-nu-latn", {
+      day: "numeric", month: "short", year: "numeric",
+      ...(withTime ? {hour: "2-digit", minute: "2-digit"} : {}),
+      timeZone: "Africa/Cairo",
+    }).format(parsed);
+  };
   const n = publicScreen(p.screen) + 1;
   const [chatHistory,setChatHistory] = useState<Record<string,Row[]>>(() => demo ? restorePreviewChatHistory() : {});
   const [local, setLocal] = useState(demoData),
@@ -278,7 +291,7 @@ const money = (v: unknown) =>
       </h2>
       <div className="b-row">
         <span>{language==="en" ? "Start date" : "البداية"}</span>
-        <b dir="ltr">{str(b, "starts_on")}</b>
+        <b dir="ltr">{dateLabel(str(b, "starts_on"))}</b>
       </div>
       <div className="b-row">
         <span>{tr("المبلغ المثبت")}</span>
@@ -489,7 +502,7 @@ const money = (v: unknown) =>
                   <Box>
                     <div className="b-row">
                       <span>{tr("نهاية الفترة (غير شامل)")}</span>
-                      <b>{str(booking, "ends_before")}</b>
+                      <b>{dateLabel(str(booking, "ends_before"))}</b>
                     </div>
                     <div className="b-row">
                       <span>{tr("تأكيد الراكب")}</span>
@@ -678,7 +691,7 @@ const money = (v: unknown) =>
                       <span>
                         <strong>{tr(str(c, "rider_name", "مشترك"))}</strong>
                         <small>{tr(str(c, "body", "ابدأ المحادثة"))}</small>
-                        <small>{str(c, "created_at", "")}</small>
+                        <small>{dateLabel(str(c, "created_at", ""), true)}</small>
                       </span>
                       <DiscoveryIcon name="back" />
                     </button>
@@ -710,7 +723,7 @@ const money = (v: unknown) =>
                         key={str(m, "id")}
                       >
                         <p>{tr(str(m, "body"))}</p>
-                        <small>{str(m, "created_at")}</small>
+                        <small>{dateLabel(str(m, "created_at"), true)}</small>
                       </article>
                     ))}
                   </section>
@@ -728,9 +741,7 @@ const money = (v: unknown) =>
                               id: crypto.randomUUID(),
                               body,
                               sender_id: "me",
-                              created_at: new Date().toLocaleTimeString(
-                                language==="en"?"en-GB":"ar-EG",
-                              ),
+                              created_at: new Date().toISOString(),
                             },
                           ];
                           const nextHistory = {...chatHistory, [thread]: next};
@@ -797,7 +808,7 @@ const money = (v: unknown) =>
                   .map((r) => (
                     <Box key={str(r, "id")}>
                       <p>{tr(str(r, "body"))}</p>
-                      <small>{str(r, "created_at")}</small>
+                      <small>{dateLabel(str(r, "created_at"), true)}</small>
                       {action("راجع الحجوزات", 52)}
                     </Box>
                   ))}
@@ -833,7 +844,7 @@ const money = (v: unknown) =>
                         <span>{tr("تم الإقرار باستلام")}</span>
                         <b>{money(b.price)}</b>
                       </div>
-                      <small>{str(b, "captain_received_at")}</small>
+                      <small>{dateLabel(str(b, "captain_received_at"), true)}</small>
                       <button className="a-menu" onClick={() => choose(b)}>
                         {tr("تفاصيل الاشتراك")}</button>
                     </Box>
