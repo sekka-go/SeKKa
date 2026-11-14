@@ -53,6 +53,10 @@ test('captain route preview enforces approval and capacity before local publicat
  await page.getByLabel('محاكاة حساب كابتن معتمد',{exact:true}).check();await expect(page.getByRole('button',{name:'نشر في المعاينة',exact:true})).toBeDisabled();
  await page.getByLabel('شاشة خطوط الكابتن').selectOption('47');await page.getByLabel('المقاعد المعروضة',{exact:true}).fill('3');await page.getByRole('button',{name:'حفظ المسودة ومتابعة',exact:true}).click();
  await page.getByRole('button',{name:'نشر في المعاينة',exact:true}).click();await expect(page).toHaveURL(/screen=49/);await expect(page.getByRole('button',{name:'إيقاف الحجوزات الجديدة في المعاينة'})).toBeEnabled();
+ await page.getByRole('button',{name:'إيقاف الحجوزات الجديدة في المعاينة'}).click();
+ await expect(page.getByText('الحجوزات الجديدة متوقفة مؤقتًا.',{exact:false})).toBeVisible();
+ await page.getByRole('button',{name:'استئناف الحجوزات الجديدة في المعاينة'}).click();
+ await expect(page.getByRole('button',{name:'إيقاف الحجوزات الجديدة في المعاينة'})).toBeEnabled();
 });
 
 test('English device translates onboarding; unsupported device language falls back to Arabic',async({browser})=>{
