@@ -232,3 +232,25 @@ test('subscription cancellation warning leads directly to the support form',asyn
  await page.getByLabel('سبب مراجعة الاشتراك').fill('من فضلك راجع حالة الاشتراك');
  await expect(page.getByRole('button',{name:'معاينة طلب المراجعة'})).toBeEnabled();
 });
+
+
+test('filtered empty states offer immediate recovery without losing the page',async({page})=>{
+ await page.goto('/?screen=26&preview=phase4');
+ await page.getByLabel('نوع العملية').selectOption('withdrawal');
+ await expect(page.getByRole('button',{name:'عرض كل المعاملات'})).toBeVisible();
+ await page.getByRole('button',{name:'عرض كل المعاملات'}).click();
+ await expect(page.locator('.w-transaction')).toHaveCount(4);
+
+ await page.goto('/?screen=29&preview=phase4');
+ await page.getByLabel('دوّر في المحادثات').fill('not-a-matching-route');
+ await expect(page.getByRole('button',{name:'مسح البحث'})).toBeVisible();
+ await page.getByRole('button',{name:'مسح البحث'}).click();
+ await expect(page.locator('.a-thread')).toHaveCount(2);
+
+ await page.goto('/?screen=31&preview=phase4');
+ await page.getByRole('button',{name:'غير المقروءة',exact:true}).click();
+ await page.getByRole('button',{name:'اعتباره مقروءًا في المعاينة'}).click();
+ await expect(page.getByRole('button',{name:'عرض كل الإشعارات'})).toBeVisible();
+ await page.getByRole('button',{name:'عرض كل الإشعارات'}).click();
+ await expect(page.getByRole('button',{name:'الكل',exact:true})).toHaveAttribute('aria-pressed','true');
+});
