@@ -129,11 +129,11 @@ test('interactive preview locks booking terms and persists dual-confirmation sec
 
 test('favorite sign-in prerequisite returns to its original screen',async({page})=>{
  await page.goto('/?screen=13');
- await page.getByRole('button',{name:'تسجيل الدخول',exact:true}).click();
+ await page.getByRole('button',{name:'تسجيل الدخول أو إنشاء حساب',exact:true}).click();
  await expect(page).toHaveURL(/screen=4/);
  await page.getByRole('button',{name:'ارجع للخطوة السابقة',exact:true}).click();
  await expect(page).toHaveURL(/screen=13/);
- await expect(page.getByRole('heading',{name:'المفضلة',exact:true})).toBeVisible();
+ await expect(page.getByRole('alert')).toContainText('سجّل دخولك أو اعمل حساب');
 });
 
 test('captain draft survives reload and incomplete publication links to its missing step',async({page})=>{
@@ -319,7 +319,7 @@ test('guest entering a protected subscription sees direct sign-in and safe retur
  await expect(page.getByRole('alert')).toContainText('سجّل دخولك أو اعمل حساب');
  await expect(page.getByRole('button',{name:'تسجيل الدخول أو إنشاء حساب',exact:true})).toBeVisible();
  await page.getByRole('button',{name:'تسجيل الدخول أو إنشاء حساب',exact:true}).click();
- await expect(page).toHaveURL(/screen=3/);
+ await expect(page).toHaveURL(/screen=4/);
  await page.goto('/?screen=18');
  await page.getByRole('button',{name:'الرجوع للرئيسية',exact:true}).click();
  await expect(page).toHaveURL(/screen=8/);
@@ -332,7 +332,7 @@ test('English protected captain and admin screens provide actionable auth gates'
   await page.goto('/?screen='+id);
   await expect(page.locator('html')).toHaveAttribute('lang','en');
   await expect(page.getByRole('alert')).toContainText('Sign in or create an account');
-  await expect(page.getByRole('button',{name:'Sign in or create an account',exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:id===50?'Sign in or create a captain account':'Sign in or create an account',exact:true})).toBeVisible();
   await expect(page.getByRole('button',{name:'Back to home',exact:true})).toBeVisible();
  }
  await page.getByRole('button',{name:'Back to home',exact:true}).click();
