@@ -497,3 +497,19 @@ test('captain preview does not translate rider-authored or captain-authored chat
  await expect(page.locator('.a-chat .a-bubble.mine')).toContainText('رجوع');
  await context.close();
 });
+
+
+test('premium rider styling is scoped to screens 8–21 and preserves onboarding',async({page})=>{
+ await page.goto('/?screen=1');
+ const onboarding=await page.locator('main').evaluate(el=>getComputedStyle(el).backgroundImage);
+ await page.goto('/?screen=8&preview=phase2');
+ await expect(page.locator('.discovery-stage .d-canvas')).toBeVisible();
+ const rider=await page.locator('.discovery-stage .d-canvas').evaluate(el=>getComputedStyle(el).backgroundImage);
+ expect(rider).toContain('radial-gradient');
+ await expect(page.locator('.discovery-stage .d-canvas .d-primary').first()).toHaveCSS('border-radius', /\d+(\.\d+)?px/);
+ await page.goto('/?screen=16&preview=phase3');
+ await expect(page.locator('.booking-stage .b-canvas')).toBeVisible();
+ await expect(page.locator('.booking-stage .b-canvas .b-box').first()).toBeVisible();
+ await page.goto('/?screen=1');
+ expect(await page.locator('main').evaluate(el=>getComputedStyle(el).backgroundImage)).toBe(onboarding);
+});
