@@ -813,6 +813,15 @@ export const english: Readonly<Record<string,string>> = {
   "اكتب رقم الحجز والتفاصيل، من غير كلمات مرور أو أكواد تحقق": "Enter the booking reference and details. Keep passwords and verification codes private.",
   "معاينة طلب الدعم": "Preview support request",
   "إرسال للدعم": "Send to support",
+  "سجّل الدخول عشان تحفظ العرض في المفضلة.": "Sign in to save this offer to your favorites.",
+  "تسجيل الدخول أو إنشاء حساب": "Sign in or create an account",
+  "تعذّر حفظ العرض. جرّب تاني.": "Could not save this offer. Please try again.",
+  "ارجع للبحث": "Back to search",
+  "راجع المحفظة": "Review wallet",
+  "اكتب طلب مراجعة": "Write a review request",
+  "عرض كل المعاملات": "Show all transactions",
+  "مسح البحث": "Clear search",
+  "عرض كل الإشعارات": "Show all notifications",
   "الحالة:": "Status:"
 };
 export function translate(text:string,language:"ar"|"en"){return language==="en" ? english[text] ?? text : text;}

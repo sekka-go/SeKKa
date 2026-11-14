@@ -161,6 +161,9 @@ test("phase two: v3.1 paired views, fixed offers, navigation and preview isolati
         .locator(".d-canvas")
         .screenshot({ path: `../docs/audit/phase2-${screen}-${theme}.png` });
     }
+    // Explicitly clear the previous theme iteration\u0027s filters: preferences must not erase rider input.
+    await page.goto(`/?screen=10&theme=${theme}&preview=phase2`);
+    await page.getByRole("button", {name:"مسح الفلاتر",exact:true}).click();
     await page.goto(`/?screen=11&theme=${theme}&preview=phase2`);
     await expect(page.locator(".d-result")).toHaveCount(3);
     await page.getByRole("button", { name: /عرض تفاصيل SAVER/ }).click();
@@ -191,12 +194,21 @@ test("phase two: v3.1 paired views, fixed offers, navigation and preview isolati
       page.getByText("لسه مفيش خط مناسب.", { exact: true }),
     ).toBeVisible();
     await page.goto(`/?screen=13&theme=${theme}&preview=phase2`);
-    await page
-      .getByRole("button", {
+    if (theme === "dark") {
+      await expect(page.locator(".d-favorite")).toHaveCount(3);
+      await page
+        .getByRole("button", {
+          name: "إزالة المعادي إلى التجمع من المفضلة",
+          exact: true,
+        })
+        .click();
+    } else {
+      // Switching appearance must not silently restore a removed favorite.
+      await expect(page.getByRole("button", {
         name: "إزالة المعادي إلى التجمع من المفضلة",
         exact: true,
-      })
-      .click();
+      })).toHaveCount(0);
+    }
     await expect(page.locator(".d-favorite")).toHaveCount(2);
     await page.goto(`/?screen=14&theme=${theme}&preview=phase2`);
     await expect(page.getByRole("button", {name:"تأكيد الطلب",exact:true})).toHaveCount(0);

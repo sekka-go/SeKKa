@@ -505,15 +505,19 @@ export default function SubscriptionApp() {
     };
     // Search runs on the results screen; intermediate form edits do not send requests.
   }, [screen, revision, signedIn, conversation]);
+  const inPhasePreview = /^phase[2-8]$/.test(new URLSearchParams(location.search).get("preview") || "");
   const guarded =
+    !inPhasePreview &&
     !publicScreens.has(screen) &&
     ![6, 7].includes(screen) &&
     (!signedIn || !profile);
   const captainBlocked =
+    !inPhasePreview &&
     publicScreen(screen) >= 36 &&
     publicScreen(screen) <= 61 &&
     profile?.role !== "captain";
   const adminBlocked =
+    !inPhasePreview &&
     publicScreen(screen) >= 62 && !profile?.permissions?.length;
   const selectedRoute = route;
   function RouteCard({ r }: { r: Route }) {
@@ -674,7 +678,7 @@ export default function SubscriptionApp() {
     if (guarded) return authScreen();
     if (captainBlocked || adminBlocked)
       return <Empty>الصفحة دي مش متاحة لحسابك.</Empty>;
-    if ([1, 2, 37].includes(screen))
+    if ([1, 2].includes(screen))
       return (
         <Panel className="hero">
           <img src="/brand/sekka-mark.png" alt="شعار سِكّة" />

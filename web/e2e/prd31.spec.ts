@@ -53,6 +53,10 @@ test('captain route preview enforces approval and capacity before local publicat
  await page.getByLabel('محاكاة حساب كابتن معتمد',{exact:true}).check();await expect(page.getByRole('button',{name:'نشر في المعاينة',exact:true})).toBeDisabled();
  await page.getByLabel('شاشة خطوط الكابتن').selectOption('47');await page.getByLabel('المقاعد المعروضة',{exact:true}).fill('3');await page.getByRole('button',{name:'حفظ المسودة ومتابعة',exact:true}).click();
  await page.getByRole('button',{name:'نشر في المعاينة',exact:true}).click();await expect(page).toHaveURL(/screen=49/);await expect(page.getByRole('button',{name:'إيقاف الحجوزات الجديدة في المعاينة'})).toBeEnabled();
+ await page.getByRole('button',{name:'إيقاف الحجوزات الجديدة في المعاينة'}).click();
+ await expect(page.getByText('الحجوزات الجديدة متوقفة مؤقتًا.',{exact:false})).toBeVisible();
+ await page.getByRole('button',{name:'استئناف الحجوزات الجديدة في المعاينة'}).click();
+ await expect(page.getByRole('button',{name:'إيقاف الحجوزات الجديدة في المعاينة'})).toBeEnabled();
 });
 
 test('English device translates onboarding; unsupported device language falls back to Arabic',async({browser})=>{
@@ -198,9 +202,113 @@ test('captain preview retains an English conversation through refresh and back',
  await page.getByLabel('Your message').fill('Meet me at the published stop.');
  await page.getByRole('button',{name:'Add to preview',exact:true}).click();
  await page.getByRole('button',{name:'Refresh conversation',exact:true}).click();
+ await expect(page).toHaveURL(/screen=57/);
+ await expect(page.locator('.a-bubble.mine')).toContainText('Meet me at the published stop.');
+ await page.reload();
  await expect(page.locator('.a-bubble.mine')).toContainText('Meet me at the published stop.');
  await page.goBack();
+ await expect(page).toHaveURL(/screen=56/);
  await page.locator('.a-thread').first().click();
  await expect(page.locator('.a-bubble.mine')).toContainText('Meet me at the published stop.');
  await context.close();
+});
+
+
+test('insufficient security balance offers a direct wallet action without claiming a top-up',async({page})=>{
+ await page.goto('/?screen=16&preview=phase3');
+ await page.getByRole('button',{name:'غير كافي',exact:true}).click();
+ await expect(page.getByRole('button',{name:'معاينة تأكيد الحجز',exact:true})).toBeDisabled();
+ await page.getByRole('button',{name:'راجع المحفظة',exact:true}).click();
+ await expect(page).toHaveURL(/screen=22/);
+ await expect(page.getByRole('heading',{name:'محفظتي'})).toBeVisible();
+});
+
+test('subscription cancellation warning leads directly to the support form',async({page})=>{
+ await page.goto('/?screen=21&preview=phase3');
+ await page.getByRole('button',{name:'طلب إلغاء الاشتراك',exact:false}).click();
+ await expect(page.getByText('إلغاء الاشتراك متوقف لحد اعتماد سياسة الإلغاء والاسترداد.',{exact:false})).toBeVisible();
+ await page.getByRole('button',{name:'اكتب طلب مراجعة',exact:true}).click();
+ await expect(page.getByLabel('سبب مراجعة الاشتراك')).toBeFocused();
+ await page.getByLabel('سبب مراجعة الاشتراك').fill('من فضلك راجع حالة الاشتراك');
+ await expect(page.getByRole('button',{name:'معاينة طلب المراجعة'})).toBeEnabled();
+});
+
+
+test('filtered empty states offer immediate recovery without losing the page',async({page})=>{
+ await page.goto('/?screen=26&preview=phase4');
+ await page.getByLabel('نوع العملية').selectOption('withdrawal');
+ await expect(page.getByRole('button',{name:'عرض كل المعاملات'})).toBeVisible();
+ await page.getByRole('button',{name:'عرض كل المعاملات'}).click();
+ await expect(page.locator('.w-transaction')).toHaveCount(4);
+
+ await page.goto('/?screen=29&preview=phase4');
+ await page.getByLabel('دوّر في المحادثات').fill('not-a-matching-route');
+ await expect(page.getByRole('button',{name:'مسح البحث'})).toBeVisible();
+ await page.getByRole('button',{name:'مسح البحث'}).click();
+ await expect(page.locator('.a-thread')).toHaveCount(2);
+
+ await page.goto('/?screen=31&preview=phase4');
+ await page.getByRole('button',{name:'غير المقروءة',exact:true}).click();
+ await page.getByRole('button',{name:'اعتباره مقروءًا في المعاينة'}).click();
+ await expect(page.getByRole('button',{name:'عرض كل الإشعارات'})).toBeVisible();
+ await page.getByRole('button',{name:'عرض كل الإشعارات'}).click();
+ await expect(page.getByRole('button',{name:'الكل',exact:true})).toHaveAttribute('aria-pressed','true');
+});
+
+
+test('73 public screens load in English LTR on a small phone without runtime exceptions',async({browser})=>{
+ const context=await browser.newContext({locale:'en-GB',viewport:{width:390,height:844},colorScheme:'light'});
+ const page=await context.newPage();
+ const errors:string[]=[];
+ page.on('pageerror',error=>errors.push(error.message));
+ for(let n=1;n<=73;n++){
+  await page.goto('/?screen='+n);
+  await expect(page.locator('html')).toHaveAttribute('lang','en');
+  await expect(page.locator('html')).toHaveAttribute('dir','ltr');
+  await expect(page.locator('html')).toHaveAttribute('data-theme','light');
+  await expect(page.locator('main')).toBeVisible();
+  await expect(page.locator('main h1,main h2').first()).not.toBeEmpty();
+ }
+ expect(errors).toEqual([]);
+ await context.close();
+});
+
+
+test('all 66 rider, captain and admin screens render their real phase previews in both languages',async({browser})=>{
+ test.setTimeout(120000);
+ for (const locale of ['ar-EG','en-GB']) {
+  const context=await browser.newContext({locale,viewport:{width:390,height:844}});
+  const page=await context.newPage();
+  const errors:string[]=[];
+  page.on('pageerror',error=>errors.push(error.message));
+  for(let n=8;n<=73;n++){
+   const phase=n<=14?2:n<=21?3:n<=34?4:n<=41?5:n<=49?6:n<=61?7:8;
+   await page.goto('/?screen='+n+'&preview=phase'+phase);
+   const surface=n>=62?'main.ad-content':'main.phase-canvas';
+   if(await page.locator(surface).count()===0) throw new Error('Missing phase preview screen '+n+' ('+locale+'): '+(await page.locator('body').innerText()).slice(0,250));
+   await expect(page.locator(surface)).toBeVisible();
+   await expect(page.locator('main h1,main h2').first()).not.toBeEmpty();
+   await expect(page.locator('html')).toHaveAttribute('dir',locale==='ar-EG'?'rtl':'ltr');
+   await expect(page.locator('html')).toHaveAttribute('lang',locale==='ar-EG'?'ar':'en');
+  }
+  expect(errors).toEqual([]);
+  await context.close();
+ }
+});
+
+
+test('rider search and selected stops survive leaving for a prerequisite and returning',async({page})=>{
+ await page.goto('/?screen=9&preview=phase2');
+ await page.getByRole('button',{name:'ابحث عن الرحلات',exact:true}).click();
+ await page.getByRole('button',{name:/عرض تفاصيل PRIME/}).click();
+ await page.getByLabel('نقطة الركوب',{exact:true}).selectOption('maadi');
+ await page.getByLabel('نقطة النزول',{exact:true}).selectOption('tagamoa');
+ await expect(page.getByLabel('نقطة النزول',{exact:true})).toHaveValue('tagamoa');
+ await page.goto('/?screen=4&inspect=1');
+ await page.goto('/?screen=12&preview=phase2');
+ await expect(page.getByLabel('نقطة الركوب',{exact:true})).toHaveValue('maadi');
+ await expect(page.getByLabel('نقطة النزول',{exact:true})).toHaveValue('tagamoa');
+ await page.getByRole('button',{name:'حجز الاشتراك',exact:true}).click();
+ await expect(page).toHaveURL(/screen=15/);
+ await expect(page.locator('.b-stops')).toContainText('ميدان الجزائر');
 });
