@@ -1784,3 +1784,15 @@ html[dir="ltr"] .booking-stage .b-canvas .b-timeline > div:not(:last-child)::bef
     gap: 12px;
   }
 }
+
+/* Paired district search and selection: preserve native keyboard-select semantics. */
+.discovery-stage .d-area-picker { display:grid; gap:8px; min-width:0; width:100%; }
+.discovery-stage .d-area-picker .d-area-search {
+  min-height:44px; width:100%; min-width:0;
+  padding:10px 12px; border:1px solid var(--d-line);
+  border-radius:12px; background:var(--phase-card); color:var(--phase-text);
+  font:inherit; box-sizing:border-box;
+}
+.discovery-stage .d-area-picker select { width:100%; min-width:0; }
+.discovery-stage .d-area-picker small { color:var(--phase-text); font-size:.82em; }
+.discovery-stage .d-area-picker .d-area-search:focus-visible { outline:3px solid #ffc400; outline-offset:2px; }
