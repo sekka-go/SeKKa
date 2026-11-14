@@ -28,3 +28,7 @@ These files remain recoverable from Git history, not active `main`.
 - CI must pass typecheck, lint, domain/historical tests, structure guard, Vite build and Playwright.
 - No real OTP/identity, payment provider, durable booking inventory, live messaging or admin authorization was activated. This cleanup must not be mistaken for a complete backend release.
 - Because Cloudflare Pages is connected to GitHub `main`, merging the PR deploys the frontend automatically.
+
+## Historical documentation hygiene
+
+Outdated root status/tracker/design documents that referenced 78 screens, older Supabase integrations and green branding have been relocated to `docs/archive/pre-v3.1/old-root-*`. The active `web/DESIGN.md` now links exclusively to PRD v3.1, official yellow/black brand guidelines and live v3 CSS. No historical source text was destroyed; Git history and archive retain it.

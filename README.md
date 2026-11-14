@@ -10,6 +10,7 @@ This iteration is frontend-only. Authentication, document review, booking, walle
 - [Screen-by-screen audit](docs/product/SCREEN_INVENTORY.md)
 - [Historical documents (not active requirements)](docs/archive/pre-v3.1/README.md)
 - [Deployment history](docs/DEPLOYMENT.md)
+- [Current UI/UX design reference](web/DESIGN.md)
 
 Active frontend: `web/src/v2`, React 19 + TypeScript + Vite. URL screen IDs follow the PRD; component view IDs remain stable internally. React state holds preview flows; preferences use local storage.
 
