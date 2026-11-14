@@ -50,6 +50,8 @@ export type Line = {
   destination: string;
   category: string;
   available: number;
+  // Preview-only snapshot of available seats when a captain pauses new bookings.
+  pausedAvailableSeats?: number;
   outbound: string;
   returnTime: string;
   period: string;
