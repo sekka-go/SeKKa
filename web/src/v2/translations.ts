@@ -833,6 +833,8 @@ export const english: Readonly<Record<string,string>> = {
   "التأمين المحجوز": "Held booking security",
   "تحرير تأمين جدية الحجز": "Release booking security",
   "حجوزات المعاينة موحّدة مع حساب الراكب والكابتن والمحفظة": "Preview bookings are shared with rider, captain and wallet",
+  "نتقابل عند نقطة الالتقاء المتفق عليها.": "Let's meet at the agreed meeting point.",
+  "أهلًا بيك، أنا معاك لو محتاج تسأل عن الخط.": "Hi, feel free to ask me about the route.",
   "الحالة:": "Status:"
 };
 export function translate(text:string,language:"ar"|"en"){return language==="en" ? english[text] ?? text : text;}
