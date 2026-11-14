@@ -1,3 +1,5 @@
+import {usePreferences} from "./preferences";
+import {translate} from "./translations";
 import {readPreviewBookings, previewSubscriberRows, confirmPreviewBooking} from "./previewBookingStore";
 import { PreferenceSettings } from "./preferences";
 import { useState, type ReactNode } from "react";
@@ -130,8 +132,6 @@ const demoData: OperationsData = {
   tickets: [],
 };
 const str = (r: Row, k: string, f = "—") => String(r[k] ?? f);
-const money = (v: unknown) =>
-  `${Number(v || 0).toLocaleString("ar-EG-u-nu-latn")} ج.م`;
 const state = (v: unknown) =>
   ({
     reserved: "حجز مؤكد · انتظار الدفع",
@@ -160,8 +160,13 @@ export default function CaptainOperations(p: {
   error: string;
   refresh: () => void;
 }) {
+  const {language}=usePreferences();
+  const tr=(text:string)=>translate(text,language);
+const money = (v: unknown) =>
+  `${Number(v || 0).toLocaleString(language==="en"?"en-GB":"ar-EG-u-nu-latn")} ${language==="en"?"EGP":"ج.م"}`;
   const demo = new URLSearchParams(location.search).get("preview") === "phase7";
   const n = publicScreen(p.screen) + 1;
+  const [chatHistory,setChatHistory] = useState<Record<string,Row[]>>({});
   const [local, setLocal] = useState(demoData),
     [empty, setEmpty] = useState(false),
     [query, setQuery] = useState(""),
@@ -201,7 +206,7 @@ export default function CaptainOperations(p: {
   };
   const action = (label: string, target: number) => (
     <button className="a-menu" onClick={() => nav(target)}>
-      {label}
+      {tr(String(label))}
       <DiscoveryIcon name="back" />
     </button>
   );
@@ -220,7 +225,7 @@ export default function CaptainOperations(p: {
   async function openChat(id: string) {
     await perform(async () => {
       if (demo) {
-        setMessages([
+        setMessages(chatHistory[id] ?? [
           {
             id: "m1",
             body: "أهلًا يا كابتن، هنلتزم بنقطة الالتقاء.",
@@ -236,51 +241,50 @@ export default function CaptainOperations(p: {
   const card = (b: Row) => (
     <Box key={str(b, "id")}>
       <div className="o-card-top">
-        <strong>{str(b, "rider_name", "مشترك")}</strong>
-        <span className="o-badge">{state(b.status)}</span>
+        <strong>{tr(str(b, "rider_name", "مشترك"))}</strong>
+        <span className="o-badge">{tr(state(b.status))}</span>
       </div>
       <h2>
-        {str(b, "origin")} ← {str(b, "destination")}
+        {tr(str(b, "origin"))} ← {tr(str(b, "destination"))}
       </h2>
       <div className="b-row">
-        <span>البداية</span>
+        <span>{language==="en" ? "Start date" : "البداية"}</span>
         <b dir="ltr">{str(b, "starts_on")}</b>
       </div>
       <div className="b-row">
-        <span>المبلغ المثبت</span>
+        <span>{tr("المبلغ المثبت")}</span>
         <b>{money(b.price)}</b>
       </div>
       <button className="d-primary b-primary" onClick={() => choose(b)}>
-        تفاصيل الاشتراك
-      </button>
+        {tr("تفاصيل الاشتراك")}</button>
     </Box>
   );
   return (
     <div
       className={`phase-one-stage discovery-stage booking-stage account-stage ${p.theme}`}
     >
-      <nav className="phase-review-bar" aria-label="معاينة المرحلة السابعة">
+      <nav className="phase-review-bar" aria-label={tr("معاينة المرحلة السابعة")}>
         <div className="review-screen-nav">
           <button
-            aria-label="الشاشة السابقة"
+            aria-label={tr("الشاشة السابقة")}
             disabled={n === 51}
             onClick={() => nav(n - 1)}
           >
             ‹
           </button>
           <select
-            aria-label="شاشة المرحلة السابعة"
+            aria-label={tr("شاشة المرحلة السابعة")}
             value={n}
             onChange={(e) => nav(+e.target.value)}
           >
             {operationsScreens.map((s) => (
               <option key={s} value={publicScreen(s) + 1}>
-                {publicScreen(s)} · {screenTitle(s)}
+                {publicScreen(s)} · {screenTitle(s,language)}
               </option>
             ))}
           </select>
           <button
-            aria-label="الشاشة التالية"
+            aria-label={tr("الشاشة التالية")}
             disabled={n === 62}
             onClick={() => nav(n + 1)}
           >
@@ -294,15 +298,15 @@ export default function CaptainOperations(p: {
               aria-pressed={p.theme === t}
               onClick={() => p.onTheme(t)}
             >
-              {t === "dark" ? "دارك" : "لايت"}
+              {t === "dark" ? tr("دارك") : tr("لايت")}
             </button>
           ))}
         </div>
       </nav>
       <p className="w-preview">
         {demo
-          ? "معاينة المرحلة السابعة · بيانات توضيحية، مفيش عمليات حقيقية"
-          : "تشغيل الكابتن"}
+          ? tr("معاينة المرحلة السابعة · بيانات توضيحية، مفيش عمليات حقيقية")
+          : tr("تشغيل الكابتن")}
       </p>
       {demo && (
         <label className="a-preview-empty">
@@ -311,14 +315,13 @@ export default function CaptainOperations(p: {
             checked={empty}
             onChange={(e) => setEmpty(e.target.checked)}
           />
-          معاينة القوائم الفارغة
-        </label>
+          {tr("معاينة القوائم الفارغة")}</label>
       )}
       <main className="phase-canvas d-canvas b-canvas a-canvas o-canvas">
         <header className="d-header">
           <button
             className="phase-back"
-            aria-label="رجوع"
+            aria-label={tr("رجوع")}
             onClick={() => nav(n === 58 ? 57 : 51)}
           >
             <DiscoveryIcon name="back" />
@@ -326,42 +329,40 @@ export default function CaptainOperations(p: {
           <Wordmark />
         </header>
         <div className="b-stage-label">
-          <span>الكابتن · معاك في السِكّة</span>
+          <span>{tr("الكابتن · معاك في السِكّة")}</span>
           <span>{n - 50} / 12</span>
         </div>
-        <h1 className="b-title">{screenTitle(p.screen)}</h1>
+        <h1 className="b-title">{screenTitle(p.screen,language)}</h1>
         {!allowed ? (
           <Box>
-            <p>سجّل بحساب كابتن عشان تشوف بيانات تشغيلك.</p>
+            <p>{tr("سجّل بحساب كابتن عشان تشوف بيانات تشغيلك.")}</p>
             <button className="d-primary b-primary" onClick={() => p.go(4)}>
-              تسجيل الدخول
-            </button>
+              {tr("تسجيل الدخول")}</button>
           </Box>
         ) : (
           <>
             {busy && (
               <Box>
-                <p role="status">جاري التحميل…</p>
+                <p role="status">{tr("جاري التحميل…")}</p>
               </Box>
             )}
             {(error || p.error) && (
               <Box>
                 <p role="alert">{error || p.error}</p>
                 <button className="w-link" onClick={p.refresh}>
-                  تحديث البيانات
-                </button>
+                  {tr("تحديث البيانات")}</button>
               </Box>
             )}
             {note && (
               <Box>
-                <p role="status">{note}</p>
+                <p role="status">{tr(note)}</p>
               </Box>
             )}
             {n === 51 && (
               <>
                 <Box>
-                  <h2>أهلًا يا كابتن {demo ? "مصطفى" : p.profile?.full_name}</h2>
-                  <p>تابع خطوطك ومشتركيك وتأكيدات الدفع من مكان واحد.</p>
+                  <h2>{tr("أهلًا يا كابتن")}{demo ? tr("مصطفى") : p.profile?.full_name}</h2>
+                  <p>{tr("تابع خطوطك ومشتركيك وتأكيدات الدفع من مكان واحد.")}</p>
                 </Box>
                 <div className="o-stats">
                   {[
@@ -379,9 +380,9 @@ export default function CaptainOperations(p: {
                       52,
                     ],
                   ].map(([label, count, target]) => (
-                    <button key={label} onClick={() => nav(Number(target))}>
+                    <button key={tr(String(label))} onClick={() => nav(Number(target))}>
                       <b>{count}</b>
-                      <span>{label}</span>
+                      <span>{tr(String(label))}</span>
                     </button>
                   ))}
                 </div>
@@ -401,26 +402,24 @@ export default function CaptainOperations(p: {
                 <Box>
                   <p>
                     {n === 52
-                      ? "الحجوزات مثبتة بالفعل؛ مش محتاجة موافقة جديدة منك. الأحدث أولًا."
-                      : "كل صف اشتراك بمقعد واحد. اختار الخط أو ابحث باسم المشترك."}
+                      ? tr("الحجوزات مثبتة بالفعل؛ مش محتاجة موافقة جديدة منك. الأحدث أولًا.")
+                      : tr("كل صف اشتراك بمقعد واحد. اختار الخط أو ابحث باسم المشترك.")}
                   </p>
                   <label className="w-field">
-                    اسم المشترك
-                    <input
+                    {tr("اسم المشترك")}<input
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                     />
                   </label>
                   <label className="w-field">
-                    الخط
-                    <select
+                    {tr("الخط")}<select
                       value={filter}
                       onChange={(e) => setFilter(e.target.value)}
                     >
-                      <option value="">كل الخطوط</option>
+                      <option value="">{tr("كل الخطوط")}</option>
                       {d.routes.map((r) => (
                         <option key={str(r, "id")} value={str(r, "id")}>
-                          {str(r, "origin")} ← {str(r, "destination")}
+                          {tr(str(r, "origin"))} ← {tr(str(r, "destination"))}
                         </option>
                       ))}
                     </select>
@@ -430,7 +429,7 @@ export default function CaptainOperations(p: {
                   .filter(
                     (b) =>
                       (!filter || b.route_id === filter) &&
-                      str(b, "rider_name", "").includes(query.trim()),
+                      tr(str(b, "rider_name", "")).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()),
                   )
                   .sort((a, b) =>
                     str(b, "created_at").localeCompare(str(a, "created_at")),
@@ -439,10 +438,11 @@ export default function CaptainOperations(p: {
                 {!active.filter(
                   (b) =>
                     (!filter || b.route_id === filter) &&
-                    str(b, "rider_name", "").includes(query.trim()),
+                    tr(str(b, "rider_name", "")).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()),
                 ).length && (
                   <Box>
-                    <p>مفيش اشتراكات مطابقة حاليًا.</p>
+                    <p>{tr("مفيش اشتراكات مطابقة حاليًا.")}</p>
+                    {(query || filter || empty) && <button onClick={()=>{setQuery("");setFilter("");setEmpty(false);}}>{tr("مسح الفلاتر")}</button>}
                   </Box>
                 )}
               </>
@@ -450,40 +450,38 @@ export default function CaptainOperations(p: {
             {(n === 54 || n === 56) &&
               (!booking ? (
                 <Box>
-                  <p>اختار اشتراك راكب الأول.</p>
+                  <p>{tr("اختار اشتراك راكب الأول.")}</p>
                   {action("قائمة المشتركين", 53)}
                 </Box>
               ) : (
                 <>
                   {card(booking)}
-                  <Box><h2>نقاط الراكب</h2><p>الركوب: {str(booking, "pickup_stop")}</p><p>النزول: {str(booking, "dropoff_stop")}</p>{booking.direction === "round_trip" && <p>العودة تلقائيًا: {str(booking, "dropoff_stop")} ← {str(booking, "pickup_stop")}</p>}</Box>
+                  <Box><h2>{tr("نقاط الراكب")}</h2><p>{tr("الركوب:")}{str(booking, "pickup_stop")}</p><p>{tr("النزول:")}{str(booking, "dropoff_stop")}</p>{booking.direction === "round_trip" && <p>{tr("العودة تلقائيًا:")}{str(booking, "dropoff_stop")} ← {str(booking, "pickup_stop")}</p>}</Box>
                   <Box>
                     <div className="b-row">
-                      <span>نهاية الفترة (غير شامل)</span>
+                      <span>{tr("نهاية الفترة (غير شامل)")}</span>
                       <b>{str(booking, "ends_before")}</b>
                     </div>
                     <div className="b-row">
-                      <span>تأكيد الراكب</span>
+                      <span>{tr("تأكيد الراكب")}</span>
                       <b>
-                        {booking.rider_paid_at ? "تم الدفع" : "بانتظار التأكيد"}
+                        {booking.rider_paid_at ? tr("تم الدفع") : tr("بانتظار التأكيد")}
                       </b>
                     </div>
                     <div className="b-row">
-                      <span>تأكيد الكابتن</span>
+                      <span>{tr("تأكيد الكابتن")}</span>
                       <b>
                         {booking.captain_received_at
-                          ? "تم الاستلام"
-                          : "بانتظار التأكيد"}
+                          ? tr("تم الاستلام")
+                          : tr("بانتظار التأكيد")}
                       </b>
                     </div>
                     <div className="b-row">
-                      <span>تأمين جدية الحجز</span>
-                      <b>{state(booking.security_state)}</b>
+                      <span>{tr("تأمين جدية الحجز")}</span>
+                      <b>{tr(state(booking.security_state))}</b>
                     </div>
                     <p>
-                      سعر الاشتراك مدفوع ليك مباشرة. التأمين المسترد 100 جنيه
-                      يفضل منفصل، ويتحرر بعد تأكيد الطرفين.
-                    </p>
+                      {tr("سعر الاشتراك مدفوع ليك مباشرة. التأمين المسترد 100 جنيه يفضل منفصل، ويتحرر بعد تأكيد الطرفين.")}</p>
                   </Box>
                   {n === 54 ? (
                     <>
@@ -491,8 +489,7 @@ export default function CaptainOperations(p: {
                         className="d-primary b-primary"
                         onClick={() => nav(56)}
                       >
-                        متابعة تأكيد الاستلام
-                      </button>
+                        {tr("متابعة تأكيد الاستلام")}</button>
                       <button
                         className="d-primary b-primary"
                         disabled={busy}
@@ -508,22 +505,19 @@ export default function CaptainOperations(p: {
                           })
                         }
                       >
-                        محادثة الراكب
-                      </button>
+                        {tr("محادثة الراكب")}</button>
                     </>
                   ) : (
                     <Box>
                       <p>
-                        أكد فقط لو استلمت {money(booking.price)} فعلًا من الراكب.
-                      </p>
+                        {tr("أكد فقط لو استلمت")}{money(booking.price)} {tr("فعلًا من الراكب.")}</p>
                       <label className="o-check">
                         <input
                           type="checkbox"
                           checked={confirm}
                           onChange={(e) => setConfirm(e.target.checked)}
                         />
-                        أقر باستلام المبلغ الموضح
-                      </label>
+                        {tr("أقر باستلام المبلغ الموضح")}</label>
                       <button
                         className="d-primary b-primary"
                         disabled={
@@ -568,15 +562,13 @@ export default function CaptainOperations(p: {
                           })
                         }
                       >
-                        {demo ? "محاكاة تم الاستلام" : "تم الاستلام"}
+                        {demo ? tr("محاكاة تم الاستلام") : tr("تم الاستلام")}
                       </button>
                       {!booking.rider_paid_at && (
-                        <p>مستنيين إقرار الراكب بالدفع الأول.</p>
+                        <p>{tr("مستنيين إقرار الراكب بالدفع الأول.")}</p>
                       )}
                       <p>
-                        لو فيه اختلاف في الدفع، افتح طلب دعم. مفيش خصم تأمين
-                        تلقائي بسبب الغياب.
-                      </p>
+                        {tr("لو فيه اختلاف في الدفع، افتح طلب دعم. مفيش خصم تأمين تلقائي بسبب الغياب.")}</p>
                       {action("مشكلة في الدفع", 62)}
                     </Box>
                   )}
@@ -585,18 +577,17 @@ export default function CaptainOperations(p: {
             {n === 55 && (
               <>
                 <Box>
-                  <h2>جدول اليوم · {d.today || "—"}</h2>
-                  <p>بتوقيت القاهرة · الأحد للخميس، ما عدا الإجازات الرسمية.</p>
+                  <h2>{tr("جدول اليوم ·")}{d.today || "—"}</h2>
+                  <p>{tr("بتوقيت القاهرة · الأحد للخميس، ما عدا الإجازات الرسمية.")}</p>
                 </Box>
                 {d.eligible === null ? (
                   <Box>
                     <p>
-                      تقويم التشغيل غير معتمد لليوم؛ مش هنفترض إن فيه تشغيل.
-                    </p>
+                      {tr("تقويم التشغيل غير معتمد لليوم؛ مش هنفترض إن فيه تشغيل.")}</p>
                   </Box>
                 ) : !d.eligible ? (
                   <Box>
-                    <p>النهارده إجازة تشغيل.</p>
+                    <p>{tr("النهارده إجازة تشغيل.")}</p>
                   </Box>
                 ) : (
                   d.routes.map((r) => {
@@ -609,13 +600,13 @@ export default function CaptainOperations(p: {
                     return bs.length ? (
                       <Box key={str(r, "id")}>
                         <h2>
-                          {str(r, "origin")} ← {str(r, "destination")}
+                          {tr(str(r, "origin"))} ← {tr(str(r, "destination"))}
                         </h2>
                         <div className="b-row">
-                          <span>ذهاب {str(r, "outbound")}</span>
-                          <span>عودة {str(r, "return_time")}</span>
+                          <span>{tr("ذهاب")}{str(r, "outbound")}</span>
+                          <span>{tr("عودة")}{str(r, "return_time")}</span>
                         </div>
-                        <p>{bs.length} اشتراك اليوم</p>
+                        <p>{bs.length} {tr("اشتراك اليوم")}</p>
                         <button
                           className="d-primary b-primary"
                           onClick={() => {
@@ -623,8 +614,7 @@ export default function CaptainOperations(p: {
                             nav(53);
                           }}
                         >
-                          عرض ركاب الخط
-                        </button>
+                          {tr("عرض ركاب الخط")}</button>
                       </Box>
                     ) : null;
                   })
@@ -636,7 +626,7 @@ export default function CaptainOperations(p: {
                       str(b, "ends_before") > d.today,
                   ) && (
                     <Box>
-                      <p>مفيش اشتراكات تشغيل النهارده.</p>
+                      <p>{tr("مفيش اشتراكات تشغيل النهارده.")}</p>
                     </Box>
                   )}
               </>
@@ -654,8 +644,8 @@ export default function CaptainOperations(p: {
                         {str(c, "rider_name", "ر").slice(0, 1)}
                       </span>
                       <span>
-                        <strong>{str(c, "rider_name", "مشترك")}</strong>
-                        <small>{str(c, "body", "ابدأ المحادثة")}</small>
+                        <strong>{tr(str(c, "rider_name", "مشترك"))}</strong>
+                        <small>{tr(str(c, "body", "ابدأ المحادثة"))}</small>
                         <small>{str(c, "created_at", "")}</small>
                       </span>
                       <DiscoveryIcon name="back" />
@@ -664,30 +654,30 @@ export default function CaptainOperations(p: {
                 ))}
                 {!d.conversations.length && (
                   <Box>
-                    <p>لسه مفيش محادثات. افتح اشتراك مؤكد للتواصل مع الراكب.</p>
+                    <p>{tr("لسه مفيش محادثات. افتح اشتراك مؤكد للتواصل مع الراكب.")}</p>
                     {action("قائمة المشتركين", 53)}
                   </Box>
                 )}
                 <Box>
-                  <p>علامات القراءة وعدّاد غير المقروء مش متاحين حاليًا.</p>
+                  <p>{tr("علامات القراءة وعدّاد غير المقروء مش متاحين حاليًا.")}</p>
                 </Box>
               </>
             )}
             {n === 58 &&
               (!thread ? (
                 <Box>
-                  <p>اختار محادثة الأول.</p>
+                  <p>{tr("اختار محادثة الأول.")}</p>
                   {action("المحادثات", 57)}
                 </Box>
               ) : (
                 <>
-                  <section className="a-chat" aria-label="رسائل المحادثة">
+                  <section className="a-chat" aria-label={tr("رسائل المحادثة")}>
                     {messages.map((m) => (
                       <article
                         className={`a-bubble ${m.sender_id === (demo ? "me" : p.profile?.id) ? "mine" : ""}`}
                         key={str(m, "id")}
                       >
-                        <p>{str(m, "body")}</p>
+                        <p>{tr(str(m, "body"))}</p>
                         <small>{str(m, "created_at")}</small>
                       </article>
                     ))}
@@ -699,19 +689,21 @@ export default function CaptainOperations(p: {
                       void perform(async () => {
                         const body = draft.trim();
                         if (!body) return;
-                        if (demo)
-                          setMessages((v) => [
-                            ...v,
+                        if (demo) {
+                          const next = [
+                            ...messages,
                             {
                               id: crypto.randomUUID(),
                               body,
                               sender_id: "me",
                               created_at: new Date().toLocaleTimeString(
-                                "ar-EG",
+                                language==="en"?"en-GB":"ar-EG",
                               ),
                             },
-                          ]);
-                        else {
+                          ];
+                          setChatHistory(v=>({...v,[thread]:next}));
+                          setMessages(next);
+                        } else {
                           await api("message.send", {
                             conversationId: thread,
                             body,
@@ -725,15 +717,14 @@ export default function CaptainOperations(p: {
                         setDraft("");
                         setNote(
                           demo
-                            ? "الرسالة في المعاينة فقط، ماتبعتتش."
-                            : "تم إرسال الرسالة.",
+                            ? tr("الرسالة في المعاينة فقط، ماتبعتتش.")
+                            : tr("تم إرسال الرسالة."),
                         );
                       });
                     }}
                   >
                     <label className="w-field">
-                      رسالتك
-                      <textarea
+                      {tr("رسالتك")}<textarea
                         maxLength={2000}
                         value={draft}
                         onChange={(e) => setDraft(e.target.value)}
@@ -743,7 +734,7 @@ export default function CaptainOperations(p: {
                       className="d-primary"
                       disabled={busy || !draft.trim()}
                     >
-                      {demo ? "إضافة للمعاينة" : "إرسال الرسالة"}
+                      {demo ? tr("إضافة للمعاينة") : tr("إرسال الرسالة")}
                     </button>
                     <button
                       type="button"
@@ -751,8 +742,7 @@ export default function CaptainOperations(p: {
                       disabled={busy}
                       onClick={() => void openChat(thread)}
                     >
-                      تحديث المحادثة
-                    </button>
+                      {tr("تحديث المحادثة")}</button>
                   </form>
                 </>
               ))}
@@ -763,17 +753,15 @@ export default function CaptainOperations(p: {
                     aria-pressed={!unread}
                     onClick={() => setUnread(false)}
                   >
-                    الكل
-                  </button>
+                    {tr("الكل")}</button>
                   <button aria-pressed={unread} onClick={() => setUnread(true)}>
-                    غير المقروءة
-                  </button>
+                    {tr("غير المقروءة")}</button>
                 </div>
                 {d.notifications
                   .filter((r) => !unread || !r.read_at)
                   .map((r) => (
                     <Box key={str(r, "id")}>
-                      <p>{str(r, "body")}</p>
+                      <p>{tr(str(r, "body"))}</p>
                       <small>{str(r, "created_at")}</small>
                       {action("راجع الحجوزات", 52)}
                     </Box>
@@ -781,41 +769,38 @@ export default function CaptainOperations(p: {
                 {!d.notifications.filter((r) => !unread || !r.read_at)
                   .length && (
                   <Box>
-                    <p>مفيش إشعارات جديدة.</p>
+                    <p>{tr("مفيش إشعارات جديدة.")}</p>
                   </Box>
                 )}
                 <Box>
-                  <p>الإشعار تنبيه؛ راجع حالة الدفع الفعلية في الاشتراك.</p>
+                  <p>{tr("الإشعار تنبيه؛ راجع حالة الدفع الفعلية في الاشتراك.")}</p>
                 </Box>
               </>
             )}
             {n === 60 && (
               <>
                 <Box>
-                  <h2>سجل إقرارات الاستلام</h2>
+                  <h2>{tr("سجل إقرارات الاستلام")}</h2>
                   <p>
-                    المبالغ دي مدفوعة مباشرة ليك من الركاب؛ مش رصيد في محفظة
-                    سِكّة.
-                  </p>
+                    {tr("المبالغ دي مدفوعة مباشرة ليك من الركاب؛ مش رصيد في محفظة سِكّة.")}</p>
                 </Box>
                 {d.bookings
                   .filter((b) => b.captain_received_at)
                   .map((b) => (
                     <Box key={str(b, "id")}>
-                      <h2>{str(b, "rider_name")}</h2>
+                      <h2>{tr(str(b, "rider_name"))}</h2>
                       <div className="b-row">
-                        <span>تم الإقرار باستلام</span>
+                        <span>{tr("تم الإقرار باستلام")}</span>
                         <b>{money(b.price)}</b>
                       </div>
                       <small>{str(b, "captain_received_at")}</small>
                       <button className="a-menu" onClick={() => choose(b)}>
-                        تفاصيل الاشتراك
-                      </button>
+                        {tr("تفاصيل الاشتراك")}</button>
                     </Box>
                   ))}
                 {!d.bookings.some((b) => b.captain_received_at) && (
                   <Box>
-                    <p>لسه مفيش إقرارات استلام مسجلة.</p>
+                    <p>{tr("لسه مفيش إقرارات استلام مسجلة.")}</p>
                   </Box>
                 )}
               </>
@@ -824,26 +809,26 @@ export default function CaptainOperations(p: {
               <>
                 <Box>
                   <div className="a-profile">
-                    <span className="a-avatar">ك</span>
-                    <h2>{demo ? "كابتن مصطفى" : p.profile?.full_name}</h2>
-                    <span className="o-badge">{state(d.captain.status)}</span>
+                    <span className="a-avatar">{tr("ك")}</span>
+                    <h2>{demo ? tr("كابتن مصطفى") : p.profile?.full_name}</h2>
+                    <span className="o-badge">{tr(state(d.captain.status))}</span>
                   </div>
                 </Box>
                 <Box>
-                  <h2>بيانات العربية</h2>
+                  <h2>{tr("بيانات العربية")}</h2>
                   <div className="b-row">
-                    <span>الموديل</span>
+                    <span>{tr("الموديل")}</span>
                     <b>{str(d.vehicle, "model")}</b>
                   </div>
                   <div className="b-row">
-                    <span>الفئة</span>
+                    <span>{tr("الفئة")}</span>
                     <b>{str(d.vehicle, "category")}</b>
                   </div>
                   <div className="b-row">
-                    <span>اللوحة</span>
+                    <span>{tr("اللوحة")}</span>
                     <b>{str(d.vehicle, "plate")}</b>
                   </div>
-                  <p>تعديل العربية أو المستندات يحتاج مراجعة الإدارة.</p>
+                  <p>{tr("تعديل العربية أو المستندات يحتاج مراجعة الإدارة.")}</p>
                   {action("طلب تعديل البيانات", 62)}
                 </Box>
                 <PreferenceSettings />
@@ -852,21 +837,19 @@ export default function CaptainOperations(p: {
             {n === 62 && (
               <>
                 <Box>
-                  <h2>نساعدك إزاي؟</h2>
+                  <h2>{tr("نساعدك إزاي؟")}</h2>
                   <details className="a-faq">
-                    <summary>الراكب قال دفع والمبلغ موصلش؟</summary>
+                    <summary>{tr("الراكب قال دفع والمبلغ موصلش؟")}</summary>
                     <p>
-                      متأكدش الاستلام. ابعت تفاصيل الحجز للدعم عشان يراجع
-                      إقرارات الطرفين.
-                    </p>
+                      {tr("متأكدش الاستلام. ابعت تفاصيل الحجز للدعم عشان يراجع إقرارات الطرفين.")}</p>
                   </details>
                   <details className="a-faq">
-                    <summary>هل الغياب يخصم تأمين؟</summary>
-                    <p>لأ، مفيش مصادرة تلقائية للتأمين بسبب الغياب.</p>
+                    <summary>{tr("هل الغياب يخصم تأمين؟")}</summary>
+                    <p>{tr("لأ، مفيش مصادرة تلقائية للتأمين بسبب الغياب.")}</p>
                   </details>
                   <details className="a-faq">
-                    <summary>أعدّل العربية إزاي؟</summary>
-                    <p>قدّم طلب تعديل، والبيانات الحساسة بتحتاج مراجعة جديدة.</p>
+                    <summary>{tr("أعدّل العربية إزاي؟")}</summary>
+                    <p>{tr("قدّم طلب تعديل، والبيانات الحساسة بتحتاج مراجعة جديدة.")}</p>
                   </details>
                 </Box>
                 <form
@@ -898,8 +881,7 @@ export default function CaptainOperations(p: {
                 >
                   <Box>
                     <label className="w-field">
-                      نوع المشكلة
-                      <select
+                      {tr("نوع المشكلة")}<select
                         value={topic}
                         onChange={(e) => setTopic(e.target.value)}
                       >
@@ -909,39 +891,38 @@ export default function CaptainOperations(p: {
                           "العربية والمستندات",
                           "تعديل البيانات",
                         ].map((t) => (
-                          <option key={t}>{t}</option>
+                          <option key={t} value={t}>{tr(t)}</option>
                         ))}
                       </select>
                     </label>
                     <label className="w-field">
-                      تفاصيل المشكلة
-                      <textarea
+                      {tr("تفاصيل المشكلة")}<textarea
                         minLength={5}
                         maxLength={3800}
                         value={support}
                         onChange={(e) => setSupport(e.target.value)}
-                        placeholder="اكتب رقم الحجز والتفاصيل، من غير كلمات مرور أو أكواد تحقق"
+                        placeholder={tr("اكتب رقم الحجز والتفاصيل، من غير كلمات مرور أو أكواد تحقق")}
                       />
                     </label>
                     <button
                       className="d-primary b-primary"
                       disabled={busy || support.trim().length < 5}
                     >
-                      {demo ? "معاينة طلب الدعم" : "إرسال للدعم"}
+                      {demo ? tr("معاينة طلب الدعم") : tr("إرسال للدعم")}
                     </button>
                   </Box>
                 </form>
                 {d.tickets.map((t) => (
                   <Box key={str(t, "id")}>
-                    <p>{str(t, "body")}</p>
-                    <small>الحالة: {str(t, "status")}</small>
+                    <p>{tr(str(t, "body"))}</p>
+                    <small>{tr("الحالة:")}{str(t, "status")}</small>
                   </Box>
                 ))}
               </>
             )}
           </>
         )}
-        <p className="w-footnote">معاك في السِكّة</p>
+        <p className="w-footnote">{tr("معاك في السِكّة")}</p>
       </main>
     </div>
   );

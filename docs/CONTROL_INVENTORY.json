@@ -1927,7 +1927,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 203,
+    "line": 208,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(target)}",
@@ -1936,7 +1936,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 253,
+    "line": 258,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => choose(b)}",
@@ -1945,34 +1945,34 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 264,
+    "line": 268,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(n - 1)}",
     "disabled": "{n === 51}",
-    "label": "\"الشاشة السابقة\""
+    "label": "{tr(\"الشاشة السابقة\")}"
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 271,
+    "line": 275,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => nav(+e.target.value)}",
     "disabled": "",
-    "label": "\"شاشة المرحلة السابعة\""
+    "label": "{tr(\"شاشة المرحلة السابعة\")}"
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 282,
+    "line": 286,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(n + 1)}",
     "disabled": "{n === 62}",
-    "label": "\"الشاشة التالية\""
+    "label": "{tr(\"الشاشة التالية\")}"
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 292,
+    "line": 296,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => p.onTheme(t)}",
@@ -1981,7 +1981,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 309,
+    "line": 313,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setEmpty(e.target.checked)}",
@@ -1990,16 +1990,16 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 319,
+    "line": 322,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(n === 58 ? 57 : 51)}",
     "disabled": "",
-    "label": "\"رجوع\""
+    "label": "{tr(\"رجوع\")}"
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 336,
+    "line": 339,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => p.go(4)}",
@@ -2008,7 +2008,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 350,
+    "line": 352,
     "tag": "button",
     "action": "onClick",
     "handler": "{p.refresh}",
@@ -2017,7 +2017,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 382,
+    "line": 383,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(Number(target))}",
@@ -2035,7 +2035,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 416,
+    "line": 415,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => setFilter(e.target.value)}",
@@ -2044,7 +2044,16 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 490,
+    "line": 445,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>{setQuery(\"\");setFilter(\"\");setEmpty(false);}}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 488,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(56)}",
@@ -2053,7 +2062,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 496,
+    "line": 493,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n                          void perform(async () => {\n                            const c = demo\n                              ? { id: \"thread-1\" }\n                              : await api<{ id: string }>(\n                                  \"captain.conversation.open\",\n                                  { bookingId: booking.id },\n                                );\n                            await openChat(c.id);\n                          })\n                        }",
@@ -2062,7 +2071,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 520,
+    "line": 515,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setConfirm(e.target.checked)}",
@@ -2071,7 +2080,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 527,
+    "line": 521,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n                          void perform(async () => {\n                            if (shared) {\n                              confirmPreviewBooking(str(booking,\"id\"),\"captain\");\n                              setNote(\"تم تسجيل الاستلام وتحرير تأمين الحجز في المحفظة التجريبية.\");\n                            } else if (demo) {\n                              setLocal((v) => ({\n                                ...v,\n                                bookings: v.bookings.map((b) =>\n                                  b.id === booking.id\n                                    ? {\n                                        ...b,\n                                        captain_received_at:\n                                          \"2026-11-15T08:00:00Z\",\n                                        status: \"confirmed\",\n                                        security_state: \"released\",\n                                      }\n                                    : b,\n                                ),\n                              }));\n                              setNote(\n                                \"تمت محاكاة الاستلام وتحرير التأمين في المعاينة فقط.\",\n                              );\n                            } else {\n                              await api(\"payment.received\", {\n                                bookingId: booking.id,\n                              });\n                              p.refresh();\n                              setNote(\"تم تسجيل تأكيد الاستلام.\");\n                            }\n                            setConfirm(false);\n                          })\n                        }",
@@ -2080,7 +2089,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 619,
+    "line": 610,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => {\n                            setFilter(str(r, \"id\"));\n                            nav(53);\n                          }}",
@@ -2089,7 +2098,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 648,
+    "line": 638,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => void openChat(str(c, \"id\"))}",
@@ -2098,16 +2107,16 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 695,
+    "line": 685,
     "tag": "form",
     "action": "onSubmit",
-    "handler": "{(e) => {\n                      e.preventDefault();\n                      void perform(async () => {\n                        const body = draft.trim();\n                        if (!body) return;\n                        if (demo)\n                          setMessages((v) => [\n                            ...v,\n                            {\n                              id: crypto.randomUUID(),\n                              body,\n                              sender_id: \"me\",\n                              created_at: new Date().toLocaleTimeString(\n                                \"ar-EG\",\n                              ),\n                            },\n                          ]);\n                        else {\n                          await api(\"message.send\", {\n                            conversationId: thread,\n                            body,\n                          });\n                          setMessages(\n                            await api<Row[]>(\"messages\", {\n                              conversationId: thread,\n                            }),\n                          );\n                        }\n                        setDraft(\"\");\n                        setNote(\n                          demo\n                            ? \"الرسالة في المعاينة فقط، ماتبعتتش.\"\n                            : \"تم إرسال الرسالة.\",\n                        );\n                      });\n                    }}",
+    "handler": "{(e) => {\n                      e.preventDefault();\n                      void perform(async () => {\n                        const body = draft.trim();\n                        if (!body) return;\n                        if (demo) {\n                          const next = [\n                            ...messages,\n                            {\n                              id: crypto.randomUUID(),\n                              body,\n                              sender_id: \"me\",\n                              created_at: new Date().toLocaleTimeString(\n                                language===\"en\"?\"en-GB\":\"ar-EG\",\n                              ),\n                            },\n                          ];\n                          setChatHistory(v=>({...v,[thread]:next}));\n                          setMessages(next);\n                        } else {\n                          await api(\"message.send\", {\n                            conversationId: thread,\n                            body,\n                          });\n                          setMessages(\n                            await api<Row[]>(\"messages\", {\n                              conversationId: thread,\n                            }),\n                          );\n                        }\n                        setDraft(\"\");\n                        setNote(\n                          demo\n                            ? tr(\"الرسالة في المعاينة فقط، ماتبعتتش.\")\n                            : tr(\"تم إرسال الرسالة.\"),\n                        );\n                      });\n                    }}",
     "disabled": "",
     "label": ""
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 736,
+    "line": 727,
     "tag": "textarea",
     "action": "onChange",
     "handler": "{(e) => setDraft(e.target.value)}",
@@ -2116,7 +2125,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 742,
+    "line": 733,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -2125,7 +2134,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 748,
+    "line": 739,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => void openChat(thread)}",
@@ -2134,7 +2143,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 762,
+    "line": 752,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => setUnread(false)}",
@@ -2143,7 +2152,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 768,
+    "line": 757,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => setUnread(true)}",
@@ -2152,7 +2161,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 811,
+    "line": 797,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => choose(b)}",
@@ -2161,7 +2170,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 872,
+    "line": 855,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{(e) => {\n                    e.preventDefault();\n                    void perform(async () => {\n                      const body = `${topic}: ${support.trim()}`;\n                      if (demo) {\n                        setLocal((v) => ({\n                          ...v,\n                          tickets: [\n                            ...v.tickets,\n                            {\n                              id: crypto.randomUUID(),\n                              body,\n                              status: \"معاينة فقط\",\n                            },\n                          ],\n                        }));\n                        setNote(\"طلب الدعم اتضاف للمعاينة فقط.\");\n                      } else {\n                        await api(\"support.create\", { body });\n                        p.refresh();\n                        setNote(\"تم إرسال طلبك للدعم.\");\n                      }\n                      setSupport(\"\");\n                    });\n                  }}",
@@ -2170,7 +2179,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 902,
+    "line": 884,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => setTopic(e.target.value)}",
@@ -2179,7 +2188,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 918,
+    "line": 899,
     "tag": "textarea",
     "action": "onChange",
     "handler": "{(e) => setSupport(e.target.value)}",
@@ -2188,7 +2197,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 926,
+    "line": 907,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",

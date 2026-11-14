@@ -72,3 +72,5 @@ The reproducible TypeScript source inventory (`node web/scripts/audit-controls.c
 English wallet retry and amount preservation passed in CI run 43577020386 alongside the existing browser suite. Captain onboarding screens 35–41 now render English form labels, vehicle categories, document names and review states. Independent bilingual visual verification and role-wide interaction testing remain open.
 
 Phone verification now has a local demo code, a retry path after an incorrect code and a resend cooldown. Direct entry without a challenge links to phone entry. This simulates navigation and local validation only. It does not grant an authenticated session.
+
+English admin preview coverage now exercises permission recovery, clearing an empty list, searching the displayed English record, opening its details and returning to the same search. CI run 43626704129 passed. Captain operations now searches the displayed rider name and keeps local messages when a demo thread is reopened or refreshed. Scope remains frontend-only. A complete control-by-control bilingual acceptance pass and shared mock integrations across every role remain outstanding.
