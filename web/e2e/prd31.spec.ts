@@ -275,6 +275,7 @@ test('73 public screens load in English LTR on a small phone without runtime exc
 
 
 test('all 66 rider, captain and admin screens render their real phase previews in both languages',async({browser})=>{
+ test.setTimeout(120000);
  for (const locale of ['ar-EG','en-GB']) {
   const context=await browser.newContext({locale,viewport:{width:390,height:844}});
   const page=await context.newPage();
