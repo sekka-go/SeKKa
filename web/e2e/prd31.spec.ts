@@ -254,3 +254,21 @@ test('filtered empty states offer immediate recovery without losing the page',as
  await page.getByRole('button',{name:'عرض كل الإشعارات'}).click();
  await expect(page.getByRole('button',{name:'الكل',exact:true})).toHaveAttribute('aria-pressed','true');
 });
+
+
+test('73 public screens load in English LTR on a small phone without runtime exceptions',async({browser})=>{
+ const context=await browser.newContext({locale:'en-GB',viewport:{width:390,height:844},colorScheme:'light'});
+ const page=await context.newPage();
+ const errors:string[]=[];
+ page.on('pageerror',error=>errors.push(error.message));
+ for(let n=1;n<=73;n++){
+  await page.goto('/?screen='+n);
+  await expect(page.locator('html')).toHaveAttribute('lang','en');
+  await expect(page.locator('html')).toHaveAttribute('dir','ltr');
+  await expect(page.locator('html')).toHaveAttribute('data-theme','light');
+  await expect(page.locator('main')).toBeVisible();
+  await expect(page.locator('main h1,main h2').first()).not.toBeEmpty();
+ }
+ expect(errors).toEqual([]);
+ await context.close();
+});
