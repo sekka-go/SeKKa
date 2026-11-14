@@ -1,18 +1,18 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-// PRD v3.1 frontend-only build. Historical integration is deliberately disconnected.
-function frontendClient(): SupabaseClient | null { return null; }
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+// Google Auth can be enabled without connecting the old domain RPCs.
+function frontendClient(): SupabaseClient | null {
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+}
 export const client = frontendClient();
 export async function api<T = unknown>(
-  operation: string,
-  payload: Record<string, unknown> = {},
+  _operation: string,
+  _payload: Record<string, unknown> = {},
 ): Promise<T> {
-  if (!client) throw new Error("V2_BACKEND_NOT_CONFIGURED");
-  const { data, error } = await client.rpc("sekka_v2_api", {
-    operation,
-    payload,
-  });
-  if (error) throw new Error(error.message);
-  return data as T;
+  // Do not let v3.1 screens mutate legacy v2 database tables or RPCs.
+  throw new Error("V31_DOMAIN_BACKEND_NOT_READY");
 }
 export type Profile = {
   id: string;
