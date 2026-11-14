@@ -338,13 +338,9 @@ export default function SubscriptionApp() {
     const { data } = await client.auth.getSession();
     setSignedIn(Boolean(data.session));
     if (data.session) {
-      const p = await api<Profile | null>("me");
-      setProfile(p);
-      if (p) {
-        setName(p.full_name);
-        setRole(p.role);
-        setBalance(p.balance);
-      }
+      // Google identity is real; domain profile is not provisioned until the new schema ships.
+      setProfile(null);
+      setName(data.session.user.user_metadata?.full_name || data.session.user.email || "");
     } else setProfile(null);
   }
   useEffect(() => {
@@ -740,61 +736,34 @@ export default function SubscriptionApp() {
           </button>
         </Panel>
       );
-    if (screen === 4)
+    if (screen === 4 || screen === 5)
       return (
-        <form
-          className="panel"
-          onSubmit={submit(async () => {
-            if (!client) throw new Error("V2_BACKEND_NOT_CONFIGURED");
-            const { error } = await client.auth.signInWithOtp({
-              phone: normalizePhone(phone),
-            });
-            if (error) throw error;
-            go(5);
-          })}
-        >
-          <Field
-            label="رقم الموبايل"
-            type="tel"
-            autoComplete="tel"
-            required
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="01xxxxxxxxx"
-          />
-          <p className="muted">هنبعت لك كود تأكيد على موبايلك.</p>
-          <button disabled={busy}>ابعت الكود</button>
-        </form>
-      );
-    if (screen === 5)
-      return (
-        <form
-          className="panel"
-          onSubmit={submit(async () => {
-            if (!client) throw new Error("V2_BACKEND_NOT_CONFIGURED");
-            const { error } = await client.auth.verifyOtp({
-              phone: normalizePhone(phone),
-              token: otp,
-              type: "sms",
-            });
-            if (error) throw error;
-            await refreshProfile();
-            go(6);
-          })}
-        >
-          <Field
-            label="كود التأكيد"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            required
-            value={otp}
-            onChange={(e) => setOtp(e.target.value)}
-          />
-          <button disabled={busy}>أكد رقمك</button>
-          <button type="button" className="text-button" onClick={() => go(4)}>
-            غيّر الرقم أو اطلب كود تاني
-          </button>
-        </form>
+        <section className="panel">
+          <h2>الدخول بجوجل</h2>
+          <p className="muted">تسجيل الدخول بجوجل متاح مؤقتًا. الدخول برقم الموبايل وOTP مؤجل.</p>
+          {signedIn ? (
+            <>
+              <p role="status">تم تسجيل الدخول بحساب جوجل.</p>
+              <button type="button" onClick={() => go(8)}>متابعة للتطبيق</button>
+              <button type="button" className="text-button" onClick={() => void run(async () => {
+                if (!client) return;
+                const {error} = await client.auth.signOut();
+                if(error) throw error;
+                setSignedIn(false);
+              })}>تسجيل الخروج</button>
+            </>
+          ) : (
+            <button type="button" disabled={busy || !client} onClick={() => void run(async () => {
+              if (!client) throw new Error("V2_BACKEND_NOT_CONFIGURED");
+              const {error} = await client.auth.signInWithOAuth({
+                provider: "google",
+                options: { redirectTo: window.location.origin + window.location.pathname + "?screen=8" },
+              });
+              if(error) throw error;
+            })}>المتابعة باستخدام جوجل</button>
+          )}
+          {!client && <p role="status">دخول جوجل محتاج إعداد متغيرات Supabase العامة وربط Google OAuth.</p>}
+        </section>
       );
     if (screen === 6 || screen === 7 || screen === 35)
       return (
