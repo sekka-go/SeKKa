@@ -523,3 +523,11 @@ html[dir="ltr"] .admin-stage .ad-metrics button { text-align: left; }
 @media(prefers-reduced-motion:reduce) {
   .admin-stage .ad-table-wrap tbody tr { transition: none; }
 }
+
+/* Keep admin navigation available on mobile: the global theme stylesheet
+   hides generic <aside> elements at <=900px. */
+@media (max-width: 900px) {
+  .admin-stage .ad-sidebar {
+    display: block;
+  }
+}
