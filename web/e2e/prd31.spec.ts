@@ -312,3 +312,24 @@ test('rider search and selected stops survive leaving for a prerequisite and ret
  await expect(page).toHaveURL(/screen=15/);
  await expect(page.locator('.b-stops')).toContainText('ميدان الجزائر');
 });
+
+
+test('protected screen gives guest direct sign-in and safe home return',async({page})=>{
+ await page.goto('/?screen=18');
+ await expect(page.getByRole('alert')).toContainText('سجّل دخولك أو اعمل حساب');
+ await page.getByRole('button',{name:'تسجيل الدخول أو إنشاء حساب',exact:true}).click();
+ await expect(page).toHaveURL(/screen=3/);
+ await page.goto('/?screen=18');
+ await page.getByRole('button',{name:'الرجوع للرئيسية',exact:true}).click();
+ await expect(page).toHaveURL(/screen=8/);
+});
+
+test('English guarded page provides contextual actions and navigates back to home',async({browser})=>{
+ const context=await browser.newContext({locale:'en-GB'});
+ const page=await context.newPage();
+ await page.goto('/?screen=18');
+ await expect(page.getByRole('alert')).toContainText('Sign in or create an account');
+ await page.getByRole('button',{name:'Back to home',exact:true}).click();
+ await expect(page).toHaveURL(/screen=8/);
+ await context.close();
+});
