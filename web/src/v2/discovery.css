@@ -1418,3 +1418,106 @@
 .d-planner-places { padding-left: 0; padding-right: 13%; }
 .d-swap { left: auto; right: 0; }
 .light .d-region .reference-art { mix-blend-mode: multiply; }
+
+
+/* seKKa premium rider experience — screens 8–21 only.
+   Deliberately excludes onboarding (screens 1–7) and all other phases.
+   Pure presentation: no control, route, quote or state semantics change. */
+.discovery-stage {
+  --sekka-premium-glow: rgba(255,196,0,.13);
+  --sekka-premium-line: rgba(255,255,255,.14);
+}
+.discovery-stage.light {
+  --sekka-premium-glow: rgba(255,196,0,.10);
+  --sekka-premium-line: rgba(17,24,39,.12);
+}
+.discovery-stage .d-canvas {
+  background:
+    radial-gradient(ellipse 85% 34% at 100% 0%, var(--sekka-premium-glow), transparent 75%),
+    linear-gradient(150deg,#12181f 0%,#0a1016 49%,#0b1015 100%);
+}
+.discovery-stage.light .d-canvas {
+  background:
+    radial-gradient(ellipse 90% 35% at 100% -5%,rgba(255,196,0,.16),transparent 75%),
+    linear-gradient(180deg,#fffefa 0%,#f7f7f6 58%,#f3f4f6 100%);
+}
+.discovery-stage .d-canvas .d-box,
+.discovery-stage .d-canvas .d-result,
+.discovery-stage .d-canvas .d-subscription {
+  border-radius: 4.4cqw;
+  border-color: var(--sekka-premium-line);
+  background: linear-gradient(155deg,rgba(255,255,255,.065),rgba(255,255,255,.016));
+  box-shadow: 0 2.1cqw 5.7cqw rgba(0,0,0,.16), 0 .2cqw .5cqw rgba(0,0,0,.12);
+}
+.discovery-stage.light .d-canvas .d-box,
+.discovery-stage.light .d-canvas .d-result,
+.discovery-stage.light .d-canvas .d-subscription {
+  border-color: rgba(27,32,39,.10);
+  background: rgba(255,255,255,.92);
+  box-shadow: 0 2.2cqw 6.2cqw rgba(23,27,32,.065), 0 .3cqw 1cqw rgba(23,27,32,.025);
+}
+.discovery-stage .d-canvas .d-title {
+  letter-spacing: -.035em;
+  text-wrap: balance;
+}
+.discovery-stage .d-canvas .d-primary,
+.discovery-stage .d-canvas .d-outline {
+  min-height: 11cqw;
+  border-radius: 3.5cqw;
+  box-shadow: 0 1.1cqw 3cqw rgba(255,196,0,.14);
+}
+.discovery-stage .d-canvas .d-primary {
+  background: linear-gradient(110deg,#ffce33 0%,#ffc400 70%,#f2b900 100%);
+}
+.discovery-stage .d-canvas .d-primary:disabled { box-shadow: none; }
+.discovery-stage .d-canvas .d-primary:focus-visible,
+.discovery-stage .d-canvas .d-outline:focus-visible { outline-offset: 3px; }
+.discovery-stage .d-canvas input,
+.discovery-stage .d-canvas select,
+.discovery-stage .d-canvas textarea {
+  border-color: var(--sekka-premium-line);
+  border-radius: 2.8cqw;
+  background: rgba(255,255,255,.035);
+  min-height: 8.4cqw;
+}
+.discovery-stage.light .d-canvas input,
+.discovery-stage.light .d-canvas select,
+.discovery-stage.light .d-canvas textarea { background: rgba(249,250,251,.94); }
+.discovery-stage .d-canvas .d-result,
+.discovery-stage .d-canvas .d-subscription { overflow: hidden; }
+.discovery-stage .d-canvas .d-category-badge,
+.discovery-stage .d-canvas .d-available {
+  border-radius: 999px;
+  letter-spacing: .01em;
+}
+.discovery-stage .d-canvas .d-results-summary { color: var(--phase-muted); }
+.discovery-stage .d-canvas .d-empty {
+  border-radius: 4.6cqw;
+  border: 1px dashed rgba(255,196,0,.35);
+  background: rgba(255,196,0,.045);
+}
+/* Booking uses discovery primitives; keep the accent, layouts and hierarchy consistent. */
+.booking-stage .b-canvas .b-box {
+  padding: 3cqw 3.5cqw;
+}
+.booking-stage .b-canvas .b-title { letter-spacing: -.03em; text-wrap: balance; }
+.booking-stage .b-canvas .b-row { gap: 2cqw; min-height: 7.5cqw; }
+.booking-stage .b-canvas .b-row > strong { overflow-wrap: anywhere; }
+.booking-stage .b-canvas .b-primary { margin-block-start: 3.2cqw; }
+.booking-stage .b-canvas .b-status-card,
+.booking-stage .b-canvas .b-amount-card {
+  border-radius: 4.3cqw;
+  box-shadow: inset 0 .3cqw 0 rgba(255,196,0,.15);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .discovery-stage .d-canvas .d-primary,
+  .discovery-stage .d-canvas .d-outline,
+  .discovery-stage .d-canvas .d-result {
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  }
+  .discovery-stage .d-canvas .d-primary:hover:not(:disabled) { transform: translateY(-1px); }
+  .discovery-stage .d-canvas .d-result:hover { border-color: rgba(255,196,0,.48); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .discovery-stage .d-canvas * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
