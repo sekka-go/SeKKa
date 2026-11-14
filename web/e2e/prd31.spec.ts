@@ -172,3 +172,21 @@ test('English discovery keeps canonical search values and reviews an unmatched c
  await expect(page.getByRole('button',{name:'Request confirmed in preview'})).toBeDisabled();
  await context.close();
 });
+
+test('English admin can recover from restricted preview permissions and empty results',async({browser})=>{
+ const context=await browser.newContext({locale:'en-GB'}), page=await context.newPage();
+ await page.goto('/?screen=65&preview=phase8');
+ await page.getByLabel('Simulate permission').selectOption('المالية');
+ await page.getByRole('button',{name:'Preview with required permission'}).click();
+ await expect(page.locator('tbody tr')).toHaveCount(2);
+ await page.getByLabel('Show empty state').check();
+ await page.getByRole('button',{name:'Clear filters'}).click();
+ await expect(page.locator('tbody tr')).toHaveCount(2);
+ await page.getByLabel('Search records').fill('Mostafa');
+ await expect(page.locator('tbody tr')).toHaveCount(1);
+ await page.locator('tbody').getByRole('button').click();
+ await expect(page.getByRole('heading',{name:'Driving licence — Mostafa Hassan'})).toBeVisible();
+ await page.getByRole('button',{name:'Close details ×'}).click();
+ await expect(page.getByLabel('Search records')).toHaveValue('Mostafa');
+ await context.close();
+});

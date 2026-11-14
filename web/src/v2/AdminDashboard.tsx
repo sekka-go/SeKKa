@@ -1,3 +1,5 @@
+import {usePreferences} from "./preferences";
+import {translate} from "./translations";
 import { useState } from "react";
 import { Wordmark, type Appearance } from "./Onboarding";
 import { internalScreen, publicScreen, screenTitle } from "./screenMap";
@@ -191,6 +193,8 @@ export default function AdminDashboard(p: {
   onTheme: (v: Appearance) => void;
   go: (v: number) => void;
 }) {
+  const {language}=usePreferences();
+  const tr=(text:string)=>translate(text,language);
   const demo = new URLSearchParams(location.search).get("preview") === "phase8",
     n = publicScreen(p.screen) + 1;
   const [data, setData] = useState(seed),
@@ -212,7 +216,7 @@ export default function AdminDashboard(p: {
     filtered = items.filter(
       (i) =>
         (!filter || i.status === filter) &&
-        `${i.id} ${i.name} ${i.detail}`.includes(query.trim()),
+        `${i.id} ${tr(i.name)} ${tr(i.detail)}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()),
     );
   function nav(id: number) {
     setSelected(null);
@@ -226,7 +230,7 @@ export default function AdminDashboard(p: {
   }
   function record(text: string) {
     setAudit((a) => [
-      `${new Date().toLocaleTimeString("ar-EG")} · ${text}`,
+      `${new Date().toLocaleTimeString(language==="en"?"en-GB":"ar-EG")} · ${text}`,
       ...a,
     ]);
     setNote("اتحفظ في المعاينة فقط؛ لم يتغير أي حساب حقيقي.");
@@ -239,7 +243,7 @@ export default function AdminDashboard(p: {
         i.id === selected.id ? { ...i, status: decision } : i,
       ),
     }));
-    record(`${selected.id} · ${decision} · ${reason.trim()}`);
+    record(`${selected.id} · ${tr(decision)} · ${reason.trim()}`);
     setSelected(null);
     setDecision("");
     setReason("");
@@ -249,7 +253,7 @@ export default function AdminDashboard(p: {
       <header className="ad-top">
         <div className="ad-brand">
           <Wordmark />
-          <span>لوحة الإدارة</span>
+          <span>{tr("لوحة الإدارة")}</span>
         </div>
         <div className="ad-themes">
           {(["dark", "light"] as const).map((t) => (
@@ -258,33 +262,29 @@ export default function AdminDashboard(p: {
               aria-pressed={p.theme === t}
               onClick={() => p.onTheme(t)}
             >
-              {t === "dark" ? "دارك" : "لايت"}
+              {t === "dark" ? tr("دارك") : tr("لايت")}
             </button>
           ))}
         </div>
       </header>
       {!demo ? (
         <main className="ad-content">
-          <h1>{screenTitle(p.screen)}</h1>
+          <h1>{screenTitle(p.screen,language)}</h1>
           <section className="ad-card">
-            <h2>دخول الإدارة محمي</h2>
+            <h2>{tr("دخول الإدارة محمي")}</h2>
             <p>
-              واجهة الإدارة الجديدة متاحة للمعاينة فقط حاليًا. ربط الإجراءات
-              الحقيقية بصلاحيات الإدارة ومراجعة الأمان لسه مطلوب قبل التفعيل.
-            </p>
-            <button onClick={() => p.go(4)}>الرجوع لتسجيل الدخول</button>
+              {tr("واجهة الإدارة الجديدة متاحة للمعاينة فقط حاليًا. ربط الإجراءات الحقيقية بصلاحيات الإدارة ومراجعة الأمان لسه مطلوب قبل التفعيل.")}</p>
+            <button onClick={() => p.go(4)}>{tr("الرجوع لتسجيل الدخول")}</button>
           </section>
         </main>
       ) : (
         <>
           <p className="ad-notice">
-            معاينة المرحلة الثامنة · بيانات توضيحية فقط · لا توجد إجراءات أو
-            رسائل حقيقية
-          </p>
+            {tr("معاينة المرحلة الثامنة · بيانات توضيحية فقط · لا توجد إجراءات أو رسائل حقيقية")}</p>
           <div className="ad-layout">
             <aside className="ad-sidebar">
-              <p>إدارة المنصة</p>
-              <nav aria-label="شاشات الإدارة">
+              <p>{tr("إدارة المنصة")}</p>
+              <nav aria-label={tr("شاشات الإدارة")}>
                 {adminScreens.map((s) => (
                   <button
                     key={s}
@@ -292,7 +292,7 @@ export default function AdminDashboard(p: {
                     onClick={() => nav(publicScreen(s) + 1)}
                   >
                     <span className="ad-number">{publicScreen(s)}</span>
-                    {screenTitle(s)}
+                    {screenTitle(s,language)}
                   </button>
                 ))}
               </nav>
@@ -300,17 +300,16 @@ export default function AdminDashboard(p: {
             <main className="ad-content">
               <div className="ad-heading">
                 <div>
-                  <span className="ad-eyebrow">سِكّة / الإدارة / {publicScreen(p.screen)}</span>
-                  <h1>{screenTitle(p.screen)}</h1>
-                  <p>{intro[n]}</p>
+                  <span className="ad-eyebrow">{tr("سِكّة / الإدارة /")}{publicScreen(p.screen)}</span>
+                  <h1>{screenTitle(p.screen,language)}</h1>
+                  <p>{tr(intro[n])}</p>
                 </div>
-                <span className="ad-tag">معاينة</span>
+                <span className="ad-tag">{tr("معاينة")}</span>
               </div>
               <div className="ad-tools">
                 <label>
-                  محاكاة صلاحية
-                  <select
-                    aria-label="محاكاة صلاحية"
+                  {tr("محاكاة صلاحية")}<select
+                    aria-label={tr("محاكاة صلاحية")}
                     value={role}
                     onChange={(e) => {
                       setRole(e.target.value);
@@ -318,7 +317,7 @@ export default function AdminDashboard(p: {
                     }}
                   >
                     {permissions.map((r) => (
-                      <option key={r}>{r}</option>
+                      <option key={r} value={r}>{tr(r)}</option>
                     ))}
                   </select>
                 </label>
@@ -328,22 +327,20 @@ export default function AdminDashboard(p: {
                     checked={empty}
                     onChange={(e) => setEmpty(e.target.checked)}
                   />
-                  عرض الحالة الفارغة
-                </label>
-                <span>البيانات تتصفّر عند إعادة التحميل</span>
+                  {tr("عرض الحالة الفارغة")}</label>
+                <span>{tr("البيانات تتصفّر عند إعادة التحميل")}</span>
               </div>
               {note && (
                 <p className="ad-feedback" role="status">
-                  {note}
+                  {tr(note)}
                 </p>
               )}
               {!allowed ? (
                 <section className="ad-card">
-                  <h2>الصلاحية غير متاحة في المعاينة</h2>
+                  <h2>{tr("الصلاحية غير متاحة في المعاينة")}</h2>
                   <p>
-                    القسم ده يحتاج صلاحية {required(n)}. الاختيار هنا يحاكي
-                    الواجهة فقط ولا يمنح صلاحيات فعلية.
-                  </p>
+                    {tr("القسم ده يحتاج صلاحية")}{tr(required(n))}{tr(". الاختيار هنا يحاكي الواجهة فقط ولا يمنح صلاحيات فعلية.")}</p>
+                <button onClick={() => setRole(required(n))}>{language==="en" ? "Preview with required permission" : "جرّب الصلاحية المطلوبة في المعاينة"}</button>
                 </section>
               ) : (
                 <>
@@ -370,41 +367,33 @@ export default function AdminDashboard(p: {
                                   : rows.length;
                           return (
                             <button key={label} onClick={() => nav(Number(id))}>
-                              <span>{label}</span>
+                              <span>{tr(String(label))}</span>
                               <b>{count}</b>
-                              <small>عرض التفاصيل ←</small>
+                              <small>{tr("عرض التفاصيل ←")}</small>
                             </button>
                           );
                         })}
                       </div>
                       <div className="ad-columns">
                         <section className="ad-card">
-                          <h2>محتاج مراجعتك</h2>
+                          <h2>{tr("محتاج مراجعتك")}</h2>
                           <p>
-                            راجع طلبات التوثيق والتذاكر المفتوحة قبل اتخاذ أي
-                            إجراء.
-                          </p>
+                            {tr("راجع طلبات التوثيق والتذاكر المفتوحة قبل اتخاذ أي إجراء.")}</p>
                           <button
                             className="ad-primary"
                             onClick={() => nav(66)}
                           >
-                            مراجعة المستندات
-                          </button>
+                            {tr("مراجعة المستندات")}</button>
                           <button onClick={() => nav(72)}>
-                            الشكاوى والدعم
-                          </button>
+                            {tr("الشكاوى والدعم")}</button>
                         </section>
                         <section className="ad-card">
-                          <h2>تعريف المؤشرات</h2>
+                          <h2>{tr("تعريف المؤشرات")}</h2>
                           <p>
-                            الأعداد محسوبة من سجلات المعاينة الحالية. الكباتن:
-                            المعتمدون فقط. العروض: النشطة فقط. التأمينات:
-                            المحجوزة ولم تتحرر.
-                          </p>
-                          <p>آخر تحديث: عند فتح المعاينة أو تعديل سجل محلي.</p>
+                            {tr("الأعداد محسوبة من سجلات المعاينة الحالية. الكباتن: المعتمدون فقط. العروض: النشطة فقط. التأمينات: المحجوزة ولم تتحرر.")}</p>
+                          <p>{tr("آخر تحديث: عند فتح المعاينة أو تعديل سجل محلي.")}</p>
                           <span className="ad-tag">
-                            الأموال الحقيقية غير مفعّلة
-                          </span>
+                            {tr("الأموال الحقيقية غير مفعّلة")}</span>
                         </section>
                       </div>
                     </>
@@ -419,9 +408,9 @@ export default function AdminDashboard(p: {
                       ].map(([c, seats]) => (
                         <section className="ad-card" key={c}>
                           <b>{c}</b>
-                          <p>{seats} مقاعد</p>
+                          <p>{seats} {tr("مقاعد")}</p>
                           <small>
-                            {Number(seats) < 5 ? "سيارة ركوب" : "هاي آس"}
+                            {Number(seats) < 5 ? tr("سيارة ركوب") : tr("هاي آس")}
                           </small>
                         </section>
                       ))}
@@ -431,29 +420,27 @@ export default function AdminDashboard(p: {
                     <section className="ad-card">
                       <div className="ad-list-head">
                         <h2>
-                          السجلات <small>({filtered.length})</small>
+                          {tr("السجلات")}<small>({filtered.length})</small>
                         </h2>
                         <div className="ad-filters">
                           <label>
-                            بحث
-                            <input
-                              aria-label="بحث السجلات"
-                              placeholder="الاسم أو المرجع أو الخط"
+                            {tr("بحث")}<input
+                              aria-label={tr("بحث السجلات")}
+                              placeholder={tr("الاسم أو المرجع أو الخط")}
                               value={query}
                               onChange={(e) => setQuery(e.target.value)}
                             />
                           </label>
                           <label>
-                            الحالة
-                            <select
-                              aria-label="تصفية الحالة"
+                            {tr("الحالة")}<select
+                              aria-label={tr("تصفية الحالة")}
                               value={filter}
                               onChange={(e) => setFilter(e.target.value)}
                             >
-                              <option value="">الكل</option>
+                              <option value="">{tr("الكل")}</option>
                               {[...new Set(items.map((i) => i.status))].map(
                                 (s) => (
-                                  <option key={s}>{s}</option>
+                                  <option key={s} value={s}>{tr(s)}</option>
                                 ),
                               )}
                             </select>
@@ -464,10 +451,10 @@ export default function AdminDashboard(p: {
                         <table>
                           <thead>
                             <tr>
-                              <th>المرجع</th>
-                              <th>البيانات</th>
-                              <th>الحالة</th>
-                              <th>الإجراء</th>
+                              <th>{tr("المرجع")}</th>
+                              <th>{tr("البيانات")}</th>
+                              <th>{tr("الحالة")}</th>
+                              <th>{tr("الإجراء")}</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -475,12 +462,12 @@ export default function AdminDashboard(p: {
                               <tr key={i.id}>
                                 <td dir="ltr">{i.id}</td>
                                 <td>
-                                  <strong>{i.name}</strong>
-                                  <p>{i.detail}</p>
-                                  {i.value && <b>{i.value}</b>}
+                                  <strong>{tr(i.name)}</strong>
+                                  <p>{tr(i.detail)}</p>
+                                  {i.value && <b>{tr(i.value)}</b>}
                                 </td>
                                 <td>
-                                  <span className="ad-tag">{i.status}</span>
+                                  <span className="ad-tag">{tr(i.status)}</span>
                                 </td>
                                 <td>
                                   <button
@@ -490,8 +477,7 @@ export default function AdminDashboard(p: {
                                       setReason("");
                                     }}
                                   >
-                                    عرض التفاصيل
-                                  </button>
+                                    {tr("عرض التفاصيل")}</button>
                                 </td>
                               </tr>
                             ))}
@@ -502,18 +488,18 @@ export default function AdminDashboard(p: {
                         <div className="ad-empty">
                           <h2>
                             {query || filter
-                              ? "مفيش نتائج مطابقة"
-                              : "لسه مفيش سجلات"}
+                              ? tr("مفيش نتائج مطابقة")
+                              : tr("لسه مفيش سجلات")}
                           </h2>
-                          <p>جرّب تغيير البحث أو التصفية.</p>
+                          <p>{tr("جرّب تغيير البحث أو التصفية.")}</p>
                           <button
                             onClick={() => {
                               setQuery("");
                               setFilter("");
+                              setEmpty(false);
                             }}
                           >
-                            مسح الفلاتر
-                          </button>
+                            {tr("مسح الفلاتر")}</button>
                         </div>
                       )}
                     </section>
@@ -521,50 +507,42 @@ export default function AdminDashboard(p: {
                   {selected && n >= 64 && n <= 72 && (
                     <section
                       className="ad-card ad-detail"
-                      aria-label="تفاصيل السجل"
+                      aria-label={tr("تفاصيل السجل")}
                     >
                       <button
                         className="ad-close"
                         onClick={() => setSelected(null)}
                       >
-                        إغلاق التفاصيل ×
-                      </button>
-                      <h2>{selected.name}</h2>
+                        {tr("إغلاق التفاصيل ×")}</button>
+                      <h2>{tr(selected.name)}</h2>
                       <span className="ad-tag">{selected.id}</span>
-                      <p>{selected.detail}</p>
-                      {selected.value && <h3>{selected.value}</h3>}
+                      <p>{tr(selected.detail)}</p>
+                      {selected.value && <h3>{tr(selected.value)}</h3>}
                       {n === 66 && (
                         <div className="ad-document">
                           <span>▤</span>
-                          <h3>مساحة معاينة المستند</h3>
+                          <h3>{tr("مساحة معاينة المستند")}</h3>
                           <p>
-                            لا توجد وثيقة حقيقية هنا. المستندات الفعلية تتطلب
-                            صلاحية التوثيق ورابطًا خاصًا مؤقتًا.
-                          </p>
+                            {tr("لا توجد وثيقة حقيقية هنا. المستندات الفعلية تتطلب صلاحية التوثيق ورابطًا خاصًا مؤقتًا.")}</p>
                         </div>
                       )}
                       {n === 69 && (
                         <p>
-                          شروط الحجز والسعر المسجل لا تتغير بتعديل العرض. لا
-                          توجد موافقة يدوية جديدة على الحجز المؤكد.
-                        </p>
+                          {tr("شروط الحجز والسعر المسجل لا تتغير بتعديل العرض. لا توجد موافقة يدوية جديدة على الحجز المؤكد.")}</p>
                       )}
                       {(n === 70 || n === 71) && (
                         <p>
-                          لا يوجد تحرير تأمين أو تحويل أو سحب يدوي في هذه
-                          المعاينة. مراجعة العملية لا تعني تنفيذها.
-                        </p>
+                          {tr("لا يوجد تحرير تأمين أو تحويل أو سحب يدوي في هذه المعاينة. مراجعة العملية لا تعني تنفيذها.")}</p>
                       )}
                       {![69, 70, 71].includes(n) && (
                         <>
                           <label>
-                            قرار المعاينة
-                            <select
-                              aria-label="قرار المعاينة"
+                            {tr("قرار المعاينة")}<select
+                              aria-label={tr("قرار المعاينة")}
                               value={decision}
                               onChange={(e) => setDecision(e.target.value)}
                             >
-                              <option value="">اختار إجراء</option>
+                              <option value="">{tr("اختار إجراء")}</option>
                               {(n === 64
                                 ? ["نشط", "موقوف"]
                                 : n === 68
@@ -573,32 +551,28 @@ export default function AdminDashboard(p: {
                                     ? ["قيد المتابعة", "مصعّدة للمالية", "مغلقة"]
                                     : ["معتمد", "مطلوب تعديل", "مرفوض"]
                               ).map((v) => (
-                                <option key={v}>{v}</option>
+                                <option key={v} value={v}>{tr(v)}</option>
                               ))}
                             </select>
                           </label>
                           <label>
-                            سبب الإجراء
-                            <textarea
-                              aria-label="سبب الإجراء"
+                            {tr("سبب الإجراء")}<textarea
+                              aria-label={tr("سبب الإجراء")}
                               minLength={5}
                               maxLength={1000}
                               value={reason}
                               onChange={(e) => setReason(e.target.value)}
-                              placeholder="اكتب سببًا واضحًا للمراجعة"
+                              placeholder={tr("اكتب سببًا واضحًا للمراجعة")}
                             />
                           </label>
                           <p>
-                            التغيير هيتم على السجل التوضيحي فقط، مع إضافته لسجل
-                            المعاينة.
-                          </p>
+                            {tr("التغيير هيتم على السجل التوضيحي فقط، مع إضافته لسجل المعاينة.")}</p>
                           <button
                             className="ad-primary"
                             disabled={!decision || reason.trim().length < 5}
                             onClick={apply}
                           >
-                            تأكيد التغيير في المعاينة
-                          </button>
+                            {tr("تأكيد التغيير في المعاينة")}</button>
                         </>
                       )}
                     </section>
@@ -612,10 +586,9 @@ export default function AdminDashboard(p: {
                           setMessagePreview(true);
                         }}
                       >
-                        <h2>رسالة جديدة</h2>
+                        <h2>{tr("رسالة جديدة")}</h2>
                         <label>
-                          عنوان الرسالة
-                          <input
+                          {tr("عنوان الرسالة")}<input
                             required
                             maxLength={120}
                             value={title}
@@ -626,8 +599,7 @@ export default function AdminDashboard(p: {
                           />
                         </label>
                         <label>
-                          المحتوى
-                          <textarea
+                          {tr("المحتوى")}<textarea
                             required
                             maxLength={1000}
                             value={body}
@@ -638,16 +610,15 @@ export default function AdminDashboard(p: {
                           />
                         </label>
                         <label>
-                          الجمهور
-                          <select
-                            value={audience}
+                          {tr("الجمهور")}<select
+                            value={tr(audience)}
                             onChange={(e) => {
                               setAudience(e.target.value);
                               setMessagePreview(false);
                             }}
                           >
                             {["الركاب", "الكباتن", "الجميع"].map((v) => (
-                              <option key={v}>{v}</option>
+                              <option key={v} value={v}>{tr(v)}</option>
                             ))}
                           </select>
                         </label>
@@ -655,65 +626,58 @@ export default function AdminDashboard(p: {
                           className="ad-primary"
                           disabled={!title.trim() || !body.trim()}
                         >
-                          معاينة الرسالة
-                        </button>
+                          {tr("معاينة الرسالة")}</button>
                       </form>
                       <section className="ad-card">
-                        <h2>معاينة قبل الإرسال</h2>
+                        <h2>{tr("معاينة قبل الإرسال")}</h2>
                         {messagePreview ? (
                           <>
-                            <span className="ad-tag">إلى: {audience}</span>
+                            <span className="ad-tag">{tr("إلى:")}{tr(audience)}</span>
                             <h3>{title}</h3>
                             <p className="ad-message">{body}</p>
                             <button
                               onClick={() => {
                                 record(
-                                  `حفظ مسودة إشعار إلى ${audience}: ${title}`,
+                                  language==="en" ? `Saved notification draft for ${tr(audience)}: ${title}` : `حفظ مسودة إشعار إلى ${tr(audience)}: ${title}`,
                                 );
                                 setMessagePreview(false);
                               }}
                             >
-                              حفظ مسودة في المعاينة
-                            </button>
+                              {tr("حفظ مسودة في المعاينة")}</button>
                           </>
                         ) : (
-                          <p>اكتب الرسالة واضغط معاينة.</p>
+                          <p>{tr("اكتب الرسالة واضغط معاينة.")}</p>
                         )}
-                        <button disabled>الإرسال الجماعي غير مفعّل</button>
+                        <button disabled>{tr("الإرسال الجماعي غير مفعّل")}</button>
                         <p>
-                          لا يتم إرسال إشعارات حقيقية أو مشاركة بيانات
-                          المستخدمين.
-                        </p>
+                          {tr("لا يتم إرسال إشعارات حقيقية أو مشاركة بيانات المستخدمين.")}</p>
                       </section>
                     </div>
                   )}
                   {n === 74 && (
                     <div className="ad-columns">
                       <section className="ad-card">
-                        <h2>قواعد التشغيل المعتمدة</h2>
+                        <h2>{tr("قواعد التشغيل المعتمدة")}</h2>
                         <dl>
-                          <dt>نطاق الخدمة</dt>
-                          <dd>القاهرة والجيزة</dd>
-                          <dt>تأمين جدية الحجز</dt>
-                          <dd>100 جنيه مستردة</dd>
-                          <dt>الحد الأدنى للشحن</dt>
-                          <dd>100 جنيه</dd>
-                          <dt>أيام التشغيل</dt>
-                          <dd>الأحد–الخميس باستثناء الإجازات الرسمية</dd>
+                          <dt>{tr("نطاق الخدمة")}</dt>
+                          <dd>{tr("القاهرة والجيزة")}</dd>
+                          <dt>{tr("تأمين جدية الحجز")}</dt>
+                          <dd>{tr("100 جنيه مستردة")}</dd>
+                          <dt>{tr("الحد الأدنى للشحن")}</dt>
+                          <dd>{tr("100 جنيه")}</dd>
+                          <dt>{tr("أيام التشغيل")}</dt>
+                          <dd>{tr("الأحد–الخميس باستثناء الإجازات الرسمية")}</dd>
                         </dl>
-                        <button disabled>تعديل القواعد المالية غير مفعّل</button>
+                        <button disabled>{tr("تعديل القواعد المالية غير مفعّل")}</button>
                       </section>
                       <section className="ad-card">
-                        <h2>الصلاحيات</h2>
+                        <h2>{tr("الصلاحيات")}</h2>
                         <p>
-                          التوثيق · التشغيل · المالية · الدعم · إدارة النظام
-                        </p>
+                          {tr("التوثيق · التشغيل · المالية · الدعم · إدارة النظام")}</p>
                         <p>
-                          اختيار الصلاحية أعلى الصفحة مجرد محاكاة. لا يغيّر أدوار
-                          الحسابات.
-                        </p>
-                        <button disabled>منح صلاحيات حقيقية غير مفعّل</button>
-                        <h2>مظهر اللوحة</h2>
+                          {tr("اختيار الصلاحية أعلى الصفحة مجرد محاكاة. لا يغيّر أدوار الحسابات.")}</p>
+                        <button disabled>{tr("منح صلاحيات حقيقية غير مفعّل")}</button>
+                        <h2>{tr("مظهر اللوحة")}</h2>
                         <div className="ad-themes">
                           {(["dark", "light"] as const).map((t) => (
                             <button
@@ -721,7 +685,7 @@ export default function AdminDashboard(p: {
                               aria-pressed={p.theme === t}
                               onClick={() => p.onTheme(t)}
                             >
-                              {t === "dark" ? "دارك" : "لايت"}
+                              {t === "dark" ? tr("دارك") : tr("لايت")}
                             </button>
                           ))}
                         </div>
@@ -730,7 +694,7 @@ export default function AdminDashboard(p: {
                   )}
                   {(n === 74 || audit.length > 0) && (
                     <section className="ad-card">
-                      <h2>سجل إجراءات المعاينة</h2>
+                      <h2>{tr("سجل إجراءات المعاينة")}</h2>
                       {audit.length ? (
                         <ol className="ad-audit">
                           {audit.map((a, i) => (
@@ -739,15 +703,13 @@ export default function AdminDashboard(p: {
                         </ol>
                       ) : (
                         <p>
-                          لسه مفيش إجراءات. السجل ده محلي ومش بديل لسجل التدقيق
-                          الحقيقي.
-                        </p>
+                          {tr("لسه مفيش إجراءات. السجل ده محلي ومش بديل لسجل التدقيق الحقيقي.")}</p>
                       )}
                     </section>
                   )}
                 </>
               )}
-              <footer>سِكّة — معاك في السِكّة</footer>
+              <footer>{tr("سِكّة — معاك في السِكّة")}</footer>
             </main>
           </div>
         </>

@@ -208,7 +208,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 256,
+    "line": 260,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => p.onTheme(t)}",
@@ -217,7 +217,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 275,
+    "line": 277,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => p.go(4)}",
@@ -235,16 +235,16 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 312,
+    "line": 311,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => {\n                      setRole(e.target.value);\n                      setSelected(null);\n                    }}",
     "disabled": "",
-    "label": "\"محاكاة صلاحية\""
+    "label": "{tr(\"محاكاة صلاحية\")}"
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 326,
+    "line": 325,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setEmpty(e.target.checked)}",
@@ -253,7 +253,16 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 372,
+    "line": 343,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => setRole(required(n))}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 369,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(Number(id))}",
@@ -262,7 +271,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 387,
+    "line": 382,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(66)}",
@@ -271,7 +280,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 393,
+    "line": 387,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(72)}",
@@ -280,25 +289,25 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 439,
+    "line": 427,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setQuery(e.target.value)}",
     "disabled": "",
-    "label": "\"بحث السجلات\""
+    "label": "{tr(\"بحث السجلات\")}"
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 448,
+    "line": 435,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => setFilter(e.target.value)}",
     "disabled": "",
-    "label": "\"تصفية الحالة\""
+    "label": "{tr(\"تصفية الحالة\")}"
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 486,
+    "line": 473,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => {\n                                      setSelected(i);\n                                      setDecision(\"\");\n                                      setReason(\"\");\n                                    }}",
@@ -307,16 +316,16 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 509,
+    "line": 495,
     "tag": "button",
     "action": "onClick",
-    "handler": "{() => {\n                              setQuery(\"\");\n                              setFilter(\"\");\n                            }}",
+    "handler": "{() => {\n                              setQuery(\"\");\n                              setFilter(\"\");\n                              setEmpty(false);\n                            }}",
     "disabled": "",
     "label": ""
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 526,
+    "line": 512,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => setSelected(null)}",
@@ -325,25 +334,25 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 562,
+    "line": 540,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => setDecision(e.target.value)}",
     "disabled": "",
-    "label": "\"قرار المعاينة\""
+    "label": "{tr(\"قرار المعاينة\")}"
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 582,
+    "line": 559,
     "tag": "textarea",
     "action": "onChange",
     "handler": "{(e) => setReason(e.target.value)}",
     "disabled": "",
-    "label": "\"سبب الإجراء\""
+    "label": "{tr(\"سبب الإجراء\")}"
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 595,
+    "line": 570,
     "tag": "button",
     "action": "onClick",
     "handler": "{apply}",
@@ -352,7 +361,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 608,
+    "line": 582,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{(e) => {\n                          e.preventDefault();\n                          setMessagePreview(true);\n                        }}",
@@ -361,7 +370,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 618,
+    "line": 591,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => {\n                              setTitle(e.target.value);\n                              setMessagePreview(false);\n                            }}",
@@ -370,7 +379,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 630,
+    "line": 602,
     "tag": "textarea",
     "action": "onChange",
     "handler": "{(e) => {\n                              setBody(e.target.value);\n                              setMessagePreview(false);\n                            }}",
@@ -379,7 +388,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 642,
+    "line": 613,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => {\n                              setAudience(e.target.value);\n                              setMessagePreview(false);\n                            }}",
@@ -388,7 +397,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 654,
+    "line": 625,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -397,16 +406,16 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 668,
+    "line": 638,
     "tag": "button",
     "action": "onClick",
-    "handler": "{() => {\n                                record(\n                                  `حفظ مسودة إشعار إلى ${audience}: ${title}`,\n                                );\n                                setMessagePreview(false);\n                              }}",
+    "handler": "{() => {\n                                record(\n                                  language===\"en\" ? `Saved notification draft for ${tr(audience)}: ${title}` : `حفظ مسودة إشعار إلى ${tr(audience)}: ${title}`,\n                                );\n                                setMessagePreview(false);\n                              }}",
     "disabled": "",
     "label": ""
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 682,
+    "line": 651,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -415,7 +424,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 704,
+    "line": 671,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -424,7 +433,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 715,
+    "line": 679,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -433,7 +442,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 719,
+    "line": 683,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => p.onTheme(t)}",
