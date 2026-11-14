@@ -19,8 +19,11 @@ npm ci
 npm run typecheck
 npm run lint
 npm test
+npm run test:structure
 npm run build
 PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:e2e
 ```
 
-The v3.1 frontend has replaced the former app on the production `main` branch. **This is a frontend deployment, not a production backend release**: OTP, authentication, paid bookings, wallets and persistent admin operations are unavailable or illustrative. The historical `__sekka-api` path intentionally returns HTTP 410. No database migrations or real finance integrations are activated.\n\nThe obsolete frontend was retired from the active source tree. See [legacy frontend retirement](docs/LEGACY_FRONTEND_RETIREMENT.md).
+The v3.1 frontend has replaced the former app on the production `main` branch. **This is a frontend deployment, not a production backend release**: OTP, authentication, paid bookings, wallets and persistent admin operations are unavailable or illustrative. The historical `__sekka-api` path intentionally returns HTTP 410. No database migrations or real finance integrations are activated.
+
+The obsolete frontend was retired from the active source tree. See [legacy frontend retirement](docs/LEGACY_FRONTEND_RETIREMENT.md).
