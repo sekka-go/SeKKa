@@ -339,3 +339,30 @@ test('English protected captain and admin screens provide actionable auth gates'
  await expect(page).toHaveURL(/screen=8/);
  await context.close();
 });
+
+
+test('captain daily operations empty state links straight to subscriber list',async({page})=>{
+ await page.goto('/?screen=54&preview=phase7');
+ await page.getByLabel('معاينة القوائم الفارغة').check();
+ await expect(page.getByText('مفيش اشتراكات تشغيل النهارده.')).toBeVisible();
+ await page.getByRole('button',{name:'قائمة المشتركين',exact:true}).click();
+ await expect(page).toHaveURL(/screen=52/);
+ await expect(page.getByRole('heading',{name:'قائمة المشتركين'})).toBeVisible();
+});
+
+test('captain empty notifications and receipts offer direct recovery actions',async({page})=>{
+ await page.goto('/?screen=58&preview=phase7');
+ await page.getByLabel('معاينة القوائم الفارغة').check();
+ await page.getByRole('button',{name:'غير المقروءة',exact:true}).click();
+ await expect(page.getByRole('button',{name:'عرض كل الإشعارات',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'عرض كل الإشعارات',exact:true}).click();
+ await expect(page.getByRole('button',{name:'الكل',exact:true})).toHaveAttribute('aria-pressed','true');
+ await page.getByRole('button',{name:'الحجوزات الجديدة',exact:true}).click();
+ await expect(page).toHaveURL(/screen=51/);
+
+ await page.goto('/?screen=59&preview=phase7');
+ await page.getByLabel('معاينة القوائم الفارغة').check();
+ await expect(page.getByText('لسه مفيش إقرارات استلام مسجلة.')).toBeVisible();
+ await page.getByRole('button',{name:'الحجوزات الجديدة',exact:true}).click();
+ await expect(page).toHaveURL(/screen=51/);
+});
