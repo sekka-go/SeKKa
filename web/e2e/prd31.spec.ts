@@ -292,3 +292,20 @@ test('all 66 rider, captain and admin screens render their real phase previews i
   await context.close();
  }
 });
+
+
+test('rider search and selected stops survive leaving for a prerequisite and returning',async({page})=>{
+ await page.goto('/?screen=9&preview=phase2');
+ await page.getByRole('button',{name:'ابحث عن الرحلات',exact:true}).click();
+ await page.getByRole('button',{name:/عرض تفاصيل PRIME/}).click();
+ await page.getByLabel('نقطة الركوب',{exact:true}).selectOption('maadi');
+ await page.getByLabel('نقطة النزول',{exact:true}).selectOption('tagamoa');
+ await expect(page.getByLabel('نقطة النزول',{exact:true})).toHaveValue('tagamoa');
+ await page.goto('/?screen=4&inspect=1');
+ await page.goto('/?screen=12&preview=phase2');
+ await expect(page.getByLabel('نقطة الركوب',{exact:true})).toHaveValue('maadi');
+ await expect(page.getByLabel('نقطة النزول',{exact:true})).toHaveValue('tagamoa');
+ await page.getByRole('button',{name:'حجز الاشتراك',exact:true}).click();
+ await expect(page).toHaveURL(/screen=15/);
+ await expect(page.locator('.b-stops')).toContainText('ميدان الجزائر');
+});
