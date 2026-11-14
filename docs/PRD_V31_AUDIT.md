@@ -55,3 +55,7 @@ An interactive search-to-booking preview now stores a cloned offer, selected sto
 Localization CI run 43527334833 passed all checks including 21 browser tests. The booking interaction test also passed in run 43527661792: all 22 browser tests and 40 domain/historical database checks passed at `98bbffac`.
 
 Historical decisions and phase completion reports were also moved into `docs/archive/pre-v3.1/`. Current `DECISIONS.md` and `IMPLEMENTATION_STATUS.md` now describe only v3.1 implementation status. Other useful historical engineering documents carry explicit non-authoritative labels.
+
+### Cross-stage preview state
+
+Interactive bookings are now visible to the demo captain with their locked price, period, selected stops and payment status. The captain acknowledges receipt on public screen 55. Rider screen 20 reads the resulting status; wallet balances and transaction history derive from the same session ledger. Unused demo galleries keep their sample fixtures when the session has no interactive bookings.
