@@ -222,7 +222,7 @@ const money = (v: unknown) =>
       setWorking(false);
     }
   }
-  async function openChat(id: string) {
+  async function openChat(id: string, shouldNavigate = true) {
     await perform(async () => {
       if (demo) {
         setMessages(chatHistory[id] ?? [
@@ -235,7 +235,7 @@ const money = (v: unknown) =>
         ]);
       } else setMessages(await api<Row[]>("messages", { conversationId: id }));
       setThread(id);
-      nav(58);
+      if (shouldNavigate) nav(58);
     });
   }
   const card = (b: Row) => (
@@ -740,7 +740,7 @@ const money = (v: unknown) =>
                       type="button"
                       className="w-link"
                       disabled={busy}
-                      onClick={() => void openChat(thread)}
+                      onClick={() => void openChat(thread, false)}
                     >
                       {tr("تحديث المحادثة")}</button>
                   </form>
