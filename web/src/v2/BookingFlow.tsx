@@ -642,7 +642,7 @@ const dateText = (v: string) =>
                   <p className="b-hint">{tr("سجّل الدخول عشان نراجع السعر والتواريخ.")}</p>
                   <Primary onClick={() => nav(4)}>{tr("تسجيل الدخول أو إنشاء حساب")}</Primary>
                 </Box>
-              )
+              )}
               <Primary disabled={!q} onClick={() => nav(17)}>
                 {tr("متابعة لتأمين الحجز")}</Primary>
             </>
@@ -697,7 +697,7 @@ const dateText = (v: string) =>
                     {tr("راجع المحفظة")}
                   </button>
                 </>
-              )
+              )}
               <Primary
                 disabled={!sufficient || !q || !demo}
                 onClick={() => {
