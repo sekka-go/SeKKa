@@ -1,0 +1,79 @@
+.c-canvas {
+  min-height: 900px;
+}
+.c-canvas form {
+  display: grid;
+  gap: 20px;
+}
+.c-canvas h2 {
+  font-size: 1.2em;
+}
+.c-canvas p {
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.c-canvas textarea {
+  width: 100%;
+  min-height: 100px;
+  resize: vertical;
+  background: transparent;
+  color: inherit;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 14px;
+  font: inherit;
+}
+.c-categories {
+  border: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.c-categories legend {
+  margin-bottom: 14px;
+}
+.c-categories button {
+  display: grid;
+  gap: 8px;
+  border: 1px solid #8d929b;
+  border-radius: 22px;
+  padding: 20px 8px;
+  background: transparent;
+  color: inherit;
+}
+.c-categories button[aria-pressed="true"] {
+  border: 2px solid #ffc400;
+  background: #ffc40018;
+}
+.c-categories span {
+  font-size: 0.85em;
+}
+.c-check {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  align-items: center;
+}
+.c-check input {
+  width: 22px;
+  min-height: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  appearance: auto;
+  accent-color: #ffc400;
+}
+.c-document input {
+  max-width: 100%;
+  font-size: 0.8em;
+}
+.c-filename {
+  overflow-wrap: anywhere;
+}
+.c-steps {
+  padding-inline-start: 24px;
+  line-height: 2.4;
+}
+.c-canvas .w-link {
+  margin: 6px;
+}

@@ -6,3 +6,7 @@ supabase/.temp/
 .env
 .env.*
 !.env.example
+
+web/test-results/
+web/playwright-report/
+web/tsconfig.tsbuildinfo

@@ -1,0 +1,64 @@
+.o-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2cqw;
+  margin: 3cqw 4.4%;
+}
+.o-stats button {
+  background: var(--phase-card);
+  color: var(--phase-text);
+  border: 1px solid var(--phase-line);
+  border-radius: 3cqw;
+  padding: 3cqw 1cqw;
+  display: grid;
+  gap: 2cqw;
+}
+.o-stats b {
+  font-size: 7cqw;
+  color: var(--d-gold);
+}
+.o-stats span {
+  font-size: 3cqw;
+  line-height: 1.5;
+}
+.o-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2cqw;
+  margin-bottom: 3cqw;
+  font-size: 3.8cqw;
+}
+.o-badge {
+  font-size: 2.8cqw;
+  border: 1px solid #b48d1d;
+  border-radius: 999px;
+  background: #ffc40012;
+  padding: 1cqw 2cqw;
+  line-height: 1.5;
+}
+.o-check {
+  display: flex !important;
+  align-items: center;
+  gap: 2cqw;
+  font-size: 3.5cqw;
+  line-height: 1.7;
+}
+.o-check input {
+  width: 22px;
+  height: 22px;
+  min-height: 22px;
+  accent-color: #ffc400;
+  flex-shrink: 0;
+}
+.o-canvas {
+  overflow-wrap: anywhere;
+}
+.o-canvas select {
+  width: 100%;
+  background: var(--phase-card);
+  color: var(--phase-text);
+}
+.o-canvas .b-box .a-menu {
+  font-size: 3.6cqw;
+}

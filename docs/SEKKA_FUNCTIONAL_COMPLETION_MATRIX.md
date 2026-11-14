@@ -1,3 +1,5 @@
+> Historical engineering context — not current product requirements or evidence of active frontend integration. [PRD v3.1](PRD.md) is the sole authority; [current status](IMPLEMENTATION_STATUS.md) records today’s implementation gaps.
+
 # SeKKa Functional Completion Matrix
 
 Updated: 2026-10-30
