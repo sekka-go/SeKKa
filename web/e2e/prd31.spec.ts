@@ -272,3 +272,23 @@ test('73 public screens load in English LTR on a small phone without runtime exc
  expect(errors).toEqual([]);
  await context.close();
 });
+
+
+test('all 66 rider, captain and admin screens render their real phase previews in both languages',async({browser})=>{
+ for (const locale of ['ar-EG','en-GB']) {
+  const context=await browser.newContext({locale,viewport:{width:390,height:844}});
+  const page=await context.newPage();
+  const errors:string[]=[];
+  page.on('pageerror',error=>errors.push(error.message));
+  for(let n=8;n<=73;n++){
+   const phase=n<=14?2:n<=21?3:n<=34?4:n<=41?5:n<=49?6:n<=61?7:8;
+   await page.goto('/?screen='+n+'&preview=phase'+phase);
+   await expect(page.locator('main.phase-canvas')).toBeVisible();
+   await expect(page.locator('main h1,main h2').first()).not.toBeEmpty();
+   await expect(page.locator('html')).toHaveAttribute('dir',locale==='ar-EG'?'rtl':'ltr');
+   await expect(page.locator('html')).toHaveAttribute('lang',locale==='ar-EG'?'ar':'en');
+  }
+  expect(errors).toEqual([]);
+  await context.close();
+ }
+});
