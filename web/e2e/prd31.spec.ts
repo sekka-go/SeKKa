@@ -222,3 +222,13 @@ test('insufficient security balance offers a direct wallet action without claimi
  await expect(page).toHaveURL(/screen=22/);
  await expect(page.getByRole('heading',{name:'محفظتي'})).toBeVisible();
 });
+
+test('subscription cancellation warning leads directly to the support form',async({page})=>{
+ await page.goto('/?screen=21&preview=phase3');
+ await page.getByRole('button',{name:'طلب إلغاء الاشتراك',exact:false}).click();
+ await expect(page.getByText('إلغاء الاشتراك متوقف لحد اعتماد سياسة الإلغاء والاسترداد.',{exact:false})).toBeVisible();
+ await page.getByRole('button',{name:'اكتب طلب مراجعة',exact:true}).click();
+ await expect(page.getByLabel('سبب مراجعة الاشتراك')).toBeFocused();
+ await page.getByLabel('سبب مراجعة الاشتراك').fill('من فضلك راجع حالة الاشتراك');
+ await expect(page.getByRole('button',{name:'معاينة طلب المراجعة'})).toBeEnabled();
+});
