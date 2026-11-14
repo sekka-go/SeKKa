@@ -324,6 +324,11 @@ test('all 66 rider, captain and admin screens render their real phase previews i
    await expect(page.locator('main h1,main h2').first()).not.toBeEmpty();
    await expect(page.locator('html')).toHaveAttribute('dir',locale==='ar-EG'?'rtl':'ltr');
    await expect(page.locator('html')).toHaveAttribute('lang',locale==='ar-EG'?'ar':'en');
+   const unnamed = await page.locator('button').evaluateAll(buttons => buttons
+     .filter(button => ![button.getAttribute('aria-label'),button.getAttribute('title'),button.textContent]
+       .some(label => Boolean(label?.trim())))
+     .map(button => button.outerHTML.slice(0,180)));
+   expect(unnamed, 'Unlabelled controls: screen '+n+' ('+locale+')').toEqual([]);
   }
   expect(errors).toEqual([]);
   await context.close();
@@ -399,4 +404,15 @@ test('captain empty notifications and receipts offer direct recovery actions',as
  await expect(page.getByText('لسه مفيش إقرارات استلام مسجلة.')).toBeVisible();
  await page.getByRole('button',{name:'الحجوزات الجديدة',exact:true}).click();
  await expect(page).toHaveURL(/screen=51/);
+});
+
+
+test('screen heading gets keyboard focus on navigation and browser Back',async({page})=>{
+ await page.goto('/?screen=9&preview=phase2');
+ await page.getByRole('button',{name:'ابحث عن الرحلات',exact:true}).click();
+ await expect(page).toHaveURL(/screen=11/);
+ await expect(page.locator('main h1,main h2').first()).toBeFocused();
+ await page.goBack();
+ await expect(page).toHaveURL(/screen=9/);
+ await expect(page.locator('main h1,main h2').first()).toBeFocused();
 });
