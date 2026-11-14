@@ -21,7 +21,8 @@ test("public planner, real empty results, and protected wallet", async ({
   ).toBeVisible();
   await expect(page.locator(".d-result")).toHaveCount(0);
   await page.goto("/?screen=22");
-  await expect(page.getByText("سجّل برقم موبايلك عشان نكمل.")).toBeVisible();
+  await expect(page.getByRole("alert")).toContainText("سجّل دخولك أو اعمل حساب");
+  await expect(page.getByRole("button",{name:"تسجيل الدخول أو إنشاء حساب",exact:true})).toBeVisible();
   expect(errors).toEqual([]);
 });
 test("all 73 screen entries render without client errors for guests", async ({
@@ -314,9 +315,8 @@ test("phase three: approved seven screens, fixed quote, security and confirmatio
   }
   await page.goto("/?screen=17");
   await expect(page.locator(".b-success-tag")).toHaveCount(0);
-  await expect(
-    page.getByText("سجّل الدخول الأول عشان تشوف اشتراكك.", { exact: true }),
-  ).toBeVisible();
+  await expect(page.getByRole("alert")).toContainText("سجّل دخولك أو اعمل حساب");
+  await expect(page.getByRole("button",{name:"تسجيل الدخول أو إنشاء حساب",exact:true})).toBeVisible();
   expect(mutations).toEqual([]);
 });
 
@@ -378,7 +378,8 @@ test("phase four wallet states stay isolated from money operations", async ({
   await page.getByRole("button", { name: "السابقة", exact: true }).click();
   await expect(page.getByText("الزمالك", { exact: true })).toBeVisible();
   await page.goto("/?screen=24");
-  await expect(page.getByText("سجّل برقم موبايلك عشان نكمل.")).toBeVisible();
+  await expect(page.getByRole("alert")).toContainText("سجّل دخولك أو اعمل حساب");
+  await expect(page.getByRole("button",{name:"تسجيل الدخول أو إنشاء حساب",exact:true})).toBeVisible();
   expect(writes).toEqual([]);
 });
 
@@ -453,12 +454,13 @@ test("phase five communication and account previews are isolated", async ({
   await page.getByRole("button", { name: "معاينة طلب المساعدة" }).click();
   await expect(page.getByRole("status")).toContainText("ماتبعتش للدعم");
   await page.goto("/?screen=29");
-  await expect(page.getByText("سجّل برقم موبايلك عشان نكمل.")).toBeVisible();
+  await expect(page.getByRole("alert")).toContainText("سجّل دخولك أو اعمل حساب");
+  await expect(page.getByRole("button",{name:"تسجيل الدخول أو إنشاء حساب",exact:true})).toBeVisible();
   await expect(page.locator(".a-thread")).toHaveCount(0);
   await page.goto("/?screen=34");
-  await expect(
-    page.getByRole("button", { name: "ابعت للدعم", exact: true }),
-  ).toBeDisabled();
+  await expect(page.getByRole("alert")).toContainText("سجّل دخولك أو اعمل حساب");
+  await expect(page.getByRole("button",{name:"تسجيل الدخول أو إنشاء حساب",exact:true})).toBeVisible();
+  await expect(page.getByRole("button",{name:"ابعت للدعم",exact:true})).toHaveCount(0);
   expect(writes).toEqual([]);
   expect(errors).toEqual([]);
 });
@@ -514,7 +516,8 @@ test("phase five captain onboarding validates locally without uploads", async ({
   ).toBeVisible();
   expect(writes).toEqual([]);
   await page.goto("/?screen=38");
-  await expect(page.getByText("سجّل بحساب كابتن عشان نكمل.")).toBeVisible();
+  await expect(page.getByRole("alert")).toContainText("سجّل دخولك أو اعمل حساب");
+  await expect(page.getByRole("button",{name:"تسجيل الدخول أو إنشاء حساب كابتن",exact:true})).toBeVisible();
 });
 
 test("canonical map has exactly 73 unique destinations and public results hide identity", async ({
@@ -592,9 +595,8 @@ test("phase seven captain operations isolate previews and confirm receipt once",
   await expect(page.getByText("طلب الدعم اتضاف للمعاينة فقط.")).toBeVisible();
   expect(writes).toEqual([]);
   await page.goto("/?screen=50");
-  await expect(
-    page.getByText("سجّل بحساب كابتن عشان تشوف بيانات تشغيلك."),
-  ).toBeVisible();
+  await expect(page.getByRole("alert")).toContainText("سجّل دخولك أو اعمل حساب");
+  await expect(page.getByRole("button",{name:"تسجيل الدخول أو إنشاء حساب كابتن",exact:true})).toBeVisible();
 });
 
 test("phase eight admin preview is responsive and mutations remain local", async ({
@@ -651,7 +653,8 @@ test("phase eight admin preview is responsive and mutations remain local", async
   ).toBeDisabled();
   expect(writes).toEqual([]);
   await page.goto("/?screen=65");
-  await expect(page.getByText("دخول الإدارة محمي")).toBeVisible();
+  await expect(page.getByRole("alert")).toContainText("سجّل دخولك أو اعمل حساب");
+  await expect(page.getByRole("button",{name:"تسجيل الدخول أو إنشاء حساب",exact:true})).toBeVisible();
   await expect(
     page.getByRole("button", { name: "عرض التفاصيل", exact: true }),
   ).toHaveCount(0);
