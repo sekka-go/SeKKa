@@ -458,9 +458,9 @@ test("phase five communication and account previews are isolated", async ({
   await expect(page.getByRole("button",{name:"تسجيل الدخول أو إنشاء حساب",exact:true})).toBeVisible();
   await expect(page.locator(".a-thread")).toHaveCount(0);
   await page.goto("/?screen=34");
-  await expect(
-    page.getByRole("button", { name: "ابعت للدعم", exact: true }),
-  ).toBeDisabled();
+  await expect(page.getByRole("alert")).toContainText("سجّل دخولك أو اعمل حساب");
+  await expect(page.getByRole("button",{name:"تسجيل الدخول أو إنشاء حساب",exact:true})).toBeVisible();
+  await expect(page.getByRole("button",{name:"ابعت للدعم",exact:true})).toHaveCount(0);
   expect(writes).toEqual([]);
   expect(errors).toEqual([]);
 });
