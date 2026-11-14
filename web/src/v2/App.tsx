@@ -1674,6 +1674,7 @@ export default function SubscriptionApp() {
   if (authReady && (guarded || (!publicScreens.has(screen) && (captainBlocked || adminBlocked)))) {
     const needsAccount = guarded;
     const captainHome = profile?.role === "captain";
+    const enteringCaptainFlow = publicScreen(screen) >= 35 && publicScreen(screen) <= 61;
     return (
       <div className="app">
         <main id="content">
@@ -1688,13 +1689,16 @@ export default function SubscriptionApp() {
                 : language === "en" ? "Complete your profile to continue." : "كمّل بيانات حسابك عشان تقدر تتابع."
               : language === "en" ? "Your account does not have access to this page." : "الصفحة دي مش متاحة لنوع حسابك أو صلاحياتك."
             }</p>
-            <button type="button" onClick={() =>
-              go(needsAccount ? signedIn ? 6 : 3 : captainHome ? 61 : 32)
-            }>
+            <button type="button" onClick={() => {
+              if (needsAccount && !signedIn && enteringCaptainFlow) setRole("captain");
+              go(needsAccount ? signedIn ? 6 : 4 : captainHome ? 61 : 32);
+            }}>
               {needsAccount
                 ? signedIn
                   ? language === "en" ? "Complete profile" : "استكمال الملف الشخصي"
-                  : language === "en" ? "Sign in or create an account" : "تسجيل الدخول أو إنشاء حساب"
+                  : enteringCaptainFlow
+                    ? language === "en" ? "Sign in or create a captain account" : "تسجيل الدخول أو إنشاء حساب كابتن"
+                    : language === "en" ? "Sign in or create an account" : "تسجيل الدخول أو إنشاء حساب"
                 : language === "en" ? "Review my account" : "راجع حسابي"}
             </button>
             <button type="button" className="secondary" onClick={() => go(captainHome ? 44 : 8)}>
