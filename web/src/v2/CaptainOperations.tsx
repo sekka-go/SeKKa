@@ -722,7 +722,7 @@ const money = (v: unknown) =>
                         className={`a-bubble ${m.sender_id === (demo ? "me" : p.profile?.id) ? "mine" : ""}`}
                         key={str(m, "id")}
                       >
-                        <p>{tr(str(m, "body"))}</p>
+                        <p>{demo && str(m, "id") === "m1" ? tr(str(m, "body")) : str(m, "body")}</p>
                         <small>{dateLabel(str(m, "created_at"), true)}</small>
                       </article>
                     ))}
