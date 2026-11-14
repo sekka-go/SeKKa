@@ -443,6 +443,11 @@ export default function WalletFlow(p: {
                   <Box>
                     <h2>{tr("لسه مفيش معاملات هنا.")}</h2>
                     <p>{tr("أي تغيير في الرصيد هيظهر في السجل.")}</p>
+                    {filter !== "all" && (
+                      <button type="button" className="d-primary b-primary" onClick={() => setFilter("all")}>
+                        {tr("عرض كل المعاملات")}
+                      </button>
+                    )}
                   </Box>
                 )}
               </>
