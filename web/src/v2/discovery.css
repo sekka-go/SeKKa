@@ -1521,3 +1521,69 @@
 @media (prefers-reduced-motion: reduce) {
   .discovery-stage .d-canvas * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+
+/* Rider visual refinement II: route details, offer cards, booking hierarchy.
+   Scope excludes the approved onboarding screens 1–7. */
+.discovery-stage .d-screen-11 .d-result {
+  position: relative;
+  border: 1px solid rgba(255,196,0,.22);
+  padding-block: 3.1cqw;
+}
+.discovery-stage .d-screen-11 .d-result::before {
+  content:"";
+  position:absolute;
+  inset-block: 3.2cqw;
+  inset-inline-start:0;
+  width: .9cqw;
+  border-radius: 99px;
+  background:linear-gradient(#ffdf69,#ffc400 58%,#b58500);
+}
+.discovery-stage .d-screen-11 .d-offer-price {
+  font-variant-numeric:tabular-nums;
+  letter-spacing:-.03em;
+}
+.discovery-stage .d-screen-11 .d-offer-select {
+  min-height:9cqw;
+  border-radius:2.5cqw;
+}
+.discovery-stage .d-screen-12 .d-box,
+.discovery-stage .d-screen-13 .d-box,
+.booking-stage .b-screen-16 .b-box {
+  border: 1px solid rgba(255,196,0,.22);
+  box-shadow:0 2cqw 5.2cqw rgba(0,0,0,.12),inset 0 1px rgba(255,255,255,.07);
+}
+.discovery-stage .d-screen-12 .d-fixed-price,
+.booking-stage .b-screen-16 .b-price-breakdown {
+  border-radius:3cqw;
+  padding:2.6cqw 3cqw;
+  background:rgba(255,196,0,.065);
+}
+.discovery-stage .d-screen-12 .d-detail-journey,
+.discovery-stage .d-screen-12 .d-offer-facts {
+  border-radius:3cqw;
+}
+.booking-stage .b-canvas .b-price-breakdown > strong {
+  font-variant-numeric:tabular-nums;
+  letter-spacing:-.04em;
+}
+.booking-stage .b-canvas .b-route {
+  border-bottom-color:rgba(255,196,0,.22);
+  padding-block:2.2cqw 3cqw;
+}
+.booking-stage .b-canvas .b-status-tag {
+  border-radius:99px;
+  padding-inline:2.4cqw;
+}
+.booking-stage .b-canvas .b-timeline {
+  border:1px solid rgba(255,196,0,.16);
+}
+.discovery-stage.light .d-screen-11 .d-result,
+.discovery-stage.light .d-screen-12 .d-box,
+.booking-stage.light .b-screen-16 .b-box {
+  border-color:rgba(174,123,0,.22);
+}
+@media (max-width:380px) {
+ .discovery-stage .d-screen-11 .d-result { padding-inline:2.4cqw; }
+ .booking-stage .b-screen-16 .b-price-breakdown { padding:2cqw; }
+}
