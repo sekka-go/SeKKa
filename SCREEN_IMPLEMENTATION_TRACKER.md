@@ -1,6 +1,6 @@
 # SeKKa — Screen Implementation Tracker
 
-مرجع المطابقة هو `docs/product-spec/SeKKa_Master_Screen_Map_MVP_v1_AR.md` مع السلوك الوظيفي في `docs/product-spec/SeKKa_Master_PRD_MVP_v2_AR.md` والقرارات في `docs/product-spec/DECISION_LOG.md`.
+مرجع المطابقة هو `docs/PRD.md` مع السلوك الوظيفي في `docs/PRD.md` والقرارات في `docs/product-spec/DECISION_LOG.md`.
 
 **إجمالي شاشات المنتج:** 78 (7 عامة + 24 راكبًا + 24 كابتنًا + 23 إدارة). حالات E-01 إلى E-08 مشتركة وتُتبع منفصلة لأنها حالات عابرة للشاشات وليست ضمن هذا الإجمالي.
 

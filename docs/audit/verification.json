@@ -1,0 +1,43 @@
+{
+  "checkedAt": "2026-11-12",
+  "baseCommit": "f605e1ecc108d12b3e20776159ee67866ced66e7",
+  "branch": "rebuild/subscriptions-20261112",
+  "unitAndDatabaseTests": {
+    "passed": 32,
+    "failed": 0,
+    "database": "real temporary PostgreSQL 17.11",
+    "scope": [
+      "calendar and pricing",
+      "RLS and direct privilege denial",
+      "two-client last-seat contention",
+      "wallet contention",
+      "same-idempotency-key contention",
+      "cross-period and direction seat inventory",
+      "snapshot immutability",
+      "one-time dual-confirmation release",
+      "private document ownership",
+      "messages ownership"
+    ]
+  },
+  "typecheck": "passed",
+  "lint": "passed for active v2 frontend",
+  "productionBuild": "passed",
+  "playwright": {
+    "passed": 3,
+    "scope": [
+      "guest public search and wallet guard",
+      "guest rendering of all 75 registry entries",
+      "390px mobile and 1440px desktop RTL and no horizontal overflow"
+    ],
+    "authenticatedBackendJourneys": "not tested"
+  },
+  "hostedMigration": "not applied: confirmation expired twice; read-back schema absent; legacy 54 tables and 11 objects retained",
+  "legacyDataMigrated": false,
+  "productionCutover": false,
+  "resourcesDeleted": [],
+  "verifiedCodeCommit": "ad48c6bd50398e4e7a5e8dc49ea3c0612935f903",
+  "ciRun": "https://github.com/sekka-go/SeKKa/actions/runs/43190565818",
+  "ciConclusion": "success",
+  "previewUrl": "https://3897cdaa.sekka-go.pages.dev",
+  "previewDeployment": "3897cdaa-fdb7-4a32-894f-40c94f02b1b3"
+}

@@ -1,0 +1,69 @@
+import { useEffect, useState } from 'react';
+import { Wordmark, type Appearance } from './Onboarding';
+import { internalScreen, publicScreen, screenTitle } from './screenMap';
+import { categories, type Category } from '../../../packages/domain/subscriptions';
+import type { Stop } from '../../../packages/domain/stops';
+import { usePreferences } from './preferences';
+import type { Line } from './Discovery';
+export const captainRouteScreens = Array.from({length:8},(_,i)=>internalScreen(i+42));
+const areaNames: Record<string,string> = {'المعادي':'Maadi','التجمع':'New Cairo','مدينة نصر':'Nasr City','الدقي':'Dokki','المهندسين':'Mohandessin','الزمالك':'Zamalek','الشيخ زايد':'Sheikh Zayed','6 أكتوبر':'6th of October','مصر الجديدة':'Heliopolis'};
+const areas=['المعادي','التجمع','مدينة نصر','الدقي','المهندسين','الزمالك','الشيخ زايد','6 أكتوبر','مصر الجديدة'];
+export function readPublishedPreviews(): Line[] {try{return JSON.parse(sessionStorage.getItem('sekka.preview.offers')||'[]') as Line[];}catch{return [];}}
+const draftKey = 'sekka.preview.routeDraft.v31';
+const blankDraft = {
+ title:'', stops:[] as Stop[], stopName:'', area:areas[0], outbound:'07:30',
+ returnTime:'17:00', direction:'round_trip', period:'monthly', category:'PRIME' as Category,
+ capacity:'3', price:'', returnSupported:false
+};
+function readDraft(){
+ try {
+  const saved=JSON.parse(sessionStorage.getItem(draftKey)||'null');
+  if(!saved || !Array.isArray(saved.stops))return blankDraft;
+  return {...blankDraft,...saved} as typeof blankDraft;
+ } catch {return blankDraft;}
+}
+export default function CaptainRoutes(p:{screen:number;theme:Appearance;onTheme:(t:Appearance)=>void;go:(n:number)=>void}) {
+ const {language}=usePreferences(),en=language==='en',t=(ar:string,english:string)=>en?english:ar;
+ const n=publicScreen(p.screen),demo=new URLSearchParams(location.search).get('preview')==='phase6';
+ const [offers,setOffers]=useState(readPublishedPreviews),[selected,setSelected]=useState('');
+ const [draft,setDraft]=useState(()=>demo ? readDraft() : blankDraft);
+ const {title,stops,stopName,area,outbound,returnTime,direction,period,category,capacity,price,returnSupported}=draft;
+ const [approved,setApproved]=useState(false),[message,setMessage]=useState('');
+ function change<K extends keyof typeof draft>(key:K,value:(typeof draft)[K]){
+   setDraft(previous=>({...previous,[key]:value}));
+ }
+ useEffect(()=>{
+   if(!demo)return;
+   try{sessionStorage.setItem(draftKey,JSON.stringify(draft));}
+   catch{setMessage(language==='en'?'Draft can only be kept while this page is open.':'المسودة هتفضل محفوظة طول ما الصفحة مفتوحة بس.');}
+ },[draft,demo,language]);
+ const go=(id:number)=>{setMessage('');p.go(internalScreen(id));};
+ const valid=title.trim().length>=3&&stops.length>=2&&stops[0].area!==stops[stops.length-1].area&&Number.isInteger(+capacity)&&+capacity>0&&+capacity<=categories[category]&&Number.isInteger(+price)&&+price>0&&(direction==='return'||!!outbound)&&(direction==='outbound'||!!returnTime)&&(direction!=='round_trip'||returnSupported);
+ const save=(next:Line[])=>{
+   try{
+     sessionStorage.setItem('sekka.preview.offers',JSON.stringify(next));
+     setOffers(next);
+     return true;
+   }catch{
+     setMessage(t('تعذر حفظ العرض. احتفظنا بمسودتك؛ حاول النشر مرة تانية.','Could not save the offer. Your draft is still here. Try publishing again.'));
+     return false;
+   }
+ };
+ const publish=()=>{if(!demo||!valid||!approved)return;const route:Line={id:'preview-created-'+crypto.randomUUID(),origin:stops[0].area,destination:stops[stops.length-1].area,stops:stops.map(s=>({...s})),returnStops:direction==='round_trip'?[...stops].reverse().map(s=>({...s,pickup:s.dropoff,dropoff:s.pickup})):undefined,category,available:+capacity,amount:+price,period,direction,outbound:direction==='return'?'':outbound,returnTime:direction==='outbound'?'':returnTime};if(!save([...offers,route]))return;setDraft(blankDraft);setApproved(false);setSelected(route.id);go(49);};
+ const selectedOffer=offers.find(o=>o.id===selected);
+ return <div className={`phase-one-stage discovery-stage ${p.theme}`}>
+ <nav className="phase-review-bar"><select aria-label={t('شاشة خطوط الكابتن','Captain routes screen')} value={n} onChange={e=>go(+e.target.value)}>{captainRouteScreens.map(s=><option key={s} value={publicScreen(s)}>{publicScreen(s)} · {screenTitle(s,language)}</option>)}</select><button onClick={()=>p.onTheme(p.theme==='dark'?'light':'dark')}>{t('تبديل المظهر','Switch theme')}</button></nav>
+ <main className="phase-canvas d-canvas"><Wordmark/><h1>{screenTitle(p.screen,language)}</h1><p>{t('معاينة محلية فقط — لا يتم نشر عروض حقيقية.','Local preview only — no real offers are published.')}</p>{message&&<p role="status">{message}</p>}
+ {!demo?<section className="d-box"><p>{t('إدارة العروض الحقيقية غير مفعّلة.','Live route management is not enabled.')}</p></section>:<>
+ {n===42&&<><button className="d-primary" onClick={()=>go(43)}>{t('إنشاء خط جديد','Create route')}</button>{offers.length===0&&<p>{t('لا توجد عروض منشورة في هذه المعاينة.','No offers published in this preview.')}</p>}{offers.map(o=><section className="d-box" key={o.id}><h2>{o.origin} ← {o.destination}</h2><p>{o.category} · {o.amount} EGP · {o.available}</p><button onClick={()=>{setSelected(o.id);go(49);}}>{t('إدارة العرض','Manage offer')}</button></section>)}</>}
+ {n===43&&<section className="d-box"><label>{t('وصف الخط','Route description')}<input value={title} onChange={e=>change('title',e.target.value)} maxLength={120}/></label><p>{t('أكمل المسار والمواعيد والشروط قبل النشر.','Complete the stops, schedule and offer terms before publishing.')}</p></section>}
+ {n===44&&<section className="d-box"><h2>{t('نقاط المسار بالترتيب','Ordered route stops')}</h2><label>{t('اسم النقطة','Stop name')}<input value={stopName} onChange={e=>change('stopName',e.target.value)} maxLength={80}/></label><label>{t('المنطقة','Area')}<select aria-label={t("المنطقة","Area")} value={area} onChange={e=>change('area',e.target.value)}>{areas.map(a=><option key={a} value={a}>{en ? areaNames[a] : a}</option>)}</select></label><button disabled={!stopName.trim()} onClick={()=>{change('stops',[...stops,{id:crypto.randomUUID(),name:stopName.trim(),area,pickup:true,dropoff:true}]);change('stopName','');}}>{t('أضف نقطة','Add stop')}</button><ol>{stops.map((s,i)=><li key={s.id}><strong>{s.name} — {s.area}</strong><label><input type="checkbox" checked={s.pickup} onChange={e=>change('stops',stops.map(x=>x.id===s.id?{...x,pickup:e.target.checked}:x))}/>{t('يسمح بالركوب','Pickup allowed')}</label><label><input type="checkbox" checked={s.dropoff} onChange={e=>change('stops',stops.map(x=>x.id===s.id?{...x,dropoff:e.target.checked}:x))}/>{t('يسمح بالنزول','Drop-off allowed')}</label><button disabled={i===0} onClick={()=>{const next=[...stops];[next[i-1],next[i]]=[next[i],next[i-1]];change('stops',next);}}>{t('لأعلى','Move up')}</button><button onClick={()=>change('stops',stops.filter(x=>x.id!==s.id))}>{t('إزالة','Remove')}</button></li>)}</ol></section>}
+ {n===45&&<section className="d-box">{direction!=='return'&&<label>{t('وقت الذهاب','Outbound time')}<input type="time" value={outbound} onChange={e=>change('outbound',e.target.value)}/></label>}{direction!=='outbound'&&<label>{t('وقت العودة','Return time')}<input type="time" value={returnTime} onChange={e=>change('returnTime',e.target.value)}/></label>}<p>{t('الأحد–الخميس باستثناء الإجازات الرسمية المعتمدة.','Sunday–Thursday, excluding approved public holidays.')}</p></section>}
+ {n===46&&<section className="d-box"><label>{t('مدة الاشتراك','Subscription period')}<select value={period} onChange={e=>change('period',e.target.value)}><option value="weekly">{t('أسبوعي','Weekly')}</option><option value="monthly">{t('شهري','Monthly')}</option></select></label><label>{t('الاتجاه','Direction')}<select value={direction} onChange={e=>change('direction',e.target.value)}><option value="round_trip">{t('ذهاب وعودة','Round trip')}</option><option value="outbound">{t('ذهاب فقط','Outbound only')}</option><option value="return">{t('عودة فقط','Return only')}</option></select></label>{direction==='round_trip'&&<label><input type="checkbox" checked={returnSupported} onChange={e=>change('returnSupported',e.target.checked)}/>{t('مسار العودة يدعم نفس النقاط بالترتيب العكسي.','The return route supports the same stops in reverse order.')}</label>}</section>}
+ {n===47&&<section className="d-box"><label>{t('فئة العربية المعتمدة — محاكاة','Approved vehicle category — simulation')}<select value={category} onChange={e=>{const c=e.target.value as Category;change('category',c);change('capacity',String(categories[c]));}}>{Object.keys(categories).map(c=><option key={c}>{c}</option>)}</select></label><label>{t('المقاعد المعروضة','Offered seats')}<input type="number" min={1} max={categories[category]} value={capacity} onChange={e=>change('capacity',e.target.value)}/></label><label>{t('سعر العرض الذي تحدده — جنيه','Your offer price — EGP')}<input type="number" min={1} step={1} value={price} onChange={e=>change('price',e.target.value)}/></label></section>}
+ {n===48&&<section className="d-box"><h2>{title}</h2><ol>{stops.map(s=><li key={s.id}>{s.name}</li>)}</ol><p>{category} · {period==='weekly' ? t('أسبوعي','Weekly') : t('شهري','Monthly')} · {direction==='return' ? t('عودة فقط','Return only') : direction==='outbound' ? t('ذهاب فقط','Outbound only') : t('ذهاب وعودة','Round trip')} · {[direction!=='return' && outbound, direction!=='outbound' && returnTime].filter(Boolean).join(' / ')}</p><p>{price} EGP · {capacity} {t('مقاعد','seats')}</p><label><input type="checkbox" checked={approved} onChange={e=>setApproved(e.target.checked)}/>{t('محاكاة حساب كابتن معتمد','Simulate an approved captain account')}</label><button className="d-primary" disabled={!valid||!approved} onClick={publish}>{t('نشر في المعاينة','Publish in preview')}</button>{!valid&&<><p>{t('أكمل البيانات والمقاعد وصلاحية مسار العودة قبل النشر.','Complete the route, price, capacity and return validation before publishing.')}</p><button onClick={()=>go(title.trim().length<3?43:stops.length<2||stops[0].area===stops.at(-1)?.area?44:direction!=='return'&&!outbound||direction!=='outbound'&&!returnTime?45:direction==='round_trip'&&!returnSupported?46:47)}>{t('راجع البيانات الناقصة','Review missing details')}</button></>}</section>}
+ {n===49&&<section className="d-box">{selectedOffer?<><h2>{selectedOffer.origin} ← {selectedOffer.destination}</h2><p>{selectedOffer.category} · {selectedOffer.amount} EGP</p><p>{t('تعديل الشروط يحتاج عرضًا جديدًا؛ الحجوزات السابقة تحتفظ بشروطها.','Changed terms require a new offer; existing bookings retain their snapshot.')}</p><button disabled={selectedOffer.available===0} onClick={()=>save(offers.map(o=>o.id===selected?{...o,available:0}:o))}>{t('إيقاف الحجوزات الجديدة في المعاينة','Pause new bookings in preview')}</button></>:<p>{t('اختر عرضًا من خطوطي.','Choose an offer from My routes.')}</p>}<button onClick={()=>go(42)}>{t('خطوطي','My routes')}</button></section>}
+ {n>=43&&n<48&&<div className="d-box"><button onClick={()=>go(n===43?42:n-1)}>{t('رجوع','Back')}</button><button className="d-primary" onClick={()=>go(n+1)}>{t('حفظ المسودة ومتابعة','Keep draft and continue')}</button></div>}
+ </>}
+ </main></div>;
+}

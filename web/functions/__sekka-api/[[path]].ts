@@ -1,21 +1,5 @@
-type PagesFunctionContext = {
-  request: Request;
-};
-
-const API_ORIGIN = "https://uorxfakceqnhxqnaawdy.supabase.co/functions/v1/sekka-api";
-
-export async function onRequest({ request }: PagesFunctionContext) {
-  const incoming = new URL(request.url);
-  const suffix = incoming.pathname.slice("/__sekka-api".length).replace(/^\/+/, "");
-  if (!suffix || suffix.split("/").some((part) => part === "." || part === "..")) {
-    return new Response(JSON.stringify({ error: "المسار غير موجود." }), {
-      status: 404,
-      headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
-    });
-  }
-
-  const target = new URL(`${API_ORIGIN}/${suffix}`);
-  target.search = incoming.search;
-  const upstream = new Request(target, request);
-  return fetch(upstream);
+// The legacy proxy is deliberately unreachable in the replacement preview.
+// Production remains on main until an approved cutover.
+export function onRequest() {
+ return new Response(JSON.stringify({error:'واجهة الخدمة القديمة غير متاحة في النسخة الجديدة.'}),{status:410,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 }

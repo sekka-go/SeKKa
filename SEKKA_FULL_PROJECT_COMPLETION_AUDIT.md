@@ -524,8 +524,8 @@
 
 ## المراجع الداخلية التي فُحصت
 
-- `docs/product-spec/SeKKa_Master_PRD_MVP_v2_AR.md`
-- `docs/product-spec/SeKKa_Master_Screen_Map_MVP_v1_AR.md`
+- `docs/PRD.md`
+- `docs/PRD.md`
 - `docs/product-spec/SeKKa_Master_UI_UX_Design_Spec_AR.md`
 - `docs/product-spec/DECISION_LOG.md`
 - `docs/product-spec/ARCHITECTURE.md`, `IMPLEMENTATION_PLAN_v1.md`, `IMPLEMENTATION_PLAN_v2.md`, `DESIGN.md`
