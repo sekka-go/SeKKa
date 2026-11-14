@@ -22,3 +22,28 @@ test('rider offer cards convey keyboard focus and responsive layout', async ({ b
     await context.close();
   }
 });
+
+
+test('rider home quick actions have visible 12px spacing in Arabic and English', async ({browser}) => {
+  for (const locale of ['ar-EG','en-GB'] as const) {
+    for (const width of [320,390]) {
+      const context=await browser.newContext({locale,viewport:{width,height:844}});
+      const page=await context.newPage();
+      await page.goto('/?screen=8&preview=phase2');
+      const buttons=page.locator('.d-screen-8 .d-home-quick-actions > button');
+      await expect(buttons).toHaveCount(4);
+      const boxes=await buttons.evaluateAll(nodes=>nodes.map(n=>{
+        const r=n.getBoundingClientRect();
+        return {left:r.left,right:r.right,top:r.top,bottom:r.bottom};
+      }));
+      for(let i=0;i<boxes.length;i++) for(let j=i+1;j<boxes.length;j++){
+        const a=boxes[i],b=boxes[j];
+        const horizontal=Math.max(0,Math.max(a.left-b.right,b.left-a.right));
+        const vertical=Math.max(0,Math.max(a.top-b.bottom,b.top-a.bottom));
+        expect(horizontal>=11 || vertical>=11,
+          'Quick action buttons touch: '+locale+' / '+width+' / '+i+'-'+j).toBeTruthy();
+      }
+      await context.close();
+    }
+  }
+});
