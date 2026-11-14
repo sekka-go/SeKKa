@@ -62,3 +62,17 @@
 .o-canvas .b-box .a-menu {
   font-size: 3.6cqw;
 }
+
+/* Phase 2 captain operations: clear hit targets, gutters and responsive summaries. */
+.o-canvas .o-stats { gap: 12px; }
+.o-canvas .o-stats button { min-width: 0; min-height: 72px; overflow-wrap: anywhere; }
+.o-canvas .o-stats button:focus-visible { outline: 3px solid #ffc400; outline-offset: 3px; }
+.o-canvas .o-card-top { flex-wrap: wrap; gap: 12px; }
+.o-canvas .b-box button + button { margin-inline-start: 12px; margin-block: 6px; }
+.o-canvas .b-box select { min-height: 44px; }
+@media (max-width: 360px) {
+  .o-canvas .o-stats { grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+@media (hover:hover) and (prefers-reduced-motion:no-preference) {
+  .o-canvas .o-stats button:hover:not(:disabled) { border-color:#ffc400; transform:translateY(-1px); transition:transform .16s ease,border-color .16s ease; }
+}

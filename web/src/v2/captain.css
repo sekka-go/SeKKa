@@ -77,3 +77,65 @@
 .c-canvas .w-link {
   margin: 6px;
 }
+
+/* Phase 2 captain UX: consistent mobile spacing, visible selections and flow actions. */
+.c-canvas .c-categories button {
+  min-height: 92px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.c-canvas .c-categories button:focus-visible,
+.c-canvas .w-link:focus-visible,
+.captain-routes-canvas button:focus-visible,
+.captain-routes-canvas input:focus-visible,
+.captain-routes-canvas select:focus-visible {
+  outline: 3px solid #ffc400;
+  outline-offset: 3px;
+}
+.c-canvas .c-categories button[aria-pressed="true"] {
+  box-shadow: 0 0 0 2px rgba(255,196,0,.16);
+}
+.c-canvas .c-document,
+.c-canvas .c-check { min-width: 0; }
+.captain-routes-canvas .d-box {
+  display: flow-root;
+  padding: clamp(14px, 3cqw, 24px);
+  margin-block: 16px;
+  overflow-wrap: anywhere;
+}
+.captain-routes-canvas .d-box > button,
+.captain-routes-canvas .d-box > label,
+.captain-routes-canvas .d-box > p {
+  margin-block: 6px 12px;
+}
+.captain-routes-canvas .d-box > button + button { margin-inline-start: 12px; }
+.captain-routes-canvas .d-box > label { display: block; line-height: 1.6; }
+.captain-routes-canvas .d-box input:not([type="checkbox"]),
+.captain-routes-canvas .d-box select {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  margin-block: 8px 12px;
+}
+.captain-routes-canvas .d-box ol { padding-inline-start: 22px; }
+.captain-routes-canvas .d-box li {
+  padding-block: 12px;
+  border-bottom: 1px solid var(--phase-line);
+  overflow-wrap: anywhere;
+}
+.captain-routes-canvas .d-box li > label { display: flex; align-items: center; gap: 10px; margin-block: 10px; }
+.captain-routes-canvas .d-box li input[type="checkbox"] { width: 22px; min-height: 22px; flex: 0 0 22px; }
+.captain-routes-canvas .d-box li > button { margin-inline-end: 12px; margin-block: 6px; }
+@media(max-width:390px) {
+  .captain-routes-canvas .d-box > button { max-width: 100%; white-space: normal; min-height: 44px; }
+  .c-canvas .c-categories { gap: 12px; }
+}
+@media (hover:hover) and (prefers-reduced-motion:no-preference) {
+  .c-canvas .c-categories button:hover:not(:disabled),
+  .captain-routes-canvas .d-box button:hover:not(:disabled) {
+    border-color: #ffc400;
+    transform: translateY(-1px);
+    transition: transform .16s ease, border-color .16s ease;
+  }
+}

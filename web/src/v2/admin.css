@@ -428,3 +428,106 @@
     padding: 8px 12px;
   }
 }
+
+/* Phase 2 premium admin surface — calm hierarchy, clear spacing and interaction. */
+.admin-stage {
+  --ad-space: 12px;
+  --ad-shadow: 0 12px 32px rgba(0,0,0,.16);
+}
+.admin-stage.light { --ad-shadow: 0 10px 28px rgba(30,42,56,.07); }
+.admin-stage .ad-card {
+  box-shadow: var(--ad-shadow);
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+.admin-stage .ad-card:focus-within {
+  border-color: #ffc400;
+  box-shadow: 0 0 0 2px rgba(255,196,0,.18), var(--ad-shadow);
+}
+.admin-stage .ad-content button,
+.admin-stage .ad-sidebar button {
+  min-height: 44px;
+  overflow-wrap: anywhere;
+}
+.admin-stage .ad-card button {
+  margin: 6px 12px 6px 0;
+}
+html[dir="rtl"] .admin-stage .ad-card button {
+  margin: 6px 0 6px 12px;
+}
+.admin-stage .ad-themes,
+.admin-stage .ad-tools,
+.admin-stage .ad-filters {
+  gap: var(--ad-space);
+}
+.admin-stage .ad-metrics { gap: 16px; }
+.admin-stage .ad-metrics > * { min-width: 0; }
+.admin-stage .ad-sidebar button[aria-current="page"] {
+  border-color: #ffc400;
+  box-shadow: inset 3px 0 0 #ffc400;
+}
+html[dir="rtl"] .admin-stage .ad-sidebar button[aria-current="page"] {
+  box-shadow: inset -3px 0 0 #ffc400;
+}
+.admin-stage .ad-content h1 { letter-spacing: -.025em; text-wrap: balance; }
+.admin-stage .ad-content input:focus-visible,
+.admin-stage .ad-content select:focus-visible,
+.admin-stage .ad-content textarea:focus-visible {
+  outline: 3px solid #ffc400;
+  outline-offset: 2px;
+}
+.admin-stage .ad-empty { overflow-wrap: anywhere; }
+@media(max-width:760px) {
+  .admin-stage .ad-top { gap: 12px; flex-wrap: wrap; }
+  .admin-stage .ad-heading { flex-wrap: wrap; }
+  .admin-stage .ad-card { padding: 18px; }
+  .admin-stage .ad-sidebar nav { gap: 12px; scroll-padding-inline: 16px; }
+  .admin-stage .ad-sidebar button { min-height: 44px; }
+}
+@media (hover:hover) and (prefers-reduced-motion:no-preference) {
+  .admin-stage .ad-content button:hover:not(:disabled),
+  .admin-stage .ad-sidebar button:hover:not(:disabled) {
+    border-color: #ffc400;
+    transform: translateY(-1px);
+    transition: transform .16s ease, border-color .16s ease;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .admin-stage *, .admin-stage *::before, .admin-stage *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Admin review tables: direction-aware labels, clear scroll affordance and focus. */
+.admin-stage .ad-table-wrap {
+  border: 1px solid var(--ad-line);
+  border-radius: 16px;
+  scrollbar-width: thin;
+  scrollbar-color: #b28c20 var(--ad-card);
+}
+.admin-stage .ad-table-wrap :is(th,td) { text-align: start; }
+.admin-stage .ad-table-wrap tbody tr { transition: background-color .15s ease; }
+.admin-stage .ad-table-wrap tbody tr:focus-within { background: rgba(255,196,0,.11); }
+.admin-stage .ad-table-wrap tbody tr:nth-child(even) { background: rgba(128,128,128,.035); }
+.admin-stage .ad-table-wrap tbody tr:last-child td { border-bottom: none; }
+.admin-stage .ad-table-wrap td button { margin: 4px 6px; }
+.admin-stage .ad-table-wrap th { white-space: nowrap; font-weight: 700; }
+html[dir="ltr"] .admin-stage .ad-sidebar { border-left: none; border-right: 1px solid var(--ad-line); }
+html[dir="ltr"] .admin-stage .ad-sidebar button { text-align: left; }
+html[dir="ltr"] .admin-stage .ad-metrics button { text-align: left; }
+@media (max-width:760px) {
+  .admin-stage .ad-table-wrap { overflow-x: auto; overscroll-behavior-inline: contain; }
+  .admin-stage .ad-table-wrap table { min-width: 620px; }
+  .admin-stage .ad-sidebar { border: 0 !important; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .admin-stage .ad-table-wrap tbody tr { transition: none; }
+}
+
+/* Keep admin navigation available on mobile: the global theme stylesheet
+   hides generic <aside> elements at <=900px. */
+@media (max-width: 900px) {
+  .admin-stage .ad-sidebar {
+    display: block;
+  }
+}
