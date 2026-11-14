@@ -497,3 +497,29 @@ html[dir="rtl"] .admin-stage .ad-sidebar button[aria-current="page"] {
     transition: none !important;
   }
 }
+
+/* Admin review tables: direction-aware labels, clear scroll affordance and focus. */
+.admin-stage .ad-table-wrap {
+  border: 1px solid var(--ad-line);
+  border-radius: 16px;
+  scrollbar-width: thin;
+  scrollbar-color: #b28c20 var(--ad-card);
+}
+.admin-stage .ad-table-wrap :is(th,td) { text-align: start; }
+.admin-stage .ad-table-wrap tbody tr { transition: background-color .15s ease; }
+.admin-stage .ad-table-wrap tbody tr:focus-within { background: rgba(255,196,0,.11); }
+.admin-stage .ad-table-wrap tbody tr:nth-child(even) { background: rgba(128,128,128,.035); }
+.admin-stage .ad-table-wrap tbody tr:last-child td { border-bottom: none; }
+.admin-stage .ad-table-wrap td button { margin: 4px 6px; }
+.admin-stage .ad-table-wrap th { white-space: nowrap; font-weight: 700; }
+html[dir="ltr"] .admin-stage .ad-sidebar { border-left: none; border-right: 1px solid var(--ad-line); }
+html[dir="ltr"] .admin-stage .ad-sidebar button { text-align: left; }
+html[dir="ltr"] .admin-stage .ad-metrics button { text-align: left; }
+@media (max-width:760px) {
+  .admin-stage .ad-table-wrap { overflow-x: auto; overscroll-behavior-inline: contain; }
+  .admin-stage .ad-table-wrap table { min-width: 620px; }
+  .admin-stage .ad-sidebar { border: 0 !important; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .admin-stage .ad-table-wrap tbody tr { transition: none; }
+}
