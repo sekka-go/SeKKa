@@ -315,8 +315,22 @@ test("payment role and first-service-day restrictions", async () => {
     as(db, captain, "payment.paid", { bookingId: reserved.id }),
     /FORBIDDEN|PAYMENT_TOO_EARLY/,
   );
+  // The reservation made in an earlier test eventually reaches its real start
+  // date. Make a separate future-dated fixture so this security test remains
+  // valid on any subsequent CI day, without changing production time rules.
+  const startsOn = (
+    await db.query("select ((now() at time zone 'Africa/Cairo')::date + 14)::text d")
+  ).rows[0].d;
+  const cycle = await db.query(
+    "insert into sekka_v2.cycles(route_id,period,starts_on,ends_before) values($1,'weekly',$2::date,$2::date+7) on conflict(route_id,period,starts_on) do update set starts_on=excluded.starts_on returning id",
+    [route, startsOn],
+  );
+  const futureBooking = await db.query(
+    "insert into sekka_v2.bookings(rider_id,route_id,cycle_id,direction,starts_on,ends_before,full_price,price,total_days,remaining_days,idempotency_key) values($1,$2,$3,'outbound',$4::date,$4::date+7,1000,1000,5,5,$5) returning id",
+    [reserved.rider_id, route, cycle.rows[0].id, startsOn, randomUUID()],
+  );
   await assert.rejects(
-    as(db, reserved.rider_id, "payment.paid", { bookingId: reserved.id }),
+    as(db, reserved.rider_id, "payment.paid", { bookingId: futureBooking.rows[0].id }),
     /PAYMENT_TOO_EARLY/,
   );
 });

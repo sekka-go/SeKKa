@@ -106,6 +106,31 @@ test('interactive preview locks booking terms and persists dual-confirmation sec
  await expect(page).toHaveURL(/screen=17/);
  const snapshot=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('sekka.preview.bookingLedger.v31')!));
  expect(snapshot.available).toBe(50);expect(snapshot.reserved).toBe(100);expect(snapshot.bookings).toHaveLength(1);
+ const confirmedBookingUrl=page.url();
+ // Admin must see the exact interactive snapshot, not independent fixed demo examples.
+ await page.goto('/?screen=68&preview=phase8');
+ await expect(page.locator('tbody tr')).toHaveCount(1);
+ await expect(page.locator('tbody')).toContainText(snapshot.bookings[0].id);
+ await expect(page.locator('tbody')).toContainText('حجز مؤكد');
+ await page.goto('/?screen=69&preview=phase8');
+ await expect(page.locator('tbody')).toContainText('PREVIEW-WALLET');
+ await expect(page.locator('tbody')).toContainText('50 ج.م');
+ await expect(page.locator('tbody')).toContainText('100 ج.م');
+ await page.goto('/?screen=70&preview=phase8');
+ await expect(page.locator('tbody tr')).toHaveCount(1);
+ await expect(page.locator('tbody')).toContainText('حجز تأمين جدية الحجز');
+ // A user changing languages must see the same ledger with translated admin labels.
+ await page.goto('/?screen=32&preview=phase4');
+ await page.getByLabel('language_preference',{exact:true}).selectOption('en');
+ await page.goto('/?screen=68&preview=phase8');
+ await expect(page.locator('tbody')).toContainText('Preview rider');
+ await expect(page.locator('tbody')).toContainText('Awaiting payment');
+ await page.goto('/?screen=69&preview=phase8');
+ await expect(page.locator('tbody')).toContainText('Preview rider wallet');
+ await expect(page.locator('tbody')).toContainText('EGP 50');
+ await page.goto('/?screen=32&preview=phase4');
+ await page.getByLabel('language_preference',{exact:true}).selectOption('ar');
+ await page.goto(confirmedBookingUrl);
  // Simulate a later edit of the source offer. The confirmed snapshot must stay fixed.
  await page.evaluate(()=>{const offer=JSON.parse(sessionStorage.getItem('sekka.preview.selectedOffer')!);offer.amount=99999;offer.selectedStops.pickup.name='نقطة معدلة';sessionStorage.setItem('sekka.preview.selectedOffer',JSON.stringify(offer));});
  await page.reload();await expect(page.locator('.b-stops')).toContainText('ميدان الجزائر');await expect(page.locator('.b-stops')).not.toContainText('نقطة معدلة');
@@ -124,6 +149,15 @@ test('interactive preview locks booking terms and persists dual-confirmation sec
  await expect(page.getByRole('button',{name:'محاكاة تم الاستلام',exact:true})).toBeDisabled();
  await page.goto(receiptUrl);await expect(page.locator('.b-status-tag')).toContainText('الكابتن أكد الاستلام');
  const released=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('sekka.preview.bookingLedger.v31')!));expect(released.available).toBe(150);expect(released.reserved).toBe(0);expect(released.bookings[0].quote).toEqual(snapshot.bookings[0].quote);
+ await page.goto('/?screen=68&preview=phase8');
+ await expect(page.locator('tbody')).toContainText('الدفع مؤكد');
+ await page.goto('/?screen=69&preview=phase8');
+ await expect(page.locator('tbody')).toContainText('PREVIEW-WALLET');
+ await expect(page.locator('tbody')).toContainText('150 ج.م');
+ await page.goto('/?screen=70&preview=phase8');
+ await expect(page.locator('tbody tr')).toHaveCount(2);
+ await expect(page.locator('tbody')).toContainText('تحرير تأمين جدية الحجز');
+ await page.goto(receiptUrl);
  await expect(page.getByRole('button',{name:'محاكاة تأكيد الكابتن — لا دفع حقيقي',exact:true})).toHaveCount(0);
 });
 

@@ -822,6 +822,17 @@ export const english: Readonly<Record<string,string>> = {
   "عرض كل المعاملات": "Show all transactions",
   "مسح البحث": "Clear search",
   "عرض كل الإشعارات": "Show all notifications",
+  "راكب المعاينة": "Preview rider",
+  "نهاية الدورة": "Cycle ends",
+  "الراكب:": "Rider:",
+  "الكابتن:": "Captain:",
+  "انتظار الدفع": "Awaiting payment",
+  "انتظار الاستلام": "Awaiting receipt",
+  "محفظة الراكب التجريبية": "Preview rider wallet",
+  "الرصيد المتاح": "Available balance",
+  "التأمين المحجوز": "Held booking security",
+  "تحرير تأمين جدية الحجز": "Release booking security",
+  "حجوزات المعاينة موحّدة مع حساب الراكب والكابتن والمحفظة": "Preview bookings are shared with rider, captain and wallet",
   "الحالة:": "Status:"
 };
 export function translate(text:string,language:"ar"|"en"){return language==="en" ? english[text] ?? text : text;}
