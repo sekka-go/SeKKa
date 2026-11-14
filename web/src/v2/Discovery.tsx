@@ -462,6 +462,8 @@ export default function Discovery(p: DiscoveryProps) {
     });
   const [favoriteDetail, setFavoriteDetail] = useState<Line | null>(null);
   const [searched, setSearched] = useState(false);
+  const [favoriteSignInRequired, setFavoriteSignInRequired] = useState(false);
+  const [favoriteRetryId, setFavoriteRetryId] = useState<string | null>(null);
   const [requestSent, setRequestSent] = useState(false);
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
@@ -524,6 +526,8 @@ export default function Discovery(p: DiscoveryProps) {
   )[screen];
   function nav(id: number) {
     setMessage("");
+    setFavoriteSignInRequired(false);
+    setFavoriteRetryId(null);
     go(id);
   }
   function openLine(l: Line) {
@@ -562,15 +566,22 @@ export default function Discovery(p: DiscoveryProps) {
     }
   }
   async function favorite(id: string) {
+    setFavoriteSignInRequired(false);
+    setFavoriteRetryId(null);
     if (demo) {
       const next = favorites.includes(id) ? favorites.filter(value => value !== id) : [...favorites, id];
       setFavorites(next);
       try { sessionStorage.setItem("sekka.preview.favoriteOfferIds", JSON.stringify(next)); } catch { /* Keep the current session view usable. */ }
+    } else if (!p.signedIn) {
+      // The sign-in prerequisite uses App.go(), which remembers this offer's URL for return.
+      setMessage(tr("سجّل الدخول عشان تحفظ العرض في المفضلة."));
+      setFavoriteSignInRequired(true);
     } else {
       try {
         await p.onFavorite(id);
       } catch {
-        setMessage(tr("حفظ الخط محتاج تسجيل الدخول واتصال بالخدمة."));
+        setMessage(tr("تعذّر حفظ العرض. جرّب تاني."));
+        setFavoriteRetryId(id);
       }
     }
   }
@@ -704,13 +715,27 @@ export default function Discovery(p: DiscoveryProps) {
             {tr("بنحمّل البيانات…")}</p>
         )}
         {p.error && !demo && (
-          <p className="d-feedback" role="alert">
-            {tr("الخدمة مش متاحة دلوقتي. جرّب تاني بعد شوية.")}</p>
+          <div className="d-feedback" role="alert">
+            <p>{tr("الخدمة مش متاحة دلوقتي. جرّب تاني بعد شوية.")}</p>
+            <button type="button" className="d-outline" onClick={() => nav(9)}>
+              {tr("ارجع للبحث")}
+            </button>
+          </div>
         )}
         {message && (
-          <p className="d-feedback" role="status">
-            {message}
-          </p>
+          <div className="d-feedback" role="status">
+            <p>{message}</p>
+            {favoriteSignInRequired && (
+              <button type="button" className="d-primary" onClick={() => nav(4)}>
+                {tr("تسجيل الدخول أو إنشاء حساب")}
+              </button>
+            )}
+            {favoriteRetryId && (
+              <button type="button" className="d-outline" onClick={() => void favorite(favoriteRetryId)}>
+                {tr("حاول تاني")}
+              </button>
+            )}
+          </div>
         )}
         {[8, 9].includes(screen) && (
           <>
