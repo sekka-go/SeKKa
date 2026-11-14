@@ -283,8 +283,9 @@ test('all 66 rider, captain and admin screens render their real phase previews i
   for(let n=8;n<=73;n++){
    const phase=n<=14?2:n<=21?3:n<=34?4:n<=41?5:n<=49?6:n<=61?7:8;
    await page.goto('/?screen='+n+'&preview=phase'+phase);
-   if(await page.locator('main.phase-canvas').count()===0) throw new Error('Missing phase preview screen '+n+' ('+locale+'): '+(await page.locator('body').innerText()).slice(0,250));
-   await expect(page.locator('main.phase-canvas')).toBeVisible();
+   const surface=n>=62?'main.ad-content':'main.phase-canvas';
+   if(await page.locator(surface).count()===0) throw new Error('Missing phase preview screen '+n+' ('+locale+'): '+(await page.locator('body').innerText()).slice(0,250));
+   await expect(page.locator(surface)).toBeVisible();
    await expect(page.locator('main h1,main h2').first()).not.toBeEmpty();
    await expect(page.locator('html')).toHaveAttribute('dir',locale==='ar-EG'?'rtl':'ltr');
    await expect(page.locator('html')).toHaveAttribute('lang',locale==='ar-EG'?'ar':'en');
