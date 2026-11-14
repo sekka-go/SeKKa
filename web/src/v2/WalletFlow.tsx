@@ -1,3 +1,5 @@
+import {usePreferences} from "./preferences";
+import {translate} from "./translations";
 import {readPreviewBookings, previewSubscriberRows, previewSecurityTransactions} from "./previewBookingStore";
 import { publicScreen } from "./screenMap";
 import { useState, type ReactNode } from "react";
@@ -16,7 +18,7 @@ const titles = [
   "اشتراكاتي",
   "سجل الاشتراكات",
 ];
-const money = (n: number) => `${n.toLocaleString("en-US")} ج.م`;
+
 const kinds: Record<string, string> = {
   provider_credit: "شحن الرصيد",
   reserve: "تخصيص تأمين جدية الحجز",
@@ -99,6 +101,9 @@ export default function WalletFlow(p: {
   bookings: Booking[];
   error: string;
 }) {
+  const {language}=usePreferences();
+  const tr=(text:string)=>translate(text,language);
+  const money = (n:number) => language==="en" ? `EGP ${n.toLocaleString("en-GB")}` : `${n.toLocaleString("en-US")} ج.م`;
   const demo = new URLSearchParams(location.search).get("preview") === "phase4";
   const [filter, setFilter] = useState("all"),
     [amount, setAmount] = useState("100"),
@@ -124,35 +129,35 @@ export default function WalletFlow(p: {
     </button>
   );
   const date = (v: string) =>
-    new Date(v).toLocaleDateString("ar-EG-u-nu-latn", {
+    new Date(v).toLocaleDateString(language==="en"?"en-GB":"ar-EG-u-nu-latn", {
       timeZone: "Africa/Cairo",
     });
   return (
     <div
       className={`phase-one-stage discovery-stage booking-stage wallet-stage ${p.theme}`}
     >
-      <nav className="phase-review-bar" aria-label="معاينة المرحلة الرابعة">
+      <nav className="phase-review-bar" aria-label={tr("معاينة المرحلة الرابعة")}>
         <div className="review-screen-nav">
           <button
-            aria-label="الشاشة السابقة"
+            aria-label={tr("الشاشة السابقة")}
             disabled={p.screen === 24}
             onClick={() => nav(p.screen - 1)}
           >
             ‹
           </button>
           <select
-            aria-label="شاشة المرحلة الرابعة"
+            aria-label={tr("شاشة المرحلة الرابعة")}
             value={p.screen}
             onChange={(e) => nav(+e.target.value)}
           >
             {walletScreens.map((id, i) => (
               <option key={id} value={id}>
-                {publicScreen(id)} · {titles[i]}
+                {publicScreen(id)} · {tr(titles[i])}
               </option>
             ))}
           </select>
           <button
-            aria-label="الشاشة التالية"
+            aria-label={tr("الشاشة التالية")}
             disabled={p.screen === 30}
             onClick={() => nav(p.screen + 1)}
           >
@@ -166,15 +171,15 @@ export default function WalletFlow(p: {
               aria-pressed={p.theme === t}
               onClick={() => p.onTheme(t)}
             >
-              {t === "dark" ? "دارك" : "لايت"}
+              {t === "dark" ? tr("دارك") : tr("لايت")}
             </button>
           ))}
         </div>
       </nav>
       <p className="w-preview">
         {demo
-          ? "معاينة المرحلة الرابعة · بيانات توضيحية فقط"
-          : "المحفظة والاشتراكات"}
+          ? tr("معاينة المرحلة الرابعة · بيانات توضيحية فقط")
+          : tr("المحفظة والاشتراكات")}
       </p>
       {demo && (
         <div className="w-scenarios">
@@ -184,17 +189,16 @@ export default function WalletFlow(p: {
               checked={empty}
               onChange={(e) => setEmpty(e.target.checked)}
             />{" "}
-            معاينة السجل الفارغ
-          </label>
+            {tr("معاينة السجل الفارغ")}</label>
           {p.screen === 26 && (
             <select
-              aria-label="حالة الشحن التجريبية"
+              aria-label={tr("حالة الشحن التجريبية")}
               value={scenario}
               onChange={(e) => setScenario(e.target.value)}
             >
-              <option value="pending">قيد التحقق</option>
-              <option value="failed">لم يكتمل</option>
-              <option value="success">نجاح توضيحي</option>
+              <option value="pending">{tr("قيد التحقق")}</option>
+              <option value="failed">{tr("لم يكتمل")}</option>
+              <option value="success">{tr("نجاح توضيحي")}</option>
             </select>
           )}
         </div>
@@ -203,7 +207,7 @@ export default function WalletFlow(p: {
         <header className="d-header">
           <button
             className="phase-back"
-            aria-label="رجوع"
+            aria-label={tr("رجوع")}
             onClick={() => nav(p.screen === 24 ? 19 : 24)}
           >
             <DiscoveryIcon name="back" />
@@ -211,10 +215,10 @@ export default function WalletFlow(p: {
           <Wordmark />
         </header>
         <div className="b-stage-label">
-          <span>المحفظة والاشتراكات</span>
+          <span>{tr("المحفظة والاشتراكات")}</span>
           <span dir="ltr">{p.screen - 23} / 7</span>
         </div>
-        <h1 className="b-title">{titles[p.screen - 24]}</h1>
+        <h1 className="b-title">{tr(titles[p.screen - 24])}</h1>
         {p.error && (
           <Box>
             <p role="alert">{p.error}</p>
@@ -222,8 +226,8 @@ export default function WalletFlow(p: {
         )}
         {!(demo || p.signedIn) ? (
           <Box>
-            <p>سجّل برقم موبايلك عشان نكمل.</p>
-            {button("تسجيل الدخول", 4)}
+            <p>{tr("سجّل برقم موبايلك عشان نكمل.")}</p>
+            {button(tr("تسجيل الدخول"), 4)}
           </Box>
         ) : (
           <>
@@ -237,43 +241,38 @@ export default function WalletFlow(p: {
                       <circle cx="90" cy="54" r="3" />
                     </svg>
                   </div>
-                  <p className="w-center">رصيدك المتاح</p>
+                  <p className="w-center">{tr("رصيدك المتاح")}</p>
                   <strong className="w-balance">
                     {money(balance.available)}
                   </strong>
                   <div className="b-row">
-                    <span>تأمين جدية الحجز</span>
+                    <span>{tr("تأمين جدية الحجز")}</span>
                     <strong>{money(balance.reserved)}</strong>
                   </div>
                   <p>
-                    التأمين المحجوز بيتاح بعد تأكيد الدفع والاستلام من الطرفين،
-                    لو مفيش نزاع.
-                  </p>
+                    {tr("التأمين المحجوز بيتاح بعد تأكيد الدفع والاستلام من الطرفين، لو مفيش نزاع.")}</p>
                 </Box>
                 <div className="w-actions">
-                  {button("شحن الرصيد", 25)}
-                  {button("سحب الرصيد", 27)}
+                  {button(tr("شحن الرصيد"), 25)}
+                  {button(tr("سحب الرصيد"), 27)}
                 </div>
                 <Box>
-                  <h2>تأمينك محفوظ</h2>
+                  <h2>{tr("تأمينك محفوظ")}</h2>
                   <p>
-                    الـ100 جنيه لتأمين جدية الحجز، ومبلغ مسترد. قيمة الاشتراك
-                    بتدفعها كاملة للكابتن أول يوم، والتأمين مش بيتخصم منها.
-                  </p>
+                    {tr("الـ100 جنيه لتأمين جدية الحجز، ومبلغ مسترد. قيمة الاشتراك بتدفعها كاملة للكابتن أول يوم، والتأمين مش بيتخصم منها.")}</p>
                 </Box>
-                {button("سجل المعاملات", 28)}
-                {button("اشتراكاتي", 29)}
+                {button(tr("سجل المعاملات"), 28)}
+                {button(tr("اشتراكاتي"), 29)}
               </>
             )}
             {p.screen === 25 && (
               <>
                 <Box>
-                  <h2>تحب تشحن بكام؟</h2>
-                  <p>الحد الأدنى للشحن 100 جنيه.</p>
-                  <p>المتاح حاليًا: {money(balance.available)}</p>
+                  <h2>{tr("تحب تشحن بكام؟")}</h2>
+                  <p>{tr("الحد الأدنى للشحن 100 جنيه.")}</p>
+                  <p>{tr("المتاح حاليًا:")}{money(balance.available)}</p>
                   <label className="w-field">
-                    مبلغ الشحن بالجنيه
-                    <input
+                    {tr("مبلغ الشحن بالجنيه")}<input
                       inputMode="decimal"
                       type="number"
                       min="100"
@@ -295,28 +294,23 @@ export default function WalletFlow(p: {
                   </div>
                   {(!Number.isInteger(+amount) || +amount < 100) && (
                     <p role="alert">
-                      أقل مبلغ شحن 100 جنيه. اكتب المبلغ بالجنيه من غير كسور.
-                    </p>
+                      {tr("أقل مبلغ شحن 100 جنيه. اكتب المبلغ بالجنيه من غير كسور.")}</p>
                   )}
                 </Box>
                 <Box>
-                  <h2>الشحن لسه مش متاح</h2>
+                  <h2>{tr("الشحن لسه مش متاح")}</h2>
                   <p>
-                    هنفعّل الشحن بعد اعتماد وسيلة الدفع. مفيش مبلغ هيتخصم منك
-                    دلوقتي.
-                  </p>
+                    {tr("هنفعّل الشحن بعد اعتماد وسيلة الدفع. مفيش مبلغ هيتخصم منك دلوقتي.")}</p>
                 </Box>
                 <button className="d-primary b-primary" disabled>
-                  متابعة للدفع — غير مفعّل
-                </button>
+                  {tr("متابعة للدفع — غير مفعّل")}</button>
                 {demo && (
                   <button
                     className="d-primary b-primary"
                     disabled={!Number.isInteger(+amount) || +amount < 100}
                     onClick={() => nav(26)}
                   >
-                    معاينة حالات الشحن
-                  </button>
+                    {tr("معاينة حالات الشحن")}</button>
                 )}
               </>
             )}
@@ -335,21 +329,21 @@ export default function WalletFlow(p: {
                   </div>
                   <h2 className="w-center">
                     {!demo
-                      ? "مفيش عملية شحن مؤكدة"
+                      ? tr("مفيش عملية شحن مؤكدة")
                       : scenario === "success"
-                        ? "نموذج شحن ناجح"
+                        ? tr("نموذج شحن ناجح")
                         : scenario === "failed"
-                          ? "الشحن ما اكتملش"
-                          : "مستنيين نتيجة الشحن"}
+                          ? tr("الشحن ما اكتملش")
+                          : tr("مستنيين نتيجة الشحن")}
                   </h2>
                   <p>
                     {demo
-                      ? "دي معاينة للحالة فقط. مفيش دفع تم، ورصيد المحفظة ما اتغيرش."
-                      : "أي رصيد جديد لازم يتأكد من مزوّد الدفع ويتسجل مرة واحدة في سجل المعاملات."}
+                      ? tr("دي معاينة للحالة فقط. مفيش دفع تم، ورصيد المحفظة ما اتغيرش.")
+                      : tr("أي رصيد جديد لازم يتأكد من مزوّد الدفع ويتسجل مرة واحدة في سجل المعاملات.")}
                   </p>
                   {demo && (
                     <div className="b-row">
-                      <span>مبلغ المثال</span>
+                      <span>{tr("مبلغ المثال")}</span>
                       <strong>
                         {money(
                           Number.isInteger(+amount) && +amount >= 100
@@ -360,51 +354,47 @@ export default function WalletFlow(p: {
                     </div>
                   )}
                 </Box>
-                {button("الرجوع للمحفظة", 24)}
+                {button(tr("الرجوع للمحفظة"), 24)}
                 {demo &&
                   scenario === "failed" &&
-                  button("مراجعة مبلغ الشحن", 25)}
+                  button(tr("مراجعة مبلغ الشحن"), 25)}
               </>
             )}
             {p.screen === 27 && (
               <>
                 <Box>
-                  <h2>الرصيد المتاح للسحب</h2>
+                  <h2>{tr("الرصيد المتاح للسحب")}</h2>
                   <strong className="w-balance">
                     {money(balance.available)}
                   </strong>
                   <div className="b-row">
-                    <span>محجوز — غير متاح للسحب</span>
+                    <span>{tr("محجوز — غير متاح للسحب")}</span>
                     <strong>{money(balance.reserved)}</strong>
                   </div>
                 </Box>
                 <Box>
-                  <h2>السحب لسه مش مفعّل</h2>
+                  <h2>{tr("السحب لسه مش مفعّل")}</h2>
                   <p>
-                    طريقة السحب ومدته وأي رسوم محتاجين اعتماد قبل تفعيل الطلبات.
-                    رصيدك هيفضل زي ما هو.
-                  </p>
-                  <p>مش هنطلب منك بيانات حساب أو محفظة قبل تفعيل الخدمة.</p>
+                    {tr("طريقة السحب ومدته وأي رسوم محتاجين اعتماد قبل تفعيل الطلبات. رصيدك هيفضل زي ما هو.")}</p>
+                  <p>{tr("مش هنطلب منك بيانات حساب أو محفظة قبل تفعيل الخدمة.")}</p>
                 </Box>
                 <button className="d-primary b-primary" disabled>
-                  طلب سحب — غير مفعّل
-                </button>
-                {button("سجل المعاملات", 28)}
+                  {tr("طلب سحب — غير مفعّل")}</button>
+                {button(tr("سجل المعاملات"), 28)}
               </>
             )}
             {p.screen === 28 && (
               <>
                 <Box>
                   <label className="w-field">
-                    نوع العملية
-                    <select
+                    {tr("نوع العملية")}<select
                       value={filter}
                       onChange={(e) => setFilter(e.target.value)}
                     >
-                      <option value="all">كل المعاملات</option>
+                      <option value="all">{tr("كل المعاملات")}</option>
                       {Object.entries(kinds).map(([k, v]) => (
                         <option key={k} value={k}>
-                          {v}
+                          {tr(v)}
                         </option>
                       ))}
                     </select>
@@ -421,7 +411,7 @@ export default function WalletFlow(p: {
                         }
                       >
                         <span>
-                          <strong>{kinds[String(t.kind)] || "معاملة"}</strong>
+                          <strong>{tr(kinds[String(t.kind)] || "معاملة")}</strong>
                           <small>{date(String(t.created_at))}</small>
                         </span>
                         <strong dir="ltr">
@@ -432,15 +422,15 @@ export default function WalletFlow(p: {
                       {detail === t.id && (
                         <dl className="w-details">
                           <div>
-                            <dt>المرجع</dt>
+                            <dt>{tr("المرجع")}</dt>
                             <dd>{String(t.id)}</dd>
                           </div>
                           <div>
-                            <dt>تغير الرصيد المحجوز</dt>
+                            <dt>{tr("تغير الرصيد المحجوز")}</dt>
                             <dd dir="ltr">{money(Number(t.reserved_delta))}</dd>
                           </div>
                           <div>
-                            <dt>تغير الرصيد المتاح</dt>
+                            <dt>{tr("تغير الرصيد المتاح")}</dt>
                             <dd dir="ltr">
                               {money(Number(t.available_delta))}
                             </dd>
@@ -451,8 +441,8 @@ export default function WalletFlow(p: {
                   ))
                 ) : (
                   <Box>
-                    <h2>لسه مفيش معاملات هنا.</h2>
-                    <p>أي تغيير في الرصيد هيظهر في السجل.</p>
+                    <h2>{tr("لسه مفيش معاملات هنا.")}</h2>
+                    <p>{tr("أي تغيير في الرصيد هيظهر في السجل.")}</p>
                   </Box>
                 )}
               </>
@@ -464,14 +454,12 @@ export default function WalletFlow(p: {
                     aria-pressed={p.screen === 29}
                     onClick={() => nav(29)}
                   >
-                    الحالية
-                  </button>
+                    {tr("الحالية")}</button>
                   <button
                     aria-pressed={p.screen === 30}
                     onClick={() => nav(30)}
                   >
-                    السابقة
-                  </button>
+                    {tr("السابقة")}</button>
                 </div>
                 {(() => {
                   const items = bookings.filter(
@@ -488,18 +476,18 @@ export default function WalletFlow(p: {
                           <strong>{b.destination}</strong>
                         </div>
                         <p className="w-status">
-                          {states[b.status] || "حالة الاشتراك قيد التحديث"}
+                          {tr(states[b.status] || "حالة الاشتراك قيد التحديث")}
                         </p>
                         <div className="b-row">
-                          <span>قيمة الاشتراك</span>
+                          <span>{tr("قيمة الاشتراك")}</span>
                           <strong>{money(b.price)}</strong>
                         </div>
                         <div className="b-row">
-                          <span>البداية</span>
+                          <span>{tr("البداية")}</span>
                           <strong>{date(b.starts_on)}</strong>
                         </div>
                         <div className="b-row">
-                          <span>نهاية الدورة — غير شاملة</span>
+                          <span>{tr("نهاية الدورة — غير شاملة")}</span>
                           <strong>{date(b.ends_before)}</strong>
                         </div>
                         {demo ? (
@@ -509,21 +497,19 @@ export default function WalletFlow(p: {
                               setDetail(detail === b.id ? null : b.id)
                             }
                           >
-                            عرض حالة الدفع
-                          </button>
+                            {tr("عرض حالة الدفع")}</button>
                         ) : (
                           <button
                             className="w-link"
                             onClick={() => p.go(19, undefined, b.id)}
                           >
-                            تفاصيل الاشتراك
-                          </button>
+                            {tr("تفاصيل الاشتراك")}</button>
                         )}
                         {detail === b.id && (
                           <p role="status">
                             {b.rider_paid_at && b.captain_received_at
-                              ? "الطرفين أكدوا الدفع والاستلام — مثال توضيحي."
-                              : "لسه مستنيين تأكيد الدفع والاستلام — مثال توضيحي."}
+                              ? tr("الطرفين أكدوا الدفع والاستلام — مثال توضيحي.")
+                              : tr("لسه مستنيين تأكيد الدفع والاستلام — مثال توضيحي.")}
                           </p>
                         )}
                       </Box>
@@ -532,10 +518,10 @@ export default function WalletFlow(p: {
                     <Box>
                       <h2>
                         {p.screen === 29
-                          ? "لسه مفيش اشتراك حالي."
-                          : "لسه مفيش اشتراكات سابقة."}
+                          ? tr("لسه مفيش اشتراك حالي.")
+                          : tr("لسه مفيش اشتراكات سابقة.")}
                       </h2>
-                      {button("دوّر على خط", 8)}
+                      {button(tr("دوّر على خط"), 8)}
                     </Box>
                   );
                 })()}
@@ -543,7 +529,7 @@ export default function WalletFlow(p: {
             )}
           </>
         )}
-        <p className="w-footnote">معاك في السِكّة</p>
+        <p className="w-footnote">{tr("معاك في السِكّة")}</p>
       </main>
     </div>
   );

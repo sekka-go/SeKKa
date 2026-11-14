@@ -144,3 +144,16 @@ test('captain draft survives reload and incomplete publication links to its miss
  await page.getByRole('button',{name:'رجوع',exact:true}).click();
  await expect(page.getByLabel('وصف الخط',{exact:true})).toHaveValue('خط المعادي اليومي');
 });
+
+test('English wallet preserves amount through failed result and retry',async({browser})=>{
+ const context=await browser.newContext({locale:'en-GB'}),page=await context.newPage();
+ await page.goto('/?screen=23&preview=phase4');
+ await page.getByLabel('Top-up amount in EGP').fill('99');
+ await expect(page.getByRole('button',{name:'Preview top-up result'})).toBeDisabled();
+ await page.getByLabel('Top-up amount in EGP').fill('240');
+ await page.getByRole('button',{name:'Preview top-up result'}).click();
+ await page.getByLabel('Preview top-up status').selectOption('failed');
+ await page.getByRole('button',{name:'Review top-up amount'}).click();
+ await expect(page.getByLabel('Top-up amount in EGP')).toHaveValue('240');
+ await context.close();
+});

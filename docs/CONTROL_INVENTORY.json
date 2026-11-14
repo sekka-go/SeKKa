@@ -2998,7 +2998,7 @@
   },
   {
     "file": "WalletFlow.tsx",
-    "line": 121,
+    "line": 126,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(n)}",
@@ -3007,34 +3007,34 @@
   },
   {
     "file": "WalletFlow.tsx",
-    "line": 136,
+    "line": 141,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(p.screen - 1)}",
     "disabled": "{p.screen === 24}",
-    "label": "\"الشاشة السابقة\""
+    "label": "{tr(\"الشاشة السابقة\")}"
   },
   {
     "file": "WalletFlow.tsx",
-    "line": 143,
+    "line": 148,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => nav(+e.target.value)}",
     "disabled": "",
-    "label": "\"شاشة المرحلة الرابعة\""
+    "label": "{tr(\"شاشة المرحلة الرابعة\")}"
   },
   {
     "file": "WalletFlow.tsx",
-    "line": 154,
+    "line": 159,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(p.screen + 1)}",
     "disabled": "{p.screen === 30}",
-    "label": "\"الشاشة التالية\""
+    "label": "{tr(\"الشاشة التالية\")}"
   },
   {
     "file": "WalletFlow.tsx",
-    "line": 164,
+    "line": 169,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => p.onTheme(t)}",
@@ -3043,7 +3043,7 @@
   },
   {
     "file": "WalletFlow.tsx",
-    "line": 182,
+    "line": 187,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setEmpty(e.target.checked)}",
@@ -3052,25 +3052,25 @@
   },
   {
     "file": "WalletFlow.tsx",
-    "line": 190,
+    "line": 194,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => setScenario(e.target.value)}",
     "disabled": "",
-    "label": "\"حالة الشحن التجريبية\""
+    "label": "{tr(\"حالة الشحن التجريبية\")}"
   },
   {
     "file": "WalletFlow.tsx",
-    "line": 204,
+    "line": 208,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(p.screen === 24 ? 19 : 24)}",
     "disabled": "",
-    "label": "\"رجوع\""
+    "label": "{tr(\"رجوع\")}"
   },
   {
     "file": "WalletFlow.tsx",
-    "line": 276,
+    "line": 275,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setAmount(e.target.value)}",
@@ -3079,7 +3079,7 @@
   },
   {
     "file": "WalletFlow.tsx",
-    "line": 287,
+    "line": 286,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => setAmount(String(n))}",
@@ -3088,7 +3088,7 @@
   },
   {
     "file": "WalletFlow.tsx",
-    "line": 309,
+    "line": 305,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -3097,7 +3097,7 @@
   },
   {
     "file": "WalletFlow.tsx",
-    "line": 313,
+    "line": 308,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(26)}",
@@ -3106,7 +3106,7 @@
   },
   {
     "file": "WalletFlow.tsx",
-    "line": 389,
+    "line": 381,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -3115,7 +3115,7 @@
   },
   {
     "file": "WalletFlow.tsx",
-    "line": 400,
+    "line": 390,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => setFilter(e.target.value)}",
@@ -3124,7 +3124,7 @@
   },
   {
     "file": "WalletFlow.tsx",
-    "line": 416,
+    "line": 406,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n                          setDetail(detail === t.id ? null : String(t.id))\n                        }",
@@ -3133,7 +3133,7 @@
   },
   {
     "file": "WalletFlow.tsx",
-    "line": 463,
+    "line": 453,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(29)}",
@@ -3142,7 +3142,7 @@
   },
   {
     "file": "WalletFlow.tsx",
-    "line": 469,
+    "line": 458,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(30)}",
@@ -3151,7 +3151,7 @@
   },
   {
     "file": "WalletFlow.tsx",
-    "line": 506,
+    "line": 494,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n                              setDetail(detail === b.id ? null : b.id)\n                            }",
@@ -3160,7 +3160,7 @@
   },
   {
     "file": "WalletFlow.tsx",
-    "line": 515,
+    "line": 502,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => p.go(19, undefined, b.id)}",
