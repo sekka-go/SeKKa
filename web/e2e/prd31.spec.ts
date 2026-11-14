@@ -513,3 +513,17 @@ test('premium rider styling is scoped to screens 8–21 and preserves onboarding
  await page.goto('/?screen=1');
  expect(await page.locator('main').evaluate(el=>getComputedStyle(el).backgroundImage)).toBe(onboarding);
 });
+
+
+test('rider offer detail and booking summary have refined surfaces in both themes',async({page})=>{
+ for(const [n,selector] of [[11,'.d-screen-11 .d-result'],[12,'.d-screen-12 .d-box'],[16,'.b-screen-16 .b-box']] as const){
+  await page.goto('/?screen='+n+'&preview=phase'+(n===16?3:2));
+  const item=page.locator(selector).first();
+  await expect(item).toBeVisible();
+  const border=await item.evaluate(el=>getComputedStyle(el).borderTopColor);
+  expect(border).not.toBe('rgba(0, 0, 0, 0)');
+ }
+ await page.goto('/?screen=1');
+ await expect(page.locator('.discovery-stage')).toHaveCount(0);
+ await expect(page.locator('.booking-stage')).toHaveCount(0);
+});
