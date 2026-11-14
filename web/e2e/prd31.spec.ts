@@ -446,3 +446,21 @@ test('subscription preview localizes known route areas without changing recorded
  await expect(page.getByText('Sheikh Zayed',{exact:true})).toBeVisible();
  await context.close();
 });
+
+
+test('captain preview service dates follow language instead of exposing ISO strings',async({browser})=>{
+ const context=await browser.newContext({locale:'en-GB',viewport:{width:390,height:844}});
+ const page=await context.newPage();
+ await page.goto('/?screen=52&preview=phase7');
+ const startDate=page.locator('main .b-row b[dir="ltr"]').first();
+ await expect(startDate).toContainText('Nov 2026');
+ await expect(startDate).not.toContainText('2026-11-15');
+ await page.goto('/?screen=58&preview=phase7');
+ await expect(page.locator('main small').first()).toContainText('Nov');
+ await page.goto('/?screen=60&preview=phase7');
+ await page.getByLabel('language_preference',{exact:true}).selectOption('ar');
+ await page.goto('/?screen=52&preview=phase7');
+ await expect(page.locator('main .b-row b[dir="ltr"]').first()).not.toContainText('2026-11-15');
+ await expect(page.locator('main .b-row b[dir="ltr"]').first()).toContainText('2026');
+ await context.close();
+});
