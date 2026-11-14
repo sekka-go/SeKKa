@@ -451,7 +451,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 532,
+    "line": 537,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n              void run(async () => {\n                const detail = await api<Route>(\"route\", { id: r.id });\n                setRoute(detail);\n                setQuote(null);\n                go(12, r.id);\n              })\n            }",
@@ -460,7 +460,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 565,
+    "line": 570,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => {\n            setBooking(b);\n            go(profile?.role === \"captain\" ? 53 : 20);\n          }}",
@@ -469,7 +469,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 582,
+    "line": 587,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(signedIn ? 6 : 3)}",
@@ -478,7 +478,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 588,
+    "line": 593,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{(e) => {\n          e.preventDefault();\n          if (screen === 11) setRevision((v) => v + 1);\n          else go(11);\n        }}",
@@ -487,7 +487,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 596,
+    "line": 601,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setOrigin(e.target.value)}",
@@ -496,7 +496,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 602,
+    "line": 607,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setDestination(e.target.value)}",
@@ -505,7 +505,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 609,
+    "line": 614,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setDeparture(e.target.value)}",
@@ -514,7 +514,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 616,
+    "line": 621,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setReturnTime(e.target.value)}",
@@ -523,7 +523,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 625,
+    "line": 630,
     "tag": "Select",
     "action": "onChange",
     "handler": "{setDirection}",
@@ -532,7 +532,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 635,
+    "line": 640,
     "tag": "Select",
     "action": "onChange",
     "handler": "{setPeriod}",
@@ -541,7 +541,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 643,
+    "line": 648,
     "tag": "Select",
     "action": "onChange",
     "handler": "{setCategory}",
@@ -550,7 +550,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 655,
+    "line": 660,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setMaxPrice(e.target.value)}",
@@ -559,7 +559,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 663,
+    "line": 668,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -568,7 +568,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 683,
+    "line": 688,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => {\n              if (screen === 37) setRole(\"captain\");\n              go(screen === 37 ? 3 : 8);\n            }}",
@@ -577,7 +577,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 691,
+    "line": 696,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(3)}",
@@ -586,7 +586,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 702,
+    "line": 707,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => {\n                  setRole(r);\n                  go(4);\n                }}",
@@ -595,7 +595,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 715,
+    "line": 720,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(8)}",
@@ -604,7 +604,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 722,
+    "line": 727,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{submit(async () => {\n            if (!client) throw new Error(\"V2_BACKEND_NOT_CONFIGURED\");\n            const { error } = await client.auth.signInWithOtp({\n              phone: normalizePhone(phone),\n            });\n            if (error) throw error;\n            go(5);\n          })}",
@@ -613,7 +613,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 733,
+    "line": 738,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setPhone(e.target.value)}",
@@ -622,7 +622,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 743,
+    "line": 748,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -631,7 +631,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 748,
+    "line": 753,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{submit(async () => {\n            if (!client) throw new Error(\"V2_BACKEND_NOT_CONFIGURED\");\n            const { error } = await client.auth.verifyOtp({\n              phone: normalizePhone(phone),\n              token: otp,\n              type: \"sms\",\n            });\n            if (error) throw error;\n            await refreshProfile();\n            go(6);\n          })}",
@@ -640,7 +640,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 762,
+    "line": 767,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setOtp(e.target.value)}",
@@ -649,7 +649,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 770,
+    "line": 775,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -658,7 +658,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 771,
+    "line": 776,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(4)}",
@@ -667,7 +667,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 778,
+    "line": 783,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{submit(async () => {\n            if (!consent) throw new Error(\"INVALID_PROFILE\");\n            await api(\"profile.save\", {\n              name,\n              role,\n              policyVersion: \"2026-11-12\",\n            });\n            await refreshProfile();\n            go(role === \"captain\" ? 38 : 8);\n          })}",
@@ -676,7 +676,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 791,
+    "line": 796,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setName(e.target.value)}",
@@ -685,7 +685,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 804,
+    "line": 809,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setConsent(e.target.checked)}",
@@ -694,7 +694,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 816,
+    "line": 821,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -703,7 +703,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 836,
+    "line": 841,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => {\n                  setCategory(c);\n                  setRevision((v) => v + 1);\n                }}",
@@ -712,7 +712,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 880,
+    "line": 885,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(8)}",
@@ -721,7 +721,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 890,
+    "line": 895,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(17)}",
@@ -730,7 +730,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 925,
+    "line": 930,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n                  void run(async () => {\n                    await api(\"favorite.toggle\", { routeId: selectedRoute.id });\n                    setNotice(\"المفضلة اتحدثت.\");\n                  })\n                }",
@@ -739,7 +739,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 936,
+    "line": 941,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n                  void run(async () => {\n                    await api(\"waitlist.join\", { routeId: selectedRoute.id });\n                    setNotice(\"اسمك اتسجل في قائمة الانتظار.\");\n                  })\n                }",
@@ -748,7 +748,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 947,
+    "line": 952,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n                  void run(async () => {\n                    const c = await api<{ id: string }>(\"conversation.open\", {\n                      captainId: selectedRoute.captain_id,\n                    });\n                    setConversation(c.id);\n                    go(32);\n                  })\n                }",
@@ -757,7 +757,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 963,
+    "line": 968,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{submit(async () => {\n              const q = await api<Quote>(\"quote\", {\n                routeId: selectedRoute.id,\n                period,\n                direction,\n              });\n              setQuote(q);\n              setIdempotencyKey(crypto.randomUUID());\n              if (screen !== 17) go(17);\n            })}",
@@ -766,7 +766,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 977,
+    "line": 982,
     "tag": "Select",
     "action": "onChange",
     "handler": "{(v) => {\n                setPeriod(v);\n                setQuote(null);\n              }}",
@@ -775,7 +775,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 986,
+    "line": 991,
     "tag": "Select",
     "action": "onChange",
     "handler": "{(v) => {\n                setDirection(v);\n                setQuote(null);\n              }}",
@@ -784,7 +784,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1003,
+    "line": 1008,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -793,7 +793,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1026,
+    "line": 1031,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n                  void run(async () => {\n                    const b = await api<Booking>(\"book\", {\n                      routeId: selectedRoute.id,\n                      period,\n                      direction,\n                      expectedQuote: quote,\n                      idempotencyKey,\n                    });\n                    setBooking({\n                      ...b,\n                      origin: selectedRoute.origin,\n                      destination: selectedRoute.destination,\n                    });\n                    go(19);\n                  })\n                }",
@@ -802,7 +802,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1068,
+    "line": 1073,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{submit(async () => {\n            await api(\"request.create\", {\n              origin,\n              destination,\n              departure,\n              direction,\n            });\n            setNotice(\"طلب خطك اتسجل.\");\n          })}",
@@ -811,7 +811,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1080,
+    "line": 1085,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setOrigin(e.target.value)}",
@@ -820,7 +820,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1087,
+    "line": 1092,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setDestination(e.target.value)}",
@@ -829,7 +829,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1094,
+    "line": 1099,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setDeparture(e.target.value)}",
@@ -838,7 +838,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1101,
+    "line": 1106,
     "tag": "Select",
     "action": "onChange",
     "handler": "{setDirection}",
@@ -847,7 +847,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1111,
+    "line": 1116,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -856,7 +856,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1119,
+    "line": 1124,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(profile?.role === \"captain\" ? 52 : 29)}",
@@ -865,7 +865,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1139,
+    "line": 1144,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n                void run(async () => {\n                  const b = await api<Booking>(\n                    profile?.role === \"captain\"\n                      ? \"payment.received\"\n                      : \"payment.paid\",\n                    { bookingId: booking.id },\n                  );\n                  setBooking({ ...booking, ...b });\n                  setRevision((v) => v + 1);\n                })\n              }",
@@ -874,7 +874,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1163,
+    "line": 1168,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setBody(e.target.value)}",
@@ -883,7 +883,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1169,
+    "line": 1174,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n                void run(async () => {\n                  await api(\"dispute.open\", {\n                    bookingId: booking.id,\n                    reason: body,\n                  });\n                  setBooking({ ...booking, status: \"disputed\" });\n                  setNotice(\"الحالة اتبعتت للمراجعة.\");\n                })\n              }",
@@ -892,7 +892,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1222,
+    "line": 1227,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -901,7 +901,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1223,
+    "line": 1228,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -910,7 +910,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1226,
+    "line": 1231,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(28)}",
@@ -919,7 +919,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1244,
+    "line": 1249,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => {\n                  setConversation(String(row.id));\n                  go(32);\n                }}",
@@ -928,7 +928,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1255,
+    "line": 1260,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(36)}",
@@ -937,7 +937,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1262,
+    "line": 1267,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{submit(async () => {\n              await api(\"message.send\", { conversationId: conversation, body });\n              setBody(\"\");\n              setRevision((v) => v + 1);\n            })}",
@@ -946,7 +946,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1270,
+    "line": 1275,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setBody(e.target.value)}",
@@ -955,7 +955,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1277,
+    "line": 1282,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -964,7 +964,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1290,
+    "line": 1295,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(35)}",
@@ -973,7 +973,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1291,
+    "line": 1296,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(24)}",
@@ -982,7 +982,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1292,
+    "line": 1297,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(36)}",
@@ -991,7 +991,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1293,
+    "line": 1298,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n                void run(async () => {\n                  if (client) await client.auth.signOut();\n                  setProfile(null);\n                  go(8);\n                })\n              }",
@@ -1000,7 +1000,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1310,
+    "line": 1315,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{submit(async () => {\n            await api(\"support.create\", { body });\n            setBody(\"\");\n            setNotice(\"رسالتك وصلت للدعم.\");\n          })}",
@@ -1009,7 +1009,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1320,
+    "line": 1325,
     "tag": "textarea",
     "action": "onChange",
     "handler": "{(e) => setBody(e.target.value)}",
@@ -1018,7 +1018,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1328,
+    "line": 1333,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -1027,7 +1027,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1333,
+    "line": 1338,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{submit(async () => {\n            await api(\"captain.save\", { experience: body });\n            go(39);\n          })}",
@@ -1036,7 +1036,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1340,
+    "line": 1345,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setBody(e.target.value)}",
@@ -1045,7 +1045,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1345,
+    "line": 1350,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -1054,7 +1054,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1346,
+    "line": 1351,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(43)}",
@@ -1063,7 +1063,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1354,
+    "line": 1359,
     "tag": "Select",
     "action": "onChange",
     "handler": "{setDocumentKind}",
@@ -1072,7 +1072,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1367,
+    "line": 1372,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setExpiresOn(e.target.value)}",
@@ -1081,7 +1081,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1373,
+    "line": 1378,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => {\n              const file = e.target.files?.[0];\n              if (!file) return;\n              void run(async () => {\n                if (!client || !profile) throw new Error(\"AUTH_REQUIRED\");\n                if (\n                  file.size > 5 * 1024 * 1024 ||\n                  ![\"image/jpeg\", \"image/png\", \"application/pdf\"].includes(\n                    file.type,\n                  )\n                )\n                  throw new Error(\"INVALID_FILE\");\n                const path = `${profile.id}/${crypto.randomUUID()}`;\n                const { error } = await client.storage\n                  .from(\"sekka-v2-documents\")\n                  .upload(path, file, {\n                    contentType: file.type,\n                    upsert: false,\n                  });\n                if (error) throw error;\n                await api(\"document.save\", {\n                  kind: documentKind,\n                  path,\n                  expiresOn,\n                });\n                setNotice(\"المستند اترفع للمراجعة.\");\n              });\n            }}",
@@ -1090,7 +1090,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1406,
+    "line": 1411,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(screen === 39 ? 40 : 42)}",
@@ -1099,7 +1099,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1413,
+    "line": 1418,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{submit(async () => {\n            await api(\"vehicle.save\", {\n              category: category || \"PRIME\",\n              model,\n              plate,\n            });\n            go(41);\n          })}",
@@ -1108,7 +1108,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1424,
+    "line": 1429,
     "tag": "Select",
     "action": "onChange",
     "handler": "{setCategory}",
@@ -1117,7 +1117,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1435,
+    "line": 1440,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setModel(e.target.value)}",
@@ -1126,7 +1126,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1441,
+    "line": 1446,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setPlate(e.target.value)}",
@@ -1135,7 +1135,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1447,
+    "line": 1452,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -1144,7 +1144,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1454,
+    "line": 1459,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(38)}",
@@ -1153,7 +1153,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1460,
+    "line": 1465,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(46)}",
@@ -1162,7 +1162,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1467,
+    "line": 1472,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{submit(async () => {\n            if (screen < 51) {\n              go(screen + 1);\n              return;\n            }\n            await api(\"route.create\", {\n              origin,\n              destination,\n              outbound: departure,\n              returnTime: direction === \"outbound\" ? \"\" : returnTime,\n              anchor,\n              seats: Number(seats),\n              prices: [\n                { period: \"weekly\", direction, amount: Number(weekly) },\n                { period: \"monthly\", direction, amount: Number(monthly) },\n              ],\n            });\n            go(45);\n          })}",
@@ -1171,7 +1171,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1491,
+    "line": 1496,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setOrigin(e.target.value)}",
@@ -1180,7 +1180,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1497,
+    "line": 1502,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setDestination(e.target.value)}",
@@ -1189,7 +1189,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1507,
+    "line": 1512,
     "tag": "Select",
     "action": "onChange",
     "handler": "{setDirection}",
@@ -1198,7 +1198,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1517,
+    "line": 1522,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setDeparture(e.target.value)}",
@@ -1207,7 +1207,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1525,
+    "line": 1530,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setReturnTime(e.target.value)}",
@@ -1216,7 +1216,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1538,
+    "line": 1543,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setAnchor(e.target.value)}",
@@ -1225,7 +1225,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1553,
+    "line": 1558,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setSeats(e.target.value)}",
@@ -1234,7 +1234,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1566,
+    "line": 1571,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setWeekly(e.target.value)}",
@@ -1243,7 +1243,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1574,
+    "line": 1579,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setMonthly(e.target.value)}",
@@ -1252,7 +1252,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1600,
+    "line": 1605,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -1261,7 +1261,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1610,
+    "line": 1615,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(Number(id))}",
@@ -1270,7 +1270,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1627,
+    "line": 1632,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n                          void run(async () => {\n                            await api(\"admin.review\", {\n                              resource: adminResources[screen],\n                              id: row.id ?? row.user_id,\n                              status,\n                            });\n                            setRevision((v) => v + 1);\n                          })\n                        }",
@@ -1279,7 +1279,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1698,
+    "line": 1703,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(publicScreen(screen) >= 62 ? 64 : 44)}",
@@ -1288,7 +1288,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1958,
+    "line": 1964,
     "tag": "a",
     "action": "href",
     "handler": "\"#content\"",
@@ -1297,7 +1297,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1962,
+    "line": 1968,
     "tag": "a",
     "action": "onClick",
     "handler": "{(e) => {\n            e.preventDefault();\n            go(8);\n          }}",
@@ -1306,7 +1306,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1977,
+    "line": 1983,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => changeTheme(theme === \"light\" ? \"dark\" : \"light\")}",
@@ -1315,7 +1315,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1984,
+    "line": 1990,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(signedIn ? 34 : 3)}",
@@ -1324,7 +1324,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1996,
+    "line": 2002,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(id)}",
@@ -1333,7 +1333,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 2005,
+    "line": 2011,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(64)}",
@@ -1342,7 +1342,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 2024,
+    "line": 2030,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(profile?.role === \"captain\" ? 44 : 8)}",
@@ -1351,7 +1351,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 2041,
+    "line": 2047,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => setRevision((v) => v + 1)}",
@@ -1360,7 +1360,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 2066,
+    "line": 2072,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(id)}",
@@ -1639,16 +1639,16 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 68,
+    "line": 72,
     "tag": "input",
     "action": "onChange",
-    "handler": "{(e) => {\n                  const file = e.target.files?.[0];\n                  if (!file) return;\n                  setSubmitted(false);\n                  if (\n                    ![\"image/jpeg\", \"image/png\", \"application/pdf\"].includes(\n                      file.type,\n                    ) ||\n                    file.size > 5 * 1024 * 1024 ||\n                    file.size === 0\n                  ) {\n                    setNote(\n                      \"اختار صورة JPG أو PNG أو ملف PDF، بحجم أكبر من صفر ولحد 5 ميجا.\",\n                    );\n                    e.target.value = \"\";\n                    return;\n                  }\n                  setDocs((d) => ({ ...d, [kind]: file.name }));\n                  setNote(\"الملف اتحدد على جهازك فقط. مفيش رفع أو إرسال.\");\n                }}",
+    "handler": "{(e) => {\n                  const file = e.target.files?.[0];\n                  if (!file) return;\n                  setSubmitted(false);\n                  if (\n                    ![\"image/jpeg\", \"image/png\", \"application/pdf\"].includes(\n                      file.type,\n                    ) ||\n                    file.size > 5 * 1024 * 1024 ||\n                    file.size === 0\n                  ) {\n                    setNote(\n                      tr(\"اختار صورة JPG أو PNG أو ملف PDF، بحجم أكبر من صفر ولحد 5 ميجا.\"),\n                    );\n                    e.target.value = \"\";\n                    return;\n                  }\n                  setDocs((d) => ({ ...d, [kind]: file.name }));\n                  setNote(tr(\"الملف اتحدد على جهازك فقط. مفيش رفع أو إرسال.\"));\n                }}",
     "disabled": "{!demo}",
     "label": ""
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 97,
+    "line": 101,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => {\n                    setDocs((d) => {\n                      const next = { ...d };\n                      delete next[kind];\n                      return next;\n                    });\n                    setSubmitted(false);\n                  }}",
@@ -1657,7 +1657,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 118,
+    "line": 119,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n            nav(\n              captainOnboardingScreens[\n                captainOnboardingScreens.indexOf(p.screen) + 1\n              ],\n            )\n          }",
@@ -1666,34 +1666,34 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 140,
+    "line": 141,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n              nav(\n                captainOnboardingScreens[\n                  captainOnboardingScreens.indexOf(p.screen) - 1\n                ],\n              )\n            }",
     "disabled": "{p.screen === 37}",
-    "label": "\"الشاشة السابقة\""
+    "label": "{tr(\"الشاشة السابقة\")}"
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 153,
+    "line": 154,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => nav(+e.target.value)}",
     "disabled": "",
-    "label": "\"شاشة المرحلة الخامسة\""
+    "label": "{tr(\"شاشة المرحلة الخامسة\")}"
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 164,
+    "line": 165,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n              nav(\n                captainOnboardingScreens[\n                  captainOnboardingScreens.indexOf(p.screen) + 1\n                ],\n              )\n            }",
     "disabled": "{p.screen === 76}",
-    "label": "\"الشاشة التالية\""
+    "label": "{tr(\"الشاشة التالية\")}"
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 180,
+    "line": 181,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => p.onTheme(t)}",
@@ -1707,7 +1707,7 @@
     "action": "onClick",
     "handler": "{() =>\n              nav(\n                p.screen === 37\n                  ? 3\n                  : captainOnboardingScreens[\n                      captainOnboardingScreens.indexOf(p.screen) - 1\n                    ],\n              )\n            }",
     "disabled": "",
-    "label": "\"رجوع\""
+    "label": "{tr(\"رجوع\")}"
   },
   {
     "file": "CaptainOnboarding.tsx",
@@ -1720,7 +1720,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 246,
+    "line": 243,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n                nav(demo || p.profile?.role === \"captain\" ? 38 : 3)\n              }",
@@ -1729,7 +1729,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 258,
+    "line": 255,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(3)}",
@@ -1738,7 +1738,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 271,
+    "line": 265,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(43)}",
@@ -1747,7 +1747,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 278,
+    "line": 271,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{(e) => {\n                      e.preventDefault();\n                      setSubmitted(false);\n                      nav(40);\n                    }}",
@@ -1756,7 +1756,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 287,
+    "line": 280,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => {\n                          setName(e.target.value);\n                          setSubmitted(false);\n                        }}",
@@ -1765,7 +1765,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 301,
+    "line": 294,
     "tag": "textarea",
     "action": "onChange",
     "handler": "{(e) => setExperience(e.target.value)}",
@@ -1774,7 +1774,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 308,
+    "line": 301,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -1783,7 +1783,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 324,
+    "line": 317,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{(e) => {\n                      e.preventDefault();\n                      setSubmitted(false);\n                      nav(39);\n                    }}",
@@ -1792,7 +1792,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 333,
+    "line": 326,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => {\n                          setModel(e.target.value);\n                          setSubmitted(false);\n                        }}",
@@ -1801,7 +1801,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 347,
+    "line": 340,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => {\n                          setPlate(e.target.value);\n                          setSubmitted(false);\n                        }}",
@@ -1810,16 +1810,16 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 360,
+    "line": 353,
     "tag": "input",
     "action": "onChange",
-    "handler": "{(e) => setColor(e.target.value)}",
+    "handler": "{(e) => { setColor(e.target.value); setSubmitted(false); }}",
     "disabled": "",
     "label": ""
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 371,
+    "line": 364,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => {\n                            setCategory(c);\n                            setSubmitted(false);\n                          }}",
@@ -1828,7 +1828,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 394,
+    "line": 384,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -1837,7 +1837,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 413,
+    "line": 403,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(38)}",
@@ -1846,7 +1846,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 427,
+    "line": 415,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(40)}",
@@ -1855,7 +1855,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 439,
+    "line": 426,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(39)}",
@@ -1864,7 +1864,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 442,
+    "line": 428,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(39)}",
@@ -1873,7 +1873,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 447,
+    "line": 432,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setReviewed(e.target.checked)}",
@@ -1882,7 +1882,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 455,
+    "line": 439,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => {\n                        setSubmitted(true);\n                        nav(43);\n                      }}",
@@ -1891,7 +1891,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 493,
+    "line": 476,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => (demo ? nav(42) : p.onRefresh())}",
@@ -1900,7 +1900,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 525,
+    "line": 506,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(45)}",
@@ -1909,7 +1909,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 529,
+    "line": 509,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(43)}",

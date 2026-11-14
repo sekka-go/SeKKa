@@ -1,3 +1,5 @@
+import {usePreferences} from "./preferences";
+import {translate} from "./translations";
 import { publicScreen, screenTitle } from "./screenMap";
 import { useState } from "react";
 import { Wordmark, type Appearance } from "./Onboarding";
@@ -27,6 +29,8 @@ export default function CaptainOnboarding(p: {
   error: string;
   onRefresh: () => void;
 }) {
+  const {language}=usePreferences();
+  const tr=(text:string)=>translate(text,language);
   const demo = new URLSearchParams(location.search).get("preview") === "phase5";
   const [name, setName] = useState("");
   const [experience, setExperience] = useState("");
@@ -51,20 +55,20 @@ export default function CaptainOnboarding(p: {
   const blocked = !demo && (!p.signedIn || p.profile?.role !== "captain");
   const actual = p.rows.find((r) => r.kind === "captain");
   const statusLabels: Record<string, string> = {
-    pending: "طلبك قيد المراجعة",
-    approved: "تم اعتماد بيانات الكابتن",
-    changes_requested: "طلبك محتاج تعديل",
-    rejected: "الطلب لم يُعتمد",
-    suspended: "حساب الكابتن موقوف",
+    pending: tr("طلبك قيد المراجعة"),
+    approved: tr("تم اعتماد بيانات الكابتن"),
+    changes_requested: tr("طلبك محتاج تعديل"),
+    rejected: tr("الطلب لم يُعتمد"),
+    suspended: tr("حساب الكابتن موقوف"),
   };
   function files(kinds: DocKind[]) {
     return (
       <>
         {kinds.map((kind) => (
           <section className="d-box b-box c-document" key={kind}>
-            <h2>{documentNames[kind]}</h2>
+            <h2>{tr(documentNames[kind])}</h2>
             <label className="w-field">
-              <span>اختار ملف للمعاينة — {documentNames[kind]}</span>
+              <span>{tr("اختار ملف للمعاينة —")}{tr(documentNames[kind])}</span>
               <input
                 disabled={!demo}
                 type="file"
@@ -81,13 +85,13 @@ export default function CaptainOnboarding(p: {
                     file.size === 0
                   ) {
                     setNote(
-                      "اختار صورة JPG أو PNG أو ملف PDF، بحجم أكبر من صفر ولحد 5 ميجا.",
+                      tr("اختار صورة JPG أو PNG أو ملف PDF، بحجم أكبر من صفر ولحد 5 ميجا."),
                     );
                     e.target.value = "";
                     return;
                   }
                   setDocs((d) => ({ ...d, [kind]: file.name }));
-                  setNote("الملف اتحدد على جهازك فقط. مفيش رفع أو إرسال.");
+                  setNote(tr("الملف اتحدد على جهازك فقط. مفيش رفع أو إرسال."));
                 }}
               />
             </label>
@@ -105,16 +109,13 @@ export default function CaptainOnboarding(p: {
                     setSubmitted(false);
                   }}
                 >
-                  إزالة الاختيار
-                </button>
+                  {tr("إزالة الاختيار")}</button>
               </p>
             )}
           </section>
         ))}
         <p>
-          استخدم ملفات تجريبية. الاختيار مش بيرفع الملف، وبيتمسح لما تقفل أو
-          تحدّث الصفحة.
-        </p>
+          {tr("استخدم ملفات تجريبية. الاختيار مش بيرفع الملف، وبيتمسح لما تقفل أو تحدّث الصفحة.")}</p>
         <button
           className="d-primary b-primary"
           disabled={!demo || kinds.some((k) => !docs[k])}
@@ -126,7 +127,7 @@ export default function CaptainOnboarding(p: {
             )
           }
         >
-          متابعة <DiscoveryIcon name="arrow" />
+          {tr("متابعة")}<DiscoveryIcon name="arrow" />
         </button>
       </>
     );
@@ -135,10 +136,10 @@ export default function CaptainOnboarding(p: {
     <div
       className={`phase-one-stage discovery-stage booking-stage captain-stage ${p.theme}`}
     >
-      <nav className="phase-review-bar" aria-label="معاينة المرحلة الخامسة">
+      <nav className="phase-review-bar" aria-label={tr("معاينة المرحلة الخامسة")}>
         <div className="review-screen-nav">
           <button
-            aria-label="الشاشة السابقة"
+            aria-label={tr("الشاشة السابقة")}
             disabled={p.screen === 37}
             onClick={() =>
               nav(
@@ -151,18 +152,18 @@ export default function CaptainOnboarding(p: {
             ‹
           </button>
           <select
-            aria-label="شاشة المرحلة الخامسة"
+            aria-label={tr("شاشة المرحلة الخامسة")}
             value={p.screen}
             onChange={(e) => nav(+e.target.value)}
           >
             {captainOnboardingScreens.map((n) => (
               <option key={n} value={n}>
-                {publicScreen(n)} · {screenTitle(n)}
+                {publicScreen(n)} · {screenTitle(n,language)}
               </option>
             ))}
           </select>
           <button
-            aria-label="الشاشة التالية"
+            aria-label={tr("الشاشة التالية")}
             disabled={p.screen === 76}
             onClick={() =>
               nav(
@@ -182,21 +183,20 @@ export default function CaptainOnboarding(p: {
               aria-pressed={p.theme === t}
               onClick={() => p.onTheme(t)}
             >
-              {t === "dark" ? "دارك" : "لايت"}
+              {t === "dark" ? tr("دارك") : tr("لايت")}
             </button>
           ))}
         </div>
       </nav>
       {demo && (
         <p className="w-preview">
-          معاينة المرحلة الخامسة · 7 شاشات · مفيش إرسال طلبات أو مستندات حقيقية
-        </p>
+          {tr("معاينة المرحلة الخامسة · 7 شاشات · مفيش إرسال طلبات أو مستندات حقيقية")}</p>
       )}
       <main className="phase-canvas d-canvas b-canvas c-canvas">
         <header className="d-header">
           <button
             className="phase-back"
-            aria-label="رجوع"
+            aria-label={tr("رجوع")}
             onClick={() =>
               nav(
                 p.screen === 37
@@ -212,18 +212,17 @@ export default function CaptainOnboarding(p: {
           <Wordmark />
         </header>
         <div className="b-stage-label">
-          انضم لسِكّة <span dir="ltr">{publicScreen(p.screen) - 35} / 7</span>
+          {tr("انضم لسِكّة")}<span dir="ltr">{publicScreen(p.screen) - 35} / 7</span>
         </div>
-        <h1 className="b-title">{screenTitle(p.screen)}</h1>
+        <h1 className="b-title">{screenTitle(p.screen,language)}</h1>
         {p.error && (
           <div role="alert">
             <p>{p.error}</p>
             <button className="w-link" onClick={p.onRefresh}>
-              حاول تاني
-            </button>
+              {tr("حاول تاني")}</button>
           </div>
         )}
-        {p.busy && <p role="status">بنحمّل بيانات طلبك…</p>}
+        {p.busy && <p role="status">{tr("بنحمّل بيانات طلبك…")}</p>}
         {note && (
           <p role="status" className="d-box b-box">
             {note}
@@ -232,15 +231,13 @@ export default function CaptainOnboarding(p: {
         {p.screen === 37 ? (
           <>
             <section className="d-box b-box">
-              <h2>شغّل خطك مع سِكّة</h2>
+              <h2>{tr("شغّل خطك مع سِكّة")}</h2>
               <p>
-                قدّم بياناتك وبيانات عربيتك للمراجعة، وبعد الاعتماد تقدر تحدد خطك
-                ومواعيدك وعروض الاشتراك.
-              </p>
+                {tr("قدّم بياناتك وبيانات عربيتك للمراجعة، وبعد الاعتماد تقدر تحدد خطك ومواعيدك وعروض الاشتراك.")}</p>
               <ol className="c-steps">
-                <li>كمّل بياناتك</li>
-                <li>جهّز مستنداتك وبيانات العربية</li>
-                <li>راجع طلبك وتابع حالته</li>
+                <li>{tr("كمّل بياناتك")}</li>
+                <li>{tr("جهّز مستنداتك وبيانات العربية")}</li>
+                <li>{tr("راجع طلبك وتابع حالته")}</li>
               </ol>
             </section>
             <button
@@ -249,28 +246,24 @@ export default function CaptainOnboarding(p: {
                 nav(demo || p.profile?.role === "captain" ? 38 : 3)
               }
             >
-              ابدأ يا كابتن <DiscoveryIcon name="arrow" />
+              {tr("ابدأ يا كابتن")}<DiscoveryIcon name="arrow" />
             </button>
           </>
         ) : blocked ? (
           <section className="d-box b-box">
-            <h2>سجّل بحساب كابتن عشان نكمل.</h2>
+            <h2>{tr("سجّل بحساب كابتن عشان نكمل.")}</h2>
             <button className="d-primary b-primary" onClick={() => nav(3)}>
-              اختار نوع حسابك
-            </button>
+              {tr("اختار نوع حسابك")}</button>
           </section>
         ) : (
           <>
             {!demo && ![43, 76].includes(p.screen) ? (
               <section className="d-box b-box">
-                <h2>تقديم الطلب لسه مش متاح</h2>
+                <h2>{tr("تقديم الطلب لسه مش متاح")}</h2>
                 <p>
-                  تفعيل استقبال المستندات محتاج اعتماد سياسة التحقق وحماية
-                  المستندات. بياناتك الحالية محفوظة، ومش هنرفع ملفات دلوقتي.
-                </p>
+                  {tr("تفعيل استقبال المستندات محتاج اعتماد سياسة التحقق وحماية المستندات. بياناتك الحالية محفوظة، ومش هنرفع ملفات دلوقتي.")}</p>
                 <button className="w-link" onClick={() => nav(43)}>
-                  تابع حالة الطلب الحالي
-                </button>
+                  {tr("تابع حالة الطلب الحالي")}</button>
               </section>
             ) : (
               <>
@@ -283,7 +276,7 @@ export default function CaptainOnboarding(p: {
                     }}
                   >
                     <label className="w-field">
-                      <span>الاسم الكامل</span>
+                      <span>{tr("الاسم الكامل")}</span>
                       <input
                         required
                         minLength={2}
@@ -297,19 +290,19 @@ export default function CaptainOnboarding(p: {
                       />
                     </label>
                     <label className="w-field">
-                      <span>خبرتك في تشغيل الخطوط (اختياري)</span>
+                      <span>{tr("خبرتك في تشغيل الخطوط (اختياري)")}</span>
                       <textarea
                         maxLength={1000}
                         value={experience}
                         onChange={(e) => setExperience(e.target.value)}
                       />
                     </label>
-                    <p>الاسم وباقي البيانات هنا للمعاينة بس.</p>
+                    <p>{tr("الاسم وباقي البيانات هنا للمعاينة بس.")}</p>
                     <button
                       className="d-primary b-primary"
                       disabled={name.trim().length < 2}
                     >
-                      متابعة <DiscoveryIcon name="arrow" />
+                      {tr("متابعة")}<DiscoveryIcon name="arrow" />
                     </button>
                   </form>
                 )}
@@ -329,7 +322,7 @@ export default function CaptainOnboarding(p: {
                     }}
                   >
                     <label className="w-field">
-                      <span>موديل العربية</span>
+                      <span>{tr("موديل العربية")}</span>
                       <input
                         required
                         minLength={2}
@@ -339,11 +332,11 @@ export default function CaptainOnboarding(p: {
                           setModel(e.target.value);
                           setSubmitted(false);
                         }}
-                        placeholder="مثال: تويوتا كورولا"
+                        placeholder={tr("مثال: تويوتا كورولا")}
                       />
                     </label>
                     <label className="w-field">
-                      <span>رقم اللوحة</span>
+                      <span>{tr("رقم اللوحة")}</span>
                       <input
                         required
                         minLength={3}
@@ -356,15 +349,15 @@ export default function CaptainOnboarding(p: {
                       />
                     </label>
                     <label className="w-field">
-                      <span>لون العربية</span>
+                      <span>{tr("لون العربية")}</span>
                       <input
                         value={color}
                         maxLength={40}
-                        onChange={(e) => setColor(e.target.value)}
+                        onChange={(e) => { setColor(e.target.value); setSubmitted(false); }}
                       />
                     </label>
                     <fieldset className="c-categories">
-                      <legend>فئة العربية</legend>
+                      <legend>{tr("فئة العربية")}</legend>
                       {(
                         Object.keys(capacities) as (keyof typeof capacities)[]
                       ).map((c) => (
@@ -380,17 +373,14 @@ export default function CaptainOnboarding(p: {
                           <strong>{c}</strong>
                           <span>
                             {c === "PRIME" || c === "SAVER"
-                              ? "ملاكي"
-                              : "هاي إس"}{" "}
-                            · {capacities[c]} مقاعد
-                          </span>
+                              ? tr("ملاكي")
+                              : tr("هاي إس")}{" "}
+                            · {capacities[c]} {tr("مقاعد")}</span>
                         </button>
                       ))}
                     </fieldset>
                     <p>
-                      سعة الفئة ثابتة، وعدد المقاعد المتاحة في الخط بيتحدد
-                      بعدين.
-                    </p>
+                      {tr("سعة الفئة ثابتة، وعدد المقاعد المتاحة في الخط بيتحدد بعدين.")}</p>
                     <button
                       className="d-primary b-primary"
                       disabled={
@@ -399,7 +389,7 @@ export default function CaptainOnboarding(p: {
                         !color.trim()
                       }
                     >
-                      متابعة <DiscoveryIcon name="arrow" />
+                      {tr("متابعة")}<DiscoveryIcon name="arrow" />
                     </button>
                   </form>
                 )}
@@ -407,41 +397,36 @@ export default function CaptainOnboarding(p: {
                 {p.screen === 42 && (
                   <>
                     <section className="d-box b-box">
-                      <h2>بياناتك</h2>
-                      <p>{name || "الاسم لسه ناقص"}</p>
-                      <p>{experience || "مفيش خبرة مضافة"}</p>
+                      <h2>{tr("بياناتك")}</h2>
+                      <p>{name || tr("الاسم لسه ناقص")}</p>
+                      <p>{experience || tr("مفيش خبرة مضافة")}</p>
                       <button className="w-link" onClick={() => nav(38)}>
-                        تعديل بيانات الكابتن
-                      </button>
+                        {tr("تعديل بيانات الكابتن")}</button>
                     </section>
                     <section className="d-box b-box">
-                      <h2>عربيتك</h2>
+                      <h2>{tr("عربيتك")}</h2>
                       <p>
-                        {model || "الموديل لسه ناقص"} ·{" "}
-                        {color || "اللون لسه ناقص"} ·{" "}
-                        {plate || "اللوحة لسه ناقصة"}
+                        {model || tr("الموديل لسه ناقص")} ·{" "}
+                        {color || tr("اللون لسه ناقص")} ·{" "}
+                        {plate || tr("اللوحة لسه ناقصة")}
                       </p>
                       <p>
-                        {category} · {capacities[category]} مقاعد
-                      </p>
+                        {category} · {capacities[category]} {tr("مقاعد")}</p>
                       <button className="w-link" onClick={() => nav(40)}>
-                        تعديل بيانات العربية
-                      </button>
+                        {tr("تعديل بيانات العربية")}</button>
                     </section>
                     <section className="d-box b-box">
-                      <h2>المستندات المختارة</h2>
+                      <h2>{tr("المستندات المختارة")}</h2>
                       {(Object.keys(documentNames) as DocKind[]).map((k) => (
                         <p key={k}>
-                          {documentNames[k]}:{" "}
-                          {docs[k] ? "تم الاختيار محليًا" : "لسه ناقص"}
+                          {tr(documentNames[k])}:{" "}
+                          {docs[k] ? tr("تم الاختيار محليًا") : tr("لسه ناقص")}
                         </p>
                       ))}
                       <button className="w-link" onClick={() => nav(39)}>
-                        راجع مستنداتك
-                      </button>
+                        {tr("راجع مستنداتك")}</button>
                       <button className="w-link" onClick={() => nav(39)}>
-                        راجع مستندات العربية
-                      </button>
+                        {tr("راجع مستندات العربية")}</button>
                     </section>
                     <label className="c-check">
                       <input
@@ -449,9 +434,8 @@ export default function CaptainOnboarding(p: {
                         checked={reviewed}
                         onChange={(e) => setReviewed(e.target.checked)}
                       />
-                      راجعت البيانات التجريبية
-                    </label>
-                    {!complete && <p>كمّل البيانات والمستندات الناقصة الأول.</p>}
+                      {tr("راجعت البيانات التجريبية")}</label>
+                    {!complete && <p>{tr("كمّل البيانات والمستندات الناقصة الأول.")}</p>}
                     <button
                       className="d-primary b-primary"
                       disabled={!complete || !reviewed}
@@ -460,8 +444,7 @@ export default function CaptainOnboarding(p: {
                         nav(43);
                       }}
                     >
-                      معاينة حالة الطلب
-                    </button>
+                      {tr("معاينة حالة الطلب")}</button>
                   </>
                 )}
                 {p.screen === 43 && (
@@ -469,15 +452,15 @@ export default function CaptainOnboarding(p: {
                     <h2>
                       {demo
                         ? submitted
-                          ? "مثال: طلبك قيد المراجعة"
-                          : "لسه مفيش طلب في المعاينة"
+                          ? tr("مثال: طلبك قيد المراجعة")
+                          : tr("لسه مفيش طلب في المعاينة")
                         : statusLabels[String(actual?.status)] ||
-                          "لسه مفيش طلب متاح"}
+                          tr("لسه مفيش طلب متاح")}
                     </h2>
                     <p>
                       {demo
-                        ? "دي معاينة فقط؛ مفيش طلب اتبعت أو اعتماد حصل. اعتماد الكابتن والعربية بيحتاج مراجعة فعلية."
-                        : "حالة الكابتن مستقلة عن اعتماد العربية والمستندات. الموافقة على جزء مش معناها إن كل الطلب معتمد."}
+                        ? tr("دي معاينة فقط؛ مفيش طلب اتبعت أو اعتماد حصل. اعتماد الكابتن والعربية بيحتاج مراجعة فعلية.")
+                        : tr("حالة الكابتن مستقلة عن اعتماد العربية والمستندات. الموافقة على جزء مش معناها إن كل الطلب معتمد.")}
                     </p>
                     {!demo &&
                       p.rows
@@ -485,16 +468,16 @@ export default function CaptainOnboarding(p: {
                         .map((r, i) => (
                           <p key={i}>
                             {r.kind === "vehicle"
-                              ? "العربية"
-                              : documentNames[r.kind as DocKind] || "مستند"}
-                            : {statusLabels[String(r.status)] || "قيد المراجعة"}
+                              ? (language==="en"?"Vehicle":"العربية")
+                              : documentNames[r.kind as DocKind] || tr("مستند")}
+                            : {statusLabels[String(r.status)] || tr("قيد المراجعة")}
                           </p>
                         ))}
                     <button
                       className="w-link"
                       onClick={() => (demo ? nav(42) : p.onRefresh())}
                     >
-                      {demo ? "ارجع لمراجعة الطلب" : "تحديث الحالة"}
+                      {demo ? tr("ارجع لمراجعة الطلب") : tr("تحديث الحالة")}
                     </button>
                   </section>
                 )}
@@ -510,29 +493,25 @@ export default function CaptainOnboarding(p: {
               p.rows.some(
                 (r) => r.kind === "vehicle" && r.status === "approved",
               )
-                ? "حساب الكابتن والعربية معتمدين"
-                : "التفعيل مستني اعتماد الإدارة"}
+                ? tr("حساب الكابتن والعربية معتمدين")
+                : tr("التفعيل مستني اعتماد الإدارة")}
             </h2>
             <p>
-              الدخول لإدارة الخطوط مش بديل عن اعتماد الكابتن والعربية. المعاينة
-              ما بتمنحش صلاحيات نشر.
-            </p>
+              {tr("الدخول لإدارة الخطوط مش بديل عن اعتماد الكابتن والعربية. المعاينة ما بتمنحش صلاحيات نشر.")}</p>
             {!demo &&
             actual?.status === "approved" &&
             p.rows.some(
               (r) => r.kind === "vehicle" && r.status === "approved",
             ) ? (
               <button className="d-primary" onClick={() => nav(45)}>
-                إدارة خطوطي
-              </button>
+                {tr("إدارة خطوطي")}</button>
             ) : (
               <button className="w-link" onClick={() => nav(43)}>
-                متابعة حالة الطلب
-              </button>
+                {tr("متابعة حالة الطلب")}</button>
             )}
           </section>
         )}
-        <p className="w-footnote">سِكّة — معاك في السِكّة</p>
+        <p className="w-footnote">{tr("سِكّة — معاك في السِكّة")}</p>
       </main>
     </div>
   );

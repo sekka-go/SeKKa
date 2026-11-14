@@ -236,10 +236,15 @@ export default function SubscriptionApp() {
   const [operationsData, setOperationsData] = useState<OperationsData | null>(
     null,
   );
+  const [prerequisiteReturn, setPrerequisiteReturn] = useState(() => {
+    try { return sessionStorage.getItem("sekka.prerequisiteReturn"); }
+    catch { return null; }
+  });
   function go(id: number, routeId = route?.id, bookingId = booking?.id) {
     if (id === 13) id = 19;
     if (screen > 7 && [3,4,6].includes(id)) {
-      sessionStorage.setItem("sekka.prerequisiteReturn",location.search);
+      setPrerequisiteReturn(location.search);
+      try { sessionStorage.setItem("sekka.prerequisiteReturn", location.search); } catch { /* Keep the in-memory fallback. */ }
     }
     setScreen(id);
     setContact(null);
@@ -1933,9 +1938,10 @@ export default function SubscriptionApp() {
         theme={theme}
         onTheme={changeTheme}
         go={go}
-        onReturn={sessionStorage.getItem("sekka.prerequisiteReturn") ? () => {
-          const saved = sessionStorage.getItem("sekka.prerequisiteReturn");
-          sessionStorage.removeItem("sekka.prerequisiteReturn");
+        onReturn={prerequisiteReturn ? () => {
+          const saved = prerequisiteReturn;
+          setPrerequisiteReturn(null);
+          try { sessionStorage.removeItem("sekka.prerequisiteReturn"); } catch { /* Storage is optional. */ }
           if (!saved || !saved.startsWith("?")) return;
           history.pushState({}, "", location.pathname + saved);
           setScreen(getScreen());
