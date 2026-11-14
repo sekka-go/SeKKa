@@ -119,6 +119,17 @@ test('interactive preview locks booking terms and persists dual-confirmation sec
  await page.goto('/?screen=70&preview=phase8');
  await expect(page.locator('tbody tr')).toHaveCount(1);
  await expect(page.locator('tbody')).toContainText('حجز تأمين جدية الحجز');
+ // A user changing languages must see the same ledger with translated admin labels.
+ await page.goto('/?screen=32&preview=phase4');
+ await page.getByLabel('language_preference',{exact:true}).selectOption('en');
+ await page.goto('/?screen=68&preview=phase8');
+ await expect(page.locator('tbody')).toContainText('Preview rider');
+ await expect(page.locator('tbody')).toContainText('Awaiting payment');
+ await page.goto('/?screen=69&preview=phase8');
+ await expect(page.locator('tbody')).toContainText('Preview rider wallet');
+ await expect(page.locator('tbody')).toContainText('EGP 50');
+ await page.goto('/?screen=32&preview=phase4');
+ await page.getByLabel('language_preference',{exact:true}).selectOption('ar');
  await page.goto(confirmedBookingUrl);
  // Simulate a later edit of the source offer. The confirmed snapshot must stay fixed.
  await page.evaluate(()=>{const offer=JSON.parse(sessionStorage.getItem('sekka.preview.selectedOffer')!);offer.amount=99999;offer.selectedStops.pickup.name='نقطة معدلة';sessionStorage.setItem('sekka.preview.selectedOffer',JSON.stringify(offer));});
