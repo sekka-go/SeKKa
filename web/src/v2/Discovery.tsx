@@ -941,7 +941,7 @@ export default function Discovery(p: DiscoveryProps) {
           <section className="d-box">
             <h2>{tr("أهلًا بيك في سِكّة")}</h2>
             <p>{tr("مشوارك المنتظم يبدأ من هنا.")}</p>
-            <div className="d-period-options d-home-quick-actions" aria-label={tr("اختصارات الرئيسية")}>
+            <div className="d-period-options d-home-quick-actions">
               <button onClick={() => nav(29)}>{tr("اشتراكاتي")}</button>
               <button onClick={() => nav(14)}>{tr("المفضلة")}</button>
               <button onClick={() => nav(24)}>{tr("المحفظة")}</button>
