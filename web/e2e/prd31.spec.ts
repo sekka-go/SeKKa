@@ -157,3 +157,18 @@ test('English wallet preserves amount through failed result and retry',async({br
  await expect(page.getByLabel('Top-up amount in EGP')).toHaveValue('240');
  await context.close();
 });
+
+test('English discovery keeps canonical search values and reviews an unmatched commute',async({browser})=>{
+ const context=await browser.newContext({locale:'en-GB'});
+ const page=await context.newPage();
+ await page.goto('/?screen=9&preview=phase2');
+ await page.getByLabel('From where?',{exact:true}).selectOption('الدقي');
+ await page.getByRole('button',{name:'Search for routes',exact:true}).click();
+ await page.getByRole('button',{name:'Request a route',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Review your search'})).toBeVisible();
+ await expect(page.locator('.d-journey')).toContainText('Dokki');
+ await page.getByLabel('Optional notes').fill('Near the square');
+ await page.getByRole('button',{name:'Confirm request',exact:true}).click();
+ await expect(page.getByRole('button',{name:'Request confirmed in preview'})).toBeDisabled();
+ await context.close();
+});

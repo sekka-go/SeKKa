@@ -1,3 +1,5 @@
+import {usePreferences} from "./preferences";
+import {translate} from "./translations";
 import { readPublishedPreviews } from "./CaptainRoutes";
 import { selectStops, matchesStops, type Stop } from "../../../packages/domain/stops";
 import { publicScreen } from "./screenMap";
@@ -317,13 +319,13 @@ function Art({
     </span>
   );
 }
-const money = (v: number | null) =>
-  v === null ? "السعر مش متاح" : `${v.toLocaleString("en-US")} ج.م`;
-function time(v: string) {
+const money = (v: number | null, language: "en" | "ar") =>
+  v === null ? translate("السعر مش متاح",language) : `${v.toLocaleString("en-US")} ${language === "en" ? "EGP" : "ج.م"}`;
+function time(v: string, language: "en" | "ar") {
   if (!v) return "—";
   const [hh, mm] = v.split(":");
   const h = Number(hh);
-  return `${String(h % 12 || 12).padStart(2, "0")}:${mm} ${h < 12 ? "ص" : "م"}`;
+  return `${String(h % 12 || 12).padStart(2, "0")}:${mm} ${translate(h < 12 ? "ص" : "م", language)}`;
 }
 function Action({
   children,
@@ -349,30 +351,32 @@ function Action({
   );
 }
 function Journey({ line, compact = false }: { line: Line; compact?: boolean }) {
+  const {language} = usePreferences();
+  const tr=(text:string)=>translate(text,language);
   return (
     <div className={`d-journey ${compact ? "compact" : ""}`}>
       <div className="d-locations">
         <span>
           <DiscoveryIcon name="pin" />
-          {line.origin}
+          {tr(line.origin)}
         </span>
         <DiscoveryIcon name="swap" />
         <span>
           <DiscoveryIcon name="pin" />
-          {line.destination}
+          {tr(line.destination)}
         </span>
       </div>
       <div className="d-times">
         <span>
           <DiscoveryIcon name="sun" />
           <span>
-            الذهاب{compact ? ":" : ""} <b dir="auto">{time(line.outbound)}</b>
+            {tr("الذهاب")}{compact ? ":" : ""} <b dir="auto">{time(line.outbound,language)}</b>
           </span>
         </span>
         <span>
           <DiscoveryIcon name="moon" />
           <span>
-            العودة{compact ? ":" : ""} <b dir="auto">{time(line.returnTime)}</b>
+            {tr("العودة")}{compact ? ":" : ""} <b dir="auto">{time(line.returnTime,language)}</b>
           </span>
         </span>
       </div>
@@ -437,6 +441,8 @@ export type DiscoveryProps = {
 };
 export default function Discovery(p: DiscoveryProps) {
   const { screen, theme, onTheme, go } = p;
+  const {language}=usePreferences();
+  const tr=(text:string)=>translate(text,language);
   const demo = new URLSearchParams(location.search).get("preview") === "phase2";
   const [origin, setOrigin] = useState(demo ? "المعادي" : ""),
     [destination, setDestination] = useState(demo ? "التجمع" : "");
@@ -472,8 +478,8 @@ export default function Discovery(p: DiscoveryProps) {
   };
   const queryLine = {
     ...current,
-    origin: origin || "منطقة الانطلاق",
-    destination: destination || "منطقة الوصول",
+    origin: origin || tr("منطقة الانطلاق"),
+    destination: destination || tr("منطقة الوصول"),
     outbound,
     returnTime,
   };
@@ -494,7 +500,7 @@ export default function Discovery(p: DiscoveryProps) {
   const favoritesList = demo
     ? favoriteExamples.filter((l) => favorites.includes(l.id))
     : lines;
-  const heading = titles[screen];
+  const heading = tr(titles[screen]);
   const titleIcon = (
     {
       8: "route",
@@ -524,11 +530,11 @@ export default function Discovery(p: DiscoveryProps) {
   function search() {
     setMessage("");
     if (!origin || !destination) {
-      setMessage("اختار منطقة الانطلاق والوصول عشان نكمل.");
+      setMessage(tr("اختار منطقة الانطلاق والوصول عشان نكمل."));
       return;
     }
     if (origin === destination) {
-      setMessage("اختار منطقتين مختلفتين.");
+      setMessage(tr("اختار منطقتين مختلفتين."));
       return;
     }
     setSearched(true); setRequestSent(false);
@@ -556,7 +562,7 @@ export default function Discovery(p: DiscoveryProps) {
       try {
         await p.onFavorite(id);
       } catch {
-        setMessage("حفظ الخط محتاج تسجيل الدخول واتصال بالخدمة.");
+        setMessage(tr("حفظ الخط محتاج تسجيل الدخول واتصال بالخدمة."));
       }
     }
   }
@@ -564,7 +570,7 @@ export default function Discovery(p: DiscoveryProps) {
     e.preventDefault();
     if (!searched || filtered.length || requestSent) return;
     setRequestSent(true);
-    setMessage("تم تأكيد الطلب في المعاينة فقط. لا يوجد حجز مقعد أو تأمين.");
+    setMessage(tr("تم تأكيد الطلب في المعاينة فقط. لا يوجد حجز مقعد أو تأمين."));
   }
   const areaSelect = (
     value: string,
@@ -581,7 +587,7 @@ export default function Discovery(p: DiscoveryProps) {
         {label}
       </option>
       {servedAreas.map((a) => (
-        <option key={a}>{a}</option>
+        <option key={a} value={a}>{tr(a)}</option>
       ))}
     </select>
   );
@@ -596,7 +602,7 @@ export default function Discovery(p: DiscoveryProps) {
           onClick={() => setPeriod(v)}
         >
           <DiscoveryIcon name="calendar" />
-          {v === "monthly" ? "شهري" : "أسبوعي"}
+          {v === "monthly" ? tr("شهري") : tr("أسبوعي")}
           <span className="d-radio" />
         </button>
       ))}
@@ -606,7 +612,7 @@ export default function Discovery(p: DiscoveryProps) {
     <div className={`phase-one-stage discovery-stage ${theme}`}>
       <nav
         className="phase-review-bar d-review"
-        aria-label="معاينة المرحلة الثانية"
+        aria-label={tr("معاينة المرحلة الثانية")}
       >
         <div className="review-screen-nav">
           <button
@@ -617,20 +623,20 @@ export default function Discovery(p: DiscoveryProps) {
                 ],
               )
             }
-            aria-label="الشاشة السابقة"
+            aria-label={tr("الشاشة السابقة")}
           >
             ‹
           </button>
           <label>
-            الشاشة{" "}
+            {tr("الشاشة")}{" "}
             <select
-              aria-label="شاشة المرحلة الثانية"
+              aria-label={tr("شاشة المرحلة الثانية")}
               value={screen}
               onChange={(e) => nav(Number(e.target.value))}
             >
               {discoveryScreens.map((id) => (
                 <option key={id} value={id}>
-                  {String(publicScreen(id)).padStart(2, "0")} · {titles[id]}
+                  {String(publicScreen(id)).padStart(2, "0")} · {tr(titles[id])}
                 </option>
               ))}
             </select>
@@ -643,7 +649,7 @@ export default function Discovery(p: DiscoveryProps) {
                 ],
               )
             }
-            aria-label="الشاشة التالية"
+            aria-label={tr("الشاشة التالية")}
           >
             ›
           </button>
@@ -653,26 +659,24 @@ export default function Discovery(p: DiscoveryProps) {
             aria-pressed={theme === "dark"}
             onClick={() => onTheme("dark")}
           >
-            دارك
-          </button>
+            {tr("دارك")}</button>
           <button
             aria-pressed={theme === "light"}
             onClick={() => onTheme("light")}
           >
-            لايت
-          </button>
+            {tr("لايت")}</button>
         </div>
       </nav>
       <p className="phase-preview-note">
         {demo
-          ? "معاينة المرحلة الثانية · كل الأسماء والأسعار والحجوزات بيانات توضيحية فقط."
-          : "سِكّة · القاهرة والجيزة"}
+          ? tr("معاينة المرحلة الثانية · كل الأسماء والأسعار والحجوزات بيانات توضيحية فقط.")
+          : tr("سِكّة · القاهرة والجيزة")}
       </p>
       <main className={`phase-canvas d-canvas d-screen-${screen}`}>
         <header className="d-header">
           <button
             className="phase-back"
-            aria-label="رجوع"
+            aria-label={tr("رجوع")}
             onClick={() =>
               nav(
                 screen === 8 ? 2 : screen === 13 ? 29 : screen === 12 ? 11 : 8,
@@ -689,13 +693,11 @@ export default function Discovery(p: DiscoveryProps) {
         </h1>
         {p.busy && !demo && (
           <p className="d-feedback" role="status">
-            بنحمّل البيانات…
-          </p>
+            {tr("بنحمّل البيانات…")}</p>
         )}
         {p.error && !demo && (
           <p className="d-feedback" role="alert">
-            الخدمة مش متاحة دلوقتي. جرّب تاني بعد شوية.
-          </p>
+            {tr("الخدمة مش متاحة دلوقتي. جرّب تاني بعد شوية.")}</p>
         )}
         {message && (
           <p className="d-feedback" role="status">
@@ -705,8 +707,7 @@ export default function Discovery(p: DiscoveryProps) {
         {[8, 9].includes(screen) && (
           <>
             <p className="d-subtitle">
-              حدد نقطة الانطلاق والوجهة، وابدأ رحلتك بسهولة
-            </p>
+              {tr("حدد نقطة الانطلاق والوجهة، وابدأ رحلتك بسهولة")}</p>
             <form
               className="d-planner"
               onSubmit={(e) => {
@@ -716,14 +717,14 @@ export default function Discovery(p: DiscoveryProps) {
             >
               <div className="d-planner-places">
                 <label className="d-place">
-                  <span className="sr-only">من أين؟</span>
-                  {areaSelect(origin, setOrigin, "من أين؟")}
+                  <span className="sr-only">{tr("من أين؟")}</span>
+                  {areaSelect(origin, setOrigin, tr("من أين؟"))}
                   <span className="d-origin-dot" />
                 </label>
                 <button
                   type="button"
                   className="d-swap"
-                  aria-label="تبديل الانطلاق والوصول"
+                  aria-label={tr("تبديل الانطلاق والوصول")}
                   onClick={() => {
                     setOrigin(destination);
                     setDestination(origin);
@@ -732,17 +733,17 @@ export default function Discovery(p: DiscoveryProps) {
                   <DiscoveryIcon name="swap" />
                 </button>
                 <label className="d-place">
-                  <span className="sr-only">إلى أين؟</span>
-                  {areaSelect(destination, setDestination, "إلى أين؟")}
+                  <span className="sr-only">{tr("إلى أين؟")}</span>
+                  {areaSelect(destination, setDestination, tr("إلى أين؟"))}
                   <DiscoveryIcon name="pin" />
                 </label>
               </div>
               <div className="d-box d-time-picker">
                 <label>
                   <DiscoveryIcon name="calendar" />
-                  <span>الذهاب</span>
+                  <span>{tr("الذهاب")}</span>
                   <input
-                    aria-label="وقت الذهاب"
+                    aria-label={tr("وقت الذهاب")}
                     type="time"
                     value={outbound}
                     onChange={(e) => setOutbound(e.target.value)}
@@ -751,9 +752,9 @@ export default function Discovery(p: DiscoveryProps) {
                 </label>
                 <label>
                   <DiscoveryIcon name="calendar" />
-                  <span>العودة</span>
+                  <span>{tr("العودة")}</span>
                   <input
-                    aria-label="وقت العودة"
+                    aria-label={tr("وقت العودة")}
                     type="time"
                     value={returnTime}
                     onChange={(e) => setReturnTime(e.target.value)}
@@ -762,8 +763,7 @@ export default function Discovery(p: DiscoveryProps) {
                 </label>
               </div>
               <button className="d-primary" type="submit">
-                ابحث عن الرحلات
-                <DiscoveryIcon name="arrow" />
+                {tr("ابحث عن الرحلات")}<DiscoveryIcon name="arrow" />
               </button>
             </form>
             <div className="d-road" aria-hidden="true" />
@@ -772,13 +772,11 @@ export default function Discovery(p: DiscoveryProps) {
         {screen === 10 && (
           <>
             <p className="d-subtitle">
-              خصص بحثك للعثور على الاشتراك المناسب لك
-            </p>
+              {tr("خصص بحثك للعثور على الاشتراك المناسب لك")}</p>
             <section className="d-filter-section">
               <h2>
                 <DiscoveryIcon name="car" />
-                الفئة
-              </h2>
+                {tr("الفئة")}</h2>
               <div className="d-category-grid">
                 {categoryList.map((c) => (
                   <button
@@ -796,7 +794,7 @@ export default function Discovery(p: DiscoveryProps) {
                     <DiscoveryIcon name={c.seats > 4 ? "bus" : "car"} />
                     <b dir="ltr">{c.name}</b>
                     <span>
-                      {c.seats} {c.seats === 13 ? "مقعدًا" : "مقاعد"}
+                      {c.seats} {c.seats === 13 ? tr("مقعدًا") : tr("مقاعد")}
                     </span>
                   </button>
                 ))}
@@ -805,25 +803,24 @@ export default function Discovery(p: DiscoveryProps) {
             <section className="d-filter-section">
               <h2>
                 <DiscoveryIcon name="calendar" />
-                مدة الاشتراك
-              </h2>
+                {tr("مدة الاشتراك")}</h2>
               {periodChoices}
             </section>
             <section className="d-box">
               <label className="w-field">
-                <span>اتجاه الاشتراك</span>
+                <span>{tr("اتجاه الاشتراك")}</span>
                 <select
                   value={filterDirection}
                   onChange={(e) => setFilterDirection(e.target.value)}
                 >
-                  <option value="">كل الاتجاهات</option>
-                  <option value="outbound">ذهاب فقط</option>
-                  <option value="return">عودة فقط</option>
-                  <option value="round_trip">ذهاب وعودة</option>
+                  <option value="">{tr("كل الاتجاهات")}</option>
+                  <option value="outbound">{tr("ذهاب فقط")}</option>
+                  <option value="return">{tr("عودة فقط")}</option>
+                  <option value="round_trip">{tr("ذهاب وعودة")}</option>
                 </select>
               </label>
               <label className="w-field">
-                <span>أقصى سعر للاشتراك</span>
+                <span>{tr("أقصى سعر للاشتراك")}</span>
                 <input
                   type="number"
                   min="0"
@@ -836,8 +833,7 @@ export default function Discovery(p: DiscoveryProps) {
                 aria-pressed={onlyAvailable}
                 onClick={() => setOnlyAvailable(!onlyAvailable)}
               >
-                مقاعد متاحة فقط
-              </button>
+                {tr("مقاعد متاحة فقط")}</button>
               <button
                 className="d-outline"
                 onClick={() => {
@@ -848,18 +844,16 @@ export default function Discovery(p: DiscoveryProps) {
                   setAppliedFilters(false);
                 }}
               >
-                مسح الفلاتر
-              </button>
+                {tr("مسح الفلاتر")}</button>
             </section>
             <section className="d-filter-section">
               <h2>
                 <DiscoveryIcon name="pin" />
-                نطاق الخدمة
-              </h2>
+                {tr("نطاق الخدمة")}</h2>
               <div className="d-box d-region">
                 <div>
-                  <strong>القاهرة والجيزة فقط</strong>
-                  <span>داخل المناطق والأحياء</span>
+                  <strong>{tr("القاهرة والجيزة فقط")}</strong>
+                  <span>{tr("داخل المناطق والأحياء")}</span>
                 </div>
                 <Art source={10} crop={[102, 746, 190, 88]} theme={theme} />
                 <DiscoveryIcon name="info" />
@@ -882,35 +876,34 @@ export default function Discovery(p: DiscoveryProps) {
                 nav(11);
               }}
             >
-              عرض النتائج
-            </Action>
+              {tr("عرض النتائج")}</Action>
           </>
         )}
         {screen === 8 && (
           <section className="d-box">
-            <h2>أهلًا بيك في سِكّة</h2>
-            <p>مشوارك المنتظم يبدأ من هنا.</p>
+            <h2>{tr("أهلًا بيك في سِكّة")}</h2>
+            <p>{tr("مشوارك المنتظم يبدأ من هنا.")}</p>
             <div className="d-period-options">
-              <button onClick={() => nav(29)}>اشتراكاتي</button>
-              <button onClick={() => nav(14)}>المفضلة</button>
-              <button onClick={() => nav(24)}>المحفظة</button>
-              <button onClick={() => nav(33)}>الإشعارات</button>
+              <button onClick={() => nav(29)}>{tr("اشتراكاتي")}</button>
+              <button onClick={() => nav(14)}>{tr("المفضلة")}</button>
+              <button onClick={() => nav(24)}>{tr("المحفظة")}</button>
+              <button onClick={() => nav(33)}>{tr("الإشعارات")}</button>
             </div>
           </section>
         )}
         {screen === 11 && (
           <>
-            <p className="d-subtitle">اختر عرض الاشتراك المناسب لك</p>
+            <p className="d-subtitle">{tr("اختر عرض الاشتراك المناسب لك")}</p>
             <section className="d-box d-results-summary">
               <span>
                 <DiscoveryIcon name="pin" />
-                {queryLine.origin}
+                {tr(queryLine.origin)}
               </span>
               <DiscoveryIcon name="swap" />
-              <strong>{queryLine.destination}</strong>
-              <button aria-label="تعديل الفلاتر" onClick={() => nav(10)}>
+              <strong>{tr(queryLine.destination)}</strong>
+              <button aria-label={tr("تعديل الفلاتر")} onClick={() => nav(10)}>
                 <DiscoveryIcon name="calendar" />
-                عروض متاحة: {filtered.length}
+                {tr("عروض متاحة:")}{filtered.length}
               </button>
             </section>
             <div className="d-result-list">
@@ -919,17 +912,16 @@ export default function Discovery(p: DiscoveryProps) {
                   <div className="d-offer-top">
                     <strong>
                       <DiscoveryIcon name="user" />
-                      {"عرض اشتراك"}
+                      {tr("عرض اشتراك")}
                     </strong>
                     <span className="d-available">
                       <DiscoveryIcon name="seat" />
-                      متاح {l.available} مقاعد
-                    </span>
+                      {tr("متاح")}{l.available} {tr("مقاعد")}</span>
                   </div>
                   <button
                     className="d-offer-select"
                     onClick={() => openLine(l)}
-                    aria-label={`عرض تفاصيل ${l.category} ${periodLabel(l.period)} ${directionLabel(l.direction)}`}
+                    aria-label={`${language === "en" ? "View details" : "عرض تفاصيل"} ${l.category} ${tr(periodLabel(l.period))} ${tr(directionLabel(l.direction))}`}
                   >
                     <span className="d-category-badge">
                       <DiscoveryIcon
@@ -945,33 +937,33 @@ export default function Discovery(p: DiscoveryProps) {
                       <DiscoveryIcon
                         name={l.direction === "round_trip" ? "swap" : "arrow"}
                       />
-                      <b>{directionLabel(l.direction)}</b>
+                      <b>{tr(directionLabel(l.direction))}</b>
                     </span>
                     <span className="d-offer-period">
                       <DiscoveryIcon name="calendar" />
-                      {periodLabel(l.period)}
+                      {tr(periodLabel(l.period))}
                     </span>
                     <span className="d-offer-price">
-                      <strong dir="auto">{money(l.amount)}</strong>
-                      <small>سعر الاشتراك</small>
+                      <strong dir="auto">{money(l.amount,language)}</strong>
+                      <small>{tr("سعر الاشتراك")}</small>
                     </span>
                     <DiscoveryIcon name="back" />
                   </button>
                   <div className="d-times d-offer-times">
                     <span>
                       <DiscoveryIcon name="sun" />
-                      وقت الذهاب <b dir="auto">{time(l.outbound)}</b>
+                      {tr("وقت الذهاب")}<b dir="auto">{time(l.outbound,language)}</b>
                     </span>
                     <span>
                       <DiscoveryIcon name="moon" />
-                      وقت العودة <b dir="auto">{time(l.returnTime)}</b>
+                      {tr("وقت العودة")}<b dir="auto">{time(l.returnTime,language)}</b>
                     </span>
                   </div>
                 </article>
               ))}
             </div>
-            {!filtered.length && <Empty>لسه مفيش خط مناسب.</Empty>}
-            {searched && !filtered.length && <button className="d-text-action" onClick={() => nav(15)}>اطلب رحلة</button>}
+            {!filtered.length && <Empty>{tr("لسه مفيش خط مناسب.")}</Empty>}
+            {searched && !filtered.length && <button className="d-text-action" onClick={() => nav(15)}>{tr("اطلب رحلة")}</button>}
           </>
         )}
         {screen === 12 &&
@@ -981,68 +973,61 @@ export default function Discovery(p: DiscoveryProps) {
                 <Journey line={current} compact />
               </section>
               <section className="d-box d-offer-facts">
-                <Meta label="اتجاه الاشتراك" icon="swap">
-                  {directionLabel(current.direction)}
+                <Meta label={tr("اتجاه الاشتراك")} icon="swap">
+                  {tr(directionLabel(current.direction))}
                 </Meta>
-                <Meta label="نوع الاشتراك" icon="calendar">
-                  {periodLabel(current.period)}
+                <Meta label={tr("نوع الاشتراك")} icon="calendar">
+                  {tr(periodLabel(current.period))}
                 </Meta>
-                <Meta label="الفئة" icon="seat">
+                <Meta label={tr("الفئة")} icon="seat">
                   {current.category}
                 </Meta>
-                <Meta label="المقاعد المتاحة" icon="user">
-                  {current.available} مقاعد
-                </Meta>
+                <Meta label={tr("المقاعد المتاحة")} icon="user">
+                  {current.available} {tr("مقاعد")}</Meta>
               </section>
               <div className="d-box d-fixed-price">
                 <span>
                   <DiscoveryIcon name="clipboard" />
-                  سعر الاشتراك
-                </span>
-                <strong dir="auto">{money(current.amount)}</strong>
+                  {tr("سعر الاشتراك")}</span>
+                <strong dir="auto">{money(current.amount,language)}</strong>
               </div>
               <div className="d-box d-information">
                 <p>
-                  الاشتراك من الأحد للخميس، باستثناء الإجازات الرسمية المصرية،
-                  وفق مواعيد العرض طوال مدة الاشتراك.
-                </p>
+                  {tr("الاشتراك من الأحد للخميس، باستثناء الإجازات الرسمية المصرية، وفق مواعيد العرض طوال مدة الاشتراك.")}</p>
                 <DiscoveryIcon name="info" />
               </div>
-              <section className="d-box"><h2>نقاط المسار</h2>
-                <ol>{(current.stops || []).map(s => <li key={s.id}>{s.name}</li>)}</ol>
-                <label>نقطة الركوب<select aria-label="نقطة الركوب" value={pickup} onChange={e => {setPickup(e.target.value); setDropoff("");}}><option value="">اختر نقطة الركوب</option>{(current.stops || []).filter(s => s.pickup).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
-                <label>نقطة النزول<select aria-label="نقطة النزول" value={dropoff} onChange={e => setDropoff(e.target.value)}><option value="">اختر نقطة النزول</option>{(current.stops || []).filter((s,i) => s.dropoff && i > (current.stops || []).findIndex(p => p.id === pickup)).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
-                {current.direction === "round_trip" && pickup && dropoff && <p>العودة تلقائيًا: {current.stops?.find(s => s.id === dropoff)?.name} ← {current.stops?.find(s => s.id === pickup)?.name}</p>}
-                {!current.stops?.length && <p>نقاط العرض غير متاحة؛ الحجز غير متاح حتى نشر النقاط.</p>}
+              <section className="d-box"><h2>{tr("نقاط المسار")}</h2>
+                <ol>{(current.stops || []).map(s => <li key={s.id}>{tr(s.name)}</li>)}</ol>
+                <label>{tr("نقطة الركوب")}<select aria-label={tr("نقطة الركوب")} value={pickup} onChange={e => {setPickup(e.target.value); setDropoff("");}}><option value="">{tr("اختر نقطة الركوب")}</option>{(current.stops || []).filter(s => s.pickup).map(s => <option key={s.id} value={s.id}>{tr(s.name)}</option>)}</select></label>
+                <label>{tr("نقطة النزول")}<select aria-label={tr("نقطة النزول")} value={dropoff} onChange={e => setDropoff(e.target.value)}><option value="">{tr("اختر نقطة النزول")}</option>{(current.stops || []).filter((s,i) => s.dropoff && i > (current.stops || []).findIndex(p => p.id === pickup)).map(s => <option key={s.id} value={s.id}>{tr(s.name)}</option>)}</select></label>
+                {current.direction === "round_trip" && pickup && dropoff && <p>{tr("العودة تلقائيًا:")}{current.stops?.find(s => s.id === dropoff)?.name} ← {current.stops?.find(s => s.id === pickup)?.name}</p>}
+                {!current.stops?.length && <p>{tr("نقاط العرض غير متاحة؛ الحجز غير متاح حتى نشر النقاط.")}</p>}
               </section>
               <Action
-                onClick={() => {try {const selectedStops = selectStops(current.stops || [], pickup, dropoff, current.direction === "round_trip" ? current.returnStops || [] : undefined); p.onBook({...current, selectedStops});} catch {setMessage("اختار نقطتين صالحين؛ يجب أن يدعم مسار العودة عكس النقطتين.");}}}
+                onClick={() => {try {const selectedStops = selectStops(current.stops || [], pickup, dropoff, current.direction === "round_trip" ? current.returnStops || [] : undefined); p.onBook({...current, selectedStops});} catch {setMessage(tr("اختار نقطتين صالحين؛ يجب أن يدعم مسار العودة عكس النقطتين."));}}}
                 disabled={current.amount === null || !pickup || !dropoff}
               >
-                حجز الاشتراك
-              </Action>
+                {tr("حجز الاشتراك")}</Action>
               <button
                 className="d-text-action"
                 onClick={() => void favorite(current.routeId || current.id)}
               >
                 <DiscoveryIcon name="heart" />
-                حفظ في المفضلة
-              </button>
+                {tr("حفظ في المفضلة")}</button>
             </>
           ) : (
-            <Empty>اختار خط من نتائج البحث عشان تشوف تفاصيله.</Empty>
+            <><Empty>{tr("اختار خط من نتائج البحث عشان تشوف تفاصيله.")}</Empty><Action onClick={() => nav(9)}>{tr("البحث عن خط")}</Action></>
           ))}
         {screen === 14 && (
           <>
             <p className="d-subtitle">
-              حفظ العرض مش حجز مقعد، والسعر والتوافر ممكن يتغيروا.
-            </p>
+              {tr("حفظ العرض مش حجز مقعد، والسعر والتوافر ممكن يتغيروا.")}</p>
             <div className="d-favorites">
               {favoritesList.map((l) => (
                 <article key={l.id} className="d-box d-favorite">
                   <button
                     className="d-heart"
-                    aria-label={`إزالة ${l.origin} إلى ${l.destination} من المفضلة`}
+                    aria-label={language==="en" ? `Remove ${tr(l.origin)} to ${tr(l.destination)} from favorites` : `إزالة ${l.origin} إلى ${l.destination} من المفضلة`}
                     onClick={() => void favorite(l.id)}
                   >
                     <DiscoveryIcon name="heart" />
@@ -1050,28 +1035,27 @@ export default function Discovery(p: DiscoveryProps) {
                   <Journey line={l} compact />
                   <div className="d-three-meta">
                     <Meta
-                      label="الفئة"
+                      label={tr("الفئة")}
                       icon={l.category === "SPACE" ? "bus" : "car"}
                     >
                       {l.category}
                     </Meta>
-                    <Meta label="المقاعد المتاحة" icon="seat">
-                      {l.available} مقاعد
-                    </Meta>
-                    <Meta label="اشتراك شهري" icon="">
-                      {money(l.amount)}
+                    <Meta label={tr("المقاعد المتاحة")} icon="seat">
+                      {l.available} {tr("مقاعد")}</Meta>
+                    <Meta label={tr("اشتراك شهري")} icon="">
+                      {money(l.amount,language)}
                     </Meta>
                   </div>
-                  <Action onClick={() => openLine(l)}>عرض التفاصيل</Action>
+                  <Action onClick={() => openLine(l)}>{tr("عرض التفاصيل")}</Action>
                 </article>
               ))}
             </div>
             {!favoritesList.length && (
               <Empty>
                 {p.signedIn || demo
-                  ? "لسه مفيش خطوط محفوظة."
-                  : "سجّل الدخول عشان تشوف المفضلة."}
-                <Action onClick={()=>go(p.signedIn || demo ? 9 : 4)}>{p.signedIn || demo ? "البحث عن خط" : "تسجيل الدخول"}</Action>
+                  ? tr("لسه مفيش خطوط محفوظة.")
+                  : tr("سجّل الدخول عشان تشوف المفضلة.")}
+                <Action onClick={()=>go(p.signedIn || demo ? 9 : 4)}>{p.signedIn || demo ? tr("البحث عن خط") : tr("تسجيل الدخول")}</Action>
               </Empty>
             )}
           </>
@@ -1084,19 +1068,18 @@ export default function Discovery(p: DiscoveryProps) {
                 className={!past ? "selected" : ""}
                 onClick={() => setPast(false)}
               >
-                الاشتراكات الحالية {demo ? "(2)" : ""}
+                {tr("الاشتراكات الحالية")}{demo ? "(2)" : ""}
               </button>
               <button
                 aria-pressed={past}
                 className={past ? "selected" : ""}
                 onClick={() => setPast(true)}
               >
-                الاشتراكات السابقة
-              </button>
+                {tr("الاشتراكات السابقة")}</button>
             </div>
             {demo ? (
               past ? (
-                <Empty>مفيش اشتراكات سابقة في المعاينة.</Empty>
+                <Empty>{tr("مفيش اشتراكات سابقة في المعاينة.")}</Empty>
               ) : (
                 <div className="d-subscriptions">
                   {[examples[0], favoriteExamples[1]].map((l, i) => (
@@ -1104,36 +1087,34 @@ export default function Discovery(p: DiscoveryProps) {
                       <div className="d-subscription-head">
                         <span>
                           <DiscoveryIcon name="calendar" />
-                          اشتراك {i ? "أسبوعي" : "شهري"}
+                          {tr("اشتراك")}{i ? tr("أسبوعي") : tr("شهري")}
                         </span>
                         <b>
                           <DiscoveryIcon name="check" />
-                          نشط
-                        </b>
+                          {tr("نشط")}</b>
                       </div>
                       <Journey line={l} compact />
                       <div className="d-three-meta">
-                        <Meta label="الفئة" icon={i ? "bus" : "car"}>
+                        <Meta label={tr("الفئة")} icon={i ? "bus" : "car"}>
                           {l.category}
                         </Meta>
-                        <Meta label="المقاعد" icon="seat">
+                        <Meta label={tr("المقاعد")} icon="seat">
                           {i ? 6 : 3}
                         </Meta>
-                        <Meta label="نهاية الاشتراك" icon="calendar">
-                          {i ? "22 يونيو" : "30 يونيو"}
+                        <Meta label={tr("نهاية الاشتراك")} icon="calendar">
+                          {i ? tr("22 يونيو") : tr("30 يونيو")}
                         </Meta>
                       </div>
                       <button
                         className="d-manage"
                         onClick={() =>
                           setModal(
-                            "إدارة الاشتراك محتاجة حجزًا فعليًا. البيانات المعروضة توضيحية فقط.",
+                            tr("إدارة الاشتراك محتاجة حجزًا فعليًا. البيانات المعروضة توضيحية فقط."),
                           )
                         }
                       >
                         <DiscoveryIcon name="settings" />
-                        إدارة الاشتراك
-                        <DiscoveryIcon name="back" />
+                        {tr("إدارة الاشتراك")}<DiscoveryIcon name="back" />
                       </button>
                     </article>
                   ))}
@@ -1152,32 +1133,31 @@ export default function Discovery(p: DiscoveryProps) {
                       {b.origin} ← {b.destination}
                     </h2>
                     <p>
-                      {money(b.price)} · {b.starts_on} — {b.ends_before}
+                      {money(b.price,language)} · {b.starts_on} — {b.ends_before}
                     </p>
                     <button
                       className="d-outline"
                       onClick={() => p.onBooking(b.id)}
                     >
-                      تفاصيل اشتراكي
-                    </button>
+                      {tr("تفاصيل اشتراكي")}</button>
                   </article>
                 ))
             )}
             {!demo && !p.bookings.length && (
-              <Empty>
+              <><Empty>
                 {p.signedIn
-                  ? "لسه مفيش اشتراكات."
-                  : "سجّل الدخول عشان تشوف اشتراكاتك."}
-              </Empty>
+                  ? tr("لسه مفيش اشتراكات.")
+                  : tr("سجّل الدخول عشان تشوف اشتراكاتك.")}
+              </Empty><Action onClick={() => p.signedIn ? nav(9) : go(4)}>{tr(p.signedIn ? "البحث عن خط" : "تسجيل الدخول")}</Action></>
             )}
           </>
         )}
         {screen === 15 && (searched && !filtered.length ? <form className="d-request" onSubmit={e => void request(e)}>
-          <section className="d-box"><h2>راجع بيانات البحث</h2><Journey line={queryLine} />
-          <p>الطلب لا يحجز مقعدًا ولا يخصم تأمينًا ولا يضمن توافر كابتن.</p></section>
-          <label>ملاحظات اختيارية<textarea value={notes} onChange={e => setNotes(e.target.value)} maxLength={1000}/></label>
-          <button className="d-primary" disabled={requestSent} type="submit">{requestSent ? "تم تأكيد الطلب في المعاينة" : "تأكيد الطلب"}</button>
-        </form> : <><Empty>ابدأ بالبحث؛ طلب الرحلة متاح فقط عندما لا توجد عروض مطابقة.</Empty><Action onClick={()=>go(9)}>البحث عن خط</Action></>)}
+          <section className="d-box"><h2>{tr("راجع بيانات البحث")}</h2><Journey line={queryLine} />
+          <p>{tr("الطلب لا يحجز مقعدًا ولا يخصم تأمينًا ولا يضمن توافر كابتن.")}</p></section>
+          <label>{tr("ملاحظات اختيارية")}<textarea value={notes} onChange={e => setNotes(e.target.value)} maxLength={1000}/></label>
+          <button className="d-primary" disabled={requestSent} type="submit">{requestSent ? tr("تم تأكيد الطلب في المعاينة") : tr("تأكيد الطلب")}</button>
+        </form> : <><Empty>{tr("ابدأ بالبحث؛ طلب الرحلة متاح فقط عندما لا توجد عروض مطابقة.")}</Empty><Action onClick={()=>go(9)}>{tr("البحث عن خط")}</Action></>)}
       </main>
       {modal && (
         <div className="d-modal-backdrop">
@@ -1187,15 +1167,14 @@ export default function Discovery(p: DiscoveryProps) {
             aria-modal="true"
             aria-labelledby="d-modal-title"
           >
-            <h2 id="d-modal-title">معاينة سِكّة</h2>
+            <h2 id="d-modal-title">{tr("معاينة سِكّة")}</h2>
             <p>{modal}</p>
             <button
               autoFocus
               className="d-primary"
               onClick={() => setModal("")}
             >
-              تمام
-            </button>
+              {tr("تمام")}</button>
           </section>
         </div>
       )}

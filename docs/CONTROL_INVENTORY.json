@@ -2431,7 +2431,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 340,
+    "line": 342,
     "tag": "button",
     "action": "onClick",
     "handler": "{onClick}",
@@ -2440,7 +2440,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 574,
+    "line": 580,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => onChange(e.target.value)}",
@@ -2449,7 +2449,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 591,
+    "line": 597,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => setPeriod(v)}",
@@ -2458,34 +2458,34 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 612,
+    "line": 618,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n              nav(\n                discoveryScreens[\n                  Math.max(0, discoveryScreens.indexOf(screen) - 1)\n                ],\n              )\n            }",
     "disabled": "",
-    "label": "\"الشاشة السابقة\""
+    "label": "{tr(\"الشاشة السابقة\")}"
   },
   {
     "file": "Discovery.tsx",
-    "line": 626,
+    "line": 632,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => nav(Number(e.target.value))}",
     "disabled": "",
-    "label": "\"شاشة المرحلة الثانية\""
+    "label": "{tr(\"شاشة المرحلة الثانية\")}"
   },
   {
     "file": "Discovery.tsx",
-    "line": 638,
+    "line": 644,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n              nav(\n                discoveryScreens[\n                  Math.min(discoveryScreens.length - 1, discoveryScreens.indexOf(screen) + 1)\n                ],\n              )\n            }",
     "disabled": "",
-    "label": "\"الشاشة التالية\""
+    "label": "{tr(\"الشاشة التالية\")}"
   },
   {
     "file": "Discovery.tsx",
-    "line": 652,
+    "line": 658,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => onTheme(\"dark\")}",
@@ -2494,7 +2494,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 658,
+    "line": 663,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => onTheme(\"light\")}",
@@ -2503,16 +2503,16 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 673,
+    "line": 677,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n              nav(\n                screen === 8 ? 2 : screen === 13 ? 29 : screen === 12 ? 11 : 8,\n              )\n            }",
     "disabled": "",
-    "label": "\"رجوع\""
+    "label": "{tr(\"رجوع\")}"
   },
   {
     "file": "Discovery.tsx",
-    "line": 710,
+    "line": 711,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{(e) => {\n                e.preventDefault();\n                search();\n              }}",
@@ -2521,34 +2521,34 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 723,
+    "line": 724,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => {\n                    setOrigin(destination);\n                    setDestination(origin);\n                  }}",
     "disabled": "",
-    "label": "\"تبديل الانطلاق والوصول\""
+    "label": "{tr(\"تبديل الانطلاق والوصول\")}"
   },
   {
     "file": "Discovery.tsx",
-    "line": 744,
+    "line": 745,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setOutbound(e.target.value)}",
     "disabled": "",
-    "label": "\"وقت الذهاب\""
+    "label": "{tr(\"وقت الذهاب\")}"
   },
   {
     "file": "Discovery.tsx",
-    "line": 755,
+    "line": 756,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setReturnTime(e.target.value)}",
     "disabled": "",
-    "label": "\"وقت العودة\""
+    "label": "{tr(\"وقت العودة\")}"
   },
   {
     "file": "Discovery.tsx",
-    "line": 764,
+    "line": 765,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -2557,7 +2557,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 784,
+    "line": 782,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n                      setCategories((v) =>\n                        v.includes(c.name)\n                          ? v.filter((x) => x !== c.name)\n                          : [...v, c.name],\n                      )\n                    }",
@@ -2566,7 +2566,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 815,
+    "line": 812,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => setFilterDirection(e.target.value)}",
@@ -2575,7 +2575,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 827,
+    "line": 824,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setFilterPrice(e.target.value)}",
@@ -2584,7 +2584,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 834,
+    "line": 831,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => setOnlyAvailable(!onlyAvailable)}",
@@ -2593,7 +2593,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 841,
+    "line": 837,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => {\n                  setCategories([]);\n                  setFilterDirection(\"\");\n                  setFilterPrice(\"\");\n                  setOnlyAvailable(false);\n                  setAppliedFilters(false);\n                }}",
@@ -2602,7 +2602,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 868,
+    "line": 862,
     "tag": "Action",
     "action": "onClick",
     "handler": "{() => {\n                setAppliedFilters(true);\n                if (!demo)\n                  p.onSearch({\n                    origin,\n                    destination,\n                    outbound,\n                    returnTime,\n                    period,\n                    category: categories.length === 1 ? categories[0] : \"\",\n                    direction: filterDirection || \"outbound\",\n                    maxPrice: filterPrice,\n                  });\n                nav(11);\n              }}",
@@ -2611,7 +2611,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 894,
+    "line": 887,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(29)}",
@@ -2620,7 +2620,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 895,
+    "line": 888,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(14)}",
@@ -2629,7 +2629,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 896,
+    "line": 889,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(24)}",
@@ -2638,7 +2638,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 897,
+    "line": 890,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(33)}",
@@ -2647,25 +2647,25 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 911,
+    "line": 904,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(10)}",
     "disabled": "",
-    "label": "\"تعديل الفلاتر\""
+    "label": "{tr(\"تعديل الفلاتر\")}"
   },
   {
     "file": "Discovery.tsx",
-    "line": 929,
+    "line": 921,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => openLine(l)}",
     "disabled": "",
-    "label": "{`عرض تفاصيل ${l.category} ${periodLabel(l.period)} ${directionLabel(l.direction)}`}"
+    "label": "{`${language === \"en\" ? \"View details\" : \"عرض تفاصيل\"} ${l.category} ${tr(periodLabel(l.period))} ${tr(directionLabel(l.direction))}`}"
   },
   {
     "file": "Discovery.tsx",
-    "line": 974,
+    "line": 966,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(15)}",
@@ -2674,34 +2674,34 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 1013,
+    "line": 1001,
     "tag": "select",
     "action": "onChange",
     "handler": "{e => {setPickup(e.target.value); setDropoff(\"\");}}",
     "disabled": "",
-    "label": "\"نقطة الركوب\""
+    "label": "{tr(\"نقطة الركوب\")}"
   },
   {
     "file": "Discovery.tsx",
-    "line": 1014,
+    "line": 1002,
     "tag": "select",
     "action": "onChange",
     "handler": "{e => setDropoff(e.target.value)}",
     "disabled": "",
-    "label": "\"نقطة النزول\""
+    "label": "{tr(\"نقطة النزول\")}"
   },
   {
     "file": "Discovery.tsx",
-    "line": 1018,
+    "line": 1006,
     "tag": "Action",
     "action": "onClick",
-    "handler": "{() => {try {const selectedStops = selectStops(current.stops || [], pickup, dropoff, current.direction === \"round_trip\" ? current.returnStops || [] : undefined); p.onBook({...current, selectedStops});} catch {setMessage(\"اختار نقطتين صالحين؛ يجب أن يدعم مسار العودة عكس النقطتين.\");}}}",
+    "handler": "{() => {try {const selectedStops = selectStops(current.stops || [], pickup, dropoff, current.direction === \"round_trip\" ? current.returnStops || [] : undefined); p.onBook({...current, selectedStops});} catch {setMessage(tr(\"اختار نقطتين صالحين؛ يجب أن يدعم مسار العودة عكس النقطتين.\"));}}}",
     "disabled": "{current.amount === null || !pickup || !dropoff}",
     "label": ""
   },
   {
     "file": "Discovery.tsx",
-    "line": 1024,
+    "line": 1011,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => void favorite(current.routeId || current.id)}",
@@ -2710,16 +2710,25 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 1043,
+    "line": 1019,
+    "tag": "Action",
+    "action": "onClick",
+    "handler": "{() => nav(9)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 1028,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => void favorite(l.id)}",
     "disabled": "",
-    "label": "{`إزالة ${l.origin} إلى ${l.destination} من المفضلة`}"
+    "label": "{language===\"en\" ? `Remove ${tr(l.origin)} to ${tr(l.destination)} from favorites` : `إزالة ${l.origin} إلى ${l.destination} من المفضلة`}"
   },
   {
     "file": "Discovery.tsx",
-    "line": 1065,
+    "line": 1049,
     "tag": "Action",
     "action": "onClick",
     "handler": "{() => openLine(l)}",
@@ -2728,7 +2737,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 1074,
+    "line": 1058,
     "tag": "Action",
     "action": "onClick",
     "handler": "{()=>go(p.signedIn || demo ? 9 : 4)}",
@@ -2737,7 +2746,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 1082,
+    "line": 1066,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => setPast(false)}",
@@ -2746,7 +2755,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 1089,
+    "line": 1073,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => setPast(true)}",
@@ -2755,16 +2764,16 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 1126,
+    "line": 1108,
     "tag": "button",
     "action": "onClick",
-    "handler": "{() =>\n                          setModal(\n                            \"إدارة الاشتراك محتاجة حجزًا فعليًا. البيانات المعروضة توضيحية فقط.\",\n                          )\n                        }",
+    "handler": "{() =>\n                          setModal(\n                            tr(\"إدارة الاشتراك محتاجة حجزًا فعليًا. البيانات المعروضة توضيحية فقط.\"),\n                          )\n                        }",
     "disabled": "",
     "label": ""
   },
   {
     "file": "Discovery.tsx",
-    "line": 1157,
+    "line": 1138,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => p.onBooking(b.id)}",
@@ -2773,7 +2782,16 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 1175,
+    "line": 1151,
+    "tag": "Action",
+    "action": "onClick",
+    "handler": "{() => p.signedIn ? nav(9) : go(4)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 1155,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{e => void request(e)}",
@@ -2782,7 +2800,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 1178,
+    "line": 1158,
     "tag": "textarea",
     "action": "onChange",
     "handler": "{e => setNotes(e.target.value)}",
@@ -2791,7 +2809,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 1179,
+    "line": 1159,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -2800,7 +2818,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 1180,
+    "line": 1160,
     "tag": "Action",
     "action": "onClick",
     "handler": "{()=>go(9)}",
@@ -2809,7 +2827,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 1192,
+    "line": 1172,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => setModal(\"\")}",
