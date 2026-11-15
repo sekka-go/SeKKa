@@ -1,3 +1,4 @@
+import LiveNotifications from './LiveNotifications';
 import LiveTripRequests from './LiveTripRequests';
 import LiveProfile from './LiveProfile';
 import LiveBookings from './LiveBookings';
@@ -75,6 +76,7 @@ export default function LiveHome({onNavigate}:{onNavigate:(screen:number)=>void}
     {identity.admin&&<button className="live-home__secondary" onClick={()=>onNavigate(62)}>{t('لوحة الإدارة','Admin dashboard')}</button>}
    </section>}
    {identity&&<LiveProfile/>}
+   {identity&&<LiveNotifications/>}
    {identity&&<LiveBookings mode={identity.role==="captain"?"captain":"rider"}/>}
    {identity&&identity.role==="rider"&&<LiveTripRequests mode="rider"/>}
    <div className="live-home__info"><span aria-hidden="true">ⓘ</span>{t('الحجز والدفع الفعلي لسه تحت التجهيز. مفيش فلوس هتتخصم.','Real bookings and payments are not enabled yet. No money will be charged.')}</div>
