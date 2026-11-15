@@ -34,8 +34,8 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Capture original gallery and real unauthenticated Staging at all 584 variants
         env:
-          AUDIT_BASE_URL: https://6a8b773f.sekka-staging-web.pages.dev
-          AUDIT_BASE_COMMIT: 017124fc9525bef14b1ff4bd2acd801fc4f3b305
+          AUDIT_BASE_URL: https://1247ab5f.sekka-staging-web.pages.dev
+          AUDIT_BASE_COMMIT: 396165f42b91a58813e48c2707d8924401195780
         run: node scripts/collect-visual-audit.mjs
       - name: Bundle an accessible ZIP for offline side-by-side review
         if: always()
