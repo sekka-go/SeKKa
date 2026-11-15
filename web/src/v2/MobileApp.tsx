@@ -56,7 +56,7 @@ export default function MobileApp(){
   if(n===5||n===7)n=6;
   if(n>=1&&n<=6){setOnboardingScreen(n);navigate('login');}
  };
- const onLegacyNavigate=(n:number)=>navigate(n===4?'login':n===9?'search':n===42?'routes':n===62?'admin':n===34?'profile':n===32?'notifications':n===27?'bookings':'home');
+ const onLegacyNavigate=(n:number)=>{if(n===4)setOnboardingScreen(4);navigate(n===4?'login':n===9?'search':n===42?'routes':n===62?'admin':n===34?'profile':n===32?'notifications':n===27?'bookings':'home');};
  return <div className="sekka-mobile" dir={en?'ltr':'rtl'}>
   <a className="sekka-skip" href="#sekka-content">{t('تخطي للمحتوى','Skip to content')}</a>
   <header className="sekka-mobile-header">
@@ -69,7 +69,7 @@ export default function MobileApp(){
    {error&&<div className="sekka-mobile-alert" role="alert">{error}<button onClick={()=>setError('')}>{t('إغلاق','Dismiss')}</button></div>}
    {tab==='home'&&(!ready?<p role="status">{t('بنجهز حسابك…','Loading account…')}</p>:userId?<LiveHome onNavigate={onLegacyNavigate}/>:<Onboarding production screen={2} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={setSelectedRole}/>)}
    {tab==='login'&&<Onboarding production screen={userId?6:onboardingScreen} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={setSelectedRole}/>}
-   {tab==='profile'&&(userId?<section className="sekka-mobile-card"><LiveProfile/><button type="button" onClick={()=>void signOut()}>{t('تسجيل الخروج','Sign out')}</button></section>:<section className="sekka-mobile-card"><h1>{t('حسابي','My profile')}</h1><p>{t('سجّل بجوجل علشان تكمل بياناتك.','Sign in with Google to complete your profile.')}</p><button className="sekka-action" onClick={()=>navigate('login')}>{t('تسجيل الدخول بجوجل','Sign in with Google')}</button></section>)}
+   {tab==='profile'&&(userId?<section className="sekka-mobile-card"><LiveProfile/><button type="button" onClick={()=>void signOut()}>{t('تسجيل الخروج','Sign out')}</button></section>:<section className="sekka-mobile-card"><h1>{t('حسابي','My profile')}</h1><p>{t('سجّل بجوجل علشان تكمل بياناتك.','Sign in with Google to complete your profile.')}</p><button className="sekka-action" onClick={()=>{setOnboardingScreen(4);navigate('login');}}>{t('تسجيل الدخول بجوجل','Sign in with Google')}</button></section>)}
    {tab==='search'&&<section className="sekka-mobile-card"><h1>{t('دور على خط','Find a route')}</h1><p>{t('اختار مكانك وميعادك عشان تشوف الخطوط الحقيقية.','Choose your stops and schedule to find real routes.')}</p>{areasError&&<p role="alert">{areasError}</p>}<div className="sekka-fields">
     <label>{t('من','From')}<select value={origin} onChange={e=>{setOrigin(e.target.value);setSearch(false);}}><option value="">{t('اختار المنطقة','Select area')}</option>{areas.map(a=><option key={a.id} value={a.name_ar}>{en?a.name_en:a.name_ar}</option>)}</select></label>
     <label>{t('إلى','To')}<select value={destination} onChange={e=>{setDestination(e.target.value);setSearch(false);}}><option value="">{t('اختار المنطقة','Select area')}</option>{areas.map(a=><option key={a.id} value={a.name_ar}>{en?a.name_en:a.name_ar}</option>)}</select></label>
