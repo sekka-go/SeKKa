@@ -31,7 +31,7 @@ test('phase 2 rider screen visual evidence and mobile overflow audit', async ({ 
         page.on('pageerror', error => exceptions.push(error.message));
         for (const id of riderScreens) {
           const phase = id <= 14 ? 2 : 3;
-          await page.goto('/?screen=' + id + '&preview=phase' + phase);
+          await page.goto('/dev/screens?screen=' + id + '&preview=phase' + phase);
           await expect(page.locator('html')).toHaveAttribute('lang', language.lang);
           await expect(page.locator('html')).toHaveAttribute('dir', language.dir);
           await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
