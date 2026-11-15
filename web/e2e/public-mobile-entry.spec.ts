@@ -76,15 +76,17 @@ test('Get started permanently leaves the welcome screen out of the Back history'
  await expect(page.locator('.phase-screen-3')).toBeVisible();
  await expect(page.locator('.phase-screen-2')).toHaveCount(0);
 
- // The native onboarding Back control returns to guest Rider Home.
+ // Leaving role selection never makes a guest look signed in.
  await page.locator('.phase-screen-3 .phase-back').click();
- await expect(page.locator('.d-screen-8')).toBeVisible();
+ await expect(page.locator('.phase-screen-4 .phase-google-auth')).toBeVisible();
+ await expect(page.locator('.d-screen-8')).toHaveCount(0);
  await expect(page.locator('.phase-screen-2')).toHaveCount(0);
  await page.reload();
- await expect(page.locator('.d-screen-8')).toBeVisible();
- await expect(page.locator('.phase-screen-2')).toHaveCount(0);
+ await expect(page.locator('.phase-screen-4 .phase-google-auth')).toBeVisible();
+ await expect(page.locator('.d-screen-8')).toHaveCount(0);
  await page.goto('/');
- await expect(page.locator('.d-screen-8')).toBeVisible();
+ await expect(page).toHaveURL(/tab=login&view=4/);
+ await expect(page.locator('.phase-screen-4 .phase-google-auth')).toBeVisible();
 });
 
 test('Sign in from welcome also prevents returning to it later',async({page})=>{
@@ -96,6 +98,40 @@ test('Sign in from welcome also prevents returning to it later',async({page})=>{
  await page.locator('.phase-screen-4 .phase-back').click();
  await expect(page.locator('.phase-screen-3')).toBeVisible();
  await page.locator('.phase-screen-3 .phase-back').click();
- await expect(page.locator('.d-screen-8')).toBeVisible();
+ await expect(page.locator('.phase-screen-4 .phase-google-auth')).toBeVisible();
+ await expect(page.locator('.d-screen-8')).toHaveCount(0);
  await expect(page.locator('.phase-screen-2')).toHaveCount(0);
+});
+
+test('completed welcome is not a Google session: root and Back lead to sign-in',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.addInitScript(()=>{
+  localStorage.setItem('sekka.welcomeCompleted.v1','1');
+  localStorage.setItem('language_preference','en');
+  localStorage.setItem('theme_preference','light');
+ });
+ await page.goto('/');
+ await expect(page).toHaveURL(/tab=login&view=4/);
+ await expect(page.locator('.phase-screen-4 .phase-google-auth')).toBeVisible();
+ await expect(page.locator('.d-screen-8')).toHaveCount(0);
+ await expect(page.locator('.sekka-bottom-nav')).toBeHidden();
+ await page.goto('/?tab=profile');
+ await expect(page.getByRole('heading',{name:'My profile'})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Sign in with Google'})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Sign out'})).toHaveCount(0);
+ await page.goto('/');
+ await expect(page.locator('.phase-screen-4 .phase-google-auth')).toBeVisible();
+ await page.reload();
+ await expect(page.locator('.d-screen-8')).toHaveCount(0);
+});
+
+test('guest who completed welcome cannot return to Rider Home with browser Back',async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('sekka.welcomeCompleted.v1','1'));
+ await page.goto('/');
+ await expect(page).toHaveURL(/tab=login&view=4/);
+ await page.goto('/?tab=search');
+ await expect(page.locator('.d-screen-9')).toBeVisible();
+ await page.goBack();
+ await expect(page.locator('.phase-screen-4 .phase-google-auth')).toBeVisible();
+ await expect(page.locator('.d-screen-8')).toHaveCount(0);
 });
