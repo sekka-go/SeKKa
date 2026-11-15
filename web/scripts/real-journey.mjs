@@ -50,6 +50,29 @@ assert.equal(await availability(),1,'Atomic 2-seat booking reduces availability 
 const key2=randomUUID();
 const exceeded=await rider.rpc('v31_reserve_seats_with_stops',{p_route:routeId,p_seats:2,p_idempotency:key2,p_pickup:stops[0].id,p_dropoff:stops[1].id,p_reverse:false});
 assert.ok(exceeded.error,'Overselling capacity must fail');
+
+const raceKeys=[randomUUID(),randomUUID()];
+const race=await Promise.all(raceKeys.map(p_idempotency=>
+ rider.rpc('v31_reserve_seats_with_stops',{
+  p_route:routeId,p_seats:1,p_idempotency,
+  p_pickup:stops[0].id,p_dropoff:stops[1].id,p_reverse:false
+ })
+));
+const winners=race.filter(r=>!r.error);
+const denied=race.filter(r=>Boolean(r.error));
+assert.equal(winners.length,1,'Concurrent attempts for last seat must yield exactly one booking');
+assert.equal(denied.length,1,'Concurrent overbooking attempt must be rejected by PostgreSQL');
+const raceBookingId=must(winners[0],'concurrent winning booking');
+const winnerRow=must(await rider.from('v31_bookings').select('status,seats').eq('id',raceBookingId).single(),'concurrent winner persisted');
+assert.equal(winnerRow.status,'pending');
+assert.equal(winnerRow.seats,1);
+assert.equal(await availability(),0,'Last seat cannot be overbooked');
+must(await rider.rpc('v31_cancel_pending_booking',{p_booking:raceBookingId}),'release concurrent winner');
+assert.equal(await availability(),1,'Released contested seat is visible again');
+// Without a second independently authenticated passenger, this probes PostgreSQL
+// row locking using two simultaneous requests from one rider; do not label it
+// a cross-account concurrency acceptance.
+
 const cRefreshed=actor(env.SEKKA_CAPTAIN_ACCESS_TOKEN),rRefreshed=actor(env.SEKKA_RIDER_ACCESS_TOKEN);
 const captainBooking=must(await cRefreshed.from('v31_bookings').select('id,seats,status,pickup_stop_id,dropoff_stop_id,price_snapshot_egp,period_snapshot').eq('id',id1).single(),'captain persisted booking read');
 const riderBooking=must(await rRefreshed.from('v31_bookings').select('id,seats,status').eq('id',id1).single(),'rider persisted booking read');
@@ -80,6 +103,10 @@ assert.equal(acceptedState.status,'accepted');
 assert.equal(acceptedState.accepted_offer_id,offer.id);
 const captainAccepted=must(await cRefreshed.from('v31_bookings').select('id,seats,status').eq('id',acceptedBooking).single(),'captain sees accepted offer booking');
 assert.equal(captainAccepted.seats,1);
+const captainAdmin=await captain.rpc('v31_is_admin');
+assert.equal(must(captainAdmin,'captain admin status'),false,'Captain must not be admin');
+const riderAdmin=await rider.rpc('v31_is_admin');
+assert.equal(must(riderAdmin,'passenger admin status'),false,'Passenger must not be admin');
 const unauthorizedAdmin=await rider.rpc('v31_admin_overview');
 assert.ok(unauthorizedAdmin.error,'Passenger must not access admin data');
 const unread=must(await rRefreshed.from('v31_notifications').select('id,kind').eq('kind','new_offer').limit(20),'rider notifications');
@@ -89,4 +116,4 @@ must(await rider.rpc('v31_cancel_pending_booking',{p_booking:id1}),'cancel');
 const cancelled=must(await rRefreshed.from('v31_bookings').select('status').eq('id',id1).single(),'persisted cancellation');
 assert.equal(cancelled.status,'cancelled');
 assert.equal(await availability(),3,'Cancellation of both reservations restores all three seats');
-process.stdout.write('PASS: two Google sessions, captain publish, rider search, atomic booking/capacity, request/offer acceptance, notifications, admin isolation, reload on both sides, cancellation. Test route remains in disposable staging.\n');
+process.stdout.write('PASS: two independent Google sessions, captain publish, rider route visibility, single-rider concurrent last-seat attempts, atomic booking, notifications, admin restriction, persistence, cancellation and seat restoration. Cross-account concurrency and browser UI acceptance require additional authorized sessions and must not be inferred. Test route remains in staging.\n');
