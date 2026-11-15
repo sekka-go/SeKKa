@@ -7,15 +7,22 @@ export default function LiveVehicles(){
  const {language}=usePreferences(),en=language==='en',t=(ar:string,english:string)=>en?english:ar;
  const [items,setItems]=useState<Vehicle[]>([]),[model,setModel]=useState(''),[plate,setPlate]=useState(''),[category,setCategory]=useState('PRIME'),[seats,setSeats]=useState(3);
  const [busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[revision,setRevision]=useState(0);
+ const [approval,setApproval]=useState<string|null>(null);
  useEffect(()=>{if(!client)return;let active=true;void (async()=>{
   const {data:{user},error:authError}=await client!.auth.getUser();
   if(!active)return;
   if(authError||!user){setError('AUTH_REQUIRED');return;}
-  const {data,error:readError}=await client!.from('v31_vehicles').select('id,model,plate_number,category,seats,status').eq('captain_id',user.id).order('created_at',{ascending:false});
+  const [{data,error:readError},{data:enrollment,error:enrollError}]=await Promise.all([
+   client!.from('v31_vehicles').select('id,model,plate_number,category,seats,status').eq('captain_id',user.id).order('created_at',{ascending:false}),
+   client!.from('v31_captain_profiles').select('approval_status').eq('user_id',user.id).maybeSingle()
+  ]);
+  if(active)setApproval(enrollment?.approval_status||null);
+  if(enrollError){if(active)setError(enrollError.message);return;}
   if(!active)return;
   if(readError)setError(readError.message);else setItems((data||[]) as Vehicle[]);
  })();return()=>{active=false;};},[revision]);
  const save=async()=>{if(!client)return;setError('');setNotice('');
+  if(approval!=='approved'){setError(t('حساب الكابتن لازم يتعتمد أولًا قبل تسجيل العربية.','Captain must be approved before a vehicle can be registered.'));return;}
   if(model.trim().length<2||plate.trim().length<3||!Number.isInteger(seats)||seats<1||seats>maxSeats[category]){setError(t('راجع بيانات العربية والمقاعد.','Check vehicle details and seat count.'));return;}
   setBusy(true);try{
    const {data:{user},error:authError}=await client.auth.getUser();if(authError||!user)throw Error('AUTH_REQUIRED');
@@ -39,6 +46,7 @@ export default function LiveVehicles(){
   <label>{t('رقم اللوحة','Plate number')}<input value={plate} maxLength={24} onChange={e=>setPlate(e.target.value)}/></label>
   <label>{t('الفئة','Category')}<select value={category} onChange={e=>{setCategory(e.target.value);setSeats(Math.min(seats,maxSeats[e.target.value]));}}>{Object.keys(maxSeats).map(c=><option key={c}>{c}</option>)}</select></label>
   <label>{t('المقاعد','Seats')}<input type="number" min="1" max={maxSeats[category]} value={seats} onChange={e=>setSeats(Number(e.target.value))}/></label>
-  <button type="button" className="d-primary" disabled={busy} onClick={()=>void save()}>{busy?t('جارٍ الحفظ…','Saving…'):t('حفظ العربية','Save vehicle')}</button>
+  {approval!=='approved'&&<p role="status">{approval==='pending'?t('طلب الكابتن قيد المراجعة؛ إضافة العربية هتفتح بعد الموافقة.','Captain approval is pending; vehicle registration opens after approval.'):t('كمّل تسجيل الكابتن الأول، ثم اطلب الاعتماد.','Complete captain enrollment before vehicle registration.')}</p>}
+  <button type="button" className="d-primary" disabled={busy||approval!=='approved'} onClick={()=>void save()}>{busy?t('جارٍ الحفظ…','Saving…'):t('حفظ العربية','Save vehicle')}</button>
  </section>;
 }
