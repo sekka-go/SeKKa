@@ -26,8 +26,14 @@ export default function LiveVehicles(){
   if(model.trim().length<2||plate.trim().length<3||!Number.isInteger(seats)||seats<1||seats>maxSeats[category]){setError(t('راجع بيانات العربية والمقاعد.','Check vehicle details and seat count.'));return;}
   setBusy(true);try{
    const {data:{user},error:authError}=await client.auth.getUser();if(authError||!user)throw Error('AUTH_REQUIRED');
-   const {error:writeError}=await client.from('v31_vehicles').insert({captain_id:user.id,model:model.trim(),plate_number:plate.trim(),category,seats});
-   if(writeError)throw writeError;setModel('');setPlate('');setNotice(t('العربية اتحفظت في حسابك.','Vehicle saved to your account.'));setRevision(x=>x+1);
+   const {data:saved,error:writeError}=await client.from('v31_vehicles')
+      .insert({captain_id:user.id,model:model.trim(),plate_number:plate.trim(),category,seats})
+      .select('id,model,plate_number,category,seats,status').single();
+   if(writeError)throw writeError;
+   if(!saved||saved.model!==model.trim()||saved.plate_number!==plate.trim()||
+      saved.category!==category||saved.seats!==seats||saved.status!=='active'){
+      throw Error('VEHICLE_PERSISTENCE_NOT_VERIFIED');
+   }setModel('');setPlate('');setNotice(t('العربية اتحفظت في حسابك.','Vehicle saved to your account.'));setRevision(x=>x+1);
   }catch(e){setError(e instanceof Error?e.message:String(e));}finally{setBusy(false);}
  };
  const toggle=async(v:Vehicle)=>{if(!client)return;setBusy(true);setError('');
