@@ -16,9 +16,10 @@ export default function LiveHome({onNavigate}:{onNavigate:(screen:number)=>void}
   void(async()=>{
    try{
     if(!client){if(active)setIdentity(null);return;}
+    const {data:{session},error:sessionError}=await client.auth.getSession();
+    if(sessionError||!session){if(active)setIdentity(null);return;}
     const {data:{user},error:authError}=await client.auth.getUser();
-    if(authError)throw authError;
-    if(!user){if(active)setIdentity(null);return;}
+    if(authError||!user){if(active){setIdentity(null);setError('');}return;}
     // Role display must be resilient: a permission lookup failure must not erase the user's signed-in identity.
     const [{data:profile,error:profileError},{data:captain,error:captainError},{data:admin,error:adminError}]=await Promise.all([
      client.from('v31_profiles').select('display_name,role_preference').eq('user_id',user.id).maybeSingle(),
@@ -31,9 +32,10 @@ export default function LiveHome({onNavigate}:{onNavigate:(screen:number)=>void}
      role:profile?.role_preference==='captain'?'captain':'rider',
      approved:captain?.approval_status==='approved',admin:!adminError&&admin===true
     });
-    if(profileError||captainError||adminError)setError(t('تعذّر تحديث بعض الصلاحيات. جرّب تحديث البيانات.','Some account permissions could not be refreshed.'));
+    // An optional role lookup should not block the signed-in home screen.
+    if(profileError||captainError||adminError)console.warn('Some account capabilities could not be refreshed');
    }catch{
-    if(active)setError(t('تعذر الاتصال بحسابك. تقدر تعيد المحاولة أو تسجّل دخولك.','Unable to connect to your account. Retry or sign in.'));
+    if(active){setIdentity(null);setError('');}
    }finally{if(active)setBusy(false);}
   })();
   return()=>{active=false;};
@@ -54,8 +56,7 @@ export default function LiveHome({onNavigate}:{onNavigate:(screen:number)=>void}
    {busy&&<div className="live-home__panel" role="status">{t('بنجهّز بيانات حسابك…','Getting your account ready…')}</div>}
    {!busy&&!identity&&<section className="live-home__panel">
     <div className="live-home__panel-icon" aria-hidden="true">↗</div>
-    {error&&<div className="live-home__inline-alert" role="alert"><span>{error}</span><button type="button" onClick={retry}>{t("إعادة المحاولة","Retry")}</button></div>}
-    <h2>{t('يلا نبدأ مشوارك','Ready to get moving?')}</h2>
+     <h2>{t('يلا نبدأ مشوارك','Ready to get moving?')}</h2>
     <p>{t('سجّل بجوجل علشان تلاقي خطك وتتابع بياناتك الحقيقية.','Sign in with Google to find routes and manage your real account.')}</p>
     <button className="live-home__primary" onClick={()=>onNavigate(4)}>{t('التسجيل باستخدام جوجل','Continue with Google')} <span aria-hidden="true">←</span></button>
    </section>}
