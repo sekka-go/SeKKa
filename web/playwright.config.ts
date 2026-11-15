@@ -2,6 +2,9 @@ import { defineConfig } from "@playwright/test";
 export default defineConfig({
   testDir: "./e2e",
   workers: 1,
+  // Synthetic Google session fixtures are run only by a separate CI build,
+  // never alongside real-staging acceptance tests.
+  testIgnore: process.env.SEKKA_AUTH_UI_MOCKS==='true' ? [] : ['admin-authorization-mocked.spec.ts'],
   use: {
     baseURL: "http://127.0.0.1:4173",
     headless: true,
