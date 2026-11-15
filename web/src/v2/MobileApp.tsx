@@ -37,7 +37,7 @@ export default function MobileApp(){
    setUserId(session.user.id);setCaptain(Boolean(captainRow));setAdmin(adminAccess===true);setReady(true);
   }
   void read();
-  const sub=client?.auth.onAuthStateChange((_event,session)=>{void read(session);});
+  const sub=client?.auth.onAuthStateChange((_event,session)=>{queueMicrotask(()=>{if(active)void read(session);});});
   return()=>{active=false;sub?.data.subscription.unsubscribe();};
  },[]);
  useEffect(()=>{if(!client)return;void client.from('v31_service_areas').select('id,name_ar,name_en').eq('active',true).order('id').then(({data,error:e})=>{if(e)setAreasError(e.message);else if(data){setAreas(data);setAreasError('');}});},[]);
