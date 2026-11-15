@@ -139,7 +139,10 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
    <p>{t('حالة حساب الكابتن:','Captain account status:')} {approval}</p>
    {application?.status==='rejected'&&<><p role="alert">{t('سبب الرفض:','Rejection reason:')} {application.rejection_reason||'—'}</p>
     <button type="button" disabled={busy} onClick={editAgain}>{t('عدّل الطلب وأعد تقديمه','Edit and resubmit')}</button></>}
-   {application?.status==='approved'&&approval==='approved'&&<button className="d-primary" onClick={()=>onNext(42)}>{t('ابدأ إدارة الخطوط','Manage routes')}</button>}
+   {application?.status==='approved'&&approval==='approved'&&<>
+    <button type="button" className="d-primary" onClick={()=>onNext(37)}>{t('سجّل عربيتك المعتمدة','Register your vehicle')}</button>
+    <button type="button" className="d-outline" onClick={()=>onNext(42)}>{t('ابدأ إدارة الخطوط','Manage routes')}</button>
+   </>}
    <button type="button" onClick={()=>setRev(n=>n+1)}>{t('تحديث الحالة','Refresh status')}</button>
   </div>}
  </section>;
