@@ -52,14 +52,15 @@ export default function LiveHome({onNavigate}:{onNavigate:(screen:number)=>void}
   </section>
   <section className="live-home__body" aria-label={t('البدء في التطبيق','Get started')}>
    {busy&&<div className="live-home__panel" role="status">{t('بنجهّز بيانات حسابك…','Getting your account ready…')}</div>}
-   {error&&<div className="live-home__notice" role="alert"><span>{error}</span><button onClick={retry}>{t('حاول تاني','Retry')}</button></div>}
    {!busy&&!identity&&<section className="live-home__panel">
     <div className="live-home__panel-icon" aria-hidden="true">↗</div>
+    {error&&<div className="live-home__inline-alert" role="alert"><span>{error}</span><button type="button" onClick={retry}>{t("إعادة المحاولة","Retry")}</button></div>}
     <h2>{t('يلا نبدأ مشوارك','Ready to get moving?')}</h2>
     <p>{t('سجّل بجوجل علشان تلاقي خطك وتتابع بياناتك الحقيقية.','Sign in with Google to find routes and manage your real account.')}</p>
     <button className="live-home__primary" onClick={()=>onNavigate(4)}>{t('التسجيل باستخدام جوجل','Continue with Google')} <span aria-hidden="true">←</span></button>
    </section>}
    {identity&&<section className="live-home__panel">
+    {error&&<div className="live-home__inline-alert" role="alert"><span>{error}</span><button type="button" onClick={retry}>{t("إعادة المحاولة","Retry")}</button></div>}
     <div className="live-home__identity"><span className="live-home__avatar">{identity.name.slice(0,1).toUpperCase()}</span><div><strong>{identity.name}</strong><small dir="ltr">{identity.email}</small></div></div>
     <span className="live-home__role">{identity.admin?t('أدمن معتمد','Verified admin'):identity.role==='captain'?(identity.approved?t('كابتن معتمد','Approved captain'):t('كابتن بانتظار الاعتماد','Captain under review')):t('حساب راكب','Passenger account')}</span>
     <h2>{identity.role==='captain'?t('خطوطك، في إيدك','Manage your routes'):t('رايح فين النهارده؟','Where are you headed?')}</h2>
