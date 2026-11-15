@@ -22,7 +22,10 @@ test('PWA manifest installs at mobile root and worker never caches user data',as
  await expect(page.locator('.phase-preview-note')).toHaveCount(0);
 });
 test('guest app supports browser Back/Forward between real tabs',async({page})=>{
- await page.goto('/');
+ // The approved guest welcome is a standalone screen and has no tabs.
+ // Start in the real tabbed Search experience before exercising history.
+ await page.goto('/?tab=search');
+ await expect(page.locator('.sekka-bottom-nav')).toBeVisible();
  await page.getByRole('navigation',{name:/Main navigation|التنقل الرئيسي/}).getByRole('button',{name:/Search|بحث/}).click();
  await expect(page).toHaveURL(/tab=search/);
  await page.getByRole('navigation',{name:/Main navigation|التنقل الرئيسي/}).getByRole('button',{name:/Bookings|حجوزاتي/}).click();
