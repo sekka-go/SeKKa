@@ -2,7 +2,6 @@ import type {Session} from '@supabase/supabase-js';
 import {useEffect,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
-import LiveHome from './LiveHome';
 import Onboarding from './Onboarding';
 import Discovery from './Discovery';
 import type {Line} from './Discovery';
@@ -23,6 +22,7 @@ const tabFromUrl=():Tab=>{const key=new URL(location.href).searchParams.get('tab
 export default function MobileApp(){
  const p=usePreferences(),en=p.language==='en',t=(ar:string,english:string)=>en?english:ar;
  const [adminScreen,setAdminScreen]=useState(()=>{const n=Number(new URL(location.href).searchParams.get('view'));return n>=62&&n<=73?n:62;});
+ const [captainApproved,setCaptainApproved]=useState(false);
  const [captainStep,setCaptainStep]=useState(()=>{const n=Number(new URL(location.href).searchParams.get('view'));return n>=35&&n<=41?n:35;});
  const [captainScreen,setCaptainScreen]=useState(()=>{const n=Number(new URL(location.href).searchParams.get('view'));return n>=42&&n<=49?n:42;});
  const [discoveryScreen,setDiscoveryScreen]=useState(()=>{const n=Number(new URL(location.href).searchParams.get('view'));return [8,9,10,11,12].includes(n)?n:9;});
@@ -59,9 +59,9 @@ export default function MobileApp(){
    if(!client){if(active)setReady(true);return;}
    const session=supplied===undefined?(await client.auth.getSession()).data.session:supplied;
    if(!active)return;
-   if(!session){setUserId(null);setCaptain(false);setAdmin(false);setReady(true);return;}
+   if(!session){setUserId(null);setCaptain(false);setCaptainApproved(false);setAdmin(false);setReady(true);return;}
    const [{data:captainRow},{data:adminAccess}]=await Promise.all([
-    client.from('v31_captain_profiles').select('user_id').eq('user_id',session.user.id).maybeSingle(),
+    client.from('v31_captain_profiles').select('user_id,approval_status').eq('user_id',session.user.id).maybeSingle(),
     client.rpc('v31_is_admin')
    ]);
    if(!active)return;
@@ -89,7 +89,7 @@ export default function MobileApp(){
      }
    }
    if(!active)return;
-   setUserId(session.user.id);setCaptain(enrolled);setAdmin(adminAccess===true);setReady(true);
+   setUserId(session.user.id);setCaptain(enrolled);setCaptainApproved(captainRow?.approval_status==='approved');setAdmin(adminAccess===true);setReady(true);
   }
   void read();
   const sub=client?.auth.onAuthStateChange((_event,session)=>{queueMicrotask(()=>{if(active)void read(session);});});
@@ -145,7 +145,7 @@ export default function MobileApp(){
   if(n===5||n===7)n=6;
   if(n>=1&&n<=6){if(n===4&&onboardingScreen===3){try{sessionStorage.setItem('sekka.pendingRole',selectedRole);}catch{/* no session storage */}}setOnboardingScreen(n);navigate('login');}
  };
- const onLegacyNavigate=(n:number)=>{if(n===4)setOnboardingScreen(4);navigate(n===4?'login':n===9?'search':n===42?'routes':n===62?'admin':n===34?'profile':n===32?'notifications':n===27?'bookings':'home');};
+
  return <div className="sekka-mobile" dir={en?'ltr':'rtl'}>
   <a className="sekka-skip" href="#sekka-content">{t('تخطي للمحتوى','Skip to content')}</a>
   <header className="sekka-mobile-header">
@@ -156,7 +156,7 @@ export default function MobileApp(){
   <main id="sekka-content" className="sekka-mobile-content">
    {!ready&&<p role="status">{t('بنجهز حسابك…','Loading account…')}</p>}
    {error&&<div className="sekka-mobile-alert" role="alert">{error}<button onClick={()=>setError('')}>{t('إغلاق','Dismiss')}</button></div>}
-   {tab==='home'&&(!ready?<p role="status">{t('بنجهز حسابك…','Loading account…')}</p>:userId?(captain?<LiveHome onNavigate={onLegacyNavigate}/>:approvedDiscovery(8)):<Onboarding production screen={2} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={setSelectedRole}/>)}
+   {tab==='home'&&(!ready?<p role="status">{t('بنجهز حسابك…','Loading account…')}</p>:userId?(captain?(captainApproved?<CaptainRoutes production screen={internalScreen(42)} theme={p.theme} onTheme={p.setThemePreference} go={captainGo}/>:approvedCaptainOnboarding(40)):approvedDiscovery(8)):<Onboarding production screen={2} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={setSelectedRole}/>)}
    {tab==='login'&&<Onboarding production screen={userId?6:onboardingScreen} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={setSelectedRole}/>}
    {tab==='profile'&&(userId?<section className="sekka-mobile-card"><LiveProfile/><button type="button" onClick={()=>{setCaptainStep(35);navigate('captain-onboarding');}}>{t('ابدأ ككابتن','Become a captain')}</button><button type="button" onClick={()=>void signOut()}>{t('تسجيل الخروج','Sign out')}</button></section>:<section className="sekka-mobile-card"><h1>{t('حسابي','My profile')}</h1><p>{t('سجّل بجوجل علشان تكمل بياناتك.','Sign in with Google to complete your profile.')}</p><button className="sekka-action" onClick={()=>{setOnboardingScreen(4);navigate('login');}}>{t('تسجيل الدخول بجوجل','Sign in with Google')}</button></section>)}
    {selectionError&&['search','booking'].includes(tab)&&<div role="alert" className="sekka-mobile-alert">{selectionError}<button type="button" onClick={()=>setSelectionVersion(v=>v+1)}>{t('إعادة المحاولة','Retry')}</button></div>}
