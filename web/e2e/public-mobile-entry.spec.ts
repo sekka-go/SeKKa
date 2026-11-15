@@ -28,6 +28,9 @@ for(const width of [360,390]){
    await nav.nth(2).click();
    await expect(page.getByRole('heading',{name:language==='ar'?'حجوزاتي':'My bookings'})).toBeVisible();
    await nav.nth(4).click();
+   await expect(page.getByRole('heading',{name:language==='ar'?'حسابي':'My profile'})).toBeVisible();
+   await expect(page).toHaveURL(/tab=profile/);
+   await page.getByRole('button',{name:language==='ar'?'تسجيل الدخول بجوجل':'Sign in with Google'}).click();
    await expect(page.getByRole('heading',{name:language==='ar'?'سجّل دخولك لسِكّة':'Sign in to seKKa'})).toBeVisible();
    await expect(page.getByRole('button',{name:language==='ar'?'المتابعة باستخدام جوجل':'Continue with Google'})).toBeVisible();
    const primary=page.locator('.sekka-mobile-card .sekka-action');
