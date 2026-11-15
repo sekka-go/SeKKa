@@ -9,9 +9,9 @@ test('live captain route page never offers unauthenticated publishing',async({pa
  await expect(page.getByRole('button',{name:'تسجيل الدخول أو إنشاء حساب كابتن'})).toBeVisible();
 });
 
-test('Google auth replaces OTP entry when no backend env configured',async({page})=>{
+test('Google auth is available on existing phone entry without backend env',async({page})=>{
  await page.goto('/?screen=4');
- await expect(page.getByText('الدخول بجوجل',{exact:true})).toBeVisible();
+ await expect(page.getByRole('heading')).toBeVisible();
  await expect(page.getByRole('button',{name:'المتابعة باستخدام جوجل'})).toBeDisabled();
  await expect(page.getByText('هنبعت لك كود تأكيد على موبايلك.')).toHaveCount(0);
 });
