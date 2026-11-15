@@ -53,4 +53,4 @@ BEGIN
  UPDATE public.v31_routes SET status=p_status WHERE id=p_route;
  RETURN p_status;
 END
-$function$
+$function$;
