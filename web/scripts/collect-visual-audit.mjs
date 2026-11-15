@@ -55,11 +55,14 @@ function integrated(n){
 async function bounds(page){
  return page.evaluate(()=>{
   const w=innerWidth,h=innerHeight;
-  // The gallery's developer toolbar is not part of the approved screen canvas.
-  // Scope interactive measurements to main; measure the app's persistent nav separately.
-  const types={headers:'header,.ad-top,.d-header,.b-header',buttons:'main button,main a[role="button"],main input[type="submit"]',
-   fields:'main input:not([type="hidden"]),main select,main textarea',cards:'main article,main .d-box,main .b-box,main .ad-card,main .sekka-mobile-card,main .d-result',
+  // Measure production page chrome and the original Admin sidebar too.
+  // Explicitly omit developer gallery controls; these are not approved UI.
+  const types={headers:'header,.ad-top,.d-header,.b-header',headings:'main h1,main h2,main h3',
+   buttons:'button,a[role="button"],input[type="submit"]',
+   fields:'input:not([type="hidden"]),select,textarea',
+   cards:'article,.d-box,.b-box,.ad-card,.sekka-mobile-card,.d-result',
    bottomNavigation:'.sekka-bottom-nav'};
+  const isGalleryChrome=e=>Boolean(e.closest('.phase-review-bar,.phase-navigation,.phase-preview-note,.phase-screen-selector'));
   const inIntentionalScroller=e=>{
    for(let p=e.parentElement;p&&p!==document.body;p=p.parentElement){
     const style=getComputedStyle(p);
@@ -72,7 +75,7 @@ async function bounds(page){
   for(const [type,selector] of Object.entries(types)){
    const arr=[];
    for(const e of document.querySelectorAll(selector)){
-    if(!visible(e))continue;
+    if(!visible(e)||isGalleryChrome(e))continue;
     const r=e.getBoundingClientRect();
     const rect={x:+r.x.toFixed(1),y:+r.y.toFixed(1),width:+r.width.toFixed(1),height:+r.height.toFixed(1)};
     const label=(e.getAttribute('aria-label')||e.textContent||e.getAttribute('placeholder')||'').trim().replace(/\s+/g,' ').slice(0,70);
@@ -167,9 +170,17 @@ async function main(){
     if(row.state!=='comparable_guest')row.issues.push({kind:'non_equivalent_state',detail:row.reason});
     if(row.errors.length)row.issues.push({kind:'capture_error',detail:row.errors});
     if(row.state==='comparable_guest'&&row.originalMetrics&&row.integratedMetrics){
-     for(const kind of ['headers','buttons','fields','cards','bottomNavigation']){
+     for(const kind of ['headers','headings','buttons','fields','cards','bottomNavigation']){
       const a=row.originalMetrics.groups[kind]||[],b=row.integratedMetrics.groups[kind]||[];
       if(a.length!==b.length)row.issues.push({kind:'element_count_difference',group:kind,original:a.length,integrated:b.length});
+      if(['headings','buttons'].includes(kind)){
+       for(const item of a){
+        if(!item.label)continue;
+        if(!b.some(candidate=>candidate.tag===item.tag&&candidate.label===item.label))
+         row.issues.push({kind:kind==='buttons'?'missing_original_action_candidate':'missing_original_heading_candidate',
+          group:kind,label:item.label});
+       }
+      }
       // Compare only elements with matching accessible labels and tag.
       // Index alignment paired unrelated gallery navigation with app controls.
       for(const original of a){
