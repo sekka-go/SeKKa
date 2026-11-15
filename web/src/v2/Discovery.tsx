@@ -742,7 +742,7 @@ export default function Discovery(p: DiscoveryProps) {
         )}
         {p.error && !demo && (
           <div className="d-feedback" role="alert">
-            <p>{p.error}</p>
+            <p>{/OTP|verify|verification|تحقق|موبايل|بجوجل|Google/i.test(p.error) ? p.error : tr("الخدمة مش متاحة دلوقتي. جرّب تاني بعد شوية.")}</p>
             <button type="button" className="d-outline" onClick={() => nav(9)}>
               {tr("ارجع للبحث")}
             </button>
