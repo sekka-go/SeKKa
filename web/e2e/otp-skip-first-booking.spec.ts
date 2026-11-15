@@ -4,7 +4,7 @@ test.use({locale:'ar-EG',viewport:{width:390,height:844}});
 for(const theme of ['dark','light'] as const){
  test('verification preview allows skip below Verify in '+theme,async({page})=>{
   await page.addInitScript(t=>localStorage.setItem('theme_preference',t),theme);
-  await page.goto('/?screen=5&inspect=1');
+  await page.goto('/dev/screens?screen=5&inspect=1');
   const verify=page.locator('button.phase-verify');
   const skip=page.getByRole('button',{name:/تخطي الآن/});
   await expect(skip).toBeVisible();
