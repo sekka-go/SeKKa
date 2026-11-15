@@ -168,7 +168,7 @@ export default function Onboarding({
   onReturn?: () => void;
   children?: ReactNode;
 }) {
-  const {language} = usePreferences();
+  const {language,themePreference,languagePreference} = usePreferences();
   const t = (text:string) => translate(text,language);
   const id = screen === 37 ? 2 : screen;
   const [phone, setPhone] = useState(""),
@@ -436,7 +436,7 @@ export default function Onboarding({
             <p className="phase-subtitle">{language === "en" ? "Phone login and OTP are temporarily unavailable." : "تسجيل الدخول بالموبايل وOTP مؤجل مؤقتًا."}</p>
             <button className="phase-primary" disabled={!client} onClick={async () => {
               if (!client) return;
-              const {error}=await client.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin+location.pathname+"?screen=8"}});
+              const {error}=await client.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin+location.pathname+"?screen=8&oauth_theme="+encodeURIComponent(themePreference==="system"?theme:themePreference)+"&oauth_language="+encodeURIComponent(languagePreference==="system"?language:languagePreference)}});
               if (error) window.alert(error.message);
             }}>{language === "en" ? "Continue with Google" : "المتابعة باستخدام جوجل"}</button>
             {!client && <p role="status">{language === "en" ? "Supabase public configuration is not ready." : "إعداد الاتصال العام بـSupabase لم يكتمل."}</p>}
