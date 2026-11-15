@@ -1,10 +1,14 @@
 import {usePreferences} from "./preferences";
 import {translate} from "./translations";
-import { publicScreen, screenTitle } from "./screenMap";
-import { useState } from "react";
+import { publicScreen, internalScreen, screenTitle } from "./screenMap";
+import { useEffect, useState } from "react";
 import { Wordmark, type Appearance } from "./Onboarding";
 import { DiscoveryIcon } from "./Discovery";
 import type { Profile } from "./api";
+import {client} from "./api";
+import {enrollCaptain} from "./captainEnrollment";
+import LiveProfile from "./LiveProfile";
+import LiveVehicles from "./LiveVehicles";
 import "./booking.css";
 import "./wallet.css";
 import "./captain.css";
@@ -28,10 +32,34 @@ export default function CaptainOnboarding(p: {
   busy: boolean;
   error: string;
   onRefresh: () => void;
+  production?: boolean;
+  onEnrolled?: () => void;
 }) {
   const {language}=usePreferences();
   const tr=(text:string)=>translate(text,language);
   const demo = new URLSearchParams(location.search).get("preview") === "phase5";
+  const [v31Status,setV31Status]=useState<string|null>(null),[v31Busy,setV31Busy]=useState(false),[v31Error,setV31Error]=useState(''),[v31Revision,setV31Revision]=useState(0);
+  useEffect(()=>{
+    if(!p.production||!client)return;
+    let live=true;
+    void(async()=>{try{
+      const {data:{user},error:authError}=await client.auth.getUser();
+      if(authError||!user)throw Error('AUTH_REQUIRED');
+      const {data,error}=await client.from('v31_captain_profiles').select('approval_status').eq('user_id',user.id).maybeSingle();
+      if(error)throw error;
+      if(live)setV31Status(data?.approval_status||null);
+    }catch(e){if(live)setV31Error(e instanceof Error?e.message:String(e));}})();
+    return()=>{live=false;};
+  },[p.production,v31Revision]);
+  const startEnrollment=async()=>{
+    setV31Busy(true);setV31Error('');
+    try{
+      const result=await enrollCaptain();
+      setV31Status(result.approval_status);setV31Revision(n=>n+1);p.onEnrolled?.();
+    }catch(e){setV31Error(e instanceof Error?e.message:String(e));}
+    finally{setV31Busy(false);}
+  };
+
   const [name, setName] = useState("");
   const [experience, setExperience] = useState("");
   const [model, setModel] = useState("");
@@ -131,6 +159,33 @@ export default function CaptainOnboarding(p: {
         </button>
       </>
     );
+  }
+  if(p.production){
+    const n=publicScreen(p.screen);
+    const next=(id:number)=>p.go(internalScreen(id));
+    return <div className={`phase-one-stage discovery-stage booking-stage captain-stage ${p.theme}`}>
+      <main className={`phase-canvas d-canvas captain-onboarding-canvas captain-step-${n}`}>
+        <Wordmark/><h1>{screenTitle(p.screen,language)}</h1>
+        {v31Error&&<div role="alert" className="d-feedback"><p>{v31Error}</p><button type="button" onClick={()=>setV31Revision(v=>v+1)}>{tr("إعادة المحاولة")}</button></div>}
+        {n===35&&<section className="d-box"><h2>{tr("ابدأ ككابتن في سِكّة")}</h2>
+          <p>{tr("حسابك بيتسجل للمراجعة، ومفيش نشر خطوط قبل الاعتماد.")}</p>
+          {!p.signedIn?<button className="d-primary" onClick={()=>next(3)}>{tr("سجّل دخولك بجوجل")}</button>
+           :<button className="d-primary" disabled={v31Busy} onClick={()=>void startEnrollment()}>{v31Busy?tr("جاري تسجيل طلبك…"):v31Status?tr("تحديث بيانات التسجيل"):tr("ابدأ التسجيل")}</button>}
+          {v31Status&&<p role="status">{tr("حالة الطلب:")} {v31Status}</p>}
+        </section>}
+        {n===36&&<LiveProfile/>}
+        {n===37&&<LiveVehicles/>}
+        {n===38&&<section className="d-box" role="status"><p>{tr("رفع المستندات يحتاج تخزين آمن وصلاحيات لم تُفعّل بعد. لن يتم إرسال أي ملف وهمي.")}</p></section>}
+        {(n===39||n===40||n===41)&&<section className="d-box">
+          <h2>{tr("حالة حساب الكابتن")}</h2><p role="status">{v31Status===null?tr("لسه مفيش طلب تسجيل كابتن."):v31Status==='approved'?tr("حساب الكابتن معتمد."):v31Status==='pending'?tr("طلبك قيد المراجعة."):v31Status==='suspended'?tr("الحساب موقوف."):tr("الطلب يحتاج مراجعة.")}</p>
+          <button className="d-outline" onClick={()=>setV31Revision(v=>v+1)}>{tr("تحديث الحالة")}</button>
+          {n===41&&v31Status==='approved'&&<button className="d-primary" onClick={()=>next(42)}>{tr("اذهب إلى خطوطي")}</button>}
+        </section>}
+        <div className="d-box"><button type="button" className="d-outline" onClick={()=>next(n<=35?3:n-1)}>{tr("رجوع")}</button>
+          {n>=35&&n<41&&<button type="button" className="d-primary" onClick={()=>next(n+1)}>{tr("متابعة")}</button>}
+        </div>
+      </main>
+    </div>;
   }
   return (
     <div
