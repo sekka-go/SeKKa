@@ -183,6 +183,7 @@ export default function SubscriptionApp() {
     [signedIn, setSignedIn] = useState(false),
     [authReady, setAuthReady] = useState(false);
   const [verifiedAdmin,setVerifiedAdmin]=useState(false);
+  const [hasCaptainProfile,setHasCaptainProfile]=useState(false);
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
@@ -334,14 +335,16 @@ export default function SubscriptionApp() {
       return;
     const {data:{session},error:sessionError}=await client.auth.getSession();
     if(sessionError||!session){
-      setSignedIn(false);setVerifiedAdmin(false);setProfile(null);return;
+      setSignedIn(false);setVerifiedAdmin(false);setHasCaptainProfile(false);setProfile(null);return;
     }
     setSignedIn(true);
     const identityName=session.user.user_metadata?.full_name||session.user.email||"";
-    const [{data:adminAccess,error:adminError},{data:existing,error:readError}]=await Promise.all([
+    const [{data:adminAccess,error:adminError},{data:existing,error:readError},{data:captainAccount,error:captainError}]=await Promise.all([
       client.rpc("v31_is_admin"),
-      client.from("v31_profiles").select("display_name,role_preference").eq("user_id",session.user.id).maybeSingle()
+      client.from("v31_profiles").select("display_name,role_preference").eq("user_id",session.user.id).maybeSingle(),
+      client.from("v31_captain_profiles").select("approval_status").eq("user_id",session.user.id).maybeSingle()
     ]);
+    setHasCaptainProfile(!captainError&&Boolean(captainAccount));
     setVerifiedAdmin(!adminError&&adminAccess===true);
     if(readError){
       setProfile(null);setName(identityName);setRole("rider");return;
@@ -535,13 +538,13 @@ export default function SubscriptionApp() {
     !inPhasePreview &&
     !publicScreens.has(screen) &&
     ![6, 7].includes(screen) &&
-    !(signedIn && captainRouteScreens.includes(screen)) &&
+    !(signedIn && hasCaptainProfile && captainRouteScreens.includes(screen)) &&
     (!signedIn || (!profile && !(verifiedAdmin && publicScreen(screen)>=62)));
   const captainBlocked =
     !inPhasePreview &&
     publicScreen(screen) >= 36 &&
     publicScreen(screen) <= 61 &&
-    !captainRouteScreens.includes(screen) &&
+    !(hasCaptainProfile && captainRouteScreens.includes(screen)) &&
     profile?.role !== "captain";
   const adminBlocked =
     !inPhasePreview &&
