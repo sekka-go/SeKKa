@@ -139,3 +139,148 @@
   min-height:max(calc(min(100vw,600px)*1.3333333),calc(100dvh - 44px))
  }
 }
+
+/*
+ * Real-mobile overflow/brand guards.  Scope to the integrated application:
+ * /dev/screens retains the owner's original reference geometry.
+ */
+.sekka-mobile .phase-logo {
+  max-width: min(26%, 124px);
+  min-width: 0;
+}
+.sekka-mobile .d-header > .phase-wordmark {
+  max-width: min(24%, 124px);
+  height: auto;
+}
+.sekka-mobile .phase-logo .phase-wordmark,
+.sekka-mobile .d-header > .phase-wordmark {
+  display: block;
+  aspect-ratio: 445 / 225;
+}
+.sekka-mobile-header .sekka-approved-logo {
+  width: 48px;
+  height: 48px;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.sekka-mobile-card > button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  width: 100%;
+  max-width: 100%;
+  margin-block-start: 12px;
+  padding: 10px 14px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+  text-align: center;
+}
+.sekka-mobile-alert {
+  min-width: 0;
+  flex-wrap: wrap;
+  overflow-wrap: anywhere;
+}
+.sekka-mobile-alert > p { flex: 1 1 190px; min-width: 0; margin: 0; }
+.sekka-mobile-alert > button { flex: 0 0 auto; min-height: 44px; }
+
+/* S006: profile retrieval, form and continuation are not fixed artwork.
+ * Restore a scrolling document flow beneath the original approved wordmark. */
+.sekka-mobile .phase-screen-6 {
+  height: auto;
+  min-height: calc(100dvh - env(safe-area-inset-top, 0px));
+  aspect-ratio: auto;
+  overflow: visible;
+}
+.sekka-mobile .phase-screen-6 .phase-live-profile-flow {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: clamp(100px, 25cqw, 150px) max(16px, 6cqw)
+    calc(24px + env(safe-area-inset-bottom, 0px));
+}
+.sekka-mobile .phase-screen-6 .phase-live-profile-flow :is(.phase-title,.phase-primary) {
+  position: static;
+  inset: auto;
+  transform: none;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  margin: 0;
+  white-space: normal;
+}
+.sekka-mobile .phase-screen-6 .phase-live-profile-flow .phase-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 12px 16px !important;
+  line-height: 1.4;
+}
+.sekka-mobile .phase-screen-6 .phase-live-profile-flow .live-profile {
+  position: static;
+  display: grid;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 16px;
+  overflow-wrap: anywhere;
+}
+.sekka-mobile .phase-screen-6 .phase-live-profile-flow .live-profile label {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.sekka-mobile .phase-screen-6 .phase-live-profile-flow .live-profile input,
+.sekka-mobile .phase-screen-6 .phase-live-profile-flow .live-profile button {
+  position: static;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.sekka-mobile .phase-screen-6 .phase-live-profile-flow .live-profile input {
+  font: inherit;
+  color: var(--phase-text);
+}
+@media (max-width:680px) {
+  .sekka-tab-login .sekka-mobile-content > .phase-one-stage:has(> .phase-screen-6) {
+    padding-block-start: 0;
+    min-height: 100dvh;
+  }
+  .sekka-tab-login .phase-screen-6 {
+    max-width: none;
+    width: 100%;
+  }
+  /* S010 must scroll all the way to the results action, with no fixed tabs. */
+  .sekka-search-filters .d-screen-10 {
+    height: auto;
+    overflow: visible;
+    padding-block-end: calc(28px + env(safe-area-inset-bottom, 0px));
+  }
+  .sekka-search-filters .d-screen-10 > .d-primary {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    height: auto;
+    padding: 10px 14px;
+    white-space: normal;
+    line-height: 1.4;
+  }
+}
+@media (max-width:380px) {
+  .sekka-mobile-card > button { margin-block-start: 14px; }
+  .sekka-mobile .phase-screen-6 .phase-live-profile-flow { gap: 14px; }
+}
