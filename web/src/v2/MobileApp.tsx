@@ -204,7 +204,7 @@ export default function MobileApp(){
   if(n>=1&&n<=6){if(n===4&&onboardingScreen===3){try{sessionStorage.setItem('sekka.pendingRole',selectedRole);}catch{/* no session storage */}}setOnboardingScreen(n);navigate('login');}
  };
 
- return <div className="sekka-mobile" dir={en?'ltr':'rtl'}>
+ return <div className={`sekka-mobile sekka-tab-${tab}${!userId&&tab==='home'?' sekka-guest-welcome':''}`} dir={en?'ltr':'rtl'}>
   <a className="sekka-skip" href="#sekka-content">{t('تخطي للمحتوى','Skip to content')}</a>
   <header className="sekka-mobile-header">
    <button className="sekka-brand-button" onClick={()=>navigate('home')} aria-label={t('الرئيسية','Home')}><img className="sekka-approved-logo" src="/brand/approved/app-icon-yellow.png" alt="سِكّة — seKKa"/></button>
