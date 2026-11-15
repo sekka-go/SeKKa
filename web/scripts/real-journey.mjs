@@ -17,7 +17,7 @@ const env=process.env;
 assert.equal(env.SEKKA_TEST_DATABASE,'true','Explicit disposable staging opt-in required');
 const url=env.VITE_SUPABASE_URL,key=env.VITE_SUPABASE_PUBLISHABLE_KEY;
 assert.ok(url&&key,'Missing staging public config');
-assert.ok(!url.includes('uorxfakceqnhxqnaawdy'),'Never run on connected main project');
+assert.equal(new URL(url).hostname,'zgcvumykzivsvnlflbyp.supabase.co','REFUSE_NON_STAGING_DATABASE');
 assert.ok(env.SEKKA_CAPTAIN_ACCESS_TOKEN&&env.SEKKA_RIDER_ACCESS_TOKEN,'Two independently authenticated Google sessions required');
 const actor=(token)=>createClient(url,key,{global:{headers:{Authorization:`Bearer ${token}`}},auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
 const captain=actor(env.SEKKA_CAPTAIN_ACCESS_TOKEN),rider=actor(env.SEKKA_RIDER_ACCESS_TOKEN);
