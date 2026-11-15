@@ -36,7 +36,7 @@ const originalPath=n=>'/dev/screens?screen='+n+(n<=7?'&inspect=1':'&preview='+ph
 function integrated(n){
  if(n===2)return{url:'/',state:'comparable_guest',note:'Public welcome screen'};
  if(n===3)return{url:'/',state:'comparable_guest',note:'Welcome button opens role selection',action:'welcome'};
- if(n===4)return{url:'/?tab=profile',state:'comparable_guest',note:'Guest profile CTA opens Google sign-in',action:'login'};
+ if(n===4)return{url:'/?tab=profile',state:'auth_flow_changed',note:'Gallery phone screen is not equivalent to production Google OAuth login; do not score as pixel mismatch',action:'login'};
  if(n>=9&&n<=11)return{url:'/?tab=search&view='+n,state:'guest_data_mismatch',note:'Real search empty/loading state; gallery preview uses illustrative examples'};
  if(n===12)return{url:'/?tab=search&view=12',state:'route_required',note:'Published route and valid stops required for equivalent details'};
  if(n===8)return{url:'/',state:'auth_required',note:'Guest home shows welcome, not signed-in Rider home'};
@@ -55,9 +55,18 @@ function integrated(n){
 async function bounds(page){
  return page.evaluate(()=>{
   const w=innerWidth,h=innerHeight;
-  const types={headers:'header,.ad-top,.d-header,.b-header',buttons:'button,a[role="button"],input[type="submit"]',
-   fields:'input:not([type="hidden"]),select,textarea',cards:'article,.d-box,.b-box,.ad-card,.sekka-mobile-card,.d-result',
+  // The gallery's developer toolbar is not part of the approved screen canvas.
+  // Scope interactive measurements to main; measure the app's persistent nav separately.
+  const types={headers:'main header,main .ad-top,main .d-header,main .b-header',buttons:'main button,main a[role="button"],main input[type="submit"]',
+   fields:'main input:not([type="hidden"]),main select,main textarea',cards:'main article,main .d-box,main .b-box,main .ad-card,main .sekka-mobile-card,main .d-result',
    bottomNavigation:'.sekka-bottom-nav'};
+  const inIntentionalScroller=e=>{
+   for(let p=e.parentElement;p&&p!==document.body;p=p.parentElement){
+    const style=getComputedStyle(p);
+    if(['scroll','auto'].includes(style.overflowX)&&p.scrollWidth>p.clientWidth+2)return true;
+   }
+   return false;
+  };
   const visible=e=>{const r=e.getBoundingClientRect(),s=getComputedStyle(e);return s.visibility!=='hidden'&&s.display!=='none'&&r.width>1&&r.height>1;};
   const groups={},issues=[],controls=[];
   for(const [type,selector] of Object.entries(types)){
@@ -68,7 +77,10 @@ async function bounds(page){
     const rect={x:+r.x.toFixed(1),y:+r.y.toFixed(1),width:+r.width.toFixed(1),height:+r.height.toFixed(1)};
     const label=(e.getAttribute('aria-label')||e.textContent||e.getAttribute('placeholder')||'').trim().replace(/\s+/g,' ').slice(0,70);
     arr.push({tag:e.tagName.toLowerCase(),label,rect});
-    if(r.left < -2||r.right>w+2)issues.push({kind:'element_horizontal_clipping',type,label,rect});
+    // Offscreen children inside a deliberately scrollable horizontal navigation
+    // are not viewport clipping bugs; the scroller is their access mechanism.
+    if((r.left < -2||r.right>w+2)&&!inIntentionalScroller(e))
+     issues.push({kind:'element_horizontal_clipping',type,label,rect});
     let p=e.parentElement;
     while(p&&p!==document.body){
      const s=getComputedStyle(p),pr=p.getBoundingClientRect();
@@ -79,7 +91,8 @@ async function bounds(page){
      }
      p=p.parentElement;
     }
-    if((type==='buttons'||type==='fields')&&r.top<h&&r.bottom>0)controls.push({e,r,label});
+    if((type==='buttons'||type==='fields')&&r.top<h&&r.bottom>0&&r.right>0&&r.left<w)
+     controls.push({e,r,label});
    }
    groups[type]=arr.slice(0,110);
   }
@@ -157,10 +170,16 @@ async function main(){
      for(const kind of ['headers','buttons','fields','cards','bottomNavigation']){
       const a=row.originalMetrics.groups[kind]||[],b=row.integratedMetrics.groups[kind]||[];
       if(a.length!==b.length)row.issues.push({kind:'element_count_difference',group:kind,original:a.length,integrated:b.length});
-      for(let j=0;j<Math.min(a.length,b.length,8);j++){
-       const ar=a[j].rect,br=b[j].rect;
+      // Compare only elements with matching accessible labels and tag.
+      // Index alignment paired unrelated gallery navigation with app controls.
+      for(const [j,original] of a.entries()){
+       if(!original.label)continue;
+       const candidate=b.find(item=>item.tag===original.tag&&item.label===original.label);
+       if(!candidate)continue;
+       const ar=original.rect,br=candidate.rect;
        if(Math.abs(ar.x-br.x)>24||Math.abs(ar.y-br.y)>40||Math.abs(ar.width-br.width)>32)
-        row.issues.push({kind:'bounding_box_delta_for_review',group:kind,index:j,original:ar,integrated:br});
+        row.issues.push({kind:'matched_element_position_delta_for_review',group:kind,
+         label:original.label,original:ar,integrated:br});
       }
      }
     }
