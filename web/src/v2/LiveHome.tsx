@@ -1,3 +1,4 @@
+import LiveBookings from './LiveBookings';
 import {useEffect,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
@@ -71,6 +72,7 @@ export default function LiveHome({onNavigate}:{onNavigate:(screen:number)=>void}
     <button className="live-home__primary" onClick={()=>onNavigate(identity.role==='captain'?42:9)}>{identity.role==='captain'?t('إدارة خطوطي','Manage my routes'):t('ابحث عن خط','Find a route')} <span aria-hidden="true">←</span></button>
     {identity.admin&&<button className="live-home__secondary" onClick={()=>onNavigate(62)}>{t('لوحة الإدارة','Admin dashboard')}</button>}
    </section>}
+   {identity&&<LiveBookings mode={identity.role==="captain"?"captain":"rider"}/>}
    <div className="live-home__info"><span aria-hidden="true">ⓘ</span>{t('الحجز والدفع الفعلي لسه تحت التجهيز. مفيش فلوس هتتخصم.','Real bookings and payments are not enabled yet. No money will be charged.')}</div>
    {identity&&<button className="live-home__logout" onClick={async()=>{if(!client)return;const {error:signOutError}=await client.auth.signOut();if(signOutError){setError(t('تعذّر تسجيل الخروج.','Unable to sign out.'));return;}setIdentity(null);onNavigate(4);}}>{t('تسجيل الخروج','Sign out')}</button>}
   </section>
