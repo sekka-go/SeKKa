@@ -18,9 +18,20 @@ import AdminDashboard from './AdminDashboard';
 import {mobileRouteHref,readMobileRoute} from './mobileNavigation';
 import type {MobileRoute,RouteSelection} from './mobileNavigation';
 import './mobile-app.css';
+
+// A completed welcome is an introduction, not a recurring Home destination.
+const WELCOME_COMPLETED_KEY='sekka.welcomeCompleted.v1';
+function readWelcomeCompleted(){
+ try{return localStorage.getItem(WELCOME_COMPLETED_KEY)==='1';}catch{return false;}
+}
 export default function MobileApp(){
  const p=usePreferences(),en=p.language==='en',t=(ar:string,english:string)=>en?english:ar;
  const [route,setRoute]=useState<MobileRoute>(()=>readMobileRoute());
+ const [welcomeCompleted,setWelcomeCompleted]=useState(readWelcomeCompleted);
+ const completeWelcome=()=>{
+  setWelcomeCompleted(true);
+  try{localStorage.setItem(WELCOME_COMPLETED_KEY,'1');}catch{/* State persists in this session if storage is disabled. */}
+ };
  const tab=route.tab;
  const adminScreen=route.tab==='admin'?route.view:62;
  const [captainApproved,setCaptainApproved]=useState(false);
@@ -232,6 +243,19 @@ export default function MobileApp(){
    rows={[]} busy={false} error="" onRefresh={()=>{}} onEnrolled={()=>setCaptain(true)}/>;
  const signOut=async()=>{if(!client)return;const {error:e}=await client.auth.signOut();if(e)setError(e.message);else navigate({tab:'home'});};
  const onboardingGo=(n:number)=>{
+  // Entering the real journey replaces the intro's history entry. Back from
+  // sign-in returns to role choice, never to the promotional welcome screen.
+  if(tab==='home'&&!welcomeCompleted&&(n===3||n===4)){
+   completeWelcome();
+   if(n===3){navigate({tab:'login',view:3},{replace:true});return;}
+   // Sign in directly from welcome is also an explicit completion.
+   navigate({tab:'login',view:4},{replace:true});
+   return;
+  }
+  if(n===2&&welcomeCompleted){
+   navigate({tab:'home'},{replace:true});
+   return;
+  }
   if(n===8){navigate({tab:'home'});return;}
   if(n===37){startCaptainJourney();return;}
   // Legacy SMS screens are intentionally unreachable outside /dev/screens.
@@ -259,7 +283,7 @@ export default function MobileApp(){
  const fullScreenSearchFilters=tab==='search'&&discoveryScreen===10;
  const fullScreenAuth=(tab==='login'&&(onboardingScreen===3||onboardingScreen===4))||(tab==='captain-onboarding'&&!userId);
  const fullScreenSearch=tab==='search'&&discoveryScreen===9;
- return <div className={`sekka-mobile sekka-tab-${tab}${fullScreenSearchFilters?' sekka-search-filters':''}${fullScreenAuth?' sekka-fullscreen-auth':''}${fullScreenSearch?' sekka-fullscreen-search':''}${!userId&&tab==='home'?' sekka-guest-welcome':''}`} dir={en?'ltr':'rtl'}>
+ return <div className={`sekka-mobile sekka-tab-${tab}${fullScreenSearchFilters?' sekka-search-filters':''}${fullScreenAuth?' sekka-fullscreen-auth':''}${fullScreenSearch?' sekka-fullscreen-search':''}${!userId&&tab==='home'&&!welcomeCompleted?' sekka-guest-welcome':''}`} dir={en?'ltr':'rtl'}>
   <a className="sekka-skip" href="#sekka-content">{t('تخطي للمحتوى','Skip to content')}</a>
   <header className="sekka-mobile-header">
    <button className="sekka-brand-button" onClick={()=>navigate({tab:'home'})} aria-label={t('الرئيسية','Home')}><img className="sekka-approved-logo" src="/brand/sekka-icon-192.png" alt="سِكّة — seKKa"/></button>
@@ -275,7 +299,7 @@ export default function MobileApp(){
      <button type="button" onClick={()=>setAuthCheckRevision(v=>v+1)}>{t('إعادة فحص الصلاحيات','Retry authorization')}</button>
    </div>}
    {error&&<div className="sekka-mobile-alert" role="alert">{error}<button onClick={()=>setError('')}>{t('إغلاق','Dismiss')}</button></div>}
-   {tab==='home'&&(!ready?<p role="status">{t('بنجهز حسابك…','Loading account…')}</p>:userId?approvedDiscovery(8):<Onboarding production screen={2} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={setSelectedRole}/>)}
+   {tab==='home'&&(!ready?<p role="status">{t('بنجهز حسابك…','Loading account…')}</p>:userId||welcomeCompleted?approvedDiscovery(8):<Onboarding production screen={2} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={setSelectedRole}/>)}
    {tab==='login'&&<Onboarding production screen={userId?6:!ready?4:onboardingScreen} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={selectRole}/>}
    {tab==='profile'&&(userId?<section className="sekka-mobile-card"><LiveProfile/>{ready&&admin&&<button type="button" className="sekka-action" onClick={openAdmin}>
      {t('فتح لوحة الإدارة','Open Admin dashboard')}</button>}
