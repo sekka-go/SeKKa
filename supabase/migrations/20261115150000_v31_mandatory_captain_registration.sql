@@ -296,7 +296,7 @@ BEGIN
     OR char_length(trim(coalesce(app.professional_notes,'')))<3
     OR app.experience_years IS NULL OR app.experience_years NOT BETWEEN 0 AND 80
  THEN RAISE EXCEPTION 'CAPTAIN_PROFILE_INCOMPLETE'; END IF;
- IF app.vehicle_type NOT IN ('private_car','hiace')
+ IF app.vehicle_type IS NULL OR app.vehicle_type NOT IN ('private_car','hiace')
     OR app.vehicle_make_id IS NULL OR app.vehicle_model_id IS NULL
     OR app.manufacture_year IS NULL OR app.manufacture_year<1980
     OR app.manufacture_year>extract(year FROM now())::integer
@@ -358,7 +358,7 @@ BEGIN
       OR app.phone_number IS NULL OR app.phone_number !~ '^01[0125][0-9]{8}$'
       OR char_length(trim(coalesce(app.professional_notes,'')))<3
       OR app.experience_years IS NULL OR app.experience_years NOT BETWEEN 0 AND 80
-      OR app.vehicle_type NOT IN ('private_car','hiace') OR app.vehicle_make_id IS NULL
+      OR app.vehicle_type IS NULL OR app.vehicle_type NOT IN ('private_car','hiace') OR app.vehicle_make_id IS NULL
       OR app.vehicle_model_id IS NULL OR app.manufacture_year IS NULL
       OR app.manufacture_year<1980 OR app.manufacture_year>extract(year FROM now())::integer
       OR app.vehicle_color_code IS NULL OR app.intended_plate IS NULL
@@ -597,6 +597,15 @@ BEGIN
  SELECT * INTO route FROM public.v31_routes WHERE id=p_route FOR UPDATE;
  IF NOT FOUND OR route.status<>'published' THEN RAISE EXCEPTION 'ROUTE_NOT_AVAILABLE'; END IF;
  IF route.captain_id=uid THEN RAISE EXCEPTION 'CAPTAIN_CANNOT_BOOK_OWN_ROUTE'; END IF;
+ -- Recheck after locking the route: an identical concurrent retry may have committed.
+ SELECT * INTO existing FROM public.v31_bookings
+ WHERE rider_id=uid AND idempotency_key=p_idempotency;
+ IF FOUND THEN
+  IF existing.route_id<>p_route OR existing.seats<>p_seats
+  THEN RAISE EXCEPTION 'IDEMPOTENCY_CONFLICT'; END IF;
+  IF existing.status='cancelled' THEN RAISE EXCEPTION 'BOOKING_ALREADY_CANCELLED'; END IF;
+  RETURN existing.id;
+ END IF;
  IF route.vehicle_id IS NOT NULL THEN
    SELECT seats INTO vehicle_capacity FROM public.v31_vehicles
    WHERE id=route.vehicle_id AND status='active' FOR UPDATE;
@@ -694,7 +703,8 @@ BEGIN
  IF p_status NOT IN ('paused','published','archived') THEN RAISE EXCEPTION 'INVALID_STATUS'; END IF;
  SELECT * INTO route FROM public.v31_routes WHERE id=p_route FOR UPDATE;
  IF NOT FOUND OR route.captain_id<>uid THEN RAISE EXCEPTION 'ROUTE_NOT_OWNED'; END IF;
- IF route.status='published' AND p_status='paused' THEN NULL;
+ IF route.status='draft' AND p_status='published' THEN NULL;
+ ELSIF route.status='published' AND p_status='paused' THEN NULL;
  ELSIF route.status='paused' AND p_status IN ('published','archived') THEN NULL;
  ELSIF route.status='published' AND p_status='archived' THEN NULL;
  ELSE RAISE EXCEPTION 'INVALID_TRANSITION'; END IF;
