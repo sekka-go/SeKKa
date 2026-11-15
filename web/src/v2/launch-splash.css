@@ -25,14 +25,14 @@
   animation: sekka-route-fade 3s linear both;
 }
 .sekka-launch__route-line, .sekka-launch__route-halo {
-  stroke-dasharray: 1020;
-  stroke-dashoffset: 1020;
-  animation: sekka-route-trace 1.7s cubic-bezier(.37,.05,.54,.97) forwards;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: sekka-route-trace 1.78s cubic-bezier(.37,.05,.54,.97) forwards;
 }
 .sekka-launch__route-halo { opacity: .22; }
 .sekka-launch__destination {
   opacity: 0;
-  animation: sekka-arrive .45s ease-out 1.48s forwards;
+  animation: sekka-arrive .45s ease-out 1.69s forwards;
 }
 .sekka-launch__point {
   opacity: .08;
@@ -42,7 +42,8 @@
 .sekka-launch__point--2 { animation-delay: .38s; }
 .sekka-launch__point--3 { animation-delay: .74s; }
 .sekka-launch__point--4 { animation-delay: 1.08s; }
-.sekka-launch__point--5 { animation-delay: 1.40s; }
+.sekka-launch__point--5 { animation-delay: 1.32s; }
+.sekka-launch__point--6 { animation-delay: 1.55s; }
 
 .sekka-launch__wordmark {
   display: block;
@@ -78,24 +79,24 @@
   animation: sekka-progress 3s cubic-bezier(.3, .01, .68, 1) both;
 }
 @keyframes sekka-route-trace {
-  from { stroke-dashoffset: 1020; }
+  from { stroke-dashoffset: 1; }
   to { stroke-dashoffset: 0; }
 }
 @keyframes sekka-route-fade {
-  0%, 58% { opacity: 1; }
-  73%, 100% { opacity: 0; }
+  0%, 63% { opacity: 1; }
+  77%, 100% { opacity: 0; }
 }
 @keyframes sekka-waypoint {
   0%, 100% { opacity: .12; }
   40% { opacity: 1; }
 }
 @keyframes sekka-arrive {
-  from { opacity: 0; transform: translate(347px, 97px) scale(.7); }
-  to { opacity: 1; transform: translate(347px, 101px) scale(1); }
+  from { opacity: 0; transform: translate(321px, 153px) scale(.7); }
+  to { opacity: 1; transform: translate(321px, 157px) scale(1); }
 }
 @keyframes sekka-logo-reveal {
-  0%, 59% { opacity: 0; transform: translate(-50%, -48%) scale(.94); }
-  79%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  0%, 75% { opacity: 0; transform: translate(-50%, -48%) scale(.94); }
+  95%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 @keyframes sekka-progress {
   0% { width: 0%; }
