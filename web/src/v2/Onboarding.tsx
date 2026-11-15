@@ -235,7 +235,7 @@ export default function Onboarding({
         <div className="phase-top-wave" aria-hidden="true" />
         <div className="phase-logo"><Wordmark /></div>
         <button className="phase-back" onClick={() => go(id === 4 ? 3 : 2)} aria-label={t("رجوع")}>‹</button>
-        {id === 4 ? <>
+        {id === 4 ? <div className="phase-google-auth">
           <h1 className="phase-title">{language === "en" ? "Sign in to seKKa" : "سجّل دخولك لسِكّة"}</h1>
           <p className="phase-subtitle">{language === "en" ? "Continue securely with your existing Google account." : "كمّل بحساب جوجل الحالي بتاعك."}</p>
           <button type="button" className="phase-primary" disabled={!client} onClick={() => {
@@ -249,7 +249,7 @@ export default function Onboarding({
             void client.auth.signInWithOAuth({provider:"google", options:{redirectTo:redirect.toString()}});
           }}>{language === "en" ? "Continue with Google" : "المتابعة باستخدام جوجل"} <Arrow /></button>
           {!client && <p role="alert">{language === "en" ? "Sign-in is not configured." : "إعداد تسجيل الدخول غير متاح."}</p>}
-        </> : <>
+        </div> : <>
           <h1 className="phase-title">{language === "en" ? "Complete your profile" : "استكمال الملف الشخصي"}</h1>
           <LiveProfile />
           <button className="phase-primary" onClick={() => go(8)}>{language === "en" ? "Continue to home" : "الذهاب للرئيسية"} <Arrow /></button>
