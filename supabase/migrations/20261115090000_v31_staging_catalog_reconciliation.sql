@@ -541,59 +541,59 @@ alter table public.v31_service_areas enable row level security;
 alter table public.v31_trip_offers enable row level security;
 alter table public.v31_trip_requests enable row level security;
 alter table public.v31_vehicles enable row level security;
-create policy 'own bookings read' on public.v31_bookings as PERMISSIVE for SELECT to authenticated using ((rider_id = ( SELECT auth.uid() AS uid))) ;
-create policy 'route captain booking read' on public.v31_bookings as PERMISSIVE for SELECT to authenticated using ((EXISTS ( SELECT 1
+create policy "own bookings read" on public.v31_bookings as PERMISSIVE for SELECT to authenticated using ((rider_id = ( SELECT auth.uid() AS uid))) ;
+create policy "route captain booking read" on public.v31_bookings as PERMISSIVE for SELECT to authenticated using ((EXISTS ( SELECT 1
    FROM v31_routes r
   WHERE ((r.id = v31_bookings.route_id) AND (r.captain_id = ( SELECT auth.uid() AS uid)))))) ;
-create policy 'captain profile enrollment' on public.v31_captain_profiles as PERMISSIVE for INSERT to authenticated with check (((user_id = ( SELECT auth.uid() AS uid)) AND (approval_status = 'pending'::text))) ;
-create policy 'own captain profile read' on public.v31_captain_profiles as PERMISSIVE for SELECT to authenticated using ((user_id = ( SELECT auth.uid() AS uid))) ;
-create policy 'recipient acknowledge notifications' on public.v31_notifications as PERMISSIVE for UPDATE to authenticated using ((user_id = ( SELECT auth.uid() AS uid))) with check ((user_id = ( SELECT auth.uid() AS uid))) ;
-create policy 'recipient read notifications' on public.v31_notifications as PERMISSIVE for SELECT to authenticated using ((user_id = ( SELECT auth.uid() AS uid))) ;
-create policy 'read own verification status' on public.v31_phone_verifications as PERMISSIVE for SELECT to authenticated using ((user_id = ( SELECT auth.uid() AS uid))) ;
-create policy 'self profile insert' on public.v31_profiles as PERMISSIVE for INSERT to authenticated with check ((user_id = ( SELECT auth.uid() AS uid))) ;
-create policy 'self profile select' on public.v31_profiles as PERMISSIVE for SELECT to authenticated using ((user_id = ( SELECT auth.uid() AS uid))) ;
-create policy 'self profile update' on public.v31_profiles as PERMISSIVE for UPDATE to authenticated using ((user_id = ( SELECT auth.uid() AS uid))) with check ((user_id = ( SELECT auth.uid() AS uid))) ;
-create policy 'own draft stops delete' on public.v31_route_stops as PERMISSIVE for DELETE to authenticated using ((EXISTS ( SELECT 1
+create policy "captain profile enrollment" on public.v31_captain_profiles as PERMISSIVE for INSERT to authenticated with check (((user_id = ( SELECT auth.uid() AS uid)) AND (approval_status = 'pending'::text))) ;
+create policy "own captain profile read" on public.v31_captain_profiles as PERMISSIVE for SELECT to authenticated using ((user_id = ( SELECT auth.uid() AS uid))) ;
+create policy "recipient acknowledge notifications" on public.v31_notifications as PERMISSIVE for UPDATE to authenticated using ((user_id = ( SELECT auth.uid() AS uid))) with check ((user_id = ( SELECT auth.uid() AS uid))) ;
+create policy "recipient read notifications" on public.v31_notifications as PERMISSIVE for SELECT to authenticated using ((user_id = ( SELECT auth.uid() AS uid))) ;
+create policy "read own verification status" on public.v31_phone_verifications as PERMISSIVE for SELECT to authenticated using ((user_id = ( SELECT auth.uid() AS uid))) ;
+create policy "self profile insert" on public.v31_profiles as PERMISSIVE for INSERT to authenticated with check ((user_id = ( SELECT auth.uid() AS uid))) ;
+create policy "self profile select" on public.v31_profiles as PERMISSIVE for SELECT to authenticated using ((user_id = ( SELECT auth.uid() AS uid))) ;
+create policy "self profile update" on public.v31_profiles as PERMISSIVE for UPDATE to authenticated using ((user_id = ( SELECT auth.uid() AS uid))) with check ((user_id = ( SELECT auth.uid() AS uid))) ;
+create policy "own draft stops delete" on public.v31_route_stops as PERMISSIVE for DELETE to authenticated using ((EXISTS ( SELECT 1
    FROM v31_routes r
   WHERE ((r.id = v31_route_stops.route_id) AND (r.captain_id = ( SELECT auth.uid() AS uid)) AND (r.status = 'draft'::text))))) ;
-create policy 'own draft stops insert' on public.v31_route_stops as PERMISSIVE for INSERT to authenticated with check ((EXISTS ( SELECT 1
+create policy "own draft stops insert" on public.v31_route_stops as PERMISSIVE for INSERT to authenticated with check ((EXISTS ( SELECT 1
    FROM v31_routes r
   WHERE ((r.id = v31_route_stops.route_id) AND (r.captain_id = ( SELECT auth.uid() AS uid)) AND (r.status = 'draft'::text))))) ;
-create policy 'own draft stops update' on public.v31_route_stops as PERMISSIVE for UPDATE to authenticated using ((EXISTS ( SELECT 1
+create policy "own draft stops update" on public.v31_route_stops as PERMISSIVE for UPDATE to authenticated using ((EXISTS ( SELECT 1
    FROM v31_routes r
   WHERE ((r.id = v31_route_stops.route_id) AND (r.captain_id = ( SELECT auth.uid() AS uid)) AND (r.status = 'draft'::text))))) with check ((EXISTS ( SELECT 1
    FROM v31_routes r
   WHERE ((r.id = v31_route_stops.route_id) AND (r.captain_id = ( SELECT auth.uid() AS uid)) AND (r.status = 'draft'::text))))) ;
-create policy 'route stops read' on public.v31_route_stops as PERMISSIVE for SELECT to anon,authenticated using ((EXISTS ( SELECT 1
+create policy "route stops read" on public.v31_route_stops as PERMISSIVE for SELECT to anon,authenticated using ((EXISTS ( SELECT 1
    FROM v31_routes r
   WHERE ((r.id = v31_route_stops.route_id) AND ((r.status = 'published'::text) OR (r.captain_id = ( SELECT auth.uid() AS uid))))))) ;
-create policy 'captain draft route insert' on public.v31_routes as PERMISSIVE for INSERT to authenticated with check (((captain_id = ( SELECT auth.uid() AS uid)) AND (status = 'draft'::text))) ;
-create policy 'captain own or published routes read' on public.v31_routes as PERMISSIVE for SELECT to authenticated using (((captain_id = ( SELECT auth.uid() AS uid)) OR (status = 'published'::text))) ;
-create policy 'captain owned route review' on public.v31_routes as PERMISSIVE for UPDATE to authenticated using (((captain_id = ( SELECT auth.uid() AS uid)) AND (status = 'draft'::text))) with check (((captain_id = ( SELECT auth.uid() AS uid)) AND ((status = 'draft'::text) OR ((status = 'published'::text) AND (EXISTS ( SELECT 1
+create policy "captain draft route insert" on public.v31_routes as PERMISSIVE for INSERT to authenticated with check (((captain_id = ( SELECT auth.uid() AS uid)) AND (status = 'draft'::text))) ;
+create policy "captain own or published routes read" on public.v31_routes as PERMISSIVE for SELECT to authenticated using (((captain_id = ( SELECT auth.uid() AS uid)) OR (status = 'published'::text))) ;
+create policy "captain owned route review" on public.v31_routes as PERMISSIVE for UPDATE to authenticated using (((captain_id = ( SELECT auth.uid() AS uid)) AND (status = 'draft'::text))) with check (((captain_id = ( SELECT auth.uid() AS uid)) AND ((status = 'draft'::text) OR ((status = 'published'::text) AND (EXISTS ( SELECT 1
    FROM v31_captain_profiles cp
   WHERE ((cp.user_id = ( SELECT auth.uid() AS uid)) AND (cp.approval_status = 'approved'::text)))))))) ;
-create policy 'public published routes read' on public.v31_routes as PERMISSIVE for SELECT to anon using ((status = 'published'::text)) ;
-create policy 'areas public read' on public.v31_service_areas as PERMISSIVE for SELECT to anon,authenticated using ((active = true)) ;
-create policy 'approved captain offer existing route' on public.v31_trip_offers as PERMISSIVE for INSERT to authenticated with check (((captain_id = ( SELECT auth.uid() AS uid)) AND (status = 'offered'::text) AND (EXISTS ( SELECT 1
+create policy "public published routes read" on public.v31_routes as PERMISSIVE for SELECT to anon using ((status = 'published'::text)) ;
+create policy "areas public read" on public.v31_service_areas as PERMISSIVE for SELECT to anon,authenticated using ((active = true)) ;
+create policy "approved captain offer existing route" on public.v31_trip_offers as PERMISSIVE for INSERT to authenticated with check (((captain_id = ( SELECT auth.uid() AS uid)) AND (status = 'offered'::text) AND (EXISTS ( SELECT 1
    FROM v31_captain_profiles cp
   WHERE ((cp.user_id = ( SELECT auth.uid() AS uid)) AND (cp.approval_status = 'approved'::text)))) AND (EXISTS ( SELECT 1
    FROM v31_routes route
   WHERE ((route.id = v31_trip_offers.route_id) AND (route.captain_id = ( SELECT auth.uid() AS uid)) AND (route.status = 'published'::text)))) AND (EXISTS ( SELECT 1
    FROM v31_trip_requests req
   WHERE ((req.id = v31_trip_offers.request_id) AND (req.status = 'open'::text)))))) ;
-create policy 'rider and captain see offers' on public.v31_trip_offers as PERMISSIVE for SELECT to authenticated using (((captain_id = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
+create policy "rider and captain see offers" on public.v31_trip_offers as PERMISSIVE for SELECT to authenticated using (((captain_id = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
    FROM v31_trip_requests req
   WHERE ((req.id = v31_trip_offers.request_id) AND (req.rider_id = ( SELECT auth.uid() AS uid))))))) ;
-create policy 'approved captains read open requests' on public.v31_trip_requests as PERMISSIVE for SELECT to authenticated using (((status = 'open'::text) AND (EXISTS ( SELECT 1
+create policy "approved captains read open requests" on public.v31_trip_requests as PERMISSIVE for SELECT to authenticated using (((status = 'open'::text) AND (EXISTS ( SELECT 1
    FROM v31_captain_profiles cp
   WHERE ((cp.user_id = ( SELECT auth.uid() AS uid)) AND (cp.approval_status = 'approved'::text)))))) ;
-create policy 'rider insert own requests' on public.v31_trip_requests as PERMISSIVE for INSERT to authenticated with check (((rider_id = ( SELECT auth.uid() AS uid)) AND (status = 'open'::text) AND (accepted_offer_id IS NULL))) ;
-create policy 'rider own requests' on public.v31_trip_requests as PERMISSIVE for SELECT to authenticated using ((rider_id = ( SELECT auth.uid() AS uid))) ;
-create policy 'captain vehicles own create' on public.v31_vehicles as PERMISSIVE for INSERT to authenticated with check (((captain_id = ( SELECT auth.uid() AS uid)) AND (EXISTS ( SELECT 1
+create policy "rider insert own requests" on public.v31_trip_requests as PERMISSIVE for INSERT to authenticated with check (((rider_id = ( SELECT auth.uid() AS uid)) AND (status = 'open'::text) AND (accepted_offer_id IS NULL))) ;
+create policy "rider own requests" on public.v31_trip_requests as PERMISSIVE for SELECT to authenticated using ((rider_id = ( SELECT auth.uid() AS uid))) ;
+create policy "captain vehicles own create" on public.v31_vehicles as PERMISSIVE for INSERT to authenticated with check (((captain_id = ( SELECT auth.uid() AS uid)) AND (EXISTS ( SELECT 1
    FROM v31_captain_profiles cp
   WHERE ((cp.user_id = ( SELECT auth.uid() AS uid)) AND (cp.approval_status = 'approved'::text)))))) ;
-create policy 'captain vehicles own edit' on public.v31_vehicles as PERMISSIVE for UPDATE to authenticated using ((captain_id = ( SELECT auth.uid() AS uid))) with check ((captain_id = ( SELECT auth.uid() AS uid))) ;
-create policy 'captain vehicles own read' on public.v31_vehicles as PERMISSIVE for SELECT to authenticated using ((captain_id = ( SELECT auth.uid() AS uid))) ;
+create policy "captain vehicles own edit" on public.v31_vehicles as PERMISSIVE for UPDATE to authenticated using ((captain_id = ( SELECT auth.uid() AS uid))) with check ((captain_id = ( SELECT auth.uid() AS uid))) ;
+create policy "captain vehicles own read" on public.v31_vehicles as PERMISSIVE for SELECT to authenticated using ((captain_id = ( SELECT auth.uid() AS uid))) ;
 grant SELECT on public.v31_bookings to authenticated;
 grant INSERT on public.v31_captain_profiles to authenticated;
 grant SELECT on public.v31_captain_profiles to authenticated;
