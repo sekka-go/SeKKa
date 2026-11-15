@@ -295,9 +295,16 @@ export default function AdminDashboard(p: {
     <AdminApprovalLive screen={n-1} onGo={screen=>p.go(internalScreen(screen))}/>
   </div>;
   if(p.production&&n===63)return <div className={`admin-stage ${p.theme}`}>
-    <LiveAdminOverview/>
-    <nav className="ad-tools"><button type="button" onClick={()=>p.go(internalScreen(64))}>{tr("طلبات الكباتن")}</button>
-    <button type="button" onClick={()=>p.go(internalScreen(65))}>{tr("مراجعة المستندات")}</button></nav>
+    <header className="ad-top">
+      <div className="ad-brand"><Wordmark/><span>{tr("لوحة الإدارة")}</span></div>
+    </header>
+    <main className="ad-content">
+      <LiveAdminOverview/>
+      <nav className="ad-tools" aria-label={tr("أقسام الإدارة")}>
+        <button type="button" onClick={()=>p.go(internalScreen(64))}>{tr("طلبات الكباتن")}</button>
+        <button type="button" onClick={()=>p.go(internalScreen(65))}>{tr("مراجعة المستندات")}</button>
+      </nav>
+    </main>
   </div>;
   if(!demo&&n===63)return <div className={`admin-stage ${p.theme}`}><LiveAdminOverview/><button type="button" onClick={()=>p.go(64)}>{tr("قائمة المستخدمين")}</button></div>;
   return (
