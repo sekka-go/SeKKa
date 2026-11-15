@@ -7,6 +7,7 @@ for(const width of [360,390]){
    await page.goto('/');
    await expect(page.locator('.sekka-mobile')).toBeVisible();
    await expect(page.locator('.sekka-bottom-nav')).toBeVisible();
+   await page.screenshot({path:`test-results/public-mobile-${width}-${language}.png`,fullPage:true});
    await expect(page.locator('.phase-preview-note,.phase-navigation,.phase-screen-selector')).toHaveCount(0);
    await expect(page.getByText(/معاينة المرحلة الأولى|Stage one preview|7 screens/)).toHaveCount(0);
    await expect(page.locator('html')).toHaveAttribute('dir',language==='ar'?'rtl':'ltr');
