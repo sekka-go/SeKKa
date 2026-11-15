@@ -8,10 +8,10 @@ test('v3.1 registry has exactly 73 unique reversible screen identifiers',()=>{
 });
 test('73 guest entries render without client exceptions',async({page})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
- for(let n=1;n<=73;n++){await page.goto(`/?screen=${n}`);await expect(page.locator('main')).toBeVisible();await expect(page.locator('main h1,main h2').first()).not.toBeEmpty();}expect(errors).toEqual([]);
+ for(let n=1;n<=73;n++){await page.goto(`/dev/screens?screen=${n}`);await expect(page.locator('main')).toBeVisible();await expect(page.locator('main h1,main h2').first()).not.toBeEmpty();}expect(errors).toEqual([]);
 });
 test('no-results request reuses search, prevents duplicate confirmation and direct entry',async({page})=>{
- await page.goto('/?screen=9&preview=phase2');
+ await page.goto('/dev/screens?screen=9&preview=phase2');
  await expect(page.getByRole('button',{name:'اطلب رحلة',exact:true})).toHaveCount(0);
  await page.getByLabel('من أين؟',{exact:true}).selectOption('الدقي');await page.getByLabel('إلى أين؟',{exact:true}).selectOption('المهندسين');
  await page.getByRole('button',{name:'ابحث عن الرحلات',exact:true}).click();
@@ -19,10 +19,10 @@ test('no-results request reuses search, prevents duplicate confirmation and dire
  await expect(page.locator('.d-request')).toContainText('الدقي');await expect(page.locator('.d-request')).toContainText('المهندسين');
  await expect(page.locator('.d-request select,.d-request input')).toHaveCount(0);
  await page.getByRole('button',{name:'تأكيد الطلب',exact:true}).click();await expect(page.getByRole('button',{name:'تم تأكيد الطلب في المعاينة',exact:true})).toBeDisabled();
- await page.goto('/?screen=14&preview=phase2');await expect(page.getByRole('button',{name:'تأكيد الطلب',exact:true})).toHaveCount(0);
+ await page.goto('/dev/screens?screen=14&preview=phase2');await expect(page.getByRole('button',{name:'تأكيد الطلب',exact:true})).toHaveCount(0);
 });
 test('matching offers hide request and ordered stops carry to summary',async({page})=>{
- await page.goto('/?screen=9&preview=phase2');await page.getByRole('button',{name:'ابحث عن الرحلات',exact:true}).click();
+ await page.goto('/dev/screens?screen=9&preview=phase2');await page.getByRole('button',{name:'ابحث عن الرحلات',exact:true}).click();
  await expect(page.locator('.d-result')).toHaveCount(1);await expect(page.getByRole('button',{name:'اطلب رحلة',exact:true})).toHaveCount(0);
  await expect(page.locator('.d-result')).not.toContainText('كابتن أحمد');await page.getByRole('button',{name:/عرض تفاصيل PRIME/}).click();
  await expect(page.getByRole('button',{name:'حجز الاشتراك',exact:true})).toBeDisabled();
@@ -33,7 +33,7 @@ test('matching offers hide request and ordered stops carry to summary',async({pa
 });
 test('device preferences, manual override, persistence, independence and return to system',async({browser})=>{
  const context=await browser.newContext({locale:'ar-EG',colorScheme:'dark'}),page=await context.newPage();
- await page.goto('/?screen=32&preview=phase4');await expect(page.locator('html')).toHaveAttribute('dir','rtl');await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
+ await page.goto('/dev/screens?screen=32&preview=phase4');await expect(page.locator('html')).toHaveAttribute('dir','rtl');await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
  await page.getByLabel('theme_preference',{exact:true}).selectOption('light');await page.getByLabel('language_preference',{exact:true}).selectOption('en');
  await expect(page.locator('html')).toHaveAttribute('dir','ltr');await expect(page.locator('html')).toHaveAttribute('data-theme','light');await expect(page).toHaveURL(/screen=32/);
  await page.reload();await expect(page.getByLabel('theme_preference',{exact:true})).toHaveValue('light');await expect(page.getByLabel('language_preference',{exact:true})).toHaveValue('en');
@@ -42,7 +42,7 @@ test('device preferences, manual override, persistence, independence and return 
  await page.getByLabel('language_preference',{exact:true}).selectOption('system');await expect(page.locator('html')).toHaveAttribute('lang','ar');await context.close();
 });
 test('captain route preview enforces approval and capacity before local publication',async({page})=>{
- await page.goto('/?screen=43&preview=phase6');await page.getByLabel('وصف الخط',{exact:true}).fill('خط صباحي تجريبي');
+ await page.goto('/dev/screens?screen=43&preview=phase6');await page.getByLabel('وصف الخط',{exact:true}).fill('خط صباحي تجريبي');
  await page.getByRole('button',{name:'حفظ المسودة ومتابعة',exact:true}).click();
  for(const [name,area] of [['ميدان الجزائر','المعادي'],['شارع التسعين','التجمع']]){
   await page.getByLabel('اسم النقطة',{exact:true}).fill(name);await page.getByLabel('المنطقة',{exact:true}).selectOption(area);await page.getByRole('button',{name:'أضف نقطة',exact:true}).click();
@@ -63,18 +63,18 @@ test('English device translates onboarding; unsupported device language falls ba
  const en=await browser.newContext({locale:'en-GB',colorScheme:'light'}),page=await en.newPage();
  const headings=['With you on your commute','With you on your commute','Choose your account type','Enter your mobile number','Enter the verification code','Complete profile','Permissions'];
  for(let n=1;n<=7;n++){
-  await page.goto(`/?screen=${n}&inspect=1`);
+  await page.goto(`/dev/screens?screen=${n}&inspect=1`);
   await expect(page.locator('html')).toHaveAttribute('lang','en');
   await expect(page.locator('main h1')).toHaveText(headings[n-1]);
  }
- await page.goto('/?screen=3');await expect(page.getByRole('radio',{name:/Register as a captain/})).toBeVisible();
+ await page.goto('/dev/screens?screen=3');await expect(page.getByRole('radio',{name:/Register as a captain/})).toBeVisible();
  await en.close();
- const fallback=await browser.newContext({locale:'fr-FR'}),other=await fallback.newPage();await other.goto('/?screen=2');
+ const fallback=await browser.newContext({locale:'fr-FR'}),other=await fallback.newPage();await other.goto('/dev/screens?screen=2');
  await expect(other.locator('html')).toHaveAttribute('lang','ar');await expect(other.locator('html')).toHaveAttribute('dir','rtl');await fallback.close();
 });
 
 test('manual language changes keep rider draft details and translate account controls',async({page})=>{
- await page.goto('/?screen=32&preview=phase4');await page.getByRole('button',{name:'تعديل بياناتي',exact:true}).click();
+ await page.goto('/dev/screens?screen=32&preview=phase4');await page.getByRole('button',{name:'تعديل بياناتي',exact:true}).click();
  await page.getByLabel('الاسم الكامل',{exact:true}).fill('عبد الرحمن');
  await page.getByRole('button',{name:'الرجوع لحسابي',exact:true}).click();
  await page.getByLabel('language_preference',{exact:true}).selectOption('en');
@@ -88,7 +88,7 @@ test('manual language changes keep rider draft details and translate account con
 
 test('captain settings persist independent manual choices',async({browser})=>{
  const context=await browser.newContext({locale:'en-US',colorScheme:'dark'}),page=await context.newPage();
- await page.goto('/?screen=60&preview=phase7');
+ await page.goto('/dev/screens?screen=60&preview=phase7');
  await page.getByLabel('language_preference',{exact:true}).selectOption('ar');
  await page.getByLabel('theme_preference',{exact:true}).selectOption('light');await page.reload();
  await expect(page.locator('html')).toHaveAttribute('lang','ar');await expect(page.locator('html')).toHaveAttribute('data-theme','light');
@@ -97,7 +97,7 @@ test('captain settings persist independent manual choices',async({browser})=>{
 });
 
 test('interactive preview locks booking terms and persists dual-confirmation security release',async({page})=>{
- await page.goto('/?screen=9&preview=phase2');await page.getByRole('button',{name:'ابحث عن الرحلات',exact:true}).click();
+ await page.goto('/dev/screens?screen=9&preview=phase2');await page.getByRole('button',{name:'ابحث عن الرحلات',exact:true}).click();
  await page.getByRole('button',{name:/عرض تفاصيل PRIME/}).click();
  await page.getByLabel('نقطة الركوب',{exact:true}).selectOption('maadi');await page.getByLabel('نقطة النزول',{exact:true}).selectOption('tagamoa');
  await page.getByRole('button',{name:'حجز الاشتراك',exact:true}).click();
@@ -108,27 +108,27 @@ test('interactive preview locks booking terms and persists dual-confirmation sec
  expect(snapshot.available).toBe(50);expect(snapshot.reserved).toBe(100);expect(snapshot.bookings).toHaveLength(1);
  const confirmedBookingUrl=page.url();
  // Admin must see the exact interactive snapshot, not independent fixed demo examples.
- await page.goto('/?screen=68&preview=phase8');
+ await page.goto('/dev/screens?screen=68&preview=phase8');
  await expect(page.locator('tbody tr')).toHaveCount(1);
  await expect(page.locator('tbody')).toContainText(snapshot.bookings[0].id);
  await expect(page.locator('tbody')).toContainText('حجز مؤكد');
- await page.goto('/?screen=69&preview=phase8');
+ await page.goto('/dev/screens?screen=69&preview=phase8');
  await expect(page.locator('tbody')).toContainText('PREVIEW-WALLET');
  await expect(page.locator('tbody')).toContainText('50 ج.م');
  await expect(page.locator('tbody')).toContainText('100 ج.م');
- await page.goto('/?screen=70&preview=phase8');
+ await page.goto('/dev/screens?screen=70&preview=phase8');
  await expect(page.locator('tbody tr')).toHaveCount(1);
  await expect(page.locator('tbody')).toContainText('حجز تأمين جدية الحجز');
  // A user changing languages must see the same ledger with translated admin labels.
- await page.goto('/?screen=32&preview=phase4');
+ await page.goto('/dev/screens?screen=32&preview=phase4');
  await page.getByLabel('language_preference',{exact:true}).selectOption('en');
- await page.goto('/?screen=68&preview=phase8');
+ await page.goto('/dev/screens?screen=68&preview=phase8');
  await expect(page.locator('tbody')).toContainText('Preview rider');
  await expect(page.locator('tbody')).toContainText('Awaiting payment');
- await page.goto('/?screen=69&preview=phase8');
+ await page.goto('/dev/screens?screen=69&preview=phase8');
  await expect(page.locator('tbody')).toContainText('Preview rider wallet');
  await expect(page.locator('tbody')).toContainText('EGP 50');
- await page.goto('/?screen=32&preview=phase4');
+ await page.goto('/dev/screens?screen=32&preview=phase4');
  await page.getByLabel('language_preference',{exact:true}).selectOption('ar');
  await page.goto(confirmedBookingUrl);
  // Simulate a later edit of the source offer. The confirmed snapshot must stay fixed.
@@ -139,7 +139,7 @@ test('interactive preview locks booking terms and persists dual-confirmation sec
  await page.getByLabel('دفعت للكابتن قيمة الاشتراك كاملة.',{exact:true}).check();await page.getByRole('button',{name:'معاينة متابعة الاستلام',exact:true}).click();
  expect(await page.evaluate(()=>JSON.parse(sessionStorage.getItem('sekka.preview.bookingLedger.v31')!).reserved)).toBe(100);
  const receiptUrl=page.url();
- await page.goto('/?screen=51&preview=phase7');
+ await page.goto('/dev/screens?screen=51&preview=phase7');
  await expect(page.getByText('راكب المعاينة',{exact:true})).toBeVisible();
  await page.getByRole('button',{name:'تفاصيل الاشتراك',exact:true}).click();
  await expect(page.getByText('نقاط الراكب',{exact:true})).toBeVisible();
@@ -149,12 +149,12 @@ test('interactive preview locks booking terms and persists dual-confirmation sec
  await expect(page.getByRole('button',{name:'محاكاة تم الاستلام',exact:true})).toBeDisabled();
  await page.goto(receiptUrl);await expect(page.locator('.b-status-tag')).toContainText('الكابتن أكد الاستلام');
  const released=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('sekka.preview.bookingLedger.v31')!));expect(released.available).toBe(150);expect(released.reserved).toBe(0);expect(released.bookings[0].quote).toEqual(snapshot.bookings[0].quote);
- await page.goto('/?screen=68&preview=phase8');
+ await page.goto('/dev/screens?screen=68&preview=phase8');
  await expect(page.locator('tbody')).toContainText('الدفع مؤكد');
- await page.goto('/?screen=69&preview=phase8');
+ await page.goto('/dev/screens?screen=69&preview=phase8');
  await expect(page.locator('tbody')).toContainText('PREVIEW-WALLET');
  await expect(page.locator('tbody')).toContainText('150 ج.م');
- await page.goto('/?screen=70&preview=phase8');
+ await page.goto('/dev/screens?screen=70&preview=phase8');
  await expect(page.locator('tbody tr')).toHaveCount(2);
  await expect(page.locator('tbody')).toContainText('تحرير تأمين جدية الحجز');
  await page.goto(receiptUrl);
@@ -162,7 +162,7 @@ test('interactive preview locks booking terms and persists dual-confirmation sec
 });
 
 test('favorite sign-in prerequisite returns to its original screen',async({page})=>{
- await page.goto('/?screen=13');
+ await page.goto('/dev/screens?screen=13');
  await page.getByRole('button',{name:'تسجيل الدخول أو إنشاء حساب',exact:true}).click();
  await expect(page).toHaveURL(/screen=4/);
  await page.getByRole('button',{name:'ارجع للخطوة السابقة',exact:true}).click();
@@ -171,7 +171,7 @@ test('favorite sign-in prerequisite returns to its original screen',async({page}
 });
 
 test('captain draft survives reload and incomplete publication links to its missing step',async({page})=>{
- await page.goto('/?screen=43&preview=phase6');
+ await page.goto('/dev/screens?screen=43&preview=phase6');
  await page.getByLabel('وصف الخط',{exact:true}).fill('خط المعادي اليومي');
  await page.getByRole('button',{name:'حفظ المسودة ومتابعة',exact:true}).click();
  await page.getByLabel('اسم النقطة',{exact:true}).fill('ميدان الجزائر');
@@ -185,7 +185,7 @@ test('captain draft survives reload and incomplete publication links to its miss
 
 test('English wallet preserves amount through failed result and retry',async({browser})=>{
  const context=await browser.newContext({locale:'en-GB'}),page=await context.newPage();
- await page.goto('/?screen=23&preview=phase4');
+ await page.goto('/dev/screens?screen=23&preview=phase4');
  await page.getByLabel('Top-up amount in EGP').fill('99');
  await expect(page.getByRole('button',{name:'Preview top-up result'})).toBeDisabled();
  await page.getByLabel('Top-up amount in EGP').fill('240');
@@ -199,7 +199,7 @@ test('English wallet preserves amount through failed result and retry',async({br
 test('English discovery keeps canonical search values and reviews an unmatched commute',async({browser})=>{
  const context=await browser.newContext({locale:'en-GB'});
  const page=await context.newPage();
- await page.goto('/?screen=9&preview=phase2');
+ await page.goto('/dev/screens?screen=9&preview=phase2');
  await page.getByLabel('From where?',{exact:true}).selectOption('الدقي');
  await page.getByRole('button',{name:'Search for routes',exact:true}).click();
  await page.getByRole('button',{name:'Request a route',exact:true}).click();
@@ -213,7 +213,7 @@ test('English discovery keeps canonical search values and reviews an unmatched c
 
 test('English admin can recover from restricted preview permissions and empty results',async({browser})=>{
  const context=await browser.newContext({locale:'en-GB'}), page=await context.newPage();
- await page.goto('/?screen=65&preview=phase8');
+ await page.goto('/dev/screens?screen=65&preview=phase8');
  await page.getByLabel('Simulate permission').selectOption('المالية');
  await page.getByRole('button',{name:'Preview with required permission'}).click();
  await expect(page.locator('tbody tr')).toHaveCount(2);
@@ -231,7 +231,7 @@ test('English admin can recover from restricted preview permissions and empty re
 
 test('captain preview retains an English conversation through refresh and back',async({browser})=>{
  const context=await browser.newContext({locale:'en-GB'}), page=await context.newPage();
- await page.goto('/?screen=56&preview=phase7');
+ await page.goto('/dev/screens?screen=56&preview=phase7');
  await page.locator('.a-thread').first().click();
  await page.getByLabel('Your message').fill('Meet me at the published stop.');
  await page.getByRole('button',{name:'Add to preview',exact:true}).click();
@@ -249,7 +249,7 @@ test('captain preview retains an English conversation through refresh and back',
 
 
 test('insufficient security balance offers a direct wallet action without claiming a top-up',async({page})=>{
- await page.goto('/?screen=16&preview=phase3');
+ await page.goto('/dev/screens?screen=16&preview=phase3');
  await page.getByRole('button',{name:'غير كافي',exact:true}).click();
  await expect(page.getByRole('button',{name:'معاينة تأكيد الحجز',exact:true})).toBeDisabled();
  await page.getByRole('button',{name:'راجع المحفظة',exact:true}).click();
@@ -258,7 +258,7 @@ test('insufficient security balance offers a direct wallet action without claimi
 });
 
 test('subscription cancellation warning leads directly to the support form',async({page})=>{
- await page.goto('/?screen=21&preview=phase3');
+ await page.goto('/dev/screens?screen=21&preview=phase3');
  await page.getByRole('button',{name:'طلب إلغاء الاشتراك',exact:false}).click();
  await expect(page.getByText('إلغاء الاشتراك متوقف لحد اعتماد سياسة الإلغاء والاسترداد.',{exact:false})).toBeVisible();
  await page.getByRole('button',{name:'اكتب طلب مراجعة',exact:true}).click();
@@ -269,19 +269,19 @@ test('subscription cancellation warning leads directly to the support form',asyn
 
 
 test('filtered empty states offer immediate recovery without losing the page',async({page})=>{
- await page.goto('/?screen=26&preview=phase4');
+ await page.goto('/dev/screens?screen=26&preview=phase4');
  await page.getByLabel('نوع العملية').selectOption('withdrawal');
  await expect(page.getByRole('button',{name:'عرض كل المعاملات'})).toBeVisible();
  await page.getByRole('button',{name:'عرض كل المعاملات'}).click();
  await expect(page.locator('.w-transaction')).toHaveCount(4);
 
- await page.goto('/?screen=29&preview=phase4');
+ await page.goto('/dev/screens?screen=29&preview=phase4');
  await page.getByLabel('دوّر في المحادثات').fill('not-a-matching-route');
  await expect(page.getByRole('button',{name:'مسح البحث'})).toBeVisible();
  await page.getByRole('button',{name:'مسح البحث'}).click();
  await expect(page.locator('.a-thread')).toHaveCount(2);
 
- await page.goto('/?screen=31&preview=phase4');
+ await page.goto('/dev/screens?screen=31&preview=phase4');
  await page.getByRole('button',{name:'غير المقروءة',exact:true}).click();
  await page.getByRole('button',{name:'اعتباره مقروءًا في المعاينة'}).click();
  await expect(page.getByRole('button',{name:'عرض كل الإشعارات'})).toBeVisible();
@@ -296,7 +296,7 @@ test('73 public screens load in English LTR on a small phone without runtime exc
  const errors:string[]=[];
  page.on('pageerror',error=>errors.push(error.message));
  for(let n=1;n<=73;n++){
-  await page.goto('/?screen='+n);
+  await page.goto('/dev/screens?screen='+n);
   await expect(page.locator('html')).toHaveAttribute('lang','en');
   await expect(page.locator('html')).toHaveAttribute('dir','ltr');
   await expect(page.locator('html')).toHaveAttribute('data-theme','light');
@@ -317,7 +317,7 @@ test('all 66 rider, captain and admin screens render their real phase previews i
   page.on('pageerror',error=>errors.push(error.message));
   for(let n=8;n<=73;n++){
    const phase=n<=14?2:n<=21?3:n<=34?4:n<=41?5:n<=49?6:n<=61?7:8;
-   await page.goto('/?screen='+n+'&preview=phase'+phase);
+   await page.goto('/dev/screens?screen='+n+'&preview=phase'+phase);
    const surface=n>=62?'main.ad-content':'main.phase-canvas';
    if(await page.locator(surface).count()===0) throw new Error('Missing phase preview screen '+n+' ('+locale+'): '+(await page.locator('body').innerText()).slice(0,250));
    await expect(page.locator(surface)).toBeVisible();
@@ -337,14 +337,14 @@ test('all 66 rider, captain and admin screens render their real phase previews i
 
 
 test('rider search and selected stops survive leaving for a prerequisite and returning',async({page})=>{
- await page.goto('/?screen=9&preview=phase2');
+ await page.goto('/dev/screens?screen=9&preview=phase2');
  await page.getByRole('button',{name:'ابحث عن الرحلات',exact:true}).click();
  await page.getByRole('button',{name:/عرض تفاصيل PRIME/}).click();
  await page.getByLabel('نقطة الركوب',{exact:true}).selectOption('maadi');
  await page.getByLabel('نقطة النزول',{exact:true}).selectOption('tagamoa');
  await expect(page.getByLabel('نقطة النزول',{exact:true})).toHaveValue('tagamoa');
- await page.goto('/?screen=4&inspect=1');
- await page.goto('/?screen=12&preview=phase2');
+ await page.goto('/dev/screens?screen=4&inspect=1');
+ await page.goto('/dev/screens?screen=12&preview=phase2');
  await expect(page.getByLabel('نقطة الركوب',{exact:true})).toHaveValue('maadi');
  await expect(page.getByLabel('نقطة النزول',{exact:true})).toHaveValue('tagamoa');
  await page.getByRole('button',{name:'حجز الاشتراك',exact:true}).click();
@@ -354,12 +354,12 @@ test('rider search and selected stops survive leaving for a prerequisite and ret
 
 
 test('guest entering a protected subscription sees direct sign-in and safe return',async({page})=>{
- await page.goto('/?screen=18');
+ await page.goto('/dev/screens?screen=18');
  await expect(page.getByRole('alert')).toContainText('سجّل دخولك أو اعمل حساب');
  await expect(page.getByRole('button',{name:'تسجيل الدخول أو إنشاء حساب',exact:true})).toBeVisible();
  await page.getByRole('button',{name:'تسجيل الدخول أو إنشاء حساب',exact:true}).click();
  await expect(page).toHaveURL(/screen=4/);
- await page.goto('/?screen=18');
+ await page.goto('/dev/screens?screen=18');
  await page.getByRole('button',{name:'الرجوع للرئيسية',exact:true}).click();
  await expect(page).toHaveURL(/screen=8/);
 });
@@ -368,7 +368,7 @@ test('English protected captain and admin screens provide actionable auth gates'
  const context=await browser.newContext({locale:'en-GB'});
  const page=await context.newPage();
  for(const id of [18,50,62,73]){
-  await page.goto('/?screen='+id);
+  await page.goto('/dev/screens?screen='+id);
   await expect(page.locator('html')).toHaveAttribute('lang','en');
   await expect(page.getByRole('alert')).toContainText('Sign in or create an account');
   await expect(page.getByRole('button',{name:id===50?'Sign in or create a captain account':'Sign in or create an account',exact:true})).toBeVisible();
@@ -381,7 +381,7 @@ test('English protected captain and admin screens provide actionable auth gates'
 
 
 test('captain daily operations empty state links straight to subscriber list',async({page})=>{
- await page.goto('/?screen=54&preview=phase7');
+ await page.goto('/dev/screens?screen=54&preview=phase7');
  await page.getByLabel('معاينة القوائم الفارغة').check();
  await expect(page.getByText('مفيش اشتراكات تشغيل النهارده.')).toBeVisible();
  await page.getByRole('button',{name:'قائمة المشتركين',exact:true}).click();
@@ -390,7 +390,7 @@ test('captain daily operations empty state links straight to subscriber list',as
 });
 
 test('captain empty notifications and receipts offer direct recovery actions',async({page})=>{
- await page.goto('/?screen=58&preview=phase7');
+ await page.goto('/dev/screens?screen=58&preview=phase7');
  await page.getByLabel('معاينة القوائم الفارغة').check();
  await page.getByRole('button',{name:'غير المقروءة',exact:true}).click();
  await expect(page.getByRole('button',{name:'عرض كل الإشعارات',exact:true})).toBeVisible();
@@ -399,7 +399,7 @@ test('captain empty notifications and receipts offer direct recovery actions',as
  await page.getByRole('button',{name:'الحجوزات الجديدة',exact:true}).click();
  await expect(page).toHaveURL(/screen=51/);
 
- await page.goto('/?screen=59&preview=phase7');
+ await page.goto('/dev/screens?screen=59&preview=phase7');
  await page.getByLabel('معاينة القوائم الفارغة').check();
  await expect(page.getByText('لسه مفيش إقرارات استلام مسجلة.')).toBeVisible();
  await page.getByRole('button',{name:'الحجوزات الجديدة',exact:true}).click();
@@ -408,7 +408,7 @@ test('captain empty notifications and receipts offer direct recovery actions',as
 
 
 test('screen heading gets keyboard focus on navigation and browser Back',async({page})=>{
- await page.goto('/?screen=9&preview=phase2');
+ await page.goto('/dev/screens?screen=9&preview=phase2');
  await page.getByRole('button',{name:'ابحث عن الرحلات',exact:true}).click();
  await expect(page).toHaveURL(/screen=11/);
  await expect(page.locator('main h1,main h2').first()).toBeFocused();
@@ -421,7 +421,7 @@ test('screen heading gets keyboard focus on navigation and browser Back',async({
 test('English preview chat localizes fixture text without translating a typed message',async({browser})=>{
  const context=await browser.newContext({locale:'en-GB',viewport:{width:390,height:844}});
  const page=await context.newPage();
- await page.goto('/?screen=29&preview=phase4');
+ await page.goto('/dev/screens?screen=29&preview=phase4');
  await expect(page.getByText('Captain Ahmed',{exact:true})).toBeVisible();
  await expect(page.getByText('Maadi to New Cairo',{exact:true})).toBeVisible();
  await expect(page.getByText("Let's meet at the agreed meeting point.",{exact:true})).toBeVisible();
@@ -438,10 +438,10 @@ test('English preview chat localizes fixture text without translating a typed me
 test('subscription preview localizes known route areas without changing recorded data',async({browser})=>{
  const context=await browser.newContext({locale:'en-GB',viewport:{width:390,height:844}});
  const page=await context.newPage();
- await page.goto('/?screen=27&preview=phase4');
+ await page.goto('/dev/screens?screen=27&preview=phase4');
  await expect(page.getByText('Maadi',{exact:true})).toBeVisible();
  await expect(page.getByText('New Cairo',{exact:true})).toBeVisible();
- await page.goto('/?screen=28&preview=phase4');
+ await page.goto('/dev/screens?screen=28&preview=phase4');
  await expect(page.getByText('Zamalek',{exact:true})).toBeVisible();
  await expect(page.getByText('Sheikh Zayed',{exact:true})).toBeVisible();
  await context.close();
@@ -451,15 +451,15 @@ test('subscription preview localizes known route areas without changing recorded
 test('captain preview service dates follow language instead of exposing ISO strings',async({browser})=>{
  const context=await browser.newContext({locale:'en-GB',viewport:{width:390,height:844}});
  const page=await context.newPage();
- await page.goto('/?screen=52&preview=phase7');
+ await page.goto('/dev/screens?screen=52&preview=phase7');
  const startDate=page.locator('main .b-row b[dir="ltr"]').first();
  await expect(startDate).toContainText('Nov 2026');
  await expect(startDate).not.toContainText('2026-11-15');
- await page.goto('/?screen=58&preview=phase7');
+ await page.goto('/dev/screens?screen=58&preview=phase7');
  await expect(page.locator('main small').first()).toContainText('Nov');
- await page.goto('/?screen=60&preview=phase7');
+ await page.goto('/dev/screens?screen=60&preview=phase7');
  await page.getByLabel('language_preference',{exact:true}).selectOption('ar');
- await page.goto('/?screen=52&preview=phase7');
+ await page.goto('/dev/screens?screen=52&preview=phase7');
  await expect(page.locator('main .b-row b[dir="ltr"]').first()).not.toContainText('2026-11-15');
  await expect(page.locator('main .b-row b[dir="ltr"]').first()).toContainText('2026');
  await context.close();
@@ -469,7 +469,7 @@ test('captain preview service dates follow language instead of exposing ISO stri
 test('rider preview chat and selected captain persist after full reload without sending remotely',async({browser})=>{
  const context=await browser.newContext({locale:'en-GB'});
  const page=await context.newPage();
- await page.goto('/?screen=29&preview=phase4');
+ await page.goto('/dev/screens?screen=29&preview=phase4');
  await page.locator('.a-thread').nth(1).click();
  await expect(page).toHaveURL(/screen=30/);
  await expect(page.locator('.a-chat-heading')).toContainText('Captain Karim');
@@ -479,7 +479,7 @@ test('rider preview chat and selected captain persist after full reload without 
  await page.reload();
  await expect(page.locator('.a-chat-heading')).toContainText('Captain Karim');
  await expect(page.locator('.a-chat .a-bubble.mine')).toContainText('رجوع');
- await page.goto('/?screen=29&preview=phase4');
+ await page.goto('/dev/screens?screen=29&preview=phase4');
  await page.locator('.a-thread').nth(1).click();
  await expect(page.locator('.a-chat .a-bubble.mine')).toContainText('رجوع');
  await context.close();
@@ -488,7 +488,7 @@ test('rider preview chat and selected captain persist after full reload without 
 test('captain preview does not translate rider-authored or captain-authored chat text',async({browser})=>{
  const context=await browser.newContext({locale:'en-GB'});
  const page=await context.newPage();
- await page.goto('/?screen=56&preview=phase7');
+ await page.goto('/dev/screens?screen=56&preview=phase7');
  await page.locator('.a-thread').first().click();
  await page.getByLabel('Your message').fill('رجوع');
  await page.getByRole('button',{name:'Add to preview',exact:true}).click();
@@ -500,34 +500,34 @@ test('captain preview does not translate rider-authored or captain-authored chat
 
 
 test('premium rider styling is scoped to screens 8–21 and preserves onboarding',async({page})=>{
- await page.goto('/?screen=1');
+ await page.goto('/dev/screens?screen=1');
  const onboarding=await page.locator('main').evaluate(el=>getComputedStyle(el).backgroundImage);
- await page.goto('/?screen=8&preview=phase2');
+ await page.goto('/dev/screens?screen=8&preview=phase2');
  await expect(page.locator('.discovery-stage .d-canvas')).toBeVisible();
  const rider=await page.locator('.discovery-stage .d-canvas').evaluate(el=>getComputedStyle(el).backgroundImage);
  expect(rider).toContain('radial-gradient');
  await expect(page.locator('.discovery-stage .d-canvas .d-primary').first()).toHaveCSS('border-radius', /\d+(\.\d+)?px/);
- await page.goto('/?screen=16&preview=phase3');
+ await page.goto('/dev/screens?screen=16&preview=phase3');
  await expect(page.locator('.booking-stage .b-canvas')).toBeVisible();
  await expect(page.locator('.booking-stage .b-canvas .b-box').first()).toBeVisible();
- await page.goto('/?screen=1');
+ await page.goto('/dev/screens?screen=1');
  expect(await page.locator('main').evaluate(el=>getComputedStyle(el).backgroundImage)).toBe(onboarding);
 });
 
 
 test('rider offer detail and booking summary have refined surfaces in both themes',async({page})=>{
  for(const [n,selector] of [[11,'.d-screen-11 .d-result'],[12,'.d-screen-12 .d-box']] as const){
-  await page.goto('/?screen='+n+'&preview=phase2');
+  await page.goto('/dev/screens?screen='+n+'&preview=phase2');
   const item=page.locator(selector).first();
   await expect(item).toBeVisible();
   const border=await item.evaluate(el=>getComputedStyle(el).borderTopColor);
   expect(border).not.toBe('rgba(0, 0, 0, 0)');
  }
- await page.goto('/?screen=16&preview=phase3');
+ await page.goto('/dev/screens?screen=16&preview=phase3');
  await expect(page.locator('.booking-stage .b-canvas')).toBeVisible();
  // Without a selected offer, booking shows a recoverable empty state instead of a fake priced card.
  await expect(page.locator('.booking-stage .b-canvas .b-box, .booking-stage .b-canvas .b-empty').first()).toBeVisible();
- await page.goto('/?screen=1');
+ await page.goto('/dev/screens?screen=1');
  await expect(page.locator('.discovery-stage')).toHaveCount(0);
  await expect(page.locator('.booking-stage')).toHaveCount(0);
 });
