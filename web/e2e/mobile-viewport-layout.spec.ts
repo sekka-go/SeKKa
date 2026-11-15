@@ -4,6 +4,7 @@ const scenes=[
  {id:'passenger-welcome',url:'/',selector:'.phase-screen-2'},
  {id:'passenger-account-type',url:'/',selector:'.phase-screen-3',start:true},
  {id:'passenger-search',url:'/?tab=search&view=9',selector:'.d-screen-9'},
+ {id:'passenger-filters',url:'/?tab=search&view=10',selector:'.d-screen-10'},
  {id:'captain-sign-in-gate',url:'/?tab=captain-onboarding&view=35',selector:'.phase-screen-4'},
  {id:'admin-access-gate',url:'/?tab=admin&view=62',selector:'.sekka-mobile-card'}
 ] as const;
@@ -57,13 +58,61 @@ for(const width of widths){
     const primary=scene.id==='passenger-welcome'?page.locator('.phase-start'):
      scene.id==='passenger-account-type'?page.locator('.phase-role-next'):
      scene.id==='passenger-search'?page.locator('.d-screen-9 .d-planner > .d-primary'):
+     scene.id==='passenger-filters'?page.locator('.d-screen-10 > .d-primary'):
      scene.id==='captain-sign-in-gate'?page.locator('.phase-google-auth .phase-primary'):null;
     if(primary){
      await expect(primary).toBeVisible();
+     await primary.scrollIntoViewIfNeeded();
      const bounds=await primary.boundingBox();
      expect(bounds).not.toBeNull();
      expect(bounds!.y+bounds!.height,'Primary action must remain inside the mobile viewport')
       .toBeLessThanOrEqual(height+1);
+    }
+    // Reject oversized brand marks without changing the approved artwork or crop.
+    // Ratios are relative to the actual integrated full-width canvas, not the
+    // obsolete centered preview frame.
+    const logo=screen.locator('.phase-logo > .phase-wordmark, .d-header > .phase-wordmark').first();
+    if(await logo.count()){
+     const mark=await logo.boundingBox(),canvas=await screen.boundingBox();
+     expect(mark).not.toBeNull();expect(canvas).not.toBeNull();
+     expect(mark!.width,'Logo must not occupy a third of the mobile screen')
+      .toBeLessThanOrEqual(canvas!.width*.32+1);
+     expect(mark!.height/mark!.width,'Wordmark must preserve its source proportions')
+      .toBeGreaterThan(.45);
+     expect(mark!.height/mark!.width,'Wordmark must preserve its source proportions')
+      .toBeLessThan(.56);
+    }
+    const shellLogo=page.locator('.sekka-mobile-header .sekka-approved-logo:visible');
+    if(await shellLogo.count()){
+     const mark=await shellLogo.boundingBox();
+     expect(mark!.width).toBeLessThanOrEqual(54);
+     expect(mark!.height).toBeLessThanOrEqual(54);
+    }
+    // Pairwise interactive checks on the real rendered screen, excluding
+    // invisible and off-screen elements.  Never score gallery chrome here.
+    const collisions=await page.evaluate(()=>{
+     const buttons=[...document.querySelectorAll<HTMLButtonElement>(
+      '.sekka-mobile-content button, .sekka-bottom-nav button')].filter(b=>{
+       const s=getComputedStyle(b),r=b.getBoundingClientRect();
+       return s.display!=='none'&&s.visibility!=='hidden'&&r.width>0&&r.height>0
+        &&r.bottom>0&&r.top<innerHeight;
+      });
+     const overlaps: string[]=[];
+     for(let i=0;i<buttons.length;i++)for(let j=i+1;j<buttons.length;j++){
+      const a=buttons[i].getBoundingClientRect(),b=buttons[j].getBoundingClientRect();
+      const x=Math.max(0,Math.min(a.right,b.right)-Math.max(a.left,b.left));
+      const y=Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top));
+      if(x*y>4)overlaps.push([buttons[i].textContent,buttons[j].textContent].map(t=>
+       (t||'').trim().replace(/\\s+/g,' ').slice(0,45)).join(' / '));
+     }
+     return overlaps;
+    });
+    expect(collisions,'Interactive buttons must never occupy the same touch area').toEqual([]);
+    if(scene.id==='passenger-filters'){
+     await expect(page.locator('.sekka-bottom-nav')).toBeHidden();
+     const last=await page.locator('.d-screen-10 > .d-primary').boundingBox();
+     expect(last).not.toBeNull();
+     expect(last!.y+last!.height).toBeLessThanOrEqual(height-1);
     }
     if(scene.id==='admin-access-gate')
      await expect(screen.getByRole('heading',{name:language==='ar'?/غير مسموح/:/Access restricted/})).toBeVisible();
@@ -77,11 +126,16 @@ for(const width of widths){
      expect(canvas!.height,'Original production screen must fill the mobile viewport')
       .toBeGreaterThanOrEqual(height-2);
     }
-    if(scene.id==='passenger-search'){
+    if(scene.id==='passenger-search'||scene.id==='passenger-filters'){
      const canvas=layout['.phase-canvas'];
      expect(canvas?.width,'Search canvas must use the viewport width').toBe(width);
      expect(canvas!.height,'Search canvas must fill the space above bottom navigation')
       .toBeGreaterThanOrEqual(height-140);
+    }
+    if(scene.id==='passenger-filters'){
+     // Long filters are document scroll, not a clipped fixed-height canvas.
+     expect(await page.evaluate(()=>getComputedStyle(document.querySelector('.d-screen-10')!).overflowY))
+      .not.toBe('hidden');
     }
     expect(await page.evaluate(()=>document.documentElement.scrollWidth))
      .toBeLessThanOrEqual(width+1);
