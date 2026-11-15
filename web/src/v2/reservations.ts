@@ -31,3 +31,21 @@ export async function cancelPendingBooking(bookingId:string):Promise<void>{
   if(error)throw new Error(error.message);
   if(data!==true)throw new Error('CANCELLATION_NOT_CONFIRMED');
 }
+
+/**
+ * Complete reservation: immutable route price/period and validated ordered stop IDs
+ * are copied into the booking by a single atomic server transaction.
+ */
+export async function reserveSeatsWithStops(routeId:string,seats:number,idempotencyKey:string,pickupStopId:string,dropoffStopId:string,reverse=false):Promise<SeatReservationResult>{
+ if(!client)throw new Error('BACKEND_NOT_CONFIGURED');
+ if(!routeId||!Number.isInteger(seats)||seats<1||seats>13)throw new Error('INVALID_SEATS');
+ const {data:{user},error:authError}=await client.auth.getUser();
+ if(authError||!user)throw new Error('AUTH_REQUIRED');
+ const {data,error}=await client.rpc('v31_reserve_seats_with_stops',{
+  p_route:routeId,p_seats:seats,p_idempotency:idempotencyKey,
+  p_pickup:pickupStopId,p_dropoff:dropoffStopId,p_reverse:reverse
+ });
+ if(error)throw new Error(error.message);
+ if(typeof data!=='string')throw new Error('BOOKING_NOT_CONFIRMED');
+ return {bookingId:data};
+}
