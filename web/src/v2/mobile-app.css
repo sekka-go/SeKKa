@@ -23,3 +23,70 @@
 .sekka-mobile-content.sekka-admin-workspace{max-width:none;padding:0;min-width:0}
 .sekka-admin-workspace .admin-stage{min-width:0;overflow-x:clip}
 .sekka-admin-workspace .ad-content{min-width:0}
+
+
+/*
+ * Integrated production shell geometry only. Do not alter /dev/screens or
+ * approved absolute-positioned screen artwork.
+ *
+ * Root cause: the app's 12/14px content padding + the original phase's 90/18px
+ * inspection padding were applied together. The full-height phase was then
+ * nested below a sticky header and over a fixed bottom bar, producing smaller
+ * original artwork, a phantom 992px page and shifted hit targets.
+ */
+.sekka-mobile,
+.sekka-mobile *,
+.sekka-mobile *::before,
+.sekka-mobile *::after{box-sizing:border-box}
+.sekka-mobile{--sekka-nav-height:calc(68px + env(safe-area-inset-bottom,0px));min-width:0;
+ padding-bottom:var(--sekka-nav-height)}
+.sekka-mobile-header{height:64px;min-height:64px;padding:8px max(12px,env(safe-area-inset-right,0px))
+  8px max(12px,env(safe-area-inset-left,0px));box-sizing:border-box;gap:8px}
+.sekka-mobile-header>.sekka-brand-button{width:56px;height:48px;min-height:48px;flex:0 0 56px;padding:0}
+.sekka-mobile-header .sekka-approved-logo{width:48px;height:48px}
+.sekka-mobile-header>.sekka-theme{width:44px;height:44px;min-height:44px;flex:0 0 44px;padding:0}
+.sekka-mobile-content{min-width:0;overflow:visible;min-height:0}
+.sekka-bottom-nav{height:var(--sekka-nav-height);min-height:0;
+ padding-block:5px calc(5px + env(safe-area-inset-bottom,0px))}
+.sekka-bottom-nav>button{height:58px;min-height:0;min-width:0;padding:2px 1px;flex:1 1 0;width:auto}
+.sekka-bottom-nav small{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.sekka-mobile-content > .phase-one-stage{
+ width:calc(100% + 28px);max-width:none;min-height:0;margin-inline:-14px;
+ padding:44px 18px calc(20px + var(--sekka-nav-height));
+ box-sizing:border-box;overflow:visible;
+}
+.sekka-mobile-content > .phase-one-stage > .phase-canvas{width:100%;max-width:600px;min-width:0}
+.sekka-mobile-content > .phase-one-stage.discovery-stage{
+ padding-block-start:45px;
+ padding-inline:0;
+}
+.sekka-mobile-content > .phase-one-stage.discovery-stage > .d-canvas{
+ width:100%;max-width:600px;
+}
+/* Onboarding is itself a full-screen approved flow with its own wordmark and
+ * Back button. Repeating the shell header and persistent navigation shifts its
+ * absolute composition and obscures approval CTAs. */
+.sekka-guest-welcome > .sekka-mobile-header,
+.sekka-guest-welcome > .sekka-bottom-nav,
+.sekka-tab-login > .sekka-mobile-header,
+.sekka-tab-login > .sekka-bottom-nav{display:none}
+.sekka-guest-welcome,.sekka-tab-login{padding-bottom:0}
+.sekka-guest-welcome > .sekka-mobile-content,
+.sekka-tab-login > .sekka-mobile-content{max-width:none;min-height:100dvh;padding-bottom:0}
+.sekka-guest-welcome .sekka-mobile-content > .phase-one-stage,
+.sekka-tab-login .sekka-mobile-content > .phase-one-stage{
+ padding-block-start:107px;
+ padding-block-end:calc(24px + env(safe-area-inset-bottom,0px));
+ min-height:calc(100dvh - 12px);
+}
+.sekka-mobile-content :is(button,input,select,textarea,a){scroll-margin-block:84px calc(var(--sekka-nav-height) + 16px)}
+.sekka-admin-workspace .ad-content{overflow-wrap:anywhere}
+@media(max-width:380px){
+ .sekka-mobile-content > .phase-one-stage{width:calc(100% + 20px);margin-inline:-10px}
+}
+@media(min-width:681px){
+ .sekka-mobile-content > .phase-one-stage{width:100%;margin-inline:0}
+ .sekka-mobile-content > .phase-one-stage.discovery-stage{padding-inline:0}
+ .sekka-guest-welcome .sekka-mobile-content > .phase-one-stage,
+ .sekka-tab-login .sekka-mobile-content > .phase-one-stage{width:100%;margin-inline:0}
+}
