@@ -17,6 +17,7 @@ async function rect(page:Page,selector:string){
 }
 async function snapshot(page:Page,scene:(typeof screens)[number],kind:'reference'|'after',label:string){
  await expect(page.locator(scene.heading)).toBeVisible();
+ await expect(page.locator('.sekka-launch')).toBeHidden();
  const title=await rect(page,scene.heading),canvas=await rect(page,scene.canvas);
  const action=scene.id===10?await rect(page,'.d-screen-10 > .d-primary'):null;
  const checks=await page.evaluate(()=>({

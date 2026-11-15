@@ -17,6 +17,7 @@ for(const width of [360,390])for(const language of ['ar','en'] as const)for(cons
   for(const scene of routes){
    await page.goto(`/?tab=${scene.tab}&view=${scene.view}`);
    await expect(page.locator(scene.expected).first()).toBeVisible();
+   await expect(page.locator('.sekka-launch')).toBeHidden();
    if(scene.tab==='search'||scene.tab==='booking'||scene.tab==='captain-onboarding')
     await expect(page.locator('.sekka-mobile-header')).toBeHidden();
    if(scene.tab==='captain-onboarding')
