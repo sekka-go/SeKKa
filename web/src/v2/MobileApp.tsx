@@ -15,13 +15,14 @@ import {internalScreen,publicScreen} from './screenMap';
 import LiveProfile from './LiveProfile';
 import LiveBookings from './LiveBookings';
 import LiveNotifications from './LiveNotifications';
-import LiveAdminOverview from './LiveAdminOverview';
+import AdminDashboard from './AdminDashboard';
 import './mobile-app.css';
 type Tab='home'|'search'|'booking'|'captain-onboarding'|'routes'|'bookings'|'notifications'|'admin'|'login'|'profile';
 const validTabs:Tab[]=['home','search','booking','captain-onboarding','routes','bookings','notifications','admin','login','profile'];
 const tabFromUrl=():Tab=>{const key=new URL(location.href).searchParams.get('tab') as Tab;return validTabs.includes(key)?key:'home';};
 export default function MobileApp(){
  const p=usePreferences(),en=p.language==='en',t=(ar:string,english:string)=>en?english:ar;
+ const [adminScreen,setAdminScreen]=useState(()=>{const n=Number(new URL(location.href).searchParams.get('view'));return n>=62&&n<=73?n:62;});
  const [captainStep,setCaptainStep]=useState(()=>{const n=Number(new URL(location.href).searchParams.get('view'));return n>=35&&n<=41?n:35;});
  const [captainScreen,setCaptainScreen]=useState(()=>{const n=Number(new URL(location.href).searchParams.get('view'));return n>=42&&n<=49?n:42;});
  const [discoveryScreen,setDiscoveryScreen]=useState(()=>{const n=Number(new URL(location.href).searchParams.get('view'));return [8,9,10,11,12].includes(n)?n:9;});
@@ -33,7 +34,7 @@ export default function MobileApp(){
 
  const [areasError,setAreasError]=useState('');
  const [areas,setAreas]=useState<{id:number;name_ar:string;name_en:string}[]>([]);
- useEffect(()=>{const back=()=>{setTab(tabFromUrl());const u=new URL(location.href);const screen=Number(u.searchParams.get('view'));if(tabFromUrl()==='routes')setCaptainScreen(screen>=42&&screen<=49?screen:42);if(tabFromUrl()==='captain-onboarding')setCaptainStep(screen>=35&&screen<=41?screen:35);setDiscoveryScreen([8,9,10,11,12].includes(screen)?screen:9);setBookingId(u.searchParams.get('booking'));setSelectionVersion(v=>v+1);};addEventListener('popstate',back);return()=>removeEventListener('popstate',back);},[]);
+ useEffect(()=>{const back=()=>{setTab(tabFromUrl());const u=new URL(location.href);const screen=Number(u.searchParams.get('view'));if(tabFromUrl()==='admin')setAdminScreen(screen>=62&&screen<=73?screen:62);if(tabFromUrl()==='routes')setCaptainScreen(screen>=42&&screen<=49?screen:42);if(tabFromUrl()==='captain-onboarding')setCaptainStep(screen>=35&&screen<=41?screen:35);setDiscoveryScreen([8,9,10,11,12].includes(screen)?screen:9);setBookingId(u.searchParams.get('booking'));setSelectionVersion(v=>v+1);};addEventListener('popstate',back);return()=>removeEventListener('popstate',back);},[]);
  useEffect(()=>{let active=true;const u=new URL(location.href);
   const route=u.searchParams.get('route'),pickup=u.searchParams.get('pickup'),dropoff=u.searchParams.get('dropoff');
   if(!['search','booking'].includes(tab))return;
@@ -173,7 +174,10 @@ export default function MobileApp(){
    }}/> :<section className="sekka-mobile-card"><h1>{t('خطوط الكابتن','Captain routes')}</h1><p>{userId?t('حسابك مش كابتن معتمد في النظام حاليًا.','This account is not enrolled as a captain.'):t('سجّل الدخول الأول.','Sign in first.')}</p><button className="sekka-action" onClick={()=>{setCaptainStep(35);navigate(userId?'captain-onboarding':'login');}}>{t('بدء تسجيل الكابتن','Start captain onboarding')}</button></section>)}
    {tab==='bookings'&&(userId?<LiveBookings mode={captain?'captain':'rider'}/>:<section className="sekka-mobile-card"><h1>{t('حجوزاتي','My bookings')}</h1><p>{t('سجّل دخولك علشان تشوف حجوزاتك الحقيقية.','Sign in to view your bookings.')}</p><button className="sekka-action" onClick={()=>navigate('login')}>{t('تسجيل الدخول','Sign in')}</button></section>)}
    {tab==='notifications'&&(userId?<LiveNotifications/>:<section className="sekka-mobile-card"><h1>{t('الإشعارات','Notifications')}</h1><button className="sekka-action" onClick={()=>navigate('login')}>{t('تسجيل الدخول','Sign in')}</button></section>)}
-   {tab==='admin'&&(admin?<LiveAdminOverview/>:<section className="sekka-mobile-card"><h1>{t('غير مسموح','Access restricted')}</h1><p>{t('لوحة الإدارة للحسابات المصرح لها فقط.','The admin dashboard requires authorization.')}</p><button onClick={()=>navigate('home')}>{t('العودة','Back')}</button></section>)}
+   {tab==='admin'&&(admin?<AdminDashboard production screen={internalScreen(adminScreen)} theme={p.theme}
+      onTheme={p.setThemePreference} go={id=>{const n=publicScreen(id);setAdminScreen(n);
+        const u=new URL(location.href);u.searchParams.set('tab','admin');u.searchParams.set('view',String(n));
+        history.pushState({},'',u.pathname+u.search);window.scrollTo(0,0);}}/>:<section className="sekka-mobile-card"><h1>{t('غير مسموح','Access restricted')}</h1><p>{t('لوحة الإدارة للحسابات المصرح لها فقط.','The admin dashboard requires authorization.')}</p><button onClick={()=>navigate('home')}>{t('العودة','Back')}</button></section>)}
   </main>
   <nav className="sekka-bottom-nav" aria-label={t('التنقل الرئيسي','Main navigation')}>
    {([['home','⌂','الرئيسية','Home'],['search','⌕','بحث','Search'],[captain? 'routes':'bookings','▦',captain?'خطوطي':'حجوزاتي',captain?'Routes':'Bookings'],['notifications','♧','الإشعارات','Alerts'],['profile','◉','حسابي','Account']] as [Tab,string,string,string][]).map(([id,icon,ar,english])=><button key={id} aria-current={tab===id?'page':undefined} onClick={()=>navigate(id)}><span aria-hidden="true">{icon}</span><small>{t(ar,english)}</small></button>)}
