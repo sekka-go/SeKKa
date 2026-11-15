@@ -79,7 +79,7 @@ export default function LiveCaptainDraft(){
      ]);
      if(savedError||stopsError)throw Error(savedError?.message||stopsError?.message||'DRAFT_READ_FAILED');
      if(!saved||saved.status!=='draft'||saved.seat_capacity!==capacity||saved.price_egp!==Number(price)||
-        savedStops?.length!==stops.length||savedStops.some((s,i)=>s.area_id!==stops[i].areaId||s.position!==i||s.name!==stops[i].name)){
+        !savedStops||savedStops.length!==stops.length||savedStops.some((s,i)=>s.area_id!==stops[i].areaId||s.position!==i||s.name!==stops[i].name)){
        throw Error('DRAFT_PERSISTENCE_NOT_VERIFIED');
      }
      setMessage(t('اتحفظت مسودة الخط الحقيقية بنجاح. النشر متوقف لحين اعتماد الكابتن وتفعيل التحقق من المسار.','Your real route draft was saved. Publishing is disabled pending captain approval and server route validation.'));
