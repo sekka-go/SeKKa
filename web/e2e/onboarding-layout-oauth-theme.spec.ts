@@ -22,18 +22,23 @@ for (const theme of ['light','dark'] as const) {
     }
   });
 }
-test('live Google sign-in button is below its heading inside the card in both themes',async({page})=>{
+test('screen four keeps phone, Or, and Google actions in vertical order in both themes',async({page})=>{
  for(const theme of ['light','dark'] as const){
-  await page.goto(`/?screen=4&oauth_theme=${theme}&oauth_language=ar`);
-  const heading=page.getByRole('heading',{name:'الدخول بجوجل'});
-  const button=page.getByRole('button',{name:'المتابعة باستخدام جوجل'});
-  await expect(heading).toBeVisible();
-  await expect(button).toBeVisible();
-  const titleBox=await heading.boundingBox(),buttonBox=await button.boundingBox(),cardBox=await page.locator('main.phase-canvas').boundingBox();
-  expect(titleBox&&buttonBox&&cardBox).toBeTruthy();
-  expect(buttonBox!.y).toBeGreaterThan(titleBox!.y+titleBox!.height);
-  expect(buttonBox!.x).toBeGreaterThanOrEqual(cardBox!.x);
-  expect(buttonBox!.x+buttonBox!.width).toBeLessThanOrEqual(cardBox!.x+cardBox!.width);
+  await page.goto(`/?screen=4&oauth_theme=${theme}&oauth_language=en`);
+  const phone=page.locator('.phase-phone-input');
+  const demo=page.locator('button.phase-send');
+  const orLabel=page.locator('.phase-auth-or');
+  const google=page.getByRole('button',{name:'Continue with Google'});
+  await expect(phone).toBeVisible();
+  await expect(demo).toBeVisible();
+  await expect(orLabel).toContainText('Or');
+  await expect(google).toBeVisible();
+  const d=await demo.boundingBox(),o=await orLabel.boundingBox(),g=await google.boundingBox(),card=await page.locator('main.phase-canvas').boundingBox();
+  expect(d&&o&&g&&card).toBeTruthy();
+  expect(o!.y).toBeGreaterThan(d!.y+d!.height-1);
+  expect(g!.y).toBeGreaterThan(o!.y+o!.height-1);
+  expect(g!.x).toBeGreaterThanOrEqual(card!.x);
+  expect(g!.y+g!.height).toBeLessThanOrEqual(card!.y+card!.height+1);
   await expect(page.locator('.phase-one-stage')).toHaveClass(new RegExp(theme));
  }
 });
