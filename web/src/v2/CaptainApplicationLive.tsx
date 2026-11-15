@@ -6,6 +6,7 @@ import LiveVehicles from './LiveVehicles';
 import {usePreferences} from './preferences';
 
 const bucket='v31-captain-docs-staging';
+const categorySeats:Record<string,number>={PRIME:3,SAVER:4,SPACE:9,MAX:13};
 const kinds=[['identity','إثبات الهوية','Identity'],['driving_license','رخصة القيادة','Driving license'],
  ['vehicle_license','رخصة العربية','Vehicle license'],['vehicle_photo','صورة العربية','Vehicle photo']] as const;
 type Application={user_id:string;status:string;professional_notes:string;experience_years:number|null;
@@ -61,7 +62,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
  });
  const saveVehicle=()=>void run(async()=>{
   const number=seats.trim()===''?null:Number(seats);
-  if(number!==null&&(!Number.isInteger(number)||number<1||number>13))throw Error('INVALID_SEATS');
+  if(number!==null&&(!Number.isInteger(number)||number<1||number>(categorySeats[category]||13)))throw Error('INVALID_SEATS_FOR_CATEGORY');
   const {data,error:e}=await client!.rpc('v31_save_captain_vehicle_intent',{
     p_model:model.trim()||null,p_category:category||null,p_seats:number,p_plate:plate.trim()||null});
   if(e)throw e;expectRpc(data,'draft');onNext(38);
@@ -109,9 +110,9 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
   {!loading&&screen===37&&<div className="d-box">
    <p>{t('سجّل تفاصيل العربية المتوقعة. تسجيل العربية الفعلي يتم بعد الاعتماد.','Save intended vehicle details. Actual registration follows approval.')}</p>
    <label>{t('الموديل (اختياري)','Model (optional)')}<input value={model} disabled={!editable} onChange={e=>setModel(e.target.value)}/></label>
-   <label>{t('الفئة','Category')}<select value={category} disabled={!editable} onChange={e=>setCategory(e.target.value)}>
+   <label>{t('الفئة','Category')}<select value={category} disabled={!editable} onChange={e=>{const next=e.target.value;setCategory(next);setSeats(String(Math.min(Number(seats)||1,categorySeats[next]||13)));}}>
     {['PRIME','SAVER','SPACE','MAX'].map(x=><option key={x}>{x}</option>)}</select></label>
-   <label>{t('المقاعد المقترحة','Planned seats')}<input type="number" min={1} max={13} value={seats} disabled={!editable} onChange={e=>setSeats(e.target.value)}/></label>
+   <label>{t('المقاعد المقترحة','Planned seats')}<input type="number" min={1} max={categorySeats[category]||13} value={seats} disabled={!editable} onChange={e=>setSeats(e.target.value)}/></label>
    <label>{t('رقم اللوحة (اختياري)','Plate number (optional)')}<input value={plate} disabled={!editable} onChange={e=>setPlate(e.target.value)}/></label>
    {editable&&<button type="button" className="d-primary" disabled={busy} onClick={saveVehicle}>{t('احفظ وتابع','Save and continue')}</button>}
    {application?.status==='approved'&&<LiveVehicles/>}
