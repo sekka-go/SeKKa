@@ -35,8 +35,8 @@ test("manifest contains the new icon at both install sizes", async ({ request })
   expect(response.ok()).toBeTruthy();
   const manifest = await response.json();
   expect(manifest.icons.map((icon: { src: string }) => icon.src)).toEqual([
-    "/brand/sekka-icon-192.png",
-    "/brand/sekka-icon-512.png"
+    "/brand/sekka-pwa-20261115-192.png",
+    "/brand/sekka-pwa-20261115-512.png"
   ]);
   for (const icon of manifest.icons) {
     const asset = await request.get(icon.src);
@@ -104,4 +104,13 @@ test("the route fades completely before the centered wordmark appears", async ({
     return Number(getComputedStyle(logo).opacity);
   });
   expect(atReveal).toBeGreaterThan(0.75);
+});
+
+test("installed PWA never points to the retired icon", async ({ request }) => {
+  const html = await (await request.get("/")).text();
+  const manifest = await (await request.get("/manifest.webmanifest")).json();
+  expect(html).not.toContain("app-icon-yellow.png");
+  expect(html).not.toContain("/brand/sekka-icon-192.png");
+  expect(manifest.icons.map((icon: {src:string}) => icon.src).join(" ")).not.toContain("app-icon");
+  expect(manifest.icons.map((icon: {src:string}) => icon.src).every((src:string) => src.includes("sekka-pwa-20261115-"))).toBe(true);
 });
