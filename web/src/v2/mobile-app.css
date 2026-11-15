@@ -7,3 +7,13 @@
 .sekka-mobile-content .live-home__panel{border-radius:18px;padding:20px 16px}
 
 .sekka-approved-logo{width:48px;height:48px;object-fit:contain;display:block}
+
+
+/* Admin entry is exposed only after verified server authorization. Keep the
+   original five-tab mobile navigation and official artwork unchanged. */
+.sekka-mobile-header>span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sekka-admin-entry{border:1px solid #b88d00;border-radius:11px;background:#ffc400;color:#171c22;
+ min-height:44px;max-width:132px;padding:7px 10px;flex:0 1 auto;font:inherit;font-size:12px;
+ font-weight:900;white-space:normal;text-align:center;line-height:1.2}
+.sekka-admin-entry[aria-current=page]{outline:2px solid #997400;outline-offset:2px}
+@media(max-width:420px){.sekka-mobile-header>span{display:none}.sekka-brand-button{width:60px;flex-shrink:0}}
