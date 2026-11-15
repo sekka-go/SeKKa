@@ -52,7 +52,7 @@
 .sekka-bottom-nav small{max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .sekka-mobile-content > .phase-one-stage{
  width:calc(100% + 28px);max-width:none;min-height:0;margin-inline:-14px;
- padding:44px 18px calc(20px + var(--sekka-nav-height));
+ padding:44px 0 calc(20px + var(--sekka-nav-height));
  box-sizing:border-box;overflow:visible;
 }
 .sekka-mobile-content > .phase-one-stage > .phase-canvas{width:100%;max-width:600px;min-width:0}
