@@ -1,3 +1,4 @@
+import LiveAdminOverview from './LiveAdminOverview';
 import {usePreferences} from "./preferences";
 import {readPreviewBookings, previewSubscriberRows, previewSecurityTransactions} from "./previewBookingStore";
 import {translate} from "./translations";
@@ -287,6 +288,7 @@ export default function AdminDashboard(p: {
     setDecision("");
     setReason("");
   }
+  if(!demo&&n===63)return <div className={`admin-stage ${p.theme}`}><LiveAdminOverview/><button type="button" onClick={()=>p.go(64)}>{tr("قائمة المستخدمين")}</button></div>;
   return (
     <div className={`admin-stage ${p.theme}`} >
       <header className="ad-top">
