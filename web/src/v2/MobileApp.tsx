@@ -22,8 +22,8 @@ const validTabs:Tab[]=['home','search','booking','captain-onboarding','routes','
 const tabFromUrl=():Tab=>{const key=new URL(location.href).searchParams.get('tab') as Tab;return validTabs.includes(key)?key:'home';};
 export default function MobileApp(){
  const p=usePreferences(),en=p.language==='en',t=(ar:string,english:string)=>en?english:ar;
- const [captainStep,setCaptainStep]=useState(35);
- const [captainScreen,setCaptainScreen]=useState(42);
+ const [captainStep,setCaptainStep]=useState(()=>{const n=Number(new URL(location.href).searchParams.get('view'));return n>=35&&n<=41?n:35;});
+ const [captainScreen,setCaptainScreen]=useState(()=>{const n=Number(new URL(location.href).searchParams.get('view'));return n>=42&&n<=49?n:42;});
  const [discoveryScreen,setDiscoveryScreen]=useState(()=>{const n=Number(new URL(location.href).searchParams.get('view'));return [8,9,10,11,12].includes(n)?n:9;});
  const [liveSelection,setLiveSelection]=useState<LiveSelection|null>(null),[bookingOffer,setBookingOffer]=useState<Line|null>(null),[selectionError,setSelectionError]=useState('');
  const [bookingId,setBookingId]=useState<string|null>(()=>new URL(location.href).searchParams.get('booking'));
@@ -36,8 +36,9 @@ export default function MobileApp(){
  useEffect(()=>{const back=()=>{setTab(tabFromUrl());const u=new URL(location.href);const screen=Number(u.searchParams.get('view'));if(tabFromUrl()==='routes')setCaptainScreen(screen>=42&&screen<=49?screen:42);if(tabFromUrl()==='captain-onboarding')setCaptainStep(screen>=35&&screen<=41?screen:35);setDiscoveryScreen([8,9,10,11,12].includes(screen)?screen:9);setBookingId(u.searchParams.get('booking'));setSelectionVersion(v=>v+1);};addEventListener('popstate',back);return()=>removeEventListener('popstate',back);},[]);
  useEffect(()=>{let active=true;const u=new URL(location.href);
   const route=u.searchParams.get('route'),pickup=u.searchParams.get('pickup'),dropoff=u.searchParams.get('dropoff');
-  if(!['search','booking'].includes(tab)||!route||!pickup||!dropoff)return;
-  setSelectionError('');
+  if(!['search','booking'].includes(tab))return;
+  if(!route||!pickup||!dropoff){setLiveSelection(null);setBookingOffer(null);return;}
+  setLiveSelection(null);setBookingOffer(null);setSelectionError('');
   void fetchPublishedSelection(route,pickup,dropoff,u.searchParams.get('reverse')==='1').then(s=>{
     if(!active)return;setLiveSelection(s);
     if(tab==='booking')setBookingOffer({
@@ -127,7 +128,9 @@ export default function MobileApp(){
  const captainGo=(id:number)=>{
    const n=publicScreen(id);
    if(n===3||n===4){setOnboardingScreen(4);navigate('login');return;}
-   if(n>=42){setCaptainScreen(n);navigate('routes');return;}
+   if(n>=42&&n<=49){setCaptainScreen(n);setTab('routes');
+     const u=new URL(location.href);u.searchParams.set('tab','routes');u.searchParams.set('view',String(n));
+     history.pushState({},'',u.pathname+u.search);window.scrollTo(0,0);return;}
    if(n<35||n>41)return;
    setCaptainStep(n);const u=new URL(location.href);u.searchParams.set('tab','captain-onboarding');u.searchParams.set('view',String(n));history.pushState({},'',u.pathname+u.search);setTab('captain-onboarding');window.scrollTo(0,0);
  };
