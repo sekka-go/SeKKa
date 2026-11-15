@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+test.use({locale:'ar-EG'});
 
 test('live captain route page never offers unauthenticated publishing',async({page})=>{
  await page.goto('/?screen=42');
