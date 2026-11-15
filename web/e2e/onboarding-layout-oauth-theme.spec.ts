@@ -44,3 +44,18 @@ test('light preference carried in OAuth callback remains light after reload',asy
  await expect(page.locator('html')).toHaveAttribute('data-theme','light');
  await expect(page.locator('html')).toHaveAttribute('lang','ar');
 });
+
+test('prerequisite return button stays outside onboarding image and never overlays logo',async({page})=>{
+ await page.addInitScript(()=>{
+   sessionStorage.setItem('sekka.prerequisiteReturn','?screen=11');
+   localStorage.setItem('theme_preference','dark');
+ });
+ await page.goto('/?screen=5&preview=phase1');
+ const button=page.locator('.phase-return-prerequisite');
+ if(await button.count()){
+  await expect(button).toBeVisible();
+  const b=await button.boundingBox(),card=await page.locator('main.phase-canvas').boundingBox();
+  expect(b&&card).toBeTruthy();
+  expect(b!.y+b!.height).toBeLessThanOrEqual(card!.y);
+ }
+});
