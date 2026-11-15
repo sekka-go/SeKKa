@@ -7,8 +7,9 @@ for(const width of [360,390]){
    await page.goto('/');
    await expect(page.locator('.sekka-mobile')).toBeVisible();
    await expect(page.locator('.sekka-bottom-nav')).toBeVisible();
-   await expect(page.getByRole('heading',{name:language==='ar'?/مشوارك اليومي/:/Your daily commute/})).toBeVisible();
-   await expect(page.getByRole('button',{name:language==='ar'?'التسجيل باستخدام جوجل':'Continue with Google'})).toBeVisible();
+   await expect(page.locator('.phase-screen-2')).toBeVisible();
+   await expect(page.getByRole('button',{name:language==='ar'?'ابدأ الآن':'Get started'})).toBeVisible();
+   await expect(page.locator('.phase-review-bar,.phase-preview-note')).toHaveCount(0);
    await page.screenshot({path:`test-results/public-mobile-${width}-${language}-light.png`,fullPage:true});
    await page.getByRole('button',{name:language==='ar'?'تغيير المظهر':'Switch appearance'}).click();
    await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
@@ -33,7 +34,7 @@ for(const width of [360,390]){
    await page.getByRole('button',{name:language==='ar'?'تسجيل الدخول بجوجل':'Sign in with Google'}).click();
    await expect(page.getByRole('heading',{name:language==='ar'?'سجّل دخولك لسِكّة':'Sign in to seKKa'})).toBeVisible();
    await expect(page.getByRole('button',{name:language==='ar'?'المتابعة باستخدام جوجل':'Continue with Google'})).toBeVisible();
-   const primary=page.locator('.sekka-mobile-card .sekka-action');
+   const primary=page.locator('.phase-screen-4 .phase-primary');
    const p=await primary.boundingBox();
    expect(p?.x).toBeGreaterThanOrEqual(0);
    expect(p!.x+p!.width).toBeLessThanOrEqual(width+1);
@@ -44,4 +45,16 @@ test('approved 73 screen designs isolated under /dev/screens',async({page})=>{
  await page.goto('/dev/screens?screen=2');
  await expect(page.locator('.phase-preview-note')).toBeVisible();
  await expect(page.locator('.sekka-mobile')).toHaveCount(0);
+});
+
+test('approved original onboarding transitions to Google OAuth without OTP',async({page})=>{
+ await page.goto('/');
+ await expect(page.locator('.phase-screen-2')).toBeVisible();
+ await page.locator('.phase-screen-2 .phase-start').click();
+ await expect(page.locator('.phase-screen-3')).toBeVisible();
+ await expect(page.locator('.phase-role-card')).toHaveCount(2);
+ await page.locator('.phase-screen-3 .phase-role-next').click();
+ await expect(page.locator('.phase-screen-4')).toBeVisible();
+ await expect(page.locator('.phase-screen-5')).toHaveCount(0);
+ await expect(page.locator('.phase-review-bar,.phase-preview-note')).toHaveCount(0);
 });
