@@ -275,7 +275,7 @@ export default function Onboarding({
             ? t("معاينة التصميم — إرسال الرسائل وإنشاء الحسابات غير مفعّلين.")
             : t("معاينة المرحلة الأولى · 7 شاشات")}
       </p>
-      {onReturn && <button className="d-outline" onClick={onReturn}>{language==="en" ? "Return to previous step" : "ارجع للخطوة السابقة"}</button>}
+      {onReturn && <button className="phase-return-prerequisite" onClick={onReturn}>{language==="en" ? "Return to previous step" : "ارجع للخطوة السابقة"}</button>}
       <main
         className={`phase-canvas phase-screen-${id}`}
         aria-label={`${t("المرحلة الأولى")} — ${t(names[id - 1])}`}
