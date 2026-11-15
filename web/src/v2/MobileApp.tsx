@@ -44,11 +44,6 @@ export default function MobileApp(){
  },[]);
  useEffect(()=>{if(!client)return;void client.from('v31_service_areas').select('id,name_ar,name_en').eq('active',true).order('id').then(({data,error:e})=>{if(e)setAreasError(e.message);else if(data){setAreas(data);setAreasError('');}});},[]);
  const navigate=(next:Tab)=>{setTab(next);const u=new URL(location.href);u.searchParams.delete('screen');u.searchParams.delete('preview');u.searchParams.delete('inspect');if(next==='home')u.searchParams.delete('tab');else u.searchParams.set('tab',next);history.pushState({},'',u.pathname+u.search);window.scrollTo(0,0);};
- const signIn=async()=>{if(!client){setError(t('تعذّر إعداد تسجيل الدخول.','Sign-in is not configured.'));return;}
-  const redirect=new URL(location.origin+'/');redirect.searchParams.set('oauth_theme',p.themePreference);redirect.searchParams.set('oauth_language',p.languagePreference);
-  const {error:e}=await client.auth.signInWithOAuth({provider:'google',options:{redirectTo:redirect.toString()}});
-  if(e)setError(e.message);
- };
  const signOut=async()=>{if(!client)return;const {error:e}=await client.auth.signOut();if(e)setError(e.message);else navigate('home');};
  const onboardingGo=(n:number)=>{
   if(n===8){navigate('home');return;}
