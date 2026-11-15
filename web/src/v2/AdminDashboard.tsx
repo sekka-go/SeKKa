@@ -301,8 +301,8 @@ export default function AdminDashboard(p: {
     <main className="ad-content">
       <LiveAdminOverview/>
       <nav className="ad-tools" aria-label={tr("أقسام الإدارة")}>
-        <button type="button" onClick={()=>p.go(internalScreen(64))}>{tr("طلبات الكباتن")}</button>
-        <button type="button" onClick={()=>p.go(internalScreen(65))}>{tr("مراجعة المستندات")}</button>
+        <button type="button" onClick={()=>p.go(internalScreen(64))}>{language==='en'?'Captain applications':'طلبات الكباتن'}</button>
+        <button type="button" onClick={()=>p.go(internalScreen(65))}>{language==='en'?'Document review':'مراجعة المستندات'}</button>
       </nav>
     </main>
   </div>;
