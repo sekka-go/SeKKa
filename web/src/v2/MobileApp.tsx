@@ -10,17 +10,19 @@ import {fetchPublishedSelection} from './LiveRouteSearch';
 import type {LiveSelection} from './LiveRouteSearch';
 import {V31BookingJourney} from './BookingFlow';
 import CaptainRoutes from './CaptainRoutes';
+import CaptainOnboarding from './CaptainOnboarding';
 import {internalScreen,publicScreen} from './screenMap';
 import LiveProfile from './LiveProfile';
 import LiveBookings from './LiveBookings';
 import LiveNotifications from './LiveNotifications';
 import LiveAdminOverview from './LiveAdminOverview';
 import './mobile-app.css';
-type Tab='home'|'search'|'booking'|'routes'|'bookings'|'notifications'|'admin'|'login'|'profile';
-const validTabs:Tab[]=['home','search','booking','routes','bookings','notifications','admin','login','profile'];
+type Tab='home'|'search'|'booking'|'captain-onboarding'|'routes'|'bookings'|'notifications'|'admin'|'login'|'profile';
+const validTabs:Tab[]=['home','search','booking','captain-onboarding','routes','bookings','notifications','admin','login','profile'];
 const tabFromUrl=():Tab=>{const key=new URL(location.href).searchParams.get('tab') as Tab;return validTabs.includes(key)?key:'home';};
 export default function MobileApp(){
  const p=usePreferences(),en=p.language==='en',t=(ar:string,english:string)=>en?english:ar;
+ const [captainStep,setCaptainStep]=useState(35);
  const [captainScreen,setCaptainScreen]=useState(42);
  const [discoveryScreen,setDiscoveryScreen]=useState(()=>{const n=Number(new URL(location.href).searchParams.get('view'));return [8,9,10,11,12].includes(n)?n:9;});
  const [liveSelection,setLiveSelection]=useState<LiveSelection|null>(null),[bookingOffer,setBookingOffer]=useState<Line|null>(null),[selectionError,setSelectionError]=useState('');
@@ -31,7 +33,7 @@ export default function MobileApp(){
 
  const [areasError,setAreasError]=useState('');
  const [areas,setAreas]=useState<{id:number;name_ar:string;name_en:string}[]>([]);
- useEffect(()=>{const back=()=>{setTab(tabFromUrl());const u=new URL(location.href);const screen=Number(u.searchParams.get('view'));if(tabFromUrl()==='routes')setCaptainScreen(screen>=42&&screen<=49?screen:42);setDiscoveryScreen([8,9,10,11,12].includes(screen)?screen:9);setBookingId(u.searchParams.get('booking'));setSelectionVersion(v=>v+1);};addEventListener('popstate',back);return()=>removeEventListener('popstate',back);},[]);
+ useEffect(()=>{const back=()=>{setTab(tabFromUrl());const u=new URL(location.href);const screen=Number(u.searchParams.get('view'));if(tabFromUrl()==='routes')setCaptainScreen(screen>=42&&screen<=49?screen:42);if(tabFromUrl()==='captain-onboarding')setCaptainStep(screen>=35&&screen<=41?screen:35);setDiscoveryScreen([8,9,10,11,12].includes(screen)?screen:9);setBookingId(u.searchParams.get('booking'));setSelectionVersion(v=>v+1);};addEventListener('popstate',back);return()=>removeEventListener('popstate',back);},[]);
  useEffect(()=>{let active=true;const u=new URL(location.href);
   const route=u.searchParams.get('route'),pickup=u.searchParams.get('pickup'),dropoff=u.searchParams.get('dropoff');
   if(!['search','booking'].includes(tab)||!route||!pickup||!dropoff)return;
@@ -122,6 +124,16 @@ export default function MobileApp(){
      onFavorite={async()=>{throw Error(t('المفضلة غير متاحة حاليًا.','Favorites are not available yet.'));}}
      onBook={beginBooking} onBooking={()=>navigate('bookings')}
    />;
+ const captainGo=(id:number)=>{
+   const n=publicScreen(id);
+   if(n===3||n===4){setOnboardingScreen(4);navigate('login');return;}
+   if(n>=42){setCaptainScreen(n);navigate('routes');return;}
+   if(n<35||n>41)return;
+   setCaptainStep(n);const u=new URL(location.href);u.searchParams.set('tab','captain-onboarding');u.searchParams.set('view',String(n));history.pushState({},'',u.pathname+u.search);setTab('captain-onboarding');window.scrollTo(0,0);
+ };
+ const approvedCaptainOnboarding=(step:number)=><CaptainOnboarding production screen={internalScreen(step)} theme={p.theme}
+   onTheme={p.setThemePreference} go={captainGo} profile={null} signedIn={Boolean(userId)}
+   rows={[]} busy={false} error="" onRefresh={()=>{}} onEnrolled={()=>setCaptain(true)}/>;
  const signOut=async()=>{if(!client)return;const {error:e}=await client.auth.signOut();if(e)setError(e.message);else navigate('home');};
  const onboardingGo=(n:number)=>{
   if(n===8){navigate('home');return;}
@@ -142,7 +154,7 @@ export default function MobileApp(){
    {error&&<div className="sekka-mobile-alert" role="alert">{error}<button onClick={()=>setError('')}>{t('إغلاق','Dismiss')}</button></div>}
    {tab==='home'&&(!ready?<p role="status">{t('بنجهز حسابك…','Loading account…')}</p>:userId?(captain?<LiveHome onNavigate={onLegacyNavigate}/>:approvedDiscovery(8)):<Onboarding production screen={2} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={setSelectedRole}/>)}
    {tab==='login'&&<Onboarding production screen={userId?6:onboardingScreen} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={setSelectedRole}/>}
-   {tab==='profile'&&(userId?<section className="sekka-mobile-card"><LiveProfile/><button type="button" onClick={()=>void signOut()}>{t('تسجيل الخروج','Sign out')}</button></section>:<section className="sekka-mobile-card"><h1>{t('حسابي','My profile')}</h1><p>{t('سجّل بجوجل علشان تكمل بياناتك.','Sign in with Google to complete your profile.')}</p><button className="sekka-action" onClick={()=>{setOnboardingScreen(4);navigate('login');}}>{t('تسجيل الدخول بجوجل','Sign in with Google')}</button></section>)}
+   {tab==='profile'&&(userId?<section className="sekka-mobile-card"><LiveProfile/><button type="button" onClick={()=>{setCaptainStep(35);navigate('captain-onboarding');}}>{t('ابدأ ككابتن','Become a captain')}</button><button type="button" onClick={()=>void signOut()}>{t('تسجيل الخروج','Sign out')}</button></section>:<section className="sekka-mobile-card"><h1>{t('حسابي','My profile')}</h1><p>{t('سجّل بجوجل علشان تكمل بياناتك.','Sign in with Google to complete your profile.')}</p><button className="sekka-action" onClick={()=>{setOnboardingScreen(4);navigate('login');}}>{t('تسجيل الدخول بجوجل','Sign in with Google')}</button></section>)}
    {selectionError&&['search','booking'].includes(tab)&&<div role="alert" className="sekka-mobile-alert">{selectionError}<button type="button" onClick={()=>setSelectionVersion(v=>v+1)}>{t('إعادة المحاولة','Retry')}</button></div>}
    {tab==='search'&&approvedDiscovery(discoveryScreen)}
    {tab==='booking'&&<V31BookingJourney offer={bookingOffer} routeId={liveSelection?.route.id||''}
@@ -152,6 +164,7 @@ export default function MobileApp(){
      onLogin={()=>{try{sessionStorage.setItem('sekka.postAuthPath',location.pathname+location.search);}catch{ /* Safari privacy storage */ }setOnboardingScreen(4);navigate('login');}}
      onBooked={bookingSaved}/>}
 
+   {tab==='captain-onboarding'&&(userId?approvedCaptainOnboarding(captainStep):<Onboarding production screen={4} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={setSelectedRole}/>)}
    {tab==='routes'&&(captain?<CaptainRoutes production screen={internalScreen(captainScreen)} theme={p.theme} onTheme={p.setThemePreference} go={id=>{
       const n=publicScreen(id);setCaptainScreen(n);const u=new URL(location.href);u.searchParams.set('tab','routes');u.searchParams.set('view',String(n));history.pushState({},'',u.pathname+u.search);window.scrollTo(0,0);
    }}/> :<section className="sekka-mobile-card"><h1>{t('خطوط الكابتن','Captain routes')}</h1><p>{userId?t('حسابك مش كابتن معتمد في النظام حاليًا.','This account is not enrolled as a captain.'):t('سجّل الدخول الأول.','Sign in first.')}</p><button className="sekka-action" onClick={()=>navigate(userId?'home':'login')}>{t('متابعة','Continue')}</button></section>)}
