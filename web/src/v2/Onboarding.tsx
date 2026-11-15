@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import "./onboarding.css";
 import { client } from "./api";
+import LiveProfile from "./LiveProfile";
 export type Appearance = "dark" | "light";
 type Crop = [number, number, number, number];
 // Original paired references are preserved. CSS windows show ONLY illustration/logo regions.
@@ -158,6 +159,7 @@ export default function Onboarding({
   role,
   onRole,
   onReturn,
+  production = false,
 }: {
   screen: number;
   theme: Appearance;
@@ -166,6 +168,7 @@ export default function Onboarding({
   role: string;
   onRole: (r: string) => void;
   onReturn?: () => void;
+  production?: boolean;
   children?: ReactNode;
 }) {
   const {language,themePreference,languagePreference} = usePreferences();
@@ -226,9 +229,34 @@ export default function Onboarding({
     6: t("استكمال الملف الشخصي"),
     7: t("الأذونات"),
   }[id];
+  if (production && (id === 4 || id === 6)) return (
+    <div className={`phase-one-stage ${theme}`}>
+      <main className={`phase-canvas phase-screen-${id}`}>
+        <div className="phase-top-wave" aria-hidden="true" />
+        <div className="phase-logo"><Wordmark /></div>
+        <button className="phase-back" onClick={() => go(id === 4 ? 3 : 2)} aria-label={t("رجوع")}>‹</button>
+        {id === 4 ? <>
+          <h1 className="phase-title">{language === "en" ? "Sign in to seKKa" : "سجّل دخولك لسِكّة"}</h1>
+          <p className="phase-subtitle">{language === "en" ? "Continue securely with your existing Google account." : "كمّل بحساب جوجل الحالي بتاعك."}</p>
+          <button type="button" className="phase-primary" disabled={!client} onClick={() => {
+            if (!client) return;
+            const redirect = new URL(location.origin + "/");
+            redirect.searchParams.set("oauth_theme", themePreference);
+            redirect.searchParams.set("oauth_language", languagePreference);
+            void client.auth.signInWithOAuth({provider:"google", options:{redirectTo:redirect.toString()}});
+          }}>{language === "en" ? "Continue with Google" : "المتابعة باستخدام جوجل"} <Arrow /></button>
+          {!client && <p role="alert">{language === "en" ? "Sign-in is not configured." : "إعداد تسجيل الدخول غير متاح."}</p>}
+        </> : <>
+          <h1 className="phase-title">{language === "en" ? "Complete your profile" : "استكمال الملف الشخصي"}</h1>
+          <LiveProfile />
+          <button className="phase-primary" onClick={() => go(8)}>{language === "en" ? "Continue to home" : "الذهاب للرئيسية"} <Arrow /></button>
+        </>}
+      </main>
+    </div>
+  );
   return (
     <div className={`phase-one-stage ${theme}`}>
-      <nav className="phase-review-bar" aria-label={t("معاينة المرحلة الأولى")}>
+      {!production && <nav className="phase-review-bar" aria-label={t("معاينة المرحلة الأولى")}>
         <div className="review-screen-nav">
           <button
             onClick={() => go(Math.max(1, id - 1))}
@@ -267,14 +295,14 @@ export default function Onboarding({
           >
             {t("لايت")}</button>
         </div>
-      </nav>
-      <p className="phase-preview-note" id="phase-preview-note">
+      </nav>}
+      {!production && <p className="phase-preview-note" id="phase-preview-note">
         {id === 6
           ? t("معاينة استكمال الملف الشخصي — لم يتم حفظ حساب أو التحقق من رقم.")
           : id >= 4
             ? t("معاينة التصميم — إرسال الرسائل وإنشاء الحسابات غير مفعّلين.")
             : t("معاينة المرحلة الأولى · 7 شاشات")}
-      </p>
+      </p>}
       {onReturn && <button className="phase-return-prerequisite" onClick={onReturn}>{language==="en" ? "Return to previous step" : "ارجع للخطوة السابقة"}</button>}
       <main
         className={`phase-canvas phase-screen-${id}`}
