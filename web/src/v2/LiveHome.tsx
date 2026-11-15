@@ -33,7 +33,7 @@ export default function LiveHome({onNavigate}:{onNavigate:(screen:number)=>void}
     if(!active)return;
     setIdentity({
      email:user.email||'',name:profile?.display_name||user.user_metadata?.full_name||user.email||'',
-     role:profile?.role_preference==='captain'?'captain':'rider',
+     role:captain&&captain.approval_status?'captain':'rider',
      approved:captain?.approval_status==='approved',admin:!adminError&&admin===true
     });
     // An optional role lookup should not block the signed-in home screen.
@@ -79,7 +79,7 @@ export default function LiveHome({onNavigate}:{onNavigate:(screen:number)=>void}
    {identity&&<LiveNotifications/>}
    {identity&&<LiveBookings mode={identity.role==="captain"?"captain":"rider"}/>}
    {identity&&identity.role==="rider"&&<LiveTripRequests mode="rider"/>}
-   <div className="live-home__info"><span aria-hidden="true">ⓘ</span>{t('الحجز والدفع الفعلي لسه تحت التجهيز. مفيش فلوس هتتخصم.','Real bookings and payments are not enabled yet. No money will be charged.')}</div>
+   <div className="live-home__info"><span aria-hidden="true">ⓘ</span>{t('الحجز بيتسجل في حسابك بحالة قيد الانتظار. الدفع والتحقق برسائل OTP مؤجلين.','Bookings are stored as pending. Payments and SMS verification are postponed.')}</div>
    {identity&&<button className="live-home__logout" onClick={async()=>{if(!client)return;const {error:signOutError}=await client.auth.signOut();if(signOutError){setError(t('تعذّر تسجيل الخروج.','Unable to sign out.'));return;}setIdentity(null);onNavigate(4);}}>{t('تسجيل الخروج','Sign out')}</button>}
   </section>
  </main>;
