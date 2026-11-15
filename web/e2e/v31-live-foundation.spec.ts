@@ -4,7 +4,8 @@ test('live captain route page never offers unauthenticated publishing',async({pa
  await page.goto('/?screen=42');
  await expect(page.getByText('إنشاء مسودة خط حقيقية')).toHaveCount(0);
  await expect(page.locator('button').filter({hasText:'نشر'})).toHaveCount(0);
- await expect(page.locator('.captain-routes-canvas')).toBeVisible();
+ await expect(page.getByRole('alert')).toContainText('سجّل دخولك أو اعمل حساب');
+ await expect(page.getByRole('button',{name:'تسجيل الدخول أو إنشاء حساب كابتن'})).toBeVisible();
 });
 
 test('Google auth replaces OTP entry when no backend env configured',async({page})=>{
