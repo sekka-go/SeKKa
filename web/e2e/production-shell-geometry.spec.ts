@@ -54,7 +54,9 @@ for(const width of [360,390]){
       await expect(page.locator('.sekka-mobile-header')).toBeHidden();
       await expect(page.locator('.sekka-bottom-nav')).toBeHidden();
      }else{
+      await expect(page.locator('.sekka-mobile-header')).toBeHidden();
       await expect(page.locator('.sekka-bottom-nav')).toBeVisible();
+      expect(actual.canvas.y,'Search canvas should begin near the safe-area top').toBeLessThanOrEqual(48);
       const nav=await rect(page,'.sekka-bottom-nav');
       expect(nav.x).toBeGreaterThanOrEqual(-1);
       expect(nav.x+nav.width).toBeLessThanOrEqual(width+1);
@@ -64,8 +66,8 @@ for(const width of [360,390]){
       'Root canvas must not shrink because of a duplicated outer padding').toBeLessThanOrEqual(3);
      expect(Math.abs(actual.title.width-reference.title.width),
       'Approved heading width must be preserved').toBeLessThanOrEqual(4);
-     expect(Math.abs(actual.title.y-reference.title.y),
-      'Original heading vertical placement should survive integrated shell').toBeLessThanOrEqual(28);
+     expect(Math.abs((actual.title.y-actual.canvas.y)-(reference.title.y-reference.canvas.y)),
+      'Heading position *inside original artwork* must be preserved').toBeLessThanOrEqual(9);
      // A fixed tab bar may temporarily cover scrolling content mid-scroll.
      // It is a defect only if the layout cannot scroll the last action above
      // the bar; reserve explicit scrollable bottom clearance.
