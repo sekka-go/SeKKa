@@ -47,6 +47,14 @@ export default function LiveCaptainRouteList(){
   }catch(e){setError(e instanceof Error?e.message:String(e));}
   finally{setBusy(null);}
  };
+ const changeStatus=async(id:string,status:'paused'|'published'|'archived')=>{
+  if(!client)return;setBusy(id);setError('');setNotice('');
+  try{
+   const {data,error:rpcError}=await client.rpc('v31_set_route_status',{p_route:id,p_status:status});
+   if(rpcError||data!==status)throw Error(rpcError?.message||'STATUS_UPDATE_NOT_CONFIRMED');
+   setNotice(t('تم تحديث حالة الخط.','Route status updated.'));setRevision(v=>v+1);
+  }catch(e){setError(e instanceof Error?e.message:String(e));}finally{setBusy(null);}
+ };
  if(!client||!uid)return null;
  return <section className="d-box live-route-list">
   <h2>{t('الخطوط المحفوظة','Saved routes')}</h2>
@@ -57,7 +65,10 @@ export default function LiveCaptainRouteList(){
   <ul>{routes.map(route=><li key={route.id}>
    <strong>{route.title}</strong>
    <span>{route.category} · {route.seat_capacity} {t('مقاعد','seats')} · {route.price_egp} {t('جنيه','EGP')}</span>
-   <span>{route.status==='published'?t('منشور','Published'):t('مسودة','Draft')}</span>
+   <span>{route.status==='published'?t('منشور','Published'):route.status==='paused'?t('متوقف مؤقتًا','Paused'):route.status==='archived'?t('مؤرشف','Archived'):t('مسودة','Draft')}</span>
+   {route.status==='published'&&<button type="button" disabled={busy!==null} onClick={()=>void changeStatus(route.id,'paused')}>{t('إيقاف الخط مؤقتًا','Pause route')}</button>}
+   {route.status==='paused'&&<button type="button" disabled={busy!==null||approval!=='approved'} onClick={()=>void changeStatus(route.id,'published')}>{t('استئناف الخط','Resume route')}</button>}
+   {(route.status==='paused'||route.status==='published')&&<button type="button" disabled={busy!==null} onClick={()=>void changeStatus(route.id,'archived')}>{t('أرشفة الخط','Archive route')}</button>}
    {route.status==='draft'&&<button type="button" disabled={busy!==null||approval!=='approved'} onClick={()=>void publish(route.id)}>
     {busy===route.id?t('جاري النشر…','Publishing…'):t('راجع وانشر','Review and publish')}
    </button>}
