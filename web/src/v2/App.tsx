@@ -1935,6 +1935,18 @@ export default function SubscriptionApp() {
           go(12, r.id);
         }}
         onBook={(offer) => {
+          // A skipped phone step is not verified. Stop before starting the first booking.
+          // OTP is disabled until a real provider and server-side verification are installed.
+          let deferred = false;
+          try { deferred = sessionStorage.getItem("sekka.phoneVerificationDeferred") === "true"; } catch { /* Optional browser storage. */ }
+          if (deferred) {
+            setBookingOffer(offer);
+            setError(language === "en"
+              ? "Phone verification is required before your first booking. OTP is not active yet; no booking has been created."
+              : "لازم تأكد رقم موبايلك قبل أول حجز. خدمة OTP لسه مش مفعّلة؛ لم يتم إنشاء أي حجز.");
+            // Preserve the chosen offer for a later verified flow rather than creating a booking.
+            return;
+          }
           setBookingOffer(offer);
           if (offer.id.startsWith("preview-")) {try {sessionStorage.setItem("sekka.preview.selectedOffer", JSON.stringify(offer));} catch {/* in-memory selection still works */}}
           setPeriod(offer.period);
