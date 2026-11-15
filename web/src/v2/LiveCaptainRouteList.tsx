@@ -39,9 +39,9 @@ export default function LiveCaptainRouteList(){
   try{
    const {data,error:publishError}=await client.from('v31_routes')
     .update({status:'published'}).eq('id',id).eq('captain_id',uid).eq('status','draft')
-    .select('id').single();
+    .select('id,status').single();
    if(publishError)throw publishError;
-   if(!data)throw new Error('ROUTE_UPDATE_NOT_CONFIRMED');
+   if(!data||data.id!==id||data.status!=='published')throw new Error('ROUTE_PUBLICATION_NOT_CONFIRMED');
    setNotice(t('تم نشر الخط بنجاح.','Route published successfully.'));
    setRevision(v=>v+1);
   }catch(e){setError(e instanceof Error?e.message:String(e));}
