@@ -62,18 +62,18 @@ export default function LaunchSplash({ children }: { children: ReactNode }) {
 
             <g className="sekka-launch__route">
               <path className="sekka-launch__route-halo"
-                d="M25 764C23 676 67 618 104 573S142 476 178 422 226 312 270 242 324 179 347 124"
+                d="M34 768 C43 681 75 644 107 626 C149 589 202 570 222 532 C265 479 275 453 281 410 C297 349 289 295 298 247 C305 213 314 195 321 180"
                 fill="none" stroke="#d3970e" strokeWidth="7" strokeLinecap="round" />
               <path className="sekka-launch__route-line"
-                d="M25 764C23 676 67 618 104 573S142 476 178 422 226 312 270 242 324 179 347 124"
+                d="M34 768 C43 681 75 644 107 626 C149 589 202 570 222 532 C265 479 275 453 281 410 C297 349 289 295 298 247 C305 213 314 195 321 180"
                 fill="none" stroke="#ffcb1b" strokeWidth="2.7" strokeLinecap="round" />
-              {([[25, 764], [104, 573], [178, 422], [270, 242], [347, 124]] as const).map(([x, y], index) => (
+              {([[34, 768], [107, 626], [222, 532], [281, 410], [298, 295], [321, 180]] as const).map(([x, y], index) => (
                 <g key={index} className={`sekka-launch__point sekka-launch__point--${index + 1}`}>
                   <circle cx={x} cy={y} r="12" fill="#ffbb00" opacity=".4" filter="url(#sekka-splash-glow)" />
                   <circle cx={x} cy={y} r="4.8" fill="#ffe279" />
                 </g>
               ))}
-              <g className="sekka-launch__destination" transform="translate(347 101)">
+              <g className="sekka-launch__destination" transform="translate(321 157)">
                 <path fill="#ffcb17" d="M0-14C-9-14-15-7-15 1c0 11 15 27 15 27S15 12 15 1C15-7 9-14 0-14Z" />
                 <circle cy="1" r="5" fill="#14110a" />
               </g>
