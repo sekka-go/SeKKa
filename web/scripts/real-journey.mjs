@@ -1,0 +1,54 @@
+/**
+ * Real backend journey gate. Run ONLY against a disposable Supabase staging project:
+ *
+ * SEKKA_TEST_DATABASE=true VITE_SUPABASE_URL=https://<staging>.supabase.co \
+ * VITE_SUPABASE_PUBLISHABLE_KEY=... \
+ * SEKKA_CAPTAIN_ACCESS_TOKEN=<real Google-authenticated captain JWT> \
+ * SEKKA_RIDER_ACCESS_TOKEN=<real Google-authenticated rider JWT> \
+ * node scripts/real-journey.mjs
+ *
+ * Tokens are never logged. This script creates durable staging records.
+ * It intentionally has NO password/OTP/payment-based login fallback.
+ */
+import {createClient} from '@supabase/supabase-js';
+import {randomUUID} from 'node:crypto';
+import assert from 'node:assert/strict';
+const env=process.env;
+assert.equal(env.SEKKA_TEST_DATABASE,'true','Explicit disposable staging opt-in required');
+const url=env.VITE_SUPABASE_URL,key=env.VITE_SUPABASE_PUBLISHABLE_KEY;
+assert.ok(url&&key,'Missing staging public config');
+assert.ok(!url.includes('uorxfakceqnhxqnaawdy'),'Never run on connected main project');
+assert.ok(env.SEKKA_CAPTAIN_ACCESS_TOKEN&&env.SEKKA_RIDER_ACCESS_TOKEN,'Two independently authenticated Google sessions required');
+const actor=(token)=>createClient(url,key,{global:{headers:{Authorization:`Bearer ${token}`}},auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+const captain=actor(env.SEKKA_CAPTAIN_ACCESS_TOKEN),rider=actor(env.SEKKA_RIDER_ACCESS_TOKEN);
+const must=(r,operation)=>{if(r.error)throw Error(`${operation}: ${r.error.message}`);return r.data;};
+const captainUser=must(await captain.auth.getUser(env.SEKKA_CAPTAIN_ACCESS_TOKEN),'captain identity').user;
+const riderUser=must(await rider.auth.getUser(env.SEKKA_RIDER_ACCESS_TOKEN),'rider identity').user;
+assert.notEqual(captainUser.id,riderUser.id,'Sessions must represent different users');
+const approval=must(await captain.from('v31_captain_profiles').select('approval_status').eq('user_id',captainUser.id).single(),'captain approval');
+assert.equal(approval.approval_status,'approved');
+const areas=must(await captain.from('v31_service_areas').select('id,name_ar').eq('active',true).order('id').limit(2),'areas');
+assert.equal(areas.length,2,'Need two active areas');
+const title=`E2E ${randomUUID().slice(0,8)}`;
+const routeId=must(await captain.rpc('v31_create_route_draft',{p_title:title,p_category:'PRIME',p_capacity:3,p_direction:'outbound',p_period:'monthly',p_outbound:'07:30',p_return:null,p_return_supported:false,p_price:800,p_stops:[{area_id:areas[0].id,name:'Test origin',pickup:true,dropoff:true},{area_id:areas[1].id,name:'Test destination',pickup:true,dropoff:true}]}),'draft creation');
+assert.equal(typeof routeId,'string');
+must(await captain.from('v31_routes').update({status:'published'}).eq('id',routeId).eq('captain_id',captainUser.id).select('id').single(),'publish');
+const found=must(await rider.from('v31_routes').select('id,title,seat_capacity').eq('id',routeId).single(),'passenger search');
+assert.equal(found.title,title);
+const key1=randomUUID();
+const id1=must(await rider.rpc('v31_reserve_seats',{p_route:routeId,p_seats:2,p_idempotency:key1}),'first booking');
+const id2=must(await rider.rpc('v31_reserve_seats',{p_route:routeId,p_seats:2,p_idempotency:key1}),'idempotent retry');
+assert.equal(id1,id2);
+const key2=randomUUID();
+const exceeded=await rider.rpc('v31_reserve_seats',{p_route:routeId,p_seats:2,p_idempotency:key2});
+assert.ok(exceeded.error,'Overselling capacity must fail');
+const cRefreshed=actor(env.SEKKA_CAPTAIN_ACCESS_TOKEN),rRefreshed=actor(env.SEKKA_RIDER_ACCESS_TOKEN);
+const captainBooking=must(await cRefreshed.from('v31_bookings').select('id,seats,status').eq('id',id1).single(),'captain persisted booking read');
+const riderBooking=must(await rRefreshed.from('v31_bookings').select('id,seats,status').eq('id',id1).single(),'rider persisted booking read');
+assert.deepEqual(captainBooking,riderBooking);
+assert.equal(captainBooking.status,'pending');
+assert.equal(captainBooking.seats,2);
+must(await rider.rpc('v31_cancel_pending_booking',{p_booking:id1}),'cancel');
+const cancelled=must(await rRefreshed.from('v31_bookings').select('status').eq('id',id1).single(),'persisted cancellation');
+assert.equal(cancelled.status,'cancelled');
+process.stdout.write('PASS: two Google sessions, captain publish, rider search, atomic booking and capacity, reload read on both sides, cancellation. Test route remains in disposable staging.\n');
