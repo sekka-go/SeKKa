@@ -999,3 +999,37 @@
 .phase-flow-content .phase-register-fields { gap: 3cqw; border: 1px solid var(--phase-line); border-radius: 3cqw; padding: 4cqw; }
 .phase-flow-content h2 { margin: 0; font-size: 4.5cqw; }
 .phase-flow-content .phase-register-fields p { font-size: 3.5cqw; text-align: right; }
+
+/* Live Google OAuth replaces the absolute-positioned preview phone controls.
+   Constrain its entire hit area inside the card on all seven-screen layouts. */
+.phase-canvas .phase-google-auth {
+  position: absolute;
+  inset-inline: 7%;
+  top: 18%;
+  width: 86%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4cqw;
+  z-index: 5;
+  text-align: center;
+}
+.phase-canvas .phase-google-auth .phase-title,
+.phase-canvas .phase-google-auth .phase-subtitle,
+.phase-canvas .phase-google-auth .phase-primary {
+  position: static;
+  inset: auto;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.phase-canvas .phase-google-auth .phase-primary {
+  min-height: 48px;
+  padding: 3cqw 4cqw !important;
+  cursor: pointer;
+}
+.phase-canvas .phase-google-auth .phase-title { font-size: clamp(19px, 6cqw, 36px); }
+.phase-canvas .phase-google-auth .phase-subtitle { font-size: clamp(13px, 3.5cqw, 20px); }
