@@ -9,6 +9,7 @@ import { Wordmark } from "./Onboarding";
 import type { Appearance } from "./Onboarding";
 import type { Route, Booking } from "./api";
 import "./discovery.css";
+import LiveRouteSearch from "./LiveRouteSearch";
 
 export const discoveryScreens = [8, 9, 10, 11, 12, 14];
 const titles: Record<number, string> = {
@@ -949,7 +950,8 @@ export default function Discovery(p: DiscoveryProps) {
             </div>
           </section>
         )}
-        {screen === 11 && (
+        {screen === 11 && !demo && <LiveRouteSearch origin={origin} destination={destination} outbound={outbound} returnTime={returnTime} period={appliedFilters?period:""} categories={categories} />}
+        {screen === 11 && demo && (
           <>
             <p className="d-subtitle">{tr("اختر عرض الاشتراك المناسب لك")}</p>
             <section className="d-box d-results-summary">
