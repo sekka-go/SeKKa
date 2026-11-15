@@ -1,0 +1,114 @@
+/* Owner-approved 3-second launch sequence. Isolated from all 73 approved screens. */
+.sekka-launch {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #09090b;
+  isolation: isolate;
+  display: block;
+  direction: ltr;
+}
+.sekka-launch__map {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.sekka-launch__route {
+  animation: sekka-route-fade 3s linear both;
+}
+.sekka-launch__route-line, .sekka-launch__route-halo {
+  stroke-dasharray: 1020;
+  stroke-dashoffset: 1020;
+  animation: sekka-route-trace 1.7s cubic-bezier(.37,.05,.54,.97) forwards;
+}
+.sekka-launch__route-halo { opacity: .22; }
+.sekka-launch__destination {
+  opacity: 0;
+  animation: sekka-arrive .45s ease-out 1.48s forwards;
+}
+.sekka-launch__point {
+  opacity: .08;
+  animation: sekka-waypoint .44s ease-in-out both;
+}
+.sekka-launch__point--1 { animation-delay: .08s; }
+.sekka-launch__point--2 { animation-delay: .38s; }
+.sekka-launch__point--3 { animation-delay: .74s; }
+.sekka-launch__point--4 { animation-delay: 1.08s; }
+.sekka-launch__point--5 { animation-delay: 1.40s; }
+
+.sekka-launch__wordmark {
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 49%;
+  width: min(68vw, 340px);
+  max-width: calc(100% - 48px);
+  height: auto;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(.94);
+  animation: sekka-logo-reveal 3s ease-out both;
+  will-change: transform, opacity;
+}
+.sekka-launch__progress {
+  position: absolute;
+  bottom: max(15%, calc(env(safe-area-inset-bottom) + 90px));
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(57vw, 252px);
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .19);
+  overflow: hidden;
+}
+.sekka-launch__progress-fill {
+  display: block;
+  width: 0%;
+  height: 100%;
+  background: #ffc300;
+  border-radius: inherit;
+  box-shadow: 0 0 6px rgba(255, 191, 0, .3);
+  animation: sekka-progress 3s cubic-bezier(.3, .01, .68, 1) both;
+}
+@keyframes sekka-route-trace {
+  from { stroke-dashoffset: 1020; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes sekka-route-fade {
+  0%, 58% { opacity: 1; }
+  73%, 100% { opacity: 0; }
+}
+@keyframes sekka-waypoint {
+  0%, 100% { opacity: .12; }
+  40% { opacity: 1; }
+}
+@keyframes sekka-arrive {
+  from { opacity: 0; transform: translate(347px, 97px) scale(.7); }
+  to { opacity: 1; transform: translate(347px, 101px) scale(1); }
+}
+@keyframes sekka-logo-reveal {
+  0%, 59% { opacity: 0; transform: translate(-50%, -48%) scale(.94); }
+  79%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes sekka-progress {
+  0% { width: 0%; }
+  53% { width: 65%; }
+  89%, 100% { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sekka-launch__route, .sekka-launch__point, .sekka-launch__route-line,
+  .sekka-launch__route-halo, .sekka-launch__destination,
+  .sekka-launch__progress-fill, .sekka-launch__wordmark {
+    animation: none !important;
+  }
+  .sekka-launch__route { opacity: 0; }
+  .sekka-launch__wordmark { opacity: 1; transform: translate(-50%,-50%); }
+  .sekka-launch__progress-fill { width: 100%; }
+}
