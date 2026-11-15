@@ -54,7 +54,30 @@ assert.equal(captainBooking.pickup_stop_id,stops[0].id);
 assert.equal(captainBooking.dropoff_stop_id,stops[1].id);
 assert.equal(captainBooking.price_snapshot_egp,800);
 assert.equal(captainBooking.period_snapshot,'monthly');
+// Demand and offer handoff uses the same separate Google sessions.
+const reqKey=randomUUID();
+const request=must(await rider.from('v31_trip_requests').insert({
+ rider_id:riderUser.id,origin_area_id:areas[0].id,destination_area_id:areas[1].id,
+ outbound_time:'07:30',period:'monthly',seats:1,request_key:reqKey
+}).select('id').single(),'passenger demand');
+const captainRequest=must(await cRefreshed.from('v31_trip_requests').select('id').eq('id',request.id).single(),'captain sees open demand');
+assert.equal(captainRequest.id,request.id);
+const offer=must(await captain.from('v31_trip_offers').insert({request_id:request.id,captain_id:captainUser.id,route_id:routeId}).select('id').single(),'captain offer');
+const riderOffer=must(await rRefreshed.from('v31_trip_offers').select('id').eq('id',offer.id).single(),'rider sees offer');
+assert.equal(riderOffer.id,offer.id);
+const acceptedBooking=must(await rider.rpc('v31_accept_trip_offer',{p_offer:offer.id}),'accept offer and reserve final seat');
+assert.equal(must(await rider.rpc('v31_accept_trip_offer',{p_offer:offer.id}),'idempotent offer acceptance'),acceptedBooking);
+const acceptedState=must(await rRefreshed.from('v31_trip_requests').select('status,accepted_offer_id').eq('id',request.id).single(),'persist accepted demand');
+assert.equal(acceptedState.status,'accepted');
+assert.equal(acceptedState.accepted_offer_id,offer.id);
+const captainAccepted=must(await cRefreshed.from('v31_bookings').select('id,seats,status').eq('id',acceptedBooking).single(),'captain sees accepted offer booking');
+assert.equal(captainAccepted.seats,1);
+const unauthorizedAdmin=await rider.rpc('v31_admin_overview');
+assert.ok(unauthorizedAdmin.error,'Passenger must not access admin data');
+const unread=must(await rRefreshed.from('v31_notifications').select('id,kind').eq('kind','new_offer').limit(20),'rider notifications');
+assert.ok(unread.some(n=>n.kind==='new_offer'),'Offer notification should persist');
+must(await rider.rpc('v31_cancel_pending_booking',{p_booking:acceptedBooking}),'cancel accepted booking');
 must(await rider.rpc('v31_cancel_pending_booking',{p_booking:id1}),'cancel');
 const cancelled=must(await rRefreshed.from('v31_bookings').select('status').eq('id',id1).single(),'persisted cancellation');
 assert.equal(cancelled.status,'cancelled');
-process.stdout.write('PASS: two Google sessions, captain publish, rider search, atomic booking and capacity, reload read on both sides, cancellation. Test route remains in disposable staging.\n');
+process.stdout.write('PASS: two Google sessions, captain publish, rider search, atomic booking/capacity, request/offer acceptance, notifications, admin isolation, reload on both sides, cancellation. Test route remains in disposable staging.\n');
