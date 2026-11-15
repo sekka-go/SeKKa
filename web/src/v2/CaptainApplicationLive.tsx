@@ -3,6 +3,12 @@ import {client} from './api';
 import {enrollCaptain} from './captainEnrollment';
 import LiveVehicles from './LiveVehicles';
 import {usePreferences} from './preferences';
+import {
+ captainPersonalErrors,captainVehicleErrors,normalizeNumerals
+} from './captainValidation';
+import type {
+ CaptainFieldError,CaptainPersonalField,CaptainVehicleField
+} from './captainValidation';
 
 const bucket='v31-captain-docs-staging';
 const documentKinds=[
@@ -13,7 +19,6 @@ const documentKinds=[
 ] as const;
 type Category='PRIME'|'SAVER'|'SPACE'|'MAX';
 const capacities:Record<Category,number>={PRIME:3,SAVER:4,SPACE:9,MAX:13};
-const egyptianPhone=/^01[0125]\d{8}$/;
 type Application={
  user_id:string;status:string;full_name:string|null;phone_number:string|null;
  professional_notes:string;experience_years:number|null;rejection_reason:string|null;
@@ -37,7 +42,10 @@ function messageFor(error:unknown,t:(ar:string,en:string)=>string){
   CAPTAIN_VEHICLE_INCOMPLETE:['أكمل بيانات المركبة المطلوبة قبل الإرسال.','Complete the required vehicle details before submitting.'],
   CAPTAIN_DOCUMENTS_INCOMPLETE:['ارفع المستندات الأربعة المطلوبة قبل الإرسال.','Upload all four required documents before submitting.'],
   INVALID_VEHICLE_CATALOG_SELECTION:['اختيار الشركة أو الموديل غير صالح.','The selected make or model is invalid.'],
-  HIACE_CATEGORY_REVIEW_REQUIRED:['يجب على المسؤول تحديد فئات خدمة الهايس عند المراجعة.','An administrator must select the Hiace service categories during review.']
+  HIACE_CATEGORY_REVIEW_REQUIRED:['يجب على المسؤول تحديد فئات خدمة الهايس عند المراجعة.','An administrator must select the Hiace service categories during review.'],
+  DRAFT_SAVE_NOT_VERIFIED:['ما قدرناش نتأكد من حفظ بياناتك. حاول تاني.','We could not verify that your draft was saved. Please retry.'],
+  SERVER_RESPONSE_NOT_VERIFIED:['ما قدرناش نتأكد من حالة الطلب. حاول تاني.','We could not verify the application status. Please retry.'],
+  DOCUMENT_NOT_REGISTERED:['ما قدرناش نتأكد من حفظ المستند. حاول تاني.','We could not verify that the document was saved. Please retry.']
  };
  const code=Object.keys(translations).find(key=>message.includes(key));
  return code?t(...translations[code]):message;
@@ -58,20 +66,27 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
  const [year,setYear]=useState(''),[colorCode,setColorCode]=useState('');
  const [colorOther,setColorOther]=useState(''),[plate,setPlate]=useState('');
  const [busy,setBusy]=useState(false),[error,setError]=useState('');
+ const [loadError,setLoadError]=useState(''),[showPersonalErrors,setShowPersonalErrors]=useState(false);
+ const [showVehicleErrors,setShowVehicleErrors]=useState(false);
  const [notice,setNotice]=useState(''),[loading,setLoading]=useState(true),[revision,setRevision]=useState(0);
  const currentYear=new Date().getFullYear();
  const availableYears=useMemo(()=>Array.from({length:currentYear-1979},(_,i)=>String(currentYear-i)),[currentYear]);
  const requiredKinds=documentKinds.map(([kind])=>kind);
  const hasDocuments=requiredKinds.every(kind=>docs.some(doc=>doc.kind===kind));
- const personalComplete=fullName.trim().split(/\s+/).length>=2&&fullName.trim().length>=5&&
-   egyptianPhone.test(phone.replace(/[\s-]/g,''))&&notes.trim().length>=3&&
-   years!==''&&Number.isInteger(Number(years))&&Number(years)>=0&&Number(years)<=80;
- const vehicleComplete=!!vehicleType&&!!makeId&&!!modelId&&!!year&&!!colorCode&&
-   (colorCode!=='other'||colorOther.trim().length>=2)&&plate.trim().length>=3;
+ const personalErrors=captainPersonalErrors({
+  fullName,phone,professionalBackground:notes,experienceYears:years
+ });
+ const vehicleErrors=captainVehicleErrors({
+  vehicleType,makeId,modelId,year,colorCode,colorOther,plate
+ },currentYear);
+ const personalComplete=Object.keys(personalErrors).length===0;
+ const vehicleComplete=Object.keys(vehicleErrors).length===0;
+ const visiblePersonalErrors=showPersonalErrors?personalErrors:{};
+ const visibleVehicleErrors=showVehicleErrors?vehicleErrors:{};
  const editable=application?.status==='draft'||application?.status==='rejected';
 
  useEffect(()=>{
-  let active=true;setLoading(true);setError('');
+  let active=true;setLoading(true);setError('');setLoadError('');
   void(async()=>{
    try{
     if(!client)throw Error('BACKEND_NOT_CONFIGURED');
@@ -106,7 +121,10 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
      setColorCode(app.vehicle_color_code||'');setColorOther(app.vehicle_color_other||'');
      setPlate(app.intended_plate||'');
     }
-   }catch(e){if(active)setError(messageFor(e,t));}
+   }catch{if(active){
+    const loadMessage=t('تعذّر تحميل طلب التسجيل. حاول تاني.','We could not load your application. Please retry.');
+    setLoadError(loadMessage);setError(loadMessage);
+   }}
    finally{if(active)setLoading(false);}
   })();
   return()=>{active=false;};
@@ -135,6 +153,54 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
  const expectRpc=(data:unknown,expected:string)=>{
   if(data!==expected)throw Error('SERVER_RESPONSE_NOT_VERIFIED');
  };
+ const readSavedApplication=async()=>{
+  if(!client||!uid)throw Error('AUTH_REQUIRED');
+  const {data,error:readError}=await client.from('v31_captain_applications').select(
+   'user_id,status,full_name,phone_number,professional_notes,experience_years,rejection_reason,vehicle_type,vehicle_make_id,vehicle_model_id,manufacture_year,vehicle_color_code,vehicle_color_other,intended_plate,approved_vehicle_id,submitted_at,reviewed_at'
+  ).eq('user_id',uid).maybeSingle();
+  if(readError)throw readError;
+  return data as Application|null;
+ };
+ const focusField=(name:string)=>{
+  const field=document.getElementById(`captain-${name}`);
+  field?.scrollIntoView({block:'center',behavior:'smooth'});
+  field?.focus({preventScroll:true});
+ };
+ const personalErrorText=(field:CaptainPersonalField,error:CaptainFieldError)=>{
+  const messages:Record<CaptainPersonalField,Record<CaptainFieldError,[string,string]>>={
+   fullName:{
+    required:['اكتب اسمك بالكامل.','Enter your full name.'],
+    invalid:['اكتب الاسم الأول واسم العائلة.','Enter both your first and last name.']
+   },
+   phone:{
+    required:['اكتب رقم موبايلك.','Enter your mobile number.'],
+    invalid:['اكتب رقم موبايل مصري صحيح يبدأ بـ 010 أو 011 أو 012 أو 015.','Enter a valid Egyptian mobile number (010, 011, 012 or 015).']
+   },
+   professionalBackground:{
+    required:['اكتب نبذة قصيرة عن خبرتك المهنية.','Add a short professional background.'],
+    invalid:['اكتب 3 أحرف على الأقل عن خبرتك المهنية.','Enter at least 3 characters about your professional background.']
+   },
+   experienceYears:{
+    required:['اكتب عدد سنين الخبرة؛ ينفع 0.','Enter your years of experience; 0 is valid.'],
+    invalid:['اكتب عددًا صحيحًا من 0 إلى 80.','Enter a whole number from 0 to 80.']
+   }
+  };
+  const [ar,enMessage]=messages[field][error];
+  return t(ar,enMessage);
+ };
+ const vehicleErrorText=(field:CaptainVehicleField,error:CaptainFieldError)=>{
+  const messages:Record<CaptainVehicleField,Record<CaptainFieldError,[string,string]>>={
+   vehicleType:{required:['اختار نوع المركبة.','Select a vehicle type.'],invalid:['اختار نوع مركبة صحيح.','Choose a valid vehicle type.']},
+   makeId:{required:['اختار الشركة المصنعة.','Select a manufacturer.'],invalid:['اختار شركة مصنعة صحيحة.','Select a valid manufacturer.']},
+   modelId:{required:['اختار موديل العربية.','Select a vehicle model.'],invalid:['اختار موديلًا تابعًا للشركة المحددة.','Choose a model from the selected manufacturer.']},
+   year:{required:['اختار سنة الصنع.','Select the manufacture year.'],invalid:['اختار سنة من 1980 لحد السنة الحالية.','Choose a year from 1980 through the current year.']},
+   colorCode:{required:['اختار لون العربية.','Select a vehicle color.'],invalid:['اختار لونًا من القائمة.','Choose a color from the list.']},
+   colorOther:{required:['اكتب لون العربية.','Enter the vehicle color.'],invalid:['اكتب لونًا من حرفين على الأقل.','Enter a color with at least 2 characters.']},
+   plate:{required:['اكتب رقم لوحة العربية.','Enter the license plate number.'],invalid:['اكتب رقم لوحة صحيح.','Enter a valid license plate number.']}
+  };
+  const [ar,enMessage]=messages[field][error];
+  return t(ar,enMessage);
+ };
  const statusLabel=(status:string|null|undefined)=>{
   const labels:Record<string,[string,string]>={
    not_enrolled:['لم يبدأ التسجيل','Not enrolled'],draft:['مسودة','Draft'],
@@ -143,30 +209,42 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
    suspended:['موقوف','Suspended']
   };
   const label=status?labels[status]:undefined;
-  return label?t(label[0],label[1]):status||t('غير متاح','Unavailable');
+  return label?t(label[0],label[1]):status||t('حالة غير معروفة','Unknown status');
  };
  const savePersonal=async(next:boolean)=>{
-  if(next&&!personalComplete){
-   setError(t('أكمل الاسم بالكامل ورقمًا مصريًا صالحًا والخلفية المهنية وسنوات الخبرة. أدخل 0 صراحةً إذا لم تكن لديك خبرة.',
-    'Enter your full name, valid Egyptian mobile, professional background, and years of experience. Enter 0 explicitly if you have no experience.'));
+ const fieldErrors=personalErrors;
+ const invalidDraft=Object.values(fieldErrors).some(value=>value==='invalid');
+ if((next&&Object.keys(fieldErrors).length>0)||(!next&&invalidDraft)){
+  setError('');
+  setShowPersonalErrors(true);
+  const firstField=Object.keys(fieldErrors)[0];
+  if(firstField)focusField(firstField);
    return;
   }
   await run(async()=>{
    if(!client)throw Error('BACKEND_NOT_CONFIGURED');
-   const experience=years.trim()===''?null:Number(years);
-   if(experience!==null&&(!Number.isInteger(experience)||experience<0||experience>80))
-    throw Error('INVALID_PROFESSIONAL_DETAILS');
+  const experience=years.trim()===''?null:Number(normalizeNumerals(years));
+  const normalizedPhone=normalizeNumerals(phone).replace(/[\s-]/g,'');
    const {data,error:saveError}=await client.rpc('v31_save_captain_application',{
-    p_full_name:fullName.trim()||null,p_phone:phone.replace(/[\s-]/g,'')||null,
+   p_full_name:fullName.trim()||null,p_phone:normalizedPhone||null,
     p_notes:notes.trim(),p_experience:experience
    });
    if(saveError)throw saveError;expectRpc(data,'draft');
-   if(next)onNext(37);else setNotice(t('اتحفظت المسودة. رقم الهاتف مطلوب لكنه غير مؤكد.','Draft saved. The phone number is required but remains unverified.'));
+  const saved=await readSavedApplication();
+  if(!saved||saved.status!=='draft'||saved.full_name!==(fullName.trim()||null)||
+     saved.phone_number!==(normalizedPhone||null)||saved.professional_notes!==notes.trim()||
+     saved.experience_years!==experience)throw Error('DRAFT_SAVE_NOT_VERIFIED');
+   if(next)onNext(37);else setNotice(t('اتحفظت، وتقدر تكمّل بعدين.','Saved. You can continue later.'));
   });
  };
  const saveVehicle=async(next:boolean)=>{
-  if(next&&!vehicleComplete){
-   setError(t('أكمل نوع المركبة والشركة والموديل وسنة الصنع واللون ورقم اللوحة.','Complete vehicle type, make, model, manufacture year, color, and license plate.'));
+ const fieldErrors=vehicleErrors;
+ const invalidDraft=Object.values(fieldErrors).some(value=>value==='invalid');
+ if((next&&Object.keys(fieldErrors).length>0)||(!next&&invalidDraft)){
+  setError('');
+  setShowVehicleErrors(true);
+  const firstField=Object.keys(fieldErrors)[0];
+  if(firstField)focusField(firstField);
    return;
   }
   await run(async()=>{
@@ -178,7 +256,16 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
     p_plate:plate.trim()||null
    });
    if(saveError)throw saveError;expectRpc(data,'draft');
-   if(next)onNext(38);else setNotice(t('اتحفظت مسودة المركبة.','Vehicle draft saved.'));
+   const saved=await readSavedApplication();
+   const normalizedColorOther=colorCode==='other'?colorOther.trim()||null:null;
+   if(!saved||saved.status!=='draft'||saved.vehicle_type!==(vehicleType||null)||
+      saved.vehicle_make_id!==(makeId?Number(makeId):null)||
+      saved.vehicle_model_id!==(modelId?Number(modelId):null)||
+      saved.manufacture_year!==(year?Number(year):null)||
+      saved.vehicle_color_code!==(colorCode||null)||
+      saved.vehicle_color_other!==normalizedColorOther||
+      saved.intended_plate!==(plate.trim()||null))throw Error('DRAFT_SAVE_NOT_VERIFIED');
+   if(next)onNext(38);else setNotice(t('اتحفظت بيانات العربية، وتقدر تكمّل بعدين.','Vehicle details saved. You can continue later.'));
   });
  };
  const begin=()=>void run(async()=>{
@@ -189,6 +276,8 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
    });
    if(saveError)throw saveError;expectRpc(data,'draft');
   }
+  const saved=await readSavedApplication();
+  if(!saved||saved.status!=='draft')throw Error('DRAFT_SAVE_NOT_VERIFIED');
   onEnrolled?.();onNext(36);
  });
  const upload=(kind:string,file:File)=>void run(async()=>{
@@ -206,20 +295,33 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
   });
   if(registerError)throw registerError;
   if(typeof data!=='string')throw Error('DOCUMENT_NOT_REGISTERED');
-  setNotice(t('اترفع المستند في مساحة خاصة.','Document uploaded to private storage.'));
+  const {data:registered,error:readError}=await client.from('v31_captain_documents')
+   .select('id,kind,object_name,created_at').eq('captain_id',uid).eq('kind',kind)
+   .eq('object_name',objectName).maybeSingle();
+  if(readError)throw readError;
+  if(!registered)throw Error('DOCUMENT_NOT_REGISTERED');
+  setDocs(current=>[registered as DocumentRow,...current.filter(doc=>doc.id!==registered.id)]);
+  setNotice(t('اتحفظ المستند، تقدر تكمّل.','Document saved. You can continue.'));
  });
  const submit=()=>void run(async()=>{
   if(!personalComplete||!vehicleComplete||!hasDocuments)
    throw Error(!personalComplete?'CAPTAIN_PROFILE_INCOMPLETE':!vehicleComplete?'CAPTAIN_VEHICLE_INCOMPLETE':'CAPTAIN_DOCUMENTS_INCOMPLETE');
   const {data,error:submitError}=await client!.rpc('v31_submit_captain_application');
-  if(submitError)throw submitError;expectRpc(data,'submitted');onNext(40);
+  if(submitError)throw submitError;expectRpc(data,'submitted');
+  const saved=await readSavedApplication();
+  if(!saved||saved.status!=='submitted')throw Error('SERVER_RESPONSE_NOT_VERIFIED');
+  onNext(40);
  });
  const editAgain=()=>void run(async()=>{
   const {data,error:saveError}=await client!.rpc('v31_save_captain_application',{
-   p_full_name:fullName.trim()||null,p_phone:phone.replace(/[\s-]/g,'')||null,
-   p_notes:notes.trim(),p_experience:years===''?null:Number(years)
+   p_full_name:fullName.trim()||null,
+   p_phone:normalizeNumerals(phone).replace(/[\s-]/g,'')||null,
+   p_notes:notes.trim(),p_experience:years===''?null:Number(normalizeNumerals(years))
   });
-  if(saveError)throw saveError;expectRpc(data,'draft');onNext(36);
+  if(saveError)throw saveError;expectRpc(data,'draft');
+  const saved=await readSavedApplication();
+  if(!saved||saved.status!=='draft')throw Error('DRAFT_SAVE_NOT_VERIFIED');
+  onNext(36);
  });
  const makeName=makes.find(m=>String(m.id)===makeId);
  const modelName=models.find(m=>String(m.id)===modelId);
@@ -229,57 +331,83 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
  return <section className="c-approval-live" dir={en?'ltr':'rtl'} aria-label={t('تسجيل الكابتن','Captain registration')}>
   {loading&&<p role="status">{t('بنحمّل طلب التسجيل…','Loading your registration…')}</p>}
   {error&&<p role="alert">{error}</p>}
+  {loadError&&!loading&&<button type="button" className="d-primary" onClick={()=>setRevision(n=>n+1)}>
+   {t('إعادة المحاولة','Retry')}
+  </button>}
   {notice&&<p role="status">{notice}</p>}
-  {!loading&&screen===35&&<div className="d-box">
-   <p>{t('يبدأ التسجيل كمسودة. رقم الهاتف لا يُعد مؤكدًا، ولا يتم اعتماد أي حساب تلقائيًا.','Registration starts as a draft. Phone numbers are not verified and approval is never automatic.')}</p>
-   <p>{t('الحالة:','Status:')} {statusLabel(application?.status)}</p>
+  {!loading&&!loadError&&screen===35&&<div className="d-box">
+   <p>{t('ابدأ بياناتك واحفظها عشان تقدر تكمّل وقت ما تحب. هنراجع طلبك قبل تفعيل الحساب.','Start your details and save them to continue later. We review every application before activation.')}</p>
+   <p>{t('تسجيلك:','Application:')} {statusLabel(application?.status||'not_enrolled')}
+    {application?.status==='draft'&&' · '+t('المسودة محفوظة','Draft saved')}</p>
    {!application&&<button type="button" className="d-primary" disabled={busy} onClick={begin}>{t('ابدأ التسجيل','Start registration')}</button>}
    {application&&<button type="button" className="d-primary" disabled={busy}
     onClick={()=>onNext(application.status==='submitted'?40:36)}>{t('متابعة الطلب','Continue application')}</button>}
   </div>}
-  {!loading&&screen>35&&!application&&<div className="d-box">
+  {!loading&&!loadError&&screen>35&&!application&&<div className="d-box">
    <p role="status">{t('ابدأ طلب التسجيل قبل فتح هذه الخطوة.','Start your registration before opening this step.')}</p>
    <button type="button" className="d-primary" onClick={()=>onNext(35)}>{t('الذهاب لبداية التسجيل','Go to registration start')}</button>
   </div>}
-  {!loading&&application&&screen===36&&<div className="d-box c-registration-form">
+  {!loading&&!loadError&&application&&screen===36&&<div className="d-box c-registration-form">
    <h2>{t('البيانات الشخصية والخبرة','Personal details and experience')}</h2>
-   <label>{t('الاسم بالكامل','Full name')}
-    <input autoComplete="name" maxLength={100} value={fullName} disabled={!editable}
+   <label htmlFor="captain-fullName">{t('الاسم بالكامل','Full name')}
+    <input id="captain-fullName" autoComplete="name" maxLength={100} value={fullName} disabled={!editable}
+     aria-invalid={Boolean(visiblePersonalErrors.fullName)}
+     aria-describedby={visiblePersonalErrors.fullName?'captain-fullName-error':undefined}
      onChange={event=>setFullName(event.target.value)}/>
+    {visiblePersonalErrors.fullName&&<span id="captain-fullName-error" className="c-field-error" role="alert">
+     {personalErrorText('fullName',visiblePersonalErrors.fullName)}</span>}
    </label>
-   <label>{t('رقم الهاتف المصري (غير مؤكد)','Egyptian mobile number (unverified)')}
-    <input type="tel" inputMode="tel" autoComplete="tel-national" maxLength={16}
-     value={phone} disabled={!editable} onChange={event=>setPhone(event.target.value)}/>
+   <label htmlFor="captain-phone">{t('رقم الموبايل المصري (غير مؤكد)','Egyptian mobile number (unverified)')}
+    <input id="captain-phone" type="tel" inputMode="tel" autoComplete="tel-national" maxLength={16}
+     value={phone} disabled={!editable} aria-invalid={Boolean(visiblePersonalErrors.phone)}
+     aria-describedby={visiblePersonalErrors.phone?'captain-phone-error':undefined}
+     onChange={event=>setPhone(event.target.value)}/>
+    {visiblePersonalErrors.phone&&<span id="captain-phone-error" className="c-field-error" role="alert">
+     {personalErrorText('phone',visiblePersonalErrors.phone)}</span>}
    </label>
-   <p>{t('التحقق برمز OTP مؤجل؛ لن نعرض الرقم كأنه مؤكد.','OTP verification is deferred; this number will not be shown as verified.')}</p>
-   <label>{t('الخلفية المهنية','Professional background')}
-    <textarea maxLength={1000} value={notes} disabled={!editable} onChange={event=>setNotes(event.target.value)}/>
+   <p>{t('رقم الموبايل مطلوب، لكن مش هيتأكد دلوقتي.','Your phone number is required but will not be verified yet.')}</p>
+   <label htmlFor="captain-professionalBackground">{t('الخلفية المهنية','Professional background')}
+    <textarea id="captain-professionalBackground" maxLength={1000} value={notes} disabled={!editable}
+     aria-invalid={Boolean(visiblePersonalErrors.professionalBackground)}
+     aria-describedby={visiblePersonalErrors.professionalBackground?'captain-professionalBackground-error':undefined}
+     onChange={event=>setNotes(event.target.value)}/>
+    {visiblePersonalErrors.professionalBackground&&<span id="captain-professionalBackground-error" className="c-field-error" role="alert">
+     {personalErrorText('professionalBackground',visiblePersonalErrors.professionalBackground)}</span>}
    </label>
-   <label>{t('سنوات الخبرة','Years of experience')}
-    <input type="number" min={0} max={80} step={1} value={years} disabled={!editable}
-     onChange={event=>setYears(event.target.value)}/>
+   <label htmlFor="captain-experienceYears">{t('سنوات الخبرة','Years of experience')}
+    <input id="captain-experienceYears" type="number" inputMode="numeric" min={0} max={80} step={1}
+     value={years} disabled={!editable} aria-invalid={Boolean(visiblePersonalErrors.experienceYears)}
+     aria-describedby={visiblePersonalErrors.experienceYears?'captain-experienceYears-error':undefined}
+     onChange={event=>setYears(normalizeNumerals(event.target.value))}/>
+    {visiblePersonalErrors.experienceYears&&<span id="captain-experienceYears-error" className="c-field-error" role="alert">
+     {personalErrorText('experienceYears',visiblePersonalErrors.experienceYears)}</span>}
    </label>
    {editable&&<div className="c-registration-actions">
-    <button type="button" disabled={busy} onClick={()=>void savePersonal(false)}>{t('حفظ المسودة','Save draft')}</button>
-    <button type="button" className="d-primary" disabled={busy||!personalComplete}
+    <button type="button" disabled={busy} onClick={()=>void savePersonal(false)}>{t('حفظ واستكمال لاحقًا','Save for later')}</button>
+    <button type="button" className="d-primary" disabled={busy}
      onClick={()=>void savePersonal(true)}>{t('حفظ ومتابعة','Save and continue')}</button>
    </div>}
   </div>}
-  {!loading&&application&&screen>36&&screen<40&&!personalComplete&&
+  {!loading&&!loadError&&application&&screen>36&&screen<40&&!personalComplete&&
    <div className="d-box" role="alert">
     <p>{t('أكمل البيانات الشخصية المطلوبة أولًا.','Complete the required personal details first.')}</p>
     <button type="button" className="d-primary" onClick={()=>onNext(36)}>{t('العودة للبيانات الشخصية','Back to personal details')}</button>
    </div>}
-  {!loading&&application&&screen===37&&personalComplete&&<div className="d-box c-registration-form">
+  {!loading&&!loadError&&application&&screen===37&&personalComplete&&<div className="d-box c-registration-form">
    <h2>{t('المركبة والخدمات المتاحة','Vehicle and eligible services')}</h2>
-   <label>{t('نوع المركبة الفعلي','Physical vehicle type')}
-    <select value={vehicleType} disabled={!editable} onChange={event=>{
+   <label htmlFor="captain-vehicleType">{t('نوع المركبة الفعلي','Physical vehicle type')}
+    <select id="captain-vehicleType" value={vehicleType} disabled={!editable}
+     aria-invalid={Boolean(visibleVehicleErrors.vehicleType)}
+     aria-describedby={visibleVehicleErrors.vehicleType?'captain-vehicleType-error':undefined}
+     onChange={event=>{
      setVehicleType(event.target.value as 'private_car'|'hiace'|'');
     }}>
      <option value="">{t('اختر نوع المركبة','Select vehicle type')}</option>
      <option value="private_car">{t('سيارة ملاكي','Private car')}</option>
      <option value="hiace">{t('هايس','Hiace')}</option>
     </select>
+    {visibleVehicleErrors.vehicleType&&<span id="captain-vehicleType-error" className="c-field-error" role="alert">
+     {vehicleErrorText('vehicleType',visibleVehicleErrors.vehicleType)}</span>}
    </label>
    {vehicleType==='private_car'&&<div className="c-category-summary" role="status">
     <p>{t('السيارة الملاكي تتيح تلقائيًا الفئتين:','A private car automatically enables both:')}</p>
@@ -289,53 +417,82 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
    </div>}
    {vehicleType==='hiace'&&<p>{t('تُراجع أهلية SPACE وMAX ويحددها المسؤول عند الاعتماد. السعات ثابتة: SPACE 9 وMAX 13.',
     'SPACE/MAX eligibility is selected by an administrator during review. Capacities are fixed: SPACE 9, MAX 13.')}</p>}
-   <label>{t('الشركة المصنعة','Manufacturer / make')}
-    <select value={makeId} disabled={!editable} onChange={event=>{
+   <label htmlFor="captain-makeId">{t('الشركة المصنعة','Manufacturer / make')}
+    <select id="captain-makeId" value={makeId} disabled={!editable}
+     aria-invalid={Boolean(visibleVehicleErrors.makeId)}
+     aria-describedby={visibleVehicleErrors.makeId?'captain-makeId-error':undefined}
+     onChange={event=>{
      setMakeId(event.target.value);setModelId('');
     }}>
      <option value="">{t('اختر الشركة','Select manufacturer')}</option>
      {makes.map(make=><option key={make.id} value={make.id}>{en?make.name_en:make.name_ar}</option>)}
     </select>
+    {visibleVehicleErrors.makeId&&<span id="captain-makeId-error" className="c-field-error" role="alert">
+     {vehicleErrorText('makeId',visibleVehicleErrors.makeId)}</span>}
    </label>
-   <label>{t('الموديل','Model')}
-    <select value={modelId} disabled={!editable||!makeId} onChange={event=>setModelId(event.target.value)}>
+   <label htmlFor="captain-modelId">{t('الموديل','Model')}
+    <select id="captain-modelId" value={modelId} disabled={!editable||!makeId}
+     aria-invalid={Boolean(visibleVehicleErrors.modelId)}
+     aria-describedby={visibleVehicleErrors.modelId?'captain-modelId-error':undefined}
+     onChange={event=>setModelId(event.target.value)}>
      <option value="">{t('اختر الموديل','Select model')}</option>
      {models.map(model=><option key={model.id} value={model.id}>{en?model.name_en:model.name_ar}</option>)}
     </select>
+    {visibleVehicleErrors.modelId&&<span id="captain-modelId-error" className="c-field-error" role="alert">
+     {vehicleErrorText('modelId',visibleVehicleErrors.modelId)}</span>}
    </label>
-   <label>{t('سنة الصنع','Manufacture year')}
-    <select value={year} disabled={!editable} onChange={event=>setYear(event.target.value)}>
+   <label htmlFor="captain-year">{t('سنة الصنع','Manufacture year')}
+    <select id="captain-year" value={year} disabled={!editable}
+     aria-invalid={Boolean(visibleVehicleErrors.year)}
+     aria-describedby={visibleVehicleErrors.year?'captain-year-error':undefined}
+     onChange={event=>setYear(event.target.value)}>
      <option value="">{t('اختر سنة الصنع','Select year')}</option>{yearOptions}
     </select>
+    {visibleVehicleErrors.year&&<span id="captain-year-error" className="c-field-error" role="alert">
+     {vehicleErrorText('year',visibleVehicleErrors.year)}</span>}
    </label>
-   <label>{t('لون المركبة','Vehicle color')}
-    <select value={colorCode} disabled={!editable} onChange={event=>{
+   <label htmlFor="captain-colorCode">{t('لون المركبة','Vehicle color')}
+    <select id="captain-colorCode" value={colorCode} disabled={!editable}
+     aria-invalid={Boolean(visibleVehicleErrors.colorCode)}
+     aria-describedby={visibleVehicleErrors.colorCode?'captain-colorCode-error':undefined}
+     onChange={event=>{
      setColorCode(event.target.value);if(event.target.value!=='other')setColorOther('');
     }}>
      <option value="">{t('اختر اللون','Select color')}</option>
      {colors.map(color=><option key={color.code} value={color.code}>{en?color.name_en:color.name_ar}</option>)}
     </select>
+    {visibleVehicleErrors.colorCode&&<span id="captain-colorCode-error" className="c-field-error" role="alert">
+     {vehicleErrorText('colorCode',visibleVehicleErrors.colorCode)}</span>}
    </label>
-   {colorCode==='other'&&<label>{t('اكتب اللون','Specify color')}
-    <input maxLength={40} value={colorOther} disabled={!editable} onChange={event=>setColorOther(event.target.value)}/>
+   {colorCode==='other'&&<label htmlFor="captain-colorOther">{t('اكتب اللون','Specify color')}
+    <input id="captain-colorOther" maxLength={40} value={colorOther} disabled={!editable}
+     aria-invalid={Boolean(visibleVehicleErrors.colorOther)}
+     aria-describedby={visibleVehicleErrors.colorOther?'captain-colorOther-error':undefined}
+     onChange={event=>setColorOther(event.target.value)}/>
+    {visibleVehicleErrors.colorOther&&<span id="captain-colorOther-error" className="c-field-error" role="alert">
+     {vehicleErrorText('colorOther',visibleVehicleErrors.colorOther)}</span>}
    </label>}
-   <label>{t('رقم لوحة المركبة','License plate number')}
-    <input autoCapitalize="characters" maxLength={24} value={plate} disabled={!editable}
+   <label htmlFor="captain-plate">{t('رقم لوحة المركبة','License plate number')}
+    <input id="captain-plate" autoCapitalize="characters" maxLength={24} value={plate} disabled={!editable}
+     aria-invalid={Boolean(visibleVehicleErrors.plate)}
+     aria-describedby={visibleVehicleErrors.plate?'captain-plate-error':undefined}
      onChange={event=>setPlate(event.target.value)}/>
+    {visibleVehicleErrors.plate&&<span id="captain-plate-error" className="c-field-error" role="alert">
+     {vehicleErrorText('plate',visibleVehicleErrors.plate)}</span>}
    </label>
    {editable&&<div className="c-registration-actions">
-    <button type="button" disabled={busy} onClick={()=>void saveVehicle(false)}>{t('حفظ المسودة','Save draft')}</button>
-    <button type="button" className="d-primary" disabled={busy||!vehicleComplete}
+    <button type="button" disabled={busy} onClick={()=>void saveVehicle(false)}>{t('حفظ واستكمال لاحقًا','Save for later')}</button>
+    <button type="button" className="d-primary" disabled={busy}
      onClick={()=>void saveVehicle(true)}>{t('حفظ ومتابعة','Save and continue')}</button>
    </div>}
    {application.status==='approved'&&<LiveVehicles/>}
   </div>}
-  {!loading&&application&&screen>37&&screen<40&&!vehicleComplete&&personalComplete&&
+  {!loading&&!loadError&&application&&screen>37&&screen<40&&!vehicleComplete&&personalComplete&&
    <div className="d-box" role="alert">
     <p>{t('أكمل بيانات المركبة المطلوبة أولًا.','Complete the required vehicle details first.')}</p>
     <button type="button" className="d-primary" onClick={()=>onNext(37)}>{t('العودة لبيانات المركبة','Back to vehicle details')}</button>
    </div>}
-  {!loading&&application&&screen===38&&personalComplete&&vehicleComplete&&<div className="d-box c-registration-form">
+  {!loading&&!loadError&&application&&screen===38&&personalComplete&&vehicleComplete&&<div className="d-box c-registration-form">
    <h2>{t('المستندات المطلوبة','Required documents')}</h2>
    <p>{t('ارفع المستندات الأربعة قبل الانتقال للمراجعة. الملفات خاصة ولا تُعد موافقة أو تحققًا.',
     'Upload all four documents before review. Files are private and do not imply verification or approval.')}</p>
@@ -357,10 +514,11 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
     </div>;
    })}
    <p role="status">{documentProgress}/4 {t('مستندات مطلوبة مكتملة','required documents complete')}</p>
+   {!hasDocuments&&<p className="c-form-hint">{t('ارفع المستندات الأربعة المطلوبة قبل المتابعة.','Upload all four required documents before continuing.')}</p>}
    {editable&&<button type="button" className="d-primary" disabled={busy||!hasDocuments}
     onClick={()=>onNext(39)}>{t('مراجعة الطلب','Review application')}</button>}
   </div>}
-  {!loading&&application&&screen===39&&<div className="d-box c-registration-form">
+  {!loading&&!loadError&&application&&screen===39&&<div className="d-box c-registration-form">
    <h2>{t('مراجعة طلب التسجيل','Review your registration')}</h2>
    <h3>{t('البيانات الشخصية','Personal details')}</h3>
    <p>{t('الاسم بالكامل:','Full name:')} {fullName||'—'}</p>
@@ -379,15 +537,15 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
    <ul>{documentKinds.map(([kind,ar,label])=><li key={kind}>
     {t(ar,label)} — {docs.some(doc=>doc.kind===kind)?t('مكتمل','Complete'):t('ناقص','Missing')}
    </li>)}</ul>
-   <p>{t('لا يتم تأكيد رقم الهاتف أو اعتماد المركبة تلقائيًا.','Phone verification and vehicle approval are not automatic.')}</p>
+   <p>{t('رقم الموبايل محتاج تأكيد بعدين، والعربية مش هتتفعل غير بعد المراجعة.','We will verify your phone later; your vehicle is activated only after review.')}</p>
    {editable&&<button type="button" disabled={busy||!personalComplete||!vehicleComplete||!hasDocuments}
     className="d-primary" onClick={submit}>{t('إرسال للمراجعة الإدارية','Submit for Admin review')}</button>}
    {!editable&&<p role="status">{statusLabel(application.status)}</p>}
   </div>}
-  {!loading&&application&&(screen===40||screen===41)&&<div className="d-box c-registration-form">
+  {!loading&&!loadError&&application&&(screen===40||screen===41)&&<div className="d-box c-registration-form">
    <h2>{t('حالة طلب التسجيل','Registration status')}</h2>
-   <p role="status">{t('حالة الطلب من الخادم:','Application status from server:')} {statusLabel(application.status)}</p>
-   <p>{t('حالة حساب الكابتن:','Captain account status:')} {statusLabel(approval)}</p>
+   <p role="status">{t('تسجيلك:','Application:')} {statusLabel(application.status)}</p>
+   <p>{t('حساب الكابتن:','Captain account:')} {statusLabel(approval)}</p>
    {application.status==='rejected'&&<>
     <p role="alert">{t('سبب الرفض:','Rejection reason:')} {application.rejection_reason||'—'}</p>
     <button type="button" disabled={busy} onClick={editAgain}>{t('تعديل البيانات وإعادة التقديم','Edit details and resubmit')}</button>

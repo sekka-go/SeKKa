@@ -180,6 +180,8 @@ export default function Onboarding({
   const [issuedAt, setIssuedAt] = useState(0);
   const [now, setNow] = useState(Date.now);
   const [wrongCode, setWrongCode] = useState(false);
+  const [googleBusy,setGoogleBusy]=useState(false);
+  const [googleError,setGoogleError]=useState('');
   const normalizedPhone = phone.replace(/[٠-٩]/g, c => String(c.charCodeAt(0)-1632)).replace(/[ -]/g, "");
   const validPhone = /^01[0125]\d{8}$/.test(normalizedPhone);
   const remaining = Math.max(0, 59 - Math.floor((now - issuedAt) / 1000));
@@ -188,6 +190,49 @@ export default function Onboarding({
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
   }, [id, issuedAt, remaining]);
+  useEffect(()=>{
+    const restore=()=>setGoogleBusy(false);
+    window.addEventListener('pageshow',restore);
+    return()=>window.removeEventListener('pageshow',restore);
+  },[]);
+  useEffect(()=>{
+    setGoogleBusy(false);
+    if(id!==4)return;
+    const url=new URL(location.href);
+    const hash=new URLSearchParams(url.hash.replace(/^#/,''));
+    if(!url.searchParams.has('error')&&!url.searchParams.has('error_code')&&
+       !hash.has('error')&&!hash.has('error_code'))return;
+    setGoogleError(language==='en'?'Google sign-in did not finish. You can try again.':'ما قدرناش نكمّل تسجيل الدخول. تقدر تحاول تاني.');
+    url.searchParams.delete('error');
+    url.searchParams.delete('error_code');
+    url.searchParams.delete('error_description');
+    if(hash.has('error')||hash.has('error_code')){
+      url.hash='';
+    }
+    history.replaceState(history.state,'',url.pathname+url.search+url.hash);
+  },[id,language]);
+  const startGoogleSignIn=async()=>{
+    if(!client||googleBusy)return;
+    setGoogleBusy(true);setGoogleError('');
+    try{
+      let returnPath=role==='captain'
+        ?'/?tab=captain-onboarding&view=35'
+        :'/?tab=login&view=6';
+      try{returnPath=sessionStorage.getItem('sekka.postAuthPath')||returnPath;}catch{/* Storage may be disabled. */}
+      const redirect=new URL(returnPath,location.origin);
+      if(redirect.origin!==location.origin)throw Error('INVALID_AUTH_RETURN_ORIGIN');
+      redirect.searchParams.set('oauth_theme',themePreference);
+      redirect.searchParams.set('oauth_language',languagePreference);
+      redirect.searchParams.set('oauth_role',role==='captain'?'captain':'rider');
+      const {error}=await client.auth.signInWithOAuth({provider:'google',options:{redirectTo:redirect.toString()}});
+      if(error)throw error;
+    }catch{
+      setGoogleBusy(false);
+      setGoogleError(language==='en'
+        ?'Could not start Google sign-in. Check your connection and try again.'
+        :'تعذّر بدء تسجيل الدخول بجوجل. افحص اتصالك وحاول تاني.');
+    }
+  };
   function issueDemoCode() {
     const time = Date.now();
     setIssuedAt(time);
@@ -238,16 +283,19 @@ export default function Onboarding({
         {id === 4 ? <div className="phase-google-auth">
           <h1 className="phase-title">{language === "en" ? "Sign in to seKKa" : "سجّل دخولك لسِكّة"}</h1>
           <p className="phase-subtitle">{language === "en" ? "Continue securely with your existing Google account." : "كمّل بحساب جوجل الحالي بتاعك."}</p>
-          <button type="button" className="phase-primary" disabled={!client} onClick={() => {
-            if (!client) return;
-            let returnPath='/';
-            try{returnPath=sessionStorage.getItem('sekka.postAuthPath')||'/';}catch{/* Storage may be disabled. */}
-            const redirect = new URL(returnPath,location.origin);
-            if(redirect.origin!==location.origin)throw Error('INVALID_AUTH_RETURN_ORIGIN');
-            redirect.searchParams.set("oauth_theme", themePreference);
-            redirect.searchParams.set("oauth_language", languagePreference);
-            void client.auth.signInWithOAuth({provider:"google", options:{redirectTo:redirect.toString()}});
-          }}>{language === "en" ? "Continue with Google" : "المتابعة باستخدام جوجل"} <Arrow /></button>
+          <button type="button" className="phase-primary" disabled={!client||googleBusy}
+            aria-busy={googleBusy} onClick={()=>void startGoogleSignIn()}>
+            {googleBusy
+              ?language==='en'?'Opening Google…':'بنفتح جوجل…'
+              :language === "en" ? "Continue with Google" : "المتابعة باستخدام جوجل"}
+            {!googleBusy&&<Arrow/>}
+          </button>
+          {googleBusy&&<p role="status">{language==='en'?'Waiting for Google sign-in…':'مستنيين تأكيد تسجيل الدخول من جوجل…'}</p>}
+          {googleError&&<div className="phase-google-error" role="alert">
+            <p>{googleError}</p>
+            <button type="button" className="phase-google-retry" disabled={googleBusy}
+              onClick={()=>void startGoogleSignIn()}>{language==='en'?'Try again':'حاول تاني'}</button>
+          </div>}
           {!client && <p role="alert">{language === "en" ? "Sign-in is not configured." : "إعداد تسجيل الدخول غير متاح."}</p>}
         </div> : <div className="phase-flow-content phase-live-profile-flow">
           <h1 className="phase-title">{language === "en" ? "Complete your profile" : "استكمال الملف الشخصي"}</h1>

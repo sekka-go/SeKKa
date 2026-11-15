@@ -77,7 +77,8 @@ export default function LiveHome({onNavigate}:{onNavigate:(screen:number)=>void}
    </section>}
    {identity&&<LiveProfile/>}
    {identity&&<LiveNotifications/>}
-   {identity&&<LiveBookings mode={identity.role==="captain"?"captain":"rider"}/>}
+   {identity&&<LiveBookings mode={identity.role==="captain"?"captain":"rider"}
+    onFindRide={identity.role==='rider'?()=>onNavigate(9):undefined}/>}
    {identity&&identity.role==="rider"&&<LiveTripRequests mode="rider"/>}
    <div className="live-home__info"><span aria-hidden="true">ⓘ</span>{t('الحجز بيتسجل في حسابك بحالة قيد الانتظار. الدفع والتحقق برسائل OTP مؤجلين.','Bookings are stored as pending. Payments and SMS verification are postponed.')}</div>
    {identity&&<button className="live-home__logout" onClick={async()=>{if(!client)return;const {error:signOutError}=await client.auth.signOut();if(signOutError){setError(t('تعذّر تسجيل الخروج.','Unable to sign out.'));return;}setIdentity(null);onNavigate(4);}}>{t('تسجيل الخروج','Sign out')}</button>}

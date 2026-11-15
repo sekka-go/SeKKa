@@ -254,6 +254,69 @@
   color:#b83224;
   overflow-wrap:anywhere;
 }
+.captain-onboarding-canvas .c-field-error {
+  color:#b42318;
+  font-size:.92em;
+  font-weight:700;
+  line-height:1.45;
+  overflow-wrap:anywhere;
+}
+.captain-onboarding-canvas .c-registration-form [aria-invalid="true"] {
+  border-color:#b42318;
+  outline-color:#b42318;
+}
+.captain-onboarding-canvas .c-form-hint {
+  margin:0;
+  color:var(--muted);
+  font-size:.95em;
+}
+.captain-enrollment-progress {
+  margin:8px 0 20px;
+}
+.captain-enrollment-progress ol {
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:6px;
+  margin:0;
+  padding:0;
+  list-style:none;
+}
+.captain-enrollment-progress li {
+  display:grid;
+  justify-items:center;
+  align-content:start;
+  gap:6px;
+  min-width:0;
+  color:var(--muted);
+  text-align:center;
+  font-size:clamp(9px,2.5vw,12px);
+  line-height:1.25;
+}
+.captain-enrollment-progress li[aria-current="step"] {
+  color:var(--phase-text);
+  font-weight:900;
+}
+.captain-enrollment-progress__number {
+  display:grid;
+  width:28px;
+  height:28px;
+  place-items:center;
+  border:1px solid var(--d-line);
+  border-radius:50%;
+  background:var(--phase-card);
+  font-size:12px;
+  font-weight:900;
+}
+.captain-enrollment-progress li[aria-current="step"] .captain-enrollment-progress__number {
+  border-color:#ffc400;
+  background:#ffc400;
+  color:#171c22;
+}
+html[data-theme="dark"] .captain-onboarding-canvas .c-field-error,
+html[data-theme="dark"] .captain-onboarding-canvas .c-registration-form [aria-invalid="true"] {
+  color:#ff9b8f;
+  border-color:#ff9b8f;
+}
 @media(max-width:360px) {
   .captain-onboarding-canvas .c-registration-actions {
     grid-template-columns:1fr;

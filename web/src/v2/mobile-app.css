@@ -140,6 +140,22 @@
  }
 }
 
+/* The authenticated Captain wizard owns the full screen instead of sitting
+   inside the padded Passenger shell. Its form grows only when content needs it. */
+.sekka-tab-captain-onboarding > .sekka-mobile-content {
+  max-width:none;
+  padding:0;
+}
+.sekka-tab-captain-onboarding > .sekka-mobile-content > .phase-one-stage.discovery-stage {
+  width:100%;
+  min-height:100dvh;
+  margin:0;
+  padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);
+}
+.sekka-tab-captain-onboarding .captain-onboarding-canvas {
+  min-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
+}
+
 /*
  * Real-mobile overflow/brand guards.  Scope to the integrated application:
  * /dev/screens retains the owner's original reference geometry.

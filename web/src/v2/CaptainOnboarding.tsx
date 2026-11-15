@@ -152,6 +152,10 @@ export default function CaptainOnboarding(p: {
   if(p.production){
     const n=p.journeyScreen??publicScreen(p.screen);
     const next=(id:number)=>p.onJourneyGo?p.onJourneyGo(id):p.go(internalScreen(id));
+    const activeStep=n===35?0:n>=40?4:n-36;
+    const steps=language==='en'
+      ?['Your details','Vehicle','Documents','Review','Approval']
+      :['بياناتك','العربية','المستندات','مراجعة الطلب','الاعتماد'];
     return <div className={`phase-one-stage discovery-stage booking-stage captain-stage ${p.theme}`}>
       <main className={`phase-canvas d-canvas captain-onboarding-canvas captain-step-${n}`}>
         <header className="d-header captain-onboarding-header">
@@ -161,7 +165,17 @@ export default function CaptainOnboarding(p: {
           </button>
           <Wordmark/>
         </header>
-        <h1>{screenTitle(p.screen,language)}</h1>
+        <h1>{n===35
+          ?language==='en'?'Complete your captain profile':'كمّل تسجيلك ككابتن'
+          :screenTitle(p.screen,language)}</h1>
+        <nav className="captain-enrollment-progress" aria-label={tr('مراحل تسجيل الكابتن')}>
+          <ol>
+            {steps.map((step,index)=><li key={step} aria-current={index===activeStep?'step':undefined}>
+              <span className="captain-enrollment-progress__number">{index+1}</span>
+              <span>{step}</span>
+            </li>)}
+          </ol>
+        </nav>
         <CaptainApplicationLive screen={n} onNext={next} onEnrolled={p.onEnrolled}/>
       </main>
     </div>;

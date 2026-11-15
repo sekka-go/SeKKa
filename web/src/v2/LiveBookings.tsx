@@ -3,7 +3,9 @@ import {client} from './api';
 import {cancelPendingBooking} from './reservations';
 import {usePreferences} from './preferences';
 type Booking={id:string;route_id:string;rider_id:string;seats:number;status:string;created_at:string;v31_routes?:{title:string}|null};
-export default function LiveBookings({mode}:{mode:'rider'|'captain'}){
+export default function LiveBookings({mode,onFindRide}:{
+ mode:'rider'|'captain';onFindRide?:()=>void;
+}){
  const {language}=usePreferences(),en=language==='en',t=(ar:string,english:string)=>en?english:ar;
  const [items,setItems]=useState<Booking[]>([]),[error,setError]=useState(''),[loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[refresh,setRefresh]=useState(0);
  useEffect(()=>{let active=true;void(async()=>{
@@ -32,7 +34,12 @@ export default function LiveBookings({mode}:{mode:'rider'|'captain'}){
   <h2>{mode==='captain'?t('حجوزات خطوطك','Reservations on your routes'):t('حجوزاتي','My bookings')}</h2>
   {loading&&<p role="status">{t('جارٍ التحميل…','Loading…')}</p>}
   {error&&<div role="alert"><p>{error}</p><button onClick={()=>{setError('');setLoading(true);setRefresh(v=>v+1);}}>{t('إعادة المحاولة','Retry')}</button></div>}
-  {!loading&&!error&&items.length===0&&<p>{t('مفيش حجوزات حقيقية لسه.','No real reservations yet.')}</p>}
+  {!loading&&!error&&items.length===0&&<>
+   <p>{t('ما عندكش حجوزات لسه.','No bookings yet.')}</p>
+   {mode==='rider'&&onFindRide&&<button type="button" className="d-primary" onClick={onFindRide}>
+    {t('دوّر على مشوار','Find a ride')}
+   </button>}
+  </>}
   <ul>{items.map(b=><li key={b.id}><strong>{t('حجز','Booking')} {b.id.slice(0,8)}</strong> · {b.seats} {t('مقاعد','seats')} · {b.status}
     <small> {new Date(b.created_at).toLocaleString(en?'en-GB':'ar-EG')}</small>
     {mode==='rider'&&<a className="d-outline" href={`/?tab=booking&booking=${encodeURIComponent(b.id)}`}>{t('عرض تفاصيل الحجز','View booking details')}</a>}

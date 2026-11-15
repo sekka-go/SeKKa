@@ -1033,6 +1033,25 @@
 }
 .phase-canvas .phase-google-auth .phase-title { font-size: clamp(19px, 6cqw, 36px); }
 .phase-canvas .phase-google-auth .phase-subtitle { font-size: clamp(13px, 3.5cqw, 20px); }
+.phase-canvas .phase-google-auth [role="status"],
+.phase-canvas .phase-google-error {
+  margin:12px 0 0;
+  color:var(--phase-text);
+  font-size:clamp(12px,3.2cqw,16px);
+  line-height:1.5;
+  overflow-wrap:anywhere;
+}
+.phase-canvas .phase-google-error p { margin:0 0 8px; }
+.phase-canvas .phase-google-retry {
+  min-height:44px;
+  padding:8px 14px;
+  border:1px solid var(--phase-line);
+  border-radius:12px;
+  background:var(--phase-card);
+  color:var(--phase-text);
+  font:inherit;
+  font-weight:800;
+}
 
 /* Prerequisite return belongs to page chrome, not to the image-backed card.
    A generic .d-outline can inherit absolute wizard positioning and cover the logo. */

@@ -61,10 +61,19 @@ test(`pending Captain profile stays in Passenger journey until explicit entry at
   else if(path.startsWith('/rest/v1/v31_captain_profiles'))
    result={user_id:userId,approval_status:'pending'};
   else if(path.startsWith('/rest/v1/v31_captain_applications'))result=hasApplication?{
-   user_id:userId,status:'draft',professional_notes:'',experience_years:null,rejection_reason:null,
-   intended_vehicle_model:'',intended_category:'PRIME',intended_seats:3,intended_plate:'',
+   user_id:userId,status:'draft',full_name:'Captain Fixture',phone_number:'01012345678',
+   professional_notes:'Safe travel',experience_years:0,rejection_reason:null,
+   vehicle_type:'private_car',vehicle_make_id:1,vehicle_model_id:1,
+   manufacture_year:2020,vehicle_color_code:'white',vehicle_color_other:null,
+   intended_plate:'ABC123',
    submitted_at:null,reviewed_at:null
   }:null;
+  else if(path.startsWith('/rest/v1/v31_vehicle_makes'))
+   result=[{id:1,name_ar:'تويوتا',name_en:'Toyota',active:true}];
+  else if(path.startsWith('/rest/v1/v31_vehicle_models'))
+   result=[{id:1,make_id:1,name_ar:'كورولا',name_en:'Corolla',active:true}];
+  else if(path.startsWith('/rest/v1/v31_vehicle_colors'))
+   result=[{code:'white',name_ar:'أبيض',name_en:'White'}];
   await request.fulfill({contentType:'application/json',body:JSON.stringify(result)});
  });
 
@@ -79,7 +88,7 @@ test(`pending Captain profile stays in Passenger journey until explicit entry at
  await page.getByRole('button',{name:'Enter Captain journey'}).click();
  await expect(page).toHaveURL(/tab=captain-onboarding&view=35/);
  await expect(page.locator('.c-approval-live')).toBeVisible();
- await expect(page.getByRole('button',{name:'Start enrollment'})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Start registration'})).toBeVisible();
  await expect(page.locator('.captain-onboarding-header')).toBeVisible();
  await expect(page.getByRole('navigation',{name:'Enrollment steps'})).toHaveCount(0);
  await page.screenshot({path:`test-results/mock-captain-enrollment-start-${width}.png`,fullPage:true,animations:'disabled'});
@@ -93,14 +102,14 @@ test(`pending Captain profile stays in Passenger journey until explicit entry at
  expect(logo!.width).toBeLessThanOrEqual(width*.32+1);
 
  await page.goto('/?tab=captain-onboarding&view=38');
- await expect(page.getByText('Start Captain enrollment before opening this step.')).toBeVisible();
+ await expect(page.getByText('Start your registration before opening this step.')).toBeVisible();
  await expect(page.locator('.c-file-picker')).toHaveCount(0);
  hasApplication=true;
  await page.goto('/?tab=captain-onboarding&view=38');
  const picker=page.locator('.c-file-picker').first();
  await expect(picker.locator('.c-file-picker-button')).toHaveText('Choose file');
  await expect(picker.locator('.c-file-picker-name')).toHaveText('No file selected');
- await expect(picker.locator('input[type=file]')).toHaveAttribute('aria-label','Identity');
+ await expect(picker.locator('input[type=file]')).toHaveAttribute('aria-label','Identity proof');
 
  await page.evaluate(()=>localStorage.setItem('language_preference','ar'));
  await page.reload();

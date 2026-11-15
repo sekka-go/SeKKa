@@ -32,7 +32,10 @@ export default function MobileApp(){
  const [bookingId,setBookingId]=useState<string|null>(()=>new URL(location.href).searchParams.get('booking'));
  const [selectionVersion,setSelectionVersion]=useState(0);
  const onboardingScreen=route.tab==='login'?route.view:2;
- const [selectedRole,setSelectedRole]=useState(()=>{try{return sessionStorage.getItem('sekka.pendingRole')==='captain'?'captain':'rider';}catch{return 'rider';}});
+ const [selectedRole,setSelectedRole]=useState(()=>{
+  try{if(sessionStorage.getItem('sekka.pendingRole')==='captain')return 'captain';}catch{/* URL fallback below. */}
+  return new URL(location.href).searchParams.get('oauth_role')==='captain'?'captain':'rider';
+ });
  const [userId,setUserId]=useState<string|null>(null),[captain,setCaptain]=useState(false),[admin,setAdmin]=useState(false),[ready,setReady]=useState(false),[error,setError]=useState('');
 
  const [adminLookupError,setAdminLookupError]=useState('');
@@ -112,6 +115,10 @@ export default function MobileApp(){
     // Preserve existing Google identities; role preference is NOT Admin authorization.
     let pendingRole:string|null=null;
     try{pendingRole=sessionStorage.getItem('sekka.pendingRole');}catch{/* private mode */}
+    if(pendingRole!=='rider'&&pendingRole!=='captain'){
+      const callbackRole=new URL(location.href).searchParams.get('oauth_role');
+      pendingRole=callbackRole==='rider'||callbackRole==='captain'?callbackRole:null;
+    }
     if(pendingRole==='rider'||pendingRole==='captain'){
       const {data:profile,error:profileError}=await client.from('v31_profiles')
         .select('user_id,role_preference').eq('user_id',user.id).maybeSingle();
@@ -132,7 +139,15 @@ export default function MobileApp(){
             if(enrollError&&enrollError.code!=='23505')setError(enrollError.message);
             else enrolled=true;
           }
-          try{sessionStorage.removeItem('sekka.pendingRole');}catch{/* private mode */}
+          try{
+           sessionStorage.removeItem('sekka.pendingRole');
+           sessionStorage.removeItem('sekka.postAuthPath');
+          }catch{/* private mode */}
+          const callbackUrl=new URL(location.href);
+          if(callbackUrl.searchParams.has('oauth_role')){
+            callbackUrl.searchParams.delete('oauth_role');
+            history.replaceState(history.state,'',callbackUrl.pathname+callbackUrl.search+callbackUrl.hash);
+          }
         }
       }
     }
@@ -231,7 +246,18 @@ export default function MobileApp(){
    theme={p.theme} onTheme={p.setThemePreference} go={captainGo} onJourneyGo={captainOnboardingGo}
    onJourneyBack={()=>navigate({tab:'home'})} profile={null} signedIn={Boolean(userId)}
    rows={[]} busy={false} error="" onRefresh={()=>{}} onEnrolled={()=>setCaptain(true)}/>;
- const signOut=async()=>{if(!client)return;const {error:e}=await client.auth.signOut();if(e)setError(e.message);else navigate({tab:'login',view:4},{replace:true});};
+ const signOut=async()=>{
+  if(!client)return;
+  const {error:e}=await client.auth.signOut();
+  if(e){setError(t('تعذّر تسجيل الخروج. حاول تاني.','Unable to sign out. Please try again.'));return;}
+  setUserId(null);setCaptain(false);setCaptainApproved(false);setAdmin(false);
+  setSelectedRole('rider');
+  try{
+   sessionStorage.removeItem('sekka.pendingRole');
+   sessionStorage.removeItem('sekka.postAuthPath');
+  }catch{/* Sign-out still clears the Supabase session. */}
+  navigate({tab:'home'},{replace:true});
+ };
  const onboardingGo=(n:number)=>{
   // The signed-out onboarding sequence is Welcome (root) -> Role -> Google.
   // Both the in-app Back control and browser Back can return to Welcome.
@@ -299,7 +325,7 @@ export default function MobileApp(){
 
    {tab==='captain-onboarding'&&(userId?approvedCaptainOnboarding(captainStep):<Onboarding production screen={4} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={selectRole}/>)}
    {tab==='routes'&&(captain&&captainApproved?<CaptainRoutes production screen={internalScreen(captainScreen)} theme={p.theme} onTheme={p.setThemePreference} go={captainGo}/> :<section className="sekka-mobile-card"><h1>{t('خطوط الكابتن','Captain routes')}</h1><p>{captain?t('حساب الكابتن لم يُعتمد بعد.','Captain access is not approved yet.'):t('ابدأ تسجيل الكابتن لمتابعة طلب الاعتماد.','Start Captain enrollment to continue.')}</p><button className="sekka-action" onClick={()=>captain?navigate({tab:'captain-onboarding',view:40}):startCaptainJourney()}>{captain?t('متابعة حالة الطلب','View application status'):t('بدء تسجيل الكابتن','Start Captain enrollment')}</button></section>)}
-   {tab==='bookings'&&(userId?<LiveBookings mode="rider"/>:<section className="sekka-mobile-card"><h1>{t('حجوزاتي','My bookings')}</h1><p>{t('سجّل دخولك علشان تشوف حجوزاتك الحقيقية.','Sign in to view your bookings.')}</p><button className="sekka-action" onClick={()=>navigate({tab:'login',view:4})}>{t('تسجيل الدخول','Sign in')}</button></section>)}
+   {tab==='bookings'&&(userId?<LiveBookings mode="rider" onFindRide={()=>navigate({tab:'search',view:9})}/>:<section className="sekka-mobile-card"><h1>{t('حجوزاتي','My bookings')}</h1><p>{t('سجّل دخولك علشان تشوف حجوزاتك الحقيقية.','Sign in to view your bookings.')}</p><button className="sekka-action" onClick={()=>navigate({tab:'login',view:4})}>{t('تسجيل الدخول','Sign in')}</button></section>)}
    {tab==='notifications'&&(userId?<LiveNotifications/>:<section className="sekka-mobile-card"><h1>{t('الإشعارات','Notifications')}</h1><button className="sekka-action" onClick={()=>navigate({tab:'login',view:4})}>{t('تسجيل الدخول','Sign in')}</button></section>)}
    {tab==='admin'&&(!ready?<p role="status">{t('بنتأكد من صلاحية الإدارة…','Checking Admin authorization…')}</p>:admin?<AdminDashboard production screen={internalScreen(adminScreen)} theme={p.theme}
       onTheme={p.setThemePreference} go={id=>{const n=publicScreen(id);if(n>=62&&n<=73)navigate({tab:'admin',view:n as 62|63|64|65|66|67|68|69|70|71|72|73});}}/>:<section className="sekka-mobile-card"><h1>{t('غير مسموح','Access restricted')}</h1><p>{adminLookupError||t('لوحة الإدارة للحسابات المصرح لها فقط.','The admin dashboard requires authorization.')}</p>

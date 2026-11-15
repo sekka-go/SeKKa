@@ -5,6 +5,7 @@ import {readFileSync} from 'node:fs';
 const read=(path)=>readFileSync(new URL(path,import.meta.url),'utf8');
 const migration=read('../migrations/20261115150000_v31_mandatory_captain_registration.sql');
 const enrollment=read('../../web/src/v2/CaptainApplicationLive.tsx');
+const captainValidation=read('../../web/src/v2/captainValidation.ts');
 const vehicles=read('../../web/src/v2/LiveVehicles.tsx');
 const routeDraft=read('../../web/src/v2/LiveCaptainDraft.tsx');
 const admin=read('../../web/src/v2/AdminApprovalLive.tsx');
@@ -89,16 +90,25 @@ test('booking locks the physical vehicle and accounts for reservations across al
 });
 
 test('Captain screens require all fields, preserve explicit zero, and distinguish unverified phone',()=>{
- assert.match(enrollment,/years!==''&&Number\.isInteger\(Number\(years\)\)&&Number\(years\)>=0/);
- assert.match(enrollment,/phone.replace\(\[\/\\s-\]\/g,' '\)|phone_number/);
+ assert.match(enrollment,/captainPersonalErrors/);
+ assert.match(enrollment,/normalizeNumerals/);
+ assert.match(captainValidation,/Number\.isInteger\(number\) \|\| number < 0 \|\| number > 80/);
+ assert.match(enrollment,/captain-fullName-error/);
+ assert.match(enrollment,/captain-phone-error/);
+ assert.match(enrollment,/captain-professionalBackground-error/);
+ assert.match(enrollment,/captain-experienceYears-error/);
  assert.match(enrollment,/unverified/i);
  for(const phrase of ['Full name','Egyptian mobile number','Professional background',
   'Years of experience','Required documents','License plate number'])
   assert.match(enrollment,new RegExp(phrase,'i'));
  assert.doesNotMatch(enrollment,/optional|اختياري|Planned seats|المقاعد المقترحة/i);
- assert.match(enrollment,/disabled=\{busy\|\|!personalComplete\}/);
- assert.match(enrollment,/disabled=\{busy\|\|!vehicleComplete\}/);
+ assert.match(enrollment,/next&&Object\.keys\(fieldErrors\)\.length>0/);
+ assert.match(enrollment,/onClick=\{\(\)=>void savePersonal\(true\)\}/);
+ assert.match(enrollment,/onClick=\{\(\)=>void saveVehicle\(true\)\}/);
  assert.match(enrollment,/disabled=\{busy\|\|!hasDocuments\}/);
+ assert.match(enrollment,/readSavedApplication/);
+ assert.match(enrollment,/DRAFT_SAVE_NOT_VERIFIED/);
+ assert.match(enrollment,/loadError&&!loading/);
  assert.match(approvalTest,/real Google-authenticated Captain JWT/);
  assert.match(approvalTest,/Explicit zero years must persist/);
  assert.match(approvalTest,/Submission without required documents/);
