@@ -7,7 +7,7 @@ test("public planner, real empty results, and protected wallet", async ({
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  await page.goto("/?screen=8");
+  await page.goto("/?screen=8&preview=phase2");
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await page.getByLabel("من أين؟", { exact: true }).selectOption("المعادي");
   await page.getByLabel("إلى أين؟", { exact: true }).selectOption("التجمع");
