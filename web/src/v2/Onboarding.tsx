@@ -3,6 +3,7 @@ import { translate } from "./translations";
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import "./onboarding.css";
+import { client } from "./api";
 export type Appearance = "dark" | "light";
 type Crop = [number, number, number, number];
 // Original paired references are preserved. CSS windows show ONLY illustration/logo regions.
@@ -429,6 +430,17 @@ export default function Onboarding({
               {t("متابعة")}<Arrow />
             </button>
           </>
+        ) : (id === 4 || id === 5) && !new URLSearchParams(location.search).has("preview") ? (
+          <section className="phase-google-auth">
+            <h1 className="phase-title">{language === "en" ? "Sign in with Google" : "الدخول بجوجل"}</h1>
+            <p className="phase-subtitle">{language === "en" ? "Phone login and OTP are temporarily unavailable." : "تسجيل الدخول بالموبايل وOTP مؤجل مؤقتًا."}</p>
+            <button className="phase-primary" disabled={!client} onClick={async () => {
+              if (!client) return;
+              const {error}=await client.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin+location.pathname+"?screen=8"}});
+              if (error) window.alert(error.message);
+            }}>{language === "en" ? "Continue with Google" : "المتابعة باستخدام جوجل"}</button>
+            {!client && <p role="status">{language === "en" ? "Supabase public configuration is not ready." : "إعداد الاتصال العام بـSupabase لم يكتمل."}</p>}
+          </section>
         ) : id === 4 ? (
           <>
             <h1 className="phase-title">{heading}</h1>
