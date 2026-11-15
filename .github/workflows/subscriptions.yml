@@ -29,6 +29,8 @@ jobs:
       - run: npm run test:structure
       - run: npm run build
       - run: npx playwright install --with-deps chromium
+      - name: Approved passenger staging-safe smoke (360/390 AR/EN light/dark)
+        run: npx playwright test e2e/v31-approved-passenger-journey.spec.ts
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4
         if: always()
