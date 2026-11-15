@@ -10,3 +10,7 @@ createRoot(root).render(
     <PreferencesProvider>{window.location.pathname.startsWith("/dev/screens")?<SubscriptionApp/>:<MobileApp/>}</PreferencesProvider>
   </React.StrictMode>,
 );
+
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load',()=>{void navigator.serviceWorker.register('/sw.js').catch(()=>{ /* Optional offline asset cache. */ });});
+}
