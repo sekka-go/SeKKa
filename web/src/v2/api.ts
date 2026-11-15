@@ -8,9 +8,11 @@ function frontendClient(): SupabaseClient | null {
 }
 export const client = frontendClient();
 export async function api<T = unknown>(
-  _operation: string,
-  _payload: Record<string, unknown> = {},
+  operation: string,
+  ...args: [Record<string, unknown>?]
 ): Promise<T> {
+  void operation;
+  void args;
   // Do not let v3.1 screens mutate legacy v2 database tables or RPCs.
   throw new Error("V31_DOMAIN_BACKEND_NOT_READY");
 }
