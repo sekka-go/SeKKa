@@ -4,12 +4,27 @@ import {useEffect,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
 
-type Route={id:string;title:string;category:string;seat_capacity:number;period:string;direction:string;outbound_time:string|null;return_time:string|null;price_egp:number;return_supported:boolean};
-type Stop={id:string;route_id:string;area_id:number;position:number;name:string;pickup_allowed:boolean;dropoff_allowed:boolean};
+export type Route={id:string;title:string;category:string;seat_capacity:number;period:string;direction:string;outbound_time:string|null;return_time:string|null;price_egp:number;return_supported:boolean};
+export type Stop={id:string;route_id:string;area_id:number;position:number;name:string;pickup_allowed:boolean;dropoff_allowed:boolean};
 type Area={id:number;name_ar:string;name_en:string};
-type Match={route:Route;from:Stop;to:Stop;reverse:boolean};
-export default function LiveRouteSearch({origin,destination,outbound,returnTime,period,categories}:{
- origin:string;destination:string;outbound:string;returnTime:string;period:string;categories:string[];
+export type LiveSelection={route:Route;from:Stop;to:Stop;reverse:boolean;stops:Stop[]};
+type Match=LiveSelection;
+export async function fetchPublishedSelection(routeId:string,fromId:string,toId:string,reverse:boolean):Promise<LiveSelection>{
+ if(!client)throw Error('BACKEND_NOT_CONFIGURED');
+ const {data:route,error:routeError}=await client.from('v31_routes').select('id,title,category,seat_capacity,period,direction,outbound_time,return_time,price_egp,return_supported').eq('id',routeId).eq('status','published').maybeSingle();
+ if(routeError)throw routeError;
+ if(!route)throw Error('ROUTE_NOT_AVAILABLE');
+ const {data:rows,error:stopsError}=await client.from('v31_route_stops').select('id,route_id,area_id,position,name,pickup_allowed,dropoff_allowed').eq('route_id',routeId).order('position');
+ if(stopsError)throw stopsError;
+ const stops=(rows||[]) as Stop[];
+ const ordered=reverse?[...stops].reverse():stops;
+ const from=ordered.find(s=>s.id===fromId),to=ordered.find(s=>s.id===toId);
+ if(!from||!to||ordered.indexOf(from)>=ordered.indexOf(to)||
+   !(reverse?route.return_supported&&route.direction!=='outbound'&&from.dropoff_allowed&&to.pickup_allowed:route.direction!=='return'&&from.pickup_allowed&&to.dropoff_allowed))throw Error('INVALID_ROUTE_STOPS');
+ return {route:route as Route,from,to,reverse,stops};
+}
+export default function LiveRouteSearch({origin,destination,outbound,returnTime,period,categories,onSelect}:{
+ origin:string;destination:string;outbound:string;returnTime:string;period:string;categories:string[];onSelect?:(selection:LiveSelection)=>void;
 }){
  const {language}=usePreferences(),en=language==='en';
  const t=(ar:string,english:string)=>en?english:ar;
@@ -68,7 +83,7 @@ export default function LiveRouteSearch({origin,destination,outbound,returnTime,
        const s=ordered[i];
        if(s.area_id!==fromId||(candidate.reverse?!s.dropoff_allowed:!s.pickup_allowed))continue;
        const next=ordered.slice(i+1).find(d=>d.area_id===toId&&(candidate.reverse?d.pickup_allowed:d.dropoff_allowed));
-       if(next){matched.push({route,from:s,to:next,reverse:candidate.reverse});break;}
+       if(next){matched.push({route,from:s,to:next,reverse:candidate.reverse,stops:sequence});break;}
       }
      }
     }
@@ -87,14 +102,16 @@ export default function LiveRouteSearch({origin,destination,outbound,returnTime,
   {!loading&&!error&&items.length===0&&origin&&destination&&<LiveTripRequests mode="rider" search={{origin,destination,outbound,period}}/>}
   {bookingError&&<p role="alert">{bookingError}</p>}
   {bookingSuccess&&<p role="status">{bookingSuccess}</p>}
-  {items.map(({route,from,to,reverse})=><article className="d-box" key={route.id+String(reverse)}>
+  {items.map((selection)=><article className="d-box d-result" key={selection.route.id+String(selection.reverse)+selection.from.id+selection.to.id}>{(()=>{const {route,from,to,reverse}=selection;return <>
    <h2>{route.title}</h2>
    <p>{from.name} ← {to.name}</p>
-   <p>{route.category} · {route.seat_capacity} {t('مقاعد إجمالية','total seats')} · {route.price_egp} {t('جنيه','EGP')}</p>
+   <p>{route.category} · {route.seat_capacity} {t('مقاعد إجمالية — التوافر يتأكد عند الحجز','total capacity — availability checked on booking')} · {route.price_egp} {t('جنيه','EGP')}</p>
+   {onSelect&&<button type="button" className="d-offer-select" onClick={()=>onSelect(selection)}>{t('عرض تفاصيل الخط','View route details')}</button>}
+   {!onSelect&&<>
    <p>{reverse?t('العودة','Return'):t('الذهاب','Outbound')} · {(reverse?route.return_time:route.outbound_time)?.slice(0,5)} · {period==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')}</p>
    <label>{t('المقاعد المطلوبة','Seats to reserve')} <input type="number" min={1} max={route.seat_capacity} value={seatCounts[route.id]||1} onChange={e=>setSeatCounts(v=>({...v,[route.id]:Number(e.target.value)}))}/></label>
    <button type="button" disabled={bookingBusy!==null||!Number.isInteger(seatCounts[route.id]||1)||(seatCounts[route.id]||1)<1||(seatCounts[route.id]||1)>route.seat_capacity} onClick={()=>void book(route.id,from.id,to.id,reverse)}>{bookingBusy===route.id?t('جارٍ حجز المقاعد…','Reserving seats…'):t('احجز مقاعد حقيقية','Reserve seats')}</button>
-   <p>{t('الحجز يسجل قيد الانتظار، من غير OTP أو دفع.','Reservation is saved as pending, without OTP or payment.')}</p>
-  </article>)}
+   <p>{t('الحجز يسجل قيد الانتظار، من غير OTP أو دفع.','Reservation is saved as pending, without OTP or payment.')}</p></>}
+  </>})()}</article>)}
  </section>;
 }
