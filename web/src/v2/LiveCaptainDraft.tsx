@@ -61,7 +61,7 @@ export default function LiveCaptainDraft(){
    setBusy(true);
    try{
      await enrollCaptain();
-     const {error:routeError}=await client.rpc('v31_create_route_draft',{
+     const {data:routeId,error:routeError}=await client.rpc('v31_create_route_draft',{
        p_title:title.trim(),p_category:category,p_capacity:capacity,
        p_direction:direction,p_period:period,
        p_outbound:direction==='return'?null:departure,
@@ -72,6 +72,16 @@ export default function LiveCaptainDraft(){
        }))
      });
      if(routeError)throw routeError;
+     if(typeof routeId!=='string')throw Error('DRAFT_NOT_CONFIRMED');
+     const [{data:saved,error:savedError},{data:savedStops,error:stopsError}]=await Promise.all([
+       client.from('v31_routes').select('id,status,seat_capacity,price_egp').eq('id',routeId).eq('captain_id',uid).maybeSingle(),
+       client.from('v31_route_stops').select('id,area_id,name,position').eq('route_id',routeId).order('position')
+     ]);
+     if(savedError||stopsError)throw Error(savedError?.message||stopsError?.message||'DRAFT_READ_FAILED');
+     if(!saved||saved.status!=='draft'||saved.seat_capacity!==capacity||saved.price_egp!==Number(price)||
+        savedStops?.length!==stops.length||savedStops.some((s,i)=>s.area_id!==stops[i].areaId||s.position!==i||s.name!==stops[i].name)){
+       throw Error('DRAFT_PERSISTENCE_NOT_VERIFIED');
+     }
      setMessage(t('اتحفظت مسودة الخط الحقيقية بنجاح. النشر متوقف لحين اعتماد الكابتن وتفعيل التحقق من المسار.','Your real route draft was saved. Publishing is disabled pending captain approval and server route validation.'));
      setStops([]);setTitle('');setPrice('');
    }catch(e){setError(e instanceof Error?e.message:String(e));}
