@@ -3,6 +3,7 @@ import {useEffect,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
 import LiveHome from './LiveHome';
+import LiveProfile from './LiveProfile';
 import LiveRouteSearch from './LiveRouteSearch';
 import LiveVehicles from './LiveVehicles';
 import LiveCaptainRouteList from './LiveCaptainRouteList';
@@ -12,13 +13,14 @@ import LiveTripRequests from './LiveTripRequests';
 import LiveNotifications from './LiveNotifications';
 import LiveAdminOverview from './LiveAdminOverview';
 import './mobile-app.css';
-type Tab='home'|'search'|'routes'|'bookings'|'notifications'|'admin'|'login';
-const validTabs:Tab[]=['home','search','routes','bookings','notifications','admin','login'];
+type Tab='home'|'search'|'routes'|'bookings'|'notifications'|'admin'|'login'|'profile';
+const validTabs:Tab[]=['home','search','routes','bookings','notifications','admin','login','profile'];
 const tabFromUrl=():Tab=>{const key=new URL(location.href).searchParams.get('tab') as Tab;return validTabs.includes(key)?key:'home';};
 export default function MobileApp(){
  const p=usePreferences(),en=p.language==='en',t=(ar:string,english:string)=>en?english:ar;
  const [tab,setTab]=useState<Tab>(tabFromUrl),[userId,setUserId]=useState<string|null>(null),[captain,setCaptain]=useState(false),[admin,setAdmin]=useState(false),[ready,setReady]=useState(false),[error,setError]=useState('');
  const [origin,setOrigin]=useState(''),[destination,setDestination]=useState(''),[outbound,setOutbound]=useState('07:30'),[returnTime,setReturnTime]=useState(''),[period,setPeriod]=useState('monthly'),[category,setCategory]=useState('PRIME'),[search,setSearch]=useState(false);
+ const [areasError,setAreasError]=useState('');
  const [areas,setAreas]=useState<{id:number;name_ar:string;name_en:string}[]>([]);
  useEffect(()=>{const back=()=>setTab(tabFromUrl());addEventListener('popstate',back);return()=>removeEventListener('popstate',back);},[]);
  useEffect(()=>{let active=true;
@@ -38,7 +40,7 @@ export default function MobileApp(){
   const sub=client?.auth.onAuthStateChange((_event,session)=>{void read(session);});
   return()=>{active=false;sub?.data.subscription.unsubscribe();};
  },[]);
- useEffect(()=>{if(!client)return;void client.from('v31_service_areas').select('id,name_ar,name_en').eq('active',true).order('id').then(({data})=>{if(data)setAreas(data);});},[]);
+ useEffect(()=>{if(!client)return;void client.from('v31_service_areas').select('id,name_ar,name_en').eq('active',true).order('id').then(({data,error:e})=>{if(e)setAreasError(e.message);else if(data){setAreas(data);setAreasError('');}});},[]);
  const navigate=(next:Tab)=>{setTab(next);const u=new URL(location.href);u.searchParams.delete('screen');u.searchParams.delete('preview');u.searchParams.delete('inspect');if(next==='home')u.searchParams.delete('tab');else u.searchParams.set('tab',next);history.pushState({},'',u.pathname+u.search);window.scrollTo(0,0);};
  const signIn=async()=>{if(!client){setError(t('تعذّر إعداد تسجيل الدخول.','Sign-in is not configured.'));return;}
   const redirect=new URL(location.origin+'/');redirect.searchParams.set('oauth_theme',p.themePreference);redirect.searchParams.set('oauth_language',p.languagePreference);
@@ -46,7 +48,7 @@ export default function MobileApp(){
   if(e)setError(e.message);
  };
  const signOut=async()=>{if(!client)return;const {error:e}=await client.auth.signOut();if(e)setError(e.message);else navigate('home');};
- const onLegacyNavigate=(n:number)=>navigate(n===4?'login':n===9?'search':n===42?'routes':n===62?'admin':'home');
+ const onLegacyNavigate=(n:number)=>navigate(n===4?'login':n===9?'search':n===42?'routes':n===62?'admin':n===34?'profile':n===32?'notifications':n===27?'bookings':'home');
  return <div className="sekka-mobile" dir={en?'ltr':'rtl'}>
   <a className="sekka-skip" href="#sekka-content">{t('تخطي للمحتوى','Skip to content')}</a>
   <header className="sekka-mobile-header">
@@ -59,7 +61,8 @@ export default function MobileApp(){
    {error&&<div className="sekka-mobile-alert" role="alert">{error}<button onClick={()=>setError('')}>{t('إغلاق','Dismiss')}</button></div>}
    {tab==='home'&&<LiveHome onNavigate={onLegacyNavigate}/>}
    {tab==='login'&&<section className="sekka-mobile-card"><h1>{t('سجّل دخولك لسِكّة','Sign in to seKKa')}</h1><p>{t('سجّل بجوجل علشان تتابع خطوطك وحجوزاتك الحقيقية.','Use Google to access your routes and real bookings.')}</p>{!userId?<button className="sekka-action" disabled={!client} onClick={()=>void signIn()}>{t('المتابعة باستخدام جوجل','Continue with Google')}</button>:<><p>{t('أنت مسجّل دخولك بالفعل.','You are signed in.')}</p><button className="sekka-action" onClick={()=>navigate('home')}>{t('روح للرئيسية','Go home')}</button><button onClick={()=>void signOut()}>{t('تسجيل الخروج','Sign out')}</button></>}</section>}
-   {tab==='search'&&<section className="sekka-mobile-card"><h1>{t('دور على خط','Find a route')}</h1><p>{t('اختار مكانك وميعادك عشان تشوف الخطوط الحقيقية.','Choose your stops and schedule to find real routes.')}</p><div className="sekka-fields">
+   {tab==='profile'&&(userId?<section className="sekka-mobile-card"><LiveProfile/><button type="button" onClick={()=>void signOut()}>{t('تسجيل الخروج','Sign out')}</button></section>:<section className="sekka-mobile-card"><h1>{t('حسابي','My profile')}</h1><p>{t('سجّل بجوجل علشان تكمل بياناتك.','Sign in with Google to complete your profile.')}</p><button className="sekka-action" onClick={()=>navigate('login')}>{t('تسجيل الدخول بجوجل','Sign in with Google')}</button></section>)}
+   {tab==='search'&&<section className="sekka-mobile-card"><h1>{t('دور على خط','Find a route')}</h1><p>{t('اختار مكانك وميعادك عشان تشوف الخطوط الحقيقية.','Choose your stops and schedule to find real routes.')}</p>{areasError&&<p role="alert">{areasError}</p>}<div className="sekka-fields">
     <label>{t('من','From')}<select value={origin} onChange={e=>{setOrigin(e.target.value);setSearch(false);}}><option value="">{t('اختار المنطقة','Select area')}</option>{areas.map(a=><option key={a.id} value={a.name_ar}>{en?a.name_en:a.name_ar}</option>)}</select></label>
     <label>{t('إلى','To')}<select value={destination} onChange={e=>{setDestination(e.target.value);setSearch(false);}}><option value="">{t('اختار المنطقة','Select area')}</option>{areas.map(a=><option key={a.id} value={a.name_ar}>{en?a.name_en:a.name_ar}</option>)}</select></label>
     <label>{t('وقت الذهاب','Departure time')}<input type="time" value={outbound} onChange={e=>{setOutbound(e.target.value);setSearch(false);}}/></label>
@@ -74,7 +77,7 @@ export default function MobileApp(){
    {tab==='admin'&&(admin?<LiveAdminOverview/>:<section className="sekka-mobile-card"><h1>{t('غير مسموح','Access restricted')}</h1><p>{t('لوحة الإدارة للحسابات المصرح لها فقط.','The admin dashboard requires authorization.')}</p><button onClick={()=>navigate('home')}>{t('العودة','Back')}</button></section>)}
   </main>
   <nav className="sekka-bottom-nav" aria-label={t('التنقل الرئيسي','Main navigation')}>
-   {([['home','⌂','الرئيسية','Home'],['search','⌕','بحث','Search'],[captain? 'routes':'bookings','▦',captain?'خطوطي':'حجوزاتي',captain?'Routes':'Bookings'],['notifications','♧','الإشعارات','Alerts'],[userId?'login':'login','◉','حسابي','Account']] as [Tab,string,string,string][]).map(([id,icon,ar,english])=><button key={id} aria-current={tab===id?'page':undefined} onClick={()=>navigate(id)}><span aria-hidden="true">{icon}</span><small>{t(ar,english)}</small></button>)}
+   {([['home','⌂','الرئيسية','Home'],['search','⌕','بحث','Search'],[captain? 'routes':'bookings','▦',captain?'خطوطي':'حجوزاتي',captain?'Routes':'Bookings'],['notifications','♧','الإشعارات','Alerts'],['profile','◉','حسابي','Account']] as [Tab,string,string,string][]).map(([id,icon,ar,english])=><button key={id} aria-current={tab===id?'page':undefined} onClick={()=>navigate(id)}><span aria-hidden="true">{icon}</span><small>{t(ar,english)}</small></button>)}
   </nav>
  </div>;
 }
