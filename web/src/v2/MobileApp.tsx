@@ -62,7 +62,31 @@ export default function MobileApp(){
     client.rpc('v31_is_admin')
    ]);
    if(!active)return;
-   setUserId(session.user.id);setCaptain(Boolean(captainRow));setAdmin(adminAccess===true);setReady(true);
+   let enrolled=Boolean(captainRow);
+   // A role is written only after the user explicitly continued from account choice.
+   // Existing staging accounts are updated in place, never deleted or recreated.
+   let pendingRole:string|null=null;
+   try{pendingRole=sessionStorage.getItem('sekka.pendingRole');}catch{/* no session storage */}
+   if(pendingRole==='rider'||pendingRole==='captain'){
+     const {data:profile,error:profileError}=await client.from('v31_profiles').select('user_id,role_preference').eq('user_id',session.user.id).maybeSingle();
+     if(profileError){if(active)setError(profileError.message);}
+     else{
+       const {error:saveError}=profile
+         ?await client.from('v31_profiles').update({role_preference:pendingRole}).eq('user_id',session.user.id)
+         :await client.from('v31_profiles').insert({user_id:session.user.id,role_preference:pendingRole,display_name:session.user.user_metadata?.full_name||session.user.email||''});
+       if(saveError){if(active)setError(saveError.message);}
+       else{
+         if(pendingRole==='captain'&&!enrolled){
+           const {error:enrollError}=await client.from('v31_captain_profiles').insert({user_id:session.user.id,approval_status:'pending'});
+           if(enrollError&&enrollError.code!=='23505'){if(active)setError(enrollError.message);}
+           else enrolled=true;
+         }
+         try{sessionStorage.removeItem('sekka.pendingRole');}catch{/* no session storage */}
+       }
+     }
+   }
+   if(!active)return;
+   setUserId(session.user.id);setCaptain(enrolled);setAdmin(adminAccess===true);setReady(true);
   }
   void read();
   const sub=client?.auth.onAuthStateChange((_event,session)=>{queueMicrotask(()=>{if(active)void read(session);});});
@@ -104,7 +128,7 @@ export default function MobileApp(){
   if(n===8){navigate('home');return;}
   // Legacy SMS screens are intentionally unreachable outside /dev/screens.
   if(n===5||n===7)n=6;
-  if(n>=1&&n<=6){setOnboardingScreen(n);navigate('login');}
+  if(n>=1&&n<=6){if(n===4&&onboardingScreen===3){try{sessionStorage.setItem('sekka.pendingRole',selectedRole);}catch{/* no session storage */}}setOnboardingScreen(n);navigate('login');}
  };
  const onLegacyNavigate=(n:number)=>{if(n===4)setOnboardingScreen(4);navigate(n===4?'login':n===9?'search':n===42?'routes':n===62?'admin':n===34?'profile':n===32?'notifications':n===27?'bookings':'home');};
  return <div className="sekka-mobile" dir={en?'ltr':'rtl'}>
