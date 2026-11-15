@@ -103,7 +103,7 @@ for(const width of widths){
       const x=Math.max(0,Math.min(a.right,b.right)-Math.max(a.left,b.left));
       const y=Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top));
       if(x*y>4)overlaps.push([buttons[i].textContent,buttons[j].textContent].map(t=>
-       (t||'').trim().replace(/\\s+/g,' ').slice(0,45)).join(' / '));
+       (t||'').trim().replace(/\s+/g,' ').slice(0,45)).join(' / '));
      }
      return overlaps;
     });
