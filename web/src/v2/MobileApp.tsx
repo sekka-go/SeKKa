@@ -1,3 +1,4 @@
+import type {Session} from '@supabase/supabase-js';
 import {useEffect,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
@@ -21,9 +22,9 @@ export default function MobileApp(){
  const [areas,setAreas]=useState<{id:number;name_ar:string;name_en:string}[]>([]);
  useEffect(()=>{const back=()=>setTab(tabFromUrl());addEventListener('popstate',back);return()=>removeEventListener('popstate',back);},[]);
  useEffect(()=>{let active=true;
-  async function read(){
+  async function read(supplied?:Session|null){
    if(!client){if(active)setReady(true);return;}
-   const {data:{session}}=await client.auth.getSession();
+   const session=supplied===undefined?(await client.auth.getSession()).data.session:supplied;
    if(!active)return;
    if(!session){setUserId(null);setCaptain(false);setAdmin(false);setReady(true);return;}
    const [{data:captainRow},{data:adminAccess}]=await Promise.all([
@@ -34,7 +35,7 @@ export default function MobileApp(){
    setUserId(session.user.id);setCaptain(Boolean(captainRow));setAdmin(adminAccess===true);setReady(true);
   }
   void read();
-  const sub=client?.auth.onAuthStateChange(()=>{void read();});
+  const sub=client?.auth.onAuthStateChange((_event,session)=>{void read(session);});
   return()=>{active=false;sub?.data.subscription.unsubscribe();};
  },[]);
  useEffect(()=>{if(!client)return;void client.from('v31_service_areas').select('id,name_ar,name_en').eq('active',true).order('id').then(({data})=>{if(data)setAreas(data);});},[]);
