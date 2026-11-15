@@ -11,6 +11,7 @@ import type { Line } from "./Discovery";
 import type { Booking, Quote, Route } from "./api";
 import {client} from "./api";
 import {reserveSeatsWithStops,cancelPendingBooking} from "./reservations";
+import {clearReservationAttempt,reservationIdempotencyKey} from "./reservationAttempt";
 import {
   quote as calculateQuote,
   addDays,
@@ -1083,12 +1084,7 @@ export function V31BookingJourney({offer,routeId,pickupId,dropoffId,reverse,book
      const {data:{user},error:authError}=await client.auth.getUser();
      if(authError||!user){onLogin();return;}
      const signature=[user.id,routeId,pickupId,dropoffId,reverse?'return':'outbound',seats].join(':');
-     // The same attempted reservation keeps its key across network failure/retry.
-     const cacheKey='sekka.v31.reservationAttempt';
-     let attempt:{signature:string;idempotency:string}|null=null;
-     try{attempt=JSON.parse(sessionStorage.getItem(cacheKey)||'null');}catch{attempt=null;}
-     const idempotency=attempt?.signature===signature?attempt.idempotency:crypto.randomUUID();
-     sessionStorage.setItem(cacheKey,JSON.stringify({signature,idempotency}));
+     const idempotency=reservationIdempotencyKey(sessionStorage,signature);
      const {bookingId:id}=await reserveSeatsWithStops(routeId,seats,idempotency,pickupId,dropoffId,reverse);
      // The RPC response alone is not a visual confirmation. Verify an owned row.
      const {data:row,error:readError}=await client.from('v31_bookings')
@@ -1096,7 +1092,7 @@ export function V31BookingJourney({offer,routeId,pickupId,dropoffId,reverse,book
        .eq('id',id).eq('rider_id',user.id).maybeSingle();
      if(readError)throw readError;
      if(!row||row.route_id!==routeId||row.seats!==seats||row.pickup_stop_id!==pickupId||row.dropoff_stop_id!==dropoffId||!['pending','confirmed'].includes(row.status))throw Error('BOOKING_NOT_VERIFIED');
-     sessionStorage.removeItem(cacheKey);
+     clearReservationAttempt(sessionStorage,signature);
      onBooked(id);
    }catch(e){setError(e instanceof Error?e.message:String(e));}
    finally{setBusy(false);}
