@@ -1,3 +1,4 @@
+import LiveHome from "./LiveHome";
 import CaptainRoutes, { captainRouteScreens } from "./CaptainRoutes";
 import { usePreferences } from "./preferences";
 import AdminDashboard, { adminScreens } from "./AdminDashboard";
@@ -1662,6 +1663,10 @@ export default function SubscriptionApp() {
         </>
       );
     return <Empty />;
+  }
+  // Authenticated, database-backed home replaces the old preview dashboard.
+  if (screen===8 && !new URLSearchParams(location.search).has("preview") && !new URLSearchParams(location.search).has("inspect")) {
+    return <div className={`app live-app ${theme}`}><LiveHome onNavigate={go}/></div>;
   }
   // Check prerequisites before delegating to phase-specific screen components.
   // These routes do not call content(), so a content-only guard leaves dead ends.
