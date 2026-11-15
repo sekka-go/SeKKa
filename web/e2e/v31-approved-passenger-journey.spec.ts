@@ -37,3 +37,17 @@ test('approved search and details preserve history navigation',async({page})=>{
  await page.goBack();
  await expect(page.locator('.d-screen-9')).toBeVisible();
 });
+
+test('unknown booking deep link never renders a previously cached reservation',async({page})=>{
+ await page.goto('/?tab=booking&booking=00000000-0000-4000-8000-000000000001');
+ await expect(page.locator('.b-screen-16')).toBeVisible();
+ await expect(page.getByText(/Confirmed by server|مؤكد من الخادم/)).toHaveCount(0);
+ await expect(page.locator('.b-summary')).toHaveCount(0);
+ await expect(page.locator('.phase-review-bar,.phase-preview-note')).toHaveCount(0);
+});
+
+test('unauthenticated passenger cannot reach captain vehicle or publishing controls',async({page})=>{
+ await page.goto('/?tab=routes');
+ await expect(page.locator('.live-vehicles,.live-route-list,.live-route-form')).toHaveCount(0);
+ await expect(page.getByRole('button',{name:/Review and publish|راجع وانشر/})).toHaveCount(0);
+});
