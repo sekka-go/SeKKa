@@ -430,17 +430,6 @@ export default function Onboarding({
               {t("متابعة")}<Arrow />
             </button>
           </>
-        ) : (id === 4 || id === 5) && !new URLSearchParams(location.search).has("preview") && !new URLSearchParams(location.search).has("inspect") ? (
-          <section className="phase-google-auth">
-            <h1 className="phase-title">{language === "en" ? "Sign in with Google" : "الدخول بجوجل"}</h1>
-            <p className="phase-subtitle">{language === "en" ? "Phone login and OTP are temporarily unavailable." : "تسجيل الدخول بالموبايل وOTP مؤجل مؤقتًا."}</p>
-            <button className="phase-primary" disabled={!client} onClick={async () => {
-              if (!client) return;
-              const {error}=await client.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin+location.pathname+"?screen=8&oauth_theme="+encodeURIComponent(themePreference)+"&oauth_language="+encodeURIComponent(languagePreference)}});
-              if (error) window.alert(error.message);
-            }}>{language === "en" ? "Continue with Google" : "المتابعة باستخدام جوجل"}</button>
-            {!client && <p role="status">{language === "en" ? "Supabase public configuration is not ready." : "إعداد الاتصال العام بـSupabase لم يكتمل."}</p>}
-          </section>
         ) : id === 4 ? (
           <>
             <h1 className="phase-title">{heading}</h1>
@@ -479,6 +468,13 @@ export default function Onboarding({
             <button className="phase-primary phase-send" disabled={!validPhone} onClick={issueDemoCode}>
               {t("إنشاء كود تجريبي")}<Arrow />
             </button>
+            <div className="phase-auth-or" aria-label={language === "en" ? "Or" : "أو"}><span>{language === "en" ? "Or" : "أو"}</span></div>
+            <button type="button" className="phase-google-secondary" disabled={!client} onClick={async () => {
+              if (!client) return;
+              const {error}=await client.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin+location.pathname+"?screen=8&oauth_theme="+encodeURIComponent(themePreference)+"&oauth_language="+encodeURIComponent(languagePreference)}});
+              if (error) window.alert(error.message);
+            }}>{language === "en" ? "Continue with Google" : "المتابعة باستخدام جوجل"}</button>
+            {!client && <p className="phase-google-config-error" role="status">{language === "en" ? "Google login is temporarily unavailable." : "تسجيل الدخول بجوجل غير متاح مؤقتًا."}</p>}
           </>
         ) : id === 5 ? (
           <>
