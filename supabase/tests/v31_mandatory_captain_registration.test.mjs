@@ -109,7 +109,7 @@ test('mandatory onboarding preserves publishing and idempotent retries',()=>{
  const selectFunction=(name)=>{
   const start=migration.indexOf('CREATE OR REPLACE FUNCTION public.'+name+'(');
   assert.ok(start>=0,'missing function '+name);
-  const end=migration.indexOf('\n$$;',start);
+  const end=migration.indexOf('$;',start);
   assert.ok(end>start,'missing end of function '+name);
   return migration.slice(start,end+4);
  };
