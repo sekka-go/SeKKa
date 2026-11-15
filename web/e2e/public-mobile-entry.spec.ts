@@ -3,11 +3,16 @@ for(const width of [360,390]){
  for(const language of ['ar','en'] as const){
   test(`public / is a mobile app, not gallery ${width}px ${language}`,async({page})=>{
    await page.setViewportSize({width,height:844});
-   await page.addInitScript(l=>localStorage.setItem('language_preference',l),language);
+   await page.addInitScript(l=>{localStorage.setItem('language_preference',l);localStorage.setItem('theme_preference','light');},language);
    await page.goto('/');
    await expect(page.locator('.sekka-mobile')).toBeVisible();
    await expect(page.locator('.sekka-bottom-nav')).toBeVisible();
-   await page.screenshot({path:`test-results/public-mobile-${width}-${language}.png`,fullPage:true});
+   await expect(page.getByRole('heading',{name:language==='ar'?/مشوارك اليومي/:/Your daily commute/})).toBeVisible();
+   await expect(page.getByRole('button',{name:language==='ar'?'التسجيل باستخدام جوجل':'Continue with Google'})).toBeVisible();
+   await page.screenshot({path:`test-results/public-mobile-${width}-${language}-light.png`,fullPage:true});
+   await page.getByRole('button',{name:language==='ar'?'تغيير المظهر':'Switch appearance'}).click();
+   await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
+   await page.screenshot({path:`test-results/public-mobile-${width}-${language}-dark.png`,fullPage:true});
    await expect(page.locator('.phase-preview-note,.phase-navigation,.phase-screen-selector')).toHaveCount(0);
    await expect(page.getByText(/معاينة المرحلة الأولى|Stage one preview|7 screens/)).toHaveCount(0);
    await expect(page.locator('html')).toHaveAttribute('dir',language==='ar'?'rtl':'ltr');
