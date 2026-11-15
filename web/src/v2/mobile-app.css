@@ -17,3 +17,9 @@
  font-weight:900;white-space:normal;text-align:center;line-height:1.2}
 .sekka-admin-entry[aria-current=page]{outline:2px solid #997400;outline-offset:2px}
 @media(max-width:420px){.sekka-mobile-header>span{display:none}.sekka-brand-button{width:60px;flex-shrink:0}}
+
+/* Original Admin dashboard is desktop-first; don't confine it to the mobile
+   passenger content column. The mobile bottom navigation remains usable. */
+.sekka-mobile-content.sekka-admin-workspace{max-width:none;padding:0;min-width:0}
+.sekka-admin-workspace .admin-stage{min-width:0;overflow-x:clip}
+.sekka-admin-workspace .ad-content{min-width:0}
