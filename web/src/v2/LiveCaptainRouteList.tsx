@@ -37,11 +37,13 @@ export default function LiveCaptainRouteList(){
   if(!client||approval!=='approved')return;
   setBusy(id);setError('');setNotice('');
   try{
-   const {data,error:publishError}=await client.from('v31_routes')
-    .update({status:'published'}).eq('id',id).eq('captain_id',uid).eq('status','draft')
-    .select('id,status').single();
+   const {data,error:publishError}=await client.rpc('v31_set_route_status',{p_route:id,p_status:'published'});
    if(publishError)throw publishError;
-   if(!data||data.id!==id||data.status!=='published')throw new Error('ROUTE_PUBLICATION_NOT_CONFIRMED');
+   if(data!=='published')throw new Error('ROUTE_PUBLICATION_NOT_CONFIRMED');
+   const {data:route,error:verifyError}=await client.from('v31_routes')
+    .select('id,status').eq('id',id).eq('captain_id',uid).maybeSingle();
+   if(verifyError)throw verifyError;
+   if(!route||route.id!==id||route.status!=='published')throw new Error('ROUTE_PUBLICATION_NOT_VERIFIED');
    setNotice(t('تم نشر الخط بنجاح.','Route published successfully.'));
    setRevision(v=>v+1);
   }catch(e){setError(e instanceof Error?e.message:String(e));}

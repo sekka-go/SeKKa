@@ -3,11 +3,12 @@
  *
  * SEKKA_TEST_DATABASE=true VITE_SUPABASE_URL=https://<staging>.supabase.co \
  * VITE_SUPABASE_PUBLISHABLE_KEY=... \
- * SEKKA_CAPTAIN_ACCESS_TOKEN=<real Google-authenticated captain JWT> \
+ * SEKKA_CAPTAIN_ACCESS_TOKEN=<real Google-authenticated approved captain JWT> \
  * SEKKA_RIDER_ACCESS_TOKEN=<real Google-authenticated rider JWT> \
  * node scripts/real-journey.mjs
  *
- * Tokens are never logged. This script creates durable staging records.
+ * Tokens are never logged. It creates durable QA rows but archives its route
+ * and deactivates its vehicle so test inventory is not exposed to passengers.
  * It intentionally has NO password/OTP/payment-based login fallback.
  */
 import {createClient} from '@supabase/supabase-js';
@@ -43,7 +44,9 @@ assert.equal(vehicle.seats,3);
 const title=`STAGING E2E ${testTag}`;
 const routeId=must(await captain.rpc('v31_create_route_draft',{p_title:title,p_category:'PRIME',p_capacity:3,p_direction:'outbound',p_period:'monthly',p_outbound:'07:30',p_return:null,p_return_supported:false,p_price:800,p_stops:[{area_id:areas[0].id,name:'Test origin',pickup:true,dropoff:true},{area_id:areas[1].id,name:'Test destination',pickup:true,dropoff:true}]}),'draft creation');
 assert.equal(typeof routeId,'string');
-must(await captain.from('v31_routes').update({status:'published'}).eq('id',routeId).eq('captain_id',captainUser.id).select('id').single(),'publish');
+assert.equal(must(await captain.rpc('v31_set_route_status',{p_route:routeId,p_status:'published'}),'publish'),'published');
+const unauthorizedRouteChange=await rider.rpc('v31_set_route_status',{p_route:routeId,p_status:'paused'});
+assert.ok(unauthorizedRouteChange.error,'A Passenger must not change another Captain route');
 const found=must(await rider.from('v31_routes').select('id,title,seat_capacity').eq('id',routeId).single(),'passenger search');
 assert.equal(found.title,title);
 const stops=must(await rider.from('v31_route_stops').select('id,area_id,position').eq('route_id',routeId).order('position'),'published stops');
@@ -55,6 +58,9 @@ const id1=must(await rider.rpc('v31_reserve_seats_with_stops',{p_route:routeId,p
 const id2=must(await rider.rpc('v31_reserve_seats',{p_route:routeId,p_seats:2,p_idempotency:key1}),'idempotent retry');
 assert.equal(id1,id2);
 assert.equal(await availability(),1,'Atomic 2-seat booking reduces availability to one');
+const captainBookingNotice=must(await captain.from('v31_notifications').select('id,kind,entity_id')
+ .eq('user_id',captainUser.id).eq('kind','new_booking').eq('entity_id',id1).maybeSingle(),'Captain booking notification');
+assert.equal(captainBookingNotice?.entity_id,id1,'A real booking notification must persist for the Captain');
 const key2=randomUUID();
 const exceeded=await rider.rpc('v31_reserve_seats_with_stops',{p_route:routeId,p_seats:2,p_idempotency:key2,p_pickup:stops[0].id,p_dropoff:stops[1].id,p_reverse:false});
 assert.ok(exceeded.error,'Overselling capacity must fail');
@@ -124,4 +130,10 @@ must(await rider.rpc('v31_cancel_pending_booking',{p_booking:id1}),'cancel');
 const cancelled=must(await rRefreshed.from('v31_bookings').select('status').eq('id',id1).single(),'persisted cancellation');
 assert.equal(cancelled.status,'cancelled');
 assert.equal(await availability(),3,'Cancellation of both reservations restores all three seats');
-process.stdout.write('PASS: two independent Google sessions, captain publish, rider route visibility, single-rider concurrent last-seat attempts, atomic booking, notifications, admin restriction, persistence, cancellation and seat restoration. Cross-account concurrency and browser UI acceptance require additional authorized sessions and must not be inferred. Test route remains in staging.\n');
+assert.equal(must(await captain.rpc('v31_set_route_status',{p_route:routeId,p_status:'archived'}),'archive test route'),'archived');
+const hiddenTestRoute=must(await rider.from('v31_routes').select('id').eq('id',routeId).maybeSingle(),'confirm archived route hidden from passengers');
+assert.equal(hiddenTestRoute,null,'Archived test route must not be visible in Passenger search');
+const inactiveVehicle=must(await captain.from('v31_vehicles').update({status:'inactive'})
+ .eq('id',vehicle.id).select('id,status').single(),'deactivate test vehicle');
+assert.equal(inactiveVehicle.status,'inactive');
+process.stdout.write('PASS: two independent Google sessions, captain publish, rider route visibility, single-rider concurrent last-seat attempts, atomic booking, Captain notification, Admin restriction, persistence, cancellation and seat restoration. Test route archived and vehicle deactivated. Cross-account concurrency and browser UI acceptance require additional authorized sessions and must not be inferred.\n');
