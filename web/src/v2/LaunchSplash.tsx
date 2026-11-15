@@ -3,6 +3,23 @@ import "./launch-splash.css";
 
 const SPLASH_DURATION_MS = 3000;
 
+/* A page refresh is not an app launch. Keep the visual sequence only for
+ * fresh document navigation; OAuth callbacks and history restores also bypass it. */
+export function shouldPlayLaunchSplash() {
+  const current = new URL(window.location.href);
+  if (current.pathname.startsWith("/dev/screens") ||
+      current.searchParams.has("code") ||
+      current.searchParams.has("error") ||
+      current.hash.includes("access_token=")) return false;
+
+  const navigation = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+  if (navigation) return navigation.type === "navigate";
+
+  // Older Android WebViews expose only the deprecated navigation entry.
+  const legacy = (performance as Performance & { navigation?: { type: number } }).navigation;
+  return legacy?.type !== 1 && legacy?.type !== 2;
+}
+
 /**
  * Launch artwork is deliberately separate from auth and route state:
  * it must never reset a session, navigate, or hide the application's contents.
@@ -10,12 +27,7 @@ const SPLASH_DURATION_MS = 3000;
  * the scene fills the entire available PWA viewport.
  */
 export default function LaunchSplash({ children }: { children: ReactNode }) {
-  const [visible, setVisible] = useState(() => {
-    const current = new URL(window.location.href);
-    return !current.pathname.startsWith("/dev/screens") &&
-      !current.searchParams.has("code") &&
-      !current.hash.includes("access_token=");
-  });
+  const [visible, setVisible] = useState(shouldPlayLaunchSplash);
 
   useEffect(() => {
     if (!visible) return;

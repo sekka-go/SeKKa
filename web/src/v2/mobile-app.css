@@ -284,3 +284,54 @@
   .sekka-mobile-card > button { margin-block-start: 14px; }
   .sekka-mobile .phase-screen-6 .phase-live-profile-flow { gap: 14px; }
 }
+
+
+/* PWA portrait viewport fix: CSS viewport width can exceed 680px on some
+ * installed Android WebViews. Do not let the 3:4 preview canvas letterbox.
+ * Scope to the actual guest/unauthenticated flows, never /dev/screens. */
+@media (max-width: 900px), (display-mode: standalone) {
+  .sekka-mobile.sekka-guest-welcome,
+  .sekka-mobile.sekka-fullscreen-auth {
+    padding: 0;
+    min-height: 100dvh;
+  }
+
+  .sekka-mobile.sekka-guest-welcome > .sekka-mobile-content,
+  .sekka-mobile.sekka-fullscreen-auth > .sekka-mobile-content {
+    width: 100%;
+    max-width: none;
+    padding: 0;
+    margin: 0;
+    min-height: 100dvh;
+  }
+
+  .sekka-mobile.sekka-guest-welcome > .sekka-mobile-content > .phase-one-stage,
+  .sekka-mobile.sekka-fullscreen-auth > .sekka-mobile-content > .phase-one-stage {
+    display: flex;
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    min-height: 100dvh;
+    margin: 0;
+    padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+    align-items: stretch;
+    justify-content: flex-start;
+    overflow: visible;
+    box-sizing: border-box;
+  }
+
+  .sekka-mobile.sekka-guest-welcome .phase-canvas:is(.phase-screen-2,.phase-screen-3),
+  .sekka-mobile.sekka-fullscreen-auth .phase-canvas:is(.phase-screen-3,.phase-screen-4) {
+    display: block;
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    min-height: 0;
+    aspect-ratio: auto;
+    margin: 0;
+    overflow: hidden;
+    box-shadow: none;
+  }
+}

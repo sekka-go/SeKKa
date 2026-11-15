@@ -114,3 +114,22 @@ test("installed PWA never points to the retired icon", async ({ request }) => {
   expect(manifest.icons.map((icon: {src:string}) => icon.src).join(" ")).not.toContain("app-icon");
   expect(manifest.icons.map((icon: {src:string}) => icon.src).every((src:string) => src.includes("sekka-pwa-20261115-"))).toBe(true);
 });
+
+test("refresh resumes the current page without replaying the launch splash", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/?tab=login&view=2");
+  await expect(page.locator(".sekka-launch")).toBeVisible();
+  await expect(page.locator(".sekka-launch")).toHaveCount(0, { timeout: 5500 });
+  await page.reload();
+  await expect(page.locator(".sekka-launch")).toHaveCount(0);
+  await expect(page.locator(".phase-screen-2")).toBeVisible();
+});
+
+test("fresh document navigation still plays the launch once", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/?tab=login&view=2");
+  await expect(page.locator(".sekka-launch")).toBeVisible();
+  await expect(page.locator(".sekka-launch")).toHaveCount(0, { timeout: 5500 });
+  await page.goto("/?tab=login&view=2");
+  await expect(page.locator(".sekka-launch")).toBeVisible();
+});

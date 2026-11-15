@@ -147,3 +147,39 @@ for(const width of widths){
   }
  }
 }
+
+/* Regression: some installed Android PWA windows report a CSS viewport wider
+ * than the old 680px breakpoint, leaving a portrait 3:4 letterboxed canvas. */
+for (const [width, height] of [[390, 844], [709, 1536], [720, 1280]] as const) {
+  test(`installed-size guest welcome fills the portrait viewport at ${width}x${height}`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    await page.goto("/");
+    const screen = page.locator(".phase-screen-2");
+    await expect(screen).toBeVisible();
+    const rect = await screen.boundingBox();
+    const stage = await page.locator(".sekka-guest-welcome .phase-one-stage").boundingBox();
+    expect(rect).not.toBeNull();
+    expect(stage).not.toBeNull();
+    expect(stage!.x).toBe(0);
+    expect(stage!.y).toBe(0);
+    expect(rect!.x).toBe(0);
+    expect(rect!.width).toBe(width);
+    expect(rect!.y).toBeGreaterThanOrEqual(0);
+    expect(rect!.y).toBeLessThanOrEqual(2);
+    expect(rect!.y + rect!.height).toBeGreaterThanOrEqual(height - 2);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth))
+      .toBeLessThanOrEqual(width + 1);
+  });
+}
+
+test("approved screen gallery retains the 3:4 reference frame", async ({ page }) => {
+  await page.setViewportSize({ width: 709, height: 1536 });
+  await page.goto("/dev/screens");
+  const canvas = page.locator(".phase-canvas").first();
+  await expect(canvas).toBeVisible();
+  const box = await canvas.boundingBox();
+  expect(box).not.toBeNull();
+  expect(box!.width).toBeGreaterThan(0);
+  expect(box!.height / box!.width).toBeGreaterThan(1.30);
+  expect(box!.height / box!.width).toBeLessThan(1.37);
+});
