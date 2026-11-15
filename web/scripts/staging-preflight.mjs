@@ -31,11 +31,15 @@ const protectedRpcs=[
  ['v31_admin_overview',{}],
  ['v31_reserve_seats',{p_route:'00000000-0000-4000-8000-000000000001',p_seats:1,p_idempotency:'00000000-0000-4000-8000-000000000002'}],
  ['v31_accept_trip_offer',{p_offer:'00000000-0000-4000-8000-000000000001'}],
- ['v31_cancel_pending_booking',{p_booking:'00000000-0000-4000-8000-000000000001'}]
+ ['v31_cancel_pending_booking',{p_booking:'00000000-0000-4000-8000-000000000001'}],
+ ['v31_cancel_trip_request',{p_request:'00000000-0000-4000-8000-000000000001'}],
+ ['v31_is_admin',{}],
+ ['v31_reserve_seats_with_stops',{p_route:'00000000-0000-4000-8000-000000000001',p_seats:1,p_idempotency:'00000000-0000-4000-8000-000000000002',p_pickup:'00000000-0000-4000-8000-000000000003',p_dropoff:'00000000-0000-4000-8000-000000000004',p_reverse:false}],
+ ['v31_set_route_status',{p_route:'00000000-0000-4000-8000-000000000001',p_status:'archived'}]
 ];
 for(const [name,args] of protectedRpcs){
  const {data,error}=await client.rpc(name,args);
  assert.ok(error,`ANON_RPC_ALLOWED ${name}: ${JSON.stringify(data)}`);
  assert.ok(!/does not exist|PGRST202/i.test(error.message+' '+error.code),`MISSING_RPC ${name}: ${error.message}`);
 }
-console.log('STAGING_PREFLIGHT_OK: database ref, expected tables and anonymous RPC denial. No records changed.');
+console.log('STAGING_PREFLIGHT_OK: isolated project, '+expected.length+' required tables and '+protectedRpcs.length+' anonymous RPC denials. No records changed.');
