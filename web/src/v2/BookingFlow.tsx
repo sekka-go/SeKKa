@@ -9,6 +9,8 @@ import type { Appearance } from "./Onboarding";
 import { DiscoveryIcon, examples, favoriteExamples } from "./Discovery";
 import type { Line } from "./Discovery";
 import type { Booking, Quote, Route } from "./api";
+import {client} from "./api";
+import {reserveSeatsWithStops,cancelPendingBooking} from "./reservations";
 import {
   quote as calculateQuote,
   addDays,
@@ -1041,4 +1043,100 @@ const dateText = (v: string) =>
       </dialog>
     </div>
   );
+}
+
+/**
+ * Production v31 reservation flow. Reuses the approved BookingFlow layout,
+ * Offer, Row, Box and illustration components. The preview wallet/payment
+ * experience above remains isolated to /dev/screens.
+ */
+export function V31BookingJourney({offer,routeId,pickupId,dropoffId,reverse,bookingId,onBack,onLogin,onBooked}:{
+ offer:Line|null;routeId:string;pickupId:string;dropoffId:string;reverse:boolean;
+ bookingId:string|null;onBack:()=>void;onLogin:()=>void;onBooked:(id:string)=>void;
+}){
+ const {language,theme}=usePreferences(),en=language==='en';
+ const t=(ar:string,english:string)=>en?english:ar;
+ const [seats,setSeats]=useState(1),[busy,setBusy]=useState(false),[error,setError]=useState('');
+ const [stored,setStored]=useState<{id:string;status:string;seats:number;price_snapshot_egp:number|null;period_snapshot:string|null;pickup_stop_id:string|null;dropoff_stop_id:string|null}|null>(null);
+ const [loading,setLoading]=useState(Boolean(bookingId)),[refresh,setRefresh]=useState(0);
+ useEffect(()=>{let active=true;
+   if(!bookingId){setStored(null);setLoading(false);return;}
+   setLoading(true);setError('');
+   void (async()=>{try{
+     if(!client)throw Error('BACKEND_NOT_CONFIGURED');
+     const {data:{user},error:authError}=await client.auth.getUser();
+     if(authError||!user)throw Error('AUTH_REQUIRED');
+     const {data,error:e}=await client.from('v31_bookings')
+       .select('id,status,seats,price_snapshot_egp,period_snapshot,pickup_stop_id,dropoff_stop_id')
+       .eq('id',bookingId).eq('rider_id',user.id).maybeSingle();
+     if(e)throw e;if(!data)throw Error('BOOKING_NOT_FOUND');
+     if(active)setStored(data);
+   }catch(e){if(active)setError(e instanceof Error?e.message:String(e));}
+   finally{if(active)setLoading(false);}
+   })();return()=>{active=false;};
+ },[bookingId,refresh]);
+ const reserve=async()=>{
+   if(busy||!routeId||!pickupId||!dropoffId||!Number.isInteger(seats)||seats<1||seats>(offer?.available||13))return;
+   if(!client){setError('BACKEND_NOT_CONFIGURED');return;}
+   setBusy(true);setError('');
+   try{
+     const {data:{user},error:authError}=await client.auth.getUser();
+     if(authError||!user){onLogin();return;}
+     const signature=[user.id,routeId,pickupId,dropoffId,reverse?'return':'outbound',seats].join(':');
+     // The same attempted reservation keeps its key across network failure/retry.
+     const cacheKey='sekka.v31.reservationAttempt';
+     let attempt:{signature:string;idempotency:string}|null=null;
+     try{attempt=JSON.parse(sessionStorage.getItem(cacheKey)||'null');}catch{attempt=null;}
+     const idempotency=attempt?.signature===signature?attempt.idempotency:crypto.randomUUID();
+     sessionStorage.setItem(cacheKey,JSON.stringify({signature,idempotency}));
+     const {bookingId:id}=await reserveSeatsWithStops(routeId,seats,idempotency,pickupId,dropoffId,reverse);
+     // The RPC response alone is not a visual confirmation. Verify an owned row.
+     const {data:row,error:readError}=await client.from('v31_bookings')
+       .select('id,status,route_id,seats,pickup_stop_id,dropoff_stop_id')
+       .eq('id',id).eq('rider_id',user.id).maybeSingle();
+     if(readError)throw readError;
+     if(!row||row.route_id!==routeId||row.seats!==seats||row.pickup_stop_id!==pickupId||row.dropoff_stop_id!==dropoffId||!['pending','confirmed'].includes(row.status))throw Error('BOOKING_NOT_VERIFIED');
+     sessionStorage.removeItem(cacheKey);
+     onBooked(id);
+   }catch(e){setError(e instanceof Error?e.message:String(e));}
+   finally{setBusy(false);}
+ };
+ const cancel=async()=>{
+   if(!bookingId||stored?.status!=='pending')return;
+   setBusy(true);setError('');
+   try{await cancelPendingBooking(bookingId);setRefresh(v=>v+1);}
+   catch(e){setError(e instanceof Error?e.message:String(e));}
+   finally{setBusy(false);}
+ };
+ return <div className={`phase-one-stage discovery-stage booking-stage ${theme}`}>
+   <main className={`phase-canvas d-canvas b-canvas b-screen-${stored?'18':'16'}`}>
+     <header className="d-header"><button type="button" className="phase-back" aria-label={t('رجوع','Back')} onClick={onBack}><DiscoveryIcon name="back"/></button><Wordmark/></header>
+     <h1 className="b-title"><DiscoveryIcon name="calendar"/>{stored?t('تفاصيل الحجز','Booking details'):t('مراجعة الحجز','Booking review')}</h1>
+     {error&&<div className="d-feedback" role="alert"><p>{error}</p><button type="button" onClick={()=>setRefresh(v=>v+1)}>{t('إعادة المحاولة','Retry')}</button></div>}
+     {loading&&<p role="status" className="b-loading">{t('بنراجع الحجز من الخدمة…','Loading booking from server…')}</p>}
+     {!bookingId&&offer&&<><p className="b-subtitle">{t('راجع الخط والنقط والسعر قبل ما تحجز.','Review your route, stops and price before booking.')}</p>
+       <Offer offer={offer}/>
+       <Box className="b-summary">
+         <Row label={t('سعر الاشتراك المعلن','Advertised price')}>{offer.amount?.toLocaleString('en-US')} {t('ج.م','EGP')}</Row>
+         <Row label={t('السعة الإجمالية (المتاح بيتراجع عند الحجز)','Total capacity (availability checked on booking)')}>{offer.available}</Row>
+         <Row label={t('الحالة بعد الحجز','Status after booking')}>{t('قيد الانتظار','Pending')}</Row>
+         <label>{t('المقاعد المطلوبة','Seats requested')}<input type="number" min={1} max={offer.available} value={seats} onChange={e=>setSeats(Number(e.target.value))}/></label>
+       </Box>
+       <p className="b-hint">{t('مفيش دفع ولا OTP. الخادم بيتحقق من المقاعد قبل حفظ الحجز.','No payment or OTP. The server verifies capacity before saving.')}</p>
+       <Primary disabled={busy||!Number.isInteger(seats)||seats<1||seats>offer.available} onClick={()=>void reserve()}>{busy?t('جارٍ الحجز…','Reserving…'):t('تأكيد طلب الحجز','Submit booking request')}</Primary>
+     </>}
+     {!bookingId&&!offer&&<Box><p role="status">{t('بيانات الخط مش متاحة. ارجع للبحث واختار خط منشور.','Route unavailable. Return to search and choose a published route.')}</p><Primary onClick={onBack}>{t('الرجوع للبحث','Back to search')}</Primary></Box>}
+     {stored&&<><Illustration kind="waiting"/><Box className="b-summary">
+       <Row label={t('رقم الحجز','Booking ID')}>{stored.id}</Row>
+       <Row label={t('حالة الحجز من الخادم','Server booking status')}>{stored.status==='pending'?t('قيد الانتظار','Pending'):stored.status==='cancelled'?t('ملغي','Cancelled'):stored.status==='confirmed'?t('مؤكد من الخادم','Confirmed by server'):stored.status}</Row>
+       <Row label={t('عدد المقاعد','Seats')}>{stored.seats}</Row>
+       <Row label={t('السعر المسجل','Recorded price')}>{stored.price_snapshot_egp===null?t('غير متاح','Unavailable'):`${stored.price_snapshot_egp} ${t('ج.م','EGP')}`}</Row>
+       <Row label={t('نقطة الركوب','Pickup')}>{offer?.selectedStops?.pickup.name||stored.pickup_stop_id||'—'}</Row>
+       <Row label={t('نقطة النزول','Drop-off')}>{offer?.selectedStops?.dropoff.name||stored.dropoff_stop_id||'—'}</Row>
+     </Box>
+     <button type="button" className="d-outline" onClick={()=>{setLoading(true);setRefresh(v=>v+1);}}>{t('تحديث حالة الحجز','Refresh status')}</button>
+     {stored.status==='pending'&&<button type="button" className="d-outline" disabled={busy} onClick={()=>void cancel()}>{busy?t('جارٍ الإلغاء…','Cancelling…'):t('إلغاء الحجز واستعادة السعة','Cancel pending booking')}</button>}
+     </>}
+   </main>
+ </div>;
 }
