@@ -68,7 +68,7 @@ export default function LiveRouteSearch({origin,destination,outbound,returnTime,
   {!client&&<p role="status">{t('البحث الحقيقي محتاج ربط إعدادات Supabase العامة.','Live search requires public Supabase configuration.')}</p>}
   {loading&&<p role="status">{t('بنبحث عن خطوط مطابقة…','Searching published routes…')}</p>}
   {error&&<div role="alert"><p>{t('تعذر تحميل الخطوط.','Unable to load routes.')} {error}</p><button onClick={()=>setRetry(v=>v+1)}>{t('حاول تاني','Retry')}</button></div>}
-  {!loading&&!error&&items.length===0&&<p role="status">{t('لسه مفيش خطوط منشورة مطابقة لنقط الركوب والنزول ومواعيدك.','No published routes match your pickup, drop-off and schedule yet.')}</p>}
+  {!loading&&!error&&items.length===0&&<div role="status"><p>{t('لسه مفيش خط مناسب.','No suitable route yet.')}</p><p>{t('لسه مفيش خطوط منشورة مطابقة لنقط الركوب والنزول ومواعيدك.','No published routes match your pickup, drop-off and schedule yet.')}</p></div>}
   {items.map(({route,from,to,reverse})=><article className="d-box" key={route.id+String(reverse)}>
    <h2>{route.title}</h2>
    <p>{from.name} ← {to.name}</p>
