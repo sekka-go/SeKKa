@@ -84,13 +84,24 @@ test("the route fades completely before the centered wordmark appears", async ({
   expect(result!.logoAnimation).toContain("sekka-logo-reveal");
   expect(result!.pinAnimation).toContain("sekka-arrive");
   expect(result!.hasLocalPinAnchor).toBe(true);
-  await page.waitForTimeout(2230);
-  const atFade = await page.locator(".sekka-launch").evaluate(root => ({
-    route: Number(getComputedStyle(root.querySelector(".sekka-launch__route")!).opacity),
-    logo: Number(getComputedStyle(root.querySelector(".sekka-launch__wordmark")!).opacity),
-  }));
+  // Seek browser animations directly: no timing-sensitive sleeps in CI.
+  const atFade = await page.locator(".sekka-launch").evaluate(root => {
+    const route = root.querySelector(".sekka-launch__route")!;
+    const logo = root.querySelector(".sekka-launch__wordmark")!;
+    for (const animation of [...route.getAnimations(), ...logo.getAnimations()]) {
+      animation.currentTime = 2250;
+    }
+    return {
+      route: Number(getComputedStyle(route).opacity),
+      logo: Number(getComputedStyle(logo).opacity),
+    };
+  });
   expect(atFade.route).toBeLessThan(0.10);
   expect(atFade.logo).toBeLessThan(0.10);
-  await page.waitForTimeout(650);
-  await expect(page.locator(".sekka-launch__wordmark")).toBeVisible();
+  const atReveal = await page.locator(".sekka-launch").evaluate(root => {
+    const logo = root.querySelector(".sekka-launch__wordmark")!;
+    for (const animation of logo.getAnimations()) animation.currentTime = 2850;
+    return Number(getComputedStyle(logo).opacity);
+  });
+  expect(atReveal).toBeGreaterThan(0.75);
 });
