@@ -213,7 +213,7 @@ export default function MobileApp(){
      onClick={openAdmin}>{t('لوحة الإدارة','Admin dashboard')}</button>}
    <button className="sekka-theme" aria-label={t('تغيير المظهر','Switch appearance')} onClick={()=>p.setThemePreference(p.theme==='dark'?'light':'dark')}>{p.theme==='dark'?'☀':'☾'}</button>
   </header>
-  <main id="sekka-content" className="sekka-mobile-content">
+  <main id="sekka-content" className={`sekka-mobile-content${tab==='admin'&&admin?' sekka-admin-workspace':''}`}>
    {!ready&&<p role="status">{t('بنجهز حسابك…','Loading account…')}</p>}
    {ready&&userId&&adminLookupError&&<div role="alert" className="sekka-mobile-alert">
      <p>{adminLookupError}</p>
