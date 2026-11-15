@@ -500,7 +500,7 @@ export default function Discovery(p: DiscoveryProps) {
     id:live.route.id+':'+(live.reverse?'return':'outbound'),routeId:live.route.id,
     origin:p.serviceAreas?.find(a=>a.id===live.from.area_id)?.name_ar||live.from.name,
     destination:p.serviceAreas?.find(a=>a.id===live.to.area_id)?.name_ar||live.to.name,
-    category:live.route.category,available:live.route.seat_capacity,
+    category:live.route.category,available:live.remaining,
     outbound:live.route.outbound_time?.slice(0,5)||'',returnTime:live.route.return_time?.slice(0,5)||'',
     period:live.route.period,direction:live.reverse?'return':'outbound',amount:live.route.price_egp,
     stops:(live.reverse?[...live.stops].reverse():live.stops).map(s=>({
@@ -1061,7 +1061,7 @@ export default function Discovery(p: DiscoveryProps) {
                 <Meta label={tr("الفئة")} icon="seat">
                   {current.category}
                 </Meta>
-                <Meta label={tr(p.production?"السعة الإجمالية — التوافر يتأكد عند الحجز":"المقاعد المتاحة")} icon="user">
+                <Meta label={tr(p.production?"المقاعد المتاحة الآن":"المقاعد المتاحة")} icon="user">
                   {current.available} {tr("مقاعد")}</Meta>
               </section>
               <div className="d-box d-fixed-price">
@@ -1084,7 +1084,7 @@ export default function Discovery(p: DiscoveryProps) {
               </section>
               <Action
                 onClick={() => {try {const selectedStops = selectStops(current.stops || [], pickup, dropoff, current.direction === "round_trip" ? current.returnStops || [] : undefined); p.onBook({...current, selectedStops});} catch {setMessage(tr("اختار نقطتين صالحين؛ يجب أن يدعم مسار العودة عكس النقطتين."));}}}
-                disabled={current.amount === null || !pickup || !dropoff}
+                disabled={current.amount === null || current.available<1 || !pickup || !dropoff}
               >
                 {tr("حجز الاشتراك")}</Action>
               {!p.production && <button
