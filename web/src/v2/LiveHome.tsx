@@ -1,3 +1,4 @@
+import LiveTripRequests from './LiveTripRequests';
 import LiveProfile from './LiveProfile';
 import LiveBookings from './LiveBookings';
 import {useEffect,useState} from 'react';
@@ -75,6 +76,7 @@ export default function LiveHome({onNavigate}:{onNavigate:(screen:number)=>void}
    </section>}
    {identity&&<LiveProfile/>}
    {identity&&<LiveBookings mode={identity.role==="captain"?"captain":"rider"}/>}
+   {identity&&identity.role==="rider"&&<LiveTripRequests mode="rider"/>}
    <div className="live-home__info"><span aria-hidden="true">ⓘ</span>{t('الحجز والدفع الفعلي لسه تحت التجهيز. مفيش فلوس هتتخصم.','Real bookings and payments are not enabled yet. No money will be charged.')}</div>
    {identity&&<button className="live-home__logout" onClick={async()=>{if(!client)return;const {error:signOutError}=await client.auth.signOut();if(signOutError){setError(t('تعذّر تسجيل الخروج.','Unable to sign out.'));return;}setIdentity(null);onNavigate(4);}}>{t('تسجيل الخروج','Sign out')}</button>}
   </section>
