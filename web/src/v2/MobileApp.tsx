@@ -1,7 +1,6 @@
 import {useEffect,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
-import {Wordmark} from './Onboarding';
 import LiveHome from './LiveHome';
 import LiveRouteSearch from './LiveRouteSearch';
 import LiveVehicles from './LiveVehicles';
@@ -50,7 +49,7 @@ export default function MobileApp(){
  return <div className="sekka-mobile" dir={en?'ltr':'rtl'}>
   <a className="sekka-skip" href="#sekka-content">{t('تخطي للمحتوى','Skip to content')}</a>
   <header className="sekka-mobile-header">
-   <button className="sekka-brand-button" onClick={()=>navigate('home')} aria-label={t('الرئيسية','Home')}><Wordmark/></button>
+   <button className="sekka-brand-button" onClick={()=>navigate('home')} aria-label={t('الرئيسية','Home')}><img className="sekka-approved-logo" src="/brand/approved/app-icon-yellow.png" alt="سِكّة — seKKa"/></button>
    <span>{t('مشوارك، على سِكّة','Your ride, your route')}</span>
    <button className="sekka-theme" aria-label={t('تغيير المظهر','Switch appearance')} onClick={()=>p.setThemePreference(p.theme==='dark'?'light':'dark')}>{p.theme==='dark'?'☀':'☾'}</button>
   </header>
