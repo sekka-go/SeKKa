@@ -18,6 +18,7 @@ async function rect(page:Page,selector:string){
 async function snapshot(page:Page,scene:(typeof screens)[number],kind:'reference'|'after',label:string){
  await expect(page.locator(scene.heading)).toBeVisible();
  const title=await rect(page,scene.heading),canvas=await rect(page,scene.canvas);
+ const action=scene.id===10?await rect(page,'.d-screen-10 > .d-primary'):null;
  const checks=await page.evaluate(()=>({
    scrollWidth:document.documentElement.scrollWidth,
    viewportWidth:innerWidth,
@@ -27,7 +28,7 @@ async function snapshot(page:Page,scene:(typeof screens)[number],kind:'reference
  }));
  await page.screenshot({path:`../docs/audit/layout-${kind}-S${String(scene.id).padStart(3,'0')}-${label}.png`,
   fullPage:true,animations:'disabled'});
- return{title,canvas,checks};
+ return{title,canvas,action,checks};
 }
 for(const width of [360,390]){
  for(const language of ['ar','en'] as const){
@@ -49,8 +50,8 @@ for(const width of [360,390]){
      }
      const actual=await snapshot(page,scene,'after',variant);
      expect(actual.checks.scrollWidth,'Production screen horizontal overflow').toBeLessThanOrEqual(width+1);
-     // Stage 1 requires its approved isolated canvas; search retains mobile tabs.
-     if(scene.id===2||scene.id===3){
+     // Stage 1 and the full-screen filter step use their approved isolated canvas.
+     if(scene.id===2||scene.id===3||scene.id===10){
       await expect(page.locator('.sekka-mobile-header')).toBeHidden();
       await expect(page.locator('.sekka-bottom-nav')).toBeHidden();
      }else{
@@ -62,6 +63,16 @@ for(const width of [360,390]){
       expect(nav.x+nav.width).toBeLessThanOrEqual(width+1);
       expect(nav.y).toBeGreaterThanOrEqual((width===360?800:844)-nav.height-2);
      }
+     if(scene.id===10){
+      if(!actual.action||!reference.action)throw new Error('Missing filter action measurement');
+      expect(Math.abs(actual.action.width-reference.action.width),
+       'Filter action width must preserve the approved design').toBeLessThanOrEqual(4);
+      expect(Math.abs(actual.action.height-reference.action.height),
+       'Filter action height must preserve the approved design').toBeLessThanOrEqual(4);
+      expect(actual.action.y+actual.action.height,
+       'Filter action must remain visible above the persistent shell chrome')
+       .toBeLessThanOrEqual((width===360?800:844)-12);
+     }
      expect(Math.abs(actual.canvas.width-reference.canvas.width),
       'Root canvas must not shrink because of a duplicated outer padding').toBeLessThanOrEqual(3);
      expect(Math.abs(actual.title.width-reference.title.width),
@@ -71,7 +82,7 @@ for(const width of [360,390]){
      // A fixed tab bar may temporarily cover scrolling content mid-scroll.
      // It is a defect only if the layout cannot scroll the last action above
      // the bar; reserve explicit scrollable bottom clearance.
-     if(scene.id>=9){
+     if(scene.id>=9&&scene.id!==10){
        const clearance=await page.evaluate(()=>{
          const canvas=document.querySelector('.d-canvas')?.getBoundingClientRect();
          const nav=document.querySelector('.sekka-bottom-nav')?.getBoundingClientRect();

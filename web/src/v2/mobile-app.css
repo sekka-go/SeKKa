@@ -64,6 +64,13 @@
  * Remove only duplicate outer chrome; keep bottom navigation on these flows. */
 .sekka-tab-search > .sekka-mobile-header,
 .sekka-tab-booking > .sekka-mobile-header{display:none}
+/* Screen 10 is an approved full-screen filter step with its own Back action.
+ * The shell tabs otherwise cover its final "Show results" button. */
+.sekka-search-filters{padding-bottom:0}
+.sekka-search-filters > .sekka-bottom-nav{display:none}
+.sekka-search-filters > .sekka-mobile-content > .phase-one-stage.discovery-stage{
+ padding-block-end:calc(20px + env(safe-area-inset-bottom,0px))
+}
 /* Original Captain application steps are full-screen as well; do not place
  * the Passenger header or fixed tabs over document fields and review CTAs. */
 .sekka-tab-captain-onboarding > .sekka-mobile-header,
