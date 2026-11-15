@@ -98,3 +98,56 @@ test('mocked failed Admin RPC shows retry, never silently treats permission as f
  await expect(page.getByRole('button',{name:'Admin dashboard'})).toBeVisible();
  await expect(page).toHaveURL(/tab=admin/);
 });
+
+/*
+ * S006 authenticated profile requires a signed-in identity. Exercise its
+ * layout with the isolated browser fixture, never as staging-auth evidence.
+ * Preserve the approved full-width screen and the current Google-only flow.
+ */
+for(const [width,height] of [[320,700],[360,800],[390,844],[412,915]] as const){
+ for(const language of ['ar','en'] as const){
+  for(const theme of ['light','dark'] as const){
+   test(`S006 profile actions are not superimposed ${width}x${height} ${language} ${theme} (MOCKED)`,async({page})=>{
+    await page.setViewportSize({width,height});
+    await setup(page,{isAdmin:false},language,theme);
+    await page.goto('/?tab=login');
+    const screen=page.locator('.phase-screen-6');
+    const form=screen.locator('.live-profile');
+    const continueButton=screen.locator('.phase-live-profile-flow > .phase-primary');
+    await expect(screen).toBeVisible();
+    await expect(form).toBeVisible();
+    await expect(continueButton).toBeVisible();
+    const actions=screen.locator('.phase-live-profile-flow button:visible');
+    const rectangles=await actions.evaluateAll(nodes=>nodes.map(n=>{
+     const r=n.getBoundingClientRect();
+     return {x:r.left,y:r.top,right:r.right,bottom:r.bottom,width:r.width,height:r.height};
+    }));
+    for(const r of rectangles){
+     expect(r.width,'Buttons must not exceed the mobile viewport').toBeLessThanOrEqual(width);
+     expect(r.height,'Tap target needs at least 44px height').toBeGreaterThanOrEqual(44);
+     expect(r.x,'Button must not be clipped on the left').toBeGreaterThanOrEqual(-1);
+     expect(r.right,'Button must not be clipped on the right').toBeLessThanOrEqual(width+1);
+    }
+    for(let i=0;i<rectangles.length;i++)for(let j=i+1;j<rectangles.length;j++){
+     const a=rectangles[i],b=rectangles[j];
+     const dx=Math.max(0,Math.min(a.right,b.right)-Math.max(a.x,b.x));
+     const dy=Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.y,b.y));
+     expect(dx*dy,'Distinct S006 buttons cannot overlap').toBe(0);
+    }
+    const logo=await screen.locator('.phase-logo > .phase-wordmark').boundingBox();
+    expect(logo).not.toBeNull();
+    expect(logo!.width).toBeLessThanOrEqual(width*.3+1);
+    expect(logo!.height).toBeLessThanOrEqual(logo!.width*.56);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
+    await continueButton.scrollIntoViewIfNeeded();
+    const last=await continueButton.boundingBox();
+    expect(last!.y+last!.height,'Continue action must be reachable with vertical scrolling')
+     .toBeLessThanOrEqual(height+1);
+    await page.screenshot({
+     path:`../docs/audit/layout-after-S006-${width}x${height}-${language}-${theme}-mocked.png`,
+     fullPage:true,animations:'disabled'
+    });
+   });
+  }
+ }
+}
