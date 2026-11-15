@@ -4,7 +4,7 @@ export default defineConfig({
   workers: 1,
   // Synthetic Google session fixtures are run only by a separate CI build,
   // never alongside real-staging acceptance tests.
-  testIgnore: process.env.SEKKA_AUTH_UI_MOCKS==='true' ? [] : ['admin-authorization-mocked.spec.ts'],
+  testIgnore: process.env.SEKKA_AUTH_UI_MOCKS==='true' ? [] : ['**/admin-authorization-mocked.spec.ts'],
   use: {
     baseURL: "http://127.0.0.1:4173",
     headless: true,
