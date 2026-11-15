@@ -62,9 +62,11 @@ export default function LaunchSplash({ children }: { children: ReactNode }) {
 
             <g className="sekka-launch__route">
               <path className="sekka-launch__route-halo"
+                pathLength={1}
                 d="M34 768 C43 681 75 644 107 626 C149 589 202 570 222 532 C265 479 275 453 281 410 C297 349 289 295 298 247 C305 213 314 195 321 180"
                 fill="none" stroke="#d3970e" strokeWidth="7" strokeLinecap="round" />
               <path className="sekka-launch__route-line"
+                pathLength={1}
                 d="M34 768 C43 681 75 644 107 626 C149 589 202 570 222 532 C265 479 275 453 281 410 C297 349 289 295 298 247 C305 213 314 195 321 180"
                 fill="none" stroke="#ffcb1b" strokeWidth="2.7" strokeLinecap="round" />
               {([[34, 768], [107, 626], [222, 532], [281, 410], [298, 295], [321, 180]] as const).map(([x, y], index) => (
