@@ -415,6 +415,8 @@ function Empty({ children }: { children: ReactNode }) {
 }
 export type DiscoveryProps = {
   screen: number;
+  production?: boolean;
+  serviceAreas?: {id:number;name_ar:string;name_en:string}[];
   theme: Appearance;
   onTheme: (t: Appearance) => void;
   go: (id: number) => void;
@@ -462,7 +464,7 @@ export default function Discovery(p: DiscoveryProps) {
   const { screen, theme, onTheme, go } = p;
   const {language}=usePreferences();
   const tr=(text:string)=>translate(text,language);
-  const demo = new URLSearchParams(location.search).get("preview") === "phase2";
+  const demo = !p.production && new URLSearchParams(location.search).get("preview") === "phase2";
   const restored = useMemo(readRiderDraft, []);
   const [origin, setOrigin] = useState(restored.origin ?? (demo ? "المعادي" : "")),
     [destination, setDestination] = useState(restored.destination ?? (demo ? "التجمع" : ""));
@@ -631,7 +633,7 @@ export default function Discovery(p: DiscoveryProps) {
       <option value="" disabled>
         {label}
       </option>
-      {servedAreas.map((a) => (
+      {(p.production ? (p.serviceAreas || []).map(a => a.name_ar) : servedAreas).map((a) => (
         <option key={a} value={a}>{tr(a)}</option>
       ))}
     </select>
@@ -655,7 +657,7 @@ export default function Discovery(p: DiscoveryProps) {
   );
   return (
     <div className={`phase-one-stage discovery-stage ${theme}`}>
-      <nav
+      {!p.production && <nav
         className="phase-review-bar d-review"
         aria-label={tr("معاينة المرحلة الثانية")}
       >
@@ -711,12 +713,12 @@ export default function Discovery(p: DiscoveryProps) {
           >
             {tr("لايت")}</button>
         </div>
-      </nav>
-      <p className="phase-preview-note">
+      </nav>}
+      {!p.production && <p className="phase-preview-note">
         {demo
           ? tr("معاينة المرحلة الثانية · كل الأسماء والأسعار والحجوزات بيانات توضيحية فقط.")
           : tr("سِكّة · القاهرة والجيزة")}
-      </p>
+      </p>}
       <main className={`phase-canvas d-canvas d-screen-${screen}`}>
         <header className="d-header">
           <button
@@ -945,7 +947,7 @@ export default function Discovery(p: DiscoveryProps) {
             <div className="d-period-options d-home-quick-actions">
               <button onClick={() => nav(29)}>{tr("اشتراكاتي")}</button>
               <button onClick={() => nav(14)}>{tr("المفضلة")}</button>
-              <button onClick={() => nav(24)}>{tr("المحفظة")}</button>
+              {!p.production && <button onClick={() => nav(24)}>{tr("المحفظة")}</button>}
               <button onClick={() => nav(33)}>{tr("الإشعارات")}</button>
             </div>
           </section>
