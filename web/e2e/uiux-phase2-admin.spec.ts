@@ -10,7 +10,7 @@ test('admin responsive navigation and tables across languages and themes',async(
    localStorage.setItem('theme_preference',mode);
   },{lang:locale==='ar-EG'?'ar':'en',mode:theme});
   for(const id of [62,63,64,65,66,67,68,69,70,71,72,73]){
-   await page.goto('/?screen='+id+'&preview=phase8');
+   await page.goto('/dev/screens?screen='+id+'&preview=phase8');
    await expect(page.locator('main.ad-content')).toBeVisible();
    await expect(page.locator('html')).toHaveAttribute('dir',locale==='ar-EG'?'rtl':'ltr');
    const buttons=page.locator('.ad-sidebar nav button');
