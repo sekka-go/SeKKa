@@ -6,7 +6,11 @@ export default defineConfig({
   // never alongside real-staging acceptance tests.
   testIgnore: process.env.SEKKA_AUTH_UI_MOCKS==='true'
     ? []
-    : ['**/admin-authorization-mocked.spec.ts','**/mobile-navigation-role.spec.ts'],
+    : [
+      '**/admin-authorization-mocked.spec.ts',
+      '**/mobile-navigation-role.spec.ts',
+      '**/captain-onboarding-validation.spec.ts'
+    ],
   use: {
     baseURL: "http://127.0.0.1:4173",
     headless: true,
