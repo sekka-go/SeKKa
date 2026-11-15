@@ -332,28 +332,31 @@ export default function SubscriptionApp() {
       ].includes(new URLSearchParams(location.search).get("preview") || "")
     )
       return;
-    const { data } = await client.auth.getSession();
-    setSignedIn(Boolean(data.session));
-    setVerifiedAdmin(false);
-    if (data.session) {
-      const {data:adminAccess,error:adminError}=await client.rpc("v31_is_admin");
-      if(adminError)throw adminError;
-      setVerifiedAdmin(adminAccess===true);
-      const identityName = data.session.user.user_metadata?.full_name || data.session.user.email || "";
-      // Own-row upsert only. Auth user ID is always sourced from the authenticated session.
-      const { data: existing, error: readError } = await client.from("v31_profiles")
-        .select("display_name,role_preference").eq("user_id", data.session.user.id).maybeSingle();
-      if (readError) throw readError;
-      if (!existing) {
-        const { error: createError } = await client.from("v31_profiles").insert({
-          user_id: data.session.user.id, display_name: identityName, role_preference: "rider",
-        });
-        if (createError && createError.code !== "23505") throw createError;
+    const {data:{session},error:sessionError}=await client.auth.getSession();
+    if(sessionError||!session){
+      setSignedIn(false);setVerifiedAdmin(false);setProfile(null);return;
+    }
+    setSignedIn(true);
+    const identityName=session.user.user_metadata?.full_name||session.user.email||"";
+    const [{data:adminAccess,error:adminError},{data:existing,error:readError}]=await Promise.all([
+      client.rpc("v31_is_admin"),
+      client.from("v31_profiles").select("display_name,role_preference").eq("user_id",session.user.id).maybeSingle()
+    ]);
+    setVerifiedAdmin(!adminError&&adminAccess===true);
+    if(readError){
+      setProfile(null);setName(identityName);setRole("rider");return;
+    }
+    if(!existing){
+      const {error:createError}=await client.from("v31_profiles").insert({
+        user_id:session.user.id,display_name:identityName,role_preference:"rider"
+      });
+      if(createError&&createError.code!=="23505"){
+        setProfile(null);setName(identityName);setRole("rider");return;
       }
-      setProfile(null); // Domain permissions, wallet and captain approval are not yet live.
-      setName(existing?.display_name || identityName);
-      setRole(existing?.role_preference || "rider");
-    } else setProfile(null);
+    }
+    setName(existing?.display_name||identityName);
+    setRole(existing?.role_preference||"rider");
+    setProfile(null); // Legacy wallet/booking roles are not inferred from new profile rows.
   }
   useEffect(() => {
     if (!client) {
