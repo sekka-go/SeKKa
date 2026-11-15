@@ -54,6 +54,8 @@ for(const width of [360,390]){
     await expect(adminButton).toBeVisible();
     await expect(page).toHaveURL(/tab=admin/);
     await expect(page.locator('.admin-stage')).toBeVisible();
+    await expect(page.locator('.ad-sidebar')).toBeVisible();
+    await expect(page.locator('.ad-layout')).toBeVisible();
     await expect(page.locator('.phase-review-bar,.phase-preview-note')).toHaveCount(0);
     await expect(page.getByText(/معاينة المرحلة الثامنة|Stage eight preview/)).toHaveCount(0);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
@@ -68,7 +70,7 @@ for(const width of [360,390]){
     await page.reload();
     await expect(page).toHaveURL(/view=64/);
     await expect(page.getByRole('heading',{name:language==='ar'?'طلبات اعتماد الكباتن':'Captain applications'})).toBeVisible();
-    await page.getByRole('button',{name:language==='ar'?'مراجعة المستندات':'Document review'}).click();
+    await page.locator('.ad-integrated-review').getByRole('button',{name:language==='ar'?'مراجعة المستندات':'Document review'}).click();
     await expect(page).toHaveURL(/view=65/);
     await expect(page.getByRole('heading',{name:language==='ar'?'مراجعة مستندات الكباتن':'Captain documents'})).toBeVisible();
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
