@@ -57,7 +57,7 @@ async function bounds(page){
   const w=innerWidth,h=innerHeight;
   // The gallery's developer toolbar is not part of the approved screen canvas.
   // Scope interactive measurements to main; measure the app's persistent nav separately.
-  const types={headers:'main header,main .ad-top,main .d-header,main .b-header',buttons:'main button,main a[role="button"],main input[type="submit"]',
+  const types={headers:'header,.ad-top,.d-header,.b-header',buttons:'main button,main a[role="button"],main input[type="submit"]',
    fields:'main input:not([type="hidden"]),main select,main textarea',cards:'main article,main .d-box,main .b-box,main .ad-card,main .sekka-mobile-card,main .d-result',
    bottomNavigation:'.sekka-bottom-nav'};
   const inIntentionalScroller=e=>{
@@ -172,7 +172,7 @@ async function main(){
       if(a.length!==b.length)row.issues.push({kind:'element_count_difference',group:kind,original:a.length,integrated:b.length});
       // Compare only elements with matching accessible labels and tag.
       // Index alignment paired unrelated gallery navigation with app controls.
-      for(const [j,original] of a.entries()){
+      for(const original of a){
        if(!original.label)continue;
        const candidate=b.find(item=>item.tag===original.tag&&item.label===original.label);
        if(!candidate)continue;
