@@ -7,8 +7,8 @@ import {usePreferences} from './preferences';
 export type Route={id:string;title:string;category:string;seat_capacity:number;period:string;direction:string;outbound_time:string|null;return_time:string|null;price_egp:number;return_supported:boolean};
 export type Stop={id:string;route_id:string;area_id:number;position:number;name:string;pickup_allowed:boolean;dropoff_allowed:boolean};
 type Area={id:number;name_ar:string;name_en:string};
-export type LiveSelection={route:Route;from:Stop;to:Stop;reverse:boolean;stops:Stop[]};
-type Match=LiveSelection;
+export type LiveSelection={route:Route;from:Stop;to:Stop;reverse:boolean;stops:Stop[];remaining:number};
+type Match=Omit<LiveSelection,'remaining'>;
 export async function fetchPublishedSelection(routeId:string,fromId:string,toId:string,reverse:boolean):Promise<LiveSelection>{
  if(!client)throw Error('BACKEND_NOT_CONFIGURED');
  const {data:route,error:routeError}=await client.from('v31_routes').select('id,title,category,seat_capacity,period,direction,outbound_time,return_time,price_egp,return_supported').eq('id',routeId).eq('status','published').maybeSingle();
@@ -21,14 +21,17 @@ export async function fetchPublishedSelection(routeId:string,fromId:string,toId:
  const from=ordered.find(s=>s.id===fromId),to=ordered.find(s=>s.id===toId);
  if(!from||!to||ordered.indexOf(from)>=ordered.indexOf(to)||
    !(reverse?route.return_supported&&route.direction!=='outbound'&&from.dropoff_allowed&&to.pickup_allowed:route.direction!=='return'&&from.pickup_allowed&&to.dropoff_allowed))throw Error('INVALID_ROUTE_STOPS');
- return {route:route as Route,from,to,reverse,stops};
+ const {data:remaining,error:capacityError}=await client.rpc('v31_published_route_available_seats',{p_route:routeId});
+ if(capacityError)throw capacityError;
+ if(typeof remaining!=='number'||remaining<0)throw Error('CAPACITY_UNAVAILABLE');
+ return {route:route as Route,from,to,reverse,stops,remaining};
 }
 export default function LiveRouteSearch({origin,destination,outbound,returnTime,period,categories,onSelect}:{
  origin:string;destination:string;outbound:string;returnTime:string;period:string;categories:string[];onSelect?:(selection:LiveSelection)=>void;
 }){
  const {language}=usePreferences(),en=language==='en';
  const t=(ar:string,english:string)=>en?english:ar;
- const [items,setItems]=useState<Match[]>([]);
+ const [items,setItems]=useState<LiveSelection[]>([]);
  const [loading,setLoading]=useState(Boolean(client));
  const [error,setError]=useState('');
  const [retry,setRetry]=useState(0);
@@ -87,7 +90,17 @@ export default function LiveRouteSearch({origin,destination,outbound,returnTime,
       }
      }
     }
-    if(active)setItems(matched);
+    // Passenger RLS intentionally hides other riders' bookings.
+    // Fetch a server-owned aggregate, never derive availability from seat_capacity.
+    const uniqueIds=[...new Set(matched.map(m=>m.route.id))];
+    const capacities=await Promise.all(uniqueIds.map(async id=>{
+      const {data,error:capError}=await client!.rpc('v31_published_route_available_seats',{p_route:id});
+      if(capError)throw capError;
+      if(typeof data!=='number'||data<0)throw Error('CAPACITY_UNAVAILABLE');
+      return [id,data] as const;
+    }));
+    const availableByRoute=new Map(capacities);
+    if(active)setItems(matched.map(m=>({...m,remaining:availableByRoute.get(m.route.id)??0})));
    }catch(e){if(active)setError(e instanceof Error?e.message:String(e));}
    finally{if(active)setLoading(false);}
   })();
@@ -105,12 +118,12 @@ export default function LiveRouteSearch({origin,destination,outbound,returnTime,
   {items.map((selection)=><article className="d-box d-result" key={selection.route.id+String(selection.reverse)+selection.from.id+selection.to.id}>{(()=>{const {route,from,to,reverse}=selection;return <>
    <h2>{route.title}</h2>
    <p>{from.name} ← {to.name}</p>
-   <p>{route.category} · {route.seat_capacity} {t('مقاعد إجمالية — التوافر يتأكد عند الحجز','total capacity — availability checked on booking')} · {route.price_egp} {t('جنيه','EGP')}</p>
+   <p>{route.category} · {selection.remaining} {t('مقاعد متاحة الآن من','seats currently available out of')} {route.seat_capacity} · {route.price_egp} {t('جنيه','EGP')}</p>
    {onSelect&&<button type="button" className="d-offer-select" onClick={()=>onSelect(selection)}>{t('عرض تفاصيل الخط','View route details')}</button>}
    {!onSelect&&<>
    <p>{reverse?t('العودة','Return'):t('الذهاب','Outbound')} · {(reverse?route.return_time:route.outbound_time)?.slice(0,5)} · {period==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')}</p>
-   <label>{t('المقاعد المطلوبة','Seats to reserve')} <input type="number" min={1} max={route.seat_capacity} value={seatCounts[route.id]||1} onChange={e=>setSeatCounts(v=>({...v,[route.id]:Number(e.target.value)}))}/></label>
-   <button type="button" disabled={bookingBusy!==null||!Number.isInteger(seatCounts[route.id]||1)||(seatCounts[route.id]||1)<1||(seatCounts[route.id]||1)>route.seat_capacity} onClick={()=>void book(route.id,from.id,to.id,reverse)}>{bookingBusy===route.id?t('جارٍ حجز المقاعد…','Reserving seats…'):t('احجز مقاعد حقيقية','Reserve seats')}</button>
+   <label>{t('المقاعد المطلوبة','Seats to reserve')} <input type="number" min={1} max={selection.remaining} value={seatCounts[route.id]||1} onChange={e=>setSeatCounts(v=>({...v,[route.id]:Number(e.target.value)}))}/></label>
+   <button type="button" disabled={bookingBusy!==null||!Number.isInteger(seatCounts[route.id]||1)||(seatCounts[route.id]||1)<1||(seatCounts[route.id]||1)>selection.remaining} onClick={()=>void book(route.id,from.id,to.id,reverse)}>{bookingBusy===route.id?t('جارٍ حجز المقاعد…','Reserving seats…'):t('احجز مقاعد حقيقية','Reserve seats')}</button>
    <p>{t('الحجز يسجل قيد الانتظار، من غير OTP أو دفع.','Reservation is saved as pending, without OTP or payment.')}</p></>}
   </>})()}</article>)}
  </section>;
