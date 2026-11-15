@@ -10,6 +10,7 @@ import type { Appearance } from "./Onboarding";
 import type { Route, Booking } from "./api";
 import "./discovery.css";
 import LiveRouteSearch from "./LiveRouteSearch";
+import type {LiveSelection} from "./LiveRouteSearch";
 
 export const discoveryScreens = [8, 9, 10, 11, 12, 14];
 const titles: Record<number, string> = {
@@ -417,6 +418,8 @@ export type DiscoveryProps = {
   screen: number;
   production?: boolean;
   serviceAreas?: {id:number;name_ar:string;name_en:string}[];
+  liveSelection?: LiveSelection | null;
+  onLiveSelect?: (selection:LiveSelection)=>void;
   theme: Appearance;
   onTheme: (t: Appearance) => void;
   go: (id: number) => void;
@@ -492,7 +495,21 @@ export default function Discovery(p: DiscoveryProps) {
     [message, setMessage] = useState(""),
     [modal, setModal] = useState("");
   const lines = demo ? [...examples, ...readPublishedPreviews()].filter(l => l.available > 0) : p.routes.flatMap(toLines);
-  const selected = demo
+  const live=p.liveSelection;
+  const liveRouteLine:Line|null=p.production&&live?{
+    id:live.route.id+':'+(live.reverse?'return':'outbound'),routeId:live.route.id,
+    origin:p.serviceAreas?.find(a=>a.id===live.from.area_id)?.name_ar||live.from.name,
+    destination:p.serviceAreas?.find(a=>a.id===live.to.area_id)?.name_ar||live.to.name,
+    category:live.route.category,available:live.route.seat_capacity,
+    outbound:live.route.outbound_time?.slice(0,5)||'',returnTime:live.route.return_time?.slice(0,5)||'',
+    period:live.route.period,direction:live.reverse?'return':'outbound',amount:live.route.price_egp,
+    stops:(live.reverse?[...live.stops].reverse():live.stops).map(s=>({
+      id:s.id,name:s.name,area:p.serviceAreas?.find(a=>a.id===s.area_id)?.name_ar||s.name,
+      pickup:live.reverse?s.dropoff_allowed:s.pickup_allowed,
+      dropoff:live.reverse?s.pickup_allowed:s.dropoff_allowed
+    }))
+  }:null;
+  const selected = p.production ? liveRouteLine : demo
     ? favoriteDetail || lines.find((l) => l.id === selectedId) || examples[0]
     : p.route
       ? toLines(p.route).find((l) => l.id === selectedId) ||
@@ -952,7 +969,7 @@ export default function Discovery(p: DiscoveryProps) {
             </div>
           </section>
         )}
-        {screen === 11 && !demo && <LiveRouteSearch origin={origin} destination={destination} outbound={outbound} returnTime={returnTime} period={appliedFilters?period:""} categories={categories} />}
+        {screen === 11 && !demo && <LiveRouteSearch origin={origin} destination={destination} outbound={outbound} returnTime={returnTime} period={appliedFilters?period:""} categories={categories} onSelect={p.production?p.onLiveSelect:undefined} />}
         {screen === 11 && demo && (
           <>
             <p className="d-subtitle">{tr("اختر عرض الاشتراك المناسب لك")}</p>
@@ -1044,7 +1061,7 @@ export default function Discovery(p: DiscoveryProps) {
                 <Meta label={tr("الفئة")} icon="seat">
                   {current.category}
                 </Meta>
-                <Meta label={tr("المقاعد المتاحة")} icon="user">
+                <Meta label={tr(p.production?"السعة الإجمالية — التوافر يتأكد عند الحجز":"المقاعد المتاحة")} icon="user">
                   {current.available} {tr("مقاعد")}</Meta>
               </section>
               <div className="d-box d-fixed-price">
@@ -1070,12 +1087,12 @@ export default function Discovery(p: DiscoveryProps) {
                 disabled={current.amount === null || !pickup || !dropoff}
               >
                 {tr("حجز الاشتراك")}</Action>
-              <button
+              {!p.production && <button
                 className="d-text-action"
                 onClick={() => void favorite(demo ? current.id : current.routeId || current.id)}
               >
                 <DiscoveryIcon name="heart" />
-                {demo && favorites.includes(current.id) ? (language==="en" ? "Remove from favorites" : "إزالة من المفضلة") : tr("حفظ في المفضلة")}</button>
+                {demo && favorites.includes(current.id) ? (language==="en" ? "Remove from favorites" : "إزالة من المفضلة") : tr("حفظ في المفضلة")}</button>}
             </>
           ) : (
             <><Empty>{tr("اختار خط من نتائج البحث عشان تشوف تفاصيله.")}</Empty><Action onClick={() => nav(9)}>{tr("البحث عن خط")}</Action></>
