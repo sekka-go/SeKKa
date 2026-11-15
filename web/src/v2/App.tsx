@@ -1950,37 +1950,10 @@ export default function SubscriptionApp() {
           go(12, r.id);
         }}
         onBook={(offer) => {
-          void (async () => {
-            if (!inPhasePreview) {
-              // The browser's skip flag is never an authorization signal.
-              // Only a trusted server-side verification record can permit bookings.
-              setBookingOffer(offer);
-              const user = client ? (await client.auth.getUser()).data.user : null;
-              if (!user) {
-                setError(language === "en" ? "Sign in with Google before booking." : "سجّل دخولك بجوجل قبل أول حجز.");
-                return;
-              }
-              const {data:verification,error:verificationError}=await client!.from("v31_phone_verifications")
-                .select("verified_at").eq("user_id",user.id).maybeSingle();
-              if (verificationError) {
-                setError(language === "en" ? "Could not check phone verification. No booking was made." : "تعذر مراجعة حالة التحقق. لم يتم إنشاء حجز.");
-                return;
-              }
-              if (!verification?.verified_at) {
-                setError(language === "en"
-                  ? "Before your first booking, verify your phone number. SMS/OTP is not available yet, so booking is paused."
-                  : "قبل أول حجز لازم تأكد رقم موبايلك. OTP لسه مش متاح، وعشان كده الحجز متوقف مؤقتًا.");
-                return;
-              }
-            } else {
-              let deferred=false;
-              try {deferred=sessionStorage.getItem("sekka.phoneVerificationDeferred")==="true";} catch { /* session storage optional */ }
-              if(deferred) {
-                setBookingOffer(offer);
-                setError(language==="en" ? "Phone verification required before first booking. No booking was made." : "لازم تأكد رقم موبايلك قبل أول حجز. لم يتم إنشاء حجز.");
-                return;
-              }
-            }
+          if(!inPhasePreview && !signedIn){
+            setError(language==="en"?"Sign in with Google to book.":"سجّل دخولك بجوجل علشان تحجز.");
+            return;
+          }
           setBookingOffer(offer);
           if (offer.id.startsWith("preview-")) {try {sessionStorage.setItem("sekka.preview.selectedOffer", JSON.stringify(offer));} catch {/* in-memory selection still works */}}
           setPeriod(offer.period);
@@ -1994,7 +1967,6 @@ export default function SubscriptionApp() {
           url.searchParams.set("offerDirection", offer.direction);
           history.replaceState({}, "", url);
 
-          })();
         }}
         onBooking={(id) => {
           const b = bookings.find((b) => b.id === id);
