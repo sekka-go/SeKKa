@@ -4,6 +4,7 @@ import {client} from './api';
 import {usePreferences} from './preferences';
 import LiveHome from './LiveHome';
 import Onboarding from './Onboarding';
+import Discovery from './Discovery';
 import LiveProfile from './LiveProfile';
 import LiveRouteSearch from './LiveRouteSearch';
 import LiveVehicles from './LiveVehicles';
@@ -19,9 +20,10 @@ const validTabs:Tab[]=['home','search','routes','bookings','notifications','admi
 const tabFromUrl=():Tab=>{const key=new URL(location.href).searchParams.get('tab') as Tab;return validTabs.includes(key)?key:'home';};
 export default function MobileApp(){
  const p=usePreferences(),en=p.language==='en',t=(ar:string,english:string)=>en?english:ar;
+ const [discoveryScreen,setDiscoveryScreen]=useState(9);
  const [onboardingScreen,setOnboardingScreen]=useState(2),[selectedRole,setSelectedRole]=useState('rider');
  const [tab,setTab]=useState<Tab>(tabFromUrl),[userId,setUserId]=useState<string|null>(null),[captain,setCaptain]=useState(false),[admin,setAdmin]=useState(false),[ready,setReady]=useState(false),[error,setError]=useState('');
- const [origin,setOrigin]=useState(''),[destination,setDestination]=useState(''),[outbound,setOutbound]=useState('07:30'),[returnTime,setReturnTime]=useState(''),[period,setPeriod]=useState('monthly'),[category,setCategory]=useState('PRIME'),[search,setSearch]=useState(false);
+
  const [areasError,setAreasError]=useState('');
  const [areas,setAreas]=useState<{id:number;name_ar:string;name_en:string}[]>([]);
  useEffect(()=>{const back=()=>setTab(tabFromUrl());addEventListener('popstate',back);return()=>removeEventListener('popstate',back);},[]);
@@ -65,15 +67,16 @@ export default function MobileApp(){
    {tab==='home'&&(!ready?<p role="status">{t('بنجهز حسابك…','Loading account…')}</p>:userId?<LiveHome onNavigate={onLegacyNavigate}/>:<Onboarding production screen={2} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={setSelectedRole}/>)}
    {tab==='login'&&<Onboarding production screen={userId?6:onboardingScreen} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={setSelectedRole}/>}
    {tab==='profile'&&(userId?<section className="sekka-mobile-card"><LiveProfile/><button type="button" onClick={()=>void signOut()}>{t('تسجيل الخروج','Sign out')}</button></section>:<section className="sekka-mobile-card"><h1>{t('حسابي','My profile')}</h1><p>{t('سجّل بجوجل علشان تكمل بياناتك.','Sign in with Google to complete your profile.')}</p><button className="sekka-action" onClick={()=>{setOnboardingScreen(4);navigate('login');}}>{t('تسجيل الدخول بجوجل','Sign in with Google')}</button></section>)}
-   {tab==='search'&&<section className="sekka-mobile-card"><h1>{t('دور على خط','Find a route')}</h1><p>{t('اختار مكانك وميعادك عشان تشوف الخطوط الحقيقية.','Choose your stops and schedule to find real routes.')}</p>{areasError&&<p role="alert">{areasError}</p>}<div className="sekka-fields">
-    <label>{t('من','From')}<select value={origin} onChange={e=>{setOrigin(e.target.value);setSearch(false);}}><option value="">{t('اختار المنطقة','Select area')}</option>{areas.map(a=><option key={a.id} value={a.name_ar}>{en?a.name_en:a.name_ar}</option>)}</select></label>
-    <label>{t('إلى','To')}<select value={destination} onChange={e=>{setDestination(e.target.value);setSearch(false);}}><option value="">{t('اختار المنطقة','Select area')}</option>{areas.map(a=><option key={a.id} value={a.name_ar}>{en?a.name_en:a.name_ar}</option>)}</select></label>
-    <label>{t('وقت الذهاب','Departure time')}<input type="time" value={outbound} onChange={e=>{setOutbound(e.target.value);setSearch(false);}}/></label>
-    <label>{t('وقت العودة (اختياري)','Return time (optional)')}<input type="time" value={returnTime} onChange={e=>{setReturnTime(e.target.value);setSearch(false);}}/></label>
-    <label>{t('الاشتراك','Period')}<select value={period} onChange={e=>{setPeriod(e.target.value);setSearch(false);}}><option value="monthly">{t('شهري','Monthly')}</option><option value="weekly">{t('أسبوعي','Weekly')}</option></select></label>
-    <label>{t('الفئة','Category')}<select value={category} onChange={e=>{setCategory(e.target.value);setSearch(false);}}>{['PRIME','SAVER','SPACE','MAX'].map(c=><option key={c}>{c}</option>)}</select></label>
-   </div><button className="sekka-action" disabled={!origin||!destination||origin===destination} onClick={()=>setSearch(true)}>{t('عرض الخطوط المتاحة','Search available routes')}</button>
-   {search&&<LiveRouteSearch origin={origin} destination={destination} outbound={outbound} returnTime={returnTime} period={period} categories={[category]}/>}</section>}
+   {tab==='search'&&<Discovery production screen={discoveryScreen} serviceAreas={areas} theme={p.theme}
+     onTheme={p.setThemePreference} go={(id)=>{if([8,9,10,11].includes(id))setDiscoveryScreen(id);else if(id===4){setOnboardingScreen(4);navigate('login');}else if(id===33)navigate('notifications');else if(id===29)navigate('bookings');else navigate('home');}}
+     routes={[]} route={null} bookings={[]} signedIn={Boolean(userId)} busy={false} error={areasError}
+     onSearch={({origin:from,destination:to,outbound:departure,returnTime:back,period:cycle,category:kind})=>{
+       void from;void to;void departure;void back;void cycle;void kind;
+     }}
+     onSelect={()=>{}} onRequest={async()=>{throw Error(t('طلبات الخطوط متاحة من نتائج البحث الحقيقية فقط.','Submit requests through live search results.'));}}
+     onFavorite={async()=>{throw Error(t('المفضلة غير متاحة حاليًا.','Favorites are not available yet.'));}}
+     onBook={()=>{}} onBooking={()=>navigate('bookings')}
+   />}
    {tab==='routes'&&(captain?<><LiveVehicles/><LiveCaptainRouteList/><LiveCaptainDraft/><LiveTripRequests mode="captain"/></>:<section className="sekka-mobile-card"><h1>{t('خطوط الكابتن','Captain routes')}</h1><p>{userId?t('حسابك مش كابتن معتمد في النظام حاليًا.','This account is not enrolled as a captain.'):t('سجّل الدخول الأول.','Sign in first.')}</p><button className="sekka-action" onClick={()=>navigate(userId?'home':'login')}>{t('متابعة','Continue')}</button></section>)}
    {tab==='bookings'&&(userId?<LiveBookings mode={captain?'captain':'rider'}/>:<section className="sekka-mobile-card"><h1>{t('حجوزاتي','My bookings')}</h1><p>{t('سجّل دخولك علشان تشوف حجوزاتك الحقيقية.','Sign in to view your bookings.')}</p><button className="sekka-action" onClick={()=>navigate('login')}>{t('تسجيل الدخول','Sign in')}</button></section>)}
    {tab==='notifications'&&(userId?<LiveNotifications/>:<section className="sekka-mobile-card"><h1>{t('الإشعارات','Notifications')}</h1><button className="sekka-action" onClick={()=>navigate('login')}>{t('تسجيل الدخول','Sign in')}</button></section>)}
