@@ -1,3 +1,4 @@
+import {reserveSeats} from './reservations';
 import {useEffect,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
@@ -15,6 +16,19 @@ export default function LiveRouteSearch({origin,destination,outbound,returnTime,
  const [loading,setLoading]=useState(Boolean(client));
  const [error,setError]=useState('');
  const [retry,setRetry]=useState(0);
+ const [bookingBusy,setBookingBusy]=useState<string|null>(null);
+ const [bookingError,setBookingError]=useState('');
+ const [bookingSuccess,setBookingSuccess]=useState('');
+ const [seatCounts,setSeatCounts]=useState<Record<string,number>>({});
+ const [bookingKeys,setBookingKeys]=useState<Record<string,string>>({});
+ const book=async(routeId:string)=>{
+  const seats=seatCounts[routeId]||1;
+  const key=bookingKeys[routeId]||crypto.randomUUID();
+  setBookingKeys(v=>({...v,[routeId]:key}));setBookingBusy(routeId);setBookingError('');setBookingSuccess('');
+  try{const result=await reserveSeats(routeId,seats,key);setBookingSuccess(t('تم تسجيل طلب الحجز برقم '+result.bookingId+'. حالته قيد الانتظار.','Booking requested: '+result.bookingId+'. Status: pending.'));setBookingKeys(v=>{const next={...v};delete next[routeId];return next;});setRetry(v=>v+1);}
+  catch(e){setBookingError(e instanceof Error?e.message:String(e));}
+  finally{setBookingBusy(null);}
+ };
  useEffect(()=>{
   if(!client){setLoading(false);return;}
   let active=true;
@@ -69,12 +83,16 @@ export default function LiveRouteSearch({origin,destination,outbound,returnTime,
   {loading&&<p role="status">{t('بنبحث عن خطوط مطابقة…','Searching published routes…')}</p>}
   {error&&<div role="alert"><p>{t('تعذر تحميل الخطوط.','Unable to load routes.')} {error}</p><button onClick={()=>setRetry(v=>v+1)}>{t('حاول تاني','Retry')}</button></div>}
   {!loading&&!error&&items.length===0&&<div role="status"><p>{t('لسه مفيش خط مناسب.','No suitable route yet.')}</p><p>{t('لسه مفيش خطوط منشورة مطابقة لنقط الركوب والنزول ومواعيدك.','No published routes match your pickup, drop-off and schedule yet.')}</p></div>}
+  {bookingError&&<p role="alert">{bookingError}</p>}
+  {bookingSuccess&&<p role="status">{bookingSuccess}</p>}
   {items.map(({route,from,to,reverse})=><article className="d-box" key={route.id+String(reverse)}>
    <h2>{route.title}</h2>
    <p>{from.name} ← {to.name}</p>
    <p>{route.category} · {route.seat_capacity} {t('مقاعد إجمالية','total seats')} · {route.price_egp} {t('جنيه','EGP')}</p>
    <p>{reverse?t('العودة','Return'):t('الذهاب','Outbound')} · {(reverse?route.return_time:route.outbound_time)?.slice(0,5)} · {period==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')}</p>
-   <p>{t('الحجز الإلكتروني غير متاح حاليًا لحين اكتمال تأمين المقاعد.','Online booking is unavailable until atomic seat reservation is ready.')}</p>
+   <label>{t('المقاعد المطلوبة','Seats to reserve')} <input type="number" min={1} max={route.seat_capacity} value={seatCounts[route.id]||1} onChange={e=>setSeatCounts(v=>({...v,[route.id]:Number(e.target.value)}))}/></label>
+   <button type="button" disabled={bookingBusy!==null||!Number.isInteger(seatCounts[route.id]||1)||(seatCounts[route.id]||1)<1||(seatCounts[route.id]||1)>route.seat_capacity} onClick={()=>void book(route.id)}>{bookingBusy===route.id?t('جارٍ حجز المقاعد…','Reserving seats…'):t('احجز مقاعد حقيقية','Reserve seats')}</button>
+   <p>{t('الحجز يسجل قيد الانتظار، من غير OTP أو دفع.','Reservation is saved as pending, without OTP or payment.')}</p>
   </article>)}
  </section>;
 }
