@@ -53,10 +53,10 @@ jobs:
           VITE_SUPABASE_URL: https://sekka-auth-e2e.supabase.co
           VITE_SUPABASE_PUBLISHABLE_KEY: e2e-synthetic-public-key
         run: npm run build
-      - name: Verify Admin landing, refresh, role denial and RPC retry (MOCKED)
+      - name: Verify Admin and role-separated navigation (MOCKED)
         env:
           SEKKA_AUTH_UI_MOCKS: "true"
-        run: npx playwright test e2e/admin-authorization-mocked.spec.ts
+        run: npx playwright test e2e/admin-authorization-mocked.spec.ts e2e/mobile-navigation-role.spec.ts
       - uses: actions/upload-artifact@v4
         if: always()
         with:

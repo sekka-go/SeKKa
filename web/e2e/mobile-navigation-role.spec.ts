@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 
-const endpoint='https://sekka-navigation-e2e.supabase.co';
+const endpoint='https://sekka-auth-e2e.supabase.co';
 const userId='00000000-0000-4000-8000-0000000000b1';
 const user={
  id:userId,aud:'authenticated',role:'authenticated',email:'captain-fixture@example.test',
