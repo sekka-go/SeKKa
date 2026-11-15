@@ -7,7 +7,8 @@ for(const width of [360,390]){
    await page.goto('/');
    await expect(page.locator('.sekka-mobile')).toBeVisible();
    await expect(page.locator('.phase-screen-2')).toBeVisible();
-   await expect(page.locator('.sekka-mobile-header,.sekka-bottom-nav')).toBeHidden();
+   await expect(page.locator('.sekka-mobile-header')).toBeHidden();
+   await expect(page.locator('.sekka-bottom-nav')).toBeHidden();
    await expect(page.getByRole('button',{name:language==='ar'?'ابدأ الآن':'Get started'})).toBeVisible();
    await expect(page.locator('.phase-review-bar,.phase-preview-note')).toHaveCount(0);
    await expect(page.locator('html')).toHaveAttribute('dir',language==='ar'?'rtl':'ltr');
@@ -23,7 +24,8 @@ for(const width of [360,390]){
    await expect(page.getByRole('heading',{name:language==='ar'?'حسابي':'My profile'})).toBeVisible();
    await page.getByRole('button',{name:language==='ar'?'تسجيل الدخول بجوجل':'Sign in with Google'}).click();
    await expect(page.locator('.phase-screen-4 .phase-google-auth')).toBeVisible();
-   await expect(page.locator('.sekka-mobile-header,.sekka-bottom-nav')).toBeHidden();
+   await expect(page.locator('.sekka-mobile-header')).toBeHidden();
+   await expect(page.locator('.sekka-bottom-nav')).toBeHidden();
    const primary=page.locator('.phase-screen-4 .phase-primary');
    const rect=await primary.boundingBox();expect(rect).not.toBeNull();
    expect(rect!.x).toBeGreaterThanOrEqual(0);
