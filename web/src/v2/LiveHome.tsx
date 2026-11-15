@@ -32,7 +32,7 @@ export default function LiveHome({onNavigate}:{onNavigate:(screen:number)=>void}
      approved:captain?.approval_status==='approved',admin:!adminError&&admin===true
     });
     if(profileError||captainError||adminError)setError(t('تعذّر تحديث بعض الصلاحيات. جرّب تحديث البيانات.','Some account permissions could not be refreshed.'));
-   }catch(e){
+   }catch{
     if(active)setError(t('تعذر الاتصال بحسابك. تقدر تعيد المحاولة أو تسجّل دخولك.','Unable to connect to your account. Retry or sign in.'));
    }finally{if(active)setBusy(false);}
   })();
