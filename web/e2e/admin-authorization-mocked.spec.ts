@@ -116,6 +116,7 @@ for(const [width,height] of [[320,700],[360,800],[390,844],[412,915]] as const){
     const continueButton=screen.locator('.phase-live-profile-flow > .phase-primary');
     await expect(screen).toBeVisible();
     await expect(form).toBeVisible();
+    await expect(form.getByRole('button',{name:language==='ar'?'حفظ بياناتي':'Save profile'})).toBeVisible();
     await expect(continueButton).toBeVisible();
     const actions=screen.locator('.phase-live-profile-flow button:visible');
     const rectangles=await actions.evaluateAll(nodes=>nodes.map(n=>{
