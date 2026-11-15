@@ -104,3 +104,15 @@ test('Captain screens require all fields, preserve explicit zero, and distinguis
  assert.match(approvalTest,/Submission without required documents/);
  assert.match(journeyTest,/blocked Captain capacity edits/);
 });
+
+test('mandatory onboarding preserves first-route publishing and pre-existing booking retry protections',()=>{
+ const status=migration.match(/CREATE OR REPLACE FUNCTION public\\.v31_set_route_status\\([\\s\\S]*?\\n\\$\\$;/i)?.[0]||'';
+ assert.match(status,/route\\.status='draft' AND p_status='published'/);
+ assert.match(status,/ROUTE_NOT_OWNED/);
+ assert.match(status,/CAPTAIN_NOT_APPROVED/);
+ const reserve=migration.match(/CREATE OR REPLACE FUNCTION public\\.v31_reserve_seats\\([\\s\\S]*?\\n\\$\\$;/i)?.[0]||'';
+ assert.match(reserve,/FOR UPDATE;[\\s\\S]*Recheck after locking the route:[\\s\\S]*SELECT \\* INTO existing/);
+ assert.match(reserve,/ON CONFLICT\\(rider_id,idempotency_key\\) DO NOTHING/);
+ assert.match(migration,/IF app\\.vehicle_type IS NULL OR app\\.vehicle_type NOT IN/);
+ assert.match(migration,/OR app\\.vehicle_type IS NULL OR app\\.vehicle_type NOT IN/);
+});
