@@ -1,11 +1,11 @@
 import LiveTripRequests from './LiveTripRequests';
-import {reserveSeats} from './reservations';
+import {reserveSeatsWithStops} from './reservations';
 import {useEffect,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
 
 type Route={id:string;title:string;category:string;seat_capacity:number;period:string;direction:string;outbound_time:string|null;return_time:string|null;price_egp:number;return_supported:boolean};
-type Stop={route_id:string;area_id:number;position:number;name:string;pickup_allowed:boolean;dropoff_allowed:boolean};
+type Stop={id:string;route_id:string;area_id:number;position:number;name:string;pickup_allowed:boolean;dropoff_allowed:boolean};
 type Area={id:number;name_ar:string;name_en:string};
 type Match={route:Route;from:Stop;to:Stop;reverse:boolean};
 export default function LiveRouteSearch({origin,destination,outbound,returnTime,period,categories}:{
@@ -22,11 +22,11 @@ export default function LiveRouteSearch({origin,destination,outbound,returnTime,
  const [bookingSuccess,setBookingSuccess]=useState('');
  const [seatCounts,setSeatCounts]=useState<Record<string,number>>({});
  const [bookingKeys,setBookingKeys]=useState<Record<string,string>>({});
- const book=async(routeId:string)=>{
+ const book=async(routeId:string,pickupStopId:string,dropoffStopId:string,reverse:boolean)=>{
   const seats=seatCounts[routeId]||1;
   const key=bookingKeys[routeId]||crypto.randomUUID();
   setBookingKeys(v=>({...v,[routeId]:key}));setBookingBusy(routeId);setBookingError('');setBookingSuccess('');
-  try{const result=await reserveSeats(routeId,seats,key);setBookingSuccess(t('تم تسجيل طلب الحجز برقم '+result.bookingId+'. حالته قيد الانتظار.','Booking requested: '+result.bookingId+'. Status: pending.'));setBookingKeys(v=>{const next={...v};delete next[routeId];return next;});setRetry(v=>v+1);}
+  try{const result=await reserveSeatsWithStops(routeId,seats,key,pickupStopId,dropoffStopId,reverse);setBookingSuccess(t('تم تسجيل طلب الحجز برقم '+result.bookingId+'. حالته قيد الانتظار.','Booking requested: '+result.bookingId+'. Status: pending.'));setBookingKeys(v=>{const next={...v};delete next[routeId];return next;});setRetry(v=>v+1);}
   catch(e){setBookingError(e instanceof Error?e.message:String(e));}
   finally{setBookingBusy(null);}
  };
@@ -48,7 +48,7 @@ export default function LiveRouteSearch({origin,destination,outbound,returnTime,
     const ids=routeRows.map(r=>r.id);
     if(!ids.length){if(active)setItems([]);return;}
     const {data:stops,error:stopsError}=await client!.from('v31_route_stops')
-      .select('route_id,area_id,position,name,pickup_allowed,dropoff_allowed')
+      .select('id,route_id,area_id,position,name,pickup_allowed,dropoff_allowed')
       .in('route_id',ids).order('position').limit(3000);
     if(stopsError)throw stopsError;
     const all=(stops||[]) as Stop[];
@@ -93,7 +93,7 @@ export default function LiveRouteSearch({origin,destination,outbound,returnTime,
    <p>{route.category} · {route.seat_capacity} {t('مقاعد إجمالية','total seats')} · {route.price_egp} {t('جنيه','EGP')}</p>
    <p>{reverse?t('العودة','Return'):t('الذهاب','Outbound')} · {(reverse?route.return_time:route.outbound_time)?.slice(0,5)} · {period==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')}</p>
    <label>{t('المقاعد المطلوبة','Seats to reserve')} <input type="number" min={1} max={route.seat_capacity} value={seatCounts[route.id]||1} onChange={e=>setSeatCounts(v=>({...v,[route.id]:Number(e.target.value)}))}/></label>
-   <button type="button" disabled={bookingBusy!==null||!Number.isInteger(seatCounts[route.id]||1)||(seatCounts[route.id]||1)<1||(seatCounts[route.id]||1)>route.seat_capacity} onClick={()=>void book(route.id)}>{bookingBusy===route.id?t('جارٍ حجز المقاعد…','Reserving seats…'):t('احجز مقاعد حقيقية','Reserve seats')}</button>
+   <button type="button" disabled={bookingBusy!==null||!Number.isInteger(seatCounts[route.id]||1)||(seatCounts[route.id]||1)<1||(seatCounts[route.id]||1)>route.seat_capacity} onClick={()=>void book(route.id,from.id,to.id,reverse)}>{bookingBusy===route.id?t('جارٍ حجز المقاعد…','Reserving seats…'):t('احجز مقاعد حقيقية','Reserve seats')}</button>
    <p>{t('الحجز يسجل قيد الانتظار، من غير OTP أو دفع.','Reservation is saved as pending, without OTP or payment.')}</p>
   </article>)}
  </section>;
