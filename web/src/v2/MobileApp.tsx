@@ -19,19 +19,9 @@ import {mobileRouteHref,readMobileRoute} from './mobileNavigation';
 import type {MobileRoute,RouteSelection} from './mobileNavigation';
 import './mobile-app.css';
 
-// A completed welcome is an introduction, not a recurring Home destination.
-const WELCOME_COMPLETED_KEY='sekka.welcomeCompleted.v1';
-function readWelcomeCompleted(){
- try{return localStorage.getItem(WELCOME_COMPLETED_KEY)==='1';}catch{return false;}
-}
 export default function MobileApp(){
  const p=usePreferences(),en=p.language==='en',t=(ar:string,english:string)=>en?english:ar;
  const [route,setRoute]=useState<MobileRoute>(()=>readMobileRoute());
- const [welcomeCompleted,setWelcomeCompleted]=useState(readWelcomeCompleted);
- const completeWelcome=()=>{
-  setWelcomeCompleted(true);
-  try{localStorage.setItem(WELCOME_COMPLETED_KEY,'1');}catch{/* State persists in this session if storage is disabled. */}
- };
  const tab=route.tab;
  const adminScreen=route.tab==='admin'?route.view:62;
  const [captainApproved,setCaptainApproved]=useState(false);
@@ -51,31 +41,18 @@ export default function MobileApp(){
  const [areasError,setAreasError]=useState('');
  const [areas,setAreas]=useState<{id:number;name_ar:string;name_en:string}[]>([]);
  useEffect(()=>{const back=()=>{setRoute(readMobileRoute());setBookingId(new URL(location.href).searchParams.get('booking'));setSelectionVersion(v=>v+1);};addEventListener('popstate',back);return()=>removeEventListener('popstate',back);},[]);
- // Completing the intro never authenticates a person. If this is a guest
- // revisit (including browser Back), replace Rider Home with Google sign-in.
- // Resolve auth before redirecting, so a valid persisted session is preserved.
- useEffect(()=>{
-  if(!ready||userId||!welcomeCompleted||route.tab!=='home')return;
-  const target:MobileRoute={tab:'login',view:4};
-  history.replaceState({route:target},'',mobileRouteHref(target));
-  setRoute(target);
- },[ready,userId,welcomeCompleted,route]);
  useEffect(()=>{
   const canonical=mobileRouteHref(route);
   const current=location.pathname+location.search+location.hash;
   if(canonical!==current)history.replaceState({route},'',canonical);
  },[route]);
  function navigate(next:MobileRoute,options:{replace?:boolean;selection?:RouteSelection}={}){
-  // Guest navigation must never treat the completed intro as an Auth session.
-  const guestHome=ready&&!userId&&welcomeCompleted&&next.tab==='home';
-  const destination:MobileRoute=guestHome?{tab:'login',view:4}:next;
-  const replace=options.replace||guestHome;
-  const href=mobileRouteHref(destination,location.href,options.selection);
-  if(replace)history.replaceState({route:destination},'',href);
-  else history.pushState({route:destination},'',href);
-  setRoute(destination);
+  const href=mobileRouteHref(next,location.href,options.selection);
+  if(options.replace)history.replaceState({route:next},'',href);
+  else history.pushState({route:next},'',href);
+  setRoute(next);
   setBookingId(new URL(href,location.origin).searchParams.get('booking'));
-  if(!replace)window.scrollTo(0,0);
+  if(!options.replace)window.scrollTo(0,0);
  }
  useEffect(()=>{let active=true;const u=new URL(location.href);
   const route=u.searchParams.get('route'),pickup=u.searchParams.get('pickup'),dropoff=u.searchParams.get('dropoff');
@@ -256,17 +233,11 @@ export default function MobileApp(){
    rows={[]} busy={false} error="" onRefresh={()=>{}} onEnrolled={()=>setCaptain(true)}/>;
  const signOut=async()=>{if(!client)return;const {error:e}=await client.auth.signOut();if(e)setError(e.message);else navigate({tab:'login',view:4},{replace:true});};
  const onboardingGo=(n:number)=>{
-  // Entering the real journey replaces the intro's history entry. Back from
-  // sign-in returns to role choice, never to the promotional welcome screen.
-  if(tab==='home'&&!welcomeCompleted&&(n===3||n===4)){
-   completeWelcome();
-   if(n===3){navigate({tab:'login',view:3},{replace:true});return;}
-   // Sign in directly from welcome is also an explicit completion.
-   navigate({tab:'login',view:4},{replace:true});
-   return;
-  }
-  if(n===2&&welcomeCompleted&&!userId){
-   navigate({tab:'login',view:4},{replace:true});
+  // The signed-out onboarding sequence is Welcome (root) -> Role -> Google.
+  // Both the in-app Back control and browser Back can return to Welcome.
+  // Only a verified Google session allows the real Rider Home.
+  if(n===2){
+   navigate({tab:'home'},{replace:true});
    return;
   }
   if(n===8){navigate({tab:'home'});return;}
@@ -294,10 +265,9 @@ export default function MobileApp(){
  };
 
  const fullScreenSearchFilters=tab==='search'&&discoveryScreen===10;
- const guestAuthAtHome=tab==='home'&&ready&&!userId&&welcomeCompleted;
- const fullScreenAuth=guestAuthAtHome||(tab==='login'&&(onboardingScreen===3||onboardingScreen===4))||(tab==='captain-onboarding'&&!userId);
+ const fullScreenAuth=(tab==='login'&&(onboardingScreen===3||onboardingScreen===4))||(tab==='captain-onboarding'&&!userId);
  const fullScreenSearch=tab==='search'&&discoveryScreen===9;
- return <div className={`sekka-mobile sekka-tab-${tab}${fullScreenSearchFilters?' sekka-search-filters':''}${fullScreenAuth?' sekka-fullscreen-auth':''}${fullScreenSearch?' sekka-fullscreen-search':''}${!userId&&tab==='home'&&!welcomeCompleted?' sekka-guest-welcome':''}`} dir={en?'ltr':'rtl'}>
+ return <div className={`sekka-mobile sekka-tab-${tab}${fullScreenSearchFilters?' sekka-search-filters':''}${fullScreenAuth?' sekka-fullscreen-auth':''}${fullScreenSearch?' sekka-fullscreen-search':''}${!userId&&tab==='home'?' sekka-guest-welcome':''}`} dir={en?'ltr':'rtl'}>
   <a className="sekka-skip" href="#sekka-content">{t('تخطي للمحتوى','Skip to content')}</a>
   <header className="sekka-mobile-header">
    <button className="sekka-brand-button" onClick={()=>navigate({tab:'home'})} aria-label={t('الرئيسية','Home')}><img className="sekka-approved-logo" src="/brand/sekka-icon-192.png" alt="سِكّة — seKKa"/></button>
@@ -313,7 +283,7 @@ export default function MobileApp(){
      <button type="button" onClick={()=>setAuthCheckRevision(v=>v+1)}>{t('إعادة فحص الصلاحيات','Retry authorization')}</button>
    </div>}
    {error&&<div className="sekka-mobile-alert" role="alert">{error}<button onClick={()=>setError('')}>{t('إغلاق','Dismiss')}</button></div>}
-   {tab==='home'&&(!ready?<p role="status">{t('بنجهز حسابك…','Loading account…')}</p>:userId?approvedDiscovery(8):<Onboarding production screen={welcomeCompleted?4:2} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={setSelectedRole}/>)}
+   {tab==='home'&&(!ready?<p role="status">{t('بنجهز حسابك…','Loading account…')}</p>:userId?approvedDiscovery(8):<Onboarding production screen={2} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={setSelectedRole}/>)}
    {tab==='login'&&<Onboarding production screen={userId?6:!ready?4:onboardingScreen} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={selectRole}/>}
    {tab==='profile'&&(userId?<section className="sekka-mobile-card"><LiveProfile/>{ready&&admin&&<button type="button" className="sekka-action" onClick={openAdmin}>
      {t('فتح لوحة الإدارة','Open Admin dashboard')}</button>}

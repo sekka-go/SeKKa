@@ -56,54 +56,8 @@ test('production Search uses genuine back-end state rather than gallery fixtures
 });
 
 
-test('Get started permanently leaves the welcome screen out of the Back history',async({page})=>{
- await page.setViewportSize({width:390,height:844});
- await page.addInitScript(()=>{
-  localStorage.setItem('language_preference','en');
-  localStorage.setItem('theme_preference','light');
- });
- await page.goto('/');
- await expect(page.locator('.phase-screen-2')).toBeVisible();
- await page.getByRole('button',{name:'Get started'}).click();
- await expect(page).toHaveURL(/tab=login&view=3/);
- expect(await page.evaluate(()=>localStorage.getItem('sekka.welcomeCompleted.v1'))).toBe('1');
- await expect(page.locator('.phase-screen-2')).toHaveCount(0);
 
- await page.locator('.phase-screen-3 .phase-role-next').click();
- await expect(page).toHaveURL(/tab=login&view=4/);
- await page.goBack();
- await expect(page).toHaveURL(/tab=login&view=3/);
- await expect(page.locator('.phase-screen-3')).toBeVisible();
- await expect(page.locator('.phase-screen-2')).toHaveCount(0);
-
- // Leaving role selection never makes a guest look signed in.
- await page.locator('.phase-screen-3 .phase-back').click();
- await expect(page.locator('.phase-screen-4 .phase-google-auth')).toBeVisible();
- await expect(page.locator('.d-screen-8')).toHaveCount(0);
- await expect(page.locator('.phase-screen-2')).toHaveCount(0);
- await page.reload();
- await expect(page.locator('.phase-screen-4 .phase-google-auth')).toBeVisible();
- await expect(page.locator('.d-screen-8')).toHaveCount(0);
- await page.goto('/');
- await expect(page).toHaveURL(/tab=login&view=4/);
- await expect(page.locator('.phase-screen-4 .phase-google-auth')).toBeVisible();
-});
-
-test('Sign in from welcome also prevents returning to it later',async({page})=>{
- await page.goto('/');
- await expect(page.locator('.phase-screen-2')).toBeVisible();
- await page.locator('.phase-screen-2 .phase-login button').click();
- await expect(page).toHaveURL(/tab=login&view=4/);
- expect(await page.evaluate(()=>localStorage.getItem('sekka.welcomeCompleted.v1'))).toBe('1');
- await page.locator('.phase-screen-4 .phase-back').click();
- await expect(page.locator('.phase-screen-3')).toBeVisible();
- await page.locator('.phase-screen-3 .phase-back').click();
- await expect(page.locator('.phase-screen-4 .phase-google-auth')).toBeVisible();
- await expect(page.locator('.d-screen-8')).toHaveCount(0);
- await expect(page.locator('.phase-screen-2')).toHaveCount(0);
-});
-
-test('completed welcome is not a Google session: root and Back lead to sign-in',async({page})=>{
+test('signed-out PWA opens Welcome even if an older release stored completed intro',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.addInitScript(()=>{
   localStorage.setItem('sekka.welcomeCompleted.v1','1');
@@ -111,27 +65,67 @@ test('completed welcome is not a Google session: root and Back lead to sign-in',
   localStorage.setItem('theme_preference','light');
  });
  await page.goto('/');
+ await expect(page.locator('.phase-screen-2 .phase-start')).toBeVisible();
+ await expect(page.locator('.d-screen-8')).toHaveCount(0);
+ await expect(page.locator('.sekka-mobile-header')).toBeHidden();
+ await expect(page.locator('.sekka-bottom-nav')).toBeHidden();
+});
+
+test('Get started -> role -> Google -> Back -> role -> Welcome via screen and browser',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.addInitScript(()=>{
+  localStorage.setItem('language_preference','en');
+  localStorage.setItem('theme_preference','light');
+ });
+ await page.goto('/');
+ await expect(page.locator('.phase-screen-2 .phase-start')).toBeVisible();
+ await page.getByRole('button',{name:'Get started'}).click();
+ await expect(page).toHaveURL(/tab=login&view=3/);
+ await expect(page.locator('.phase-screen-3')).toBeVisible();
+ await page.locator('.phase-screen-3 .phase-role-next').click();
  await expect(page).toHaveURL(/tab=login&view=4/);
  await expect(page.locator('.phase-screen-4 .phase-google-auth')).toBeVisible();
- await expect(page.locator('.d-screen-8')).toHaveCount(0);
- await expect(page.locator('.sekka-bottom-nav')).toBeHidden();
- await page.goto('/?tab=profile');
- await expect(page.getByRole('heading',{name:'My profile'})).toBeVisible();
- await expect(page.getByRole('button',{name:'Sign in with Google'})).toBeVisible();
- await expect(page.getByRole('button',{name:'Sign out'})).toHaveCount(0);
- await page.goto('/');
- await expect(page.locator('.phase-screen-4 .phase-google-auth')).toBeVisible();
- await page.reload();
+ await page.goBack();
+ await expect(page).toHaveURL(/tab=login&view=3/);
+ await expect(page.locator('.phase-screen-3')).toBeVisible();
+ await page.goBack();
+ await expect(page).toHaveURL(/\/$/);
+ await expect(page.locator('.phase-screen-2 .phase-start')).toBeVisible();
+ await page.getByRole('button',{name:'Get started'}).click();
+ await expect(page.locator('.phase-screen-3')).toBeVisible();
+ await page.locator('.phase-screen-3 .phase-back').click();
+ await expect(page.locator('.phase-screen-2 .phase-start')).toBeVisible();
  await expect(page.locator('.d-screen-8')).toHaveCount(0);
 });
 
-test('guest who completed welcome cannot return to Rider Home with browser Back',async({page})=>{
- await page.addInitScript(()=>localStorage.setItem('sekka.welcomeCompleted.v1','1'));
+test('Sign in directly from Welcome can still Back through role selection to Welcome',async({page})=>{
  await page.goto('/');
+ await expect(page.locator('.phase-screen-2')).toBeVisible();
+ await page.locator('.phase-screen-2 .phase-login button').click();
  await expect(page).toHaveURL(/tab=login&view=4/);
- await page.goto('/?tab=search');
- await expect(page.locator('.d-screen-9')).toBeVisible();
- await page.goBack();
- await expect(page.locator('.phase-screen-4 .phase-google-auth')).toBeVisible();
+ await page.locator('.phase-screen-4 .phase-back').click();
+ await expect(page.locator('.phase-screen-3')).toBeVisible();
+ await page.locator('.phase-screen-3 .phase-back').click();
+ await expect(page).toHaveURL(/\/$/);
+ await expect(page.locator('.phase-screen-2 .phase-start')).toBeVisible();
+});
+
+test('without Google session Account offers Sign in rather than Sign out',async({page})=>{
+ await page.goto('/?tab=profile');
+ await expect(page.getByRole('button',{name:/Sign in with Google|تسجيل الدخول بجوجل/})).toBeVisible();
+ await expect(page.getByRole('button',{name:/Sign out|تسجيل الخروج/})).toHaveCount(0);
+ await page.goto('/');
+ await expect(page.locator('.phase-screen-2')).toBeVisible();
  await expect(page.locator('.d-screen-8')).toHaveCount(0);
+});
+
+test('refresh keeps the current onboarding step, without redirecting or replaying welcome',async({page})=>{
+ await page.goto('/');
+ await page.locator('.phase-screen-2 .phase-start').click();
+ await expect(page.locator('.phase-screen-3')).toBeVisible();
+ await page.reload();
+ await expect(page.locator('.phase-screen-3')).toBeVisible();
+ await expect(page.locator('.phase-screen-2')).toHaveCount(0);
+ await page.locator('.phase-screen-3 .phase-back').click();
+ await expect(page.locator('.phase-screen-2')).toBeVisible();
 });
