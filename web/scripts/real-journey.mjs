@@ -27,6 +27,14 @@ const riderUser=must(await rider.auth.getUser(env.SEKKA_RIDER_ACCESS_TOKEN),'rid
 assert.notEqual(captainUser.id,riderUser.id,'Sessions must represent different users');
 const approval=must(await captain.from('v31_captain_profiles').select('approval_status').eq('user_id',captainUser.id).single(),'captain approval');
 assert.equal(approval.approval_status,'approved');
+const application=must(await captain.from('v31_captain_applications')
+ .select('user_id,status,reviewed_at').eq('user_id',captainUser.id).single(),'captain approval application');
+assert.equal(application.status,'approved','Approval must have been a real admin-reviewed application');
+assert.ok(application.reviewed_at,'Admin decision must have a persisted review timestamp');
+const decisions=must(await captain.from('v31_captain_approval_audit')
+ .select('decision').eq('captain_id',captainUser.id).order('created_at',{ascending:false}).limit(1),'captain approval audit');
+assert.equal(decisions[0]?.decision,'approved','Approval must have an immutable decision trail');
+
 const areas=must(await captain.from('v31_service_areas').select('id,name_ar').eq('active',true).order('id').limit(2),'areas');
 assert.equal(areas.length,2,'Need two active areas');
 const testTag=randomUUID().slice(0,8);
