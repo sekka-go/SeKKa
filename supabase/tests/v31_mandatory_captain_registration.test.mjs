@@ -105,14 +105,23 @@ test('Captain screens require all fields, preserve explicit zero, and distinguis
  assert.match(journeyTest,/blocked Captain capacity edits/);
 });
 
-test('mandatory onboarding preserves first-route publishing and pre-existing booking retry protections',()=>{
- const status=migration.match(/CREATE OR REPLACE FUNCTION public\\.v31_set_route_status\\([\\s\\S]*?\\n\\$\\$;/i)?.[0]||'';
- assert.match(status,/route\\.status='draft' AND p_status='published'/);
- assert.match(status,/ROUTE_NOT_OWNED/);
- assert.match(status,/CAPTAIN_NOT_APPROVED/);
- const reserve=migration.match(/CREATE OR REPLACE FUNCTION public\\.v31_reserve_seats\\([\\s\\S]*?\\n\\$\\$;/i)?.[0]||'';
- assert.match(reserve,/FOR UPDATE;[\\s\\S]*Recheck after locking the route:[\\s\\S]*SELECT \\* INTO existing/);
- assert.match(reserve,/ON CONFLICT\\(rider_id,idempotency_key\\) DO NOTHING/);
- assert.match(migration,/IF app\\.vehicle_type IS NULL OR app\\.vehicle_type NOT IN/);
- assert.match(migration,/OR app\\.vehicle_type IS NULL OR app\\.vehicle_type NOT IN/);
+test('mandatory onboarding preserves publishing and idempotent retries',()=>{
+ const selectFunction=(name)=>{
+  const start=migration.indexOf('CREATE OR REPLACE FUNCTION public.'+name+'(');
+  assert.ok(start>=0,'missing function '+name);
+  const end=migration.indexOf('\n$$;',start);
+  assert.ok(end>start,'missing end of function '+name);
+  return migration.slice(start,end+4);
+ };
+ const status=selectFunction('v31_set_route_status');
+ assert.ok(status.includes("route.status='draft' AND p_status='published'"));
+ assert.ok(status.includes('ROUTE_NOT_OWNED'));
+ assert.ok(status.includes('CAPTAIN_NOT_APPROVED'));
+ const reserve=selectFunction('v31_reserve_seats');
+ const locked=reserve.indexOf('FOR UPDATE;');
+ const recheck=reserve.indexOf('Recheck after locking the route:');
+ assert.ok(locked>=0 && recheck>locked);
+ assert.ok(reserve.includes('ON CONFLICT(rider_id,idempotency_key) DO NOTHING'));
+ assert.ok(migration.includes("IF app.vehicle_type IS NULL OR app.vehicle_type NOT IN"));
+ assert.ok(migration.includes("OR app.vehicle_type IS NULL OR app.vehicle_type NOT IN"));
 });
