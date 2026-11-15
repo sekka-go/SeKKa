@@ -468,8 +468,8 @@ export default function Onboarding({
             <button className="phase-primary phase-send" disabled={!validPhone} onClick={issueDemoCode}>
               {t("إنشاء كود تجريبي")}<Arrow />
             </button>
-            <div className="phase-auth-or" aria-label={language === "en" ? "Or" : "أو"}><span>{language === "en" ? "Or" : "أو"}</span></div>
-            <button type="button" className="phase-google-secondary" disabled={!client} onClick={async () => {
+            <div className="phase-auth-or" style={{position:"absolute",top:"84.3%",left:"9%",width:"82%",display:"flex",alignItems:"center",justifyContent:"center",gap:"3cqw",zIndex:4,fontSize:"3.5cqw",color:"var(--phase-muted)"}} aria-label={language === "en" ? "Or" : "أو"}><span>{language === "en" ? "Or" : "أو"}</span></div>
+            <button type="button" className="phase-google-secondary" style={{position:"absolute",top:"89%",left:"6.6%",width:"87.2%",height:"8%",zIndex:4,borderRadius:999,border:"1.5px solid var(--phase-line)",background:"var(--phase-card)",color:"var(--phase-text)",fontSize:"4.2cqw",fontWeight:800}} disabled={!client} onClick={async () => {
               if (!client) return;
               const {error}=await client.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin+location.pathname+"?screen=8&oauth_theme="+encodeURIComponent(themePreference)+"&oauth_language="+encodeURIComponent(languagePreference)}});
               if (error) window.alert(error.message);
