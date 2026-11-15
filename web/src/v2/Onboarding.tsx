@@ -430,7 +430,7 @@ export default function Onboarding({
               {t("متابعة")}<Arrow />
             </button>
           </>
-        ) : (id === 4 || id === 5) && !new URLSearchParams(location.search).has("preview") ? (
+        ) : (id === 4 || id === 5) && !new URLSearchParams(location.search).has("preview") && !new URLSearchParams(location.search).has("inspect") ? (
           <section className="phase-google-auth">
             <h1 className="phase-title">{language === "en" ? "Sign in with Google" : "الدخول بجوجل"}</h1>
             <p className="phase-subtitle">{language === "en" ? "Phone login and OTP are temporarily unavailable." : "تسجيل الدخول بالموبايل وOTP مؤجل مؤقتًا."}</p>
