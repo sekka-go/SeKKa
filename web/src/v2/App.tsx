@@ -532,11 +532,13 @@ export default function SubscriptionApp() {
     !inPhasePreview &&
     !publicScreens.has(screen) &&
     ![6, 7].includes(screen) &&
+    !(signedIn && captainRouteScreens.includes(screen)) &&
     (!signedIn || (!profile && !(verifiedAdmin && publicScreen(screen)>=62)));
   const captainBlocked =
     !inPhasePreview &&
     publicScreen(screen) >= 36 &&
     publicScreen(screen) <= 61 &&
+    !captainRouteScreens.includes(screen) &&
     profile?.role !== "captain";
   const adminBlocked =
     !inPhasePreview &&
