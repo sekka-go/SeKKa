@@ -1078,3 +1078,40 @@
   z-index:4;
 }
 .phase-screen-5 .phase-skip-verification:focus-visible { outline:3px solid var(--phase-accent);outline-offset:2px; }
+
+/* Screen 4: retain the reference phone form and place OAuth directly below it. */
+.phase-screen-4 .phase-auth-or {
+  position:absolute;
+  top:84.3%;
+  left:9%;
+  width:82%;
+  display:flex;
+  align-items:center;
+  gap:3cqw;
+  color:var(--phase-muted);
+  font-size:3.5cqw;
+  font-weight:700;
+  z-index:4;
+}
+.phase-screen-4 .phase-auth-or::before,
+.phase-screen-4 .phase-auth-or::after {content:"";height:1px;flex:1;background:var(--phase-line);opacity:.6;}
+.phase-screen-4 .phase-google-secondary {
+  position:absolute;
+  top:89%;
+  left:6.6%;
+  width:87.2%;
+  height:8%;
+  min-height:0;
+  z-index:4;
+  border:1.5px solid var(--phase-line);
+  border-radius:999px;
+  background:var(--phase-card);
+  color:var(--phase-text);
+  font-family:inherit;
+  font-size:4.2cqw;
+  font-weight:800;
+  padding:1.8cqw 3cqw;
+  white-space:normal;
+}
+.phase-screen-4 .phase-google-secondary:focus-visible {outline:3px solid var(--phase-accent);outline-offset:2px;}
+.phase-screen-4 .phase-google-config-error {position:absolute;top:97%;left:5%;width:90%;font-size:2.5cqw;}
