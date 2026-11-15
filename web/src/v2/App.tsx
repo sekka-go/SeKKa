@@ -333,9 +333,20 @@ export default function SubscriptionApp() {
     const { data } = await client.auth.getSession();
     setSignedIn(Boolean(data.session));
     if (data.session) {
-      // Google identity is real; domain profile is not provisioned until the new schema ships.
-      setProfile(null);
-      setName(data.session.user.user_metadata?.full_name || data.session.user.email || "");
+      const identityName = data.session.user.user_metadata?.full_name || data.session.user.email || "";
+      // Own-row upsert only. Auth user ID is always sourced from the authenticated session.
+      const { data: existing, error: readError } = await client.from("v31_profiles")
+        .select("display_name,role_preference").eq("user_id", data.session.user.id).maybeSingle();
+      if (readError) throw readError;
+      if (!existing) {
+        const { error: createError } = await client.from("v31_profiles").insert({
+          user_id: data.session.user.id, display_name: identityName, role_preference: "rider",
+        });
+        if (createError && createError.code !== "23505") throw createError;
+      }
+      setProfile(null); // Domain permissions, wallet and captain approval are not yet live.
+      setName(existing?.display_name || identityName);
+      setRole(existing?.role_preference || "rider");
     } else setProfile(null);
   }
   useEffect(() => {
