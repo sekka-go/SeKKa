@@ -71,19 +71,17 @@ export default function LiveCaptainDraft(){
        const {error}=await client.from('v31_captain_profiles').insert({user_id:uid,approval_status:'pending'});
        if(error&&error.code!=='23505')throw error;
      }
-     const {data:route,error:routeError}=await client.from('v31_routes').insert({
-       captain_id:uid,title:title.trim(),category,seat_capacity:capacity,
-       period,direction,outbound_time:direction==='return'?null:departure,
-       return_time:direction==='outbound'?null:arrival,
-       return_supported:direction==='round_trip'?returnSupported:false,
-       price_egp:Number(price),status:'draft'
-     }).select('id').single();
+     const {error:routeError}=await client.rpc('v31_create_route_draft',{
+       p_title:title.trim(),p_category:category,p_capacity:capacity,
+       p_direction:direction,p_period:period,
+       p_outbound:direction==='return'?null:departure,
+       p_return:direction==='outbound'?null:arrival,
+       p_return_supported:direction==='round_trip'?returnSupported:false,
+       p_price:Number(price),p_stops:stops.map(s=>({
+         area_id:s.areaId,name:s.name,pickup:s.pickup,dropoff:s.dropoff
+       }))
+     });
      if(routeError)throw routeError;
-     const {error:stopError}=await client.from('v31_route_stops').insert(stops.map((s,i)=>({
-       route_id:route.id,area_id:s.areaId,name:s.name,position:i,
-       pickup_allowed:s.pickup,dropoff_allowed:s.dropoff
-     })));
-     if(stopError)throw new Error(t('الخط اتحفظ كمسودة، لكن حفظ النقاط فشل. احتفظ ببياناتك وراجع الدعم قبل المحاولة مرة ثانية.','The route draft was saved, but stops failed. Keep your details and contact support before retrying.')+' '+stopError.message);
      setMessage(t('اتحفظت مسودة الخط الحقيقية بنجاح. النشر متوقف لحين اعتماد الكابتن وتفعيل التحقق من المسار.','Your real route draft was saved. Publishing is disabled pending captain approval and server route validation.'));
      setStops([]);setTitle('');setPrice('');
    }catch(e){setError(e instanceof Error?e.message:String(e));}
