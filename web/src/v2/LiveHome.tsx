@@ -13,7 +13,7 @@ export default function LiveHome({onNavigate}:{onNavigate:(screen:number)=>void}
   let active=true;
   void(async()=>{
    try{
-    if(!client)throw Error(t('اتصال Supabase غير مهيأ.','Supabase is not configured.'));
+    if(!client){if(active)setIdentity(null);return;}
     const {data:{user},error:authError}=await client.auth.getUser();
     if(authError)throw authError;
     if(!user){if(active)setIdentity(null);return;}
@@ -33,6 +33,7 @@ export default function LiveHome({onNavigate}:{onNavigate:(screen:number)=>void}
   <h1>{t('أهلاً بيك في سِكّة','Welcome to seKKa')}</h1>
   {busy&&<p role="status">{t('بنحمّل حسابك الحقيقي…','Loading your real account…')}</p>}
   {error&&<div role="alert"><p>{t('حصلت مشكلة في قراءة حسابك.','Unable to load your account.')}</p><button onClick={()=>{setError('');setBusy(true);setRefresh(x=>x+1);}}>{t('إعادة المحاولة','Try again')}</button></div>}
+  {!client&&<p role="status">{t('خدمة تسجيل الدخول غير مهيأة في هذه النسخة.','Sign-in service is not configured for this build.')}</p>}
   {!busy&&!error&&!identity&&<section className="d-box"><h2>{t('ابدأ بجوجل','Sign in with Google')}</h2><p>{t('سجّل دخولك علشان تتابع رحلاتك وبياناتك الحقيقية.','Sign in to access real routes and account data.')}</p><button className="d-primary" onClick={()=>onNavigate(4)}>{t('تسجيل الدخول','Sign in')}</button></section>}
   {identity&&<section className="d-box">
    <h2>{identity.name}</h2><p dir="ltr">{identity.email}</p>
