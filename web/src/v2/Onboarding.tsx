@@ -249,11 +249,11 @@ export default function Onboarding({
             void client.auth.signInWithOAuth({provider:"google", options:{redirectTo:redirect.toString()}});
           }}>{language === "en" ? "Continue with Google" : "المتابعة باستخدام جوجل"} <Arrow /></button>
           {!client && <p role="alert">{language === "en" ? "Sign-in is not configured." : "إعداد تسجيل الدخول غير متاح."}</p>}
-        </div> : <>
+        </div> : <div className="phase-flow-content phase-live-profile-flow">
           <h1 className="phase-title">{language === "en" ? "Complete your profile" : "استكمال الملف الشخصي"}</h1>
           <LiveProfile />
           <button className="phase-primary" onClick={() => go(8)}>{language === "en" ? "Continue to home" : "الذهاب للرئيسية"} <Arrow /></button>
-        </>}
+        </div>}
       </main>
     </div>
   );
