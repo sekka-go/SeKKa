@@ -584,6 +584,8 @@
 
 ---
 
+> **Owner amendment — 15 November 2026 (Captain enrollment):** Vehicle registration no longer asks Private-car Captains to choose PRIME versus SAVER. Both categories are automatically enabled; their passenger capacities are fixed (PRIME 3, SAVER 4). Captain personal information and vehicle make/model/year/color/plate and required documents are mandatory for submission and approval; database-side validation is required. See [Captain Enrollment Owner Requirements](product/CAPTAIN_ENROLLMENT_OWNER_REQUIREMENTS_20261115.md). This newer owner decision takes precedence over older optional-field language and manual category/seat enrollment assumptions.
+
 ## 14. Product Rules — القواعد النهائية
 
 1. الكابتن يحدد العرض بالكامل.
