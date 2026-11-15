@@ -1061,7 +1061,7 @@ export function V31BookingJourney({offer,routeId,pickupId,dropoffId,reverse,book
  const [loading,setLoading]=useState(Boolean(bookingId)),[refresh,setRefresh]=useState(0);
  useEffect(()=>{let active=true;
    if(!bookingId){setStored(null);setLoading(false);return;}
-   setLoading(true);setError('');
+   setStored(null);setLoading(true);setError('');
    void (async()=>{try{
      if(!client)throw Error('BACKEND_NOT_CONFIGURED');
      const {data:{user},error:authError}=await client.auth.getUser();
