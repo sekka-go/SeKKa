@@ -6,7 +6,6 @@ import LiveHome from './LiveHome';
 import Onboarding from './Onboarding';
 import Discovery from './Discovery';
 import LiveProfile from './LiveProfile';
-import LiveRouteSearch from './LiveRouteSearch';
 import LiveVehicles from './LiveVehicles';
 import LiveCaptainRouteList from './LiveCaptainRouteList';
 import LiveCaptainDraft from './LiveCaptainDraft';
