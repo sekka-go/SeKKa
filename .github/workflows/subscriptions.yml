@@ -44,7 +44,8 @@ jobs:
             docs/audit/layout-gated-*.png
           if-no-files-found: warn
           retention-days: 90
-      - run: npm run test:e2e
+      - name: Full Playwright E2E suite (fail fast on three actionable failures)
+        run: npm run test:e2e -- --max-failures=3 --timeout=20000
       # Browser-only auth-routing regression. Uses a non-staging fake Supabase
       # endpoint intercepted by Playwright. Never use these as real acceptance.
       - name: Build isolated fake-auth UI fixture (no staging credentials)
