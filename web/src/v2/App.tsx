@@ -1935,18 +1935,37 @@ export default function SubscriptionApp() {
           go(12, r.id);
         }}
         onBook={(offer) => {
-          // A skipped phone step is not verified. Stop before starting the first booking.
-          // OTP is disabled until a real provider and server-side verification are installed.
-          let deferred = false;
-          try { deferred = sessionStorage.getItem("sekka.phoneVerificationDeferred") === "true"; } catch { /* Optional browser storage. */ }
-          if (deferred) {
-            setBookingOffer(offer);
-            setError(language === "en"
-              ? "Phone verification is required before your first booking. OTP is not active yet; no booking has been created."
-              : "لازم تأكد رقم موبايلك قبل أول حجز. خدمة OTP لسه مش مفعّلة؛ لم يتم إنشاء أي حجز.");
-            // Preserve the chosen offer for a later verified flow rather than creating a booking.
-            return;
-          }
+          void (async () => {
+            if (!inPhasePreview) {
+              // The browser's skip flag is never an authorization signal.
+              // Only a trusted server-side verification record can permit bookings.
+              setBookingOffer(offer);
+              const user = client ? (await client.auth.getUser()).data.user : null;
+              if (!user) {
+                setError(language === "en" ? "Sign in with Google before booking." : "سجّل دخولك بجوجل قبل أول حجز.");
+                return;
+              }
+              const {data:verification,error:verificationError}=await client!.from("v31_phone_verifications")
+                .select("verified_at").eq("user_id",user.id).maybeSingle();
+              if (verificationError) {
+                setError(language === "en" ? "Could not check phone verification. No booking was made." : "تعذر مراجعة حالة التحقق. لم يتم إنشاء حجز.");
+                return;
+              }
+              if (!verification?.verified_at) {
+                setError(language === "en"
+                  ? "Before your first booking, verify your phone number. SMS/OTP is not available yet, so booking is paused."
+                  : "قبل أول حجز لازم تأكد رقم موبايلك. OTP لسه مش متاح، وعشان كده الحجز متوقف مؤقتًا.");
+                return;
+              }
+            } else {
+              let deferred=false;
+              try {deferred=sessionStorage.getItem("sekka.phoneVerificationDeferred")==="true";} catch { /* session storage optional */ }
+              if(deferred) {
+                setBookingOffer(offer);
+                setError(language==="en" ? "Phone verification required before first booking. No booking was made." : "لازم تأكد رقم موبايلك قبل أول حجز. لم يتم إنشاء حجز.");
+                return;
+              }
+            }
           setBookingOffer(offer);
           if (offer.id.startsWith("preview-")) {try {sessionStorage.setItem("sekka.preview.selectedOffer", JSON.stringify(offer));} catch {/* in-memory selection still works */}}
           setPeriod(offer.period);
@@ -1959,6 +1978,8 @@ export default function SubscriptionApp() {
           url.searchParams.set("offerPeriod", offer.period);
           url.searchParams.set("offerDirection", offer.direction);
           history.replaceState({}, "", url);
+
+          })();
         }}
         onBooking={(id) => {
           const b = bookings.find((b) => b.id === id);
