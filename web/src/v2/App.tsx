@@ -181,6 +181,7 @@ export default function SubscriptionApp() {
     [profile, setProfile] = useState<Profile | null>(null),
     [signedIn, setSignedIn] = useState(false),
     [authReady, setAuthReady] = useState(false);
+  const [verifiedAdmin,setVerifiedAdmin]=useState(false);
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
@@ -332,7 +333,11 @@ export default function SubscriptionApp() {
       return;
     const { data } = await client.auth.getSession();
     setSignedIn(Boolean(data.session));
+    setVerifiedAdmin(false);
     if (data.session) {
+      const {data:adminAccess,error:adminError}=await client.rpc("v31_is_admin");
+      if(adminError)throw adminError;
+      setVerifiedAdmin(adminAccess===true);
       const identityName = data.session.user.user_metadata?.full_name || data.session.user.email || "";
       // Own-row upsert only. Auth user ID is always sourced from the authenticated session.
       const { data: existing, error: readError } = await client.from("v31_profiles")
@@ -526,7 +531,7 @@ export default function SubscriptionApp() {
     !inPhasePreview &&
     !publicScreens.has(screen) &&
     ![6, 7].includes(screen) &&
-    (!signedIn || !profile);
+    (!signedIn || (!profile && !(verifiedAdmin && publicScreen(screen)>=62)));
   const captainBlocked =
     !inPhasePreview &&
     publicScreen(screen) >= 36 &&
@@ -534,7 +539,7 @@ export default function SubscriptionApp() {
     profile?.role !== "captain";
   const adminBlocked =
     !inPhasePreview &&
-    publicScreen(screen) >= 62 && !profile?.permissions?.length;
+    publicScreen(screen) >= 62 && !verifiedAdmin;
   const selectedRoute = route;
   function RouteCard({ r }: { r: Route }) {
     return (
