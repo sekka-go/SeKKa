@@ -58,3 +58,12 @@ test('approved original onboarding transitions to Google OAuth without OTP',asyn
  await expect(page.locator('.phase-screen-5')).toHaveCount(0);
  await expect(page.locator('.phase-review-bar,.phase-preview-note')).toHaveCount(0);
 });
+
+test('approved production Discovery renders real-data results without gallery fixtures',async({page})=>{
+ await page.goto('/?tab=search');
+ await expect(page.locator('.d-screen-9')).toBeVisible();
+ await expect(page.locator('.phase-review-bar,.phase-preview-note')).toHaveCount(0);
+ await expect(page.getByText('preview-prime')).toHaveCount(0);
+ await page.reload();
+ await expect(page.locator('.d-screen-9')).toBeVisible();
+});
