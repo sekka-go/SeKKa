@@ -130,3 +130,17 @@ Verified directly against staging `zgcvumykzivsvnlflbyp`:
 - `LiveVehicles` now blocks pre-approval save in accordance with RLS and verifies returned row on insert; `LiveCaptainDraft` reads back persisted draft and ordered stops before success; `LiveCaptainRouteList` checks actual `published` status; `BookingFlow` clears stale booking data before reading a different booking; `LiveBookings` opens the original booking details deep link.
 - The workflow now runs focused 360px/390px AR/EN Light/Dark approved-passenger smoke tests before the full Playwright suite. **No authenticated visual comparisons or full user journeys are accepted.** All 73 screens still require final production acceptance.
 
+
+
+## Staging captain verification implementation — 15 November 2026
+
+**Implemented (NOT yet real-user accepted):** original production CaptainOnboarding screens **35–41** now use `CaptainApplicationLive` for persistent personal/professional details, optional planned-vehicle category, private JPG/PNG/PDF uploads (5 MB), submitted/pending/approved/rejected status, rejection reason and resubmission. The Admin original screens **64–65** use `AdminApprovalLive` for pending application list, private authorized file download, explicit manual approve/reject and append-only decision audit. No OTP, payment, wallet, new demo UI or Google OAuth rebuild.
+
+**Staging DDL applied:** `20261115130000_v31_staging_captain_review.sql`, `20261115130500_v31_staging_captain_vehicle_intent.sql`, `20261115131000_v31_captain_intent_category_guard.sql` to Supabase project `zgcvumykzivsvnlflbyp` exclusively. The storage bucket `v31-captain-docs-staging` has `public=false`, MIME whitelist, and 5-MB cap. RLS restricts object uploads and downloads to the owner's UUID folder or authorized admin read. Client application/document/audit tables have SELECT only; mutations require authenticated server RPCs. Admin decision RPC requires `v31_is_admin()`, submitted status, and explicit reviewer action, writes server status plus audit in one transaction.
+
+**Security evidence:** Staging catalog inspection confirmed bucket privacy, table RLS, zero direct public document read, zero unauthenticated EXECUTE on the five new sensitive RPCs, no client INSERT into the document table or UPDATE of the approval audit; five direct no-identity RPC calls rejected with `AUTH_REQUIRED` or `ADMIN_REQUIRED`. The Security Advisor continues to flag intentionally authenticated `SECURITY DEFINER` endpoints and the existing public aggregate capacity endpoint; these require security review before release (not a claim of zero warnings).
+
+**PRD policy gap:** PRD v3.1 lists a Documents screen but does not prescribe mandatory document categories or an approval threshold. The original design offers identity / driving license / vehicle license / vehicle photo as **optional** uploads; do not treat any as a mandated verification without owner policy. Document contents and administrator decisions must be genuine and human reviewed. No automatic approval has been implemented.
+
+**Acceptance blocked:** the existing Captain Google identity has not supplied an interactive session, so no application was submitted or approved and no vehicle, route, booking, cancellation, or multi-user seat race occurred. Browser guest/access-control tests run in GitHub Actions. Approval/document private-download under a real Admin Google session, cross-account RLS, real screenshot comparisons against the 73 approved references, and booking acceptance remain pending.
+
