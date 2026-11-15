@@ -26,6 +26,13 @@ export function PreferencesProvider({children}: {children:ReactNode}) {
   useEffect(()=>{
     document.documentElement.dataset.theme=theme;document.documentElement.lang=language;document.documentElement.dir=language==='ar'?'rtl':'ltr';
     try{localStorage.setItem('theme_preference',themePreference);localStorage.setItem('language_preference',languagePreference);}catch{/* Memory-only when storage unavailable. */}
+    // OAuth callback parameters are one-time transport, not permanent preference overrides.
+    // Remove them after preferences have been adopted so a later manual change survives reload.
+    const url=new URL(window.location.href);
+    if(url.searchParams.has('oauth_theme')||url.searchParams.has('oauth_language')){
+      url.searchParams.delete('oauth_theme');url.searchParams.delete('oauth_language');
+      window.history.replaceState(window.history.state,'',url.pathname+url.search+url.hash);
+    }
   },[theme,language,themePreference,languagePreference]);
   return <Context.Provider value={{theme,language,themePreference,languagePreference,setThemePreference,setLanguagePreference}}>{children}</Context.Provider>;
 }
