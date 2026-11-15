@@ -35,6 +35,7 @@ export default function LiveBookings({mode}:{mode:'rider'|'captain'}){
   {!loading&&!error&&items.length===0&&<p>{t('مفيش حجوزات حقيقية لسه.','No real reservations yet.')}</p>}
   <ul>{items.map(b=><li key={b.id}><strong>{t('حجز','Booking')} {b.id.slice(0,8)}</strong> · {b.seats} {t('مقاعد','seats')} · {b.status}
     <small> {new Date(b.created_at).toLocaleString(en?'en-GB':'ar-EG')}</small>
+    {mode==='rider'&&<a className="d-outline" href={`/?tab=booking&booking=${encodeURIComponent(b.id)}`}>{t('عرض تفاصيل الحجز','View booking details')}</a>}
     {mode==='rider'&&b.status==='pending'&&<button type="button" disabled={Boolean(busy)} onClick={()=>void cancel(b.id)}>{busy===b.id?t('جارٍ الإلغاء…','Cancelling…'):t('إلغاء الحجز','Cancel booking')}</button>}
   </li>)}</ul>
   <button type="button" onClick={()=>{setLoading(true);setRefresh(v=>v+1);}}>{t('تحديث الحجوزات','Refresh reservations')}</button>
