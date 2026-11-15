@@ -24,6 +24,7 @@ const expected=[
 let unavailable=[];
 for(const table of expected){
  const {error,status}=await client.from(table).select('*',{head:true,count:'exact'}).limit(0);
+ // PostgREST may deny metadata before revealing whether a private relation exists.
  if(error&&/does not exist|not find the table|schema cache|PGRST205|42P01/i.test(error.message+' '+error.code))unavailable.push(table);
  else if(error&&status!==401&&status!==403&&!/permission denied|42501/i.test(error.message+' '+error.code))throw Error(`UNEXPECTED_DATA_API_ERROR ${table}: HTTP ${status} ${error.code||''} ${error.message}`);
 }
@@ -57,4 +58,4 @@ const authResponse=await fetch(`${url}/auth/v1/settings`,{headers:{apikey:key,Au
 assert.ok(authResponse.ok,`STAGING_AUTH_SETTINGS_UNAVAILABLE: ${authResponse.status}`);
 const authSettings=await authResponse.json();
 assert.equal(authSettings.external?.google,true,'STAGING_GOOGLE_PROVIDER_DISABLED');
-console.log('STAGING_PREFLIGHT_OK: isolated project, '+expected.length+' required tables, '+protectedRpcs.length+' anonymous RPC denials, aggregate availability boundary and Google provider enabled. No records changed.');
+console.log('STAGING_PREFLIGHT_OK: isolated project, '+expected.length+' required-table probes, '+protectedRpcs.length+' anonymous RPC denials, aggregate availability boundary and Google provider enabled. No records changed.');

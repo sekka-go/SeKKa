@@ -22,13 +22,15 @@ publishable client key. Cloudflare branch preview and the Staging API responded.
 | Active service areas | 9 |
 | Published routes visible to anonymous search | 0 |
 | Route stops visible to anonymous search | 0 |
-| Required v31 tables | All 13 checked; application/document/audit tables correctly deny anonymous table reads |
+| Required v31 table probes | All 13 requested; no explicit missing-relation errors surfaced. Anonymous 401/403 responses are treated as expected, but cannot prove a private relation exists behind RLS |
 | Sensitive RPCs called anonymously | All 15 denied |
 | Public capacity RPC, unknown route | Returns `null`, no capacity disclosure |
 | Supabase OpenAPI/catalog root | 401 (`Secret API key required`); no service-role or secret key was requested or used |
 
 The service-area response was public discovery data. Anonymous RLS results are
-not used to infer private booking, profile, or approval counts.
+not used to infer private booking, profile, or approval counts or to claim
+private table existence. Catalog/database access is still required to establish
+the complete deployed schema.
 
 The exact allowed OAuth redirect list was not exposed by the public Auth
 settings endpoint. The tested preview URL is accepted; the complete Google
@@ -40,7 +42,7 @@ sign-in, callback, session, and sign-out lifecycle remains unverified.
 |---|---|---|---|
 | Google Auth | Supabase Google OAuth; persisted session; app validates `getUser()` before assigning identity | Google provider enabled; bundle uses the specified Staging project; preview callback accepted by authorize endpoint | Interactive sign-in/callback, refresh, sign-out, and real profile creation/edit were not exercised |
 | Passenger/Captain intent | URL-backed journey state; Captain enrollment is explicit; role preference is not Admin authority | Anonymous role/authorization checks only | Needs separate real Passenger and Captain sessions |
-| Captain application | `v31_captain_profiles`; save details, optional vehicle intent, submit/status RPCs | Required tables and protected RPC existence/anonymous denial verified | No real Captain submission or state refresh |
+| Captain application | `v31_captain_profiles`; save details, optional vehicle intent, submit/status RPCs | Protected RPCs exist and deny anonymous calls; anonymous table probes cannot prove the private application tables exist | No real Captain submission or state refresh |
 | Private documents | Private bucket and storage RLS in tracked Staging migration; owner-folder upload and owner/Admin download; MIME/5 MB limits | Migration contract reviewed; no authenticated upload/download performed | Verify bucket settings and owner-vs-other-Captain/Admin access with real sessions; no real document uploaded |
 | Admin review | Admin allowlist checked server-side; Admin decision RPC changes submitted application and audit row atomically | Anonymous Admin RPC denial verified | No real Admin login, review, decision, or audit event exercised |
 | Vehicle registration | Authenticated insert; database RLS requires server-approved Captain; owner can manage own vehicle | Code/migration reviewed; no record written | Verify with real approved Captain, then verify rejected/pending Captain denial |
