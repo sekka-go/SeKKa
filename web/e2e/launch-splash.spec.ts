@@ -12,6 +12,13 @@ test("splash fills mobile viewport, reveals logo and hands off to the real app",
   expect(bounds!.width).toBe(390);
   expect(bounds!.height).toBe(844);
   await expect(page.locator(".sekka-launch__wordmark")).toHaveAttribute("src", "/brand/sekka-splash-wordmark.svg");
+  // Launch is one scene, with no old icon/black-icon intermediate screen.
+  await expect(splash.locator('img[src*="app-icon"]')).toHaveCount(0);
+  const curve = await splash.locator(".sekka-launch__route-line").getAttribute("d");
+  expect(curve).toMatch(/^M34 768 C43 681/);
+  expect((curve?.match(/ C/g) || []).length).toBeGreaterThanOrEqual(4);
+  await expect(splash.locator(".sekka-launch__point")).toHaveCount(6);
+  await expect(splash.locator(".sekka-launch__route-line")).toHaveAttribute("pathLength", "1");
   await expect(splash).toHaveCount(0, { timeout: 5500 });
   await expect(page.locator("#root")).toBeVisible();
 });
