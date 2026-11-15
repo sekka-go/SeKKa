@@ -27,3 +27,9 @@ GRANT EXECUTE ON FUNCTION public.v31_published_route_available_seats(uuid) TO an
 
 COMMENT ON FUNCTION public.v31_published_route_available_seats(uuid)
  IS 'Aggregate availability of published route; booking RPC atomically rechecks under route lock. No passenger details exposed.';
+
+-- Privileged-only role assignment. Google email allowlisting is performed by
+-- an authorized operator, never by the public client or role-selection UI.
+-- RLS with zero policies already denies access, but broad table grants must
+-- also be revoked as independent defense in depth (staging catalog hardening).
+REVOKE ALL PRIVILEGES ON TABLE public.v31_admin_allowlist FROM PUBLIC, anon, authenticated;
