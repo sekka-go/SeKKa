@@ -12,8 +12,9 @@ test('current guest home opens approved welcome then Google OAuth without fake u
  await expect(page.locator('.phase-review-bar,.phase-preview-note')).toHaveCount(0);
 });
 test('real guest search shell saves appearance and survives refresh',async({page})=>{
- await page.addInitScript(()=>{localStorage.setItem('language_preference','en');localStorage.setItem('theme_preference','light');});
  await page.goto('/?tab=search');
+ await page.evaluate(()=>{localStorage.setItem('language_preference','en');localStorage.setItem('theme_preference','light');});
+ await page.reload();
  await expect(page.locator('.d-screen-9')).toBeVisible();
  await expect(page.locator('html')).toHaveAttribute('data-theme','light');
  // Theme changes are available in the account tab of the real shell,
