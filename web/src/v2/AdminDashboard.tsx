@@ -1,4 +1,5 @@
 import LiveAdminOverview from './LiveAdminOverview';
+import AdminApprovalLive from './AdminApprovalLive';
 import {usePreferences} from "./preferences";
 import {readPreviewBookings, previewSubscriberRows, previewSecurityTransactions} from "./previewBookingStore";
 import {translate} from "./translations";
@@ -194,10 +195,11 @@ export default function AdminDashboard(p: {
   theme: Appearance;
   onTheme: (v: Appearance) => void;
   go: (v: number) => void;
+  production?: boolean;
 }) {
   const {language}=usePreferences();
   const tr=(text:string)=>translate(text,language);
-  const demo = new URLSearchParams(location.search).get("preview") === "phase8",
+  const demo = !p.production && new URLSearchParams(location.search).get("preview") === "phase8",
     n = publicScreen(p.screen) + 1;
   const [data, setData] = useState(seed),
     [query, setQuery] = useState(""),
@@ -288,6 +290,15 @@ export default function AdminDashboard(p: {
     setDecision("");
     setReason("");
   }
+  if(p.production&&(n===65||n===66))return <div className={`admin-stage ${p.theme}`}>
+    <header className="ad-top"><div className="ad-brand"><Wordmark/><span>{tr("لوحة الإدارة")}</span></div></header>
+    <AdminApprovalLive screen={n-1} onGo={screen=>p.go(internalScreen(screen))}/>
+  </div>;
+  if(p.production&&n===63)return <div className={`admin-stage ${p.theme}`}>
+    <LiveAdminOverview/>
+    <nav className="ad-tools"><button type="button" onClick={()=>p.go(internalScreen(64))}>{tr("طلبات الكباتن")}</button>
+    <button type="button" onClick={()=>p.go(internalScreen(65))}>{tr("مراجعة المستندات")}</button></nav>
+  </div>;
   if(!demo&&n===63)return <div className={`admin-stage ${p.theme}`}><LiveAdminOverview/><button type="button" onClick={()=>p.go(64)}>{tr("قائمة المستخدمين")}</button></div>;
   return (
     <div className={`admin-stage ${p.theme}`} >
