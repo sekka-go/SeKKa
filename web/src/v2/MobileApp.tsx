@@ -91,6 +91,14 @@ export default function MobileApp(){
  const bookingSaved=(id:string)=>{
    setBookingId(id);const u=new URL(location.href);u.searchParams.set('tab','booking');u.searchParams.set('booking',id);history.replaceState({},'',u.pathname+u.search);
  };
+ const approvedDiscovery=(screen:number)=><Discovery production screen={screen} serviceAreas={areas} liveSelection={liveSelection} onLiveSelect={chooseRoute} theme={p.theme}
+     onTheme={p.setThemePreference} go={discoveryGo}
+     routes={[]} route={null} bookings={[]} signedIn={Boolean(userId)} busy={false} error={areasError}
+     onSearch={()=>{}} onSelect={()=>{}}
+     onRequest={async()=>{throw Error(t('طلبات الخطوط متاحة من نتائج البحث الحقيقية فقط.','Submit requests through live search results.'));}}
+     onFavorite={async()=>{throw Error(t('المفضلة غير متاحة حاليًا.','Favorites are not available yet.'));}}
+     onBook={beginBooking} onBooking={()=>navigate('bookings')}
+   />;
  const signOut=async()=>{if(!client)return;const {error:e}=await client.auth.signOut();if(e)setError(e.message);else navigate('home');};
  const onboardingGo=(n:number)=>{
   if(n===8){navigate('home');return;}
@@ -109,18 +117,11 @@ export default function MobileApp(){
   <main id="sekka-content" className="sekka-mobile-content">
    {!ready&&<p role="status">{t('بنجهز حسابك…','Loading account…')}</p>}
    {error&&<div className="sekka-mobile-alert" role="alert">{error}<button onClick={()=>setError('')}>{t('إغلاق','Dismiss')}</button></div>}
-   {tab==='home'&&(!ready?<p role="status">{t('بنجهز حسابك…','Loading account…')}</p>:userId?<LiveHome onNavigate={onLegacyNavigate}/>:<Onboarding production screen={2} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={setSelectedRole}/>)}
+   {tab==='home'&&(!ready?<p role="status">{t('بنجهز حسابك…','Loading account…')}</p>:userId?(captain?<LiveHome onNavigate={onLegacyNavigate}/>:approvedDiscovery(8)):<Onboarding production screen={2} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={setSelectedRole}/>)}
    {tab==='login'&&<Onboarding production screen={userId?6:onboardingScreen} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={setSelectedRole}/>}
    {tab==='profile'&&(userId?<section className="sekka-mobile-card"><LiveProfile/><button type="button" onClick={()=>void signOut()}>{t('تسجيل الخروج','Sign out')}</button></section>:<section className="sekka-mobile-card"><h1>{t('حسابي','My profile')}</h1><p>{t('سجّل بجوجل علشان تكمل بياناتك.','Sign in with Google to complete your profile.')}</p><button className="sekka-action" onClick={()=>{setOnboardingScreen(4);navigate('login');}}>{t('تسجيل الدخول بجوجل','Sign in with Google')}</button></section>)}
    {selectionError&&['search','booking'].includes(tab)&&<div role="alert" className="sekka-mobile-alert">{selectionError}<button type="button" onClick={()=>setSelectionVersion(v=>v+1)}>{t('إعادة المحاولة','Retry')}</button></div>}
-   {tab==='search'&&<Discovery production screen={discoveryScreen} serviceAreas={areas} liveSelection={liveSelection} onLiveSelect={chooseRoute} theme={p.theme}
-     onTheme={p.setThemePreference} go={discoveryGo}
-     routes={[]} route={null} bookings={[]} signedIn={Boolean(userId)} busy={false} error={areasError}
-     onSearch={()=>{}} onSelect={()=>{}}
-     onRequest={async()=>{throw Error(t('طلبات الخطوط متاحة من نتائج البحث الحقيقية فقط.','Submit requests through live search results.'));}}
-     onFavorite={async()=>{throw Error(t('المفضلة غير متاحة حاليًا.','Favorites are not available yet.'));}}
-     onBook={beginBooking} onBooking={()=>navigate('bookings')}
-   />}
+   {tab==='search'&&approvedDiscovery(discoveryScreen)}
    {tab==='booking'&&<V31BookingJourney offer={bookingOffer} routeId={liveSelection?.route.id||''}
      pickupId={new URL(location.href).searchParams.get('pickup')||''} dropoffId={new URL(location.href).searchParams.get('dropoff')||''}
      reverse={new URL(location.href).searchParams.get('reverse')==='1'} bookingId={bookingId}
