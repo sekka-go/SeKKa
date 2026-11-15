@@ -116,3 +116,17 @@ The initial inventory was superseded by code integration on the existing PR, but
 - GitHub Actions #316 passed TypeScript, ESLint, unit, structure and build stages at latest inspection; Playwright not finished. No completed visual pixel-diff comparison against approved screenshots is claimed.
 - Cloudflare Preview deploy was queued/building at last read, **not approved or deployed to production**. Admin and Captain controls still require signed-in RLS E2E. Do not merge this PR until accepted.
 - Security advisor flags the aggregate capacity RPC as an intentionally callable SECURITY DEFINER by anonymous/signed-in users. Its result is restricted to published-route aggregate and not booking identities; explicit security review is still mandatory before production.
+
+## Staging first-booking acceptance checkpoint — 15 November 2026 (after `b714c5b`)
+
+**Acceptance status: BLOCKED, not PASSED.** The three existing Google identities and role preferences remain intact. The designated captain has no `v31_captain_profiles` enrollment record, no vehicle and no routes. Staging currently has no approved captains, published routes or bookings. No independently authenticated Google session is available to the test runner. No fake approval, direct booking inserts, or production DB writes were made.
+
+Verified directly against staging `zgcvumykzivsvnlflbyp`:
+- `v31_vehicles` INSERT RLS requires a server-side **approved** `v31_captain_profiles` row. Draft creation is a separate flow and may occur before approval; public route publishing has its own server-side guard.
+- Existing staging schema has **no captain document table or storage bucket**. The original documents UI is retained, but cannot claim real document verification. Owner-operated Google authentication and a genuine document review/approved privileged process are blockers for activation.
+- Five direct, unauthenticated database invocations of `v31_reserve_seats`, `v31_reserve_seats_with_stops`, `v31_cancel_pending_booking`, `v31_set_route_status` and `v31_accept_trip_offer` each returned `AUTH_REQUIRED`. This proves an unauthenticated server rejection, **not** cross-account RLS acceptance.
+- All relevant `SECURITY DEFINER` routines were inventoried for callable role grants. Internal notification triggers are not callable by client roles; aggregate published route capacity is intentionally public and does not return booking identities.
+- The operational test `web/scripts/real-journey.mjs` now verifies synthetic vehicle registration, persisted route and stops, atomic booking, a **single-rider** two-request race for the last seat, safe cancellation, restore-to-capacity, and Captain/Passenger admin-denial conditions. **This script has not run with genuine authorized tokens**; its checks are test code, not real booking evidence. A second independent passenger session is still required for cross-account concurrency.
+- `LiveVehicles` now blocks pre-approval save in accordance with RLS and verifies returned row on insert; `LiveCaptainDraft` reads back persisted draft and ordered stops before success; `LiveCaptainRouteList` checks actual `published` status; `BookingFlow` clears stale booking data before reading a different booking; `LiveBookings` opens the original booking details deep link.
+- The workflow now runs focused 360px/390px AR/EN Light/Dark approved-passenger smoke tests before the full Playwright suite. **No authenticated visual comparisons or full user journeys are accepted.** All 73 screens still require final production acceptance.
+
