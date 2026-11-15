@@ -20,3 +20,14 @@ export async function reserveSeats(routeId:string,seats:number,idempotencyKey:st
   if(typeof data!=='string')throw new Error('BOOKING_NOT_CONFIRMED');
   return {bookingId:data};
 }
+
+/** Cancel only the current rider's pending booking; the database releases capacity atomically. */
+export async function cancelPendingBooking(bookingId:string):Promise<void>{
+  if(!client)throw new Error('BACKEND_NOT_CONFIGURED');
+  if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(bookingId))throw new Error('INVALID_BOOKING_ID');
+  const {data:{user},error:authError}=await client.auth.getUser();
+  if(authError||!user)throw new Error('AUTH_REQUIRED');
+  const {data,error}=await client.rpc('v31_cancel_pending_booking',{p_booking:bookingId});
+  if(error)throw new Error(error.message);
+  if(data!==true)throw new Error('CANCELLATION_NOT_CONFIRMED');
+}
