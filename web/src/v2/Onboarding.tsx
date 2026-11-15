@@ -240,7 +240,10 @@ export default function Onboarding({
           <p className="phase-subtitle">{language === "en" ? "Continue securely with your existing Google account." : "كمّل بحساب جوجل الحالي بتاعك."}</p>
           <button type="button" className="phase-primary" disabled={!client} onClick={() => {
             if (!client) return;
-            const redirect = new URL(location.origin + "/");
+            let returnPath='/';
+            try{returnPath=sessionStorage.getItem('sekka.postAuthPath')||'/';}catch{/* Storage may be disabled. */}
+            const redirect = new URL(returnPath,location.origin);
+            if(redirect.origin!==location.origin)throw Error('INVALID_AUTH_RETURN_ORIGIN');
             redirect.searchParams.set("oauth_theme", themePreference);
             redirect.searchParams.set("oauth_language", languagePreference);
             void client.auth.signInWithOAuth({provider:"google", options:{redirectTo:redirect.toString()}});
