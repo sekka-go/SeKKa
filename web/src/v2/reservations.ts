@@ -3,8 +3,8 @@ import {client} from './api';
 export type SeatReservationResult = {bookingId:string};
 
 /**
- * Reserve capacity only after Google Auth and trusted phone verification.
- * The database locks the route row, checks capacity, and enforces the phone gate.
+ * Reserve capacity after Google Auth. OTP and payments are postponed.
+ * The database locks the route row and checks capacity atomically.
  * Never interpret this as a payment confirmation.
  */
 export async function reserveSeats(routeId:string,seats:number,idempotencyKey:string):Promise<SeatReservationResult>{
