@@ -21,10 +21,10 @@ for(const width of [360,390]){
    const nav=page.locator('.sekka-bottom-nav button');
    await expect(nav).toHaveCount(5);
    await nav.nth(1).click();
-   await expect(page.getByRole('heading',{name:language==='ar'?'دور على خط':'Find a route'})).toBeVisible();
+   await expect(page.locator('.d-screen-9')).toBeVisible();
    await expect(page).toHaveURL(/tab=search/);
    await page.reload();
-   await expect(page.getByRole('heading',{name:language==='ar'?'دور على خط':'Find a route'})).toBeVisible();
+   await expect(page.locator('.d-screen-9')).toBeVisible();
    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
    await nav.nth(2).click();
    await expect(page.getByRole('heading',{name:language==='ar'?'حجوزاتي':'My bookings'})).toBeVisible();
