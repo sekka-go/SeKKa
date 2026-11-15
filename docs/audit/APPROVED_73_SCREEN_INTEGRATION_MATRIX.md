@@ -13,6 +13,15 @@ Source of approved screen names/order: `web/src/v2/screenMap.ts` at PR #185 head
 5. Existing v31 live components should provide data/actions as adapters to original layout components; do not introduce a third visual app.
 6. Preserve Google OAuth and production DB schema unchanged; do not merge or deploy production.
 
+## PR #185 mobile navigation repair (code-level, not staging acceptance)
+
+- `web/src/v2/mobileNavigation.ts` is the URL-backed route model for the live mobile shell. It validates `tab`/`view` pairs, restores them on refresh and `popstate`, and clears stale route/booking query data when leaving those journeys.
+- Passenger Home is always screen 8. A server-side Captain profile or pending application does not select a Captain screen or replace Passenger navigation. Captain entry is explicit from role selection or the signed-in profile; OAuth carries that intent to `/?tab=captain-onboarding&view=35`.
+- Captain onboarding uses the approved public IDs and preserves the same-journey Back sequence: `35 → home`, then `36 → 35`, `37 → 36`, `38 → 37`, `39 → 38`, `40 → 39`, `41 → 40`. Forward progress is owned by each server-backed action: start enrollment `35 → 36`, save Captain details `36 → 37`, save vehicle intent `37 → 38`, review documents `38 → 39`, submit `39 → 40`. Screens 40/41 show server status; route management is only exposed when the server reports approval.
+- The generic outer Captain Next control was removed because it bypassed those actions. Individual save, upload, review, submit, and approval-dependent actions remain in their screen content.
+- A guest deep-link to profile completion is sent through Google sign-in first. The route model's ID ranges are navigation validation, not authorization: Captain mutations and Admin access remain backend-authorized.
+- Automated checks cover route parsing, role isolation with a synthetic pending Captain profile, browser Back/Forward, refresh restoration, and localized document-picker UI. These do not verify real Google authentication, real Captain submission/approval, all 73 screens, Staging deployment, or visual parity with all approved references.
+
 ## Screen-by-screen inventory
 
 | # | Approved screen | Approved source component | Intended route | Access | Real data needed | Available integration | Actions/navigation | Missing | Status |

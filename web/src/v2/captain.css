@@ -97,6 +97,23 @@
 }
 .c-canvas .c-document,
 .c-canvas .c-check { min-width: 0; }
+.c-canvas .c-document-label { display:block; font-weight:800; margin-block-end:8px; }
+.c-canvas .c-file-picker {
+  position:relative; display:flex; align-items:center; gap:12px; min-width:0; min-height:48px;
+  padding:7px 10px; border:1px solid var(--d-line); border-radius:12px;
+  background:var(--phase-card); cursor:pointer;
+}
+.c-canvas .c-file-picker:focus-within { outline:3px solid #ffc400; outline-offset:2px; }
+.c-canvas .c-file-picker-button {
+  flex:0 0 auto; padding:8px 12px; border-radius:9px; background:#ffc400; color:#171c22;
+  font-weight:900;
+}
+.c-canvas .c-file-picker-name { min-width:0; overflow-wrap:anywhere; }
+.c-canvas .c-file-native {
+  position:absolute!important; width:1px!important; height:1px!important; padding:0!important;
+  margin:-1px!important; overflow:hidden!important; clip:rect(0,0,0,0)!important;
+  clip-path:inset(50%)!important; white-space:nowrap!important; border:0!important;
+}
 .captain-routes-canvas .d-box {
   display: flow-root;
   padding: clamp(14px, 3cqw, 24px);

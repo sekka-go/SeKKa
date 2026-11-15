@@ -31,6 +31,9 @@ export default function CaptainOnboarding(p: {
   onRefresh: () => void;
   production?: boolean;
   onEnrolled?: () => void;
+  journeyScreen?: number;
+  onJourneyGo?: (screen: number) => void;
+  onJourneyBack?: () => void;
 }) {
   const {language}=usePreferences();
   const tr=(text:string)=>translate(text,language);
@@ -136,16 +139,19 @@ export default function CaptainOnboarding(p: {
     );
   }
   if(p.production){
-    const n=publicScreen(p.screen);
-    const next=(id:number)=>p.go(internalScreen(id));
+    const n=p.journeyScreen??publicScreen(p.screen);
+    const next=(id:number)=>p.onJourneyGo?p.onJourneyGo(id):p.go(internalScreen(id));
     return <div className={`phase-one-stage discovery-stage booking-stage captain-stage ${p.theme}`}>
       <main className={`phase-canvas d-canvas captain-onboarding-canvas captain-step-${n}`}>
-        <Wordmark/><h1>{screenTitle(p.screen,language)}</h1>
+        <header className="d-header captain-onboarding-header">
+          <button type="button" className="phase-back" aria-label={tr("رجوع")}
+            onClick={()=>{if(n===35){if(p.onJourneyBack)p.onJourneyBack();else p.go(internalScreen(3));}else next(n-1);}}>
+            <DiscoveryIcon name="back"/>
+          </button>
+          <Wordmark/>
+        </header>
+        <h1>{screenTitle(p.screen,language)}</h1>
         <CaptainApplicationLive screen={n} onNext={next} onEnrolled={p.onEnrolled}/>
-        <nav className="d-box" aria-label={tr("التنقل بين خطوات التسجيل")}>
-          <button type="button" className="d-outline" onClick={()=>next(n<=35?3:n-1)}>{tr("رجوع")}</button>
-          {n>=35&&n<41&&<button type="button" className="d-outline" onClick={()=>next(n+1)}>{tr("التالي")}</button>}
-        </nav>
       </main>
     </div>;
   }
