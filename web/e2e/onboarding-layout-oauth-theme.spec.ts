@@ -5,7 +5,7 @@ for (const theme of ['light','dark'] as const) {
   test(`first seven onboarding screens keep action buttons within their cards in ${theme}`,async ({page})=>{
     await page.addInitScript((selected)=>localStorage.setItem('theme_preference',selected),theme);
     for(let screen=1;screen<=7;screen++){
-      await page.goto(`/?screen=${screen}&inspect=1`);
+      await page.goto(`/dev/screens?screen=${screen}&inspect=1`);
       const canvas=page.locator('main.phase-canvas');
       await expect(canvas).toBeVisible();
       await expect(page.locator('.phase-one-stage')).toHaveClass(new RegExp(theme));
@@ -24,7 +24,7 @@ for (const theme of ['light','dark'] as const) {
 }
 test('screen four keeps phone, Or, and Google actions in vertical order in both themes',async({page})=>{
  for(const theme of ['light','dark'] as const){
-  await page.goto(`/?screen=4&oauth_theme=${theme}&oauth_language=en`);
+  await page.goto(`/dev/screens?screen=4&oauth_theme=${theme}&oauth_language=en`);
   const phone=page.locator('.phase-phone-input');
   const demo=page.locator('button.phase-send');
   const orLabel=page.locator('.phase-auth-or');
@@ -43,9 +43,9 @@ test('screen four keeps phone, Or, and Google actions in vertical order in both 
  }
 });
 test('light preference carried in OAuth callback remains light after reload',async({page})=>{
- await page.goto('/?screen=8&oauth_theme=light&oauth_language=ar');
+ await page.goto('/dev/screens?screen=8&oauth_theme=light&oauth_language=ar');
  await expect(page.locator('html')).toHaveAttribute('data-theme','light');
- await page.goto('/?screen=8');
+ await page.goto('/dev/screens?screen=8');
  await expect(page.locator('html')).toHaveAttribute('data-theme','light');
  await expect(page.locator('html')).toHaveAttribute('lang','ar');
 });
@@ -55,7 +55,7 @@ test('prerequisite return button stays outside onboarding image and never overla
    sessionStorage.setItem('sekka.prerequisiteReturn','?screen=11');
    localStorage.setItem('theme_preference','dark');
  });
- await page.goto('/?screen=5&preview=phase1');
+ await page.goto('/dev/screens?screen=5&preview=phase1');
  const button=page.locator('.phase-return-prerequisite');
  if(await button.count()){
   await expect(button).toBeVisible();
