@@ -542,6 +542,16 @@ export default function Onboarding({
             >
               {t("تحقق")}<Arrow />
             </button>
+            <button
+              type="button"
+              className="phase-skip-verification"
+              onClick={() => {
+                try {sessionStorage.setItem("sekka.phoneVerificationDeferred","true");} catch { /* Optional browser storage. */ }
+                go(6);
+              }}
+            >
+              {language === "en" ? "Skip for now — verify before your first booking" : "تخطي الآن — التحقق مطلوب عند أول حجز"}
+            </button>
           </>
         ) : id === 6 ? (
           <div className="phase-flow-content">
