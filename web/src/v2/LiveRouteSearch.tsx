@@ -1,3 +1,4 @@
+import LiveTripRequests from './LiveTripRequests';
 import {reserveSeats} from './reservations';
 import {useEffect,useState} from 'react';
 import {client} from './api';
@@ -83,6 +84,7 @@ export default function LiveRouteSearch({origin,destination,outbound,returnTime,
   {loading&&<p role="status">{t('بنبحث عن خطوط مطابقة…','Searching published routes…')}</p>}
   {error&&<div role="alert"><p>{t('تعذر تحميل الخطوط.','Unable to load routes.')} {error}</p><button onClick={()=>setRetry(v=>v+1)}>{t('حاول تاني','Retry')}</button></div>}
   {!loading&&!error&&items.length===0&&<div role="status"><p>{t('لسه مفيش خط مناسب.','No suitable route yet.')}</p><p>{t('لسه مفيش خطوط منشورة مطابقة لنقط الركوب والنزول ومواعيدك.','No published routes match your pickup, drop-off and schedule yet.')}</p></div>}
+  {!loading&&!error&&items.length===0&&origin&&destination&&<LiveTripRequests mode="rider" search={{origin,destination,outbound,period}}/>}
   {bookingError&&<p role="alert">{bookingError}</p>}
   {bookingSuccess&&<p role="status">{bookingSuccess}</p>}
   {items.map(({route,from,to,reverse})=><article className="d-box" key={route.id+String(reverse)}>
