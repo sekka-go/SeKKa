@@ -32,6 +32,17 @@ jobs:
       - name: Approved passenger staging-safe smoke (360/390 AR/EN light/dark)
         run: npx playwright test e2e/v31-approved-passenger-journey.spec.ts
       - run: npm run test:e2e
+      # Browser-only auth-routing regression. Uses a non-staging fake Supabase
+      # endpoint intercepted by Playwright. Never use these as real acceptance.
+      - name: Build isolated fake-auth UI fixture (no staging credentials)
+        env:
+          VITE_SUPABASE_URL: https://sekka-auth-e2e.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: e2e-synthetic-public-key
+        run: npm run build
+      - name: Verify Admin landing, refresh, role denial and RPC retry (MOCKED)
+        env:
+          SEKKA_AUTH_UI_MOCKS: "true"
+        run: npx playwright test e2e/admin-authorization-mocked.spec.ts
       - uses: actions/upload-artifact@v4
         if: always()
         with:
