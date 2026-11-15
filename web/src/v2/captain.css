@@ -181,3 +181,81 @@
 .captain-routes-canvas .live-route-list li { display:grid; gap:8px; border:1px solid var(--d-line); border-radius:14px; padding:16px; min-width:0; overflow-wrap:anywhere; }
 .captain-routes-canvas .live-route-list button { min-height:44px; margin:0; width:max-content; max-width:100%; }
 .captain-routes-canvas .live-route-list button:disabled { opacity:.55; cursor:not-allowed; }
+
+/* Integrated enrollment forms use document scrolling so the mobile keyboard never
+   covers the focused field or the next-step action. */
+.captain-onboarding-canvas {
+  height:auto;
+  min-height:100dvh;
+  overflow:visible;
+  padding-block-end:calc(28px + env(safe-area-inset-bottom,0px));
+}
+.captain-onboarding-canvas .c-approval-live,
+.captain-onboarding-canvas .c-registration-form { min-width:0; }
+.captain-onboarding-canvas .c-registration-form {
+  display:grid;
+  gap:14px;
+  width:100%;
+  padding:clamp(14px,4cqw,24px);
+  overflow-wrap:anywhere;
+}
+.captain-onboarding-canvas .c-registration-form > label {
+  display:grid;
+  gap:7px;
+  min-width:0;
+  line-height:1.55;
+}
+.captain-onboarding-canvas .c-registration-form input:not([type="checkbox"]),
+.captain-onboarding-canvas .c-registration-form select,
+.captain-onboarding-canvas .c-registration-form textarea {
+  box-sizing:border-box;
+  width:100%;
+  min-width:0;
+  min-height:46px;
+  padding:10px 12px;
+  border:1px solid var(--d-line);
+  border-radius:12px;
+  background:var(--phase-card);
+  color:var(--phase-text);
+  font:inherit;
+}
+.captain-onboarding-canvas .c-registration-form textarea {
+  min-height:110px;
+  resize:vertical;
+}
+.captain-onboarding-canvas .c-registration-actions {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));
+  gap:10px;
+}
+.captain-onboarding-canvas .c-registration-actions button,
+.captain-onboarding-canvas .c-registration-form > button {
+  min-height:46px;
+  max-width:100%;
+  white-space:normal;
+}
+.captain-onboarding-canvas .c-category-summary {
+  display:grid;
+  gap:8px;
+  padding:12px;
+  border:1px solid var(--d-line);
+  border-radius:12px;
+  background:var(--phase-card);
+}
+.captain-onboarding-canvas .c-category-summary span {
+  display:block;
+  font-weight:800;
+  overflow-wrap:anywhere;
+}
+.captain-onboarding-canvas .c-registration-form :is(input,select,textarea,button) {
+  scroll-margin-block:88px 24px;
+}
+.captain-onboarding-canvas .c-registration-form [role="alert"] {
+  color:#b83224;
+  overflow-wrap:anywhere;
+}
+@media(max-width:360px) {
+  .captain-onboarding-canvas .c-registration-actions {
+    grid-template-columns:1fr;
+  }
+}

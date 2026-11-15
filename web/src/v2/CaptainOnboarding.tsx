@@ -10,7 +10,6 @@ import "./booking.css";
 import "./wallet.css";
 import "./captain.css";
 export const captainOnboardingScreens = [37, 38, 40, 39, 42, 43, 76];
-const capacities = { PRIME: 3, SAVER: 4, SPACE: 9, MAX: 13 };
 const documentNames = {
   identity: "إثبات الهوية",
   driving_license: "رخصة القيادة",
@@ -40,10 +39,14 @@ export default function CaptainOnboarding(p: {
   const demo = new URLSearchParams(location.search).get("preview") === "phase5";
   const [name, setName] = useState("");
   const [experience, setExperience] = useState("");
+  const [experienceYears, setExperienceYears] = useState("");
+  const [phone, setPhone] = useState("");
+  const [vehicleType, setVehicleType] = useState<"private_car"|"hiace"| "">("");
+  const [make, setMake] = useState("");
   const [model, setModel] = useState("");
+  const [manufactureYear, setManufactureYear] = useState("");
   const [color, setColor] = useState("");
   const [plate, setPlate] = useState("");
-  const [category, setCategory] = useState<keyof typeof capacities>("PRIME");
   const [docs, setDocs] = useState<Partial<Record<DocKind, string>>>({});
   const [note, setNote] = useState("");
   const [reviewed, setReviewed] = useState(false);
@@ -53,8 +56,16 @@ export default function CaptainOnboarding(p: {
     p.go(n);
   };
   const complete =
-    name.trim().length >= 2 &&
+    name.trim().split(/\s+/).length >= 2 &&
+    /^01[0125]\d{8}$/.test(phone.replace(/[\s-]/g,"")) &&
+    experience.trim().length >= 3 &&
+    experienceYears !== "" &&
+    Number.isInteger(Number(experienceYears)) &&
+    Number(experienceYears) >= 0 &&
     model.trim().length >= 2 &&
+    make.trim().length >= 2 &&
+    !!manufactureYear &&
+    !!vehicleType &&
     plate.trim().length >= 3 &&
     Object.keys(docs).length === 4 &&
     color.trim().length > 0;
@@ -299,10 +310,10 @@ export default function CaptainOnboarding(p: {
                     }}
                   >
                     <label className="w-field">
-                      <span>{tr("الاسم الكامل")}</span>
+                      <span>{tr("الاسم بالكامل")}</span>
                       <input
                         required
-                        minLength={2}
+                        minLength={5}
                         maxLength={100}
                         value={name}
                         onChange={(e) => {
@@ -313,17 +324,32 @@ export default function CaptainOnboarding(p: {
                       />
                     </label>
                     <label className="w-field">
-                      <span>{tr("خبرتك في تشغيل الخطوط (اختياري)")}</span>
+                      <span>{tr("رقم الهاتف المصري (غير مؤكد)")}</span>
+                      <input type="tel" inputMode="tel" autoComplete="tel-national"
+                        required pattern="01[0125][0-9]{8}" value={phone}
+                        onChange={(e) => setPhone(e.target.value)}/>
+                    </label>
+                    <label className="w-field">
+                      <span>{tr("الخلفية المهنية")}</span>
                       <textarea
+                        required
+                        minLength={3}
                         maxLength={1000}
                         value={experience}
                         onChange={(e) => setExperience(e.target.value)}
                       />
                     </label>
+                    <label className="w-field">
+                      <span>{tr("سنوات الخبرة")}</span>
+                      <input type="number" required min={0} max={80} step={1}
+                        value={experienceYears} onChange={(e)=>setExperienceYears(e.target.value)}/>
+                    </label>
                     <p>{tr("الاسم وباقي البيانات هنا للمعاينة بس.")}</p>
                     <button
                       className="d-primary b-primary"
-                      disabled={name.trim().length < 2}
+                      disabled={name.trim().split(/\s+/).length < 2||
+                        !/^01[0125]\d{8}$/.test(phone.replace(/[\s-]/g,""))||
+                        experience.trim().length<3||experienceYears===""}
                     >
                       {tr("متابعة")}<DiscoveryIcon name="arrow" />
                     </button>
@@ -345,7 +371,22 @@ export default function CaptainOnboarding(p: {
                     }}
                   >
                     <label className="w-field">
-                      <span>{tr("موديل العربية")}</span>
+                      <span>{tr("نوع المركبة الفعلي")}</span>
+                      <select required value={vehicleType} onChange={e=>{
+                        setVehicleType(e.target.value as "private_car"|"hiace"|"");
+                      }}>
+                        <option value="">{tr("اختر نوع المركبة")}</option>
+                        <option value="private_car">{tr("سيارة ملاكي")}</option>
+                        <option value="hiace">{tr("هايس")}</option>
+                      </select>
+                    </label>
+                    <label className="w-field">
+                      <span>{tr("الشركة المصنعة")}</span>
+                      <input required minLength={2} maxLength={60} value={make}
+                        onChange={e=>{setMake(e.target.value);setModel("");}}/>
+                    </label>
+                    <label className="w-field">
+                      <span>{tr("الموديل")}</span>
                       <input
                         required
                         minLength={2}
@@ -357,6 +398,14 @@ export default function CaptainOnboarding(p: {
                         }}
                         placeholder={tr("مثال: تويوتا كورولا")}
                       />
+                    </label>
+                    <label className="w-field">
+                      <span>{tr("سنة الصنع")}</span>
+                      <select required value={manufactureYear} onChange={e=>setManufactureYear(e.target.value)}>
+                        <option value="">{tr("اختر سنة الصنع")}</option>
+                        {Array.from({length:new Date().getFullYear()-1979},(_,i)=>String(new Date().getFullYear()-i))
+                          .map(year=><option key={year} value={year}>{year}</option>)}
+                      </select>
                     </label>
                     <label className="w-field">
                       <span>{tr("رقم اللوحة")}</span>
@@ -372,42 +421,21 @@ export default function CaptainOnboarding(p: {
                       />
                     </label>
                     <label className="w-field">
-                      <span>{tr("لون العربية")}</span>
-                      <input
-                        value={color}
-                        maxLength={40}
-                        onChange={(e) => { setColor(e.target.value); setSubmitted(false); }}
-                      />
+                      <span>{tr("لون المركبة")}</span>
+                      <select required value={color} onChange={e=>setColor(e.target.value)}>
+                        <option value="">{tr("اختر اللون")}</option>
+                        {["white","black","silver","gray","red","blue","green","brown","gold","other"]
+                         .map(value=><option key={value} value={value}>{tr(value)}</option>)}
+                      </select>
                     </label>
-                    <fieldset className="c-categories">
-                      <legend>{tr("فئة العربية")}</legend>
-                      {(
-                        Object.keys(capacities) as (keyof typeof capacities)[]
-                      ).map((c) => (
-                        <button
-                          type="button"
-                          aria-pressed={category === c}
-                          key={c}
-                          onClick={() => {
-                            setCategory(c);
-                            setSubmitted(false);
-                          }}
-                        >
-                          <strong>{c}</strong>
-                          <span>
-                            {c === "PRIME" || c === "SAVER"
-                              ? tr("ملاكي")
-                              : tr("هاي إس")}{" "}
-                            · {capacities[c]} {tr("مقاعد")}</span>
-                        </button>
-                      ))}
-                    </fieldset>
-                    <p>
-                      {tr("سعة الفئة ثابتة، وعدد المقاعد المتاحة في الخط بيتحدد بعدين.")}</p>
+                    {vehicleType==="private_car"&&<p>PRIME · 3 {tr("مقاعد")} / SAVER · 4 {tr("مقاعد")}</p>}
+                    {vehicleType==="hiace"&&<p>SPACE · 9 {tr("مقاعد")} / MAX · 13 {tr("مقاعد")} · {tr("تحديد المسؤول")}</p>}
+                    <p>{tr("السعة ثابتة حسب فئة الخدمة ولا يمكن تعديلها.")}</p>
                     <button
                       className="d-primary b-primary"
                       disabled={
                         model.trim().length < 2 ||
+                        make.trim().length<2||!manufactureYear||!vehicleType||
                         plate.trim().length < 3 ||
                         !color.trim()
                       }
@@ -422,19 +450,23 @@ export default function CaptainOnboarding(p: {
                     <section className="d-box b-box">
                       <h2>{tr("بياناتك")}</h2>
                       <p>{name || tr("الاسم لسه ناقص")}</p>
-                      <p>{experience || tr("مفيش خبرة مضافة")}</p>
+                      <p>{phone || tr("رقم الهاتف لسه ناقص")} · {tr("غير مؤكد")}</p>
+                      <p>{experience || tr("الخلفية المهنية لسه ناقصة")}</p>
+                      <p>{experienceYears || "—"} {tr("سنوات خبرة")}</p>
                       <button className="w-link" onClick={() => nav(38)}>
                         {tr("تعديل بيانات الكابتن")}</button>
                     </section>
                     <section className="d-box b-box">
                       <h2>{tr("عربيتك")}</h2>
                       <p>
-                        {model || tr("الموديل لسه ناقص")} ·{" "}
+                        {vehicleType==="private_car"?tr("ملاكي"):vehicleType==="hiace"?tr("هايس"):"—"} ·
+                        {make || tr("الشركة لسه ناقصة")} · {model || tr("الموديل لسه ناقص")} ·{" "}
+                        {manufactureYear||"—"} ·{" "}
                         {color || tr("اللون لسه ناقص")} ·{" "}
                         {plate || tr("اللوحة لسه ناقصة")}
                       </p>
-                      <p>
-                        {category} · {capacities[category]} {tr("مقاعد")}</p>
+                      {vehicleType==="private_car"&&<p>PRIME · 3 {tr("مقاعد")} / SAVER · 4 {tr("مقاعد")}</p>}
+                      {vehicleType==="hiace"&&<p>SPACE · 9 {tr("مقاعد")} / MAX · 13 {tr("مقاعد")}</p>}
                       <button className="w-link" onClick={() => nav(40)}>
                         {tr("تعديل بيانات العربية")}</button>
                     </section>

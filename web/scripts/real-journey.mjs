@@ -29,7 +29,7 @@ assert.notEqual(captainUser.id,riderUser.id,'Sessions must represent different u
 const approval=must(await captain.from('v31_captain_profiles').select('approval_status').eq('user_id',captainUser.id).single(),'captain approval');
 assert.equal(approval.approval_status,'approved');
 const application=must(await captain.from('v31_captain_applications')
- .select('user_id,status,reviewed_at').eq('user_id',captainUser.id).single(),'captain approval application');
+ .select('user_id,status,reviewed_at,approved_vehicle_id').eq('user_id',captainUser.id).single(),'captain approval application');
 assert.equal(application.status,'approved','Approval must have been a real admin-reviewed application');
 assert.ok(application.reviewed_at,'Admin decision must have a persisted review timestamp');
 const decisions=must(await captain.from('v31_captain_approval_audit')
@@ -39,25 +39,50 @@ assert.equal(decisions[0]?.decision,'approved','Approval must have an immutable 
 const areas=must(await captain.from('v31_service_areas').select('id,name_ar').eq('active',true).order('id').limit(2),'areas');
 assert.equal(areas.length,2,'Need two active areas');
 const testTag=randomUUID().slice(0,8);
-const vehicle=must(await captain.from('v31_vehicles').insert({captain_id:captainUser.id,model:'QA vehicle',plate_number:`STG-${testTag}`,category:'PRIME',seats:3}).select('id,seats,status').single(),'captain test vehicle registration');
-assert.equal(vehicle.seats,3);
+const vehicle=must(await captain.from('v31_vehicles')
+ .select('id,seats,status,enabled_categories').eq('id',application.approved_vehicle_id)
+ .eq('captain_id',captainUser.id).single(),'Admin-activated vehicle');
+assert.equal(vehicle.status,'active');
+assert.ok(vehicle.enabled_categories.length>0,'An Admin-approved service category is required');
+const capacities={PRIME:3,SAVER:4,SPACE:9,MAX:13};
+const category=vehicle.enabled_categories.includes('SAVER')?'SAVER':vehicle.enabled_categories[0];
+const seatCapacity=capacities[category];
+assert.ok(seatCapacity,'Vehicle category must have a server-approved fixed capacity');
+const unauthorizedVehicleWrite=await captain.from('v31_vehicles')
+ .update({seats:1,enabled_categories:['PRIME']}).eq('id',vehicle.id).select('id');
+assert.ok(unauthorizedVehicleWrite.error,'Captain must not edit system-controlled capacity or eligibility');
 const title=`STAGING E2E ${testTag}`;
-const routeId=must(await captain.rpc('v31_create_route_draft',{p_title:title,p_category:'PRIME',p_capacity:3,p_direction:'outbound',p_period:'monthly',p_outbound:'07:30',p_return:null,p_return_supported:false,p_price:800,p_stops:[{area_id:areas[0].id,name:'Test origin',pickup:true,dropoff:true},{area_id:areas[1].id,name:'Test destination',pickup:true,dropoff:true}]}),'draft creation');
+const routeId=must(await captain.rpc('v31_create_vehicle_route_draft',{
+ p_title:title,p_vehicle:vehicle.id,p_category:category,p_direction:'outbound',
+ p_period:'monthly',p_outbound:'07:30',p_return:null,p_return_supported:false,
+ p_price:800,p_stops:[{area_id:areas[0].id,name:'Test origin',pickup:true,dropoff:true},
+  {area_id:areas[1].id,name:'Test destination',pickup:true,dropoff:true}]
+}),'draft creation');
 assert.equal(typeof routeId,'string');
+const draft=must(await captain.from('v31_routes').select('vehicle_id,category,seat_capacity')
+ .eq('id',routeId).single(),'persisted route draft');
+assert.equal(draft.vehicle_id,vehicle.id);
+assert.equal(draft.category,category);
+assert.equal(draft.seat_capacity,seatCapacity,'Capacity must be derived by the database');
+const forgedCapacity=await captain.from('v31_routes').update({seat_capacity:1})
+ .eq('id',routeId).select('id');
+assert.ok(forgedCapacity.error,'Captain must not alter route capacity');
 assert.equal(must(await captain.rpc('v31_set_route_status',{p_route:routeId,p_status:'published'}),'publish'),'published');
 const unauthorizedRouteChange=await rider.rpc('v31_set_route_status',{p_route:routeId,p_status:'paused'});
 assert.ok(unauthorizedRouteChange.error,'A Passenger must not change another Captain route');
 const found=must(await rider.from('v31_routes').select('id,title,seat_capacity').eq('id',routeId).single(),'passenger search');
 assert.equal(found.title,title);
+assert.equal(found.seat_capacity,seatCapacity);
 const stops=must(await rider.from('v31_route_stops').select('id,area_id,position').eq('route_id',routeId).order('position'),'published stops');
 assert.equal(stops.length,2);
 const availability=async()=>must(await rider.rpc('v31_published_route_available_seats',{p_route:routeId}),'route availability');
-assert.equal(await availability(),3,'Published test route starts with three available seats');
+assert.equal(await availability(),seatCapacity,'Published route starts at its category capacity');
 const key1=randomUUID();
-const id1=must(await rider.rpc('v31_reserve_seats_with_stops',{p_route:routeId,p_seats:2,p_idempotency:key1,p_pickup:stops[0].id,p_dropoff:stops[1].id,p_reverse:false}),'first booking');
-const id2=must(await rider.rpc('v31_reserve_seats',{p_route:routeId,p_seats:2,p_idempotency:key1}),'idempotent retry');
+const firstSeats=seatCapacity-1;
+const id1=must(await rider.rpc('v31_reserve_seats_with_stops',{p_route:routeId,p_seats:firstSeats,p_idempotency:key1,p_pickup:stops[0].id,p_dropoff:stops[1].id,p_reverse:false}),'first booking');
+const id2=must(await rider.rpc('v31_reserve_seats',{p_route:routeId,p_seats:firstSeats,p_idempotency:key1}),'idempotent retry');
 assert.equal(id1,id2);
-assert.equal(await availability(),1,'Atomic 2-seat booking reduces availability to one');
+assert.equal(await availability(),1,'Atomic booking leaves only one seat');
 const captainBookingNotice=must(await captain.from('v31_notifications').select('id,kind,entity_id')
  .eq('user_id',captainUser.id).eq('kind','new_booking').eq('entity_id',id1).maybeSingle(),'Captain booking notification');
 assert.equal(captainBookingNotice?.entity_id,id1,'A real booking notification must persist for the Captain');
@@ -94,7 +119,7 @@ assert.equal(captainBooking.id,riderBooking.id);
 assert.equal(captainBooking.status,riderBooking.status);
 assert.equal(captainBooking.seats,riderBooking.seats);
 assert.equal(captainBooking.status,'pending');
-assert.equal(captainBooking.seats,2);
+assert.equal(captainBooking.seats,firstSeats);
 assert.equal(captainBooking.pickup_stop_id,stops[0].id);
 assert.equal(captainBooking.dropoff_stop_id,stops[1].id);
 assert.equal(captainBooking.price_snapshot_egp,800);
@@ -129,11 +154,8 @@ must(await rider.rpc('v31_cancel_pending_booking',{p_booking:acceptedBooking}),'
 must(await rider.rpc('v31_cancel_pending_booking',{p_booking:id1}),'cancel');
 const cancelled=must(await rRefreshed.from('v31_bookings').select('status').eq('id',id1).single(),'persisted cancellation');
 assert.equal(cancelled.status,'cancelled');
-assert.equal(await availability(),3,'Cancellation of both reservations restores all three seats');
+assert.equal(await availability(),seatCapacity,'Cancellation of both reservations restores all seats');
 assert.equal(must(await captain.rpc('v31_set_route_status',{p_route:routeId,p_status:'archived'}),'archive test route'),'archived');
 const hiddenTestRoute=must(await rider.from('v31_routes').select('id').eq('id',routeId).maybeSingle(),'confirm archived route hidden from passengers');
 assert.equal(hiddenTestRoute,null,'Archived test route must not be visible in Passenger search');
-const inactiveVehicle=must(await captain.from('v31_vehicles').update({status:'inactive'})
- .eq('id',vehicle.id).select('id,status').single(),'deactivate test vehicle');
-assert.equal(inactiveVehicle.status,'inactive');
-process.stdout.write('PASS: two independent Google sessions, captain publish, rider route visibility, single-rider concurrent last-seat attempts, atomic booking, Captain notification, Admin restriction, persistence, cancellation and seat restoration. Test route archived and vehicle deactivated. Cross-account concurrency and browser UI acceptance require additional authorized sessions and must not be inferred.\n');
+process.stdout.write('PASS: two independent Google sessions, Admin-approved vehicle and eligible category, system-derived route capacity, blocked Captain capacity edits, route publishing, rider route visibility, concurrent last-seat protection, idempotent booking, Captain notification, Admin restriction, persistence, cancellation, and seat restoration. Test route archived; the Admin-approved test vehicle remains active. Cross-account concurrency and browser UI acceptance require additional authorized sessions and must not be inferred.\n');

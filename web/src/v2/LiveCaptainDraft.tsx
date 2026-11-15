@@ -6,7 +6,8 @@ import type {Category} from '../../../packages/domain/subscriptions';
 
 type Area={id:number;name_ar:string;name_en:string};
 type StopInput={areaId:number;name:string;pickup:boolean;dropoff:boolean};
-const seats:Record<Category,number>={PRIME:3,SAVER:4,SPACE:9,MAX:13};
+type Vehicle={id:string;model:string;plate_number:string;enabled_categories:string[]};
+const categorySeats:Record<Category,number>={PRIME:3,SAVER:4,SPACE:9,MAX:13};
 
 /** Authenticated draft creation only. Publishing requires a separate audited server operation. */
 export default function LiveCaptainDraft(){
@@ -14,12 +15,13 @@ export default function LiveCaptainDraft(){
  const t=(ar:string,english:string)=>en?english:ar;
  const [uid,setUid]=useState<string|null>(null);
  const [areas,setAreas]=useState<Area[]>([]);
+ const [vehicles,setVehicles]=useState<Vehicle[]>([]);
  const [title,setTitle]=useState('');
  const [areaId,setAreaId]=useState('');
  const [stopName,setStopName]=useState('');
  const [stops,setStops]=useState<StopInput[]>([]);
- const [category,setCategory]=useState<Category>('PRIME');
- const [capacity,setCapacity]=useState(3);
+ const [vehicleId,setVehicleId]=useState('');
+ const [category,setCategory]=useState<Category|null>(null);
  const [period,setPeriod]=useState('monthly');
  const [direction,setDirection]=useState('outbound');
  const [departure,setDeparture]=useState('07:30');
@@ -32,15 +34,39 @@ export default function LiveCaptainDraft(){
  useEffect(()=>{
    if(!client)return;
    let live=true;
-   void client.auth.getUser().then(({data})=>{if(live)setUid(data.user?.id??null);});
-   void client.from('v31_service_areas').select('id,name_ar,name_en').order('id').then(({data,error})=>{
-     if(!live)return;
-     if(error)setError(error.message);
-     else {setAreas((data||[]) as Area[]);setAreaId(String(data?.[0]?.id||''));}
-   });
+   void(async()=>{
+    const {data:{user},error:authError}=await client.auth.getUser();
+    if(!live)return;
+    if(authError){setError(authError.message);return;}
+    setUid(user?.id??null);
+    if(!user)return;
+    const [areaResult,vehicleResult]=await Promise.all([
+     client.from('v31_service_areas').select('id,name_ar,name_en').order('id'),
+     client.from('v31_vehicles').select('id,model,plate_number,enabled_categories')
+      .eq('captain_id',user.id).eq('status','active').order('created_at',{ascending:false})
+    ]);
+    if(!live)return;
+    if(areaResult.error||vehicleResult.error){
+     setError(areaResult.error?.message||vehicleResult.error?.message||'LOAD_FAILED');return;
+    }
+    const availableVehicles=(vehicleResult.data||[]) as Vehicle[];
+    setAreas((areaResult.data||[]) as Area[]);
+    setAreaId(String(areaResult.data?.[0]?.id||''));
+    setVehicles(availableVehicles);
+    setVehicleId(availableVehicles[0]?.id||'');
+    const firstCategory=availableVehicles[0]?.enabled_categories?.[0];
+    if(firstCategory&&firstCategory in categorySeats)setCategory(firstCategory as Category);
+   })();
    const {data:listener}=client.auth.onAuthStateChange((_event,session)=>setUid(session?.user.id??null));
    return ()=>{live=false;listener.subscription.unsubscribe();};
  },[]);
+ const eligibleCategories=(vehicles.find(vehicle=>vehicle.id===vehicleId)?.enabled_categories||[])
+  .filter((value):value is Category=>value in categorySeats);
+ useEffect(()=>{
+  if(eligibleCategories.length>0&&!eligibleCategories.includes(category as Category))
+   setCategory(eligibleCategories[0]);
+  else if(eligibleCategories.length===0)setCategory(null);
+ },[vehicleId,eligibleCategories.join(':')]);
  const addStop=()=>{
    if(!areaId||stopName.trim().length<2)return;
    const next={areaId:Number(areaId),name:stopName.trim(),pickup:true,dropoff:true};
@@ -53,16 +79,16 @@ export default function LiveCaptainDraft(){
    if(!client||!uid)return;
    setMessage('');setError('');
    if(title.trim().length<3||stops.length<2||stops[0].areaId===stops.at(-1)?.areaId||
-      !Number.isInteger(capacity)||capacity<1||capacity>seats[category]||
+      !vehicleId||!category||!eligibleCategories.includes(category)||
       !Number.isInteger(Number(price))||Number(price)<=0||
       (direction==='round_trip'&&!returnSupported)){
-     setError(t('راجع العنوان والسعر والمقاعد؛ يلزم نقطتان في منطقتين مختلفتين.','Check title, price, capacity and at least two stops in distinct areas.'));return;
+     setError(t('راجع المركبة والفئة والعنوان والسعر؛ يلزم نقطتان في منطقتين مختلفتين.','Check vehicle, category, title, price and at least two stops in distinct areas.'));return;
    }
    setBusy(true);
    try{
      await enrollCaptain();
-     const {data:routeId,error:routeError}=await client.rpc('v31_create_route_draft',{
-       p_title:title.trim(),p_category:category,p_capacity:capacity,
+     const {data:routeId,error:routeError}=await client.rpc('v31_create_vehicle_route_draft',{
+       p_title:title.trim(),p_vehicle:vehicleId,p_category:category,
        p_direction:direction,p_period:period,
        p_outbound:direction==='return'?null:departure,
        p_return:direction==='outbound'?null:arrival,
@@ -74,11 +100,12 @@ export default function LiveCaptainDraft(){
      if(routeError)throw routeError;
      if(typeof routeId!=='string')throw Error('DRAFT_NOT_CONFIRMED');
      const [{data:saved,error:savedError},{data:savedStops,error:stopsError}]=await Promise.all([
-       client.from('v31_routes').select('id,status,seat_capacity,price_egp').eq('id',routeId).eq('captain_id',uid).maybeSingle(),
+       client.from('v31_routes').select('id,status,vehicle_id,category,seat_capacity,price_egp').eq('id',routeId).eq('captain_id',uid).maybeSingle(),
        client.from('v31_route_stops').select('id,area_id,name,position').eq('route_id',routeId).order('position')
      ]);
      if(savedError||stopsError)throw Error(savedError?.message||stopsError?.message||'DRAFT_READ_FAILED');
-     if(!saved||saved.status!=='draft'||saved.seat_capacity!==capacity||saved.price_egp!==Number(price)||
+     if(!saved||saved.status!=='draft'||saved.vehicle_id!==vehicleId||saved.category!==category||
+        saved.seat_capacity!==categorySeats[category]||saved.price_egp!==Number(price)||
         !savedStops||savedStops.length!==stops.length||savedStops.some((s,i)=>s.area_id!==stops[i].areaId||s.position!==i||s.name!==stops[i].name)){
        throw Error('DRAFT_PERSISTENCE_NOT_VERIFIED');
      }
@@ -104,8 +131,20 @@ export default function LiveCaptainDraft(){
       <button type="button" onClick={()=>setStops(v=>v.filter((_,j)=>j!==i))}>{t('حذف','Remove')}</button>
     </div>
   </li>)}</ol>
-  <label>{t('الفئة','Category')}<select value={category} onChange={e=>{const c=e.target.value as Category;setCategory(c);setCapacity(Math.min(capacity,seats[c]));}}>{Object.keys(seats).map(c=><option key={c}>{c}</option>)}</select></label>
-  <label>{t('عدد المقاعد','Seats')}<input type="number" min={1} max={seats[category]} value={capacity} onChange={e=>setCapacity(Number(e.target.value))}/></label>
+  <label>{t('المركبة المعتمدة','Approved vehicle')}
+   <select value={vehicleId} onChange={e=>setVehicleId(e.target.value)}>
+    <option value="">{t('اختر المركبة','Select vehicle')}</option>
+    {vehicles.map(vehicle=><option key={vehicle.id} value={vehicle.id}>{vehicle.model} — {vehicle.plate_number}</option>)}
+   </select>
+  </label>
+  <label>{t('فئة الخدمة المؤهلة','Eligible service category')}
+   <select value={category||''} onChange={e=>setCategory((e.target.value||null) as Category|null)} disabled={!eligibleCategories.length}>
+    <option value="">{t('لا توجد فئات مفعلة','No categories enabled')}</option>
+    {eligibleCategories.map(value=><option key={value} value={value}>{value}</option>)}
+   </select>
+  </label>
+  {category&&<p role="status">{t('سعة الفئة ثابتة بواسطة النظام:','Category capacity is fixed by the system:')}
+   {` ${categorySeats[category]} `}{t('مقاعد ركاب','passenger seats')}</p>}
   <label>{t('مدة الاشتراك','Period')}<select value={period} onChange={e=>setPeriod(e.target.value)}><option value="weekly">{t('أسبوعي','Weekly')}</option><option value="monthly">{t('شهري','Monthly')}</option></select></label>
   <label>{t('الاتجاه','Direction')}<select value={direction} onChange={e=>setDirection(e.target.value)}><option value="outbound">{t('ذهاب','Outbound')}</option><option value="return">{t('عودة','Return')}</option><option value="round_trip">{t('ذهاب وعودة','Round trip')}</option></select></label>
   {direction!=='return'&&<label>{t('وقت الذهاب','Outbound departure')}<input type="time" value={departure} onChange={e=>setDeparture(e.target.value)}/></label>}

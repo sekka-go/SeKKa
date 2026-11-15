@@ -485,11 +485,22 @@ test("phase five captain onboarding validates locally without uploads", async ({
         ),
       ).toBe(true);
     }
-  await page.goto("/dev/screens?screen=36&preview=phase5");
+  await page.goto("/dev/screens?screen=35&preview=phase5");
+  await page.getByRole("button", { name: "ابدأ يا كابتن" }).click();
   await expect(
     page.getByRole("button", { name: "متابعة", exact: true }),
   ).toBeDisabled();
-  await page.getByLabel("الاسم الكامل").fill("كابتن تجريبي");
+  await page.getByLabel("الاسم بالكامل").fill("كابتن تجريبي");
+  await page.getByLabel("رقم الهاتف المصري (غير مؤكد)").fill("01012345678");
+  await page.getByLabel("الخلفية المهنية").fill("خبرة سائق محترف");
+  await page.getByLabel("سنوات الخبرة").fill("0");
+  await page.getByRole("button", { name: "متابعة", exact: true }).click();
+  await page.getByLabel("نوع المركبة الفعلي").selectOption("private_car");
+  await page.getByLabel("الشركة المصنعة").fill("تويوتا");
+  await page.getByLabel("الموديل").fill("كورولا");
+  await page.getByLabel("سنة الصنع").selectOption(String(new Date().getFullYear()));
+  await page.getByLabel("رقم اللوحة").fill("أ ب ج 123");
+  await page.getByLabel("لون المركبة").selectOption("white");
   await page.getByRole("button", { name: "متابعة", exact: true }).click();
   const upload = async () => {
     for (const input of await page.locator("input[type=file]").all())
@@ -499,11 +510,6 @@ test("phase five captain onboarding validates locally without uploads", async ({
         buffer: Buffer.from("demo only"),
       });
   };
-  await page.getByLabel("موديل العربية").fill("تويوتا كورولا");
-  await page.getByLabel("رقم اللوحة").fill("أ ب ج 123");
-  await page.getByLabel("لون العربية").fill("أبيض");
-  await page.getByRole("button", { name: /SAVER/ }).click();
-  await page.getByRole("button", { name: "متابعة", exact: true }).click();
   await upload();
   await page.getByRole("button", { name: "متابعة", exact: true }).click();
   await expect(
