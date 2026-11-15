@@ -64,6 +64,11 @@
  * Remove only duplicate outer chrome; keep bottom navigation on these flows. */
 .sekka-tab-search > .sekka-mobile-header,
 .sekka-tab-booking > .sekka-mobile-header{display:none}
+/* Original Captain application steps are full-screen as well; do not place
+ * the Passenger header or fixed tabs over document fields and review CTAs. */
+.sekka-tab-captain-onboarding > .sekka-mobile-header,
+.sekka-tab-captain-onboarding > .sekka-bottom-nav{display:none}
+.sekka-tab-captain-onboarding{padding-bottom:0}
 .sekka-mobile-content > .phase-one-stage.discovery-stage > .d-canvas{
  width:100%;max-width:600px;
 }
