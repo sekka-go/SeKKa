@@ -139,3 +139,22 @@
     transition: transform .16s ease, border-color .16s ease;
   }
 }
+
+/* Real route draft: accessible form and clearly separated route actions. */
+.captain-routes-canvas .live-route-form { display:grid; gap:16px; }
+.captain-routes-canvas .live-route-form > label { display:grid; gap:8px; margin:0; }
+.captain-routes-canvas .live-route-form input,
+.captain-routes-canvas .live-route-form select {
+  min-height:44px; width:100%; min-width:0;
+  padding:10px 12px; border-radius:12px;
+  border:1px solid var(--d-line); background:var(--phase-card);
+  color:var(--phase-text); font:inherit;
+}
+.captain-routes-canvas .live-route-form .live-route-check { display:flex; align-items:center; gap:12px; }
+.captain-routes-canvas .live-route-form input[type="checkbox"] {width:22px;height:22px;min-height:22px;flex:none;}
+.captain-routes-canvas .live-route-stops { margin:0; padding-inline-start:24px; }
+.captain-routes-canvas .live-route-stops li { padding:12px 0; border-bottom:1px solid var(--d-line); }
+.captain-routes-canvas .live-route-controls {display:flex;flex-wrap:wrap;gap:12px;margin-block:12px 0;}
+.captain-routes-canvas .live-route-controls button { min-height:44px;margin:0; }
+.captain-routes-canvas .live-route-form button { white-space:normal; }
+.captain-routes-canvas .live-route-form [role="alert"] {overflow-wrap:anywhere; color:#dd704a;}
