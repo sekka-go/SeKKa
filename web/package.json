@@ -13,7 +13,7 @@
     "test:domain": "node --experimental-strip-types --test ../packages/domain/*.test.mjs",
     "test:db": "node --experimental-strip-types --test ../supabase/tests/*.test.mjs",
     "test:e2e": "playwright test",
-    "test:structure": "node scripts/check-active-frontend.cjs"
+    "test:structure": "node --check scripts/real-journey.mjs && node --check scripts/staging-preflight.mjs && node scripts/check-active-frontend.cjs"
   },
   "dependencies": {
     "@fontsource/tajawal": "5.3.0",
