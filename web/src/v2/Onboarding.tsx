@@ -546,7 +546,7 @@ export default function Onboarding({
                 go(6);
               }}
             >
-              {language === "en" ? "Skip for now — verify before your first booking" : "تخطي الآن — التحقق مطلوب عند أول حجز"}
+              {language === "en" ? "Skip for now" : "تخطي الآن"}
             </button>
           </>
         ) : id === 6 ? (
