@@ -31,6 +31,18 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Approved passenger staging-safe smoke (360/390 AR/EN light/dark)
         run: npx playwright test e2e/v31-approved-passenger-journey.spec.ts
+      - name: Validate original versus integrated geometry (S002/S003/S009/S010 and Google)
+        run: npx playwright test e2e/production-shell-geometry.spec.ts e2e/production-google-login-layout.spec.ts
+      - name: Upload before/after geometry evidence, including on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sekka-original-vs-integrated-layout
+          path: |
+            docs/audit/layout-reference-*.png
+            docs/audit/layout-after-*.png
+          if-no-files-found: warn
+          retention-days: 90
       - run: npm run test:e2e
       # Browser-only auth-routing regression. Uses a non-staging fake Supabase
       # endpoint intercepted by Playwright. Never use these as real acceptance.
