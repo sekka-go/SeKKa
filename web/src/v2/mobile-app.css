@@ -57,9 +57,13 @@
 }
 .sekka-mobile-content > .phase-one-stage > .phase-canvas{width:100%;max-width:600px;min-width:0}
 .sekka-mobile-content > .phase-one-stage.discovery-stage{
- padding-block-start:45px;
+ padding-block-start:12px;
  padding-inline:0;
 }
+/* Route discovery and booking already have their approved logo/back header.
+ * Remove only duplicate outer chrome; keep bottom navigation on these flows. */
+.sekka-tab-search > .sekka-mobile-header,
+.sekka-tab-booking > .sekka-mobile-header{display:none}
 .sekka-mobile-content > .phase-one-stage.discovery-stage > .d-canvas{
  width:100%;max-width:600px;
 }
