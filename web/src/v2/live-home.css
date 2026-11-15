@@ -30,3 +30,10 @@
 .live-home__notice button{flex-shrink:0;background:#ffc400;color:#111820;border:0;border-radius:10px;padding:6px 10px;font-weight:800}
 .live-home__logout{display:block;margin:0 auto;color:var(--lh-muted);border:0;background:transparent;text-decoration:underline;font-size:14px}
 @media(min-width:720px){.live-home__hero{border-radius:24px 24px 32px 32px}.live-home__panel{margin-inline:20px}}
+
+/* Error belongs to its action card: never push it between hero and overlapping card. */
+.live-home__inline-alert{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:12px 14px;margin:0 0 18px;border:1px solid var(--lh-line);border-inline-start:4px solid #d5a000;border-radius:12px;background:var(--lh-bg);color:var(--lh-ink);font-size:13px;line-height:1.5}
+.live-home__inline-alert span{min-width:0;overflow-wrap:anywhere;flex:1}
+.live-home__inline-alert button{min-width:76px;flex-shrink:0;padding:8px 12px;border-radius:10px;background:var(--lh-accent);border:0;color:#111820;font-weight:800;font-size:13px}
+.live-home__panel{overflow-wrap:anywhere}
+@media(max-width:380px){.live-home__inline-alert{flex-direction:column;align-items:stretch}.live-home__inline-alert button{align-self:flex-start}}
