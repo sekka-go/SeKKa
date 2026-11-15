@@ -1,5 +1,6 @@
 import {useEffect,useState} from 'react';
 import {client} from './api';
+import {enrollCaptain} from './captainEnrollment';
 import {usePreferences} from './preferences';
 import type {Category} from '../../../packages/domain/subscriptions';
 
@@ -59,18 +60,7 @@ export default function LiveCaptainDraft(){
    }
    setBusy(true);
    try{
-     const {data:existing,error:profileError}=await client.from('v31_profiles').select('user_id').eq('user_id',uid).maybeSingle();
-     if(profileError)throw profileError;
-     if(!existing){
-       const {error}=await client.from('v31_profiles').insert({user_id:uid,role_preference:'rider'});
-       if(error&&error.code!=='23505')throw error;
-     }
-     const {data:captain,error:captainError}=await client.from('v31_captain_profiles').select('user_id').eq('user_id',uid).maybeSingle();
-     if(captainError)throw captainError;
-     if(!captain){
-       const {error}=await client.from('v31_captain_profiles').insert({user_id:uid,approval_status:'pending'});
-       if(error&&error.code!=='23505')throw error;
-     }
+     await enrollCaptain();
      const {error:routeError}=await client.rpc('v31_create_route_draft',{
        p_title:title.trim(),p_category:category,p_capacity:capacity,
        p_direction:direction,p_period:period,
