@@ -1,7 +1,7 @@
 [
   {
     "file": "AccountFlow.tsx",
-    "line": 130,
+    "line": 163,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(id)}",
@@ -10,7 +10,7 @@
   },
   {
     "file": "AccountFlow.tsx",
-    "line": 169,
+    "line": 202,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(p.screen - 1)}",
@@ -19,7 +19,7 @@
   },
   {
     "file": "AccountFlow.tsx",
-    "line": 176,
+    "line": 209,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => nav(+e.target.value)}",
@@ -28,7 +28,7 @@
   },
   {
     "file": "AccountFlow.tsx",
-    "line": 187,
+    "line": 220,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(p.screen + 1)}",
@@ -37,7 +37,7 @@
   },
   {
     "file": "AccountFlow.tsx",
-    "line": 197,
+    "line": 230,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => p.onTheme(t)}",
@@ -46,7 +46,7 @@
   },
   {
     "file": "AccountFlow.tsx",
-    "line": 214,
+    "line": 247,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setEmpty(e.target.checked)}",
@@ -55,7 +55,7 @@
   },
   {
     "file": "AccountFlow.tsx",
-    "line": 223,
+    "line": 256,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(p.screen === 32 ? 31 : p.screen === 35 ? 34 : 8)}",
@@ -64,7 +64,7 @@
   },
   {
     "file": "AccountFlow.tsx",
-    "line": 245,
+    "line": 278,
     "tag": "button",
     "action": "onClick",
     "handler": "{p.onRefresh}",
@@ -73,7 +73,7 @@
   },
   {
     "file": "AccountFlow.tsx",
-    "line": 265,
+    "line": 298,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setQuery(e.target.value)}",
@@ -82,7 +82,7 @@
   },
   {
     "file": "AccountFlow.tsx",
-    "line": 280,
+    "line": 313,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => {\n                          if (demo) setSelected(String(r.id));\n                          else p.onConversation(String(r.id));\n                          nav(32);\n                        }}",
@@ -91,7 +91,16 @@
   },
   {
     "file": "AccountFlow.tsx",
-    "line": 363,
+    "line": 346,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => setQuery(\"\")}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AccountFlow.tsx",
+    "line": 399,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{(e) => {\n                      e.preventDefault();\n                      void send();\n                    }}",
@@ -100,7 +109,7 @@
   },
   {
     "file": "AccountFlow.tsx",
-    "line": 371,
+    "line": 407,
     "tag": "textarea",
     "action": "onChange",
     "handler": "{(e) => setDraft(e.target.value)}",
@@ -109,7 +118,7 @@
   },
   {
     "file": "AccountFlow.tsx",
-    "line": 378,
+    "line": 414,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -118,7 +127,7 @@
   },
   {
     "file": "AccountFlow.tsx",
-    "line": 399,
+    "line": 435,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => setUnread(false)}",
@@ -127,7 +136,7 @@
   },
   {
     "file": "AccountFlow.tsx",
-    "line": 404,
+    "line": 440,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => setUnread(true)}",
@@ -136,7 +145,7 @@
   },
   {
     "file": "AccountFlow.tsx",
-    "line": 432,
+    "line": 468,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => setRead((v) => [...v, String(n.id)])}",
@@ -145,7 +154,16 @@
   },
   {
     "file": "AccountFlow.tsx",
-    "line": 475,
+    "line": 484,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => setUnread(false)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AccountFlow.tsx",
+    "line": 516,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => {\n                      if (demo)\n                        setNote(\n                          tr(\"دي معاينة. مفيش جلسة حساب حقيقية لتسجيل خروجها.\"),\n                        );\n                      else void p.onLogout().catch(() => {});\n                    }}",
@@ -154,7 +172,7 @@
   },
   {
     "file": "AccountFlow.tsx",
-    "line": 491,
+    "line": 532,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{(e) => {\n                  e.preventDefault();\n                  if (demo && name.trim().length >= 2) {\n                    setSavedName(name.trim());\n                    setNote(tr(\"الاسم اتغيّر في المعاينة بس.\"));\n                  }\n                }}",
@@ -163,7 +181,7 @@
   },
   {
     "file": "AccountFlow.tsx",
-    "line": 502,
+    "line": 543,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setName(e.target.value)}",
@@ -172,7 +190,7 @@
   },
   {
     "file": "AccountFlow.tsx",
-    "line": 519,
+    "line": 560,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -181,7 +199,7 @@
   },
   {
     "file": "AccountFlow.tsx",
-    "line": 540,
+    "line": 581,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{async (e) => {\n                    e.preventDefault();\n                    if (support.trim().length < 5) return;\n                    if (demo) {\n                      setNote(\n                        tr(\"طلب المساعدة اتجهّز في المعاينة فقط، وماتبعتش للدعم.\"),\n                      );\n                      setSupport(\"\");\n                    } else {\n                      try {\n                        await p.onSupport(support.trim());\n                        setNote(tr(\"رسالتك وصلت للدعم.\"));\n                        setSupport(\"\");\n                      } catch {\n                        /* parent error */\n                      }\n                    }\n                  }}",
@@ -190,7 +208,7 @@
   },
   {
     "file": "AccountFlow.tsx",
-    "line": 563,
+    "line": 604,
     "tag": "textarea",
     "action": "onChange",
     "handler": "{(e) => setSupport(e.target.value)}",
@@ -199,7 +217,7 @@
   },
   {
     "file": "AccountFlow.tsx",
-    "line": 571,
+    "line": 612,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -207,8 +225,152 @@
     "label": ""
   },
   {
+    "file": "AdminApprovalLive.tsx",
+    "line": 141,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>setRevision(value=>value+1)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AdminApprovalLive.tsx",
+    "line": 144,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>onGo(64)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AdminApprovalLive.tsx",
+    "line": 145,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>onGo(65)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AdminApprovalLive.tsx",
+    "line": 146,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>setRevision(value=>value+1)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AdminApprovalLive.tsx",
+    "line": 153,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>{setSelected(application.user_id);setReviewed(false);setReason('');}}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AdminApprovalLive.tsx",
+    "line": 176,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{event=>setHiaceCategories(current=>event.target.checked\n        ?[...current,category]:current.filter(value=>value!==category))}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AdminApprovalLive.tsx",
+    "line": 186,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>void download(document)}",
+    "disabled": "{busy}",
+    "label": ""
+  },
+  {
+    "file": "AdminApprovalLive.tsx",
+    "line": 190,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{event=>setReviewed(event.target.checked)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AdminApprovalLive.tsx",
+    "line": 192,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>decide('approved')}",
+    "disabled": "{!reviewed||busy||!applicationComplete||!requiredDocumentsComplete||\n       (active.vehicle_type==='hiace'&&!hiaceCategories.length)}",
+    "label": ""
+  },
+  {
+    "file": "AdminApprovalLive.tsx",
+    "line": 196,
+    "tag": "textarea",
+    "action": "onChange",
+    "handler": "{event=>setReason(event.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AdminApprovalLive.tsx",
+    "line": 198,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>decide('rejected')}",
+    "disabled": "{!reviewed||busy||reason.trim().length<5}",
+    "label": ""
+  },
+  {
     "file": "AdminDashboard.tsx",
-    "line": 260,
+    "line": 299,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>p.onTheme(theme)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 311,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>p.go(screen)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 327,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>p.go(internalScreen(64))}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 328,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>p.go(internalScreen(65))}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 335,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>p.go(64)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "AdminDashboard.tsx",
+    "line": 345,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => p.onTheme(t)}",
@@ -217,7 +379,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 277,
+    "line": 362,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => p.go(4)}",
@@ -226,7 +388,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 289,
+    "line": 374,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(publicScreen(s) + 1)}",
@@ -235,7 +397,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 311,
+    "line": 396,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => {\n                      setRole(e.target.value);\n                      setSelected(null);\n                    }}",
@@ -244,7 +406,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 325,
+    "line": 410,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setEmpty(e.target.checked)}",
@@ -253,7 +415,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 343,
+    "line": 428,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => setRole(required(n))}",
@@ -262,7 +424,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 369,
+    "line": 454,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(Number(id))}",
@@ -271,7 +433,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 382,
+    "line": 467,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(66)}",
@@ -280,7 +442,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 387,
+    "line": 472,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(72)}",
@@ -289,7 +451,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 427,
+    "line": 512,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setQuery(e.target.value)}",
@@ -298,7 +460,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 435,
+    "line": 520,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => setFilter(e.target.value)}",
@@ -307,7 +469,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 473,
+    "line": 558,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => {\n                                      setSelected(i);\n                                      setDecision(\"\");\n                                      setReason(\"\");\n                                    }}",
@@ -316,7 +478,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 495,
+    "line": 580,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => {\n                              setQuery(\"\");\n                              setFilter(\"\");\n                              setEmpty(false);\n                            }}",
@@ -325,7 +487,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 512,
+    "line": 597,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => setSelected(null)}",
@@ -334,7 +496,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 540,
+    "line": 625,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => setDecision(e.target.value)}",
@@ -343,7 +505,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 559,
+    "line": 644,
     "tag": "textarea",
     "action": "onChange",
     "handler": "{(e) => setReason(e.target.value)}",
@@ -352,7 +514,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 570,
+    "line": 655,
     "tag": "button",
     "action": "onClick",
     "handler": "{apply}",
@@ -361,7 +523,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 582,
+    "line": 667,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{(e) => {\n                          e.preventDefault();\n                          setMessagePreview(true);\n                        }}",
@@ -370,7 +532,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 591,
+    "line": 676,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => {\n                              setTitle(e.target.value);\n                              setMessagePreview(false);\n                            }}",
@@ -379,7 +541,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 602,
+    "line": 687,
     "tag": "textarea",
     "action": "onChange",
     "handler": "{(e) => {\n                              setBody(e.target.value);\n                              setMessagePreview(false);\n                            }}",
@@ -388,7 +550,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 613,
+    "line": 698,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => {\n                              setAudience(e.target.value);\n                              setMessagePreview(false);\n                            }}",
@@ -397,7 +559,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 625,
+    "line": 710,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -406,7 +568,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 638,
+    "line": 723,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => {\n                                record(\n                                  language===\"en\" ? `Saved notification draft for ${tr(audience)}: ${title}` : `حفظ مسودة إشعار إلى ${tr(audience)}: ${title}`,\n                                );\n                                setMessagePreview(false);\n                              }}",
@@ -415,7 +577,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 651,
+    "line": 736,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -424,7 +586,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 671,
+    "line": 756,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -433,7 +595,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 679,
+    "line": 764,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -442,7 +604,7 @@
   },
   {
     "file": "AdminDashboard.tsx",
-    "line": 683,
+    "line": 768,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => p.onTheme(t)}",
@@ -451,7 +613,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 64,
+    "line": 62,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => onChange(e.target.value)}",
@@ -460,7 +622,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 537,
+    "line": 571,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n              void run(async () => {\n                const detail = await api<Route>(\"route\", { id: r.id });\n                setRoute(detail);\n                setQuote(null);\n                go(12, r.id);\n              })\n            }",
@@ -469,7 +631,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 570,
+    "line": 604,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => {\n            setBooking(b);\n            go(profile?.role === \"captain\" ? 53 : 20);\n          }}",
@@ -478,7 +640,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 587,
+    "line": 621,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(signedIn ? 6 : 3)}",
@@ -487,7 +649,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 593,
+    "line": 627,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{(e) => {\n          e.preventDefault();\n          if (screen === 11) setRevision((v) => v + 1);\n          else go(11);\n        }}",
@@ -496,7 +658,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 601,
+    "line": 635,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setOrigin(e.target.value)}",
@@ -505,7 +667,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 607,
+    "line": 641,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setDestination(e.target.value)}",
@@ -514,7 +676,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 614,
+    "line": 648,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setDeparture(e.target.value)}",
@@ -523,7 +685,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 621,
+    "line": 655,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setReturnTime(e.target.value)}",
@@ -532,7 +694,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 630,
+    "line": 664,
     "tag": "Select",
     "action": "onChange",
     "handler": "{setDirection}",
@@ -541,7 +703,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 640,
+    "line": 674,
     "tag": "Select",
     "action": "onChange",
     "handler": "{setPeriod}",
@@ -550,7 +712,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 648,
+    "line": 682,
     "tag": "Select",
     "action": "onChange",
     "handler": "{setCategory}",
@@ -559,7 +721,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 660,
+    "line": 694,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setMaxPrice(e.target.value)}",
@@ -568,7 +730,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 668,
+    "line": 702,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -577,7 +739,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 688,
+    "line": 722,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => {\n              if (screen === 37) setRole(\"captain\");\n              go(screen === 37 ? 3 : 8);\n            }}",
@@ -586,7 +748,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 696,
+    "line": 730,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(3)}",
@@ -595,7 +757,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 707,
+    "line": 741,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => {\n                  setRole(r);\n                  go(4);\n                }}",
@@ -604,7 +766,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 720,
+    "line": 754,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(8)}",
@@ -613,56 +775,20 @@
   },
   {
     "file": "App.tsx",
-    "line": 727,
-    "tag": "form",
-    "action": "onSubmit",
-    "handler": "{submit(async () => {\n            if (!client) throw new Error(\"V2_BACKEND_NOT_CONFIGURED\");\n            const { error } = await client.auth.signInWithOtp({\n              phone: normalizePhone(phone),\n            });\n            if (error) throw error;\n            go(5);\n          })}",
-    "disabled": "",
-    "label": ""
-  },
-  {
-    "file": "App.tsx",
-    "line": 738,
-    "tag": "Field",
-    "action": "onChange",
-    "handler": "{(e) => setPhone(e.target.value)}",
-    "disabled": "",
-    "label": "\"رقم الموبايل\""
-  },
-  {
-    "file": "App.tsx",
-    "line": 748,
-    "tag": "button",
-    "action": "implicit or inherited",
-    "handler": "",
-    "disabled": "{busy}",
-    "label": ""
-  },
-  {
-    "file": "App.tsx",
-    "line": 753,
-    "tag": "form",
-    "action": "onSubmit",
-    "handler": "{submit(async () => {\n            if (!client) throw new Error(\"V2_BACKEND_NOT_CONFIGURED\");\n            const { error } = await client.auth.verifyOtp({\n              phone: normalizePhone(phone),\n              token: otp,\n              type: \"sms\",\n            });\n            if (error) throw error;\n            await refreshProfile();\n            go(6);\n          })}",
-    "disabled": "",
-    "label": ""
-  },
-  {
-    "file": "App.tsx",
     "line": 767,
-    "tag": "Field",
-    "action": "onChange",
-    "handler": "{(e) => setOtp(e.target.value)}",
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(8)}",
     "disabled": "",
-    "label": "\"كود التأكيد\""
+    "label": ""
   },
   {
     "file": "App.tsx",
-    "line": 775,
+    "line": 768,
     "tag": "button",
-    "action": "implicit or inherited",
-    "handler": "",
-    "disabled": "{busy}",
+    "action": "onClick",
+    "handler": "{() => void run(async () => {\n                if (!client) return;\n                const {error} = await client.auth.signOut();\n                if(error) throw error;\n                setSignedIn(false);\n              })}",
+    "disabled": "",
     "label": ""
   },
   {
@@ -670,13 +796,13 @@
     "line": 776,
     "tag": "button",
     "action": "onClick",
-    "handler": "{() => go(4)}",
-    "disabled": "",
+    "handler": "{() => void run(async () => {\n              if (!client) throw new Error(\"V2_BACKEND_NOT_CONFIGURED\");\n              const {error} = await client.auth.signInWithOAuth({\n                provider: \"google\",\n                options: { redirectTo: window.location.origin + window.location.pathname + \"?screen=8\" },\n              });\n              if(error) throw error;\n            })}",
+    "disabled": "{busy || !client}",
     "label": ""
   },
   {
     "file": "App.tsx",
-    "line": 783,
+    "line": 790,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{submit(async () => {\n            if (!consent) throw new Error(\"INVALID_PROFILE\");\n            await api(\"profile.save\", {\n              name,\n              role,\n              policyVersion: \"2026-11-12\",\n            });\n            await refreshProfile();\n            go(role === \"captain\" ? 38 : 8);\n          })}",
@@ -685,7 +811,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 796,
+    "line": 803,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setName(e.target.value)}",
@@ -694,7 +820,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 809,
+    "line": 816,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setConsent(e.target.checked)}",
@@ -703,7 +829,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 821,
+    "line": 828,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -712,7 +838,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 841,
+    "line": 848,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => {\n                  setCategory(c);\n                  setRevision((v) => v + 1);\n                }}",
@@ -721,7 +847,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 885,
+    "line": 892,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(8)}",
@@ -730,7 +856,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 895,
+    "line": 902,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(17)}",
@@ -739,7 +865,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 930,
+    "line": 937,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n                  void run(async () => {\n                    await api(\"favorite.toggle\", { routeId: selectedRoute.id });\n                    setNotice(\"المفضلة اتحدثت.\");\n                  })\n                }",
@@ -748,7 +874,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 941,
+    "line": 948,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n                  void run(async () => {\n                    await api(\"waitlist.join\", { routeId: selectedRoute.id });\n                    setNotice(\"اسمك اتسجل في قائمة الانتظار.\");\n                  })\n                }",
@@ -757,7 +883,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 952,
+    "line": 959,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n                  void run(async () => {\n                    const c = await api<{ id: string }>(\"conversation.open\", {\n                      captainId: selectedRoute.captain_id,\n                    });\n                    setConversation(c.id);\n                    go(32);\n                  })\n                }",
@@ -766,7 +892,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 968,
+    "line": 975,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{submit(async () => {\n              const q = await api<Quote>(\"quote\", {\n                routeId: selectedRoute.id,\n                period,\n                direction,\n              });\n              setQuote(q);\n              setIdempotencyKey(crypto.randomUUID());\n              if (screen !== 17) go(17);\n            })}",
@@ -775,7 +901,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 982,
+    "line": 989,
     "tag": "Select",
     "action": "onChange",
     "handler": "{(v) => {\n                setPeriod(v);\n                setQuote(null);\n              }}",
@@ -784,7 +910,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 991,
+    "line": 998,
     "tag": "Select",
     "action": "onChange",
     "handler": "{(v) => {\n                setDirection(v);\n                setQuote(null);\n              }}",
@@ -793,7 +919,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1008,
+    "line": 1015,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -802,7 +928,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1031,
+    "line": 1038,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n                  void run(async () => {\n                    const b = await api<Booking>(\"book\", {\n                      routeId: selectedRoute.id,\n                      period,\n                      direction,\n                      expectedQuote: quote,\n                      idempotencyKey,\n                    });\n                    setBooking({\n                      ...b,\n                      origin: selectedRoute.origin,\n                      destination: selectedRoute.destination,\n                    });\n                    go(19);\n                  })\n                }",
@@ -811,7 +937,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1073,
+    "line": 1080,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{submit(async () => {\n            await api(\"request.create\", {\n              origin,\n              destination,\n              departure,\n              direction,\n            });\n            setNotice(\"طلب خطك اتسجل.\");\n          })}",
@@ -820,7 +946,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1085,
+    "line": 1092,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setOrigin(e.target.value)}",
@@ -829,7 +955,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1092,
+    "line": 1099,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setDestination(e.target.value)}",
@@ -838,7 +964,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1099,
+    "line": 1106,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setDeparture(e.target.value)}",
@@ -847,7 +973,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1106,
+    "line": 1113,
     "tag": "Select",
     "action": "onChange",
     "handler": "{setDirection}",
@@ -856,7 +982,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1116,
+    "line": 1123,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -865,7 +991,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1124,
+    "line": 1131,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(profile?.role === \"captain\" ? 52 : 29)}",
@@ -874,7 +1000,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1144,
+    "line": 1151,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n                void run(async () => {\n                  const b = await api<Booking>(\n                    profile?.role === \"captain\"\n                      ? \"payment.received\"\n                      : \"payment.paid\",\n                    { bookingId: booking.id },\n                  );\n                  setBooking({ ...booking, ...b });\n                  setRevision((v) => v + 1);\n                })\n              }",
@@ -883,7 +1009,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1168,
+    "line": 1175,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setBody(e.target.value)}",
@@ -892,7 +1018,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1174,
+    "line": 1181,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n                void run(async () => {\n                  await api(\"dispute.open\", {\n                    bookingId: booking.id,\n                    reason: body,\n                  });\n                  setBooking({ ...booking, status: \"disputed\" });\n                  setNotice(\"الحالة اتبعتت للمراجعة.\");\n                })\n              }",
@@ -901,7 +1027,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1227,
+    "line": 1234,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -910,7 +1036,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1228,
+    "line": 1235,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -919,7 +1045,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1231,
+    "line": 1238,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(28)}",
@@ -928,7 +1054,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1249,
+    "line": 1256,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => {\n                  setConversation(String(row.id));\n                  go(32);\n                }}",
@@ -937,7 +1063,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1260,
+    "line": 1267,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(36)}",
@@ -946,7 +1072,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1267,
+    "line": 1274,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{submit(async () => {\n              await api(\"message.send\", { conversationId: conversation, body });\n              setBody(\"\");\n              setRevision((v) => v + 1);\n            })}",
@@ -955,7 +1081,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1275,
+    "line": 1282,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setBody(e.target.value)}",
@@ -964,7 +1090,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1282,
+    "line": 1289,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -973,7 +1099,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1295,
+    "line": 1302,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(35)}",
@@ -982,7 +1108,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1296,
+    "line": 1303,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(24)}",
@@ -991,7 +1117,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1297,
+    "line": 1304,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(36)}",
@@ -1000,7 +1126,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1298,
+    "line": 1305,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n                void run(async () => {\n                  if (client) await client.auth.signOut();\n                  setProfile(null);\n                  go(8);\n                })\n              }",
@@ -1009,7 +1135,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1315,
+    "line": 1322,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{submit(async () => {\n            await api(\"support.create\", { body });\n            setBody(\"\");\n            setNotice(\"رسالتك وصلت للدعم.\");\n          })}",
@@ -1018,7 +1144,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1325,
+    "line": 1332,
     "tag": "textarea",
     "action": "onChange",
     "handler": "{(e) => setBody(e.target.value)}",
@@ -1027,7 +1153,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1333,
+    "line": 1340,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -1036,7 +1162,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1338,
+    "line": 1345,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{submit(async () => {\n            await api(\"captain.save\", { experience: body });\n            go(39);\n          })}",
@@ -1045,7 +1171,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1345,
+    "line": 1352,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setBody(e.target.value)}",
@@ -1054,7 +1180,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1350,
+    "line": 1357,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -1063,7 +1189,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1351,
+    "line": 1358,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(43)}",
@@ -1072,7 +1198,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1359,
+    "line": 1366,
     "tag": "Select",
     "action": "onChange",
     "handler": "{setDocumentKind}",
@@ -1081,7 +1207,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1372,
+    "line": 1379,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setExpiresOn(e.target.value)}",
@@ -1090,7 +1216,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1378,
+    "line": 1385,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => {\n              const file = e.target.files?.[0];\n              if (!file) return;\n              void run(async () => {\n                if (!client || !profile) throw new Error(\"AUTH_REQUIRED\");\n                if (\n                  file.size > 5 * 1024 * 1024 ||\n                  ![\"image/jpeg\", \"image/png\", \"application/pdf\"].includes(\n                    file.type,\n                  )\n                )\n                  throw new Error(\"INVALID_FILE\");\n                const path = `${profile.id}/${crypto.randomUUID()}`;\n                const { error } = await client.storage\n                  .from(\"sekka-v2-documents\")\n                  .upload(path, file, {\n                    contentType: file.type,\n                    upsert: false,\n                  });\n                if (error) throw error;\n                await api(\"document.save\", {\n                  kind: documentKind,\n                  path,\n                  expiresOn,\n                });\n                setNotice(\"المستند اترفع للمراجعة.\");\n              });\n            }}",
@@ -1099,7 +1225,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1411,
+    "line": 1418,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(screen === 39 ? 40 : 42)}",
@@ -1108,7 +1234,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1418,
+    "line": 1425,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{submit(async () => {\n            await api(\"vehicle.save\", {\n              category: category || \"PRIME\",\n              model,\n              plate,\n            });\n            go(41);\n          })}",
@@ -1117,7 +1243,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1429,
+    "line": 1436,
     "tag": "Select",
     "action": "onChange",
     "handler": "{setCategory}",
@@ -1126,7 +1252,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1440,
+    "line": 1447,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setModel(e.target.value)}",
@@ -1135,7 +1261,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1446,
+    "line": 1453,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setPlate(e.target.value)}",
@@ -1144,7 +1270,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1452,
+    "line": 1459,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -1153,7 +1279,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1459,
+    "line": 1466,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(38)}",
@@ -1162,7 +1288,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1465,
+    "line": 1472,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(46)}",
@@ -1171,7 +1297,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1472,
+    "line": 1479,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{submit(async () => {\n            if (screen < 51) {\n              go(screen + 1);\n              return;\n            }\n            await api(\"route.create\", {\n              origin,\n              destination,\n              outbound: departure,\n              returnTime: direction === \"outbound\" ? \"\" : returnTime,\n              anchor,\n              seats: Number(seats),\n              prices: [\n                { period: \"weekly\", direction, amount: Number(weekly) },\n                { period: \"monthly\", direction, amount: Number(monthly) },\n              ],\n            });\n            go(45);\n          })}",
@@ -1180,7 +1306,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1496,
+    "line": 1503,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setOrigin(e.target.value)}",
@@ -1189,7 +1315,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1502,
+    "line": 1509,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setDestination(e.target.value)}",
@@ -1198,7 +1324,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1512,
+    "line": 1519,
     "tag": "Select",
     "action": "onChange",
     "handler": "{setDirection}",
@@ -1207,7 +1333,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1522,
+    "line": 1529,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setDeparture(e.target.value)}",
@@ -1216,7 +1342,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1530,
+    "line": 1537,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setReturnTime(e.target.value)}",
@@ -1225,7 +1351,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1543,
+    "line": 1550,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setAnchor(e.target.value)}",
@@ -1234,7 +1360,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1558,
+    "line": 1565,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setSeats(e.target.value)}",
@@ -1243,7 +1369,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1571,
+    "line": 1578,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setWeekly(e.target.value)}",
@@ -1252,7 +1378,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1579,
+    "line": 1586,
     "tag": "Field",
     "action": "onChange",
     "handler": "{(e) => setMonthly(e.target.value)}",
@@ -1261,7 +1387,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1605,
+    "line": 1612,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -1270,7 +1396,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1615,
+    "line": 1622,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(Number(id))}",
@@ -1279,7 +1405,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1632,
+    "line": 1639,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n                          void run(async () => {\n                            await api(\"admin.review\", {\n                              resource: adminResources[screen],\n                              id: row.id ?? row.user_id,\n                              status,\n                            });\n                            setRevision((v) => v + 1);\n                          })\n                        }",
@@ -1288,7 +1414,25 @@
   },
   {
     "file": "App.tsx",
-    "line": 1703,
+    "line": 1699,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => {\n              if (needsAccount && !signedIn && enteringCaptainFlow) setRole(\"captain\");\n              go(needsAccount ? signedIn ? 6 : 4 : captainHome ? 61 : 32);\n            }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1711,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(captainHome ? 44 : 8)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "App.tsx",
+    "line": 1754,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(publicScreen(screen) >= 62 ? 64 : 44)}",
@@ -1297,7 +1441,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1964,
+    "line": 2020,
     "tag": "a",
     "action": "href",
     "handler": "\"#content\"",
@@ -1306,7 +1450,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1968,
+    "line": 2024,
     "tag": "a",
     "action": "onClick",
     "handler": "{(e) => {\n            e.preventDefault();\n            go(8);\n          }}",
@@ -1315,7 +1459,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1983,
+    "line": 2039,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => changeTheme(theme === \"light\" ? \"dark\" : \"light\")}",
@@ -1324,7 +1468,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 1990,
+    "line": 2046,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(signedIn ? 34 : 3)}",
@@ -1333,7 +1477,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 2002,
+    "line": 2058,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(id)}",
@@ -1342,7 +1486,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 2011,
+    "line": 2067,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(64)}",
@@ -1351,7 +1495,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 2030,
+    "line": 2086,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(profile?.role === \"captain\" ? 44 : 8)}",
@@ -1360,7 +1504,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 2047,
+    "line": 2103,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => setRevision((v) => v + 1)}",
@@ -1369,7 +1513,7 @@
   },
   {
     "file": "App.tsx",
-    "line": 2072,
+    "line": 2128,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(id)}",
@@ -1378,7 +1522,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 77,
+    "line": 80,
     "tag": "button",
     "action": "onClick",
     "handler": "{onClick}",
@@ -1387,7 +1531,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 444,
+    "line": 455,
     "tag": "Primary",
     "action": "onClick",
     "handler": "{() => nav(!p.signedIn ? 4 : 29)}",
@@ -1396,7 +1540,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 463,
+    "line": 474,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(screen - 1)}",
@@ -1405,7 +1549,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 470,
+    "line": 481,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => nav(+e.target.value)}",
@@ -1414,7 +1558,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 481,
+    "line": 492,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(screen + 1)}",
@@ -1423,7 +1567,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 490,
+    "line": 501,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => onTheme(\"dark\")}",
@@ -1432,7 +1576,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 495,
+    "line": 506,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => onTheme(\"light\")}",
@@ -1441,7 +1585,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 512,
+    "line": 523,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => setBalanceMode(\"enough\")}",
@@ -1450,7 +1594,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 517,
+    "line": 528,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => setBalanceMode(\"short\")}",
@@ -1459,7 +1603,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 531,
+    "line": 542,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => setReceipt(v.id)}",
@@ -1468,7 +1612,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 545,
+    "line": 556,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n              nav(screen === 16 ? 12 : screen === 19 ? 29 : screen - 1)\n            }",
@@ -1477,7 +1621,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 632,
+    "line": 643,
     "tag": "Primary",
     "action": "onClick",
     "handler": "{() => void getQuote()}",
@@ -1486,7 +1630,16 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 641,
+    "line": 652,
+    "tag": "Primary",
+    "action": "onClick",
+    "handler": "{() => nav(4)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 655,
     "tag": "Primary",
     "action": "onClick",
     "handler": "{() => nav(17)}",
@@ -1495,7 +1648,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 648,
+    "line": 662,
     "tag": "Primary",
     "action": "onClick",
     "handler": "{() => nav(11)}",
@@ -1504,16 +1657,25 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 682,
+    "line": 697,
     "tag": "Primary",
     "action": "onClick",
-    "handler": "{() =>\n                    setModal(\n                      tr(\"شحن المحفظة لسه مش مفعّل. محتاجين ربط شريك الدفع واعتماد سياسة الرصيد والاسترداد. لم يتم شحن أي مبلغ.\"),\n                    )\n                  }",
+    "handler": "{() =>\n                      setModal(\n                        tr(\"شحن المحفظة لسه مش مفعّل. محتاجين ربط شريك الدفع واعتماد سياسة الرصيد والاسترداد. لم يتم شحن أي مبلغ.\"),\n                      )\n                    }",
     "disabled": "",
     "label": ""
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 691,
+    "line": 705,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(24)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 710,
     "tag": "Primary",
     "action": "onClick",
     "handler": "{() => {\n                  try {\n                    if(interactivePreview && offer && q) setPreviewLedger(reservePreviewBooking(offer,q));\n                    nav(18);\n                  } catch(error){setNotice(errorCopy(error));}\n                }}",
@@ -1522,7 +1684,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 735,
+    "line": 754,
     "tag": "Primary",
     "action": "onClick",
     "handler": "{() => nav(19)}",
@@ -1531,7 +1693,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 792,
+    "line": 811,
     "tag": "Primary",
     "action": "onClick",
     "handler": "{() => nav(riderReported ? 21 : 20)}",
@@ -1540,7 +1702,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 799,
+    "line": 818,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(22)}",
@@ -1549,7 +1711,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 823,
+    "line": 842,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setPaidChecked(e.target.checked)}",
@@ -1558,7 +1720,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 832,
+    "line": 851,
     "tag": "Primary",
     "action": "onClick",
     "handler": "{() => void paid()}",
@@ -1567,7 +1729,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 845,
+    "line": 864,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(21)}",
@@ -1576,7 +1738,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 915,
+    "line": 934,
     "tag": "Primary",
     "action": "onClick",
     "handler": "{() => void refresh()}",
@@ -1585,7 +1747,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 921,
+    "line": 940,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(22)}",
@@ -1594,7 +1756,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 941,
+    "line": 960,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(19)}",
@@ -1603,7 +1765,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 946,
+    "line": 965,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n                    setModal(\n                      tr(\"التجديد هيتاح بعد اعتماد قواعد أولوية التجديد. لم يتم إنشاء تجديد أو حجز جديد.\"),\n                    )\n                  }",
@@ -1612,16 +1774,16 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 957,
+    "line": 976,
     "tag": "button",
     "action": "onClick",
-    "handler": "{() =>\n                    setModal(\n                      tr(\"إلغاء الاشتراك متوقف لحد اعتماد سياسة الإلغاء والاسترداد. مفيش مقعد أو رصيد اتغيّر. تقدر تطلب مراجعة من الدعم.\"),\n                    )\n                  }",
+    "handler": "{() => {\n                    setModalAction(\"support\");\n                    setModal(tr(\"إلغاء الاشتراك متوقف لحد اعتماد سياسة الإلغاء والاسترداد. مفيش مقعد أو رصيد اتغيّر. تقدر تطلب مراجعة من الدعم.\"));\n                  }}",
     "disabled": "",
     "label": ""
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 975,
+    "line": 993,
     "tag": "textarea",
     "action": "onChange",
     "handler": "{(e) => setReason(e.target.value)}",
@@ -1630,7 +1792,7 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 984,
+    "line": 1003,
     "tag": "Primary",
     "action": "onClick",
     "handler": "{() => void support()}",
@@ -1639,16 +1801,340 @@
   },
   {
     "file": "BookingFlow.tsx",
-    "line": 1010,
-    "tag": "button",
+    "line": 1014,
+    "tag": "Primary",
     "action": "onClick",
-    "handler": "{() => setModal(\"\")}",
+    "handler": "{() => nav(4)}",
     "disabled": "",
     "label": ""
   },
   {
+    "file": "BookingFlow.tsx",
+    "line": 1034,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => {\n            focusSupportOnClose.current = true;\n            setModal(\"\");\n            setModalAction(null);\n          }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 1042,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => { setModal(\"\"); setModalAction(null); }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 1109,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{onBack}",
+    "disabled": "",
+    "label": "{t('رجوع','Back')}"
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 1111,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>setRefresh(v=>v+1)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 1119,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>setSeats(Number(e.target.value))}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 1122,
+    "tag": "Primary",
+    "action": "onClick",
+    "handler": "{()=>void reserve()}",
+    "disabled": "{busy||!Number.isInteger(seats)||seats<1||seats>offer.available}",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 1124,
+    "tag": "Primary",
+    "action": "onClick",
+    "handler": "{onBack}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 1133,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>{setLoading(true);setRefresh(v=>v+1);}}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "BookingFlow.tsx",
+    "line": 1134,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>void cancel()}",
+    "disabled": "{busy}",
+    "label": ""
+  },
+  {
+    "file": "CaptainApplicationLive.tsx",
+    "line": 334,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>setRevision(n=>n+1)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainApplicationLive.tsx",
+    "line": 342,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{begin}",
+    "disabled": "{busy}",
+    "label": ""
+  },
+  {
+    "file": "CaptainApplicationLive.tsx",
+    "line": 343,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>onNext(application.status==='submitted'?40:36)}",
+    "disabled": "{busy}",
+    "label": ""
+  },
+  {
+    "file": "CaptainApplicationLive.tsx",
+    "line": 348,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>onNext(35)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainApplicationLive.tsx",
+    "line": 353,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{event=>setFullName(event.target.value)}",
+    "disabled": "{!editable}",
+    "label": ""
+  },
+  {
+    "file": "CaptainApplicationLive.tsx",
+    "line": 361,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{event=>setPhone(event.target.value)}",
+    "disabled": "{!editable}",
+    "label": ""
+  },
+  {
+    "file": "CaptainApplicationLive.tsx",
+    "line": 370,
+    "tag": "textarea",
+    "action": "onChange",
+    "handler": "{event=>setNotes(event.target.value)}",
+    "disabled": "{!editable}",
+    "label": ""
+  },
+  {
+    "file": "CaptainApplicationLive.tsx",
+    "line": 378,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{event=>setYears(normalizeNumerals(event.target.value))}",
+    "disabled": "{!editable}",
+    "label": ""
+  },
+  {
+    "file": "CaptainApplicationLive.tsx",
+    "line": 386,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>void savePersonal(false)}",
+    "disabled": "{busy}",
+    "label": ""
+  },
+  {
+    "file": "CaptainApplicationLive.tsx",
+    "line": 387,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>void savePersonal(true)}",
+    "disabled": "{busy}",
+    "label": ""
+  },
+  {
+    "file": "CaptainApplicationLive.tsx",
+    "line": 394,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>onNext(36)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainApplicationLive.tsx",
+    "line": 399,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{event=>{\n     setVehicleType(event.target.value as 'private_car'|'hiace'|'');\n    }}",
+    "disabled": "{!editable}",
+    "label": ""
+  },
+  {
+    "file": "CaptainApplicationLive.tsx",
+    "line": 421,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{event=>{\n     setMakeId(event.target.value);setModelId('');\n    }}",
+    "disabled": "{!editable}",
+    "label": ""
+  },
+  {
+    "file": "CaptainApplicationLive.tsx",
+    "line": 434,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{event=>setModelId(event.target.value)}",
+    "disabled": "{!editable||!makeId}",
+    "label": ""
+  },
+  {
+    "file": "CaptainApplicationLive.tsx",
+    "line": 445,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{event=>setYear(event.target.value)}",
+    "disabled": "{!editable}",
+    "label": ""
+  },
+  {
+    "file": "CaptainApplicationLive.tsx",
+    "line": 455,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{event=>{\n     setColorCode(event.target.value);if(event.target.value!=='other')setColorOther('');\n    }}",
+    "disabled": "{!editable}",
+    "label": ""
+  },
+  {
+    "file": "CaptainApplicationLive.tsx",
+    "line": 468,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{event=>setColorOther(event.target.value)}",
+    "disabled": "{!editable}",
+    "label": ""
+  },
+  {
+    "file": "CaptainApplicationLive.tsx",
+    "line": 476,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{event=>setPlate(event.target.value)}",
+    "disabled": "{!editable}",
+    "label": ""
+  },
+  {
+    "file": "CaptainApplicationLive.tsx",
+    "line": 484,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>void saveVehicle(false)}",
+    "disabled": "{busy}",
+    "label": ""
+  },
+  {
+    "file": "CaptainApplicationLive.tsx",
+    "line": 485,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>void saveVehicle(true)}",
+    "disabled": "{busy}",
+    "label": ""
+  },
+  {
+    "file": "CaptainApplicationLive.tsx",
+    "line": 493,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>onNext(37)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainApplicationLive.tsx",
+    "line": 508,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{event=>{\n        const file=event.target.files?.[0];if(file)upload(kind,file);event.target.value='';\n       }}",
+    "disabled": "{!editable||busy}",
+    "label": "{t(ar,label)}"
+  },
+  {
+    "file": "CaptainApplicationLive.tsx",
+    "line": 518,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>onNext(39)}",
+    "disabled": "{busy||!hasDocuments}",
+    "label": ""
+  },
+  {
+    "file": "CaptainApplicationLive.tsx",
+    "line": 541,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{submit}",
+    "disabled": "{busy||!personalComplete||!vehicleComplete||!hasDocuments}",
+    "label": ""
+  },
+  {
+    "file": "CaptainApplicationLive.tsx",
+    "line": 551,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{editAgain}",
+    "disabled": "{busy}",
+    "label": ""
+  },
+  {
+    "file": "CaptainApplicationLive.tsx",
+    "line": 556,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>onNext(42)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainApplicationLive.tsx",
+    "line": 558,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>setRevision(n=>n+1)}",
+    "disabled": "{busy}",
+    "label": ""
+  },
+  {
     "file": "CaptainOnboarding.tsx",
-    "line": 72,
+    "line": 89,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => {\n                  const file = e.target.files?.[0];\n                  if (!file) return;\n                  setSubmitted(false);\n                  if (\n                    ![\"image/jpeg\", \"image/png\", \"application/pdf\"].includes(\n                      file.type,\n                    ) ||\n                    file.size > 5 * 1024 * 1024 ||\n                    file.size === 0\n                  ) {\n                    setNote(\n                      tr(\"اختار صورة JPG أو PNG أو ملف PDF، بحجم أكبر من صفر ولحد 5 ميجا.\"),\n                    );\n                    e.target.value = \"\";\n                    return;\n                  }\n                  setDocs((d) => ({ ...d, [kind]: file.name }));\n                  setNote(tr(\"الملف اتحدد على جهازك فقط. مفيش رفع أو إرسال.\"));\n                }}",
@@ -1657,7 +2143,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 101,
+    "line": 118,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => {\n                    setDocs((d) => {\n                      const next = { ...d };\n                      delete next[kind];\n                      return next;\n                    });\n                    setSubmitted(false);\n                  }}",
@@ -1666,7 +2152,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 119,
+    "line": 136,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n            nav(\n              captainOnboardingScreens[\n                captainOnboardingScreens.indexOf(p.screen) + 1\n              ],\n            )\n          }",
@@ -1675,7 +2161,16 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 141,
+    "line": 162,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>{if(n===35){if(p.onJourneyBack)p.onJourneyBack();else p.go(internalScreen(3));}else next(n-1);}}",
+    "disabled": "",
+    "label": "{tr(\"رجوع\")}"
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 189,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n              nav(\n                captainOnboardingScreens[\n                  captainOnboardingScreens.indexOf(p.screen) - 1\n                ],\n              )\n            }",
@@ -1684,7 +2179,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 154,
+    "line": 202,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => nav(+e.target.value)}",
@@ -1693,7 +2188,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 165,
+    "line": 213,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n              nav(\n                captainOnboardingScreens[\n                  captainOnboardingScreens.indexOf(p.screen) + 1\n                ],\n              )\n            }",
@@ -1702,7 +2197,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 181,
+    "line": 229,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => p.onTheme(t)}",
@@ -1711,7 +2206,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 197,
+    "line": 245,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n              nav(\n                p.screen === 37\n                  ? 3\n                  : captainOnboardingScreens[\n                      captainOnboardingScreens.indexOf(p.screen) - 1\n                    ],\n              )\n            }",
@@ -1720,7 +2215,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 221,
+    "line": 269,
     "tag": "button",
     "action": "onClick",
     "handler": "{p.onRefresh}",
@@ -1729,7 +2224,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 243,
+    "line": 291,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n                nav(demo || p.profile?.role === \"captain\" ? 38 : 3)\n              }",
@@ -1738,7 +2233,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 255,
+    "line": 303,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(3)}",
@@ -1747,7 +2242,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 265,
+    "line": 313,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(43)}",
@@ -1756,7 +2251,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 271,
+    "line": 319,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{(e) => {\n                      e.preventDefault();\n                      setSubmitted(false);\n                      nav(40);\n                    }}",
@@ -1765,7 +2260,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 280,
+    "line": 328,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => {\n                          setName(e.target.value);\n                          setSubmitted(false);\n                        }}",
@@ -1774,7 +2269,16 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 294,
+    "line": 342,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{(e) => setPhone(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 348,
     "tag": "textarea",
     "action": "onChange",
     "handler": "{(e) => setExperience(e.target.value)}",
@@ -1783,16 +2287,25 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 301,
-    "tag": "button",
-    "action": "implicit or inherited",
-    "handler": "",
-    "disabled": "{name.trim().length < 2}",
+    "line": 358,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{(e)=>setExperienceYears(e.target.value)}",
+    "disabled": "",
     "label": ""
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 317,
+    "line": 362,
+    "tag": "button",
+    "action": "implicit or inherited",
+    "handler": "",
+    "disabled": "{name.trim().split(/\\s+/).length < 2||\n                        !/^01[0125]\\d{8}$/.test(phone.replace(/[\\s-]/g,\"\"))||\n                        experience.trim().length<3||experienceYears===\"\"}",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 380,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{(e) => {\n                      e.preventDefault();\n                      setSubmitted(false);\n                      nav(39);\n                    }}",
@@ -1801,7 +2314,25 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 326,
+    "line": 389,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{e=>{\n                        setVehicleType(e.target.value as \"private_car\"|\"hiace\"|\"\");\n                      }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 399,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>{setMake(e.target.value);setModel(\"\");}}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 404,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => {\n                          setModel(e.target.value);\n                          setSubmitted(false);\n                        }}",
@@ -1810,7 +2341,16 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 340,
+    "line": 418,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{e=>setManufactureYear(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOnboarding.tsx",
+    "line": 426,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => {\n                          setPlate(e.target.value);\n                          setSubmitted(false);\n                        }}",
@@ -1819,34 +2359,25 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 353,
-    "tag": "input",
+    "line": 439,
+    "tag": "select",
     "action": "onChange",
-    "handler": "{(e) => { setColor(e.target.value); setSubmitted(false); }}",
+    "handler": "{e=>setColor(e.target.value)}",
     "disabled": "",
     "label": ""
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 364,
-    "tag": "button",
-    "action": "onClick",
-    "handler": "{() => {\n                            setCategory(c);\n                            setSubmitted(false);\n                          }}",
-    "disabled": "",
-    "label": ""
-  },
-  {
-    "file": "CaptainOnboarding.tsx",
-    "line": 384,
+    "line": 448,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
-    "disabled": "{\n                        model.trim().length < 2 ||\n                        plate.trim().length < 3 ||\n                        !color.trim()\n                      }",
+    "disabled": "{\n                        model.trim().length < 2 ||\n                        make.trim().length<2||!manufactureYear||!vehicleType||\n                        plate.trim().length < 3 ||\n                        !color.trim()\n                      }",
     "label": ""
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 403,
+    "line": 470,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(38)}",
@@ -1855,7 +2386,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 415,
+    "line": 484,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(40)}",
@@ -1864,7 +2395,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 426,
+    "line": 495,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(39)}",
@@ -1873,7 +2404,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 428,
+    "line": 497,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(39)}",
@@ -1882,7 +2413,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 432,
+    "line": 501,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setReviewed(e.target.checked)}",
@@ -1891,7 +2422,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 439,
+    "line": 508,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => {\n                        setSubmitted(true);\n                        nav(43);\n                      }}",
@@ -1900,7 +2431,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 476,
+    "line": 545,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => (demo ? nav(42) : p.onRefresh())}",
@@ -1909,7 +2440,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 506,
+    "line": 575,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(45)}",
@@ -1918,7 +2449,7 @@
   },
   {
     "file": "CaptainOnboarding.tsx",
-    "line": 509,
+    "line": 578,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(43)}",
@@ -1927,7 +2458,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 208,
+    "line": 246,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(target)}",
@@ -1936,7 +2467,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 258,
+    "line": 300,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => choose(b)}",
@@ -1945,7 +2476,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 268,
+    "line": 310,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(n - 1)}",
@@ -1954,7 +2485,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 275,
+    "line": 317,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => nav(+e.target.value)}",
@@ -1963,7 +2494,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 286,
+    "line": 328,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(n + 1)}",
@@ -1972,7 +2503,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 296,
+    "line": 338,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => p.onTheme(t)}",
@@ -1981,7 +2512,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 313,
+    "line": 355,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setEmpty(e.target.checked)}",
@@ -1990,7 +2521,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 322,
+    "line": 364,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(n === 58 ? 57 : 51)}",
@@ -1999,7 +2530,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 339,
+    "line": 381,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => p.go(4)}",
@@ -2008,7 +2539,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 352,
+    "line": 394,
     "tag": "button",
     "action": "onClick",
     "handler": "{p.refresh}",
@@ -2017,7 +2548,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 383,
+    "line": 425,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(Number(target))}",
@@ -2026,7 +2557,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 409,
+    "line": 451,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setQuery(e.target.value)}",
@@ -2035,7 +2566,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 415,
+    "line": 457,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => setFilter(e.target.value)}",
@@ -2044,7 +2575,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 445,
+    "line": 487,
     "tag": "button",
     "action": "onClick",
     "handler": "{()=>{setQuery(\"\");setFilter(\"\");setEmpty(false);}}",
@@ -2053,7 +2584,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 488,
+    "line": 530,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(56)}",
@@ -2062,7 +2593,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 493,
+    "line": 535,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n                          void perform(async () => {\n                            const c = demo\n                              ? { id: \"thread-1\" }\n                              : await api<{ id: string }>(\n                                  \"captain.conversation.open\",\n                                  { bookingId: booking.id },\n                                );\n                            await openChat(c.id);\n                          })\n                        }",
@@ -2071,7 +2602,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 515,
+    "line": 557,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setConfirm(e.target.checked)}",
@@ -2080,7 +2611,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 521,
+    "line": 563,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n                          void perform(async () => {\n                            if (shared) {\n                              confirmPreviewBooking(str(booking,\"id\"),\"captain\");\n                              setNote(\"تم تسجيل الاستلام وتحرير تأمين الحجز في المحفظة التجريبية.\");\n                            } else if (demo) {\n                              setLocal((v) => ({\n                                ...v,\n                                bookings: v.bookings.map((b) =>\n                                  b.id === booking.id\n                                    ? {\n                                        ...b,\n                                        captain_received_at:\n                                          \"2026-11-15T08:00:00Z\",\n                                        status: \"confirmed\",\n                                        security_state: \"released\",\n                                      }\n                                    : b,\n                                ),\n                              }));\n                              setNote(\n                                \"تمت محاكاة الاستلام وتحرير التأمين في المعاينة فقط.\",\n                              );\n                            } else {\n                              await api(\"payment.received\", {\n                                bookingId: booking.id,\n                              });\n                              p.refresh();\n                              setNote(\"تم تسجيل تأكيد الاستلام.\");\n                            }\n                            setConfirm(false);\n                          })\n                        }",
@@ -2089,7 +2620,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 610,
+    "line": 654,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => {\n                            setFilter(str(r, \"id\"));\n                            nav(53);\n                          }}",
@@ -2098,7 +2629,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 638,
+    "line": 683,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => void openChat(str(c, \"id\"))}",
@@ -2107,16 +2638,16 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 685,
+    "line": 730,
     "tag": "form",
     "action": "onSubmit",
-    "handler": "{(e) => {\n                      e.preventDefault();\n                      void perform(async () => {\n                        const body = draft.trim();\n                        if (!body) return;\n                        if (demo) {\n                          const next = [\n                            ...messages,\n                            {\n                              id: crypto.randomUUID(),\n                              body,\n                              sender_id: \"me\",\n                              created_at: new Date().toLocaleTimeString(\n                                language===\"en\"?\"en-GB\":\"ar-EG\",\n                              ),\n                            },\n                          ];\n                          setChatHistory(v=>({...v,[thread]:next}));\n                          setMessages(next);\n                        } else {\n                          await api(\"message.send\", {\n                            conversationId: thread,\n                            body,\n                          });\n                          setMessages(\n                            await api<Row[]>(\"messages\", {\n                              conversationId: thread,\n                            }),\n                          );\n                        }\n                        setDraft(\"\");\n                        setNote(\n                          demo\n                            ? tr(\"الرسالة في المعاينة فقط، ماتبعتتش.\")\n                            : tr(\"تم إرسال الرسالة.\"),\n                        );\n                      });\n                    }}",
+    "handler": "{(e) => {\n                      e.preventDefault();\n                      void perform(async () => {\n                        const body = draft.trim();\n                        if (!body) return;\n                        if (demo) {\n                          const next = [\n                            ...messages,\n                            {\n                              id: crypto.randomUUID(),\n                              body,\n                              sender_id: \"me\",\n                              created_at: new Date().toISOString(),\n                            },\n                          ];\n                          const nextHistory = {...chatHistory, [thread]: next};\n                          setChatHistory(nextHistory);\n                          try { sessionStorage.setItem(previewChatHistoryKey, JSON.stringify(nextHistory)); }\n                          catch { /* Messages still remain available within this preview. */ }\n                          setMessages(next);\n                        } else {\n                          await api(\"message.send\", {\n                            conversationId: thread,\n                            body,\n                          });\n                          setMessages(\n                            await api<Row[]>(\"messages\", {\n                              conversationId: thread,\n                            }),\n                          );\n                        }\n                        setDraft(\"\");\n                        setNote(\n                          demo\n                            ? tr(\"الرسالة في المعاينة فقط، ماتبعتتش.\")\n                            : tr(\"تم إرسال الرسالة.\"),\n                        );\n                      });\n                    }}",
     "disabled": "",
     "label": ""
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 727,
+    "line": 773,
     "tag": "textarea",
     "action": "onChange",
     "handler": "{(e) => setDraft(e.target.value)}",
@@ -2125,7 +2656,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 733,
+    "line": 779,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -2134,16 +2665,16 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 739,
+    "line": 785,
     "tag": "button",
     "action": "onClick",
-    "handler": "{() => void openChat(thread)}",
+    "handler": "{() => void openChat(thread, false)}",
     "disabled": "{busy}",
     "label": ""
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 752,
+    "line": 798,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => setUnread(false)}",
@@ -2152,7 +2683,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 757,
+    "line": 803,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => setUnread(true)}",
@@ -2161,7 +2692,16 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 797,
+    "line": 820,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => setUnread(false)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainOperations.tsx",
+    "line": 848,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => choose(b)}",
@@ -2170,7 +2710,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 855,
+    "line": 907,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{(e) => {\n                    e.preventDefault();\n                    void perform(async () => {\n                      const body = `${topic}: ${support.trim()}`;\n                      if (demo) {\n                        setLocal((v) => ({\n                          ...v,\n                          tickets: [\n                            ...v.tickets,\n                            {\n                              id: crypto.randomUUID(),\n                              body,\n                              status: \"معاينة فقط\",\n                            },\n                          ],\n                        }));\n                        setNote(\"طلب الدعم اتضاف للمعاينة فقط.\");\n                      } else {\n                        await api(\"support.create\", { body });\n                        p.refresh();\n                        setNote(\"تم إرسال طلبك للدعم.\");\n                      }\n                      setSupport(\"\");\n                    });\n                  }}",
@@ -2179,7 +2719,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 884,
+    "line": 936,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => setTopic(e.target.value)}",
@@ -2188,7 +2728,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 899,
+    "line": 951,
     "tag": "textarea",
     "action": "onChange",
     "handler": "{(e) => setSupport(e.target.value)}",
@@ -2197,7 +2737,7 @@
   },
   {
     "file": "CaptainOperations.tsx",
-    "line": 907,
+    "line": 959,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -2206,7 +2746,7 @@
   },
   {
     "file": "CaptainRoutes.tsx",
-    "line": 55,
+    "line": 61,
     "tag": "select",
     "action": "onChange",
     "handler": "{e=>go(+e.target.value)}",
@@ -2215,7 +2755,7 @@
   },
   {
     "file": "CaptainRoutes.tsx",
-    "line": 55,
+    "line": 61,
     "tag": "button",
     "action": "onClick",
     "handler": "{()=>p.onTheme(p.theme==='dark'?'light':'dark')}",
@@ -2224,200 +2764,11 @@
   },
   {
     "file": "CaptainRoutes.tsx",
-    "line": 58,
+    "line": 64,
     "tag": "button",
     "action": "onClick",
     "handler": "{()=>go(43)}",
     "disabled": "",
-    "label": ""
-  },
-  {
-    "file": "CaptainRoutes.tsx",
-    "line": 58,
-    "tag": "button",
-    "action": "onClick",
-    "handler": "{()=>{setSelected(o.id);go(49);}}",
-    "disabled": "",
-    "label": ""
-  },
-  {
-    "file": "CaptainRoutes.tsx",
-    "line": 59,
-    "tag": "input",
-    "action": "onChange",
-    "handler": "{e=>change('title',e.target.value)}",
-    "disabled": "",
-    "label": ""
-  },
-  {
-    "file": "CaptainRoutes.tsx",
-    "line": 60,
-    "tag": "input",
-    "action": "onChange",
-    "handler": "{e=>change('stopName',e.target.value)}",
-    "disabled": "",
-    "label": ""
-  },
-  {
-    "file": "CaptainRoutes.tsx",
-    "line": 60,
-    "tag": "select",
-    "action": "onChange",
-    "handler": "{e=>change('area',e.target.value)}",
-    "disabled": "",
-    "label": "{t(\"المنطقة\",\"Area\")}"
-  },
-  {
-    "file": "CaptainRoutes.tsx",
-    "line": 60,
-    "tag": "button",
-    "action": "onClick",
-    "handler": "{()=>{change('stops',[...stops,{id:crypto.randomUUID(),name:stopName.trim(),area,pickup:true,dropoff:true}]);change('stopName','');}}",
-    "disabled": "{!stopName.trim()}",
-    "label": ""
-  },
-  {
-    "file": "CaptainRoutes.tsx",
-    "line": 60,
-    "tag": "input",
-    "action": "onChange",
-    "handler": "{e=>change('stops',stops.map(x=>x.id===s.id?{...x,pickup:e.target.checked}:x))}",
-    "disabled": "",
-    "label": ""
-  },
-  {
-    "file": "CaptainRoutes.tsx",
-    "line": 60,
-    "tag": "input",
-    "action": "onChange",
-    "handler": "{e=>change('stops',stops.map(x=>x.id===s.id?{...x,dropoff:e.target.checked}:x))}",
-    "disabled": "",
-    "label": ""
-  },
-  {
-    "file": "CaptainRoutes.tsx",
-    "line": 60,
-    "tag": "button",
-    "action": "onClick",
-    "handler": "{()=>{const next=[...stops];[next[i-1],next[i]]=[next[i],next[i-1]];change('stops',next);}}",
-    "disabled": "{i===0}",
-    "label": ""
-  },
-  {
-    "file": "CaptainRoutes.tsx",
-    "line": 60,
-    "tag": "button",
-    "action": "onClick",
-    "handler": "{()=>change('stops',stops.filter(x=>x.id!==s.id))}",
-    "disabled": "",
-    "label": ""
-  },
-  {
-    "file": "CaptainRoutes.tsx",
-    "line": 61,
-    "tag": "input",
-    "action": "onChange",
-    "handler": "{e=>change('outbound',e.target.value)}",
-    "disabled": "",
-    "label": ""
-  },
-  {
-    "file": "CaptainRoutes.tsx",
-    "line": 61,
-    "tag": "input",
-    "action": "onChange",
-    "handler": "{e=>change('returnTime',e.target.value)}",
-    "disabled": "",
-    "label": ""
-  },
-  {
-    "file": "CaptainRoutes.tsx",
-    "line": 62,
-    "tag": "select",
-    "action": "onChange",
-    "handler": "{e=>change('period',e.target.value)}",
-    "disabled": "",
-    "label": ""
-  },
-  {
-    "file": "CaptainRoutes.tsx",
-    "line": 62,
-    "tag": "select",
-    "action": "onChange",
-    "handler": "{e=>change('direction',e.target.value)}",
-    "disabled": "",
-    "label": ""
-  },
-  {
-    "file": "CaptainRoutes.tsx",
-    "line": 62,
-    "tag": "input",
-    "action": "onChange",
-    "handler": "{e=>change('returnSupported',e.target.checked)}",
-    "disabled": "",
-    "label": ""
-  },
-  {
-    "file": "CaptainRoutes.tsx",
-    "line": 63,
-    "tag": "select",
-    "action": "onChange",
-    "handler": "{e=>{const c=e.target.value as Category;change('category',c);change('capacity',String(categories[c]));}}",
-    "disabled": "",
-    "label": ""
-  },
-  {
-    "file": "CaptainRoutes.tsx",
-    "line": 63,
-    "tag": "input",
-    "action": "onChange",
-    "handler": "{e=>change('capacity',e.target.value)}",
-    "disabled": "",
-    "label": ""
-  },
-  {
-    "file": "CaptainRoutes.tsx",
-    "line": 63,
-    "tag": "input",
-    "action": "onChange",
-    "handler": "{e=>change('price',e.target.value)}",
-    "disabled": "",
-    "label": ""
-  },
-  {
-    "file": "CaptainRoutes.tsx",
-    "line": 64,
-    "tag": "input",
-    "action": "onChange",
-    "handler": "{e=>setApproved(e.target.checked)}",
-    "disabled": "",
-    "label": ""
-  },
-  {
-    "file": "CaptainRoutes.tsx",
-    "line": 64,
-    "tag": "button",
-    "action": "onClick",
-    "handler": "{publish}",
-    "disabled": "{!valid||!approved}",
-    "label": ""
-  },
-  {
-    "file": "CaptainRoutes.tsx",
-    "line": 64,
-    "tag": "button",
-    "action": "onClick",
-    "handler": "{()=>go(title.trim().length<3?43:stops.length<2||stops[0].area===stops.at(-1)?.area?44:direction!=='return'&&!outbound||direction!=='outbound'&&!returnTime?45:direction==='round_trip'&&!returnSupported?46:47)}",
-    "disabled": "",
-    "label": ""
-  },
-  {
-    "file": "CaptainRoutes.tsx",
-    "line": 65,
-    "tag": "button",
-    "action": "onClick",
-    "handler": "{()=>save(offers.map(o=>o.id===selected?{...o,available:0}:o))}",
-    "disabled": "{selectedOffer.available===0}",
     "label": ""
   },
   {
@@ -2431,7 +2782,232 @@
   },
   {
     "file": "CaptainRoutes.tsx",
-    "line": 66,
+    "line": 67,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>go(43)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 69,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>go(43)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 69,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>{setSelected(o.id);go(49);}}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 70,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>change('title',e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 71,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>change('stopName',e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 71,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{e=>change('area',e.target.value)}",
+    "disabled": "",
+    "label": "{t(\"المنطقة\",\"Area\")}"
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 71,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>{change('stops',[...stops,{id:crypto.randomUUID(),name:stopName.trim(),area,pickup:true,dropoff:true}]);change('stopName','');}}",
+    "disabled": "{!stopName.trim()}",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 71,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>change('stops',stops.map(x=>x.id===s.id?{...x,pickup:e.target.checked}:x))}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 71,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>change('stops',stops.map(x=>x.id===s.id?{...x,dropoff:e.target.checked}:x))}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 71,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>{const next=[...stops];[next[i-1],next[i]]=[next[i],next[i-1]];change('stops',next);}}",
+    "disabled": "{i===0}",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 71,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>change('stops',stops.filter(x=>x.id!==s.id))}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 72,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>change('outbound',e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 72,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>change('returnTime',e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 73,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{e=>change('period',e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 73,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{e=>change('direction',e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 73,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>change('returnSupported',e.target.checked)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 74,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{e=>{const c=e.target.value as Category;change('category',c);change('capacity',String(categories[c]));}}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 74,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>change('capacity',e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 74,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>change('price',e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 75,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>setApproved(e.target.checked)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 75,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{publish}",
+    "disabled": "{!valid||!approved}",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 75,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>go(title.trim().length<3?43:stops.length<2||stops[0].area===stops.at(-1)?.area?44:direction!=='return'&&!outbound||direction!=='outbound'&&!returnTime?45:direction==='round_trip'&&!returnSupported?46:47)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 76,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>save(offers.map(o=>o.id===selected?{...o,available:o.pausedAvailableSeats ?? 0,pausedAvailableSeats:undefined}:o))}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 76,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>save(offers.map(o=>o.id===selected?{...o,pausedAvailableSeats:o.available,available:0}:o))}",
+    "disabled": "{selectedOffer.available===0}",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 76,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>go(42)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "CaptainRoutes.tsx",
+    "line": 77,
     "tag": "button",
     "action": "onClick",
     "handler": "{()=>go(n===43?42:n-1)}",
@@ -2440,7 +3016,7 @@
   },
   {
     "file": "CaptainRoutes.tsx",
-    "line": 66,
+    "line": 77,
     "tag": "button",
     "action": "onClick",
     "handler": "{()=>go(n+1)}",
@@ -2449,7 +3025,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 342,
+    "line": 346,
     "tag": "button",
     "action": "onClick",
     "handler": "{onClick}",
@@ -2458,7 +3034,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 586,
+    "line": 644,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => onChange(e.target.value)}",
@@ -2467,7 +3043,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 603,
+    "line": 661,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => setPeriod(v)}",
@@ -2476,7 +3052,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 624,
+    "line": 682,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n              nav(\n                discoveryScreens[\n                  Math.max(0, discoveryScreens.indexOf(screen) - 1)\n                ],\n              )\n            }",
@@ -2485,7 +3061,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 638,
+    "line": 696,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => nav(Number(e.target.value))}",
@@ -2494,7 +3070,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 650,
+    "line": 708,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n              nav(\n                discoveryScreens[\n                  Math.min(discoveryScreens.length - 1, discoveryScreens.indexOf(screen) + 1)\n                ],\n              )\n            }",
@@ -2503,7 +3079,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 664,
+    "line": 722,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => onTheme(\"dark\")}",
@@ -2512,7 +3088,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 669,
+    "line": 727,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => onTheme(\"light\")}",
@@ -2521,7 +3097,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 683,
+    "line": 741,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n              nav(\n                screen === 8 ? 2 : screen === 13 ? 29 : screen === 12 ? 11 : 8,\n              )\n            }",
@@ -2530,7 +3106,34 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 717,
+    "line": 765,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(9)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 774,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => nav(4)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 779,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => void favorite(favoriteRetryId)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Discovery.tsx",
+    "line": 789,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{(e) => {\n                e.preventDefault();\n                search();\n              }}",
@@ -2539,7 +3142,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 730,
+    "line": 802,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => {\n                    setOrigin(destination);\n                    setDestination(origin);\n                  }}",
@@ -2548,7 +3151,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 751,
+    "line": 823,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setOutbound(e.target.value)}",
@@ -2557,7 +3160,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 762,
+    "line": 834,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setReturnTime(e.target.value)}",
@@ -2566,7 +3169,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 771,
+    "line": 843,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -2575,7 +3178,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 788,
+    "line": 860,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n                      setCategories((v) =>\n                        v.includes(c.name)\n                          ? v.filter((x) => x !== c.name)\n                          : [...v, c.name],\n                      )\n                    }",
@@ -2584,7 +3187,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 818,
+    "line": 890,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => setFilterDirection(e.target.value)}",
@@ -2593,7 +3196,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 830,
+    "line": 902,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setFilterPrice(e.target.value)}",
@@ -2602,7 +3205,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 837,
+    "line": 909,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => setOnlyAvailable(!onlyAvailable)}",
@@ -2611,7 +3214,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 843,
+    "line": 915,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => {\n                  setCategories([]);\n                  setFilterDirection(\"\");\n                  setFilterPrice(\"\");\n                  setOnlyAvailable(false);\n                  setAppliedFilters(false);\n                }}",
@@ -2620,7 +3223,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 868,
+    "line": 940,
     "tag": "Action",
     "action": "onClick",
     "handler": "{() => {\n                setAppliedFilters(true);\n                if (!demo)\n                  p.onSearch({\n                    origin,\n                    destination,\n                    outbound,\n                    returnTime,\n                    period,\n                    category: categories.length === 1 ? categories[0] : \"\",\n                    direction: filterDirection || \"outbound\",\n                    maxPrice: filterPrice,\n                  });\n                nav(11);\n              }}",
@@ -2629,7 +3232,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 893,
+    "line": 965,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(29)}",
@@ -2638,7 +3241,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 894,
+    "line": 966,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(14)}",
@@ -2647,7 +3250,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 895,
+    "line": 967,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(24)}",
@@ -2656,7 +3259,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 896,
+    "line": 968,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(33)}",
@@ -2665,7 +3268,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 910,
+    "line": 983,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(10)}",
@@ -2674,7 +3277,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 927,
+    "line": 1000,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => openLine(l)}",
@@ -2683,7 +3286,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 972,
+    "line": 1045,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => nav(15)}",
@@ -2692,7 +3295,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 1007,
+    "line": 1080,
     "tag": "select",
     "action": "onChange",
     "handler": "{e => {setPickup(e.target.value); setDropoff(\"\");}}",
@@ -2701,7 +3304,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 1008,
+    "line": 1081,
     "tag": "select",
     "action": "onChange",
     "handler": "{e => setDropoff(e.target.value)}",
@@ -2710,16 +3313,16 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 1012,
+    "line": 1085,
     "tag": "Action",
     "action": "onClick",
     "handler": "{() => {try {const selectedStops = selectStops(current.stops || [], pickup, dropoff, current.direction === \"round_trip\" ? current.returnStops || [] : undefined); p.onBook({...current, selectedStops});} catch {setMessage(tr(\"اختار نقطتين صالحين؛ يجب أن يدعم مسار العودة عكس النقطتين.\"));}}}",
-    "disabled": "{current.amount === null || !pickup || !dropoff}",
+    "disabled": "{current.amount === null || current.available<1 || !pickup || !dropoff}",
     "label": ""
   },
   {
     "file": "Discovery.tsx",
-    "line": 1017,
+    "line": 1090,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => void favorite(demo ? current.id : current.routeId || current.id)}",
@@ -2728,7 +3331,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 1025,
+    "line": 1098,
     "tag": "Action",
     "action": "onClick",
     "handler": "{() => nav(9)}",
@@ -2737,7 +3340,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 1034,
+    "line": 1107,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => void favorite(l.id)}",
@@ -2746,7 +3349,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 1055,
+    "line": 1128,
     "tag": "Action",
     "action": "onClick",
     "handler": "{() => openLine(l)}",
@@ -2755,7 +3358,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 1064,
+    "line": 1137,
     "tag": "Action",
     "action": "onClick",
     "handler": "{()=>go(p.signedIn || demo ? 9 : 4)}",
@@ -2764,7 +3367,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 1072,
+    "line": 1145,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => setPast(false)}",
@@ -2773,7 +3376,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 1079,
+    "line": 1152,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => setPast(true)}",
@@ -2782,7 +3385,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 1114,
+    "line": 1187,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n                          setModal(\n                            tr(\"إدارة الاشتراك محتاجة حجزًا فعليًا. البيانات المعروضة توضيحية فقط.\"),\n                          )\n                        }",
@@ -2791,7 +3394,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 1144,
+    "line": 1217,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => p.onBooking(b.id)}",
@@ -2800,7 +3403,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 1157,
+    "line": 1230,
     "tag": "Action",
     "action": "onClick",
     "handler": "{() => p.signedIn ? nav(9) : go(4)}",
@@ -2809,7 +3412,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 1161,
+    "line": 1234,
     "tag": "form",
     "action": "onSubmit",
     "handler": "{e => void request(e)}",
@@ -2818,7 +3421,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 1164,
+    "line": 1237,
     "tag": "textarea",
     "action": "onChange",
     "handler": "{e => setNotes(e.target.value)}",
@@ -2827,7 +3430,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 1165,
+    "line": 1238,
     "tag": "button",
     "action": "implicit or inherited",
     "handler": "",
@@ -2836,7 +3439,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 1166,
+    "line": 1239,
     "tag": "Action",
     "action": "onClick",
     "handler": "{()=>go(9)}",
@@ -2845,7 +3448,7 @@
   },
   {
     "file": "Discovery.tsx",
-    "line": 1178,
+    "line": 1251,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => setModal(\"\")}",
@@ -2853,8 +3456,683 @@
     "label": ""
   },
   {
+    "file": "LiveAdminOverview.tsx",
+    "line": 27,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>{setError('');setLoading(true);setRevision(x=>x+1);}}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveAdminOverview.tsx",
+    "line": 31,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>{setLoading(true);setRevision(x=>x+1);}}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveBookings.tsx",
+    "line": 36,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>{setError('');setLoading(true);setRefresh(v=>v+1);}}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveBookings.tsx",
+    "line": 39,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{onFindRide}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveBookings.tsx",
+    "line": 45,
+    "tag": "a",
+    "action": "href",
+    "handler": "{`/?tab=booking&booking=${encodeURIComponent(b.id)}`}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveBookings.tsx",
+    "line": 46,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>void cancel(b.id)}",
+    "disabled": "{Boolean(busy)}",
+    "label": ""
+  },
+  {
+    "file": "LiveBookings.tsx",
+    "line": 48,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>{setLoading(true);setRefresh(v=>v+1);}}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveCaptainDraft.tsx",
+    "line": 118,
+    "tag": "a",
+    "action": "href",
+    "handler": "\"?screen=4\"",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveCaptainDraft.tsx",
+    "line": 122,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>setTitle(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveCaptainDraft.tsx",
+    "line": 123,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{e=>setAreaId(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveCaptainDraft.tsx",
+    "line": 124,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>setStopName(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveCaptainDraft.tsx",
+    "line": 125,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{addStop}",
+    "disabled": "{!areaId||stopName.trim().length<2}",
+    "label": ""
+  },
+  {
+    "file": "LiveCaptainDraft.tsx",
+    "line": 129,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>setStops(v=>{const n=[...v];[n[i-1],n[i]]=[n[i],n[i-1]];return n;})}",
+    "disabled": "{i===0}",
+    "label": ""
+  },
+  {
+    "file": "LiveCaptainDraft.tsx",
+    "line": 130,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>setStops(v=>{const n=[...v];[n[i+1],n[i]]=[n[i],n[i+1]];return n;})}",
+    "disabled": "{i===stops.length-1}",
+    "label": ""
+  },
+  {
+    "file": "LiveCaptainDraft.tsx",
+    "line": 131,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>setStops(v=>v.filter((_,j)=>j!==i))}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveCaptainDraft.tsx",
+    "line": 135,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{e=>setVehicleId(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveCaptainDraft.tsx",
+    "line": 141,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{e=>setCategory((e.target.value||null) as Category|null)}",
+    "disabled": "{!eligibleCategories.length}",
+    "label": ""
+  },
+  {
+    "file": "LiveCaptainDraft.tsx",
+    "line": 148,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{e=>setPeriod(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveCaptainDraft.tsx",
+    "line": 149,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{e=>setDirection(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveCaptainDraft.tsx",
+    "line": 150,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>setDeparture(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveCaptainDraft.tsx",
+    "line": 151,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>setArrival(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveCaptainDraft.tsx",
+    "line": 152,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>setReturnSupported(e.target.checked)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveCaptainDraft.tsx",
+    "line": 153,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>setPrice(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveCaptainDraft.tsx",
+    "line": 156,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>void save()}",
+    "disabled": "{busy}",
+    "label": ""
+  },
+  {
+    "file": "LiveCaptainRouteList.tsx",
+    "line": 71,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>void changeStatus(route.id,'paused')}",
+    "disabled": "{busy!==null}",
+    "label": ""
+  },
+  {
+    "file": "LiveCaptainRouteList.tsx",
+    "line": 72,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>void changeStatus(route.id,'published')}",
+    "disabled": "{busy!==null||approval!=='approved'}",
+    "label": ""
+  },
+  {
+    "file": "LiveCaptainRouteList.tsx",
+    "line": 73,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>void changeStatus(route.id,'archived')}",
+    "disabled": "{busy!==null}",
+    "label": ""
+  },
+  {
+    "file": "LiveCaptainRouteList.tsx",
+    "line": 74,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>void publish(route.id)}",
+    "disabled": "{busy!==null||approval!=='approved'}",
+    "label": ""
+  },
+  {
+    "file": "LiveHome.tsx",
+    "line": 52,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>setThemePreference(theme==='light'?'dark':'light')}",
+    "disabled": "",
+    "label": "{t('تغيير المظهر','Switch appearance')}"
+  },
+  {
+    "file": "LiveHome.tsx",
+    "line": 64,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{retry}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveHome.tsx",
+    "line": 67,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>onNavigate(4)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveHome.tsx",
+    "line": 70,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{retry}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveHome.tsx",
+    "line": 75,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>onNavigate(identity.role==='captain'?42:9)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveHome.tsx",
+    "line": 76,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>onNavigate(62)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveHome.tsx",
+    "line": 84,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{async()=>{if(!client)return;const {error:signOutError}=await client.auth.signOut();if(signOutError){setError(t('تعذّر تسجيل الخروج.','Unable to sign out.'));return;}setIdentity(null);onNavigate(4);}}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveNotifications.tsx",
+    "line": 22,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>{setError('');setRevision(v=>v+1);}}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveNotifications.tsx",
+    "line": 25,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>void mark(n.id)}",
+    "disabled": "{busy!==''}",
+    "label": ""
+  },
+  {
+    "file": "LiveNotifications.tsx",
+    "line": 27,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>setRevision(v=>v+1)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveProfile.tsx",
+    "line": 34,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>setName(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveProfile.tsx",
+    "line": 35,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>setPhone(e.target.value)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveProfile.tsx",
+    "line": 36,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>void save()}",
+    "disabled": "{busy}",
+    "label": ""
+  },
+  {
+    "file": "LiveRouteSearch.tsx",
+    "line": 113,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>setRetry(v=>v+1)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveRouteSearch.tsx",
+    "line": 122,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>onSelect(selection)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveRouteSearch.tsx",
+    "line": 125,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>setSeatCounts(v=>({...v,[route.id]:Number(e.target.value)}))}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveRouteSearch.tsx",
+    "line": 126,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>void book(route.id,from.id,to.id,reverse)}",
+    "disabled": "{bookingBusy!==null||!Number.isInteger(seatCounts[route.id]||1)||(seatCounts[route.id]||1)<1||(seatCounts[route.id]||1)>selection.remaining}",
+    "label": ""
+  },
+  {
+    "file": "LiveTripRequests.tsx",
+    "line": 54,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>{setError('');refresh();}}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveTripRequests.tsx",
+    "line": 60,
+    "tag": "input",
+    "action": "onChange",
+    "handler": "{e=>setSeats(Number(e.target.value))}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveTripRequests.tsx",
+    "line": 61,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>void create()}",
+    "disabled": "{busy||!Number.isInteger(seats)||seats<1||seats>13}",
+    "label": ""
+  },
+  {
+    "file": "LiveTripRequests.tsx",
+    "line": 66,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>void cancel(r.id)}",
+    "disabled": "{busy}",
+    "label": ""
+  },
+  {
+    "file": "LiveTripRequests.tsx",
+    "line": 68,
+    "tag": "select",
+    "action": "onChange",
+    "handler": "{e=>setRouteSelection(v=>({...v,[r.id]:e.target.value}))}",
+    "disabled": "",
+    "label": "{t('الخط المراد عرضه','Offer route')}"
+  },
+  {
+    "file": "LiveTripRequests.tsx",
+    "line": 69,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>void sendOffer(r.id)}",
+    "disabled": "{busy||offers.some(o=>o.request_id===r.id&&o.captain_id===uid)}",
+    "label": ""
+  },
+  {
+    "file": "LiveTripRequests.tsx",
+    "line": 72,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>void accept(o.id)}",
+    "disabled": "{busy}",
+    "label": ""
+  },
+  {
+    "file": "LiveTripRequests.tsx",
+    "line": 75,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{refresh}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "LiveVehicles.tsx",
+    "line": 48,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>setRevision(value=>value+1)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "MobileApp.tsx",
+    "line": 297,
+    "tag": "a",
+    "action": "href",
+    "handler": "\"#sekka-content\"",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "MobileApp.tsx",
+    "line": 299,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>navigate({tab:'home'})}",
+    "disabled": "",
+    "label": "{t('الرئيسية','Home')}"
+  },
+  {
+    "file": "MobileApp.tsx",
+    "line": 301,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{openAdmin}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "MobileApp.tsx",
+    "line": 303,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>p.setThemePreference(p.theme==='dark'?'light':'dark')}",
+    "disabled": "",
+    "label": "{t('تغيير المظهر','Switch appearance')}"
+  },
+  {
+    "file": "MobileApp.tsx",
+    "line": 309,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>setAuthCheckRevision(v=>v+1)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "MobileApp.tsx",
+    "line": 311,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>setError('')}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "MobileApp.tsx",
+    "line": 314,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{openAdmin}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "MobileApp.tsx",
+    "line": 316,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{startCaptainJourney}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "MobileApp.tsx",
+    "line": 316,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>void signOut()}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "MobileApp.tsx",
+    "line": 316,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>{try{sessionStorage.setItem('sekka.postAuthPath','/?tab=login&view=6');}catch{/* Optional callback storage. */}navigate({tab:'login',view:4});}}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "MobileApp.tsx",
+    "line": 317,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>setSelectionVersion(v=>v+1)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "MobileApp.tsx",
+    "line": 327,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>captain?navigate({tab:'captain-onboarding',view:40}):startCaptainJourney()}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "MobileApp.tsx",
+    "line": 328,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>navigate({tab:'login',view:4})}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "MobileApp.tsx",
+    "line": 329,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>navigate({tab:'login',view:4})}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "MobileApp.tsx",
+    "line": 332,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>setAuthCheckRevision(v=>v+1)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "MobileApp.tsx",
+    "line": 333,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>navigate({tab:'home'})}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "MobileApp.tsx",
+    "line": 336,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>navigate(id==='search'?{tab:id,view:9}:{tab:id})}",
+    "disabled": "",
+    "label": ""
+  },
+  {
     "file": "Onboarding.tsx",
-    "line": 232,
+    "line": 282,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(id === 4 ? 3 : 2)}",
+    "disabled": "",
+    "label": "{t(\"رجوع\")}"
+  },
+  {
+    "file": "Onboarding.tsx",
+    "line": 286,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>void startGoogleSignIn()}",
+    "disabled": "{!client||googleBusy}",
+    "label": ""
+  },
+  {
+    "file": "Onboarding.tsx",
+    "line": 296,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{()=>void startGoogleSignIn()}",
+    "disabled": "{googleBusy}",
+    "label": ""
+  },
+  {
+    "file": "Onboarding.tsx",
+    "line": 303,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => go(8)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Onboarding.tsx",
+    "line": 312,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(Math.max(1, id - 1))}",
@@ -2863,7 +4141,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 241,
+    "line": 321,
     "tag": "select",
     "action": "onChange",
     "handler": "{(e) => go(Number(e.target.value))}",
@@ -2872,7 +4150,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 249,
+    "line": 329,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(Math.min(7, id + 1))}",
@@ -2881,7 +4159,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 258,
+    "line": 338,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => onTheme(\"dark\")}",
@@ -2890,7 +4168,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 263,
+    "line": 343,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => onTheme(\"light\")}",
@@ -2899,7 +4177,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 277,
+    "line": 357,
     "tag": "button",
     "action": "onClick",
     "handler": "{onReturn}",
@@ -2908,7 +4186,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 289,
+    "line": 369,
     "tag": "button",
     "action": "onClick",
     "handler": "{back}",
@@ -2917,7 +4195,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 306,
+    "line": 386,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(2)}",
@@ -2926,7 +4204,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 355,
+    "line": 435,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(3)}",
@@ -2935,7 +4213,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 360,
+    "line": 440,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(4)}",
@@ -2944,7 +4222,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 404,
+    "line": 484,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => onRole(r.value)}",
@@ -2953,7 +4231,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 425,
+    "line": 505,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(4)}",
@@ -2962,7 +4240,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 456,
+    "line": 536,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setPhone(e.target.value)}",
@@ -2971,7 +4249,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 467,
+    "line": 547,
     "tag": "button",
     "action": "onClick",
     "handler": "{issueDemoCode}",
@@ -2980,7 +4258,16 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 494,
+    "line": 551,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{async () => {\n              if (!client) return;\n              const {error}=await client.auth.signInWithOAuth({provider:\"google\",options:{redirectTo:location.origin+location.pathname+\"?screen=8&oauth_theme=\"+encodeURIComponent(themePreference)+\"&oauth_language=\"+encodeURIComponent(languagePreference)}});\n              if (error) window.alert(error.message);\n            }}",
+    "disabled": "{!client}",
+    "label": ""
+  },
+  {
+    "file": "Onboarding.tsx",
+    "line": 581,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => otpChange(i, e.target.value)}",
@@ -2989,7 +4276,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 514,
+    "line": 601,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(4)}",
@@ -2998,7 +4285,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 520,
+    "line": 607,
     "tag": "button",
     "action": "onClick",
     "handler": "{issueDemoCode}",
@@ -3007,7 +4294,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 523,
+    "line": 610,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => {\n                if (digits.join(\"\") === \"1234\") { setIssuedAt(0); go(6); }\n                else { setWrongCode(true); setDigits([\"\", \"\", \"\", \"\"]); otpRefs.current[0]?.focus(); }\n              }}",
@@ -3016,7 +4303,16 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 541,
+    "line": 620,
+    "tag": "button",
+    "action": "onClick",
+    "handler": "{() => {\n                try {sessionStorage.setItem(\"sekka.phoneVerificationDeferred\",\"true\");} catch { /* Optional browser storage. */ }\n                go(6);\n              }}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "Onboarding.tsx",
+    "line": 638,
     "tag": "input",
     "action": "onChange",
     "handler": "{(e) => setFullName(e.target.value)}",
@@ -3025,7 +4321,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 560,
+    "line": 657,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => go(7)}",
@@ -3034,7 +4330,7 @@
   },
   {
     "file": "Onboarding.tsx",
-    "line": 580,
+    "line": 677,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => onReturn ? onReturn() : go(role === \"captain\" ? 37 : 8)}",
@@ -3178,10 +4474,10 @@
   },
   {
     "file": "WalletFlow.tsx",
-    "line": 453,
+    "line": 447,
     "tag": "button",
     "action": "onClick",
-    "handler": "{() => nav(29)}",
+    "handler": "{() => setFilter(\"all\")}",
     "disabled": "",
     "label": ""
   },
@@ -3190,13 +4486,22 @@
     "line": 458,
     "tag": "button",
     "action": "onClick",
+    "handler": "{() => nav(29)}",
+    "disabled": "",
+    "label": ""
+  },
+  {
+    "file": "WalletFlow.tsx",
+    "line": 463,
+    "tag": "button",
+    "action": "onClick",
     "handler": "{() => nav(30)}",
     "disabled": "",
     "label": ""
   },
   {
     "file": "WalletFlow.tsx",
-    "line": 494,
+    "line": 499,
     "tag": "button",
     "action": "onClick",
     "handler": "{() =>\n                              setDetail(detail === b.id ? null : b.id)\n                            }",
@@ -3205,7 +4510,7 @@
   },
   {
     "file": "WalletFlow.tsx",
-    "line": 502,
+    "line": 507,
     "tag": "button",
     "action": "onClick",
     "handler": "{() => p.go(19, undefined, b.id)}",
@@ -3214,7 +4519,7 @@
   },
   {
     "file": "preferences.tsx",
-    "line": 32,
+    "line": 43,
     "tag": "select",
     "action": "onChange",
     "handler": "{e=>p.setThemePreference(e.target.value as ThemePreference)}",
@@ -3223,7 +4528,7 @@
   },
   {
     "file": "preferences.tsx",
-    "line": 33,
+    "line": 44,
     "tag": "select",
     "action": "onChange",
     "handler": "{e=>p.setLanguagePreference(e.target.value as LanguagePreference)}",
