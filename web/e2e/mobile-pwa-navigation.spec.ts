@@ -36,3 +36,13 @@ test('guest app supports browser Back/Forward between real tabs',async({page})=>
  await page.goForward();
  await expect(page).toHaveURL(/tab=bookings/);
 });
+
+// Only the exact developer gallery path may enter preview mode.
+test('gallery path does not capture similarly named public application paths',async({page})=>{
+ await page.goto('/dev/screens-copy');
+ await expect(page.locator('.sekka-mobile')).toBeVisible();
+ await expect(page.locator('.phase-review-bar')).toHaveCount(0);
+ await page.goto('/dev/screens');
+ await expect(page.locator('.phase-review-bar')).toBeVisible();
+ await expect(page.locator('.sekka-mobile')).toHaveCount(0);
+});
