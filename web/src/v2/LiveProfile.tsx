@@ -7,12 +7,15 @@ export default function LiveProfile(){
  const [error,setError]=useState(''),[notice,setNotice]=useState(''),[loaded,setLoaded]=useState(false),[reload,setReload]=useState(0);
  useEffect(()=>{let active=true;setLoaded(false);setError('');void(async()=>{
    if(!client){if(active)setError(t('خدمة الحساب غير مهيأة.','Account service is not configured.'));return;}
+   try{
    const {data:{user},error:authError}=await client.auth.getUser();
-   if(authError||!user){if(active)setError(t('انتهت جلسة الدخول. سجّل الدخول مرة تانية.','Your session has expired. Please sign in again.'));return;}
+   if(!active)return;
+   if(authError||!user){setError(t('انتهت جلسة الدخول. سجّل الدخول مرة تانية.','Your session has expired. Please sign in again.'));return;}
    const {data,error:readError}=await client.from('v31_profiles').select('display_name,phone_number').eq('user_id',user.id).maybeSingle();
    if(!active)return;
    if(readError){setError(t('تعذر تحميل بيانات الحساب. حاول تاني.','Could not load your profile. Please retry.'));return;}
    setName(data?.display_name||user.user_metadata?.full_name||'');setPhone(data?.phone_number||'');setLoaded(true);
+   }catch{if(active)setError(t('تعذر تحميل بيانات الحساب. حاول تاني.','Could not load your profile. Please retry.'));}
  })();return()=>{active=false;};},[reload]);
  const save=async()=>{
   if(!client)return;
