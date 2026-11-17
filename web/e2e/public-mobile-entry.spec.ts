@@ -15,9 +15,10 @@ for(const width of [360,390]){
    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
    // Once on public search, the original Rider five-tab nav remains usable.
    await page.goto('/?tab=search');
-   await expect(page.locator('.sekka-bottom-nav button')).toHaveCount(5);
+   await expect(page.locator('.sekka-bottom-nav button:not(.sekka-menu-tab)')).toHaveCount(5);
+   await expect(page.locator('.sekka-bottom-nav button.sekka-menu-tab')).toHaveCount(1);
    await expect(page.locator('.d-screen-9')).toBeVisible();
-   const nav=page.locator('.sekka-bottom-nav button');
+   const nav=page.locator('.sekka-bottom-nav button:not(.sekka-menu-tab)');
    await nav.nth(2).click();
    await expect(page.getByRole('heading',{name:language==='ar'?'حجوزاتي':'My bookings'})).toBeVisible();
    await nav.nth(4).click();
