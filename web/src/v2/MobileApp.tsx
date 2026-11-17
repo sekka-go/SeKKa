@@ -202,7 +202,7 @@ export default function MobileApp(){
  };
  const discoveryGo=(id:number)=>{
   if([9,10,11,12].includes(id))navigate({tab:'search',view:id as 9|10|11|12});
-  else if(id===4)navigate({tab:'login',view:4});
+  else if(id===4)signInFor(mobileRouteHref({tab:'search',view:discoveryScreen}));
   else if(id===33)navigate({tab:'notifications'});
   else if(id===29)navigate({tab:'bookings'});
   else navigate({tab:'home'});
@@ -236,6 +236,16 @@ export default function MobileApp(){
  };
  const captainOnboardingGo=(step:number)=>{
   if(step>=35&&step<=41)navigate({tab:'captain-onboarding',view:step as 35|36|37|38|39|40|41});
+ };
+ // A guest entering a prerequisite must return to that exact destination.
+ // Do not inherit an unrelated Captain role or an old OAuth return path.
+ const signInFor=(returnPath:string)=>{
+  setSelectedRole('rider');
+  try{
+   sessionStorage.setItem('sekka.pendingRole','rider');
+   sessionStorage.setItem('sekka.postAuthPath',returnPath);
+  }catch{/* The callback URL also preserves the Rider role. */}
+  navigate({tab:'login',view:4});
  };
  const startCaptainJourney=()=>{
   setSelectedRole('captain');
@@ -317,20 +327,20 @@ export default function MobileApp(){
    {ready&&tab==='login'&&<Onboarding production screen={userId?6:!ready?4:onboardingScreen} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={selectRole}/>}
    {ready&&tab==='profile'&&(userId?<section className="sekka-mobile-card"><LiveProfile/>{ready&&admin&&<button type="button" className="sekka-action" onClick={openAdmin}>
      {t('فتح لوحة الإدارة','Open Admin dashboard')}</button>}
-   <button type="button" onClick={startCaptainJourney}>{captainApproved?t('فتح حساب الكابتن','Open Captain journey'):t('ابدأ ككابتن','Enter Captain journey')}</button><button type="button" onClick={()=>void signOut()}>{t('تسجيل الخروج','Sign out')}</button></section>:<section className="sekka-mobile-card"><h1>{t('حسابي','My profile')}</h1><p>{t('سجّل بجوجل علشان تكمل بياناتك.','Sign in with Google to complete your profile.')}</p><button className="sekka-action" onClick={()=>{try{sessionStorage.setItem('sekka.postAuthPath','/?tab=login&view=6');}catch{/* Optional callback storage. */}navigate({tab:'login',view:4});}}>{t('تسجيل الدخول بجوجل','Sign in with Google')}</button></section>)}
+   <button type="button" onClick={startCaptainJourney}>{captainApproved?t('فتح حساب الكابتن','Open Captain journey'):t('ابدأ ككابتن','Enter Captain journey')}</button><button type="button" onClick={()=>void signOut()}>{t('تسجيل الخروج','Sign out')}</button></section>:<section className="sekka-mobile-card"><h1>{t('حسابي','My profile')}</h1><p>{t('سجّل بجوجل علشان تكمل بياناتك.','Sign in with Google to complete your profile.')}</p><button className="sekka-action" onClick={()=>signInFor('/?tab=login&view=6')}>{t('تسجيل الدخول بجوجل','Sign in with Google')}</button></section>)}
    {selectionError&&['search','booking'].includes(tab)&&<div role="alert" className="sekka-mobile-alert">{selectionError}<button type="button" onClick={()=>setSelectionVersion(v=>v+1)}>{t('إعادة المحاولة','Retry')}</button></div>}
    {tab==='search'&&approvedDiscovery(discoveryScreen)}
    {ready&&tab==='booking'&&<V31BookingJourney offer={bookingOffer} routeId={liveSelection?.route.id||''}
      pickupId={new URL(location.href).searchParams.get('pickup')||''} dropoffId={new URL(location.href).searchParams.get('dropoff')||''}
      reverse={new URL(location.href).searchParams.get('reverse')==='1'} bookingId={bookingId}
      onBack={()=>{if(bookingId)navigate({tab:'bookings'});else navigate({tab:'search',view:12});}}
-     onLogin={()=>{try{sessionStorage.setItem('sekka.postAuthPath',location.pathname+location.search);}catch{ /* Safari privacy storage */ }navigate({tab:'login',view:4});}}
+     onLogin={()=>signInFor(location.pathname+location.search+location.hash)}
      onBooked={bookingSaved}/>}
 
    {ready&&tab==='captain-onboarding'&&(userId?approvedCaptainOnboarding(captainStep):<Onboarding production screen={4} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={selectRole}/>)}
    {ready&&tab==='routes'&&(captain&&captainApproved?<CaptainRoutes production screen={internalScreen(captainScreen)} theme={p.theme} onTheme={p.setThemePreference} go={captainGo}/> :<section className="sekka-mobile-card"><h1>{t('خطوط الكابتن','Captain routes')}</h1><p>{captain?t('حساب الكابتن لم يُعتمد بعد.','Captain access is not approved yet.'):t('ابدأ تسجيل الكابتن لمتابعة طلب الاعتماد.','Start Captain enrollment to continue.')}</p><button className="sekka-action" onClick={()=>captain?navigate({tab:'captain-onboarding',view:40}):startCaptainJourney()}>{captain?t('متابعة حالة الطلب','View application status'):t('بدء تسجيل الكابتن','Start Captain enrollment')}</button></section>)}
-   {ready&&tab==='bookings'&&(userId?<LiveBookings mode="rider" onFindRide={()=>navigate({tab:'search',view:9})}/>:<section className="sekka-mobile-card"><h1>{t('حجوزاتي','My bookings')}</h1><p>{t('سجّل دخولك علشان تشوف حجوزاتك الحقيقية.','Sign in to view your bookings.')}</p><button className="sekka-action" onClick={()=>navigate({tab:'login',view:4})}>{t('تسجيل الدخول','Sign in')}</button></section>)}
-   {ready&&tab==='notifications'&&(userId?<LiveNotifications/>:<section className="sekka-mobile-card"><h1>{t('الإشعارات','Notifications')}</h1><button className="sekka-action" onClick={()=>navigate({tab:'login',view:4})}>{t('تسجيل الدخول','Sign in')}</button></section>)}
+   {ready&&tab==='bookings'&&(userId?<LiveBookings mode="rider" onFindRide={()=>navigate({tab:'search',view:9})}/>:<section className="sekka-mobile-card"><h1>{t('حجوزاتي','My bookings')}</h1><p>{t('سجّل دخولك علشان تشوف حجوزاتك الحقيقية.','Sign in to view your bookings.')}</p><button className="sekka-action" onClick={()=>signInFor('/?tab=bookings')}>{t('تسجيل الدخول','Sign in')}</button></section>)}
+   {ready&&tab==='notifications'&&(userId?<LiveNotifications/>:<section className="sekka-mobile-card"><h1>{t('الإشعارات','Notifications')}</h1><button className="sekka-action" onClick={()=>signInFor('/?tab=notifications')}>{t('تسجيل الدخول','Sign in')}</button></section>)}
    {tab==='admin'&&(!ready?<p role="status">{t('بنتأكد من صلاحية الإدارة…','Checking Admin authorization…')}</p>:admin?<AdminDashboard production screen={internalScreen(adminScreen)} theme={p.theme}
       onTheme={p.setThemePreference} go={id=>{const n=publicScreen(id);if(n>=62&&n<=73)navigate({tab:'admin',view:n as 62|63|64|65|66|67|68|69|70|71|72|73});}}/>:<section className="sekka-mobile-card"><h1>{t('غير مسموح','Access restricted')}</h1><p>{adminLookupError||t('لوحة الإدارة للحسابات المصرح لها فقط.','The admin dashboard requires authorization.')}</p>
    {adminLookupError&&<button type="button" onClick={()=>setAuthCheckRevision(v=>v+1)}>{t('إعادة فحص الصلاحيات','Retry authorization')}</button>}
