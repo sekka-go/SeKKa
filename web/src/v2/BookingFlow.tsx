@@ -1094,7 +1094,11 @@ export function V31BookingJourney({offer,routeId,pickupId,dropoffId,reverse,book
      if(!row||row.route_id!==routeId||row.seats!==seats||row.pickup_stop_id!==pickupId||row.dropoff_stop_id!==dropoffId||!['pending','confirmed'].includes(row.status))throw Error('BOOKING_NOT_VERIFIED');
      clearReservationAttempt(sessionStorage,signature);
      onBooked(id);
-   }catch(e){setError(e instanceof Error?e.message:String(e));}
+   }catch(e){const message=e instanceof Error?e.message:String(e);
+     setError(message.includes('RIDER_MAX_TWO_SEATS')||message.includes('MAX_TWO_SEATS_PER_RIDER')
+       ?t('الحد الأقصى لكل حساب شخصين فقط على نفس الخط.','Each account can reserve at most two seats on the same route.')
+       :message);
+   }
    finally{setBusy(false);}
  };
  const cancel=async()=>{
