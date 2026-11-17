@@ -8,7 +8,7 @@ const root = document.getElementById("root");
 if (!root) throw new Error("Missing application root");
 createRoot(root).render(
   <React.StrictMode>
-    <PreferencesProvider>{window.location.pathname.startsWith("/dev/screens")?<SubscriptionApp/>:<LaunchSplash><MobileApp/></LaunchSplash>}</PreferencesProvider>
+    <PreferencesProvider>{["/dev/screens", "/dev/screens/"].includes(window.location.pathname)?<SubscriptionApp/>:<LaunchSplash><MobileApp/></LaunchSplash>}</PreferencesProvider>
   </React.StrictMode>,
 );
 
