@@ -195,6 +195,56 @@ test('MOCKED failed identity verification blocks profile and offers retry',async
  await expect(page.locator('.live-profile')).toBeVisible();
 });
 
+// Mocked, not real Supabase: regression for the rider's observed no-match
+// flow where a blank subscription period prevented the request from saving.
+test('MOCKED rider no-match flow saves selected weekly request and reads it back',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await setup(page,{isAdmin:false},'en','light');
+ await page.addInitScript(()=>{
+  sessionStorage.setItem('sekka.rider.discoveryDraft.v31',JSON.stringify({
+   origin:'التجمع',destination:'الزمالك',outbound:'07:30',returnTime:'17:00',
+   period:'monthly',searched:true
+  }));
+ });
+ const areas=[
+  {id:21,name_ar:'التجمع',name_en:'New Cairo'},
+  {id:22,name_ar:'الزمالك',name_en:'Zamalek'}
+ ];
+ let saved:null|{id:string;rider_id:string;origin_area_id:number;destination_area_id:number;outbound_time:string;period:string;seats:number;request_key:string;status:string}=null;
+ let inserts=0;
+ await page.route(endpoint+'/rest/v1/v31_service_areas*',async route=>{
+  await route.fulfill({contentType:'application/json',body:JSON.stringify(areas)});
+ });
+ await page.route(endpoint+'/rest/v1/v31_routes*',async route=>{
+  await route.fulfill({contentType:'application/json',body:'[]'});
+ });
+ await page.route(endpoint+'/rest/v1/v31_trip_requests*',async route=>{
+  const req=route.request(),url=new URL(req.url());
+  if(req.method()==='POST'){
+   inserts++;
+   const v=req.postDataJSON() as NonNullable<typeof saved>;
+   saved={...v,id:'33333333-3333-4333-8333-333333333333',status:'open'};
+   await route.fulfill({status:201,contentType:'application/json',body:'[]'});
+   return;
+  }
+  const matched=saved&&!url.searchParams.has('request_key')?[saved]:
+   saved&&url.searchParams.get('request_key')?.includes(saved.request_key)?[saved]:[];
+  const singular=req.headers()['accept']?.includes('vnd.pgrst.object');
+  await route.fulfill({contentType:'application/json',body:JSON.stringify(singular?matched[0]||null:matched)});
+ });
+ await page.goto('/?tab=search&view=11');
+ const panel=page.locator('.live-trip-requests');
+ await expect(panel.getByRole('heading',{name:'No match? Review your request'})).toBeVisible();
+ await panel.getByLabel('Subscription period').selectOption('weekly');
+ await panel.getByRole('button',{name:'Confirm and save trip request'}).click();
+ await expect(panel.getByRole('status')).toContainText('Your trip request is saved');
+ expect(inserts).toBe(1);
+ expect(saved).not.toBeNull();
+ expect(saved?.period).toBe('weekly');
+ expect(saved?.outbound_time).toBe('07:30');
+ await expect(panel.getByText(/weekly/)).toBeVisible();
+});
+
 // Simulated PostgREST persistence, not a Staging user-session test.
 // Verify both the successful read-after-write contract and the failure path.
 for(const verifyReadback of [true,false]){
