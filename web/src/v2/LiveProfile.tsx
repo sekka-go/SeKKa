@@ -23,7 +23,7 @@ export default function LiveProfile(){
    const {data:{user},error:authError}=await client.auth.getUser();
    if(authError||!user)throw Error('AUTH_REQUIRED');
    const {error:writeError}=await client.from('v31_profiles').upsert({user_id:user.id,display_name:name.trim(),phone_number:clean||null},{onConflict:'user_id'});
-   if(writeError)throw writeError;setNotice(t('اتحفظت بياناتك. رقم الموبايل غير مؤكد.','Profile saved. Phone number is not verified.'));
+   if(writeError)throw writeError;setNotice(t('اتحفظت بياناتك. تأكيد رقم الموبايل برسالة SMS مؤجل حاليًا.','Profile saved. SMS phone verification is currently postponed.'));
   }catch(e){setError(e instanceof Error?e.message:String(e));}finally{setBusy(false);}
  };
  if(!client)return null;
@@ -32,7 +32,8 @@ export default function LiveProfile(){
   {!loaded&&!error&&<p role="status">{t('بنحمّل بياناتك…','Loading your profile…')}</p>}
   {error&&<p role="alert">{error}</p>}{notice&&<p role="status">{notice}</p>}
   {loaded&&<><label>{t('الاسم','Name')}<input maxLength={100} value={name} onChange={e=>setName(e.target.value)}/></label>
-   <label>{t('رقم الموبايل (اختياري وغير مؤكد)','Phone (optional, unverified)')}<input type="tel" inputMode="tel" value={phone} onChange={e=>setPhone(e.target.value)}/></label>
+   <label>{t('رقم الموبايل (اختياري)','Phone (optional)')}<input type="tel" inputMode="tel" value={phone} onChange={e=>setPhone(e.target.value)}/></label>
+   <p>{t('الرقم للتواصل فقط. بنراجع صيغته؛ تأكيد ملكيته برسالة SMS مؤجل دلوقتي.','Phone is for contact only. Its format is checked; SMS verification of ownership is postponed.')}</p>
    <button type="button" className="d-primary" disabled={busy} onClick={()=>void save()}>{busy?t('جارٍ الحفظ…','Saving…'):t('حفظ بياناتي','Save profile')}</button>
   </>}
  </section>;
