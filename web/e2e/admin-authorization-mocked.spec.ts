@@ -11,7 +11,7 @@ const user={
  // Prove a user-editable role claim does not grant Admin privileges.
  user_metadata:{role:'admin',full_name:'QA Fixture'}
 };
-type Fixture={isAdmin:boolean;adminUnavailable?:boolean;delayUserMs?:number};
+type Fixture={isAdmin:boolean;adminUnavailable?:boolean;userUnavailable?:boolean;delayUserMs?:number};
 async function setup(page:Page,fixture:Fixture,language:'ar'|'en',theme:'light'|'dark'){
  await page.addInitScript(({endpoint,user,language,theme})=>{
   const storage='sb-'+new URL(endpoint).hostname.split('.')[0]+'-auth-token';
@@ -30,7 +30,8 @@ async function setup(page:Page,fixture:Fixture,language:'ar'|'en',theme:'light'|
   let status=200;
   if(path==='/auth/v1/user'){
    if(fixture.delayUserMs)await new Promise(resolve=>setTimeout(resolve,fixture.delayUserMs));
-   result=user;
+   if(fixture.userUnavailable){status=503;result={code:'TEST_UNAVAILABLE',message:'Fixture identity endpoint offline'};}
+   else result=user;
   }
   else if(path==='/rest/v1/rpc/v31_is_admin'){
    if(fixture.adminUnavailable){status=503;result={code:'TEST_UNAVAILABLE',message:'Fixture RPC offline'};}
@@ -179,6 +180,19 @@ test('MOCKED profile gate waits for verified session without showing guest Googl
  await expect(page.getByText('Loading account…')).toBeVisible();
  await expect(page.getByRole('button',{name:'Sign in with Google'})).toHaveCount(0);
  await expect(page.getByRole('button',{name:'Sign out'})).toBeVisible();
+});
+
+test('MOCKED failed identity verification blocks profile and offers retry',async({page})=>{
+ const fixture={isAdmin:false,userUnavailable:true};
+ await setup(page,fixture,'en','light');
+ await page.goto('/?tab=profile');
+ await expect(page.getByRole('button',{name:'Retry session'})).toBeVisible();
+ await expect(page.locator('.live-profile')).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'Sign out'})).toHaveCount(0);
+ fixture.userUnavailable=false;
+ await page.getByRole('button',{name:'Retry session'}).click();
+ await expect(page.getByRole('button',{name:'Sign out'})).toBeVisible();
+ await expect(page.locator('.live-profile')).toBeVisible();
 });
 
 // Simulated PostgREST persistence, not a Staging user-session test.
