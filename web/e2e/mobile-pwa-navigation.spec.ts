@@ -58,6 +58,7 @@ for(const language of ['ar','en'] as const){
   expect(position).not.toBeNull();
   expect(position!.x+position!.width/2).toBeLessThan(180);
   await trigger.click();
+  await expect(trigger).toHaveAttribute('aria-expanded','true');
   const drawer=page.getByRole('dialog',{name:language==='ar'?'القائمة الرئيسية':'Main menu'});
   await expect(drawer).toBeVisible();
   const bounds=await drawer.boundingBox();
