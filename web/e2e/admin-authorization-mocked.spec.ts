@@ -81,6 +81,29 @@ for(const width of [360,390]){
   }
  }
 }
+test('MOCKED narrow Admin header preserves both preference toggles and 44px hit targets',async({page})=>{
+ await page.setViewportSize({width:320,height:700});
+ await setup(page,{isAdmin:true},'en','dark');
+ await page.goto('/?tab=admin&view=62');
+ await expect(page.locator('.sekka-admin-entry')).toBeVisible();
+ await expect(page.locator('.sekka-mobile-header .sekka-language')).toBeVisible();
+ const theme=page.getByRole('button',{name:'Switch appearance'});
+ const language=page.getByRole('button',{name:'Switch to Arabic'});
+ for(const element of [theme,language]){
+  const box=await element.boundingBox();
+  expect(box).not.toBeNull();
+  expect(box!.width).toBeGreaterThanOrEqual(44);
+  expect(box!.height).toBeGreaterThanOrEqual(44);
+ }
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(321);
+ await language.click();
+ await expect(page.locator('html')).toHaveAttribute('dir','rtl');
+ await theme.click();
+ await expect(page.locator('html')).toHaveAttribute('data-theme','light');
+ await expect(page.locator('.sekka-admin-entry')).toBeVisible();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(321);
+});
+
 test('mocked passenger cannot gain Admin via editable metadata or direct URL',async({page})=>{
  await setup(page,{isAdmin:false},'en','light');
  await page.goto('/?tab=admin&view=64');
