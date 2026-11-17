@@ -4,7 +4,7 @@ import {enrollCaptain} from './captainEnrollment';
 import LiveVehicles from './LiveVehicles';
 import {usePreferences} from './preferences';
 import {
- captainPersonalErrors,captainVehicleErrors,normalizeNumerals
+ captainPersonalErrors,captainVehicleErrors,normalizeNumerals,canonicalEgyptianPlate
 } from './captainValidation';
 import type {
  CaptainFieldError,CaptainPersonalField,CaptainVehicleField
@@ -69,6 +69,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
  const [loadError,setLoadError]=useState(''),[showPersonalErrors,setShowPersonalErrors]=useState(false);
  const [showVehicleErrors,setShowVehicleErrors]=useState(false);
  const [notice,setNotice]=useState(''),[loading,setLoading]=useState(true),[revision,setRevision]=useState(0);
+ const [uploadingKind,setUploadingKind]=useState<string|null>(null),[uploadError,setUploadError]=useState(''),[uploadErrorKind,setUploadErrorKind]=useState<string|null>(null);
  const currentYear=new Date().getFullYear();
  const availableYears=useMemo(()=>Array.from({length:currentYear-1979},(_,i)=>String(currentYear-i)),[currentYear]);
  const requiredKinds=documentKinds.map(([kind])=>kind);
@@ -111,7 +112,8 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
     const app=appResult.data as Application|null;
     setUid(user.id);setApplication(app);setDocs((docsResult.data||[]) as DocumentRow[]);
     setApproval(profileResult.data?.approval_status||'not_enrolled');
-    setMakes((makesResult.data||[]) as CatalogItem[]);setColors((colorsResult.data||[]) as ColorItem[]);
+    setMakes((makesResult.data||[]) as CatalogItem[]);
+    setColors(((colorsResult.data||[]) as ColorItem[]).sort((a,b)=>Number(a.code==='other')-Number(b.code==='other')));
     if(app){
      setFullName(app.full_name||'');setPhone(app.phone_number||'');
      setNotes(app.professional_notes||'');setYears(app.experience_years===null?'':String(app.experience_years));
@@ -170,7 +172,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
   const messages:Record<CaptainPersonalField,Record<CaptainFieldError,[string,string]>>={
    fullName:{
     required:['اكتب اسمك بالكامل.','Enter your full name.'],
-    invalid:['اكتب الاسم الأول واسم العائلة.','Enter both your first and last name.']
+    invalid:['اكتب 3 أسماء على الأقل زي المكتوب في البطاقة.','Enter at least three names matching your ID.']
    },
    phone:{
     required:['اكتب رقم موبايلك.','Enter your mobile number.'],
@@ -178,11 +180,11 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
    },
    professionalBackground:{
     required:['اكتب نبذة قصيرة عن خبرتك المهنية.','Add a short professional background.'],
-    invalid:['اكتب 3 أحرف على الأقل عن خبرتك المهنية.','Enter at least 3 characters about your professional background.']
+    invalid:['اكتب وصفًا واضحًا من 3 كلمات و15 حرفًا على الأقل، مش حروف عشوائية.','Write a meaningful description of at least three words and 15 characters.']
    },
    experienceYears:{
     required:['اكتب عدد سنين الخبرة؛ ينفع 0.','Enter your years of experience; 0 is valid.'],
-    invalid:['اكتب عددًا صحيحًا من 0 إلى 80.','Enter a whole number from 0 to 80.']
+    invalid:['اكتب عددًا صحيحًا من 0 إلى 30.','Enter a whole number from 0 to 30.']
    }
   };
   const [ar,enMessage]=messages[field][error];
@@ -196,7 +198,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
    year:{required:['اختار سنة الصنع.','Select the manufacture year.'],invalid:['اختار سنة من 1980 لحد السنة الحالية.','Choose a year from 1980 through the current year.']},
    colorCode:{required:['اختار لون العربية.','Select a vehicle color.'],invalid:['اختار لونًا من القائمة.','Choose a color from the list.']},
    colorOther:{required:['اكتب لون العربية.','Enter the vehicle color.'],invalid:['اكتب لونًا من حرفين على الأقل.','Enter a color with at least 2 characters.']},
-   plate:{required:['اكتب رقم لوحة العربية.','Enter the license plate number.'],invalid:['اكتب رقم لوحة صحيح.','Enter a valid license plate number.']}
+   plate:{required:['اكتب رقم لوحة العربية.','Enter the license plate number.'],invalid:['لوحة عادية: القاهرة 3 حروف و3 أرقام، الجيزة حرفين و4 أرقام، وباقي المحافظات 3 حروف و4 أرقام.','Standard plate: Cairo 3 letters/3 digits, Giza 2 letters/4 digits, other governorates 3 letters/4 digits.']}
   };
   const [ar,enMessage]=messages[field][error];
   return t(ar,enMessage);
@@ -253,7 +255,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
     p_vehicle_type:vehicleType||null,p_make_id:makeId?Number(makeId):null,
     p_model_id:modelId?Number(modelId):null,p_year:year?Number(year):null,
     p_color_code:colorCode||null,p_color_other:colorCode==='other'?colorOther.trim():null,
-    p_plate:plate.trim()||null
+    p_plate:plate.trim()?canonicalEgyptianPlate(plate):null
    });
    if(saveError)throw saveError;expectRpc(data,'draft');
    const saved=await readSavedApplication();
@@ -264,7 +266,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
       saved.manufacture_year!==(year?Number(year):null)||
       saved.vehicle_color_code!==(colorCode||null)||
       saved.vehicle_color_other!==normalizedColorOther||
-      saved.intended_plate!==(plate.trim()||null))throw Error('DRAFT_SAVE_NOT_VERIFIED');
+      saved.intended_plate!==(plate.trim()?canonicalEgyptianPlate(plate):null))throw Error('DRAFT_SAVE_NOT_VERIFIED');
    if(next)onNext(38);else setNotice(t('اتحفظت بيانات العربية، وتقدر تكمّل بعدين.','Vehicle details saved. You can continue later.'));
   });
  };
@@ -280,7 +282,10 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
   if(!saved||saved.status!=='draft')throw Error('DRAFT_SAVE_NOT_VERIFIED');
   onEnrolled?.();onNext(36);
  });
- const upload=(kind:string,file:File)=>void run(async()=>{
+ const upload=(kind:string,file:File)=>{
+  setUploadingKind(kind);setUploadError('');setUploadErrorKind(kind);
+  void run(async()=>{
+   try{
   if(!uid||!client)throw Error('AUTH_REQUIRED');
   if(!['image/jpeg','image/png','application/pdf'].includes(file.type)||file.size<1||file.size>5242880)
    throw Error(t('استخدم JPG أو PNG أو PDF بحد أقصى 5 ميجابايت.','Use JPG, PNG, or PDF up to 5 MB.'));
@@ -302,7 +307,9 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
   if(!registered)throw Error('DOCUMENT_NOT_REGISTERED');
   setDocs(current=>[registered as DocumentRow,...current.filter(doc=>doc.id!==registered.id)]);
   setNotice(t('اتحفظ المستند، تقدر تكمّل.','Document saved. You can continue.'));
- });
+   }catch(e){setUploadError(t('فشل رفع المستند. جرب JPG أو PNG أو PDF أقل من 5 ميجابايت.','Document upload failed. Try a JPG, PNG or PDF under 5 MB.')+' '+messageFor(e,t));throw e;}
+  }).finally(()=>setUploadingKind(null));
+ };
  const submit=()=>void run(async()=>{
   if(!personalComplete||!vehicleComplete||!hasDocuments)
    throw Error(!personalComplete?'CAPTAIN_PROFILE_INCOMPLETE':!vehicleComplete?'CAPTAIN_VEHICLE_INCOMPLETE':'CAPTAIN_DOCUMENTS_INCOMPLETE');
@@ -349,36 +356,37 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
   </div>}
   {!loading&&!loadError&&application&&screen===36&&<div className="d-box c-registration-form">
    <h2>{t('البيانات الشخصية والخبرة','Personal details and experience')}</h2>
-   <label htmlFor="captain-fullName">{t('الاسم بالكامل','Full name')}
+   <label htmlFor="captain-fullName">{t('الاسم الثلاثي على الأقل — مطابق للبطاقة','Full name (at least 3 names, matching ID)')}
     <input id="captain-fullName" autoComplete="name" maxLength={100} value={fullName} disabled={!editable}
      aria-invalid={Boolean(visiblePersonalErrors.fullName)}
      aria-describedby={visiblePersonalErrors.fullName?'captain-fullName-error':undefined}
-     onChange={event=>setFullName(event.target.value)}/>
+     onChange={event=>setFullName(event.target.value)} onBlur={()=>setShowPersonalErrors(true)}/>
     {visiblePersonalErrors.fullName&&<span id="captain-fullName-error" className="c-field-error" role="alert">
      {personalErrorText('fullName',visiblePersonalErrors.fullName)}</span>}
    </label>
-   <label htmlFor="captain-phone">{t('رقم الموبايل المصري (غير مؤكد)','Egyptian mobile number (unverified)')}
+   <label htmlFor="captain-phone">{t('رقم الموبايل المصري','Egyptian mobile number')}
     <input id="captain-phone" type="tel" inputMode="tel" autoComplete="tel-national" maxLength={16}
      value={phone} disabled={!editable} aria-invalid={Boolean(visiblePersonalErrors.phone)}
      aria-describedby={visiblePersonalErrors.phone?'captain-phone-error':undefined}
-     onChange={event=>setPhone(event.target.value)}/>
+     onChange={event=>setPhone(event.target.value)} onBlur={()=>setShowPersonalErrors(true)}/>
     {visiblePersonalErrors.phone&&<span id="captain-phone-error" className="c-field-error" role="alert">
      {personalErrorText('phone',visiblePersonalErrors.phone)}</span>}
    </label>
-   <p>{t('رقم الموبايل مطلوب، لكن مش هيتأكد دلوقتي.','Your phone number is required but will not be verified yet.')}</p>
+   <p className="c-form-hint">{t('الرقم مطلوب للتواصل. بنراجع صيغته فقط؛ تأكيد ملكيته برسالة SMS مؤجّل حاليًا.','The phone is for contact. Its format is checked, but SMS ownership verification is postponed; the number is unverified.')}</p>
    <label htmlFor="captain-professionalBackground">{t('الخلفية المهنية','Professional background')}
     <textarea id="captain-professionalBackground" maxLength={1000} value={notes} disabled={!editable}
      aria-invalid={Boolean(visiblePersonalErrors.professionalBackground)}
      aria-describedby={visiblePersonalErrors.professionalBackground?'captain-professionalBackground-error':undefined}
-     onChange={event=>setNotes(event.target.value)}/>
+     onChange={event=>setNotes(event.target.value)} onBlur={()=>setShowPersonalErrors(true)}/>
     {visiblePersonalErrors.professionalBackground&&<span id="captain-professionalBackground-error" className="c-field-error" role="alert">
      {personalErrorText('professionalBackground',visiblePersonalErrors.professionalBackground)}</span>}
    </label>
+   <p className="c-form-hint">{t('اكتب جملة عن خبرتك في القيادة؛ مثال: بشتغل في نقل الركاب وبحافظ على المواعيد وسلامة الركاب.','Write one sentence about your work and driving experience; e.g. I drive passengers on regular routes and prioritize safety and punctuality.')}</p>
    <label htmlFor="captain-experienceYears">{t('سنوات الخبرة','Years of experience')}
-    <input id="captain-experienceYears" type="number" inputMode="numeric" min={0} max={80} step={1}
+    <input id="captain-experienceYears" type="number" inputMode="numeric" min={0} max={30} step={1}
      value={years} disabled={!editable} aria-invalid={Boolean(visiblePersonalErrors.experienceYears)}
      aria-describedby={visiblePersonalErrors.experienceYears?'captain-experienceYears-error':undefined}
-     onChange={event=>setYears(normalizeNumerals(event.target.value))}/>
+     onChange={event=>setYears(normalizeNumerals(event.target.value))} onBlur={()=>setShowPersonalErrors(true)}/>
     {visiblePersonalErrors.experienceYears&&<span id="captain-experienceYears-error" className="c-field-error" role="alert">
      {personalErrorText('experienceYears',visiblePersonalErrors.experienceYears)}</span>}
    </label>
@@ -472,14 +480,15 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
     {visibleVehicleErrors.colorOther&&<span id="captain-colorOther-error" className="c-field-error" role="alert">
      {vehicleErrorText('colorOther',visibleVehicleErrors.colorOther)}</span>}
    </label>}
-   <label htmlFor="captain-plate">{t('رقم لوحة المركبة','License plate number')}
+   <label htmlFor="captain-plate">{t('لوحة العربية (حروف وأرقام)','License plate number (letters and digits)')}
     <input id="captain-plate" autoCapitalize="characters" maxLength={24} value={plate} disabled={!editable}
      aria-invalid={Boolean(visibleVehicleErrors.plate)}
      aria-describedby={visibleVehicleErrors.plate?'captain-plate-error':undefined}
-     onChange={event=>setPlate(event.target.value)}/>
+     onChange={event=>setPlate(normalizeNumerals(event.target.value))} onBlur={()=>setShowVehicleErrors(true)}/>
     {visibleVehicleErrors.plate&&<span id="captain-plate-error" className="c-field-error" role="alert">
      {vehicleErrorText('plate',visibleVehicleErrors.plate)}</span>}
    </label>
+   <p className="c-form-hint">{t('مثال: القاهرة أ ب ج 123، الجيزة م س 6587. المسافات اختيارية.','Examples: Cairo أ ب ج 123, Giza م س 6587. Spaces are optional.')}</p>
    {editable&&<div className="c-registration-actions">
     <button type="button" disabled={busy} onClick={()=>void saveVehicle(false)}>{t('حفظ واستكمال لاحقًا','Save for later')}</button>
     <button type="button" className="d-primary" disabled={busy}
@@ -503,7 +512,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
      <label className="c-file-picker">
       <span className="c-file-picker-button">{t('اختيار ملف','Choose file')}</span>
       <span className="c-file-picker-name" aria-live="polite">
-       {saved?t('يوجد ملف محفوظ','A file is saved'):t('لم يتم اختيار ملف','No file selected')}
+       {uploadingKind===kind?t('جارٍ الرفع والتحقق…','Uploading and verifying…'):saved?t('يوجد ملف محفوظ','A file is saved'):t('اضغط لاختيار ملف','Tap to select a file')}
       </span>
       <input className="c-file-native" type="file" aria-label={t(ar,label)}
        accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
@@ -511,6 +520,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
         const file=event.target.files?.[0];if(file)upload(kind,file);event.target.value='';
        }}/>
      </label>
+     {uploadError&&uploadErrorKind===kind&&uploadingKind===null&&<p className="c-field-error" role="alert">{uploadError}</p>}
     </div>;
    })}
    <p role="status">{documentProgress}/4 {t('مستندات مطلوبة مكتملة','required documents complete')}</p>

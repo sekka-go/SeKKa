@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
- captainPersonalErrors,captainVehicleErrors,normalizeNumerals
+ captainPersonalErrors,captainVehicleErrors,normalizeNumerals,canonicalEgyptianPlate
 } from './captainValidation.ts';
 
 const valid={
- fullName:'Mona Hassan',
+ fullName:'Mona Hassan Ali',
  phone:'01012345678',
- professionalBackground:'Daily route captain',
+ professionalBackground:'Experienced driver on daily passenger routes',
  experienceYears:'0'
 };
 
@@ -34,6 +34,11 @@ test('distinguishes blank draft fields from invalid entered values',()=>{
   fullName:'required',phone:'required',professionalBackground:'required',experienceYears:'required'
  });
  assert.equal(captainPersonalErrors({...valid,experienceYears:'-1'}).experienceYears,'invalid');
+ assert.equal(captainPersonalErrors({...valid,experienceYears:'31'}).experienceYears,'invalid');
+ assert.equal(captainPersonalErrors({...valid,experienceYears:'30'}).experienceYears,undefined);
+ assert.equal(captainPersonalErrors({...valid,fullName:'Mona Hassan'}).fullName,'invalid');
+ assert.equal(captainPersonalErrors({...valid,professionalBackground:'abcdef'}).professionalBackground,'invalid');
+ assert.equal(captainPersonalErrors({...valid,professionalBackground:'كلام كلام كلام'}).professionalBackground,'invalid');
 });
 
 test('requires a valid selected vehicle and rejects out-of-range years or malformed plates',()=>{
@@ -48,4 +53,17 @@ test('requires a valid selected vehicle and rejects out-of-range years or malfor
   year:'invalid',colorOther:'required',plate:'invalid'
  });
  assert.equal(captainVehicleErrors({...vehicle,year:''},2026).year,'required');
+});
+
+test('ordinary Egyptian plate patterns: Cairo, Giza and other governorates',()=>{
+ for(const plate of ['أ ب ج ١٢٣','م س ٦٥٨٧','س ص ج 6541','123 أ ب ج','م-س-6587']){
+  const v={vehicleType:'private_car',makeId:'1',modelId:'2',year:'2020',colorCode:'white',colorOther:'',plate};
+  assert.equal(captainVehicleErrors(v,2026).plate,undefined,plate);
+ }
+ for(const plate of ['عبث','ABCD','12345','أب1234','أبجد1234','أبج12345','ابج12']){
+  const v={vehicleType:'private_car',makeId:'1',modelId:'2',year:'2020',colorCode:'white',colorOther:'',plate};
+  assert.equal(captainVehicleErrors(v,2026).plate,'invalid',plate);
+ }
+ assert.equal(canonicalEgyptianPlate('١٢٣ أ ب ج'),'أبج123');
+ assert.equal(canonicalEgyptianPlate('٦٥٨٧ م س'),'مس6587');
 });

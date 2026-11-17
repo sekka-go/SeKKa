@@ -92,7 +92,7 @@ test('booking locks the physical vehicle and accounts for reservations across al
 test('Captain screens require all fields, preserve explicit zero, and distinguish unverified phone',()=>{
  assert.match(enrollment,/captainPersonalErrors/);
  assert.match(enrollment,/normalizeNumerals/);
- assert.match(captainValidation,/Number\.isInteger\(number\) \|\| number < 0 \|\| number > 80/);
+ assert.match(captainValidation,/Number\.isInteger\(number\) \|\| number < 0 \|\| number > 30/);
  assert.match(enrollment,/captain-fullName-error/);
  assert.match(enrollment,/captain-phone-error/);
  assert.match(enrollment,/captain-professionalBackground-error/);

@@ -322,3 +322,24 @@ html[data-theme="dark"] .captain-onboarding-canvas .c-registration-form [aria-in
     grid-template-columns:1fr;
   }
 }
+
+
+/* Production Captain document picker: expose a real full-size tap target in
+ * Android/iOS PWA; old .c-canvas rules did not match this production canvas. */
+.captain-onboarding-canvas .c-file-picker {
+ position:relative; display:flex; align-items:center; gap:12px; min-width:0;
+ min-height:48px; padding:8px 10px; border:1px solid var(--d-line);
+ border-radius:12px; background:var(--phase-card); cursor:pointer;
+}
+.captain-onboarding-canvas .c-file-picker-button {
+ flex:0 0 auto; padding:8px 12px; border-radius:9px;
+ background:#ffc400; color:#171c22; font-weight:900; pointer-events:none;
+}
+.captain-onboarding-canvas .c-file-picker-name { min-width:0; overflow-wrap:anywhere; pointer-events:none; }
+.captain-onboarding-canvas .c-file-native {
+ position:absolute; inset:0; width:100%; height:100%; opacity:0;
+ cursor:pointer; z-index:1; font-size:16px;
+}
+.captain-onboarding-canvas .c-file-picker:focus-within {
+ outline:3px solid #ffc400; outline-offset:2px;
+}
