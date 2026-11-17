@@ -6,17 +6,21 @@ type OfferRow={id:string;request_id:string;captain_id:string;route_id:string;sta
 type RouteRow={id:string;title:string};
 type Area={id:number;name_ar:string;name_en:string};
 type Search={origin:string;destination:string;outbound:string;period:string};
-export default function LiveTripRequests({mode,search}:{mode:'rider'|'captain';search?:Search}){
+export default function LiveTripRequests({mode,search,onSignIn}:{mode:'rider'|'captain';search?:Search;onSignIn?:()=>void}){
  const {language}=usePreferences(),en=language==='en',t=(ar:string,english:string)=>en?english:ar;
  const [uid,setUid]=useState(''),[requests,setRequests]=useState<RequestRow[]>([]),[offers,setOffers]=useState<OfferRow[]>([]),[areas,setAreas]=useState<Area[]>([]),[routes,setRoutes]=useState<RouteRow[]>([]);
  const [seats,setSeats]=useState(1),[routeSelection,setRouteSelection]=useState<Record<string,string>>({});
+ const [requestPeriod,setRequestPeriod]=useState<'weekly'|'monthly'>(search?.period==='weekly'?'weekly':'monthly');
+ const [requestTime,setRequestTime]=useState(search?.outbound||'07:30');
  const [key,setKey]=useState(()=>crypto.randomUUID()),[busy,setBusy]=useState(false),[loading,setLoading]=useState(true),[error,setError]=useState(''),[notice,setNotice]=useState(''),[revision,setRevision]=useState(0);
  const refresh=()=>{setLoading(true);setRevision(v=>v+1);};
  useEffect(()=>{let active=true;void(async()=>{
   try{
    if(!client)throw Error('BACKEND_NOT_CONFIGURED');
    const {data:{user},error:authError}=await client.auth.getUser();
-   if(authError||!user)throw Error('AUTH_REQUIRED');
+   if(authError)throw authError;
+   if(!user&&mode==='rider'){if(active){setUid('');setRequests([]);}return;}
+   if(!user)throw Error('AUTH_REQUIRED');
    const [areasResult,requestResult,routesResult]=await Promise.all([
     client.from('v31_service_areas').select('id,name_ar,name_en').eq('active',true),
     client.from('v31_trip_requests').select('id,rider_id,origin_area_id,destination_area_id,outbound_time,period,seats,status').order('created_at',{ascending:false}).limit(100),
@@ -35,8 +39,28 @@ export default function LiveTripRequests({mode,search}:{mode:'rider'|'captain';s
  const create=async()=>{
   if(!client||!search)return;
   const from=areas.find(a=>a.name_ar===search.origin||a.name_en===search.origin),to=areas.find(a=>a.name_ar===search.destination||a.name_en===search.destination);
-  if(!from||!to||from.id===to.id||!/^\d{2}:\d{2}$/.test(search.outbound)||!['weekly','monthly'].includes(search.period)){setError(t('راجع بيانات البحث قبل الطلب.','Review your search details before requesting.'));return;}
-  await action(async()=>{const {error:insertError}=await client!.from('v31_trip_requests').insert({rider_id:uid,origin_area_id:from.id,destination_area_id:to.id,outbound_time:search.outbound,period:search.period,seats,request_key:key});if(insertError&&insertError.code!=='23505')throw insertError;setNotice(t('طلبك اتحفظ. ده مش حجز مقعد.','Request saved. This is not a seat reservation.'));setKey(crypto.randomUUID());});
+  if(!uid){onSignIn?.();return;}
+  if(!from||!to||from.id===to.id||!/^([01]\d|2[0-3]):[0-5]\d$/.test(requestTime)||!['weekly','monthly'].includes(requestPeriod)){
+   setError(t('راجع المناطق ووقت الذهاب ومدة الاشتراك قبل إرسال الطلب.','Check the areas, departure time and subscription period.'));return;
+  }
+  await action(async()=>{
+   const {error:insertError}=await client!.from('v31_trip_requests').insert({
+    rider_id:uid,origin_area_id:from.id,destination_area_id:to.id,
+    outbound_time:requestTime,period:requestPeriod,seats,request_key:key
+   });
+   if(insertError&&insertError.code!=='23505')throw insertError;
+   // The same idempotency key can already exist after a network retry.
+   // Never announce success without reading an owned, matching server row.
+   const {data:saved,error:verifyError}=await client!.from('v31_trip_requests')
+    .select('id,rider_id,origin_area_id,destination_area_id,outbound_time,period,seats')
+    .eq('rider_id',uid).eq('request_key',key).maybeSingle();
+   if(verifyError||!saved||saved.rider_id!==uid||
+     saved.origin_area_id!==from.id||saved.destination_area_id!==to.id||
+     saved.outbound_time.slice(0,5)!==requestTime||
+     saved.period!==requestPeriod||saved.seats!==seats)throw Error('REQUEST_SAVE_NOT_VERIFIED');
+   setNotice(t('اتحفظ طلب رحلتك فعلًا، وتقدر تتابعه هنا. ده مش حجز مقعد.','Your trip request is saved and appears here. This is not a seat booking.'));
+   setKey(crypto.randomUUID());
+  });
  };
  const sendOffer=async(id:string)=>{
   if(!client)return;
@@ -54,11 +78,14 @@ export default function LiveTripRequests({mode,search}:{mode:'rider'|'captain';s
   {error&&<div role="alert"><p>{error}</p><button type="button" onClick={()=>{setError('');refresh();}}>{t('إعادة المحاولة','Retry')}</button></div>}
   {notice&&<p role="status">{notice}</p>}
   {!loading&&visible.length===0&&<p>{t('مفيش طلبات حاليًا.','No requests yet.')}</p>}
-  {mode==='rider'&&search&&!loading&&<div>
+  {mode==='rider'&&search&&!loading&&!uid&&<div className="d-feedback"><p>{t('سجّل بجوجل علشان تحفظ طلب رحلتك. البحث متاح من غير حساب.','Sign in with Google to save your trip request. Searching does not require an account.')}</p><button type="button" onClick={onSignIn}>{t('تسجيل الدخول والمتابعة','Sign in and continue')}</button></div>}
+  {mode==='rider'&&search&&!loading&&Boolean(uid)&&<div>
    <h3>{t('لم تجد خطًا؟ راجع بيانات طلبك','No match? Review your request')}</h3>
-   <p>{search.origin} ← {search.destination} · {search.outbound} · {search.period}</p>
+   <p>{search.origin} ← {search.destination}</p>
+   <label>{t('وقت الذهاب','Departure time')}<input type="time" value={requestTime} onChange={e=>setRequestTime(e.target.value)} required/></label>
+   <label>{t('مدة الاشتراك','Subscription period')}<select value={requestPeriod} onChange={e=>setRequestPeriod(e.target.value as 'weekly'|'monthly')}><option value="weekly">{t('أسبوعي','Weekly')}</option><option value="monthly">{t('شهري','Monthly')}</option></select></label>
    <label>{t('عدد المقاعد المطلوبة','Seats needed')}<input type="number" min={1} max={13} value={seats} onChange={e=>setSeats(Number(e.target.value))}/></label>
-   <button type="button" disabled={busy||!Number.isInteger(seats)||seats<1||seats>13} onClick={()=>void create()}>{t('تأكيد طلب الرحلة','Confirm trip request')}</button>
+   <button type="button" disabled={busy||!Number.isInteger(seats)||seats<1||seats>13||!requestTime} onClick={()=>void create()}>{busy?t('جارٍ حفظ الطلب…','Saving request…'):t('تأكيد وحفظ طلب الرحلة','Confirm and save trip request')}</button>
    <p>{t('الطلب مش حجز ومفيش أي دفع.','Requesting does not reserve seats or charge money.')}</p>
   </div>}
   <ul>{visible.map(r=><li key={r.id}>
