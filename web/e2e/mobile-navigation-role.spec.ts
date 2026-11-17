@@ -38,6 +38,22 @@ test('direct profile-completion links require Google authentication first',async
  await expect(page).toHaveURL(/tab=login&view=4/);
 });
 
+test('guest account prerequisites preserve the actual Google return destination',async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('language_preference','en'));
+ const cases=[
+  {tab:'bookings',button:'Sign in',returnPath:'/?tab=bookings'},
+  {tab:'notifications',button:'Sign in',returnPath:'/?tab=notifications'},
+  {tab:'profile',button:'Sign in with Google',returnPath:'/?tab=login&view=6'}
+ ] as const;
+ for(const item of cases){
+  await page.goto('/?tab='+item.tab);
+  await page.getByRole('button',{name:item.button,exact:true}).click();
+  await expect(page).toHaveURL(/tab=login&view=4/);
+  expect(await page.evaluate(()=>sessionStorage.getItem('sekka.pendingRole'))).toBe('rider');
+  expect(await page.evaluate(()=>sessionStorage.getItem('sekka.postAuthPath'))).toBe(item.returnPath);
+ }
+});
+
 for(const [width,height] of [[320,700],[360,800],[390,844],[412,915]] as const){
 test(`pending Captain profile stays in Passenger journey until explicit entry at ${width}px`,async({page})=>{
  await page.setViewportSize({width,height});
