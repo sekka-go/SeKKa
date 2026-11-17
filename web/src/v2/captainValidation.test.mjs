@@ -60,7 +60,7 @@ test('ordinary Egyptian plate patterns: Cairo, Giza and other governorates',()=>
   const v={vehicleType:'private_car',makeId:'1',modelId:'2',year:'2020',colorCode:'white',colorOther:'',plate};
   assert.equal(captainVehicleErrors(v,2026).plate,undefined,plate);
  }
- for(const plate of ['عبث','ABCD','12345','أب1234','أبجد1234','أبج12345','ابج12']){
+ for(const plate of ['عبث','ABCD','12345','أب123','أبجد1234','أبج12345','ابج12']){
   const v={vehicleType:'private_car',makeId:'1',modelId:'2',year:'2020',colorCode:'white',colorOther:'',plate};
   assert.equal(captainVehicleErrors(v,2026).plate,'invalid',plate);
  }
