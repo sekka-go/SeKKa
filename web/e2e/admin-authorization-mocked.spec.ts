@@ -11,7 +11,7 @@ const user={
  // Prove a user-editable role claim does not grant Admin privileges.
  user_metadata:{role:'admin',full_name:'QA Fixture'}
 };
-type Fixture={isAdmin:boolean;adminUnavailable?:boolean};
+type Fixture={isAdmin:boolean;adminUnavailable?:boolean;delayUserMs?:number};
 async function setup(page:Page,fixture:Fixture,language:'ar'|'en',theme:'light'|'dark'){
  await page.addInitScript(({endpoint,user,language,theme})=>{
   const storage='sb-'+new URL(endpoint).hostname.split('.')[0]+'-auth-token';
@@ -28,7 +28,10 @@ async function setup(page:Page,fixture:Fixture,language:'ar'|'en',theme:'light'|
   const path=url.pathname;
   let result:unknown=[];
   let status=200;
-  if(path==='/auth/v1/user')result=user;
+  if(path==='/auth/v1/user'){
+   if(fixture.delayUserMs)await new Promise(resolve=>setTimeout(resolve,fixture.delayUserMs));
+   result=user;
+  }
   else if(path==='/rest/v1/rpc/v31_is_admin'){
    if(fixture.adminUnavailable){status=503;result={code:'TEST_UNAVAILABLE',message:'Fixture RPC offline'};}
    else result=fixture.isAdmin;
@@ -97,6 +100,44 @@ test('mocked failed Admin RPC shows retry, never silently treats permission as f
  await page.getByRole('button',{name:'Retry authorization'}).click();
  await expect(page.getByRole('button',{name:'Admin dashboard'})).toBeVisible();
  await expect(page).toHaveURL(/tab=admin/);
+});
+
+// Phase 02 routing regression fixtures: this never simulates a real Google
+// OAuth callback or asserts server-side permissions. Real Staging E2E is pending.
+test('MOCKED verified Admin returning to S006 after Google goes to Admin dashboard',async({page})=>{
+ await setup(page,{isAdmin:true},'en','light');
+ await page.goto('/?tab=login&view=6&oauth_role=rider');
+ await expect(page).toHaveURL(/tab=admin&view=62/);
+ await expect(page.locator('.admin-stage')).toBeVisible();
+ await expect(page.getByRole('button',{name:'Admin dashboard'})).toBeVisible();
+ await page.reload();
+ await expect(page).toHaveURL(/tab=admin&view=62/);
+ await expect(page.locator('.admin-stage')).toBeVisible();
+});
+
+test('MOCKED non-Admin Google completion cannot access Admin dashboard',async({page})=>{
+ await setup(page,{isAdmin:false},'en','light');
+ await page.goto('/?tab=login&view=6&oauth_role=rider');
+ await expect(page.locator('.phase-screen-6')).toBeVisible();
+ await expect(page.getByRole('button',{name:'Admin dashboard'})).toHaveCount(0);
+});
+
+test('MOCKED verified Admin explicit destination is never replaced by Admin home',async({page})=>{
+ await setup(page,{isAdmin:true},'en','light');
+ await page.goto('/?tab=bookings');
+ await expect(page).toHaveURL(/tab=bookings/);
+ await expect(page.locator('.admin-stage')).toHaveCount(0);
+ await page.goto('/?tab=admin&view=65');
+ await expect(page).toHaveURL(/tab=admin&view=65/);
+ await expect(page.locator('.admin-stage')).toBeVisible();
+});
+
+test('MOCKED profile gate waits for verified session without showing guest Google CTA',async({page})=>{
+ await setup(page,{isAdmin:false,delayUserMs:750},'en','light');
+ await page.goto('/?tab=profile');
+ await expect(page.getByText('Loading account…')).toBeVisible();
+ await expect(page.getByRole('button',{name:'Sign in with Google'})).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'Sign out'})).toBeVisible();
 });
 
 /*
