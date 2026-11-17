@@ -333,7 +333,7 @@ export default function MobileApp(){
  const fullScreenSearch=tab==='search'&&discoveryScreen===9;
  return <div className={`sekka-mobile sekka-tab-${tab}${fullScreenSearchFilters?' sekka-search-filters':''}${fullScreenAuth?' sekka-fullscreen-auth':''}${fullScreenSearch?' sekka-fullscreen-search':''}${!userId&&tab==='home'?' sekka-guest-welcome':''}`} dir={en?'ltr':'rtl'}>
   <a className="sekka-skip" href="#sekka-content">{t('تخطي للمحتوى','Skip to content')}</a>
-  <header className="sekka-mobile-header">
+  <header className={`sekka-mobile-header${ready&&admin?' sekka-mobile-header-admin':''}`}>
    <button className="sekka-brand-button" onClick={()=>navigate({tab:'home'})} aria-label={t('الرئيسية','Home')}><img className="sekka-approved-logo" src="/brand/sekka-icon-192.png" alt="سِكّة — seKKa"/></button>
    <span>{t('مشوارك، على سِكّة','Your ride, your route')}</span>
    {ready&&admin&&<button type="button" className="sekka-admin-entry" aria-current={tab==='admin'?'page':undefined}

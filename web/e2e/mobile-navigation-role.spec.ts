@@ -60,6 +60,37 @@ for(const width of [320,390]){
  });
 }
 
+for(const language of ['ar','en'] as const){
+ for(const width of [320,390]){
+  test('header logo centered and language at the '+(language==='ar'?'right':'left')+' edge '+width+'px',async({page})=>{
+   await page.setViewportSize({width,height:width===320?700:844});
+   await page.addInitScript(language=>{
+    localStorage.setItem('language_preference',language);
+    localStorage.setItem('theme_preference','light');
+   },language);
+   await page.goto('/?tab=profile');
+   const brand=page.locator('.sekka-mobile-header .sekka-brand-button');
+   const languageButton=page.locator('.sekka-mobile-header .sekka-language');
+   const themeButton=page.locator('.sekka-mobile-header .sekka-theme:not(.sekka-language)');
+   await expect(brand).toBeVisible();
+   await expect(languageButton).toBeVisible();
+   const b=await brand.boundingBox(),l=await languageButton.boundingBox(),t=await themeButton.boundingBox();
+   expect(b&&l&&t).toBeTruthy();
+   expect(Math.abs(b!.x+b!.width/2-width/2),'logo must be centered on full viewport').toBeLessThanOrEqual(1.5);
+   expect(l!.width).toBeGreaterThanOrEqual(44);
+   expect(t!.width).toBeGreaterThanOrEqual(44);
+   if(language==='ar'){
+    expect(l!.x,'language on physical right when Arabic').toBeGreaterThan(b!.x+b!.width);
+    expect(t!.x+t!.width,'theme on physical left').toBeLessThan(b!.x);
+   }else{
+    expect(l!.x+l!.width,'language on physical left when English').toBeLessThan(b!.x);
+    expect(t!.x,'theme on physical right').toBeGreaterThan(b!.x+b!.width);
+   }
+   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
+  });
+ }
+}
+
 test('direct profile-completion links require Google authentication first',async({page})=>{
  await page.goto('/?tab=login&view=6');
  await expect(page.locator('.phase-google-auth')).toBeVisible();

@@ -104,6 +104,24 @@ test('MOCKED narrow Admin header preserves both preference toggles and 44px hit 
  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(321);
 });
 
+for(const language of ['ar','en'] as const){
+ test('MOCKED Admin header keeps centered logo and separate Admin action at 320px '+language,async({page})=>{
+  await page.setViewportSize({width:320,height:700});
+  await setup(page,{isAdmin:true},language,'dark');
+  await page.goto('/?tab=admin&view=62');
+  const logo=await page.locator('.sekka-mobile-header .sekka-brand-button').boundingBox();
+  const entry=await page.locator('.sekka-mobile-header .sekka-admin-entry').boundingBox();
+  const globe=await page.locator('.sekka-mobile-header .sekka-language').boundingBox();
+  const appearance=await page.locator('.sekka-mobile-header .sekka-theme:not(.sekka-language)').boundingBox();
+  expect(logo&&entry&&globe&&appearance).toBeTruthy();
+  expect(Math.abs(logo!.x+logo!.width/2-160)).toBeLessThanOrEqual(1.5);
+  expect(entry!.y).toBeGreaterThanOrEqual(logo!.y+logo!.height);
+  expect(globe!.width).toBeGreaterThanOrEqual(44);
+  expect(appearance!.width).toBeGreaterThanOrEqual(44);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(321);
+ });
+}
+
 test('mocked passenger cannot gain Admin via editable metadata or direct URL',async({page})=>{
  await setup(page,{isAdmin:false},'en','light');
  await page.goto('/?tab=admin&view=64');
