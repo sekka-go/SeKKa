@@ -87,6 +87,7 @@ test(`pending Captain profile stays in Passenger journey until explicit entry at
   if(!localStorage.getItem('theme_preference'))localStorage.setItem('theme_preference','light');
  },{endpoint,user});
  let hasApplication=false;
+ let validApplication=false;
  await page.route(endpoint+'/**',async request=>{
   const url=new URL(request.request().url());
   const path=url.pathname;
@@ -96,11 +97,11 @@ test(`pending Captain profile stays in Passenger journey until explicit entry at
   else if(path.startsWith('/rest/v1/v31_captain_profiles'))
    result={user_id:userId,approval_status:'pending'};
   else if(path.startsWith('/rest/v1/v31_captain_applications'))result=hasApplication?{
-   user_id:userId,status:'draft',full_name:'Captain Fixture',phone_number:'01012345678',
-   professional_notes:'Safe travel',experience_years:0,rejection_reason:null,
+   user_id:userId,status:'draft',full_name:validApplication?'مونا حسن علي':'Captain Fixture',phone_number:'01012345678',
+   professional_notes:validApplication?'Professional driver committed to safe passenger transport':'Safe travel',experience_years:0,rejection_reason:null,
    vehicle_type:'private_car',vehicle_make_id:1,vehicle_model_id:1,
    manufacture_year:2020,vehicle_color_code:'white',vehicle_color_other:null,
-   intended_plate:'ABC123',
+   intended_plate:validApplication?'أبج123':'ABC123',
    submitted_at:null,reviewed_at:null
   }:null;
   else if(path.startsWith('/rest/v1/v31_vehicle_makes'))
@@ -141,16 +142,21 @@ test(`pending Captain profile stays in Passenger journey until explicit entry at
  await expect(page.locator('.c-file-picker')).toHaveCount(0);
  hasApplication=true;
  await page.goto('/?tab=captain-onboarding&view=38');
+ // A saved old draft does NOT bypass newly required name/experience/plate rules.
+ await expect(page.getByText('Complete the required personal details first.')).toBeVisible();
+ await expect(page.locator('.c-file-picker')).toHaveCount(0);
+ validApplication=true;
+ await page.goto('/?tab=captain-onboarding&view=38');
  const picker=page.locator('.c-file-picker').first();
  await expect(picker.locator('.c-file-picker-button')).toHaveText('Choose file');
- await expect(picker.locator('.c-file-picker-name')).toHaveText('No file selected');
+ await expect(picker.locator('.c-file-picker-name')).toHaveText('Tap to select a file');
  await expect(picker.locator('input[type=file]')).toHaveAttribute('aria-label','Identity proof');
 
  await page.evaluate(()=>localStorage.setItem('language_preference','ar'));
  await page.reload();
  await expect(page.locator('html')).toHaveAttribute('dir','rtl');
  await expect(page.locator('.c-file-picker').first().locator('.c-file-picker-button')).toHaveText('اختيار ملف');
- await expect(page.locator('.c-file-picker').first().locator('.c-file-picker-name')).toHaveText('لم يتم اختيار ملف');
+ await expect(page.locator('.c-file-picker').first().locator('.c-file-picker-name')).toHaveText('اضغط لاختيار ملف');
  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
  await page.screenshot({path:`test-results/mock-captain-document-upload-ar-${width}.png`,fullPage:true,animations:'disabled'});
 });
