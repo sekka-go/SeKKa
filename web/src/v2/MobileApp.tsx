@@ -80,7 +80,6 @@ export default function MobileApp(){
   history.replaceState(history.state,'',intended);
   navigate({tab:'login',view:4},{replace:true});
  // OAuth failure is handled on entry; avoid rerunning on language/theme changes.
- // eslint-disable-next-line react-hooks/exhaustive-deps
  },[]);
  useEffect(()=>{let active=true;const u=new URL(location.href);
   const route=u.searchParams.get('route'),pickup=u.searchParams.get('pickup'),dropoff=u.searchParams.get('dropoff');
