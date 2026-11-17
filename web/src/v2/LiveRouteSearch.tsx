@@ -1,5 +1,5 @@
 import LiveTripRequests from './LiveTripRequests';
-import {reserveSeatsWithStops} from './reservations';
+import {reserveSeatsWithStops,MAX_SEATS_PER_RIDER} from './reservations';
 import {useEffect,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
@@ -42,6 +42,7 @@ export default function LiveRouteSearch({origin,destination,outbound,returnTime,
  const [bookingKeys,setBookingKeys]=useState<Record<string,string>>({});
  const book=async(routeId:string,pickupStopId:string,dropoffStopId:string,reverse:boolean)=>{
   const seats=seatCounts[routeId]||1;
+  if(!Number.isInteger(seats)||seats<1||seats>MAX_SEATS_PER_RIDER){setBookingError(t('الحد الأقصى للحجز شخصين فقط.','A maximum of two people per booking.'));return;}
   const key=bookingKeys[routeId]||crypto.randomUUID();
   setBookingKeys(v=>({...v,[routeId]:key}));setBookingBusy(routeId);setBookingError('');setBookingSuccess('');
   try{const result=await reserveSeatsWithStops(routeId,seats,key,pickupStopId,dropoffStopId,reverse);setBookingSuccess(t('تم تسجيل طلب الحجز برقم '+result.bookingId+'. حالته قيد الانتظار.','Booking requested: '+result.bookingId+'. Status: pending.'));setBookingKeys(v=>{const next={...v};delete next[routeId];return next;});setRetry(v=>v+1);}
@@ -122,8 +123,8 @@ export default function LiveRouteSearch({origin,destination,outbound,returnTime,
    {onSelect&&<button type="button" className="d-offer-select" onClick={()=>onSelect(selection)}>{t('عرض تفاصيل الخط','View route details')}</button>}
    {!onSelect&&<>
    <p>{reverse?t('العودة','Return'):t('الذهاب','Outbound')} · {(reverse?route.return_time:route.outbound_time)?.slice(0,5)} · {period==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')}</p>
-   <label>{t('المقاعد المطلوبة','Seats to reserve')} <input type="number" min={1} max={selection.remaining} value={seatCounts[route.id]||1} onChange={e=>setSeatCounts(v=>({...v,[route.id]:Number(e.target.value)}))}/></label>
-   <button type="button" disabled={bookingBusy!==null||!Number.isInteger(seatCounts[route.id]||1)||(seatCounts[route.id]||1)<1||(seatCounts[route.id]||1)>selection.remaining} onClick={()=>void book(route.id,from.id,to.id,reverse)}>{bookingBusy===route.id?t('جارٍ حجز المقاعد…','Reserving seats…'):t('احجز مقاعد حقيقية','Reserve seats')}</button>
+   <label>{t('المقاعد المطلوبة','Seats to reserve')} <input type="number" min={1} max={Math.min(MAX_SEATS_PER_RIDER,selection.remaining)} value={seatCounts[route.id]||1} onChange={e=>setSeatCounts(v=>({...v,[route.id]:Number(e.target.value)}))}/></label>
+   <button type="button" disabled={bookingBusy!==null||!Number.isInteger(seatCounts[route.id]||1)||(seatCounts[route.id]||1)<1||(seatCounts[route.id]||1)>MAX_SEATS_PER_RIDER||(seatCounts[route.id]||1)>selection.remaining} onClick={()=>void book(route.id,from.id,to.id,reverse)}>{bookingBusy===route.id?t('جارٍ حجز المقاعد…','Reserving seats…'):t('احجز مقاعد حقيقية','Reserve seats')}</button>
    <p>{t('الحجز يسجل قيد الانتظار، من غير OTP أو دفع.','Reservation is saved as pending, without OTP or payment.')}</p></>}
   </>})()}</article>)}
  </section>;
