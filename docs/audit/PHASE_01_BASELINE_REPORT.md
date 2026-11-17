@@ -71,7 +71,7 @@ Local commands were run from `web/` after `npm ci`:
 | `npm ci` | PASS; lockfile install completed. npm reported 9 moderate dependency advisories (0 high/critical); not auto-fixed |
 | `npm run typecheck` | PASS |
 | `npm run lint` | PASS |
-| `npm test` | PASS — 69 tests, 0 failed |
+| `npm test` | PASS — 78 tests, 0 failed, including 9 visual-evidence provenance tests |
 | `npm run test:structure` | PASS |
 | `npm run build` | PASS; Vite warns the main JS chunk is 631 kB (500 kB advisory threshold) |
 | `npm run test:e2e` | See [acceptance report](./PHASE_01_ACCEPTANCE.md); executed against a clean copy of the exact source SHA so existing untracked screenshots were not overwritten |
@@ -83,7 +83,7 @@ The CI “staging-safe” journey and Admin/Captain UI fixtures are synthetic/un
 
 - Current-SHA artifacts are attached to [Actions run 43740353641](https://github.com/sekka-go/SeKKa/actions/runs/43740353641): `sekka-original-vs-integrated-layout` and `subscription-ui-evidence`. They contain guest screenshots and UI tests, not authenticated Staging acceptance.
 - I inspected representative S002 Welcome, S003 role, S009 Search, S010 Filters, Google sign-in, and Admin guest-gate screenshots from the current-SHA artifact. No clipping/overlap was confirmed in those inspected examples; this is not 73-screen visual approval.
-- The dedicated 73-screen evidence workflow currently uses fixed `AUDIT_BASE_URL=https://2da769f1.sekka-staging-web.pages.dev` and `AUDIT_BASE_COMMIT=7471225c61058049d358e8d0a3d49a535612bacd`. Its output is stale for PR #185 HEAD and must not be presented as current-HEAD evidence.
+- The dedicated 73-screen evidence workflow no longer uses a fixed preview URL or commit. It resolves the successful Cloudflare Staging check for the workflow's exact source SHA, then verifies that the preview's `build-info.json` reports the same SHA before capture. The collector records source/deployed SHAs and rejects stale or redirected previews. Focused provenance tests and a local production build pass; a Cloudflare run of this workflow change is still required, so no new 73-screen capture is claimed as current-HEAD evidence.
 - The PWA manifest is standalone, rooted at `/`, and declares the branded 192/512 icons. The service worker caches only same-origin static assets; navigation, Auth/OAuth, Supabase, and `/dev/` are not cached. Production registration is after load.
 - Automated splash/manifest/refresh tests pass. No installed Android/iOS PWA session was available; installability and native behavior remain unaccepted.
 

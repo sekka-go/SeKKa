@@ -4,11 +4,18 @@ on:
     branches: [main]
     paths:
       - 'web/scripts/collect-visual-audit.mjs'
+      - 'web/scripts/resolve-staging-preview.mjs'
+      - 'web/scripts/visual-evidence-provenance.mjs'
+      - 'web/scripts/visual-evidence-provenance.test.mjs'
+      - 'web/vite.config.ts'
+      - 'web/package.json'
       - 'docs/audit/INDEPENDENT_VISUAL_EVIDENCE_73.md'
+      - 'docs/audit/PHASE_01_*.md'
       - '.github/workflows/visual-evidence-73.yml'
   workflow_dispatch:
 permissions:
   contents: read
+  checks: read
 concurrency:
   group: visual-evidence-73-${{ github.ref }}
   cancel-in-progress: true
@@ -16,11 +23,15 @@ jobs:
   collect:
     runs-on: ubuntu-latest
     timeout-minutes: 110
+    env:
+      AUDIT_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     defaults:
       run:
         working-directory: web
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -29,13 +40,22 @@ jobs:
       - name: Install pinned browser tooling
         run: npm ci
       - name: Verify evidence script syntax
-        run: node --check scripts/collect-visual-audit.mjs
+        run: |
+          node --check scripts/collect-visual-audit.mjs
+          node --check scripts/resolve-staging-preview.mjs
+          node --check scripts/visual-evidence-provenance.mjs
+          node --test scripts/visual-evidence-provenance.test.mjs
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
+      - name: Resolve the Cloudflare Staging preview for this source commit
+        id: staging
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/resolve-staging-preview.mjs
       - name: Capture original gallery and real unauthenticated Staging at all 584 variants
         env:
-          AUDIT_BASE_URL: https://2da769f1.sekka-staging-web.pages.dev
-          AUDIT_BASE_COMMIT: 7471225c61058049d358e8d0a3d49a535612bacd
+          AUDIT_BASE_URL: ${{ steps.staging.outputs.preview_url }}
+          AUDIT_SOURCE_SHA: ${{ env.AUDIT_SOURCE_SHA }}
         run: node scripts/collect-visual-audit.mjs
       - name: Bundle an accessible ZIP for offline side-by-side review
         if: always()

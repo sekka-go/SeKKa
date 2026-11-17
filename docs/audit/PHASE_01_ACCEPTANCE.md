@@ -17,13 +17,13 @@ Audited source SHA: `97d534a6d231948212fd8b5c56b322f89d37d997`. PASS means only 
 | `npm ci` | `web/`, Node 24/npm 11 | Locked clean install | Completed; npm reported 9 moderate advisories, 0 high/critical | PASS (install); advisories remain | Local output; dependency audit aggregate in defect register | Review separately; no `npm audit fix` |
 | `npm run typecheck` | `web/` local | TypeScript pass | Pass | PASS | Current-head CI run and local command | None |
 | `npm run lint` | `web/` local | ESLint pass | Pass | PASS | Current-head CI run and local command | None |
-| `npm test` | `web/` local | Existing tests pass | 69 passed, 0 failed | PASS | Current-head CI run and local command | Unit tests are not Staging acceptance |
+| `npm test` | `web/` local | Existing tests pass | 78 passed, 0 failed, including the 9 new visual-evidence provenance tests | PASS | Local command on the current worktree | Unit tests are not Staging acceptance |
 | `npm run test:structure` | `web/` local | Active frontend boundary passes | Pass; no retired-source dependency | PASS | Current-head CI run and local command | None |
 | `npm run build` | `web/` local | Production build completes | Pass; 631 kB main JS chunk warning | PASS with warning | Current-head CI run and local command | Track chunk/startup size in later UI performance review |
 | `npm run test:e2e` | Exact-HEAD clean source copy; local Vite preview | Test public navigation, guest gates, visual layouts; never hit Staging | 258 passed in 10.0 minutes; 0 failed | PASS (synthetic/local) | Local Playwright result; matching [current-head CI run](https://github.com/sekka-go/SeKKa/actions/runs/43740353641) | Real authenticated Staging journeys remain blocked |
 | Critical guest entry routes | CI Playwright, synthetic/unauthenticated | Welcome → role → Google UI; Back; refresh; guest gates; unknown bookings safe | Current-head workflow passed public entry, browser history, refresh, booking guest gate, Admin guest gate, Captain gate, no fake results | PASS (guest/UI only) | Current-head [verify run](https://github.com/sekka-go/SeKKa/actions/runs/43740353641) | No authenticated acceptance |
 | 360×800 / 390×844, AR/EN, Light/Dark screenshots | Current-head CI; guest/reference comparison | Capture requested focus states; distinguish mocks | S002/S003/S009/S010 references and production screenshots plus login/gate screenshots captured; geometry assertions pass. Selected artifact images reviewed. No full 73-screen approval. | PASS (focused guest baseline) | Artifacts `sekka-original-vs-integrated-layout` and `subscription-ui-evidence` on [run 43740353641](https://github.com/sekka-go/SeKKa/actions/runs/43740353641) | Phase 10 visual acceptance |
-| 73-screen visual workflow source SHA | CI configuration review | Evidence must match inspected HEAD | Workflow is pinned to Staging deployment commit `7471225c...`, not `97d534a`; do not present its screenshots as current evidence | FAIL | `.github/workflows/visual-evidence-73.yml`; `INDEPENDENT_VISUAL_EVIDENCE_73.md` | Fix evidence SHA assertion before relying on future run |
+| 73-screen visual workflow source SHA | Workflow source + focused provenance tests | Evidence must match the workflow's exact source SHA | Workflow now resolves the Staging check for that SHA and the collector verifies deployed `build-info.json`; stale, missing, or redirected deployments fail. Focused provenance tests and local build pass; a Cloudflare run of this change is pending. Older captures remain stale. | PENDING CI | `.github/workflows/visual-evidence-73.yml`; `web/scripts/visual-evidence-provenance.test.mjs` | Confirm a successful post-change 584-pair artifact before citing it |
 | Cloudflare preview deployment | GitHub Cloudflare checks + public GET | Preview corresponds to audited commit | Staging check says deployed successfully at `97d534a`; commit-specific and branch URLs returned HTTP 200 | PASS | PR #185 Cloudflare Staging check | Reconfirm after audit-only push |
 | Production / approved assets / data preservation | Git/GitHub and operation log | No production deploy, DB changes, data reset, or asset change | None performed; docs/index only planned for commit; initial untracked images preserved | PASS | Worktree and Actions evidence | Do not merge/deploy |
 | P0/P1 ownership | Defect review | Every P0/P1 issue has next action | No P0; three P1 entries have explicit owners/phases/actions | PASS | [Defect register](./PHASE_01_DEFECT_REGISTER.md) | Resolve Staging catalog blocker and evidence workflow before acceptance |
@@ -44,7 +44,7 @@ Audited source SHA: `97d534a6d231948212fd8b5c56b322f89d37d997`. PASS means only 
 | 5. Important production CTAs inventoried | PASS (source index plus key live-flow review; not a claim every click was exercised) |
 | 6. Staging schema/security review without destructive operations | BLOCKED — authenticated migration/RLS/storage/advisor catalogs unavailable; empty public catalogs observed |
 | 7. Existing tests executed and accurately reported | PASS — unit 69/69, Playwright 258/258, typecheck/lint/structure/build passed; all browser journeys are synthetic |
-| 8. CI/deployment linked to actual SHA | PASS for verification deployment; dedicated visual run is stale and recorded as FAIL |
+| 8. CI/deployment linked to actual SHA | PASS for the existing verification deployment; visual-evidence SHA enforcement is implemented and locally tested, with its post-change Cloudflare run pending |
 | 9. Focused baseline screenshots collected | PASS for unauthenticated focus states only |
 | 10. P0/P1 accountable next steps | PASS |
 | 11. Five required deliverables exist | PASS |
@@ -52,7 +52,7 @@ Audited source SHA: `97d534a6d231948212fd8b5c56b322f89d37d997`. PASS means only 
 
 ## Decision
 
-**BLOCKED.** Phase 01 is not a PASS while the authenticated Staging schema/security review remains unavailable, real Google/Captain/Admin acceptance is absent, and the dedicated visual evidence workflow remains pinned to an older deployment. Anonymous catalog counts are not evidence of empty Captain catalogs.
+**BLOCKED.** Phase 01 is not a PASS while the authenticated Staging schema/security review remains unavailable and real Google/Captain/Admin acceptance is absent. The stale-preview workflow defect has a source-level fix with passing focused tests, but the post-change Cloudflare evidence run is still pending. Anonymous catalog counts are not evidence of empty Captain catalogs.
 
 ## Deliverables
 

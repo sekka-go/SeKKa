@@ -2,10 +2,19 @@
 import {chromium} from '@playwright/test';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {resolve,join} from 'node:path';
+import {
+ CANONICAL_SCREEN_COUNT,
+ VISUAL_VARIANTS,
+ createCaptureMetadata,
+ originalGalleryPath as originalPath,
+ screenId as id,
+ verifyDeployment,
+} from './visual-evidence-provenance.mjs';
 
-const base=(process.env.AUDIT_BASE_URL||'').replace(/\/+$/,'');
-if(!/^https:\/\//.test(base))throw Error('Expected pinned HTTPS staging preview URL');
-const commit=process.env.AUDIT_BASE_COMMIT||'UNSPECIFIED';
+const requestedBase=(process.env.AUDIT_BASE_URL||'').replace(/\/+$/,'');
+const sourceCommitSha=process.env.AUDIT_SOURCE_SHA||'';
+let base='';
+let deployment;
 const root=resolve('visual-audit-73');
 const titles=[
 'Splash','Welcome','Account type','Phone entry','OTP','Complete profile','Permissions',
@@ -24,16 +33,12 @@ const titles=[
 'Admin announcements','Admin permissions'
 ];
 if(titles.length!==73)throw Error('Expected 73 original screens, got '+titles.length);
-const variants=[];
-for(const width of [360,390])for(const language of ['ar','en'])for(const theme of ['light','dark']){
- const height=width===360?800:844;
- variants.push({width,height,language,theme,key:width+'x'+height+'-'+language+'-'+theme});
-}
-const id=n=>'S'+String(n).padStart(3,'0');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const phase=n=>n<=14?'phase2':n<=21?'phase3':n<=34?'phase4':n<=41?'phase5':n<=49?'phase6':n<=61?'phase7':'phase8';
-const originalPath=n=>'/dev/screens?screen='+n+(n<=7?'&inspect=1':'&preview='+phase(n));
+const variants=VISUAL_VARIANTS;
 function integrated(n){
+ if([5,16,19,20,22,23,24,25,26,55,59,69,70].includes(n))
+  return{url:'/',state:'feature_postponed',note:'Owner-deferred OTP/payment functionality is not exposed in the production application'};
+ if(n===6)return{url:'/?tab=profile',state:'auth_required',note:'Profile completion requires an authenticated Passenger session'};
  if(n===2)return{url:'/',state:'comparable_guest',note:'Public welcome screen'};
  if(n===3)return{url:'/',state:'comparable_guest',note:'Welcome button opens role selection',action:'welcome'};
  if(n===4)return{url:'/?tab=profile',state:'auth_flow_changed',note:'Gallery phone screen is not equivalent to production Google OAuth login; do not score as pixel mismatch',action:'login'};
@@ -48,8 +53,7 @@ function integrated(n){
  if(n>=42&&n<=49)return{url:'/?tab=routes&view='+n,state:'captain_approval_required',note:'Captain routes require authenticated approved Captain'};
  if(n>=50&&n<=61)return{url:'/?tab=routes&view='+n,state:'no_integrated_equivalent',note:'No distinct production Captain operations route; captured real fallback only'};
  if(n>=62&&n<=73)return{url:'/?tab=admin&view='+n,state:'admin_session_required',note:'Private Admin UI requires server-authorized Google session; screenshot is access gate'};
- if(n>=22&&n<=26)return{url:'/?tab=wallet&view='+n,state:'feature_postponed',note:'Wallet/payment postponed; route falls back to public welcome'};
- if([1,5,6,7].includes(n))return{url:'/',state:'not_exposed_to_guest',note:'No equivalent guest screen; actual public landing is captured'};
+ if([1,7].includes(n))return{url:'/',state:'not_exposed_to_guest',note:'No equivalent guest screen; actual public landing is captured'};
  return{url:'/?tab=home&view='+n,state:'no_integrated_equivalent',note:'No distinct production integrated route; fallback captured'};
 }
 async function bounds(page){
@@ -116,6 +120,7 @@ async function bounds(page){
 }
 async function visit(page,path,action){
  await page.goto(base+path,{waitUntil:'domcontentloaded',timeout:30000});
+ if(new URL(page.url()).origin!==base)throw Error('CLOUDFLARE_PREVIEW_REDIRECTED: refusing to capture a different origin');
  await page.locator('body').waitFor({state:'visible',timeout:10000});
  if(action==='welcome'){
   const b=page.getByRole('button',{name:/ابدأ الآن|Get started/i});
@@ -131,9 +136,12 @@ async function screenshot(page,file){
  catch(e){return String(e).slice(0,300);}
 }
 async function main(){
- await mkdir(root,{recursive:true});
- const health=await fetch(base,{redirect:'follow',signal:AbortSignal.timeout(18000)});
+ deployment=await verifyDeployment({baseUrl:requestedBase,expectedSha:sourceCommitSha});
+ base=deployment.previewUrl;
+ const health=await fetch(base,{redirect:'error',signal:AbortSignal.timeout(18000)});
  if(!health.ok)throw Error('STAGING_NOT_ACCESSIBLE HTTP '+health.status);
+ if(new URL(health.url).origin!==base)throw Error('CLOUDFLARE_PREVIEW_REDIRECTED: refusing to capture a different origin');
+ await mkdir(root,{recursive:true});
  const browser=await chromium.launch({headless:true});
  const rows=[],started=new Date().toISOString();
  try{
@@ -143,11 +151,23 @@ async function main(){
    await ctx.addInitScript(p=>{localStorage.setItem('language_preference',p.language);localStorage.setItem('theme_preference',p.theme);},
     {language:v.language,theme:v.theme});
    const gallery=await ctx.newPage(),app=await ctx.newPage();
-   for(let n=1;n<=73;n++){
+   for(let n=1;n<=CANONICAL_SCREEN_COUNT;n++){
     await mkdir(join(root,'screens',id(n)),{recursive:true});
     const live=integrated(n);
+    const capturedAt=new Date().toISOString();
     const row={screen:n,title:titles[n-1],variant:v.key,originalUrl:originalPath(n),integratedUrl:live.url,
      state:live.state,reason:live.note,
+     metadata:createCaptureMetadata({
+      sourceCommitSha:deployment.sourceCommitSha,
+      deployedCommitSha:deployment.deployedCommitSha,
+      previewUrl:deployment.previewUrl,
+      capturedAt,
+      screenId:id(n),
+      language:v.language,
+      theme:v.theme,
+      viewport:v,
+      state:live.state,
+     }),
      original:'screens/'+id(n)+'/original-'+v.key+'.png',
      integrated:'screens/'+id(n)+'/integrated-'+v.key+'.png',
      originalMetrics:null,integratedMetrics:null,issues:[],errors:[]};
@@ -167,6 +187,7 @@ async function main(){
       ...(row.originalMetrics?.issues||[]).map(i=>({source:'original',...i})),
       ...(row.integratedMetrics?.issues||[]).map(i=>({source:'integrated',...i}))
     ];
+    row.metadata.errorStatus=row.errors.length?'capture_error':'none';
     if(row.state!=='comparable_guest')row.issues.push({kind:'non_equivalent_state',detail:row.reason});
     if(row.errors.length)row.issues.push({kind:'capture_error',detail:row.errors});
     if(row.state==='comparable_guest'&&row.originalMetrics&&row.integratedMetrics){
@@ -200,18 +221,27 @@ async function main(){
    process.stdout.write('CAPTURE '+v.key+' '+rows.length+'/584\n');
   }
  }finally{await browser.close();}
- const summary={started,finished:new Date().toISOString(),stagingUrl:base,stagingFrontendCommit:commit,
-  screenIds:73,variants:variants.map(x=>x.key),pairs:rows.length,
+ const finished=new Date().toISOString();
+ const summary={started,finished,captureStartedAt:started,captureFinishedAt:finished,
+  sourceCommitSha:deployment.sourceCommitSha,deployedCommitSha:deployment.deployedCommitSha,
+  cloudflarePreviewUrl:deployment.previewUrl,stagingUrl:base,stagingFrontendCommit:deployment.deployedCommitSha,
+  screenIds:Array.from({length:CANONICAL_SCREEN_COUNT},(_,index)=>id(index+1)),
+  variants:variants.map(x=>({key:x.key,language:x.language,theme:x.theme,viewport:{width:x.width,height:x.height}})),pairs:rows.length,
   originals:rows.filter(x=>x.original).length,integrated:rows.filter(x=>x.integrated).length,
   captureFailures:rows.filter(x=>x.errors.length).length,nonComparable:rows.filter(x=>x.state!=='comparable_guest').length,
   flagCount:rows.reduce((a,x)=>a+x.issues.length,0),
   status:'EVIDENCE ONLY — HUMAN REVIEW REQUIRED — NO ISSUES RESOLVED',
   authentication:'GUEST ONLY; NO AUTH TOKENS, MOCK ACCOUNTS, OR TRANSACTIONS'};
  await writeFile(join(root,'report.json'),JSON.stringify({summary,rows},null,2));
- const csv=['screen,title,variant,state,original_path,integrated_path,original_scroll_width,integrated_scroll_width,original_button_count,integrated_button_count,flags'];
+ const csv=['screen_id,screen,title,variant,language,theme,viewport_width,viewport_height,source_commit_sha,deployed_commit_sha,cloudflare_preview_url,captured_at,original_screen_type,integrated_screen_type,integrated_state_category,error_status,comparability_status,original_path,integrated_path,original_scroll_width,integrated_scroll_width,original_button_count,integrated_button_count,flags'];
  for(const r of rows){
-  csv.push([r.screen,r.title,r.variant,r.state,r.original,r.integrated,r.originalMetrics?.document.scrollWidth,
-    r.integratedMetrics?.document.scrollWidth,r.originalMetrics?.counts.buttons,r.integratedMetrics?.counts.buttons,r.issues.length]
+  csv.push([r.metadata.screenId,r.screen,r.title,r.variant,r.metadata.language,r.metadata.theme,
+    r.metadata.viewport.width,r.metadata.viewport.height,r.metadata.sourceCommitSha,r.metadata.deployedCommitSha,
+    r.metadata.cloudflarePreviewUrl,r.metadata.capturedAt,r.metadata.originalVsIntegrated.original.screenType,
+    r.metadata.originalVsIntegrated.integrated.screenType,r.metadata.originalVsIntegrated.integrated.category,
+    r.metadata.errorStatus,r.metadata.comparabilityStatus,r.original,r.integrated,
+    r.originalMetrics?.document.scrollWidth,r.integratedMetrics?.document.scrollWidth,
+    r.originalMetrics?.counts.buttons,r.integratedMetrics?.counts.buttons,r.issues.length]
     .map(s=>'"'+String(s??'').replace(/"/g,'""')+'"').join(','));
  }
  await writeFile(join(root,'metrics.csv'),csv.join('\n')+'\n');
@@ -219,9 +249,12 @@ async function main(){
   '# seKKa PR #185: 73-screen independent visual evidence','',
   '**Visual approval status: NOT REVIEWED. No issue resolved.**','',
   '- Staging browser URL: '+base,
-  '- Frontend preview commit: '+commit,
+  '- Intended source commit SHA: '+deployment.sourceCommitSha,
+  '- Independently verified deployed commit SHA: '+deployment.deployedCommitSha,
+  '- Cloudflare preview URL: '+deployment.previewUrl,
+  '- Capture window: '+started+' through '+finished,
   '- Gallery: real /dev/screens page with approved design implementation and illustrative preview content.',
-  '- Integrated side: real guest browser pages on pinned Staging, not an authenticated test.',
+  '- Integrated side: real guest browser pages on the commit-matched Cloudflare Staging preview, not an authenticated test.',
   '- Viewports: 360x800 and 390x844; AR/EN; Light/Dark (eight variants each).',
   '- Original screenshots: '+summary.originals+'; integrated screenshots: '+summary.integrated+'; capture failures: '+summary.captureFailures+'.',
   '- '+summary.nonComparable+' of '+summary.pairs+' pairs have different or unavailable functional states.',
@@ -229,7 +262,7 @@ async function main(){
   '- See index.html for side-by-side images, metrics.csv for counts, report.json for every visible bounding box and candidate issue.',
   '- Automated clipping and overlap flags are review candidates, never proof that an issue is resolved.','','## Numbered inventory',''
  ];
- for(let n=1;n<=73;n++){
+ for(let n=1;n<=CANONICAL_SCREEN_COUNT;n++){
   const list=rows.filter(x=>x.screen===n);
   report.push(String(n).padStart(2,'0')+'. **'+titles[n-1]+'** — '+list[0].state+
    '; flags: '+list.reduce((a,x)=>a+x.issues.length,0)+
@@ -240,7 +273,7 @@ async function main(){
  await writeFile(join(root,'REPORT.md'),report.join('\n')+'\n');
  const style='<style>body{margin:0;background:#121923;color:#f2f4f7;font:14px system-ui}header{position:sticky;top:0;background:#202e40;padding:16px;z-index:3}a{color:#ffd054}.wrap{max-width:1280px;margin:auto;padding:18px}.screen{border:1px solid #627088;background:#1b2737;padding:16px;margin:16px 0;border-radius:12px}.pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}.pair div{min-width:0}.pair img{width:100%;height:auto;display:block;border:1px solid #6c7688;border-radius:7px}summary{font-weight:bold;cursor:pointer;margin:12px 0}.meta{color:#c2cedc}.warn{color:#ffbd9a}code{overflow-wrap:anywhere}@media(max-width:700px){.pair{grid-template-columns:1fr}}</style>';
  const sections=[];
- for(let n=1;n<=73;n++){
+ for(let n=1;n<=CANONICAL_SCREEN_COUNT;n++){
   const members=rows.filter(r=>r.screen===n);
   const detail=members.map(x=>'<details><summary>'+esc(x.variant)+' · '+esc(x.state)+' · '+x.issues.length+' flags</summary>'+
    '<p class="meta">'+esc(x.reason)+'</p><div class="pair"><div><h4>Original gallery (illustrative preview)</h4>'+
@@ -258,11 +291,11 @@ async function main(){
  '<header><b>seKKa | PR #185 | visual evidence</b> · <a href="REPORT.md">Numbered report</a> · <a href="report.json">Bounding boxes JSON</a> · <a href="metrics.csv">Metrics CSV</a></header>'+
  '<div class="wrap"><h1>73 original-vs-integrated screen comparisons</h1>'+
  '<p class="warn"><b>NOT ACCEPTED:</b> screenshots are actual browser output, but no authenticated session is present. Auth gates, preview demo data and unavailable features cannot be judged as matching visual states.</p>'+
- '<p>Staging '+esc(base)+' | frontend commit '+esc(commit)+' | '+summary.originals+' gallery and '+summary.integrated+' integrated screenshots</p>'+
+ '<p>Staging '+esc(base)+' | source SHA '+esc(deployment.sourceCommitSha)+' | deployed SHA '+esc(deployment.deployedCommitSha)+' | '+summary.originals+' gallery and '+summary.integrated+' integrated screenshots</p>'+
  '<nav>'+titles.map((x,i)=>'<a href="#s'+(i+1)+'">'+String(i+1).padStart(2,'0')+'</a>').join(' · ')+'</nav>'+
  sections.join('\n')+'</div></html>';
  await writeFile(join(root,'index.html'),html);
  process.stdout.write('AUDIT_SUMMARY '+JSON.stringify(summary)+'\n');
- if(rows.length!==584||summary.captureFailures)throw Error('INCOMPLETE_COLLECTION — evidence still saved');
+ if(rows.length!==CANONICAL_SCREEN_COUNT*variants.length||summary.captureFailures)throw Error('INCOMPLETE_COLLECTION — evidence still saved');
 }
 main().catch(e=>{console.error('AUDIT_FAILED:',e);process.exitCode=1;});

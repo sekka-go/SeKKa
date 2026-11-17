@@ -4,9 +4,9 @@
 
 ## Sources and limitations
 
-- **Approved baseline:** `/dev/screens?screen=1..73` on the pinned Cloudflare Staging Preview, with the original gallery's phase-preview state. This preserves the approved 73-screen component gallery, but preview names, routes and transactions are illustrative. The original owner-supplied raster references only cover part of the inventory; the gallery capture is not a claim of raw source-PNG pixel equivalence.
+- **Approved baseline:** `/dev/screens?screen=1..73` on the Cloudflare Staging Preview selected for the exact workflow source SHA, with the original gallery's phase-preview state. This preserves the approved 73-screen component gallery, but preview names, routes and transactions are illustrative. The original owner-supplied raster references only cover part of the inventory; the gallery capture is not a claim of raw source-PNG pixel equivalence.
 - **Integrated comparison:** the **same deployed frontend build** at the real `/?tab=...` public application paths. A new anonymous browser context is created for every viewport/language/theme variant. No fake tokens, mocked booking records, Google account impersonation or data mutations.
-- **Pinned frontend baseline:** post-fix frontend commit `396165f42b91a58813e48c2707d8924401195780` on `https://1247ab5f.sekka-staging-web.pages.dev`. This is the latest successful front-end Preview before evidence-only commits; evidence collection commits do not change production-facing UI. Report JSON records this commit and URL.
+- **Commit provenance:** the workflow resolves the successful `Cloudflare Pages: sekka-staging-web` check for its exact source SHA. Before capture, the collector reads `/build-info.json` from that preview and fails if the deployed SHA differs, is missing, or the request redirects. Every screenshot pair records the source SHA, deployed SHA, preview URL, viewport, language, theme, screen ID, capture time, and comparability state. Historical artifacts from the former pinned-URL workflow are not current-HEAD evidence.
 - **Device combinations:** 360×800 and 390×844; Arabic/English; Light/Dark, 8 variants per screen = **584 numbered comparison pairs** when collection completes.
 
 ## How to review the evidence
