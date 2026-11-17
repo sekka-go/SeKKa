@@ -10,11 +10,13 @@
 | PR | [#185 — Start real v3.1 app: Google OAuth foundation and legacy API isolation](https://github.com/sekka-go/SeKKa/pull/185) |
 | PR state | OPEN, Draft |
 | Target branch | `feat/real-app-google-auth-foundation-20261115` |
-| Source SHA audited | `97d534a6d231948212fd8b5c56b322f89d37d997` |
+| Original baseline audit source SHA | `97d534a6d231948212fd8b5c56b322f89d37d997` |
+| Latest application SHA represented by visual evidence | `9c9dca9351c323b4c3e5211d5baf58e2f4d587c0` |
+| Current PR documentation head at closure | `bcdfe4b13c2fceb347813c731427a7b3a3df3c52` |
 | Branch synchronization | Local, fetched origin branch, and PR head matched; divergence `0 / 0` |
 | Working tree at start | Same branch and SHA; untracked `docs/audit/layout-*.png` evidence present |
 | Preservation | Existing untracked PNGs were not edited, removed, staged, or committed |
-| Current-head CI before audit deliverables | `verify` PASS and `collect` PASS at the source SHA |
+| Existing CI evidence | `verify` PASS and `collect` PASS at the baseline source SHA |
 | Cloudflare Staging | PR status PASS; commit-specific preview `https://8c131b41.sekka-staging-web.pages.dev` returned HTTP 200 |
 | Deployment identity | Cloudflare status reports commit `97d534a`; branch preview also returned HTTP 200 |
 | Frontend Supabase target | Deployed JS contains Staging project ref `zgcvumykzivsvnlflbyp`; Production ref `uorxfakceqnhxqnaawdy` absent |
@@ -58,6 +60,8 @@ The deployed Staging bundle provided the public Supabase URL/key in the same man
 
 The committed `20261115150000_v31_mandatory_captain_registration.sql` seeds active make/model/color catalogs and grants `SELECT` to `authenticated` with active-row/Admin policies (not to `anon`). The public API's zero-count observations are therefore RLS-scoped and **not** evidence of empty tables or migration drift. Migration history, authenticated catalog access, and effective live policies remain unknown; do not call the Captain selector broken without those checks.
 
+The owner independently reported a read-only Supabase inspection finding 20 public tables with RLS enabled, 37 RLS policies, 22 v31 functions, 7 migration records, a private Captain document bucket, 21 security-advisor findings, and 29 performance-advisor findings. These findings were not verified by this Codespace, and authenticated permissions were not tested.
+
 Security-definer source review: `v31_is_admin` derives identity from `auth.uid()` plus the Google-backed server allowlist; `v31_admin_overview` calls that check; reservation, cancellation, route publication, Captain submission, and Admin decision functions check authenticated identity/ownership/role in their bodies and the committed migration revokes public/anon execution; trigger notification functions are trigger handlers; and the public capacity function is `STABLE`, returns only an aggregate for a published route, and was verified with an unknown route. These are **migration-source findings**, not confirmation of live grants or advisor status. No blanket “security clean” conclusion is made.
 
 No migrations were applied. `test:staging:captain-review` and `test:staging:journey` were not run because they create records, upload files, approve applications, publish routes, reserve/cancel seats, and leave test data behind. The preflight script was inspected but not run: it POSTs to mutation RPCs with fake IDs, so it is not strictly read-only even though it expects rejection.
@@ -83,13 +87,13 @@ The CI “staging-safe” journey and Admin/Captain UI fixtures are synthetic/un
 
 - Current-SHA artifacts are attached to [Actions run 43740353641](https://github.com/sekka-go/SeKKa/actions/runs/43740353641): `sekka-original-vs-integrated-layout` and `subscription-ui-evidence`. They contain guest screenshots and UI tests, not authenticated Staging acceptance.
 - I inspected representative S002 Welcome, S003 role, S009 Search, S010 Filters, Google sign-in, and Admin guest-gate screenshots from the current-SHA artifact. No clipping/overlap was confirmed in those inspected examples; this is not 73-screen visual approval.
-- The dedicated 73-screen workflow resolves the successful Cloudflare Staging check for its exact source SHA, then verifies that the preview's `build-info.json` reports the same SHA before capture. The current [post-fix run](https://github.com/sekka-go/SeKKa/actions/runs/44128308727) captured all 584 pairs with 0 capture failures; source and deployed SHA both equal `9c9dca9351c323b4c3e5211d5baf58e2f4d587c0`. Of the 584 pairs, 568 are explicitly non-comparable due to auth gates, deferred features, or absent equivalent routes. The report remains evidence for human review, not visual acceptance or proof that any issue is resolved.
+- The dedicated 73-screen workflow resolves the successful Cloudflare Staging check for its exact source SHA, then verifies that the preview's `build-info.json` reports the same SHA before capture. Existing [post-fix run](https://github.com/sekka-go/SeKKa/actions/runs/44128308727) captured all 584 pairs with 0 capture failures; source and deployed SHA both equal `9c9dca9351c323b4c3e5211d5baf58e2f4d587c0`. The provenance issue is fixed. Of the 584 pairs, 568 are explicitly non-comparable due to auth gates, deferred features, or absent equivalent routes; capture is not visual approval.
 - The PWA manifest is standalone, rooted at `/`, and declares the branded 192/512 icons. The service worker caches only same-origin static assets; navigation, Auth/OAuth, Supabase, and `/dev/` are not cached. Production registration is after load.
 - Automated splash/manifest/refresh tests pass. No installed Android/iOS PWA session was available; installability and native behavior remain unaccepted.
 
 ## Baseline decision
 
-**BLOCKED.** The application has real Supabase-connected foundations and green CI, but the live database’s migration/RLS/storage/advisor state is not fully inspectable and authenticated Google Passenger/Captain/Admin acceptance is absent. The anonymous catalog result is not a defect finding. See the acceptance gates and accountable issues in the linked Phase 01 reports.
+**BLOCKED.** Baseline documentation is complete, but no real authenticated Google journey has been accepted. The owner-reported Supabase inspection is not Codespace-verified, and authenticated permissions were not tested. Real Google OAuth, role authorization, Captain/Admin journeys, and cross-account RLS acceptance remain outstanding; see [closure](./PHASE_01_CLOSURE.md).
 
 ### Machine-readable status summary
 
@@ -107,7 +111,7 @@ The CI “staging-safe” journey and Admin/Captain UI fixtures are synthetic/un
     "NOT_TESTED": 0
   },
   "defects": {"P0": 0, "P1": 2, "P2": 4, "P3": 0},
-  "local_unit_tests": {"passed": 69, "failed": 0},
+  "local_unit_tests": {"passed": 78, "failed": 0},
   "local_e2e": "see PHASE_01_ACCEPTANCE.md",
   "staging_authenticated_acceptance": "BLOCKED",
   "decision": "BLOCKED"
