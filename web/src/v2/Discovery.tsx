@@ -969,7 +969,7 @@ export default function Discovery(p: DiscoveryProps) {
             </div>
           </section>
         )}
-        {screen === 11 && !demo && <LiveRouteSearch origin={origin} destination={destination} outbound={outbound} returnTime={returnTime} period={appliedFilters?period:""} categories={categories} onSelect={p.production?p.onLiveSelect:undefined} />}
+        {screen === 11 && !demo && <LiveRouteSearch origin={origin} destination={destination} outbound={outbound} returnTime={returnTime} period={appliedFilters?period:""} requestPeriod={period} categories={categories} onSelect={p.production?p.onLiveSelect:undefined} onSignIn={()=>nav(4)} />}
         {screen === 11 && demo && (
           <>
             <p className="d-subtitle">{tr("اختر عرض الاشتراك المناسب لك")}</p>
