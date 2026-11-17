@@ -207,7 +207,6 @@ for(const verifyReadback of [true,false]){
   await profile.getByRole('textbox',{name:'Name'}).fill('Verified Test Passenger');
   await profile.getByRole('textbox',{name:/Phone/}).fill('01012345678');
   await profile.getByRole('button',{name:'Save profile'}).click();
-  expect(writes).toBe(1);
   if(verifyReadback){
    await expect(profile.getByRole('status')).toContainText('Profile saved');
    await page.reload();
@@ -217,6 +216,7 @@ for(const verifyReadback of [true,false]){
    await expect(profile.getByRole('alert')).toContainText('Could not verify the profile save');
    await expect(profile.getByText('Profile saved')).toHaveCount(0);
   }
+  expect(writes).toBe(1);
  });
 }
 
