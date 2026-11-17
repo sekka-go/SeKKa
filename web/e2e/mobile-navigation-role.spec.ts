@@ -54,6 +54,25 @@ test('guest account prerequisites preserve the actual Google return destination'
  }
 });
 
+test('cancelled Google OAuth on guest Bookings preserves return path and permits retry',async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('language_preference','en'));
+ await page.goto('/?tab=bookings&error=access_denied&error_description=provider-private-detail&oauth_role=rider');
+ await expect(page).toHaveURL(/tab=login&view=4/);
+ await expect(page.getByRole('alert')).toContainText('Google sign-in did not complete');
+ expect(await page.evaluate(()=>sessionStorage.getItem('sekka.pendingRole'))).toBe('rider');
+ expect(await page.evaluate(()=>sessionStorage.getItem('sekka.postAuthPath'))).toBe('/?tab=bookings');
+ await expect(page).not.toHaveURL(/access_denied|provider-private-detail/);
+ await expect(page.getByRole('button',{name:'Continue with Google'})).toBeVisible();
+});
+
+test('cancelled Google OAuth preserves exact booking stop selection',async({page})=>{
+ const original='/?tab=booking&route=route-a&pickup=pickup-a&dropoff=dropoff-b&reverse=1';
+ await page.goto(original+'&error=access_denied&oauth_role=rider');
+ await expect(page).toHaveURL(/tab=login&view=4/);
+ expect(await page.evaluate(()=>sessionStorage.getItem('sekka.postAuthPath'))).toBe(original);
+ await expect(page).not.toHaveURL(/access_denied/);
+});
+
 for(const [width,height] of [[320,700],[360,800],[390,844],[412,915]] as const){
 test(`pending Captain profile stays in Passenger journey until explicit entry at ${width}px`,async({page})=>{
  await page.setViewportSize({width,height});
