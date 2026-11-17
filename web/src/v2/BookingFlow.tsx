@@ -10,7 +10,7 @@ import { DiscoveryIcon, examples, favoriteExamples } from "./Discovery";
 import type { Line } from "./Discovery";
 import type { Booking, Quote, Route } from "./api";
 import {client} from "./api";
-import {reserveSeatsWithStops,cancelPendingBooking} from "./reservations";
+import {reserveSeatsWithStops,cancelPendingBooking,MAX_SEATS_PER_RIDER} from "./reservations";
 import {clearReservationAttempt,reservationIdempotencyKey} from "./reservationAttempt";
 import {
   quote as calculateQuote,
@@ -1077,7 +1077,7 @@ export function V31BookingJourney({offer,routeId,pickupId,dropoffId,reverse,book
    })();return()=>{active=false;};
  },[bookingId,refresh]);
  const reserve=async()=>{
-   if(busy||!routeId||!pickupId||!dropoffId||!Number.isInteger(seats)||seats<1||seats>(offer?.available||13))return;
+   if(busy||!routeId||!pickupId||!dropoffId||!Number.isInteger(seats)||seats<1||seats>MAX_SEATS_PER_RIDER||seats>(offer?.available||13))return;
    if(!client){setError('BACKEND_NOT_CONFIGURED');return;}
    setBusy(true);setError('');
    try{
@@ -1116,10 +1116,11 @@ export function V31BookingJourney({offer,routeId,pickupId,dropoffId,reverse,book
          <Row label={t('سعر الاشتراك المعلن','Advertised price')}>{offer.amount?.toLocaleString('en-US')} {t('ج.م','EGP')}</Row>
          <Row label={t('السعة الإجمالية (المتاح بيتراجع عند الحجز)','Total capacity (availability checked on booking)')}>{offer.available}</Row>
          <Row label={t('الحالة بعد الحجز','Status after booking')}>{t('قيد الانتظار','Pending')}</Row>
-         <label>{t('المقاعد المطلوبة','Seats requested')}<input type="number" min={1} max={offer.available} value={seats} onChange={e=>setSeats(Number(e.target.value))}/></label>
+         <label>{t('المقاعد المطلوبة','Seats requested')}<input type="number" min={1} max={Math.min(MAX_SEATS_PER_RIDER,offer.available)} value={seats} onChange={e=>setSeats(Number(e.target.value))}/></label>
        </Box>
+       <p className="b-hint">{t('الحد الأقصى لكل حساب شخصين فقط، حتى لو المركبة فيها مقاعد إضافية.','A maximum of two people per account, even when the vehicle has more available seats.')}</p>
        <p className="b-hint">{t('مفيش دفع ولا OTP. الخادم بيتحقق من المقاعد قبل حفظ الحجز.','No payment or OTP. The server verifies capacity before saving.')}</p>
-       <Primary disabled={busy||!Number.isInteger(seats)||seats<1||seats>offer.available} onClick={()=>void reserve()}>{busy?t('جارٍ الحجز…','Reserving…'):t('تأكيد طلب الحجز','Submit booking request')}</Primary>
+       <Primary disabled={busy||!Number.isInteger(seats)||seats<1||seats>MAX_SEATS_PER_RIDER||seats>offer.available} onClick={()=>void reserve()}>{busy?t('جارٍ الحجز…','Reserving…'):t('تأكيد طلب الحجز','Submit booking request')}</Primary>
      </>}
      {!bookingId&&!offer&&<Box><p role="status">{t('بيانات الخط مش متاحة. ارجع للبحث واختار خط منشور.','Route unavailable. Return to search and choose a published route.')}</p><Primary onClick={onBack}>{t('الرجوع للبحث','Back to search')}</Primary></Box>}
      {stored&&<><Illustration kind="waiting"/><Box className="b-summary">
