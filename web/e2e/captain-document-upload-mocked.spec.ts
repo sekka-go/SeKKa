@@ -94,11 +94,11 @@ test('MOCKED Android-width private document upload: denied, retry, verified pers
  const input=picker.locator('input[type=file]');
  const mockFile={name:'synthetic-test.jpg',mimeType:'image/jpeg',buffer:Buffer.from('safe-synthetic-file-for-fixture')};
  await input.setInputFiles(mockFile);
- await expect(picker.getByRole('alert')).toContainText('Document upload failed');
+ await expect(page.locator('.c-document').first().getByRole('alert')).toContainText('Document upload failed');
  await expect(page.getByText('0/4 required documents complete')).toBeVisible();
  await input.setInputFiles(mockFile);
  await expect(page.getByText('1/4 required documents complete')).toBeVisible();
- await expect(picker.locator('.c-document-label')).toContainText('Uploaded');
+ await expect(page.locator('.c-document').first().locator('.c-document-label')).toContainText('Uploaded');
  expect(docs).toHaveLength(1);
  await page.reload();
  await expect(page.getByText('1/4 required documents complete')).toBeVisible();
