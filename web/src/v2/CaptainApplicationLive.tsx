@@ -70,6 +70,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
  const [showVehicleErrors,setShowVehicleErrors]=useState(false);
  const [notice,setNotice]=useState(''),[loading,setLoading]=useState(true),[revision,setRevision]=useState(0);
  const [uploadingKind,setUploadingKind]=useState<string|null>(null),[uploadError,setUploadError]=useState(''),[uploadErrorKind,setUploadErrorKind]=useState<string|null>(null);
+ const [uploadingFileName,setUploadingFileName]=useState('');
  const currentYear=new Date().getFullYear();
  const availableYears=useMemo(()=>Array.from({length:currentYear-1979},(_,i)=>String(currentYear-i)),[currentYear]);
  const requiredKinds=documentKinds.map(([kind])=>kind);
@@ -283,16 +284,25 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
   onEnrolled?.();onNext(36);
  });
  const upload=(kind:string,file:File)=>{
-  setUploadingKind(kind);setUploadError('');setUploadErrorKind(kind);
+  if(uploadingKind||busy)return;
+  setUploadingKind(kind);setUploadingFileName(file.name);setUploadError('');setUploadErrorKind(kind);
   void run(async()=>{
    try{
   if(!uid||!client)throw Error('AUTH_REQUIRED');
-  if(!['image/jpeg','image/png','application/pdf'].includes(file.type)||file.size<1||file.size>5242880)
-   throw Error(t('استخدم JPG أو PNG أو PDF بحد أقصى 5 ميجابايت.','Use JPG, PNG, or PDF up to 5 MB.'));
-  const extension=file.type==='application/pdf'?'pdf':file.type==='image/png'?'png':'jpg';
+  if(file.size<1||file.size>5242880)
+   throw Error(t('اختار ملف أكبر من صفر ولحد 5 ميجابايت.','Choose a non-empty file up to 5 MB.'));
+  // Android document providers may report an empty or generic file.type.
+  // Verify the file signature instead of trusting its name or MIME metadata.
+  const bytes=new Uint8Array(await file.slice(0,8).arrayBuffer());
+  const jpeg=bytes[0]===0xff&&bytes[1]===0xd8&&bytes[2]===0xff;
+  const png=bytes[0]===0x89&&bytes[1]===0x50&&bytes[2]===0x4e&&bytes[3]===0x47&&bytes[4]===0x0d&&bytes[5]===0x0a&&bytes[6]===0x1a&&bytes[7]===0x0a;
+  const pdf=bytes[0]===0x25&&bytes[1]===0x50&&bytes[2]===0x44&&bytes[3]===0x46&&bytes[4]===0x2d;
+  if(!jpeg&&!png&&!pdf)throw Error(t('صيغة الملف غير مدعومة. اختار JPG أو PNG أو PDF حقيقي.','Unsupported file format. Select a valid JPG, PNG, or PDF.'));
+  const extension=pdf?'pdf':png?'png':'jpg';
+  const verifiedMime=pdf?'application/pdf':png?'image/png':'image/jpeg';
   const objectName=`${uid}/${crypto.randomUUID()}.${extension}`;
   const {error:storageError}=await client.storage.from(bucket).upload(objectName,file,{
-   upsert:false,contentType:file.type
+   upsert:false,contentType:verifiedMime
   });
   if(storageError)throw storageError;
   const {data,error:registerError}=await client.rpc('v31_register_captain_document',{
@@ -308,7 +318,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
   setDocs(current=>[registered as DocumentRow,...current.filter(doc=>doc.id!==registered.id)]);
   setNotice(t('اتحفظ المستند، تقدر تكمّل.','Document saved. You can continue.'));
    }catch(e){setUploadError(t('فشل رفع المستند. جرب JPG أو PNG أو PDF أقل من 5 ميجابايت.','Document upload failed. Try a JPG, PNG or PDF under 5 MB.')+' '+messageFor(e,t));throw e;}
-  }).finally(()=>setUploadingKind(null));
+  }).finally(()=>{setUploadingKind(null);setUploadingFileName('');});
  };
  const submit=()=>void run(async()=>{
   if(!personalComplete||!vehicleComplete||!hasDocuments)
@@ -512,12 +522,15 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
      <label className="c-file-picker">
       <span className="c-file-picker-button">{t('اختيار ملف','Choose file')}</span>
       <span className="c-file-picker-name" aria-live="polite">
-       {uploadingKind===kind?t('جارٍ الرفع والتحقق…','Uploading and verifying…'):saved?t('يوجد ملف محفوظ','A file is saved'):t('اضغط لاختيار ملف','Tap to select a file')}
+       {uploadingKind===kind?t('جارٍ رفع: ','Uploading: ')+uploadingFileName:saved?t('يوجد ملف محفوظ','A file is saved'):t('اضغط لاختيار ملف','Tap to select a file')}
       </span>
       <input className="c-file-native" type="file" aria-label={t(ar,label)}
        accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
        disabled={!editable||busy} onChange={event=>{
-        const file=event.target.files?.[0];if(file)upload(kind,file);event.target.value='';
+        const file=event.currentTarget.files?.[0];
+        if(file)upload(kind,file);
+        else{setUploadErrorKind(kind);setUploadError(t('لم يتم اختيار ملف. حاول تاني.','No file selected. Please retry.'));}
+        event.currentTarget.value='';
        }}/>
      </label>
      {uploadError&&uploadErrorKind===kind&&uploadingKind===null&&<p className="c-field-error" role="alert">{uploadError}</p>}
