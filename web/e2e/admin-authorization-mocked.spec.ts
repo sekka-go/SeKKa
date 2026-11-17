@@ -181,6 +181,45 @@ test('MOCKED profile gate waits for verified session without showing guest Googl
  await expect(page.getByRole('button',{name:'Sign out'})).toBeVisible();
 });
 
+// Simulated PostgREST persistence, not a Staging user-session test.
+// Verify both the successful read-after-write contract and the failure path.
+for(const verifyReadback of [true,false]){
+ test(`MOCKED profile save ${verifyReadback?'verifies persisted values':'rejects unverified writes'}`,async({page})=>{
+  await setup(page,{isAdmin:false},'en','light');
+  let stored:{display_name:string;phone_number:string|null}|null=null;
+  let writes=0;
+  await page.route('**/rest/v1/v31_profiles*',async route=>{
+   const req=route.request();
+   if(req.method()==='POST'){
+    writes++;
+    const body=req.postDataJSON() as {display_name:string;phone_number:string|null};
+    if(verifyReadback)stored={display_name:body.display_name,phone_number:body.phone_number};
+    await route.fulfill({status:201,body:''});
+    return;
+   }
+   const single=(req.headers()['accept']||'').includes('vnd.pgrst.object');
+   await route.fulfill({status:200,contentType:'application/json',
+    body:JSON.stringify(single?stored:stored?[stored]:[])});
+  });
+  await page.goto('/?tab=profile');
+  const profile=page.locator('.live-profile');
+  await expect(profile.getByRole('button',{name:'Save profile'})).toBeVisible();
+  await profile.getByRole('textbox',{name:'Name'}).fill('Verified Test Passenger');
+  await profile.getByRole('textbox',{name:/Phone/}).fill('01012345678');
+  await profile.getByRole('button',{name:'Save profile'}).click();
+  expect(writes).toBe(1);
+  if(verifyReadback){
+   await expect(profile.getByRole('status')).toContainText('Profile saved');
+   await page.reload();
+   await expect(page.locator('.live-profile').getByRole('textbox',{name:'Name'})).toHaveValue('Verified Test Passenger');
+   await expect(page.locator('.live-profile').getByRole('textbox',{name:/Phone/})).toHaveValue('01012345678');
+  }else{
+   await expect(profile.getByRole('alert')).toContainText('Could not verify the profile save');
+   await expect(profile.getByText('Profile saved')).toHaveCount(0);
+  }
+ });
+}
+
 /*
  * S006 authenticated profile requires a signed-in identity. Exercise its
  * layout with the isolated browser fixture, never as staging-auth evidence.
