@@ -488,7 +488,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
     {visibleVehicleErrors.plate&&<span id="captain-plate-error" className="c-field-error" role="alert">
      {vehicleErrorText('plate',visibleVehicleErrors.plate)}</span>}
    </label>
-   <p className="c-form-hint">{t('مثال: القاهرة أ ب ج 123، الجيزة م س 6587. المسافات اختيارية.','Examples: Cairo أ ب ج 123, Giza م س 6587. You can omit spaces.')}</p>
+   <p className="c-form-hint">{t('مثال: القاهرة أ ب ج 123، الجيزة م س 6587. تقدر تكتب من غير مسافات.','Examples: Cairo أ ب ج 123, Giza م س 6587. You can omit spaces.')}</p>
    {editable&&<div className="c-registration-actions">
     <button type="button" disabled={busy} onClick={()=>void saveVehicle(false)}>{t('حفظ واستكمال لاحقًا','Save for later')}</button>
     <button type="button" className="d-primary" disabled={busy}
