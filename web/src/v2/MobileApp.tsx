@@ -57,6 +57,31 @@ export default function MobileApp(){
   setBookingId(new URL(href,location.origin).searchParams.get('booking'));
   if(!options.replace)window.scrollTo(0,0);
  }
+ // Google cancellation can return to a protected deep link rather than the
+ // login screen. Keep the user's destination, scrub provider error details and
+ // offer a real retry instead of silently displaying an unrelated guest gate.
+ useEffect(()=>{
+  const callback=new URL(location.href);
+  const hash=new URLSearchParams(callback.hash.replace(/^#/,''));
+  const failed=callback.searchParams.has('error')||callback.searchParams.has('error_code')||
+    hash.has('error')||hash.has('error_code');
+  if(!failed||tab==='login'||tab==='captain-onboarding')return;
+  const role=callback.searchParams.get('oauth_role')==='captain'?'captain':'rider';
+  for(const key of ['error','error_code','error_description','oauth_role','code'])
+    callback.searchParams.delete(key);
+  if(hash.has('error')||hash.has('error_code'))callback.hash='';
+  const intended=callback.pathname+callback.search+callback.hash;
+  try{
+   sessionStorage.setItem('sekka.pendingRole',role);
+   sessionStorage.setItem('sekka.postAuthPath',intended);
+  }catch{/* Callback still supports a new sign-in attempt. */}
+  setSelectedRole(role);
+  setError(t('تسجيل الدخول بجوجل ما اكتملش. تقدر تحاول تاني.','Google sign-in did not complete. You can try again.'));
+  history.replaceState(history.state,'',intended);
+  navigate({tab:'login',view:4},{replace:true});
+ // OAuth failure is handled on entry; avoid rerunning on language/theme changes.
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[]);
  useEffect(()=>{let active=true;const u=new URL(location.href);
   const route=u.searchParams.get('route'),pickup=u.searchParams.get('pickup'),dropoff=u.searchParams.get('dropoff');
   if(!['search','booking'].includes(tab))return;
