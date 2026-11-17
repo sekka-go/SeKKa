@@ -98,31 +98,7 @@ BEGIN
     OR (p_color_code='other' AND char_length(trim(coalesce(p_color_other,'')))<2)
     OR (p_color_code IS DISTINCT FROM 'other' AND nullif(trim(coalesce(p_color_other,'')),'') IS NOT NULL)
     OR (clean_plate IS NOT NULL AND (
-      clean_plate !~ '^([ء-ي]{3}[0-9]{3}|[ء-ي]{2}[0-9]{4}|[ء-ي]{3}[0-9]{4})
-    ))
- THEN RAISE EXCEPTION 'INVALID_VEHICLE_DETAILS'; END IF;
- SELECT status INTO st FROM public.v31_captain_applications WHERE user_id=uid FOR UPDATE;
- IF st IS NULL THEN RAISE EXCEPTION 'APPLICATION_DRAFT_REQUIRED'; END IF;
- IF st NOT IN ('draft','rejected') THEN RAISE EXCEPTION 'APPLICATION_LOCKED'; END IF;
- IF clean_plate IS NOT NULL THEN
-   PERFORM pg_advisory_xact_lock(hashtextextended(lower(regexp_replace(clean_plate,'[[:space:]-]+','','g')),0));
-   IF EXISTS(SELECT 1 FROM public.v31_captain_applications a WHERE a.user_id<>uid
-       AND lower(regexp_replace(a.intended_plate,'[[:space:]-]+','','g'))=
-           lower(regexp_replace(clean_plate,'[[:space:]-]+','','g')))
-      OR EXISTS(SELECT 1 FROM public.v31_vehicles v WHERE v.captain_id<>uid
-       AND lower(regexp_replace(v.plate_number,'[[:space:]-]+','','g'))=
-           lower(regexp_replace(clean_plate,'[[:space:]-]+','','g')))
-   THEN RAISE EXCEPTION 'DUPLICATE_LICENSE_PLATE'; END IF;
- END IF;
- UPDATE public.v31_captain_applications SET
-   vehicle_type=p_vehicle_type,vehicle_make_id=p_make_id,vehicle_model_id=p_model_id,
-   manufacture_year=p_year,vehicle_color_code=p_color_code,
-   vehicle_color_other=nullif(trim(coalesce(p_color_other,'')),''),
-   intended_plate=clean_plate,updated_at=now()
- WHERE user_id=uid;
- RETURN 'draft';
-END
-$$;
+      clean_plate !~ '^([ء-ي]{3}[0-9]{3}|[ء-ي]{2}[0-9]{4}|[ء-ي]{3}[0-9]{4})$'
     ))
  THEN RAISE EXCEPTION 'INVALID_VEHICLE_DETAILS'; END IF;
  SELECT status INTO st FROM public.v31_captain_applications WHERE user_id=uid FOR UPDATE;
@@ -172,35 +148,7 @@ BEGIN
     OR app.manufacture_year>extract(year FROM now())::integer
     OR app.vehicle_color_code IS NULL
     OR (app.vehicle_color_code='other' AND char_length(trim(coalesce(app.vehicle_color_other,'')))<2)
-    OR app.intended_plate IS NULL OR app.intended_plate !~ '^([ء-ي]{3}[0-9]{3}|[ء-ي]{2}[0-9]{4}|[ء-ي]{3}[0-9]{4})
- THEN RAISE EXCEPTION 'CAPTAIN_VEHICLE_INCOMPLETE'; END IF;
- IF NOT EXISTS(SELECT 1 FROM public.v31_vehicle_models m
-   JOIN public.v31_vehicle_makes mk ON mk.id=m.make_id
-   WHERE m.id=app.vehicle_model_id AND m.make_id=app.vehicle_make_id AND m.active AND mk.active)
- THEN RAISE EXCEPTION 'INVALID_VEHICLE_CATALOG_SELECTION'; END IF;
- IF NOT EXISTS(SELECT 1 FROM public.v31_vehicle_colors c
-   WHERE c.code=app.vehicle_color_code AND c.active)
- THEN RAISE EXCEPTION 'INVALID_VEHICLE_COLOR'; END IF;
- IF (SELECT count(DISTINCT d.kind) FROM public.v31_captain_documents d
-   JOIN storage.objects o ON o.bucket_id='v31-captain-docs-staging' AND o.name=d.object_name
-   WHERE d.captain_id=uid AND d.kind IN ('identity','driving_license','vehicle_license','vehicle_photo'))<4
- THEN RAISE EXCEPTION 'CAPTAIN_DOCUMENTS_INCOMPLETE'; END IF;
- PERFORM pg_advisory_xact_lock(hashtextextended(lower(regexp_replace(app.intended_plate,'[[:space:]-]+','','g')),0));
- IF EXISTS(SELECT 1 FROM public.v31_captain_applications a WHERE a.user_id<>uid
-     AND lower(regexp_replace(a.intended_plate,'[[:space:]-]+','','g'))=
-         lower(regexp_replace(app.intended_plate,'[[:space:]-]+','','g')))
-    OR EXISTS(SELECT 1 FROM public.v31_vehicles v WHERE v.captain_id<>uid
-     AND lower(regexp_replace(v.plate_number,'[[:space:]-]+','','g'))=
-         lower(regexp_replace(app.intended_plate,'[[:space:]-]+','','g')))
- THEN RAISE EXCEPTION 'DUPLICATE_LICENSE_PLATE'; END IF;
- UPDATE public.v31_captain_applications SET status='submitted',submitted_at=now(),
-   rejection_reason=null,reviewed_at=null,reviewed_by=null,updated_at=now()
- WHERE user_id=uid;
- UPDATE public.v31_captain_profiles SET approval_status='pending'
- WHERE user_id=uid AND approval_status<>'approved';
- RETURN 'submitted';
-END
-$$;
+    OR app.intended_plate IS NULL OR app.intended_plate !~ '^([ء-ي]{3}[0-9]{3}|[ء-ي]{2}[0-9]{4}|[ء-ي]{3}[0-9]{4})$'
  THEN RAISE EXCEPTION 'CAPTAIN_VEHICLE_INCOMPLETE'; END IF;
  IF NOT EXISTS(SELECT 1 FROM public.v31_vehicle_models m
    JOIN public.v31_vehicle_makes mk ON mk.id=m.make_id
@@ -260,74 +208,7 @@ BEGIN
       OR app.vehicle_model_id IS NULL OR app.manufacture_year IS NULL
       OR app.manufacture_year<1980 OR app.manufacture_year>extract(year FROM now())::integer
       OR app.vehicle_color_code IS NULL OR app.intended_plate IS NULL
-      OR app.intended_plate !~ '^([ء-ي]{3}[0-9]{3}|[ء-ي]{2}[0-9]{4}|[ء-ي]{3}[0-9]{4})
-      OR (app.vehicle_color_code='other' AND char_length(trim(coalesce(app.vehicle_color_other,'')))<2)
-   THEN RAISE EXCEPTION 'CAPTAIN_APPLICATION_INCOMPLETE'; END IF;
-   IF (SELECT count(DISTINCT d.kind) FROM public.v31_captain_documents d
-       JOIN storage.objects o ON o.bucket_id='v31-captain-docs-staging' AND o.name=d.object_name
-       WHERE d.captain_id=p_captain AND d.kind IN ('identity','driving_license','vehicle_license','vehicle_photo'))<4
-   THEN RAISE EXCEPTION 'CAPTAIN_DOCUMENTS_INCOMPLETE'; END IF;
-   PERFORM pg_advisory_xact_lock(hashtextextended(lower(regexp_replace(app.intended_plate,'[[:space:]-]+','','g')),0));
-   IF EXISTS(SELECT 1 FROM public.v31_captain_applications a WHERE a.user_id<>p_captain
-       AND lower(regexp_replace(a.intended_plate,'[[:space:]-]+','','g'))=
-           lower(regexp_replace(app.intended_plate,'[[:space:]-]+','','g')))
-      OR EXISTS(SELECT 1 FROM public.v31_vehicles v WHERE v.captain_id<>p_captain
-       AND lower(regexp_replace(v.plate_number,'[[:space:]-]+','','g'))=
-           lower(regexp_replace(app.intended_plate,'[[:space:]-]+','','g')))
-   THEN RAISE EXCEPTION 'DUPLICATE_LICENSE_PLATE'; END IF;
-   SELECT m.name_en INTO display_model FROM public.v31_vehicle_models m
-   JOIN public.v31_vehicle_makes mk ON mk.id=m.make_id
-   WHERE m.id=app.vehicle_model_id AND m.make_id=app.vehicle_make_id
-     AND m.active AND mk.active;
-   IF display_model IS NULL OR NOT EXISTS(
-      SELECT 1 FROM public.v31_vehicle_colors c WHERE c.code=app.vehicle_color_code AND c.active)
-   THEN RAISE EXCEPTION 'INVALID_VEHICLE_CATALOG_SELECTION'; END IF;
-   IF app.vehicle_type='private_car' THEN
-     IF p_hiace_categories IS NOT NULL THEN RAISE EXCEPTION 'INVALID_CATEGORY_SELECTION'; END IF;
-     categories:=ARRAY['PRIME','SAVER'];base_category:='PRIME';physical_seats:=4;
-   ELSE
-     IF p_hiace_categories IS NULL OR cardinality(p_hiace_categories)<1
-        OR cardinality(p_hiace_categories)>2
-        OR EXISTS(SELECT 1 FROM unnest(p_hiace_categories) c WHERE c NOT IN ('SPACE','MAX'))
-        OR cardinality(ARRAY(SELECT DISTINCT c FROM unnest(p_hiace_categories) c))<>cardinality(p_hiace_categories)
-     THEN RAISE EXCEPTION 'HIACE_CATEGORY_REVIEW_REQUIRED'; END IF;
-     categories:=p_hiace_categories;base_category:=p_hiace_categories[1];physical_seats:=13;
-   END IF;
-   SELECT id INTO vehicle FROM public.v31_vehicles
-   WHERE captain_id=p_captain AND lower(trim(plate_number))=lower(trim(app.intended_plate))
-   ORDER BY created_at DESC LIMIT 1 FOR UPDATE;
-   IF vehicle IS NULL THEN
-     INSERT INTO public.v31_vehicles(captain_id,model,plate_number,category,seats,status,
-       vehicle_type,make_id,vehicle_model_id,manufacture_year,color_code,color_other,enabled_categories)
-     VALUES(p_captain,display_model,trim(app.intended_plate),base_category,physical_seats,'active',
-       app.vehicle_type,app.vehicle_make_id,app.vehicle_model_id,app.manufacture_year,
-       app.vehicle_color_code,app.vehicle_color_other,categories)
-     RETURNING id INTO vehicle;
-   ELSE
-     UPDATE public.v31_vehicles SET model=display_model,plate_number=trim(app.intended_plate),
-       category=base_category,seats=physical_seats,status='active',vehicle_type=app.vehicle_type,
-       make_id=app.vehicle_make_id,vehicle_model_id=app.vehicle_model_id,
-       manufacture_year=app.manufacture_year,color_code=app.vehicle_color_code,
-       color_other=app.vehicle_color_other,enabled_categories=categories
-     WHERE id=vehicle;
-     DELETE FROM public.v31_vehicle_service_categories WHERE vehicle_id=vehicle;
-   END IF;
-   DELETE FROM public.v31_vehicle_service_categories WHERE vehicle_id=vehicle;
-   INSERT INTO public.v31_vehicle_service_categories(vehicle_id,category,seat_capacity)
-   SELECT vehicle,c,CASE c WHEN 'PRIME' THEN 3 WHEN 'SAVER' THEN 4 WHEN 'SPACE' THEN 9 ELSE 13 END
-   FROM unnest(categories) c;
- END IF;
- UPDATE public.v31_captain_applications SET status=p_decision,
-   approved_vehicle_id=CASE WHEN p_decision='approved' THEN vehicle ELSE approved_vehicle_id END,
-   rejection_reason=CASE WHEN p_decision='rejected' THEN trim(p_reason) ELSE NULL END,
-   reviewed_by=actor,reviewed_at=now(),updated_at=now()
- WHERE user_id=p_captain;
- UPDATE public.v31_captain_profiles SET approval_status=p_decision WHERE user_id=p_captain;
- INSERT INTO public.v31_captain_approval_audit(captain_id,actor_id,decision,reason)
- VALUES(p_captain,actor,p_decision,CASE WHEN p_decision='rejected' THEN trim(p_reason) ELSE NULL END);
- RETURN p_decision;
-END
-$$;
+      OR app.intended_plate !~ '^([ء-ي]{3}[0-9]{3}|[ء-ي]{2}[0-9]{4}|[ء-ي]{3}[0-9]{4})$'
       OR (app.vehicle_color_code='other' AND char_length(trim(coalesce(app.vehicle_color_other,'')))<2)
    THEN RAISE EXCEPTION 'CAPTAIN_APPLICATION_INCOMPLETE'; END IF;
    IF (SELECT count(DISTINCT d.kind) FROM public.v31_captain_documents d
