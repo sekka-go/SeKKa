@@ -87,7 +87,7 @@ test('MOCKED narrow Admin header preserves both preference toggles and 44px hit 
  await page.goto('/?tab=admin&view=62');
  await expect(page.locator('.sekka-admin-entry')).toBeVisible();
  await expect(page.locator('.sekka-mobile-header .sekka-language')).toBeVisible();
- const theme=page.getByRole('button',{name:'Switch appearance'});
+ const theme=page.locator('.sekka-mobile-header .sekka-theme:not(.sekka-language)');
  const language=page.getByRole('button',{name:'Switch to Arabic'});
  for(const element of [theme,language]){
   const box=await element.boundingBox();
