@@ -40,7 +40,7 @@ export default function LiveProfile(){
  return <section className="d-box live-profile">
   <h2>{t('بيانات حسابي','My profile')}</h2>
   {!loaded&&!error&&<p role="status">{t('بنحمّل بياناتك…','Loading your profile…')}</p>}
-  {error&&<><p role="alert">{error}</p>}{!loaded&&<button type="button" onClick={()=>setReload(n=>n+1)}>{t('إعادة المحاولة','Retry')}</button>}</>}{notice&&<p role="status">{notice}</p>}
+  {error&&<><p role="alert">{error}</p>{!loaded&&<button type="button" onClick={()=>setReload(n=>n+1)}>{t('إعادة المحاولة','Retry')}</button>}</>}{notice&&<p role="status">{notice}</p>}
   {loaded&&<><label>{t('الاسم','Name')}<input maxLength={100} value={name} onChange={e=>setName(e.target.value)}/></label>
    <label>{t('رقم الموبايل (اختياري)','Phone (optional)')}<input type="tel" inputMode="tel" value={phone} onChange={e=>setPhone(e.target.value)}/></label>
    <p>{t('الرقم للتواصل فقط. بنراجع صيغته؛ تأكيد ملكيته برسالة SMS مؤجل دلوقتي.','Phone is for contact only. Its format is checked; SMS verification of ownership is postponed.')}</p>
