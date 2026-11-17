@@ -88,3 +88,25 @@ Baseline branch HEAD before these changes: `2d0386864bbd50ccd1142cfebb022f6824be
 ### Acceptance decision
 
 **BLOCKED — actual code improvements and synthetic regression tests exist, but a passing exact-HEAD CI run and independently verified Passenger, Captain and Admin Google sessions are required.** Retain Phase 02 numbering from the owner-approved handoff. Do not automatically advance to Phase 03.
+
+
+## Real-device owner report — 18 November 2026: functional follow-up, not yet accepted
+
+The owner supplied a ~4m43s Android recording demonstrating the following Staging failures despite previous green CI:
+
+1. **Passenger no-match request:** selecting origin and destination, searching for a published route and attempting to confirm a trip request displays a "Review your search details" error rather than saving the request. Root-cause source review found that `Discovery` passed an empty `period` to `LiveRouteSearch` for an ordinary non-filtered search, then `LiveTripRequests.create` rejected the empty period. The current fix passes the selected period independently of route filtering, visibly offers Weekly/Monthly and departure-time choices, handles unauthenticated users with a Google sign-in CTA and verifies owned persisted request rows after inserting.
+2. **Captain documents:** Android file selection returns to the document stage with `0/4` and no saved document. Current code formerly relied on `File.type`, which Android document providers can supply as a blank or generic MIME. The revised upload validates the actual JPG/PNG/PDF signatures using the first bytes, selects the matching content type, displays the chosen filename while uploading and reports selection/upload errors. **The exact device failure has NOT been independently reproduced or proven fixed by a real authenticated Android upload yet.**
+3. **Navigation:** important actions were scattered across the Passenger home and account screens. Owner requested a consolidated left menu. The application now adds an accessible drawer on the physical LEFT regardless of Arabic RTL / English LTR, keeping original core tabs, authorized Captain/Admin links and language/theme preferences. The scattered home quick-action shortcuts were removed only from the real app; the approved developer gallery stays unchanged.
+
+### Read-only Staging evidence at investigation time
+- Staging project: `zgcvumykzivsvnlflbyp`, no Production change.
+- `v31_captain_applications`: 6 rows (5 drafts, 1 submitted), showing that some registration data was saved.
+- `v31_captain_documents`: 0 rows. The private Staging document Storage bucket also contained 0 objects.
+- `v31_trip_requests`: 0 rows. Published `v31_routes`: 0 rows.
+- Private Storage bucket upload policy permits authenticated owners with draft/rejected applications; bucket is private with 5 MB limit for JPEG/PNG/PDF. This metadata inspection is not a real-device Storage acceptance test.
+
+### Required acceptance after these fixes
+- Use the same authorized Android Google session on the **new exact-SHA Staging preview**. Upload four real allowed test documents, check each of four progress increments, refresh and verify documents still appear, then submit and verify status via a read.
+- Search an unmatched origin/destination and choose Weekly or Monthly; confirm a request and verify it appears in the Passenger's own requests after refresh and in the database. Do not fabricate a published Captain offer or reservation.
+- Verify the physical-left drawer, close/Back behavior, role permissions, AR/EN and Light/Dark across 360/390 widths, with no button overlap.
+- Run local/CI automated tests and distinguish synthetic MOCKED test success from authenticated Staging browser success. This follow-up and Phase 02 remain **BLOCKED** on real-device acceptance until observed.
