@@ -1,6 +1,7 @@
 import {useEffect,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
+import {MAX_SEATS_PER_RIDER} from './reservations';
 type RequestRow={id:string;rider_id:string;origin_area_id:number;destination_area_id:number;outbound_time:string;period:string;seats:number;status:string};
 type OfferRow={id:string;request_id:string;captain_id:string;route_id:string;status:string};
 type RouteRow={id:string;title:string};
@@ -40,6 +41,7 @@ export default function LiveTripRequests({mode,search,onSignIn}:{mode:'rider'|'c
   if(!client||!search)return;
   const from=areas.find(a=>a.name_ar===search.origin||a.name_en===search.origin),to=areas.find(a=>a.name_ar===search.destination||a.name_en===search.destination);
   if(!uid){onSignIn?.();return;}
+  if(!Number.isInteger(seats)||seats<1||seats>MAX_SEATS_PER_RIDER){setError(t('الحد الأقصى لطلب الرحلة شخصين فقط.','You can request a trip for at most two people.'));return;}
   if(!from||!to||from.id===to.id||!/^([01]\d|2[0-3]):[0-5]\d$/.test(requestTime)||!['weekly','monthly'].includes(requestPeriod)){
    setError(t('راجع المناطق ووقت الذهاب ومدة الاشتراك قبل إرسال الطلب.','Check the areas, departure time and subscription period.'));return;
   }
@@ -84,8 +86,9 @@ export default function LiveTripRequests({mode,search,onSignIn}:{mode:'rider'|'c
    <p>{search.origin} ← {search.destination}</p>
    <label>{t('وقت الذهاب','Departure time')}<input type="time" value={requestTime} onChange={e=>setRequestTime(e.target.value)} required/></label>
    <label>{t('مدة الاشتراك','Subscription period')}<select value={requestPeriod} onChange={e=>setRequestPeriod(e.target.value as 'weekly'|'monthly')}><option value="weekly">{t('أسبوعي','Weekly')}</option><option value="monthly">{t('شهري','Monthly')}</option></select></label>
-   <label>{t('عدد المقاعد المطلوبة','Seats needed')}<input type="number" min={1} max={13} value={seats} onChange={e=>setSeats(Number(e.target.value))}/></label>
-   <button type="button" disabled={busy||!Number.isInteger(seats)||seats<1||seats>13||!requestTime} onClick={()=>void create()}>{busy?t('جارٍ حفظ الطلب…','Saving request…'):t('تأكيد وحفظ طلب الرحلة','Confirm and save trip request')}</button>
+   <label>{t('عدد المقاعد المطلوبة','Seats needed')}<input type="number" min={1} max={MAX_SEATS_PER_RIDER} value={seats} onChange={e=>setSeats(Number(e.target.value))}/></label>
+   <p>{t('تقدر تطلب مقعد أو مقعدين فقط لكل حساب.','You can request one or two seats per account.')}</p>
+   <button type="button" disabled={busy||!Number.isInteger(seats)||seats<1||seats>MAX_SEATS_PER_RIDER||!requestTime} onClick={()=>void create()}>{busy?t('جارٍ حفظ الطلب…','Saving request…'):t('تأكيد وحفظ طلب الرحلة','Confirm and save trip request')}</button>
    <p>{t('الطلب مش حجز ومفيش أي دفع.','Requesting does not reserve seats or charge money.')}</p>
   </div>}
   <ul>{visible.map(r=><li key={r.id}>
