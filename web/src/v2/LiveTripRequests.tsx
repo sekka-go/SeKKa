@@ -36,7 +36,7 @@ export default function LiveTripRequests({mode,search,onSignIn}:{mode:'rider'|'c
   }catch(e){if(active)setError(e instanceof Error?e.message:String(e));}
   finally{if(active)setLoading(false);}
  })();return()=>{active=false;};},[mode,revision]);
- const action=async(task:()=>Promise<void>)=>{setBusy(true);setError('');setNotice('');try{await task();refresh();}catch(e){setError(e instanceof Error?e.message:String(e));}finally{setBusy(false);}};
+ const action=async(task:()=>Promise<void>)=>{setBusy(true);setError('');setNotice('');try{await task();refresh();}catch(e){const message=e instanceof Error?e.message:String(e);setError(message.includes('RIDER_MAX_TWO_SEATS')?t('الحد الأقصى شخصين فقط لكل طلب.','Maximum two people per request.'):message);}finally{setBusy(false);}};
  const create=async()=>{
   if(!client||!search)return;
   const from=areas.find(a=>a.name_ar===search.origin||a.name_en===search.origin),to=areas.find(a=>a.name_ar===search.destination||a.name_en===search.destination);
