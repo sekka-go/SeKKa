@@ -46,7 +46,7 @@ export default function LiveRouteSearch({origin,destination,outbound,returnTime,
   const key=bookingKeys[routeId]||crypto.randomUUID();
   setBookingKeys(v=>({...v,[routeId]:key}));setBookingBusy(routeId);setBookingError('');setBookingSuccess('');
   try{const result=await reserveSeatsWithStops(routeId,seats,key,pickupStopId,dropoffStopId,reverse);setBookingSuccess(t('تم تسجيل طلب الحجز برقم '+result.bookingId+'. حالته قيد الانتظار.','Booking requested: '+result.bookingId+'. Status: pending.'));setBookingKeys(v=>{const next={...v};delete next[routeId];return next;});setRetry(v=>v+1);}
-  catch(e){setBookingError(e instanceof Error?e.message:String(e));}
+  catch(e){const message=e instanceof Error?e.message:String(e);setBookingError(message.includes('RIDER_MAX_TWO_SEATS')||message.includes('MAX_TWO_SEATS_PER_RIDER')?t('كل حساب يقدر يحجز لشخصين فقط على نفس الخط.','At most two seats per account on the same route.'):message);}
   finally{setBookingBusy(null);}
  };
  useEffect(()=>{
