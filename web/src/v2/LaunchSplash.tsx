@@ -7,7 +7,7 @@ const SPLASH_DURATION_MS = 3000;
  * fresh document navigation; OAuth callbacks and history restores also bypass it. */
 export function shouldPlayLaunchSplash() {
   const current = new URL(window.location.href);
-  if (current.pathname.startsWith("/dev/screens") ||
+  if ((current.pathname === "/dev/screens" || current.pathname === "/dev/screens/") ||
       current.searchParams.has("code") ||
       current.searchParams.has("error") ||
       current.hash.includes("access_token=")) return false;
