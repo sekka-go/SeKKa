@@ -98,8 +98,8 @@ for(const width of [320,360,390,412]){
    await expect(page.getByRole('alert')).toHaveCount(4);
    expect(personalSaveCount).toBe(0);
 
-   await page.getByLabel(language==='en'?'Full name':'الاسم بالكامل').fill('Mona Hassan');
-   await page.getByLabel(language==='en'?'Egyptian mobile number (unverified)':'رقم الموبايل المصري (غير مؤكد)')
+   await page.getByLabel(language==='en'?'Full name (at least 3 names, matching ID)':'الاسم الثلاثي على الأقل — مطابق للبطاقة').fill('Mona Hassan Ali');
+   await page.getByLabel(language==='en'?'Egyptian mobile number':'رقم الموبايل المصري')
     .fill('01012345678');
    await page.getByLabel(language==='en'?'Professional background':'الخلفية المهنية')
     .fill('Daily route operations');
@@ -113,7 +113,7 @@ for(const width of [320,360,390,412]){
    await years.fill('800000');
    await continueButton.click();
    await expect(page.getByText(
-    language==='en'?'Enter a whole number from 0 to 80.':'اكتب عددًا صحيحًا من 0 إلى 80.'
+    language==='en'?'Enter a whole number from 0 to 30.':'اكتب عددًا صحيحًا من 0 إلى 30.'
    )).toBeVisible();
    expect(personalSaveCount).toBe(0);
 
@@ -122,7 +122,7 @@ for(const width of [320,360,390,412]){
    await continueButton.click();
    await expect(page).toHaveURL(/tab=captain-onboarding&view=37/);
    expect(application.experience_years).toBe(0);
-   expect(application.full_name).toBe('Mona Hassan');
+   expect(application.full_name).toBe('Mona Hassan Ali');
    expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
 
    await page.reload();
