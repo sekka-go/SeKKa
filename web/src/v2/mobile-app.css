@@ -376,8 +376,8 @@
 
 /* Owner-approved shell header correction: official logo geometrically
  * centered, independent of RTL/LTR or other header controls.
- * Arabic: language on the RIGHT, theme on the LEFT.
- * English: language on the LEFT, theme on the RIGHT.
+ * Arabic (RTL): language on the LEFT, theme on the RIGHT.
+ * English (LTR): language on the RIGHT, theme on the LEFT.
  * Keep approved screen artwork unaffected. */
 .sekka-mobile-header{height:64px;min-height:64px;position:sticky;isolation:isolate}
 .sekka-mobile-header>span{display:none}
@@ -387,11 +387,11 @@
  width:56px;height:48px;min-height:48px;flex:none;padding:0;z-index:1
 }
 .sekka-mobile-header>.sekka-language{
- position:absolute;inset-inline-start:12px;inset-inline-end:auto;
+ position:absolute;inset-inline-end:12px;inset-inline-start:auto;
  top:10px;width:44px;height:44px;min-height:44px;flex:none;padding:0;z-index:1
 }
 .sekka-mobile-header>.sekka-theme:not(.sekka-language){
- position:absolute;inset-inline-end:12px;inset-inline-start:auto;
+ position:absolute;inset-inline-start:12px;inset-inline-end:auto;
  top:10px;width:44px;height:44px;min-height:44px;flex:none;padding:0;z-index:1
 }
 /* Admin controls have a dedicated second row; never squeeze the
@@ -404,8 +404,8 @@
 }
 @media(max-width:359px){
  .sekka-mobile-header>.sekka-brand-button{left:50%;width:48px;height:48px}
- .sekka-mobile-header>.sekka-language{inset-inline-start:8px}
- .sekka-mobile-header>.sekka-theme:not(.sekka-language){inset-inline-end:8px}
+ .sekka-mobile-header>.sekka-language{inset-inline-end:8px}
+ .sekka-mobile-header>.sekka-theme:not(.sekka-language){inset-inline-start:8px}
  .sekka-mobile-header.sekka-mobile-header-admin>.sekka-admin-entry{
   width:max-content;max-width:calc(100% - 16px);padding:7px 10px;font-size:12px
  }
