@@ -1,5 +1,6 @@
 import {client} from './api';
 
+export const MAX_SEATS_PER_RIDER = 2 as const;
 export type SeatReservationResult = {bookingId:string};
 
 /**
@@ -9,7 +10,7 @@ export type SeatReservationResult = {bookingId:string};
  */
 export async function reserveSeats(routeId:string,seats:number,idempotencyKey:string):Promise<SeatReservationResult>{
   if(!client)throw new Error('BACKEND_NOT_CONFIGURED');
-  if(!routeId||!Number.isInteger(seats)||seats<1||seats>13)throw new Error('INVALID_SEATS');
+  if(!routeId||!Number.isInteger(seats)||seats<1||seats>MAX_SEATS_PER_RIDER)throw new Error('MAX_TWO_SEATS_PER_RIDER');
   if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(idempotencyKey))throw new Error('INVALID_IDEMPOTENCY_KEY');
   const {data:{user},error:authError}=await client.auth.getUser();
   if(authError||!user)throw new Error('AUTH_REQUIRED');
@@ -38,7 +39,7 @@ export async function cancelPendingBooking(bookingId:string):Promise<void>{
  */
 export async function reserveSeatsWithStops(routeId:string,seats:number,idempotencyKey:string,pickupStopId:string,dropoffStopId:string,reverse=false):Promise<SeatReservationResult>{
  if(!client)throw new Error('BACKEND_NOT_CONFIGURED');
- if(!routeId||!Number.isInteger(seats)||seats<1||seats>13)throw new Error('INVALID_SEATS');
+ if(!routeId||!Number.isInteger(seats)||seats<1||seats>MAX_SEATS_PER_RIDER)throw new Error('MAX_TWO_SEATS_PER_RIDER');
  const {data:{user},error:authError}=await client.auth.getUser();
  if(authError||!user)throw new Error('AUTH_REQUIRED');
  const {data,error}=await client.rpc('v31_reserve_seats_with_stops',{
