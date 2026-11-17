@@ -338,7 +338,11 @@ export default function MobileApp(){
    <span>{t('مشوارك، على سِكّة','Your ride, your route')}</span>
    {ready&&admin&&<button type="button" className="sekka-admin-entry" aria-current={tab==='admin'?'page':undefined}
      onClick={openAdmin}>{t('لوحة الإدارة','Admin dashboard')}</button>}
-   <button className="sekka-theme" aria-label={t('تغيير المظهر','Switch appearance')} onClick={()=>p.setThemePreference(p.theme==='dark'?'light':'dark')}>{p.theme==='dark'?'☀':'☾'}</button>
+   <button type="button" className="sekka-theme sekka-language" aria-label={en?'Switch to Arabic':'التبديل إلى الإنجليزية'}
+     title={en?'العربية':'English'} onClick={()=>p.setLanguagePreference(en?'ar':'en')}>
+     <span aria-hidden="true">🌐</span><small aria-hidden="true">{en?'ع':'EN'}</small>
+   </button>
+   <button type="button" className="sekka-theme" aria-label={t('تغيير المظهر','Switch appearance')} onClick={()=>p.setThemePreference(p.theme==='dark'?'light':'dark')}>{p.theme==='dark'?'☀':'☾'}</button>
   </header>
   <main id="sekka-content" className={`sekka-mobile-content${tab==='admin'&&admin?' sekka-admin-workspace':''}`}>
    {!ready&&<p role="status">{t('بنجهز حسابك…','Loading account…')}</p>}

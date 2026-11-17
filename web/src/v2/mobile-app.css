@@ -351,3 +351,14 @@
     box-shadow: none;
   }
 }
+
+/* Quick language switch uses the same 44px square control as the theme toggle.
+ * It follows user preference persistence in preferences.tsx, without changing
+ * approved screen artwork or creating a separate navigation destination. */
+.sekka-mobile-header > .sekka-language {
+ display:inline-flex; align-items:center; justify-content:center;
+ flex-direction:column; gap:0; line-height:1; font-size:19px;
+}
+.sekka-mobile-header > .sekka-language > small {
+ font-size:11px; font-family:inherit; font-weight:900; margin-top:-1px;
+}

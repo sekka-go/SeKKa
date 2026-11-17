@@ -32,6 +32,34 @@ test('explicit Captain selection survives route history and prepares its own OAu
  await expect(page).toHaveURL(/tab=login&view=4/);
 });
 
+for(const width of [320,390]){
+ test('language icon switches Arabic and English independently of theme at '+width+'px',async({page})=>{
+  await page.setViewportSize({width,height:width===320?700:844});
+  await page.addInitScript(()=>{
+   localStorage.setItem('language_preference','ar');
+   localStorage.setItem('theme_preference','dark');
+  });
+  await page.goto('/?tab=profile');
+  const toggle=page.locator('.sekka-mobile-header .sekka-language');
+  await expect(toggle).toBeVisible();
+  await expect(toggle).toHaveAttribute('aria-label','التبديل إلى الإنجليزية');
+  await expect(page.locator('html')).toHaveAttribute('dir','rtl');
+  await toggle.click();
+  await expect(page.locator('html')).toHaveAttribute('dir','ltr');
+  await expect(toggle).toHaveAttribute('aria-label','Switch to Arabic');
+  await expect(page.getByRole('heading',{name:'My profile'})).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
+  expect(await page.evaluate(()=>localStorage.getItem('language_preference'))).toBe('en');
+  await page.reload();
+  await expect(toggle).toHaveAttribute('aria-label','Switch to Arabic');
+  await expect(page.locator('html')).toHaveAttribute('dir','ltr');
+  await toggle.click();
+  await expect(page.locator('html')).toHaveAttribute('dir','rtl');
+  await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
+ });
+}
+
 test('direct profile-completion links require Google authentication first',async({page})=>{
  await page.goto('/?tab=login&view=6');
  await expect(page.locator('.phase-google-auth')).toBeVisible();
