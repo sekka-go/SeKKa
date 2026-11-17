@@ -195,7 +195,7 @@ export default function MobileApp(){
       }
     }
     setReady(true);
-   }catch(e){
+   }catch{
     if(!active||readId!==sessionReadId.current)return;
     setUserId(null);setCaptain(false);setCaptainApproved(false);setAdmin(false);
     setAdminLookupError('');setSessionLookupError(true);
