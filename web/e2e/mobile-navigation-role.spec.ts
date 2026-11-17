@@ -32,14 +32,17 @@ test('explicit Captain selection survives route history and prepares its own OAu
  await expect(page).toHaveURL(/tab=login&view=4/);
 });
 
-for(const width of [320,390]){
+for(const width of [320,360,390,412]){
  test('language icon switches Arabic and English independently of theme at '+width+'px',async({page})=>{
   await page.setViewportSize({width,height:width===320?700:844});
-  await page.addInitScript(()=>{
+  // Seed the preference once, before the first tested load. addInitScript
+  // re-runs on every reload and would overwrite the preference under test.
+  await page.goto('/?tab=profile');
+  await page.evaluate(()=>{
    localStorage.setItem('language_preference','ar');
    localStorage.setItem('theme_preference','dark');
   });
-  await page.goto('/?tab=profile');
+  await page.reload();
   const toggle=page.locator('.sekka-mobile-header .sekka-language');
   await expect(toggle).toBeVisible();
   await expect(toggle).toHaveAttribute('aria-label','التبديل إلى الإنجليزية');
@@ -61,8 +64,8 @@ for(const width of [320,390]){
 }
 
 for(const language of ['ar','en'] as const){
- for(const width of [320,390]){
-  test('header logo centered and language at the '+(language==='ar'?'right':'left')+' edge '+width+'px',async({page})=>{
+ for(const width of [320,360,390,412]){
+  test('header logo centered and language at the '+(language==='ar'?'left':'right')+' edge '+width+'px',async({page})=>{
    await page.setViewportSize({width,height:width===320?700:844});
    await page.addInitScript(language=>{
     localStorage.setItem('language_preference',language);
@@ -80,11 +83,11 @@ for(const language of ['ar','en'] as const){
    expect(l!.width).toBeGreaterThanOrEqual(44);
    expect(t!.width).toBeGreaterThanOrEqual(44);
    if(language==='ar'){
-    expect(l!.x,'language on physical right when Arabic').toBeGreaterThan(b!.x+b!.width);
-    expect(t!.x+t!.width,'theme on physical left').toBeLessThan(b!.x);
-   }else{
-    expect(l!.x+l!.width,'language on physical left when English').toBeLessThan(b!.x);
+    expect(l!.x+l!.width,'language on physical left when Arabic').toBeLessThan(b!.x);
     expect(t!.x,'theme on physical right').toBeGreaterThan(b!.x+b!.width);
+   }else{
+    expect(l!.x,'language on physical right when English').toBeGreaterThan(b!.x+b!.width);
+    expect(t!.x+t!.width,'theme on physical left').toBeLessThan(b!.x);
    }
    expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
   });
