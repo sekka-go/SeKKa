@@ -9,6 +9,10 @@
 - **Commit provenance:** the workflow resolves the successful `Cloudflare Pages: sekka-staging-web` check for its exact source SHA. Before capture, the collector reads `/build-info.json` from that preview and fails if the deployed SHA differs, is missing, or the request redirects. Every screenshot pair records the source SHA, deployed SHA, preview URL, viewport, language, theme, screen ID, capture time, and comparability state. Historical artifacts from the former pinned-URL workflow are not current-HEAD evidence.
 - **Device combinations:** 360×800 and 390×844; Arabic/English; Light/Dark, 8 variants per screen = **584 numbered comparison pairs** when collection completes.
 
+## Latest verified collection
+
+[Workflow run 44128308727](https://github.com/sekka-go/SeKKa/actions/runs/44128308727) completed all 584 pairs with zero capture failures. Its source and deployed SHA both equal `9c9dca9351c323b4c3e5211d5baf58e2f4d587c0`; the preview is `https://d3c54405.sekka-staging-web.pages.dev`. **568 pairs are non-comparable** because the application requires authenticated state, defers the feature, or has no equivalent route. The artifact is guest-only evidence and is not visual acceptance.
+
 ## How to review the evidence
 
 Open the **seKKa 73-screen visual evidence** GitHub Actions workflow linked from PR #185. Download the `sekka-73-screen-visual-evidence` artifact. The archive includes an explicit `visual-audit-73.zip` bundle containing:
