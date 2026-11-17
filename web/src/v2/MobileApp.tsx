@@ -22,6 +22,15 @@ import './mobile-app.css';
 export default function MobileApp(){
  const p=usePreferences(),en=p.language==='en',t=(ar:string,english:string)=>en?english:ar;
  const [route,setRoute]=useState<MobileRoute>(()=>readMobileRoute());
+ const [menuOpen,setMenuOpen]=useState(false);
+ const menuTrigger=useRef<HTMLButtonElement>(null);
+ const closeMenu=()=>{setMenuOpen(false);menuTrigger.current?.focus();};
+ useEffect(()=>{
+  if(!menuOpen)return;
+  const onKey=(event:KeyboardEvent)=>{if(event.key==='Escape')closeMenu();};
+  document.addEventListener('keydown',onKey);
+  return()=>document.removeEventListener('keydown',onKey);
+ },[menuOpen]);
  const tab=route.tab;
  const adminScreen=route.tab==='admin'?route.view:62;
  const [captainApproved,setCaptainApproved]=useState(false);
@@ -51,6 +60,7 @@ export default function MobileApp(){
   if(canonical!==current)history.replaceState({route},'',canonical);
  },[route]);
  function navigate(next:MobileRoute,options:{replace?:boolean;selection?:RouteSelection}={}){
+  setMenuOpen(false);
   const href=mobileRouteHref(next,location.href,options.selection);
   if(options.replace)history.replaceState({route:next},'',href);
   else history.pushState({route:next},'',href);
@@ -331,6 +341,8 @@ export default function MobileApp(){
   }
  };
 
+ const menuLink=(label:string,next:MobileRoute)=><button type="button" onClick={()=>navigate(next)}
+  aria-current={tab===next.tab?'page':undefined}>{label}</button>;
  const fullScreenSearchFilters=tab==='search'&&discoveryScreen===10;
  const fullScreenAuth=(tab==='login'&&(onboardingScreen===3||onboardingScreen===4))||(tab==='captain-onboarding'&&!userId);
  const fullScreenSearch=tab==='search'&&discoveryScreen===9;
@@ -381,6 +393,39 @@ export default function MobileApp(){
   </main>
   <nav className="sekka-bottom-nav" aria-label={t('التنقل الرئيسي','Main navigation')}>
    {([['home','⌂','الرئيسية','Home'],['search','⌕','بحث','Search'],['bookings','▦','حجوزاتي','Bookings'],['notifications','♧','الإشعارات','Alerts'],['profile','◉','حسابي','Account']] as const).map(([id,icon,ar,english])=><button key={id} aria-current={tab===id?'page':undefined} onClick={()=>navigate(id==='search'?{tab:id,view:9}:{tab:id})}><span aria-hidden="true">{icon}</span><small>{t(ar,english)}</small></button>)}
+   <button type="button" ref={menuTrigger} className="sekka-menu-tab"
+    aria-label={t('فتح القائمة','Open menu')} aria-expanded={menuOpen}
+    aria-controls="sekka-side-menu" onClick={()=>setMenuOpen(v=>!v)}>
+    <span aria-hidden="true">☰</span><small>{t('القائمة','Menu')}</small>
+   </button>
   </nav>
+  {menuOpen&&<div className="sekka-menu-layer">
+   <button type="button" className="sekka-menu-backdrop" aria-label={t('إغلاق القائمة','Close menu')} onClick={closeMenu}/>
+   <aside id="sekka-side-menu" className="sekka-side-drawer" role="dialog" aria-modal="true"
+    aria-label={t('القائمة الرئيسية','Main menu')} dir={en?'ltr':'rtl'}>
+    <header className="sekka-side-drawer__header"><strong>{t('القائمة','Menu')}</strong>
+     <button type="button" className="sekka-side-drawer__close" onClick={closeMenu}
+      aria-label={t('إغلاق القائمة','Close menu')}>×</button></header>
+    <nav aria-label={t('الأقسام','Sections')}>
+     <h2>{t('التنقل','Navigation')}</h2>
+     {menuLink(t('الرئيسية','Home'),{tab:'home'})}
+     {menuLink(t('البحث عن خط','Find a route'),{tab:'search',view:9})}
+     {menuLink(t('حجوزاتي','My bookings'),{tab:'bookings'})}
+     {menuLink(t('الإشعارات','Notifications'),{tab:'notifications'})}
+     {menuLink(t('حسابي','My profile'),{tab:'profile'})}
+     <h2>{t('الكابتن','Captain')}</h2>
+     <button type="button" onClick={startCaptainJourney}>{t('تسجيل / متابعة طلب الكابتن','Captain registration / application')}</button>
+     {ready&&captain&&captainApproved&&menuLink(t('خطوطي','My routes'),{tab:'routes',view:42})}
+     {ready&&admin&&<><h2>{t('الإدارة','Administration')}</h2>
+      {menuLink(t('لوحة الإدارة','Admin dashboard'),{tab:'admin',view:62})}</>}
+     <h2>{t('اللغة والمظهر','Language & appearance')}</h2>
+     <button type="button" onClick={()=>p.setLanguagePreference(en?'ar':'en')}>{en?'العربية':'English'}</button>
+     <button type="button" onClick={()=>p.setThemePreference(p.theme==='dark'?'light':'dark')}>
+      {p.theme==='dark'?t('الوضع الفاتح','Light mode'):t('الوضع الداكن','Dark mode')}</button>
+     {ready&&userId&&<><h2>{t('الحساب','Account')}</h2>
+      <button type="button" onClick={()=>void signOut()}>{t('تسجيل الخروج','Sign out')}</button></>}
+    </nav>
+   </aside>
+  </div>}
  </div>;
 }
