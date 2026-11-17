@@ -26,8 +26,8 @@ export async function fetchPublishedSelection(routeId:string,fromId:string,toId:
  if(typeof remaining!=='number'||remaining<0)throw Error('CAPACITY_UNAVAILABLE');
  return {route:route as Route,from,to,reverse,stops,remaining};
 }
-export default function LiveRouteSearch({origin,destination,outbound,returnTime,period,categories,onSelect}:{
- origin:string;destination:string;outbound:string;returnTime:string;period:string;categories:string[];onSelect?:(selection:LiveSelection)=>void;
+export default function LiveRouteSearch({origin,destination,outbound,returnTime,period,requestPeriod,categories,onSelect,onSignIn}:{
+ origin:string;destination:string;outbound:string;returnTime:string;period:string;requestPeriod:string;categories:string[];onSelect?:(selection:LiveSelection)=>void;onSignIn?:()=>void;
 }){
  const {language}=usePreferences(),en=language==='en';
  const t=(ar:string,english:string)=>en?english:ar;
@@ -112,7 +112,7 @@ export default function LiveRouteSearch({origin,destination,outbound,returnTime,
   {loading&&<p role="status">{t('بنبحث عن خطوط مطابقة…','Searching published routes…')}</p>}
   {error&&<div role="alert"><p>{t('تعذر تحميل الخطوط.','Unable to load routes.')} {error}</p><button onClick={()=>setRetry(v=>v+1)}>{t('حاول تاني','Retry')}</button></div>}
   {!loading&&!error&&items.length===0&&<div role="status"><p>{t('لسه مفيش خط مناسب.','No suitable route yet.')}</p><p>{t('لسه مفيش خطوط منشورة مطابقة لنقط الركوب والنزول ومواعيدك.','No published routes match your pickup, drop-off and schedule yet.')}</p></div>}
-  {!loading&&!error&&items.length===0&&origin&&destination&&<LiveTripRequests mode="rider" search={{origin,destination,outbound,period}}/>}
+  {!loading&&!error&&items.length===0&&origin&&destination&&<LiveTripRequests mode="rider" search={{origin,destination,outbound,period:requestPeriod}} onSignIn={onSignIn}/>}
   {bookingError&&<p role="alert">{bookingError}</p>}
   {bookingSuccess&&<p role="status">{bookingSuccess}</p>}
   {items.map((selection)=><article className="d-box d-result" key={selection.route.id+String(selection.reverse)+selection.from.id+selection.to.id}>{(()=>{const {route,from,to,reverse}=selection;return <>
