@@ -961,12 +961,12 @@ export default function Discovery(p: DiscoveryProps) {
           <section className="d-box">
             <h2>{tr("أهلًا بيك في سِكّة")}</h2>
             <p>{tr("مشوارك المنتظم يبدأ من هنا.")}</p>
-            <div className="d-period-options d-home-quick-actions">
+            {!p.production&&<div className="d-period-options d-home-quick-actions">
               <button onClick={() => nav(29)}>{tr("اشتراكاتي")}</button>
               <button onClick={() => nav(14)}>{tr("المفضلة")}</button>
               {!p.production && <button onClick={() => nav(24)}>{tr("المحفظة")}</button>}
               <button onClick={() => nav(33)}>{tr("الإشعارات")}</button>
-            </div>
+            </div>}
           </section>
         )}
         {screen === 11 && !demo && <LiveRouteSearch origin={origin} destination={destination} outbound={outbound} returnTime={returnTime} period={appliedFilters?period:""} requestPeriod={period} categories={categories} onSelect={p.production?p.onLiveSelect:undefined} onSignIn={()=>nav(4)} />}
