@@ -60,3 +60,31 @@ Do not run staging scripts that insert records, grant approval, publish routes o
 - **Phase 02 is not PASS** until real authorized Google sessions, role gates, refresh/logout and negative permissions are evidenced.
 - Full Captain enrollment/approval is Phase 03; route/vehicle lifecycle Phase 04; Passenger search Phase 05; booking atomicity Phase 06; Admin modules Phase 09; 73-screen visual acceptance Phase 10; deep security isolation Phase 11; installed-device full E2E Phase 12.
 - Verify current PR HEAD and latest GitHub Actions status separately before citing automated-test success. Keep the PR Draft, do not merge or deploy Production.
+
+
+## Owner-directed Phase 02 continuation — 17 November 2026 (not yet accepted)
+
+Baseline branch HEAD before these changes: `2d0386864bbd50ccd1142cfebb022f6824be0755`. This continuation stays on Draft PR #185. **Phase 02 is still BLOCKED for real Google account acceptance.** The earlier partial work described above is preserved; none of the following is evidence of real Google authentication.
+
+### Code and tests changed
+
+- `web/e2e/mobile-navigation-role.spec.ts`: correct the owner-approved physical header positions (Arabic language LEFT, English language RIGHT) and keep the logo centered. Extend 320/390 checks to 360/412. Fix the test's per-navigation `addInitScript` preference overwrite so reload persistence is genuinely tested.
+- `web/src/v2/LiveProfile.tsx`: do not claim a saved profile until a same-user Supabase read-back confirms the intended name and optional phone. Show a localized retry for failed profile loads and handle rejected reads without leaving a permanent loading state.
+- `web/src/v2/MobileApp.tsx`: identity-verification failures remain signed out, show a localized actionable session-retry control, and must not reveal previously authenticated content.
+- `web/src/main.tsx` and `web/src/v2/LaunchSplash.tsx`: restrict developer gallery detection to `/dev/screens` and `/dev/screens/`, not similarly prefixed routes.
+- `web/e2e/admin-authorization-mocked.spec.ts`: add MOCKED regressions for profile read-after-write success/failure and a temporary identity-verification server failure followed by retry.
+- `web/e2e/mobile-pwa-navigation.spec.ts`: verify that `/dev/screens-copy` is not mistaken for the developer gallery.
+
+### Evidence separation and known verification
+
+- Previous run [44156981554](https://github.com/sekka-go/SeKKa/actions/runs/44156981554) had 59 passing and 6 failing mocked navigation tests before the correction. The four header assertions encoded the superseded layout; two persistence tests re-seeded Arabic on reload.
+- A subsequent intermediate run [44165300867](https://github.com/sekka-go/SeKKa/actions/runs/44165300867) revealed a TypeScript JSX typo in the newly added profile retry fragment. This was fixed in commit `bcf1fd337ce92bbad60e819feda1b60ba2553db7`. **Do not cite the intermediate run as a passing CI result.**
+- Newest CI for the final documentation commit must be checked independently. Automated results are **PENDING VERIFICATION** until the exact final HEAD and corresponding jobs complete; do not mark A1 PASS ahead of evidence.
+- Read-only Staging Supabase inspection confirmed `zgcvumykzivsvnlflbyp` is `ACTIVE_HEALTHY`. `v31_is_admin`, `v31_admin_overview`, and both `v31_admin_decide_captain` overloads are not executable by `anon`; `v31_is_admin` checks `auth.uid()`, confirmed email, a Google identity and a server-side allowlist. `v31_profiles` SELECT/INSERT/UPDATE policies check `user_id = auth.uid()`, with UPDATE `WITH CHECK`. These observations **do not constitute real-account cross-user authorization tests**.
+- The Staging captain-review and real-journey scripts create/update durable rows, uploads, approvals or reservations; they were inspected but **not run**. No database migration, data deletion, or production write was performed as part of this continuation.
+- No authorized Google browser sessions were available to this execution. Passenger/Captain/Admin OAuth, token expiry, real profile read-after-write, role-specific navigation and negative permissions therefore remain **BLOCKED** pending owner-assisted authenticated tests.
+- The 73-screen screenshot collector and Cloudflare previews are distinct from real OAuth acceptance. Check deployment source SHA before claiming preview correctness.
+
+### Acceptance decision
+
+**BLOCKED — actual code improvements and synthetic regression tests exist, but a passing exact-HEAD CI run and independently verified Passenger, Captain and Admin Google sessions are required.** Retain Phase 02 numbering from the owner-approved handoff. Do not automatically advance to Phase 03.
