@@ -46,3 +46,30 @@ test('gallery path does not capture similarly named public application paths',as
  await expect(page.locator('.phase-review-bar')).toBeVisible();
  await expect(page.locator('.sekka-mobile')).toHaveCount(0);
 });
+
+for(const language of ['ar','en'] as const){
+ test(`physical-left menu consolidates key navigation in ${language} (guest)`,async({page})=>{
+  await page.setViewportSize({width:360,height:800});
+  await page.addInitScript(lang=>localStorage.setItem('language_preference',lang),language);
+  await page.goto('/?tab=search');
+  const trigger=page.getByRole('button',{name:language==='ar'?'فتح القائمة':'Open menu'});
+  await expect(trigger).toBeVisible();
+  const position=await trigger.boundingBox();
+  expect(position).not.toBeNull();
+  expect(position!.x+position!.width/2).toBeLessThan(180);
+  await trigger.click();
+  const drawer=page.getByRole('dialog',{name:language==='ar'?'القائمة الرئيسية':'Main menu'});
+  await expect(drawer).toBeVisible();
+  const bounds=await drawer.boundingBox();
+  expect(bounds).not.toBeNull();
+  expect(bounds!.x).toBeLessThanOrEqual(1);
+  await expect(drawer.getByRole('button',{name:language==='ar'?'تسجيل / متابعة طلب الكابتن':'Captain registration / application'})).toBeVisible();
+  await drawer.getByRole('button',{name:language==='ar'?'حسابي':'My profile'}).click();
+  await expect(page).toHaveURL(/tab=profile/);
+  await expect(drawer).toHaveCount(0);
+  await trigger.click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+ });
+}
