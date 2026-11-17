@@ -92,7 +92,8 @@ test('MOCKED Android-width private document upload: denied, retry, verified pers
  await expect(picker.locator('input[type=file]')).toBeEnabled();
  await expect(page.getByText('0/4 required documents complete')).toBeVisible();
  const input=picker.locator('input[type=file]');
- const mockFile={name:'synthetic-test.jpg',mimeType:'image/jpeg',buffer:Buffer.from('safe-synthetic-file-for-fixture')};
+ // Android document providers sometimes send a generic MIME type. Validated JPEG signature still uploads.
+ const mockFile={name:'synthetic-test.jpg',mimeType:'application/octet-stream',buffer:Buffer.from([0xff,0xd8,0xff,0xe0,0x00,0x10,0x4a,0x46,0x49,0x46,0xff,0xd9])};
  await input.setInputFiles(mockFile);
  await expect(page.locator('.c-document').first().getByRole('alert')).toContainText('Document upload failed');
  await expect(page.getByText('0/4 required documents complete')).toBeVisible();
