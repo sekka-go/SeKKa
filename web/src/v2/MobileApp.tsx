@@ -395,13 +395,13 @@ export default function MobileApp(){
    {([['home','⌂','الرئيسية','Home'],['search','⌕','بحث','Search'],['bookings','▦','حجوزاتي','Bookings'],['notifications','♧','الإشعارات','Alerts'],['profile','◉','حسابي','Account']] as const).map(([id,icon,ar,english])=><button key={id} aria-current={tab===id?'page':undefined} onClick={()=>navigate(id==='search'?{tab:id,view:9}:{tab:id})}><span aria-hidden="true">{icon}</span><small>{t(ar,english)}</small></button>)}
    <button type="button" ref={menuTrigger} className="sekka-menu-tab"
     aria-label={t('فتح القائمة','Open menu')} aria-expanded={menuOpen}
-    aria-controls="sekka-side-menu" onClick={()=>setMenuOpen(v=>!v)}>
+    aria-controls="sekka-side-menu" onClick={()=>setMenuOpen(true)}>
     <span aria-hidden="true">☰</span><small>{t('القائمة','Menu')}</small>
    </button>
   </nav>
   {menuOpen&&<div className="sekka-menu-layer">
    <button type="button" className="sekka-menu-backdrop" aria-label={t('إغلاق القائمة','Close menu')} onClick={closeMenu}/>
-   <aside id="sekka-side-menu" className="sekka-side-drawer" role="dialog" aria-modal="true"
+   <dialog open id="sekka-side-menu" className="sekka-side-drawer" aria-modal="true"
     aria-label={t('القائمة الرئيسية','Main menu')} dir={en?'ltr':'rtl'}>
     <header className="sekka-side-drawer__header"><strong>{t('القائمة','Menu')}</strong>
      <button type="button" className="sekka-side-drawer__close" onClick={closeMenu}
@@ -425,7 +425,7 @@ export default function MobileApp(){
      {ready&&userId&&<><h2>{t('الحساب','Account')}</h2>
       <button type="button" onClick={()=>void signOut()}>{t('تسجيل الخروج','Sign out')}</button></>}
     </nav>
-   </aside>
+   </dialog>
   </div>}
  </div>;
 }
