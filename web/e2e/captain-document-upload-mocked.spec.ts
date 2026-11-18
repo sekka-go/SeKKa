@@ -152,6 +152,15 @@ test('MOCKED Android-width private document upload: denied, retry, verified pers
  await expect(page.getByText('4/4 required documents complete')).toBeVisible();
  await expect(page.getByRole('button',{name:'Review application'})).toBeEnabled();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ // A long documents form may have scrolled underneath the next screen.
+ // After navigation, the new step heading must be visible and not clipped.
+ await page.getByRole('button',{name:'Review application'}).click();
+ await expect(page.locator('.captain-step-39')).toBeVisible();
+ await expect.poll(async()=>page.evaluate(()=>window.scrollY)).toBe(0);
+ const headingRect=await page.locator('.captain-step-39 h1').boundingBox();
+ expect(headingRect).not.toBeNull();
+ expect(headingRect!.y).toBeGreaterThanOrEqual(0);
+ await page.goto('/?tab=captain-onboarding&view=38');
 
  // A submitted application cannot upload new documents; the UI must explain
  // why instead of presenting an apparently working but disabled yellow button.
