@@ -25,10 +25,14 @@ export default function EgyptianPlateInput({value,onChange,disabled=false,invali
  const change=(kind:PlateSegment,index:number,raw:string)=>{
   const next=editPlateSlot(value,kind,index,raw);
   if(next!==value){setPasteError(false);onChange(next);}
-  if(raw){
+  if(raw&&next!==value){
    const count=Math.min([...raw].length,kind==='letter'?MAX_PLATE_LETTERS:MAX_PLATE_DIGITS);
-   // React commits the new value before moving to an enabled next input.
-   requestAnimationFrame(()=>advance(kind,index,count));
+   // A scheduled advance must NEVER steal focus if the user already
+   // tapped another slot, the CTA, or the keyboard moved the caret.
+   const source=fields.current[slotId(kind,index)];
+   requestAnimationFrame(()=>{
+    if(source&&document.activeElement===source)advance(kind,index,count);
+   });
   }
  };
  const paste=(event:ClipboardEvent<HTMLInputElement>,kind:PlateSegment,index:number)=>{
@@ -69,7 +73,12 @@ export default function EgyptianPlateInput({value,onChange,disabled=false,invali
  return <fieldset id="captain-plate" className="c-plate-fields" disabled={disabled}
   aria-label={t('لوحة العربية','License plate')} aria-invalid={invalid}
   onBlur={event=>{
-   if(!event.currentTarget.contains(event.relatedTarget as Node|null))onTouched?.();
+   // Defer touched feedback until the user leaves the entire group.
+   // In particular, do not update the form while pointer-down on
+   // "Save and continue" is in progress: that can swallow its click.
+   const next=event.relatedTarget as Element|null;
+   if(next?.closest('.c-registration-actions'))return;
+   if(!event.currentTarget.contains(next))onTouched?.();
   }}>
   <legend>{t('لوحة العربية','License plate')}</legend>
   <p className="c-form-hint">{t(
