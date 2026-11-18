@@ -17,10 +17,12 @@ test('real guest search shell saves appearance and survives refresh',async({page
  await page.reload();
  await expect(page.locator('.d-screen-9')).toBeVisible();
  await expect(page.locator('html')).toHaveAttribute('data-theme','light');
- // Theme changes are available in the account tab of the real shell,
- // not the isolated original full-screen onboarding canvas.
- await page.goto('/?tab=profile');
- await page.getByRole('button',{name:'Switch appearance'}).click();
+ // Appearance is now a manual preference in the physical-left menu,
+ // not an extra toggle on the original full-screen onboarding or profile.
+ await page.getByRole('button',{name:'Open menu'}).click();
+ const drawer=page.getByRole('dialog',{name:'Main menu'});
+ await drawer.getByRole('button',{name:'Switch appearance'}).click();
+ await expect(drawer).toBeVisible();
  await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
  await page.reload();
  await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
