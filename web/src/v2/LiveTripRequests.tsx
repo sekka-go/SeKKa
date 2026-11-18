@@ -16,6 +16,13 @@ export default function LiveTripRequests({mode,search,onSignIn}:{mode:'rider'|'c
  const [requestTime,setRequestTime]=useState(search?.outbound||'07:30');
  const [requestReturnTime,setRequestReturnTime]=useState(search?.returnTime||'17:00');
  const [requestDirection,setRequestDirection]=useState<RequestDirection>(search?.direction||'outbound');
+ useEffect(()=>{
+  if(!search)return;
+  setRequestDirection(search.direction||'outbound');
+  setRequestTime(search.outbound||'07:30');
+  setRequestReturnTime(search.returnTime||'17:00');
+  setRequestPeriod(search.period==='weekly'?'weekly':'monthly');
+ },[search?.origin,search?.destination,search?.direction,search?.outbound,search?.returnTime,search?.period]);
  const [key,setKey]=useState(()=>crypto.randomUUID()),[busy,setBusy]=useState(false),[loading,setLoading]=useState(true),[error,setError]=useState(''),[notice,setNotice]=useState(''),[revision,setRevision]=useState(0);
  const refresh=()=>{setLoading(true);setRevision(v=>v+1);};
  useEffect(()=>{let active=true;void(async()=>{
@@ -122,15 +129,29 @@ export default function LiveTripRequests({mode,search,onSignIn}:{mode:'rider'|'c
   {mode==='rider'&&search&&!loading&&Boolean(uid)&&<div>
    <h3>{t('لم تجد خطًا؟ راجع بيانات طلبك','No match? Review your request')}</h3>
    <p>{search.origin} ← {search.destination}</p>
-   <label>{t('وقت الذهاب','Departure time')}<input type="time" value={requestTime} onChange={e=>setRequestTime(e.target.value)} required/></label>
+   <label>{t('اتجاه الرحلة','Journey direction')}<select value={requestDirection}
+    onChange={e=>setRequestDirection(e.target.value as RequestDirection)}>
+    <option value="outbound">{t('ذهاب فقط','Outbound only')}</option>
+    <option value="return">{t('عودة فقط','Return only')}</option>
+    <option value="round_trip">{t('ذهاب وعودة','Round trip')}</option>
+   </select></label>
+   {requestDirection!=='return'&&<label>{t('وقت الذهاب','Departure time')}<input type="time" value={requestTime} onChange={e=>setRequestTime(e.target.value)} required/></label>}
+   {requestDirection!=='outbound'&&<label>{t('وقت العودة','Return time')}<input type="time" value={requestReturnTime} onChange={e=>setRequestReturnTime(e.target.value)} required/></label>}
    <label>{t('مدة الاشتراك','Subscription period')}<select value={requestPeriod} onChange={e=>setRequestPeriod(e.target.value as 'weekly'|'monthly')}><option value="weekly">{t('أسبوعي','Weekly')}</option><option value="monthly">{t('شهري','Monthly')}</option></select></label>
    <label>{t('عدد المقاعد المطلوبة','Seats needed')}<input type="number" min={1} max={MAX_SEATS_PER_RIDER} value={seats} onChange={e=>setSeats(Number(e.target.value))}/></label>
    <p>{t('تقدر تطلب مقعد أو مقعدين فقط لكل حساب.','You can request one or two seats per account.')}</p>
-   <button type="button" disabled={busy||!Number.isInteger(seats)||seats<1||seats>MAX_SEATS_PER_RIDER||!requestTime} onClick={()=>void create()}>{busy?t('جارٍ حفظ الطلب…','Saving request…'):t('تأكيد وحفظ طلب الرحلة','Confirm and save trip request')}</button>
+   <button type="button" disabled={busy||!Number.isInteger(seats)||seats<1||seats>MAX_SEATS_PER_RIDER||
+    (requestDirection!=='return'&&!requestTime)||(requestDirection!=='outbound'&&!requestReturnTime)} onClick={()=>void create()}>{busy?t('جارٍ حفظ الطلب…','Saving request…'):t('تأكيد وحفظ طلب الرحلة','Confirm and save trip request')}</button>
    <p>{t('الطلب مش حجز ومفيش أي دفع.','Requesting does not reserve seats or charge money.')}</p>
   </div>}
   <ul>{visible.map(r=><li key={r.id}>
-   <strong>{area(r.origin_area_id)} ← {area(r.destination_area_id)}</strong> · {r.outbound_time.slice(0,5)} · {r.period} · {r.seats} {t('مقاعد','seats')} · {r.status}
+   <strong>{area(r.origin_area_id)} ← {area(r.destination_area_id)}</strong>
+   {' · '}{r.direction==='round_trip'?t('ذهاب وعودة','Round trip'):r.direction==='return'?t('عودة فقط','Return only'):t('ذهاب فقط','Outbound only')}
+   {r.outbound_time&&' · '+t('الذهاب ','Outbound ')+r.outbound_time.slice(0,5)}
+   {r.return_time&&' · '+t('العودة ','Return ')+r.return_time.slice(0,5)}
+   {' · '}{r.period==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')}
+   {' · '}{r.seats} {t('مقاعد','seats')}
+   {' · '}{r.status==='open'?t('مفتوح','Open'):r.status==='accepted'?t('مقبول','Accepted'):r.status==='cancelled'?t('ملغي','Cancelled'):r.status}
    {mode==='rider'&&r.status==='open'&&<button type="button" disabled={busy} onClick={()=>void cancel(r.id)}>{t('إلغاء الطلب','Cancel request')}</button>}
    {mode==='captain'&&routes.length>0&&<div>
     <select aria-label={t('الخط المراد عرضه','Offer route')} value={routeSelection[r.id]||routes[0]?.id||''} onChange={e=>setRouteSelection(v=>({...v,[r.id]:e.target.value}))}>{routes.map(route=><option key={route.id} value={route.id}>{route.title}</option>)}</select>
