@@ -349,7 +349,7 @@ export default function MobileApp(){
  const fullScreenSearchFilters=tab==='search'&&discoveryScreen===10;
  const fullScreenAuth=(tab==='login'&&(onboardingScreen===3||onboardingScreen===4))||(tab==='captain-onboarding'&&!userId);
  const fullScreenSearch=tab==='search'&&discoveryScreen===9;
- return <div className={`sekka-mobile sekka-tab-${tab}${fullScreenSearchFilters?' sekka-search-filters':''}${fullScreenAuth?' sekka-fullscreen-auth':''}${fullScreenSearch?' sekka-fullscreen-search':''}${!userId&&tab==='home'?' sekka-guest-welcome':''}`} dir={en?'ltr':'rtl'}>
+ return <div className={`sekka-mobile sekka-tab-${tab}${fullScreenSearchFilters?' sekka-search-filters':''}${fullScreenAuth?' sekka-fullscreen-auth':''}${fullScreenSearch?' sekka-fullscreen-search':''}${userId&&tab==='captain-onboarding'?' sekka-captain-logged-in':''}${!userId&&tab==='home'?' sekka-guest-welcome':''}`} dir={en?'ltr':'rtl'}>
   <a className="sekka-skip" href="#sekka-content">{t('تخطي للمحتوى','Skip to content')}</a>
   <header className={`sekka-mobile-header${ready&&admin?' sekka-mobile-header-admin':''}`}>
    <button type="button" ref={menuTrigger} className="sekka-shell-menu" aria-label={t('فتح القائمة','Open menu')}
@@ -359,7 +359,7 @@ export default function MobileApp(){
    <span className="sekka-current-section">{tab==='home'?t('الرئيسية','Home'):tab==='search'?t('البحث','Search'):
     tab==='booking'?t('الحجز','Booking'):tab==='bookings'?t('حجوزاتي','My bookings'):
     tab==='notifications'?t('الإشعارات','Notifications'):tab==='profile'?t('حسابي','My profile'):
-    tab==='routes'?t('خطوط الكابتن','Captain routes'):tab==='admin'?t('الإدارة','Admin'):t('سِكّة','seKKa')}</span>
+    tab==='routes'?t('خطوط الكابتن','Captain routes'):tab==='captain-onboarding'?t('ملف الكابتن','Captain application'):tab==='admin'?t('الإدارة','Admin'):t('سِكّة','seKKa')}</span>
    {ready&&admin&&<button type="button" className="sekka-admin-entry" aria-current={tab==='admin'?'page':undefined}
      onClick={openAdmin}>{t('لوحة الإدارة','Admin dashboard')}</button>}
   </header>
