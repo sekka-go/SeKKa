@@ -64,3 +64,34 @@ jobs:
           path: |
             docs/audit/*.png
             web/test-results/
+
+  # Fast, independent acceptance for owner-reported Android plate-entry bug.
+  # Entirely synthetic fake Google/Auth/PostgREST -- NEVER staging credentials.
+  captain-plate-mock:
+    name: Captain plate form (isolated mocked browser)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    env:
+      VITE_SUPABASE_URL: https://sekka-auth-e2e.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: e2e-synthetic-public-key
+      SEKKA_AUTH_UI_MOCKS: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test e2e/captain-plate-segments.spec.ts --timeout=20000
+      - name: Upload Captain form failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: captain-plate-mocked-failures
+          path: web/test-results/
+          if-no-files-found: ignore
