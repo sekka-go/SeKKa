@@ -12,6 +12,8 @@ import type {
  CaptainFieldError,CaptainPersonalField,CaptainVehicleField
 } from './captainValidation';
 
+// Replaced at build time by Vite; this identifies the JavaScript actually running.
+declare const __SEKKA_SOURCE_SHA__: string;
 const bucket='v31-captain-docs-staging';
 const documentKinds=[
  ['identity','إثبات الهوية','Identity proof'],
@@ -117,6 +119,9 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
  const [uploadStage,setUploadStage]=useState<'idle'|'reading'|'uploading'|'registering'|'verifying'>('idle');
  const [uploadDiagnostic,setUploadDiagnostic]=useState('PICKER_READY');
  const [deployedSha,setDeployedSha]=useState('');
+ const runtimeSha=typeof __SEKKA_SOURCE_SHA__==='string'&&/^[a-f0-9]{40}$/i.test(__SEKKA_SOURCE_SHA__)
+  ?__SEKKA_SOURCE_SHA__.slice(0,8):'';
+ const stalePwa=Boolean(runtimeSha&&deployedSha&&runtimeSha!==deployedSha);
  // Diagnose stale installed PWAs without leaking user identity or Storage paths.
  // build-info.json is deliberately not cached by the PWA service worker.
  useEffect(()=>{
@@ -653,6 +658,11 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
     {t('حالة اختيار/رفع الملف: ','File selection/upload stage: ')}
     <code dir="ltr">{uploadDiagnostic}</code>
     {deployedSha&&<span data-testid="captain-upload-build" dir="ltr"> · seKKa {deployedSha}</span>}
+    {runtimeSha&&<span data-testid="captain-runtime-build" dir="ltr"> · {t('نسخة الجهاز','Running app')} {runtimeSha}</span>}
+   </p>
+   {stalePwa&&<p data-testid="captain-upload-stale" className="c-field-error" role="alert">
+    {t('التطبيق على جهازك بيشغّل نسخة قديمة. اقفله وافتح الرابط من Chrome وحدّث الصفحة، ولو النسخة المثبتة فضلت قديمة أعد تثبيتها قبل اختبار الرفع.',
+       'This device is running an older app version. Reopen the link in Chrome and refresh; reinstall the installed PWA if it remains outdated before testing uploads.')}
    </p>
    {!hasDocuments&&<p className="c-form-hint">{t('ارفع المستندات الأربعة المطلوبة قبل المتابعة.','Upload all four required documents before continuing.')}</p>}
    {editable&&<button type="button" className="d-primary" disabled={busy||!hasDocuments}
