@@ -100,15 +100,31 @@ test('MOCKED Android-width private document upload: denied, retry, verified pers
  await expect(picker.locator('input[type=file]')).toBeEnabled();
  await expect(page.getByText('0/4 required documents complete')).toBeVisible();
  const input=picker.locator('input[type=file]');
+ // The real native input must cover the visible yellow "Choose file" button.
+ // Android installed PWAs must receive the direct user gesture on this input,
+ // rather than a click forwarded from a clipped 1px input.
+ const inputRect=await input.boundingBox(),buttonRect=await picker.locator('.c-file-picker-button').boundingBox();
+ expect(inputRect).not.toBeNull();
+ expect(buttonRect).not.toBeNull();
+ expect(inputRect!.width).toBeGreaterThanOrEqual(buttonRect!.width);
+ expect(inputRect!.height).toBeGreaterThanOrEqual(buttonRect!.height);
+ expect(inputRect!.x).toBeLessThanOrEqual(buttonRect!.x);
+ expect(inputRect!.y).toBeLessThanOrEqual(buttonRect!.y);
+ await expect(input).toHaveCSS('opacity','0');
+ const tapVisibleButton=async(row=picker)=>{
+  const target=await row.locator('.c-file-picker-button').boundingBox();
+  expect(target).not.toBeNull();
+  await page.mouse.click(target!.x+target!.width/2,target!.y+target!.height/2);
+ };
  // Android document providers sometimes send a generic MIME type. Validated JPEG signature still uploads.
  const mockFile={name:'synthetic-test.jpg',mimeType:'application/octet-stream',buffer:Buffer.from([0xff,0xd8,0xff,0xe0,0x00,0x10,0x4a,0x46,0x49,0x46,0xff,0xd9])};
  const firstChooser=page.waitForEvent('filechooser');
- await picker.click();
+ await tapVisibleButton();
  await (await firstChooser).setFiles(mockFile);
  await expect(page.locator('.c-document').first().getByRole('alert')).toContainText('Document was not saved while uploading the file');
  await expect(page.getByText('0/4 required documents complete')).toBeVisible();
  const retryChooser=page.waitForEvent('filechooser');
- await picker.click();
+ await tapVisibleButton();
  await (await retryChooser).setFiles(mockFile);
  await expect(page.getByText('1/4 required documents complete')).toBeVisible();
  await expect(page.locator('.c-document').first().locator('.c-document-label')).toContainText('Uploaded');
@@ -121,7 +137,7 @@ test('MOCKED Android-width private document upload: denied, retry, verified pers
  // optimistic client counter. Use realistic chooser clicks on all four rows.
  for(let i=1;i<4;i++){
   const chooser=page.waitForEvent('filechooser');
-  await page.locator('.c-file-picker').nth(i).click();
+  await tapVisibleButton(page.locator('.c-file-picker').nth(i));
   await (await chooser).setFiles(mockFile);
   await expect(page.getByText((i+1)+'/4 required documents complete')).toBeVisible();
  }
@@ -131,4 +147,12 @@ test('MOCKED Android-width private document upload: denied, retry, verified pers
  await expect(page.getByText('4/4 required documents complete')).toBeVisible();
  await expect(page.getByRole('button',{name:'Review application'})).toBeEnabled();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+
+ // A submitted application cannot upload new documents; the UI must explain
+ // why instead of presenting an apparently working but disabled yellow button.
+ application.status='submitted';
+ await page.reload();
+ await expect(page.locator('.c-file-picker').first().locator('input[type=file]')).toBeDisabled();
+ await expect(page.getByRole('alert')).toContainText('Uploads are disabled in this status.');
+ await expect(page.getByRole('button',{name:'View application status'})).toBeVisible();
 });
