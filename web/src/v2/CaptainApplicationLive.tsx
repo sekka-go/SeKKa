@@ -321,6 +321,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
   setUploadDiagnostic('FILE_SELECTED');
   void run(async()=>{
    let stage:'reading'|'uploading'|'registering'|'verifying'='reading';
+   let phase='AUTH_OR_VALIDATION';
    try{
     if(!uid||!client)throw Error('AUTH_REQUIRED');
     if(!editable)throw Error('APPLICATION_LOCKED');
@@ -331,40 +332,40 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
     // Android document providers often return generic MIME types. Verify
     // magic bytes and upload the exact ArrayBuffer with an explicit type.
     let buffer:ArrayBuffer;
-    setUploadDiagnostic('FILE_READ');
+    phase='FILE_READ';setUploadDiagnostic(phase);
     try{buffer=await file.arrayBuffer();}catch{throw Error('FILE_READ_FAILED');}
     const bytes=new Uint8Array(buffer,0,Math.min(8,buffer.byteLength));
     const jpeg=bytes[0]===0xff&&bytes[1]===0xd8&&bytes[2]===0xff;
     const png=bytes[0]===0x89&&bytes[1]===0x50&&bytes[2]===0x4e&&bytes[3]===0x47&&bytes[4]===0x0d&&bytes[5]===0x0a&&bytes[6]===0x1a&&bytes[7]===0x0a;
     const pdf=bytes[0]===0x25&&bytes[1]===0x50&&bytes[2]===0x44&&bytes[3]===0x46&&bytes[4]===0x2d;
     if(!jpeg&&!png&&!pdf)throw Error(t('صيغة الملف غير مدعومة. اختار JPG أو PNG أو PDF حقيقي.','Unsupported format. Select a genuine JPG, PNG, or PDF.'));
-    setUploadDiagnostic('FILE_VALIDATED');
+    phase='FILE_VALIDATED';setUploadDiagnostic(phase);
     const extension=pdf?'pdf':png?'png':'jpg';
     const verifiedMime=pdf?'application/pdf':png?'image/png':'image/jpeg';
     const objectName=uid+'/'+crypto.randomUUID()+'.'+extension;
-    stage='uploading';setUploadStage(stage);setUploadDiagnostic('STORAGE_REQUEST');
+    stage='uploading';setUploadStage(stage);phase='STORAGE_REQUEST';setUploadDiagnostic(phase);
     const {data:uploaded,error:storageError}=await client.storage.from(bucket)
      .upload(objectName,buffer,{upsert:false,contentType:verifiedMime});
     if(storageError)throw storageError;
     if(uploaded?.path!==objectName)throw Error('UPLOAD_NOT_VERIFIED');
-    setUploadDiagnostic('STORAGE_CONFIRMED');
-    stage='registering';setUploadStage(stage);setUploadDiagnostic('DOCUMENT_RPC');
+    phase='STORAGE_CONFIRMED';setUploadDiagnostic(phase);
+    stage='registering';setUploadStage(stage);phase='DOCUMENT_RPC';setUploadDiagnostic(phase);
     const {data,error:registerError}=await client.rpc('v31_register_captain_document',{
      p_kind:kind,p_object_name:objectName
     });
     if(registerError)throw registerError;
     if(typeof data!=='string')throw Error('DOCUMENT_NOT_REGISTERED');
-    stage='verifying';setUploadStage(stage);setUploadDiagnostic('SERVER_READBACK');
+    stage='verifying';setUploadStage(stage);phase='SERVER_READBACK';setUploadDiagnostic(phase);
     const {data:registered,error:readError}=await client.from('v31_captain_documents')
      .select('id,kind,object_name,created_at').eq('captain_id',uid).eq('kind',kind)
      .eq('object_name',objectName).maybeSingle();
     if(readError)throw readError;
     if(!registered||registered.id!==data)throw Error('DOCUMENT_NOT_REGISTERED');
     setDocs(current=>[registered as DocumentRow,...current.filter(doc=>doc.id!==registered.id)]);
-    setUploadDiagnostic('UI_PROGRESS_UPDATED');
+    phase='UI_PROGRESS_UPDATED';setUploadDiagnostic(phase);
     setNotice(t('المستند اتحفظ واتأكدنا منه على الخادم.','Document uploaded and verified on the server.'));
    }catch(e){
-    const marker=uploadFailureMarker(uploadDiagnostic==='FILE_READ'?'FILE_READ':stage==='reading'?'AUTH_OR_VALIDATION':uploadDiagnostic||stage,e);
+    const marker=uploadFailureMarker(phase,e);
     setUploadDiagnostic(marker);
     const stageLabel:Record<typeof stage,[string,string]>={
      reading:['قراءة الملف','reading the file'],uploading:['رفع الملف','uploading the file'],
