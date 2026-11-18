@@ -1117,14 +1117,27 @@ export function V31BookingJourney({offer,routeId,pickupId,dropoffId,reverse,book
      {!bookingId&&offer&&<><p className="b-subtitle">{t('راجع الخط والنقط والسعر قبل ما تحجز.','Review your route, stops and price before booking.')}</p>
        <Offer offer={offer}/>
        <Box className="b-summary">
-         <Row label={t('سعر الاشتراك المعلن','Advertised price')}>{offer.amount?.toLocaleString('en-US')} {t('ج.م','EGP')}</Row>
-         <Row label={t('السعة الإجمالية (المتاح بيتراجع عند الحجز)','Total capacity (availability checked on booking)')}>{offer.available}</Row>
-         <Row label={t('الحالة بعد الحجز','Status after booking')}>{t('قيد الانتظار','Pending')}</Row>
-         <label>{t('المقاعد المطلوبة','Seats requested')}<input type="number" min={1} max={Math.min(MAX_SEATS_PER_RIDER,offer.available)} value={seats} onChange={e=>setSeats(Number(e.target.value))}/></label>
+         <Row label={t('سعر العرض المنشور','Published offer price')}>{offer.amount?.toLocaleString('en-US')} {t('ج.م','EGP')}</Row>
+         <Row label={t('نوع الاشتراك','Subscription type')}>{t(periodText(offer.period),offer.period==='weekly'?'Weekly':'Monthly')} · {t(directionText(offer.direction),offer.direction==='outbound'?'Outbound':offer.direction==='return'?'Return':'Round trip')}</Row>
+         <Row label={t('المقاعد المتاحة الآن','Currently available seats')}>{offer.available}</Row>
+         <Row label={t('الحالة بعد تقديم الطلب','Status after request')}>{t('قيد الانتظار','Pending')}</Row>
+         <div className="b-seat-chooser" role="group" aria-label={t('عدد الأشخاص','Number of people')}>
+          <span>{t('عدد الأشخاص','Number of people')}</span>
+          <div className="b-seat-controls">
+           <button type="button" aria-label={t('تقليل شخص','Remove one person')} disabled={busy||seats<=1} onClick={()=>setSeats(v=>Math.max(1,v-1))}>−</button>
+           <strong aria-live="polite">{seats}</strong>
+           <button type="button" aria-label={t('إضافة شخص','Add one person')} disabled={busy||seats>=MAX_SEATS_PER_RIDER||seats>=offer.available} onClick={()=>setSeats(v=>Math.min(MAX_SEATS_PER_RIDER,offer.available,v+1))}>+</button>
+          </div>
+         </div>
        </Box>
-       <p className="b-hint">{t('الحد الأقصى لكل حساب شخصين فقط، حتى لو المركبة فيها مقاعد إضافية.','A maximum of two people per account, even when the vehicle has more available seats.')}</p>
-       <p className="b-hint">{t('مفيش دفع ولا OTP. الخادم بيتحقق من المقاعد قبل حفظ الحجز.','No payment or OTP. The server verifies capacity before saving.')}</p>
-       <Primary disabled={busy||!Number.isInteger(seats)||seats<1||seats>MAX_SEATS_PER_RIDER||seats>offer.available} onClick={()=>void reserve()}>{busy?t('جارٍ الحجز…','Reserving…'):t('تأكيد طلب الحجز','Submit booking request')}</Primary>
+       <Box className="b-payment-explainer">
+        <h2>{t('طريقة الدفع وتأمين جدية الحجز','Payment and booking security')}</h2>
+        <p>{t('ثمن الاشتراك يُدفع للكابتن مباشرة في أول يوم تشغيل، وليس داخل التطبيق.','The subscription is paid directly to the Captain on the first operating day, not inside the app.')}</p>
+        <p>{t('تأمين جدية الحجز: 100 ج.م قابل للاسترداد حسب القواعد المعتمدة. الحجز الحالي لا يخصم أو يحجز هذا المبلغ من محفظتك.','Booking security: 100 EGP, refundable under the approved rules. This current booking flow does not debit or hold this amount from your wallet.')}</p>
+        <p>{t('القيمة المعروضة هي سعر العرض المنشور، وليست فاتورة نهائية محسوبة لعدد الأشخاص أو لأيام الاشتراك المتبقية.','The listed amount is the Captain’s published offer price, not a final invoice adjusted for passenger count or remaining operating days.')}</p>
+       </Box>
+       <p className="b-hint">{t('الحد الأقصى لكل حساب شخصين فقط على نفس الخط. المقاعد بيتأكد منها الخادم عند الحجز.','At most two people per account on the same route. The server validates seats during booking.')}</p>
+       <Primary disabled={busy||!Number.isInteger(seats)||seats<1||seats>MAX_SEATS_PER_RIDER||seats>offer.available} onClick={()=>void reserve()}>{busy?t('جارٍ إرسال الطلب…','Submitting…'):t('تقديم طلب الحجز','Submit booking request')}</Primary>
      </>}
      {!bookingId&&!offer&&<Box><p role="status">{t('بيانات الخط مش متاحة. ارجع للبحث واختار خط منشور.','Route unavailable. Return to search and choose a published route.')}</p><Primary onClick={onBack}>{t('الرجوع للبحث','Back to search')}</Primary></Box>}
      {stored&&<><Illustration kind="waiting"/><Box className="b-summary">
