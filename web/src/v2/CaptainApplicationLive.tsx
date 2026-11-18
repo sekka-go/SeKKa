@@ -566,22 +566,23 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
     const saved=docs.some(doc=>doc.kind===kind);
     return <div className="c-document" key={kind}>
      <span className="c-document-label">{t(ar,label)} · {saved?t('تم الرفع','Uploaded'):t('مطلوب','Required')}</span>
-     <label className={`c-file-picker${!editable?' c-file-picker--locked':''}`}>
-      <span className="c-file-picker-button">{editable?t('اختيار ملف','Choose file'):t('الرفع غير متاح','Upload unavailable')}</span>
-      <span className="c-file-picker-name" aria-live="polite">
-       {uploadingKind===kind
-       ?(uploadStage==='reading'?t('بنقرأ الملف… ','Reading file… '):uploadStage==='uploading'?t('بنرفع الملف… ','Uploading file… '):uploadStage==='registering'?t('بنسجّل المستند… ','Registering document… '):t('بنتأكد من الحفظ… ','Verifying saved document… '))+uploadingFileName
-       :saved?t('يوجد ملف محفوظ','A file is saved'):t('اضغط لاختيار ملف','Tap to select a file')}
-      </span>
-      <input id={'captain-document-'+kind} className="c-file-native" type="file" aria-label={t(ar,label)}
+     <div className={`c-file-picker${!editable?' c-file-picker--locked':''}`}>
+      {/* Use a visible native file control. Fully transparent or clipped inputs can
+          fail to open Android's Files/Photos chooser inside installed PWAs. */}
+      <input id={'captain-document-'+kind} className="c-file-native" type="file"
+       aria-label={t('اختيار ملف ','Choose file for ')+t(ar,label)}
        accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
        disabled={!editable||busy} onChange={event=>{
         const file=event.currentTarget.files?.[0];
-        // Canceling the Android document chooser is not an upload error.
         if(file)upload(kind,file);
         event.currentTarget.value='';
        }}/>
-     </label>
+      <span className="c-file-picker-name" aria-live="polite">
+       {uploadingKind===kind
+       ?(uploadStage==='reading'?t('بنقرأ الملف… ','Reading file… '):uploadStage==='uploading'?t('بنرفع الملف… ','Uploading file… '):uploadStage==='registering'?t('بنسجّل المستند… ','Registering document… '):t('بنتأكد من الحفظ… ','Verifying saved document… '))+uploadingFileName
+       :saved?t('يوجد ملف محفوظ بالفعل','A file is already saved'):editable?t('اختار صورة JPG أو PNG أو PDF من جهازك','Choose a JPG, PNG or PDF from your device'):t('الرفع غير متاح في حالة الطلب الحالية','Upload unavailable for this application status')}
+      </span>
+     </div>
      {uploadError&&uploadErrorKind===kind&&uploadingKind===null&&<div className="c-document-upload-error">
       <p className="c-field-error" role="alert">{uploadError}</p>
       {editable&&<button type="button" onClick={()=>{
