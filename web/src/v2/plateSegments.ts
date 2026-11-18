@@ -46,7 +46,7 @@ export function editPlateSlot(value:string,kind:PlateSegment,index:number,raw:st
    next[index+i]=incoming[i];
   }
  }
- return kind==='letter'?combinePlate(next,digits):combinePlate(letters,next);
+ return kind==='letter'?combinePlate(next,next.length>=2?digits:[]):combinePlate(letters,next);
 }
 
 /** Paste an entire valid plate, regardless of which slot is focused. */
