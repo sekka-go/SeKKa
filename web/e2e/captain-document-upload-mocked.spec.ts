@@ -37,6 +37,7 @@ test('MOCKED Android-width private document upload: denied, retry, verified pers
   sessionStorage.setItem('sekka.pendingRole','captain');
  },{endpoint,user});
  const docs:MockDocument[]=[];
+ let storageRequests=0;
  // A versioned build marker makes stale installed PWA reports actionable
  // without logging the Captain's file, session token, or account details.
  const buildSha='abcdef0123456789abcdef0123456789abcdef01';
@@ -74,6 +75,7 @@ test('MOCKED Android-width private document upload: denied, retry, verified pers
   else if(pathname.startsWith('/rest/v1/v31_vehicle_colors'))
    result=[{code:'white',name_ar:'أبيض',name_en:'White',active:true}];
   else if(pathname.startsWith('/storage/v1/object/')){
+   storageRequests++;
    const objectName=pathname.split('/v31-captain-docs-staging/')[1]||'';
    if(failNextUpload){
     failNextUpload=false;
@@ -127,6 +129,22 @@ test('MOCKED Android-width private document upload: denied, retry, verified pers
  };
  // Android document providers sometimes send a generic MIME type. Validated JPEG signature still uploads.
  const mockFile={name:'synthetic-test.jpg',mimeType:'application/octet-stream',buffer:Buffer.from([0xff,0xd8,0xff,0xe0,0x00,0x10,0x4a,0x46,0x49,0x46,0xff,0xd9])};
+ // Do not trust File.size alone: Android providers may expose misleading
+ // metadata, so the exact bytes read must also obey the 5 MiB policy.
+ await page.evaluate(()=>{
+  const oversized=new Uint8Array(5242881);
+  oversized.set([0xff,0xd8,0xff]);
+  Object.defineProperty(File.prototype,'arrayBuffer',{
+   configurable:true,value:async()=>oversized.buffer
+  });
+ });
+ const oversizedChooser=page.waitForEvent('filechooser');
+ await tapVisibleButton();
+ await (await oversizedChooser).setFiles(mockFile);
+ await expect(page.locator('.c-document').first().getByRole('alert')).toContainText('up to 5 MB');
+ expect(storageRequests).toBe(0);
+ expect(docs).toHaveLength(0);
+ await page.evaluate(()=>Reflect.deleteProperty(File.prototype,'arrayBuffer'));
  const firstChooser=page.waitForEvent('filechooser');
  await tapVisibleButton();
  await (await firstChooser).setFiles(mockFile);

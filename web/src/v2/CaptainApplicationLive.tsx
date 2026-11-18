@@ -368,12 +368,14 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
     if(!editable)throw Error('APPLICATION_LOCKED');
     const {data:{user},error:authError}=await client.auth.getUser();
     if(authError||user?.id!==uid)throw Error('AUTH_REQUIRED');
-    if(file.size<1||file.size>5242880)
+    if(file.size>5242880)
      throw Error(t('اختار ملف أكبر من صفر ولحد 5 ميجابايت.','Choose a non-empty file up to 5 MB.'));
     // Android document providers often return generic MIME types. Verify
     // magic bytes and upload the exact ArrayBuffer with an explicit type.
     phase='FILE_READ';setUploadDiagnostic(phase);
     const buffer=await readCaptainUploadBuffer(file);
+    if(buffer.byteLength<1||buffer.byteLength>5242880)
+     throw Error(t('اختار ملف أكبر من صفر ولحد 5 ميجابايت.','Choose a non-empty file up to 5 MB.'));
     const bytes=new Uint8Array(buffer,0,Math.min(8,buffer.byteLength));
     const jpeg=bytes[0]===0xff&&bytes[1]===0xd8&&bytes[2]===0xff;
     const png=bytes[0]===0x89&&bytes[1]===0x50&&bytes[2]===0x4e&&bytes[3]===0x47&&bytes[4]===0x0d&&bytes[5]===0x0a&&bytes[6]===0x1a&&bytes[7]===0x0a;
