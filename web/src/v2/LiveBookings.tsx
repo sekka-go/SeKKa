@@ -29,6 +29,12 @@ export default function LiveBookings({mode,onFindRide}:{
   }catch(e){if(active)setError(e instanceof Error?e.message:String(e));}
   finally{if(active)setLoading(false);}
  })();return()=>{active=false;};},[mode,refresh]);
+ const statusLabel=(status:string)=>({
+  pending:t('قيد الانتظار','Pending'),
+  confirmed:t('مؤكد','Confirmed'),
+  cancelled:t('ملغي','Cancelled'),
+  completed:t('مكتمل','Completed')
+ } as Record<string,string>)[status]||t('حالة غير معروفة','Unknown status');
  const cancel=async(id:string)=>{setBusy(id);setError('');try{await cancelPendingBooking(id);setRefresh(v=>v+1);}catch(e){setError(e instanceof Error?e.message:String(e));}finally{setBusy('');}};
  return <section className="d-box live-bookings">
   <h2>{mode==='captain'?t('حجوزات خطوطك','Reservations on your routes'):t('حجوزاتي','My bookings')}</h2>
@@ -40,7 +46,7 @@ export default function LiveBookings({mode,onFindRide}:{
     {t('دوّر على مشوار','Find a ride')}
    </button>}
   </>}
-  <ul>{items.map(b=><li key={b.id}><strong>{t('حجز','Booking')} {b.id.slice(0,8)}</strong> · {b.seats} {t('مقاعد','seats')} · {b.status}
+  <ul>{items.map(b=><li key={b.id}><strong>{t('حجز','Booking')} {b.id.slice(0,8)}</strong> · {b.seats} {t('مقاعد','seats')} · {statusLabel(b.status)}
     <small> {new Date(b.created_at).toLocaleString(en?'en-GB':'ar-EG')}</small>
     {mode==='rider'&&<a className="d-outline" href={`/?tab=booking&booking=${encodeURIComponent(b.id)}`}>{t('عرض تفاصيل الحجز','View booking details')}</a>}
     {mode==='rider'&&b.status==='pending'&&<button type="button" disabled={Boolean(busy)} onClick={()=>void cancel(b.id)}>{busy===b.id?t('جارٍ الإلغاء…','Cancelling…'):t('إلغاء الحجز','Cancel booking')}</button>}
