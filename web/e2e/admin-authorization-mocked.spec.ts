@@ -82,43 +82,48 @@ for(const width of [360,390]){
   }
  }
 }
-test('MOCKED narrow Admin header preserves both preference toggles and 44px hit targets',async({page})=>{
+test('MOCKED narrow Admin keeps authorized action and preferences in left drawer',async({page})=>{
  await page.setViewportSize({width:320,height:700});
  await setup(page,{isAdmin:true},'en','dark');
  await page.goto('/?tab=admin&view=62');
  await expect(page.locator('.sekka-admin-entry')).toBeVisible();
- await expect(page.locator('.sekka-mobile-header .sekka-language')).toBeVisible();
- const theme=page.locator('.sekka-mobile-header .sekka-theme:not(.sekka-language)');
- const language=page.getByRole('button',{name:'Switch to Arabic'});
+ await expect(page.locator('.sekka-mobile-header .sekka-approved-logo')).toHaveCount(0);
+ const trigger=page.getByRole('button',{name:'Open menu'});
+ await expect(trigger).toBeVisible();
+ await trigger.click();
+ const drawer=page.getByRole('dialog',{name:'Main menu'});
+ const theme=drawer.locator('.sekka-theme');
+ const language=drawer.getByRole('button',{name:'Switch to Arabic'});
  for(const element of [theme,language]){
   const box=await element.boundingBox();
   expect(box).not.toBeNull();
   expect(box!.width).toBeGreaterThanOrEqual(44);
   expect(box!.height).toBeGreaterThanOrEqual(44);
  }
- expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(321);
  await language.click();
  await expect(page.locator('html')).toHaveAttribute('dir','rtl');
  await theme.click();
  await expect(page.locator('html')).toHaveAttribute('data-theme','light');
+ await page.getByRole('button',{name:'إغلاق القائمة'}).last().click();
  await expect(page.locator('.sekka-admin-entry')).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(321);
 });
 
 for(const language of ['ar','en'] as const){
- test('MOCKED Admin header keeps centered logo and separate Admin action at 320px '+language,async({page})=>{
+ test('MOCKED Admin header menu stays physical left with separate Admin entry at 320px '+language,async({page})=>{
   await page.setViewportSize({width:320,height:700});
   await setup(page,{isAdmin:true},language,'dark');
   await page.goto('/?tab=admin&view=62');
-  const logo=await page.locator('.sekka-mobile-header .sekka-brand-button').boundingBox();
+  const trigger=page.getByRole('button',{name:language==='ar'?'فتح القائمة':'Open menu'});
+  const menu=await trigger.boundingBox();
   const entry=await page.locator('.sekka-mobile-header .sekka-admin-entry').boundingBox();
-  const globe=await page.locator('.sekka-mobile-header .sekka-language').boundingBox();
-  const appearance=await page.locator('.sekka-mobile-header .sekka-theme:not(.sekka-language)').boundingBox();
-  expect(logo&&entry&&globe&&appearance).toBeTruthy();
-  expect(Math.abs(logo!.x+logo!.width/2-160)).toBeLessThanOrEqual(1.5);
-  expect(entry!.y).toBeGreaterThanOrEqual(logo!.y+logo!.height);
-  expect(globe!.width).toBeGreaterThanOrEqual(44);
-  expect(appearance!.width).toBeGreaterThanOrEqual(44);
+  expect(menu&&entry).toBeTruthy();
+  expect(menu!.x+menu!.width/2).toBeLessThan(160);
+  expect(entry!.y).toBeGreaterThanOrEqual(menu!.y+menu!.height);
+  await trigger.click();
+  const drawer=page.getByRole('dialog',{name:language==='ar'?'القائمة الرئيسية':'Main menu'});
+  await expect(drawer.locator('.sekka-language')).toBeVisible();
+  await expect(drawer.locator('.sekka-theme')).toBeVisible();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(321);
  });
 }
