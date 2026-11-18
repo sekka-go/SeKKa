@@ -31,7 +31,9 @@ type ColorItem={code:string;name_ar:string;name_en:string};
 type DocumentRow={id:string;kind:string;object_name:string;created_at:string};
 
 function messageFor(error:unknown,t:(ar:string,en:string)=>string){
- const message=error instanceof Error?error.message:String(error);
+ const message=error instanceof Error?error.message:
+   typeof error==='string'?error:
+   error&&typeof error==='object'&&'message' in error&&typeof error.message==='string'?error.message:'UNKNOWN_SERVER_ERROR';
  const translations:Record<string,[string,string]>={
   AUTH_REQUIRED:['سجّل الدخول للمتابعة.','Sign in to continue.'],
   BACKEND_NOT_CONFIGURED:['الاتصال بالخادم غير متاح.','The backend is not configured.'],
@@ -55,7 +57,7 @@ function messageFor(error:unknown,t:(ar:string,en:string)=>string){
  if(/failed to fetch|networkerror|network request failed|timeout/i.test(message))
   return t('الاتصال اتقطع أثناء الحفظ. راجع الإنترنت وجرب تاني.','The connection was interrupted. Check your internet connection and retry.');
  const code=Object.keys(translations).find(key=>message.includes(key));
- return code?t(...translations[code]):message;
+ return code?t(...translations[code]):message==='UNKNOWN_SERVER_ERROR'?t('حصل خطأ غير متوقع. جرّب تاني.','An unexpected error occurred. Please retry.'):message;
 }
 
 export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
