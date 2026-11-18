@@ -352,19 +352,13 @@ html[data-theme="dark"] .captain-onboarding-canvas .c-registration-form [aria-in
  background:var(--phase-card);
 }
 .captain-onboarding-canvas .c-plate-fields legend{font-weight:800;padding:0 6px}
-.captain-onboarding-canvas .c-plate-format-label{display:flex;flex-direction:column;gap:7px;font-size:14px}
-.captain-onboarding-canvas .c-plate-format-label select{
- width:100%;min-height:46px;color:var(--phase-text);
- background:var(--phase-card);border:1px solid var(--d-line);
- border-radius:10px;font:inherit;padding:8px;
-}
 .captain-onboarding-canvas .c-plate-segments{
- display:flex;justify-content:center;align-items:flex-start;flex-wrap:wrap;
- column-gap:16px;row-gap:12px;min-width:0;
+ display:flex;flex-direction:column;align-items:stretch;
+ gap:14px;min-width:0;
 }
 .captain-onboarding-canvas .c-plate-segment{
- display:flex;flex-direction:column;align-items:center;gap:6px;
- min-width:0;flex:0 1 auto;
+ display:flex;flex-direction:column;align-items:center;gap:8px;
+ min-width:0;width:100%;
 }
 .captain-onboarding-canvas .c-plate-segment>strong{font-size:12px}
 .captain-onboarding-canvas .c-plate-boxes{display:flex;gap:5px;min-width:0}
@@ -377,7 +371,14 @@ html[data-theme="dark"] .captain-onboarding-canvas .c-registration-form [aria-in
 .captain-onboarding-canvas .c-plate-boxes input:focus-visible{
  border-color:#bd5a0a;outline:2px solid #bd5a0a;
 }
-.captain-onboarding-canvas .c-plate-boxes input[aria-invalid="true"]{border-color:#b42318}
+.captain-onboarding-canvas .c-plate-boxes input[aria-invalid="true"]:not(:disabled){border-color:#b42318}
+.captain-onboarding-canvas .c-plate-boxes input:disabled{
+ opacity:.58;background:var(--phase-card);cursor:not-allowed;
+}
+.captain-onboarding-canvas .c-plate-boxes input:disabled:not(:placeholder-shown){opacity:1}
+.captain-onboarding-canvas .c-plate-fields>.c-form-hint{
+ font-size:13px;line-height:1.55;text-align:center;margin:2px 0 8px;
+}
 .captain-onboarding-canvas .c-vehicle-save-feedback{
  color:#b42318;font-weight:800;line-height:1.5;margin:8px 0 2px;
  padding:10px;border:1px solid #b42318;border-radius:10px;
