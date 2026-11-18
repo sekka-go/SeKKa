@@ -5,6 +5,7 @@ import {readFileSync} from 'node:fs';
 const read=(path)=>readFileSync(new URL(path,import.meta.url),'utf8');
 const migration=read('../migrations/20261115150000_v31_mandatory_captain_registration.sql');
 const enrollment=read('../../web/src/v2/CaptainApplicationLive.tsx');
+const plateInput=read('../../web/src/v2/EgyptianPlateInput.tsx');
 const captainValidation=read('../../web/src/v2/captainValidation.ts');
 const vehicles=read('../../web/src/v2/LiveVehicles.tsx');
 const routeDraft=read('../../web/src/v2/LiveCaptainDraft.tsx');
@@ -99,8 +100,12 @@ test('Captain screens require all fields, preserve explicit zero, and distinguis
  assert.match(enrollment,/captain-experienceYears-error/);
  assert.match(enrollment,/unverified/i);
  for(const phrase of ['Full name','Egyptian mobile number','Professional background',
-  'Years of experience','Required documents','License plate number'])
+  'Years of experience','Required documents'])
   assert.match(enrollment,new RegExp(phrase,'i'));
+ assert.match(enrollment,/EgyptianPlateInput/);
+ assert.match(plateInput,/License plate/);
+ assert.match(plateInput,/MAX_PLATE_LETTERS/);
+ assert.match(plateInput,/MAX_PLATE_DIGITS/);
  assert.doesNotMatch(enrollment,/optional|اختياري|Planned seats|المقاعد المقترحة/i);
  assert.match(enrollment,/next&&Object\.keys\(fieldErrors\)\.length>0/);
  assert.match(enrollment,/onClick=\{\(\)=>void savePersonal\(true\)\}/);
