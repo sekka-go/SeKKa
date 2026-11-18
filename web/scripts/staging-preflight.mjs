@@ -39,12 +39,16 @@ const protectedRpcs=[
  ['v31_reserve_seats_with_stops',{p_route:'00000000-0000-4000-8000-000000000001',p_seats:1,p_idempotency:'00000000-0000-4000-8000-000000000002',p_pickup:'00000000-0000-4000-8000-000000000003',p_dropoff:'00000000-0000-4000-8000-000000000004',p_reverse:false}],
  ['v31_set_route_status',{p_route:'00000000-0000-4000-8000-000000000001',p_status:'archived'}],
  ['v31_create_route_draft',{p_title:'unauthorized',p_category:'PRIME',p_capacity:1,p_direction:'outbound',p_period:'monthly',p_outbound:'07:30',p_return:null,p_return_supported:false,p_price:1,p_stops:[]}],
+ // Current, vehicle-bound Captain publishing must remain inaccessible to anon.
+ ['v31_create_vehicle_route_draft',{p_title:'unauthorized',p_vehicle:'00000000-0000-4000-8000-000000000001',p_category:'PRIME',p_direction:'outbound',p_period:'monthly',p_outbound:'07:30',p_return:null,p_return_supported:false,p_price:1,p_stops:[]}],
  ['v31_save_captain_application',{p_notes:'',p_experience:null}],
+ ['v31_save_captain_application',{p_full_name:null,p_phone:null,p_notes:'',p_experience:null}],
  ['v31_save_captain_vehicle_intent',{p_model:null,p_category:null,p_seats:null,p_plate:null}],
+ ['v31_save_captain_vehicle_intent',{p_vehicle_type:null,p_make_id:null,p_model_id:null,p_year:null,p_color_code:null,p_color_other:null,p_plate:null}],
  ['v31_register_captain_document',{p_kind:'identity',p_object_name:'00000000-0000-4000-8000-000000000001/00000000-0000-4000-8000-000000000002.pdf'}],
  ['v31_submit_captain_application',{}],
  ['v31_admin_decide_captain',{p_captain:'00000000-0000-4000-8000-000000000001',p_decision:'approved',p_reason:null}],
- ['v31_reserve_seats',{p_route:'00000000-0000-4000-8000-000000000001',p_seats:1,p_idempotency:'00000000-0000-4000-8000-000000000002'}]
+ ['v31_admin_decide_captain',{p_captain:'00000000-0000-4000-8000-000000000001',p_decision:'approved',p_reason:null,p_hiace_categories:null}]
 ];
 for(const [name,args] of protectedRpcs){
  const {data,error}=await client.rpc(name,args);
