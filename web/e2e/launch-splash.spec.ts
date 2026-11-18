@@ -1,52 +1,52 @@
 import { expect, test } from "@playwright/test";
 
-test("splash fills mobile viewport, reveals logo and hands off to the real app", async ({ page }) => {
+const artwork = "/brand/sekka-launch-static-20261118.svg";
+
+test("fresh app open shows the owner's static English seKKa artwork before Welcome", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/?tab=login&view=2");
+  await page.goto("/");
   const splash = page.locator(".sekka-launch");
   await expect(splash).toBeVisible();
-  const bounds = await splash.boundingBox();
-  expect(bounds).not.toBeNull();
-  expect(bounds!.x).toBe(0);
-  expect(bounds!.y).toBe(0);
-  expect(bounds!.width).toBe(390);
-  expect(bounds!.height).toBe(844);
-  await expect(page.locator(".sekka-launch__wordmark")).toHaveAttribute("src", "/brand/sekka-splash-wordmark.svg");
-  // Launch is one scene, with no old icon/black-icon intermediate screen.
-  await expect(splash.locator('img[src*="app-icon"]')).toHaveCount(0);
-  const curve = await splash.locator(".sekka-launch__route-line").getAttribute("d");
-  expect(curve).toMatch(/^M34 768 C43 681/);
-  expect((curve?.match(/ C/g) || []).length).toBeGreaterThanOrEqual(4);
-  await expect(splash.locator(".sekka-launch__point")).toHaveCount(7);
-  await expect(splash.locator(".sekka-launch__progress")).toHaveCount(0);
-  await expect(splash.locator(".sekka-launch__destination")).toHaveCount(1);
-  await expect(splash.locator(".sekka-launch__route-line")).toHaveAttribute("pathLength", "1");
-  await expect(splash).toHaveCount(0, { timeout: 5500 });
-  await expect(page.locator("#root")).toBeVisible();
+  const picture = splash.locator("img.sekka-launch__artwork");
+  await expect(picture).toHaveAttribute("src", artwork);
+  await expect(picture).toHaveAttribute("alt", "seKKa");
+  await expect(picture).toBeVisible();
+  await expect(splash.locator("svg,.sekka-launch__map,.sekka-launch__route,.sekka-launch__wordmark")).toHaveCount(0);
+  await expect(splash).not.toContainText("سكة");
+  const box = await splash.boundingBox();
+  expect(box).not.toBeNull();
+  expect(box!.x).toBe(0);
+  expect(box!.y).toBe(0);
+  expect(box!.width).toBe(390);
+  expect(box!.height).toBe(844);
+  // The image is static: no CSS animation and no animated children.
+  expect(await splash.evaluate(node => [...node.querySelectorAll("*"), node]
+    .every(el => getComputedStyle(el).animationName === "none"))).toBe(true);
+  await expect(splash).toHaveCount(0, { timeout: 4500 });
+  await expect(page.locator(".phase-screen-2")).toBeVisible();
 });
 
-test("splash doesn't interrupt Google OAuth callback", async ({ page }) => {
+test("static artwork is the exact optimized brand asset, not an external image", async ({ request }) => {
+  const response = await request.get(artwork);
+  expect(response.ok()).toBeTruthy();
+  const svg = await response.text();
+  expect(svg).toContain('viewBox="0 0 1536 1536"');
+  expect(svg).toContain('aria-label="seKKa"');
+  expect(svg).toContain('fill="#000"');
+  expect(svg).toContain('fill="#ffcd04"');
+  expect(svg).toContain('fill="#fdfdfd"');
+  expect(svg).not.toContain("سكة");
+});
+
+test("OAuth callback and the developer gallery never show the opening splash", async ({ page }) => {
   await page.goto("/?code=test-oauth-callback");
+  await expect(page.locator(".sekka-launch")).toHaveCount(0);
+  await page.goto("/dev/screens?screen=2");
   await expect(page.locator(".sekka-launch")).toHaveCount(0);
 });
 
-test("manifest contains the new icon at both install sizes", async ({ request }) => {
-  const response = await request.get("/manifest.webmanifest");
-  expect(response.ok()).toBeTruthy();
-  const manifest = await response.json();
-  expect(manifest.icons.map((icon: { src: string }) => icon.src)).toEqual([
-    "/brand/sekka-pwa-20261115-192.png",
-    "/brand/sekka-pwa-20261115-512.png"
-  ]);
-  for (const icon of manifest.icons) {
-    const asset = await request.get(icon.src);
-    expect(asset.ok()).toBeTruthy();
-    expect((await asset.body()).subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");
-  }
-});
-
 for (const [width, height] of [[320, 700], [360, 800], [412, 915]] as const) {
-  test(`splash stays edge-to-edge at ${width}x${height}`, async ({ page }) => {
+  test(`static splash fills the PWA viewport at ${width}x${height}`, async ({ page }) => {
     await page.setViewportSize({ width, height });
     await page.goto("/?tab=login&view=2");
     const splash = page.locator(".sekka-launch");
@@ -57,79 +57,39 @@ for (const [width, height] of [[320, 700], [360, 800], [412, 915]] as const) {
     expect(box!.y).toBe(0);
     expect(box!.width).toBe(width);
     expect(box!.height).toBe(height);
-    await expect(splash).toHaveCount(0, { timeout: 5500 });
+    await expect(splash).toHaveCount(0, { timeout: 4500 });
   });
 }
 
-test("the route fades completely before the centered wordmark appears", async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/?tab=login&view=2");
-  const result = await page.locator(".sekka-launch").evaluate(root => {
-    const route = root.querySelector(".sekka-launch__route");
-    const logo = root.querySelector(".sekka-launch__wordmark");
-    const pin = root.querySelector(".sekka-launch__destination");
-    if (!route || !logo || !pin) return null;
-    const routeCss = getComputedStyle(route);
-    const logoCss = getComputedStyle(logo);
-    const pinCss = getComputedStyle(pin);
-    return {
-      routeAnimation: routeCss.animationName,
-      logoAnimation: logoCss.animationName,
-      pinAnimation: pinCss.animationName,
-      hasLocalPinAnchor: pin.parentElement?.getAttribute("transform") === "translate(321 157)",
-    };
-  });
-  expect(result).not.toBeNull();
-  expect(result!.routeAnimation).toContain("sekka-route-fade");
-  expect(result!.logoAnimation).toContain("sekka-logo-reveal");
-  expect(result!.pinAnimation).toContain("sekka-arrive");
-  expect(result!.hasLocalPinAnchor).toBe(true);
-  // Seek browser animations directly: no timing-sensitive sleeps in CI.
-  const atFade = await page.locator(".sekka-launch").evaluate(root => {
-    const route = root.querySelector(".sekka-launch__route")!;
-    const logo = root.querySelector(".sekka-launch__wordmark")!;
-    for (const animation of [...route.getAnimations(), ...logo.getAnimations()]) {
-      animation.currentTime = 2250;
-    }
-    return {
-      route: Number(getComputedStyle(route).opacity),
-      logo: Number(getComputedStyle(logo).opacity),
-    };
-  });
-  expect(atFade.route).toBeLessThan(0.10);
-  expect(atFade.logo).toBeLessThan(0.10);
-  const atReveal = await page.locator(".sekka-launch").evaluate(root => {
-    const logo = root.querySelector(".sekka-launch__wordmark")!;
-    for (const animation of logo.getAnimations()) animation.currentTime = 2850;
-    return Number(getComputedStyle(logo).opacity);
-  });
-  expect(atReveal).toBeGreaterThan(0.75);
-});
-
-test("installed PWA never points to the retired icon", async ({ request }) => {
-  const html = await (await request.get("/")).text();
-  const manifest = await (await request.get("/manifest.webmanifest")).json();
-  expect(html).not.toContain("app-icon-yellow.png");
-  expect(html).not.toContain("/brand/sekka-icon-192.png");
-  expect(manifest.icons.map((icon: {src:string}) => icon.src).join(" ")).not.toContain("app-icon");
-  expect(manifest.icons.map((icon: {src:string}) => icon.src).every((src:string) => src.includes("sekka-pwa-20261115-"))).toBe(true);
-});
-
-test("refresh resumes the current page without replaying the launch splash", async ({ page }) => {
+test("refresh restores current page without replaying splash", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/?tab=login&view=2");
   await expect(page.locator(".sekka-launch")).toBeVisible();
-  await expect(page.locator(".sekka-launch")).toHaveCount(0, { timeout: 5500 });
+  await expect(page.locator(".sekka-launch")).toHaveCount(0, { timeout: 4500 });
   await page.reload();
   await expect(page.locator(".sekka-launch")).toHaveCount(0);
   await expect(page.locator(".phase-screen-2")).toBeVisible();
 });
 
-test("fresh document navigation still plays the launch once", async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
+test("installed PWA keeps its icon but labels the app seKKa", async ({ request }) => {
+  const manifestResponse = await request.get("/manifest.webmanifest");
+  expect(manifestResponse.ok()).toBeTruthy();
+  const manifest = await manifestResponse.json();
+  expect(manifest.name).toBe("seKKa");
+  expect(manifest.short_name).toBe("seKKa");
+  expect(manifest.icons.map((icon: {src:string}) => icon.src)).toEqual([
+    "/brand/sekka-pwa-20261115-192.png",
+    "/brand/sekka-pwa-20261115-512.png"
+  ]);
+  const index = await (await request.get("/")).text();
+  expect(index).toContain(artwork);
+  expect(index).not.toContain('href="/brand/sekka-splash-wordmark.svg"');
+});
+
+test("a new app navigation may display the same static launch artwork again", async ({ page }) => {
   await page.goto("/?tab=login&view=2");
   await expect(page.locator(".sekka-launch")).toBeVisible();
-  await expect(page.locator(".sekka-launch")).toHaveCount(0, { timeout: 5500 });
+  await expect(page.locator(".sekka-launch")).toHaveCount(0, { timeout: 4500 });
   await page.goto("/?tab=login&view=2");
   await expect(page.locator(".sekka-launch")).toBeVisible();
 });
