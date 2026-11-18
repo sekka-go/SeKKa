@@ -343,3 +343,54 @@ html[data-theme="dark"] .captain-onboarding-canvas .c-registration-form [aria-in
 .captain-onboarding-canvas .c-file-picker:focus-within {
  outline:3px solid #ffc400; outline-offset:2px;
 }
+
+/* Android-friendly Egyptian plates: discrete editable boxes, avoiding merged
+ * Arabic letters, numerals and bidi direction ambiguity. Production only. */
+.captain-onboarding-canvas .c-plate-fields{
+ box-sizing:border-box;display:flex;flex-direction:column;gap:11px;min-width:0;
+ margin:0;padding:10px;border:1px solid var(--d-line);border-radius:12px;
+ background:var(--phase-card);
+}
+.captain-onboarding-canvas .c-plate-fields legend{font-weight:800;padding:0 6px}
+.captain-onboarding-canvas .c-plate-format-label{display:flex;flex-direction:column;gap:7px;font-size:14px}
+.captain-onboarding-canvas .c-plate-format-label select{
+ width:100%;min-height:46px;color:var(--phase-text);
+ background:var(--phase-card);border:1px solid var(--d-line);
+ border-radius:10px;font:inherit;padding:8px;
+}
+.captain-onboarding-canvas .c-plate-segments{
+ display:flex;justify-content:center;align-items:flex-start;flex-wrap:wrap;
+ column-gap:16px;row-gap:12px;min-width:0;
+}
+.captain-onboarding-canvas .c-plate-segment{
+ display:flex;flex-direction:column;align-items:center;gap:6px;
+ min-width:0;flex:0 1 auto;
+}
+.captain-onboarding-canvas .c-plate-segment>strong{font-size:12px}
+.captain-onboarding-canvas .c-plate-boxes{display:flex;gap:5px;min-width:0}
+.captain-onboarding-canvas .c-plate-boxes input{
+ box-sizing:border-box;width:44px;min-width:44px;height:48px;min-height:48px;
+ padding:0 1px;text-align:center;font:900 22px/1.1 inherit;
+ border:2px solid var(--d-line);border-radius:10px;
+ background:var(--phase-card);color:var(--phase-text);outline-offset:2px;
+}
+.captain-onboarding-canvas .c-plate-boxes input:focus-visible{
+ border-color:#bd5a0a;outline:2px solid #bd5a0a;
+}
+.captain-onboarding-canvas .c-plate-boxes input[aria-invalid="true"]{border-color:#b42318}
+.captain-onboarding-canvas .c-vehicle-save-feedback{
+ color:#b42318;font-weight:800;line-height:1.5;margin:8px 0 2px;
+ padding:10px;border:1px solid #b42318;border-radius:10px;
+ overflow-wrap:anywhere;
+}
+html[data-theme="dark"] .captain-onboarding-canvas .c-vehicle-save-feedback{
+ color:#ff9b8f;border-color:#ff9b8f;
+}
+@media(max-width:359px){
+ .captain-onboarding-canvas .c-plate-fields{padding:8px}
+ .captain-onboarding-canvas .c-plate-segments{gap:9px}
+ .captain-onboarding-canvas .c-plate-boxes{gap:4px}
+ .captain-onboarding-canvas .c-plate-boxes input{
+  width:44px;min-width:44px;height:48px;
+ }
+}
