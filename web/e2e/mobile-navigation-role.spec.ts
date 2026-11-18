@@ -215,15 +215,23 @@ test(`pending Captain profile stays in Passenger journey until explicit entry at
  validApplication=true;
  await page.goto('/?tab=captain-onboarding&view=38');
  const picker=page.locator('.c-file-picker').first();
- await expect(picker.locator('.c-file-picker-button')).toHaveText('Choose file');
- await expect(picker.locator('.c-file-picker-name')).toHaveText('Tap to select a file');
- await expect(picker.locator('input[type=file]')).toHaveAttribute('aria-label','Identity proof');
+ // The native Android file control replaced the old hidden 1px proxy button.
+ // Assert an operable accessible input instead of its removed decoration.
+ const nativeFile=picker.locator('input[type=file]');
+ await expect(nativeFile).toBeVisible();
+ await expect(nativeFile).toBeEnabled();
+ await expect(nativeFile).toHaveAttribute('aria-label','Choose file for Identity proof');
+ await expect(nativeFile).toHaveAttribute('accept',/image\/jpeg/);
+ await expect(picker.locator('.c-file-picker-name')).toHaveText('Choose a JPG, PNG or PDF from your device');
+ await expect(picker.locator('.c-file-picker-button')).toHaveCount(0);
 
  await page.evaluate(()=>localStorage.setItem('language_preference','ar'));
  await page.reload();
  await expect(page.locator('html')).toHaveAttribute('dir','rtl');
- await expect(page.locator('.c-file-picker').first().locator('.c-file-picker-button')).toHaveText('اختيار ملف');
- await expect(page.locator('.c-file-picker').first().locator('.c-file-picker-name')).toHaveText('اضغط لاختيار ملف');
+ const arabicPicker=page.locator('.c-file-picker').first();
+ await expect(arabicPicker.locator('input[type=file]')).toBeVisible();
+ await expect(arabicPicker.locator('input[type=file]')).toHaveAttribute('aria-label','اختيار ملف إثبات الهوية');
+ await expect(arabicPicker.locator('.c-file-picker-name')).toHaveText('اختار صورة JPG أو PNG أو PDF من جهازك');
  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
  await page.screenshot({path:`test-results/mock-captain-document-upload-ar-${width}.png`,fullPage:true,animations:'disabled'});
 });
