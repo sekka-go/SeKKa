@@ -122,6 +122,15 @@ async function visit(page,path,action){
  await page.goto(base+path,{waitUntil:'domcontentloaded',timeout:30000});
  if(new URL(page.url()).origin!==base)throw Error('CLOUDFLARE_PREVIEW_REDIRECTED: refusing to capture a different origin');
  await page.locator('body').waitFor({state:'visible',timeout:10000});
+ // The approved dev gallery is now code-split. DOMContentLoaded may precede
+ // its JS chunk, so never screenshot the Suspense loading placeholder.
+ if(path.startsWith('/dev/screens')){
+  await page.waitForFunction(()=>{
+   const root=document.getElementById('root');
+   return Boolean(root?.firstElementChild &&
+    !root.textContent?.includes('Loading developer preview…'));
+  },null,{timeout:15000});
+ }
  if(action==='welcome'){
   const b=page.getByRole('button',{name:/ابدأ الآن|Get started/i});
   if(await b.count())await b.first().click({timeout:5000});
