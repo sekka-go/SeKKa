@@ -129,11 +129,9 @@ async function visit(page,path,action){
  // The approved dev gallery is now code-split. DOMContentLoaded may precede
  // its JS chunk, so never screenshot the Suspense loading placeholder.
  if(path.startsWith('/dev/screens')){
-  await page.waitForFunction(()=>{
-   const root=document.getElementById('root');
-   return Boolean(root?.firstElementChild &&
-    !root.textContent?.includes('Loading developer preview…'));
-  },null,{timeout:15000});
+  // The React Suspense fallback can occupy #root while the gallery
+  // chunk downloads. Screenshot only after real approved content mounts.
+  await page.locator('main').first().waitFor({state:'visible',timeout:20000});
  }
  if(action==='welcome'){
   const b=page.getByRole('button',{name:/ابدأ الآن|Get started/i});
@@ -227,6 +225,14 @@ async function main(){
          label:original.label,original:ar,integrated:br});
       }
      }
+    }
+    // Keep actionable error samples in GitHub Actions even when all 584
+    // captures fail. Full per-screen diagnostics remain in report.json.
+    if(row.errors.length&&(n<=2||n===CANONICAL_SCREEN_COUNT)){
+     process.stderr.write('CAPTURE_DIAGNOSTIC '+JSON.stringify({
+      variant:v.key,screenId:id(n),originalUrl:row.originalUrl,
+      integratedUrl:row.integratedUrl,errors:row.errors
+     })+'\n');
     }
     rows.push(row);
    }
