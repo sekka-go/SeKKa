@@ -39,3 +39,10 @@ test('accepting Captain offers validates both schedules and stop order',()=>{
  assert.match(migration,/route\.seat_capacity/);
  assert.match(migration,/revoke all on function public\.v31_accept_trip_offer\(uuid\) from public,anon/);
 });
+
+test('follow-up trigger fix avoids PostgreSQL OLD trigger-record collision',()=>{
+ const fix=readFileSync(new URL('../migrations/20261118015500_v31_rider_duplicate_guard_alias_fix.sql',import.meta.url),'utf8');
+ assert.match(fix,/public\.v31_trip_requests existing_request/);
+ assert.match(fix,/existing_request\.rider_id=new\.rider_id/);
+ assert.doesNotMatch(fix,/public\.v31_trip_requests old\b/);
+});
