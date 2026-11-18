@@ -51,18 +51,18 @@ for(const width of [360,390]){
      }
      const actual=await snapshot(page,scene,'after',variant);
      expect(actual.checks.scrollWidth,'Production screen horizontal overflow').toBeLessThanOrEqual(width+1);
-     // Stage 1 and the full-screen filter step use their approved isolated canvas.
-     if(scene.id===2||scene.id===3||scene.id===10){
+     // Screens 02/03 stay untouched full-screen onboarding. The real
+     // Search/Filters have a compact menu-only shell, never a fixed tab strip.
+     if(scene.id===2||scene.id===3){
       await expect(page.locator('.sekka-mobile-header')).toBeHidden();
-      await expect(page.locator('.sekka-bottom-nav')).toBeHidden();
      }else{
-      await expect(page.locator('.sekka-mobile-header')).toBeHidden();
-      await expect(page.locator('.sekka-bottom-nav')).toBeVisible();
-      expect(actual.canvas.y,'Search canvas should begin near the safe-area top').toBeLessThanOrEqual(48);
-      const nav=await rect(page,'.sekka-bottom-nav');
-      expect(nav.x).toBeGreaterThanOrEqual(-1);
-      expect(nav.x+nav.width).toBeLessThanOrEqual(width+1);
-      expect(nav.y).toBeGreaterThanOrEqual((width===360?800:844)-nav.height-2);
+      await expect(page.locator('.sekka-mobile-header')).toBeVisible();
+      await expect(page.locator('.sekka-bottom-nav')).toHaveCount(0);
+      await expect(page.locator('.sekka-mobile-header .sekka-approved-logo')).toHaveCount(0);
+      const trigger=await rect(page,'.sekka-shell-menu');
+      expect(trigger.x+trigger.width/2,'Menu should be physically left').toBeLessThan(width/2);
+      expect(trigger.width,'Menu tap target').toBeGreaterThanOrEqual(44);
+      expect(actual.canvas.y,'Search begins directly below compact menu header').toBeLessThanOrEqual(96);
      }
      if(scene.id===10){
       if(!actual.action||!reference.action)throw new Error('Missing filter action measurement');
@@ -70,9 +70,12 @@ for(const width of [360,390]){
        'Filter action width must preserve the approved design').toBeLessThanOrEqual(4);
       expect(Math.abs(actual.action.height-reference.action.height),
        'Filter action height must preserve the approved design').toBeLessThanOrEqual(4);
-      expect(actual.action.y+actual.action.height,
-       'Filter action must remain visible above the persistent shell chrome')
-       .toBeLessThanOrEqual((width===360?800:844)-12);
+      // Search filters may scroll naturally; the action must be reachable
+      // without a fixed bottom nav covering it.
+      await page.locator('.d-screen-10 > .d-primary').scrollIntoViewIfNeeded();
+      const visibleAction=await rect(page,'.d-screen-10 > .d-primary');
+      expect(visibleAction.y+visibleAction.height,'Filter action must be visible after scrolling')
+       .toBeLessThanOrEqual((width===360?800:844)+1);
      }
      expect(Math.abs(actual.canvas.width-reference.canvas.width),
       'Root canvas must not shrink because of a duplicated outer padding').toBeLessThanOrEqual(3);
@@ -80,20 +83,15 @@ for(const width of [360,390]){
       'Approved heading width must be preserved').toBeLessThanOrEqual(4);
      expect(Math.abs((actual.title.y-actual.canvas.y)-(reference.title.y-reference.canvas.y)),
       'Heading position *inside original artwork* must be preserved').toBeLessThanOrEqual(9);
-     // A fixed tab bar may temporarily cover scrolling content mid-scroll.
-     // It is a defect only if the layout cannot scroll the last action above
-     // the bar; reserve explicit scrollable bottom clearance.
+     // No fixed footer remains; preserve scrollability and ensure no
+     // old viewport-height reservation takes usable space below actions.
      if(scene.id>=9&&scene.id!==10){
-       const clearance=await page.evaluate(()=>{
-         const canvas=document.querySelector('.d-canvas')?.getBoundingClientRect();
-         const nav=document.querySelector('.sekka-bottom-nav')?.getBoundingClientRect();
-         if(!canvas||!nav)return null;
-         const pageBottom=window.scrollY+canvas.bottom;
-         return {distance:document.documentElement.scrollHeight-pageBottom,navHeight:nav.height};
-       });
-       expect(clearance).not.toBeNull();
-       expect(clearance!.distance,'Scrollable bottom clearance must protect actions from fixed tabs')
-        .toBeGreaterThanOrEqual(clearance!.navHeight-12);
+      const layout=await page.evaluate(()=>({
+       contentHeight:document.querySelector('.sekka-mobile-content')?.getBoundingClientRect().height||0,
+       scrollWidth:document.documentElement.scrollWidth
+      }));
+      expect(layout.contentHeight).toBeGreaterThan(0);
+      expect(layout.scrollWidth).toBeLessThanOrEqual(width+1);
      }
     });
    }
