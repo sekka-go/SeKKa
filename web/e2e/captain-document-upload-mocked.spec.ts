@@ -134,6 +134,12 @@ test('MOCKED Android-width private document upload: denied, retry, verified pers
  await expect(diagnostic).toContainText(/STORAGE_REQUEST\/403\/UNKNOWN/);
  await expect(diagnostic).not.toContainText('synthetic-test.jpg');
  await expect(page.getByText('0/4 required documents complete')).toBeVisible();
+ // Simulate an Android content provider where File.arrayBuffer fails even
+ // though the selected JPEG bytes are accessible via native FileReader.
+ // Retry must still reach authenticated Storage and verified server readback.
+ await page.evaluate(()=>{
+  File.prototype.arrayBuffer=async()=>{throw Error('ANDROID_PROVIDER_ARRAYBUFFER_REJECTED');};
+ });
  const retryChooser=page.waitForEvent('filechooser');
  await tapVisibleButton();
  await (await retryChooser).setFiles(mockFile);
