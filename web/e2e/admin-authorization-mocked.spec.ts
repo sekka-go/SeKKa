@@ -378,3 +378,45 @@ test('MOCKED rider menu separates trip requests from saved seat bookings and sur
  await expect(page.locator('.live-bookings')).toBeVisible();
  await expect(page.locator('.live-trip-requests')).toHaveCount(0);
 });
+
+test('MOCKED signed-in rider saves validated Home/Work shortcuts and recent searches per account',async({page})=>{
+ await page.setViewportSize({width:360,height:800});
+ await setup(page,{isAdmin:false},'en','light');
+ // Only genuine service areas from a server response are offered as shortcuts.
+ await page.route(endpoint+'/rest/v1/v31_service_areas*',route=>route.fulfill({
+  contentType:'application/json',body:JSON.stringify([
+   {id:1,name_ar:'المعادي',name_en:'Maadi'},
+   {id:2,name_ar:'التجمع',name_en:'New Cairo'},
+  ])
+ }));
+ await page.goto('/?tab=search&view=9');
+ const shortcuts=page.locator('.sekka-search-shortcuts');
+ await expect(shortcuts).toBeVisible();
+ const from=page.locator('.d-planner-places .d-place select').first();
+ const to=page.locator('.d-planner-places .d-place select').last();
+ await expect(from.locator('option[value="المعادي"]')).toHaveText('Maadi');
+ await from.selectOption('المعادي');
+ await to.selectOption('التجمع');
+ await shortcuts.getByRole('button',{name:'Save origin as Home'}).click();
+ await shortcuts.getByRole('button',{name:'Save destination as Work'}).click();
+ await expect(shortcuts.getByRole('button',{name:'Home to Work'})).toBeVisible();
+ await expect(shortcuts.getByRole('button',{name:'Work to Home'})).toBeVisible();
+ await shortcuts.getByRole('button',{name:'Work to Home'}).click();
+ await expect(from).toHaveValue('التجمع');
+ await expect(to).toHaveValue('المعادي');
+ await page.locator('.d-screen-9 .d-planner > .d-primary').click();
+ await page.goto('/?tab=search&view=9');
+ await expect(shortcuts.getByText('Recent searches')).toBeVisible();
+ await expect(shortcuts.getByRole('button',{name:'Reuse route التجمع - المعادي'})).toBeVisible();
+ const key='sekka.rider.savedAreas.v1.'+userId;
+ const stored=await page.evaluate(key=>JSON.parse(localStorage.getItem(key)||'null'),key);
+ expect(stored.home).toBe('المعادي');
+ expect(stored.work).toBe('التجمع');
+ expect(stored.recent[0]).toEqual({origin:'التجمع',destination:'المعادي'});
+ await page.reload();
+ await expect(shortcuts.getByRole('button',{name:'Home to Work'})).toBeVisible();
+ await shortcuts.getByRole('button',{name:'Home to Work'}).click();
+ await expect(from).toHaveValue('المعادي');
+ await expect(to).toHaveValue('التجمع');
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
