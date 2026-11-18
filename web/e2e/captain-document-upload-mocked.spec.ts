@@ -66,7 +66,7 @@ test('MOCKED Android-width private document upload: denied, retry, verified pers
     result={statusCode:'403',error:'AccessDenied',message:'Mocked Storage policy denial'};
    }else{
     uploaded.add(objectName);
-    result={Key:'v31-captain-docs-staging/'+objectName};
+    result={path:objectName,id:objectName,fullPath:'v31-captain-docs-staging/'+objectName};
    }
   }
   else if(pathname==='/rest/v1/rpc/v31_register_captain_document'){
