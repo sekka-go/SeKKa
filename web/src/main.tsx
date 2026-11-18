@@ -1,5 +1,7 @@
 import { PreferencesProvider } from "./v2/preferences";
 import React from "react";
+// Shared global tokens/reset must stay in the production entry after gallery code-splitting.
+import "./v2/theme.css";
 import { createRoot } from "react-dom/client";
 
 import MobileApp from "./v2/MobileApp";
