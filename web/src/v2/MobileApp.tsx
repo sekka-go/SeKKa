@@ -261,7 +261,7 @@ export default function MobileApp(){
    setBookingId(id);const u=new URL(location.href);u.searchParams.set('tab','booking');u.searchParams.set('booking',id);
    history.replaceState({route:{tab:'booking'}},'',u.pathname+u.search);
  };
- const approvedDiscovery=(screen:number)=><Discovery production screen={screen} serviceAreas={areas} liveSelection={liveSelection} onLiveSelect={chooseRoute} theme={p.theme}
+ const approvedDiscovery=(screen:number)=><Discovery production riderId={userId} screen={screen} serviceAreas={areas} liveSelection={liveSelection} onLiveSelect={chooseRoute} theme={p.theme}
      onTheme={p.setThemePreference} go={discoveryGo}
      routes={[]} route={null} bookings={[]} signedIn={Boolean(userId)} busy={false} error={areasError}
      onSearch={()=>{}} onSelect={()=>{}}
