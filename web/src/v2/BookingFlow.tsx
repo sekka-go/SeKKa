@@ -1058,7 +1058,7 @@ export function V31BookingJourney({offer,routeId,pickupId,dropoffId,reverse,book
  const {language,theme}=usePreferences(),en=language==='en';
  const t=(ar:string,english:string)=>en?english:ar;
  const [seats,setSeats]=useState(1),[busy,setBusy]=useState(false),[error,setError]=useState('');
- const [stored,setStored]=useState<{id:string;status:string;seats:number;price_snapshot_egp:number|null;period_snapshot:string|null;pickup_stop_id:string|null;dropoff_stop_id:string|null}|null>(null);
+ const [stored,setStored]=useState<{id:string;status:string;seats:number;price_snapshot_egp:number|null;period_snapshot:string|null;booked_direction:string|null;pickup_stop_id:string|null;dropoff_stop_id:string|null}|null>(null);
  const [loading,setLoading]=useState(Boolean(bookingId)),[refresh,setRefresh]=useState(0);
  useEffect(()=>{let active=true;
    if(!bookingId){setStored(null);setLoading(false);return;}
@@ -1068,7 +1068,7 @@ export function V31BookingJourney({offer,routeId,pickupId,dropoffId,reverse,book
      const {data:{user},error:authError}=await client.auth.getUser();
      if(authError||!user)throw Error('AUTH_REQUIRED');
      const {data,error:e}=await client.from('v31_bookings')
-       .select('id,status,seats,price_snapshot_egp,period_snapshot,pickup_stop_id,dropoff_stop_id')
+       .select('id,status,seats,price_snapshot_egp,period_snapshot,booked_direction,pickup_stop_id,dropoff_stop_id')
        .eq('id',bookingId).eq('rider_id',user.id).maybeSingle();
      if(e)throw e;if(!data)throw Error('BOOKING_NOT_FOUND');
      if(active)setStored(data);
@@ -1088,10 +1088,10 @@ export function V31BookingJourney({offer,routeId,pickupId,dropoffId,reverse,book
      const {bookingId:id}=await reserveSeatsWithStops(routeId,seats,idempotency,pickupId,dropoffId,reverse);
      // The RPC response alone is not a visual confirmation. Verify an owned row.
      const {data:row,error:readError}=await client.from('v31_bookings')
-       .select('id,status,route_id,seats,pickup_stop_id,dropoff_stop_id')
+       .select('id,status,route_id,seats,booked_direction,pickup_stop_id,dropoff_stop_id')
        .eq('id',id).eq('rider_id',user.id).maybeSingle();
      if(readError)throw readError;
-     if(!row||row.route_id!==routeId||row.seats!==seats||row.pickup_stop_id!==pickupId||row.dropoff_stop_id!==dropoffId||!['pending','confirmed'].includes(row.status))throw Error('BOOKING_NOT_VERIFIED');
+     if(!row||row.route_id!==routeId||row.seats!==seats||row.pickup_stop_id!==pickupId||row.dropoff_stop_id!==dropoffId||row.booked_direction!==(offer?.direction==='round_trip'?'round_trip':reverse?'return':'outbound')||!['pending','confirmed'].includes(row.status))throw Error('BOOKING_NOT_VERIFIED');
      clearReservationAttempt(sessionStorage,signature);
      onBooked(id);
    }catch(e){const message=e instanceof Error?e.message:String(e);
@@ -1144,6 +1144,7 @@ export function V31BookingJourney({offer,routeId,pickupId,dropoffId,reverse,book
        <Row label={t('رقم الحجز','Booking ID')}>{stored.id}</Row>
        <Row label={t('حالة الحجز من الخادم','Server booking status')}>{stored.status==='pending'?t('قيد الانتظار','Pending'):stored.status==='cancelled'?t('ملغي','Cancelled'):stored.status==='confirmed'?t('مؤكد من الخادم','Confirmed by server'):stored.status}</Row>
        <Row label={t('عدد المقاعد','Seats')}>{stored.seats}</Row>
+       <Row label={t('اتجاه الاشتراك المسجل','Recorded subscription direction')}>{stored.booked_direction==='round_trip'?t('ذهاب وعودة','Round trip'):stored.booked_direction==='return'?t('عودة فقط','Return only'):stored.booked_direction==='outbound'?t('ذهاب فقط','Outbound only'):t('غير متاح','Unavailable')}</Row>
        <Row label={t('السعر المسجل','Recorded price')}>{stored.price_snapshot_egp===null?t('غير متاح','Unavailable'):`${stored.price_snapshot_egp} ${t('ج.م','EGP')}`}</Row>
        <Row label={t('نقطة الركوب','Pickup')}>{offer?.selectedStops?.pickup.name||stored.pickup_stop_id||'—'}</Row>
        <Row label={t('نقطة النزول','Drop-off')}>{offer?.selectedStops?.dropoff.name||stored.dropoff_stop_id||'—'}</Row>
