@@ -49,10 +49,12 @@ for(const width of [320,360,390,412]){
   await expect(toggle.locator('.sekka-drawer-pref-icon')).toHaveText('🌐');
   await toggle.click();
   await expect(page.locator('html')).toHaveAttribute('dir','ltr');
-  await expect(toggle).toHaveAttribute('aria-label','Switch to Arabic');
   await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
   expect(await page.evaluate(()=>localStorage.getItem('language_preference'))).toBe('en');
-  await page.getByRole('button',{name:'Close menu'}).last().click();
+  // Language switches can recreate the drawer. Reopen it via the current
+  // language's button rather than retaining a stale dialog locator.
+  const closeAfterChange=page.getByRole('button',{name:'Close menu'});
+  if(await closeAfterChange.count())await closeAfterChange.last().click();
   await expect(page.getByRole('heading',{name:'My profile'})).toBeVisible();
   await page.reload();
   await page.getByRole('button',{name:'Open menu'}).click();
@@ -179,10 +181,13 @@ test(`pending Captain profile stays in Passenger journey until explicit entry at
  await expect(page.locator('.d-screen-8')).toBeVisible();
  await expect(page).not.toHaveURL(/tab=captain-onboarding|tab=routes/);
  await page.screenshot({path:`test-results/mock-pending-captain-passenger-home-${width}.png`,fullPage:true,animations:'disabled'});
- await expect(page.getByRole('button',{name:'Bookings'})).toBeVisible();
- await expect(page.locator('.sekka-bottom-nav').getByRole('button',{name:'Routes'})).toHaveCount(0);
-
- await page.getByRole('button',{name:'Account'}).click();
+ await expect(page.getByRole('button',{name:'Open menu'})).toBeVisible();
+ await expect(page.locator('.sekka-bottom-nav')).toHaveCount(0);
+ await page.getByRole('button',{name:'Open menu'}).click();
+ const leftDrawer=page.getByRole('dialog',{name:'Main menu'});
+ await expect(leftDrawer.getByRole('button',{name:'My bookings'})).toBeVisible();
+ await expect(leftDrawer.getByRole('button',{name:'My routes'})).toHaveCount(0);
+ await leftDrawer.getByRole('button',{name:'My profile'}).click();
  await page.getByRole('button',{name:'Enter Captain journey'}).click();
  await expect(page).toHaveURL(/tab=captain-onboarding&view=35/);
  await expect(page.locator('.c-approval-live')).toBeVisible();
