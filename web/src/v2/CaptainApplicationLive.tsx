@@ -94,7 +94,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
  const [uploadingKind,setUploadingKind]=useState<string|null>(null),[uploadError,setUploadError]=useState(''),[uploadErrorKind,setUploadErrorKind]=useState<string|null>(null);
  const [uploadingFileName,setUploadingFileName]=useState('');
  const [uploadStage,setUploadStage]=useState<'idle'|'reading'|'uploading'|'registering'|'verifying'>('idle');
- const [uploadDiagnostic,setUploadDiagnostic]=useState('');
+ const [uploadDiagnostic,setUploadDiagnostic]=useState('PICKER_READY');
  const currentYear=new Date().getFullYear();
  const availableYears=useMemo(()=>Array.from({length:currentYear-1979},(_,i)=>String(currentYear-i)),[currentYear]);
  const requiredKinds=documentKinds.map(([kind])=>kind);
@@ -591,7 +591,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
       <input id={'captain-document-'+kind} className="c-file-native" type="file"
        aria-label={t('اختيار ملف ','Choose file for ')+t(ar,label)}
        accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
-       disabled={!editable||busy} onChange={event=>{
+       disabled={!editable||busy} onClick={()=>setUploadDiagnostic('PICKER_TAPPED')} onChange={event=>{
         const file=event.currentTarget.files?.[0];
         if(file)upload(kind,file);
         event.currentTarget.value='';
@@ -614,6 +614,10 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
     </div>;
    })}
    <p role="status">{documentProgress}/4 {t('مستندات مطلوبة مكتملة','required documents complete')}</p>
+   <p data-testid="captain-upload-stage" className="c-form-hint" role="status">
+    {t('حالة اختيار/رفع الملف: ','File selection/upload stage: ')}
+    <code dir="ltr">{uploadDiagnostic}</code>
+   </p>
    {!hasDocuments&&<p className="c-form-hint">{t('ارفع المستندات الأربعة المطلوبة قبل المتابعة.','Upload all four required documents before continuing.')}</p>}
    {editable&&<button type="button" className="d-primary" disabled={busy||!hasDocuments}
     onClick={()=>onNext(39)}>{t('مراجعة الطلب','Review application')}</button>}
