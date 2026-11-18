@@ -2,8 +2,9 @@ import { expect, test } from "@playwright/test";
 
 const artwork = "/brand/sekka-launch-static-20261118.svg";
 
-test("fresh app open shows the owner's static English seKKa artwork before Welcome", async ({ page }) => {
+test("fresh app open shows a smaller centered seKKa logo with a gentle pulse before Welcome", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({reducedMotion: "no-preference"});
   await page.goto("/");
   const splash = page.locator(".sekka-launch");
   await expect(splash).toBeVisible();
@@ -19,9 +20,28 @@ test("fresh app open shows the owner's static English seKKa artwork before Welco
   expect(box!.y).toBe(0);
   expect(box!.width).toBe(390);
   expect(box!.height).toBe(844);
-  // The image is static: no CSS animation and no animated children.
-  expect(await splash.evaluate(node => [...node.querySelectorAll("*"), node]
-    .every(el => getComputedStyle(el).animationName === "none"))).toBe(true);
+  // Only the logo pulses, not an animated road/map or a second launch screen.
+  const logoState = await picture.evaluate(image => {
+    const imageRect = image.getBoundingClientRect();
+    const viewport = document.documentElement;
+    return {
+      width: imageRect.width,
+      centerX: imageRect.left + imageRect.width / 2,
+      centerY: imageRect.top + imageRect.height / 2,
+      viewportWidth: viewport.clientWidth,
+      viewportHeight: window.innerHeight,
+      animationName: getComputedStyle(image).animationName,
+      otherAnimations: [...image.parentElement!.querySelectorAll("*")]
+        .filter(element => element !== image)
+        .some(element => getComputedStyle(element).animationName !== "none"),
+    };
+  });
+  expect(logoState.width).toBeLessThanOrEqual(300 * 1.07);
+  expect(logoState.width).toBeGreaterThan(100);
+  expect(logoState.centerX).toBeCloseTo(logoState.viewportWidth / 2, 0);
+  expect(logoState.centerY).toBeCloseTo(logoState.viewportHeight / 2, 0);
+  expect(logoState.animationName).toContain("sekka-launch-pulse");
+  expect(logoState.otherAnimations).toBe(false);
   await expect(splash).toHaveCount(0, { timeout: 4500 });
   await expect(page.locator(".phase-screen-2")).toBeVisible();
 });
@@ -92,4 +112,14 @@ test("a new app navigation may display the same static launch artwork again", as
   await expect(page.locator(".sekka-launch")).toHaveCount(0, { timeout: 4500 });
   await page.goto("/?tab=login&view=2");
   await expect(page.locator(".sekka-launch")).toBeVisible();
+});
+
+test("system reduced-motion preference disables logo pulsing", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/?tab=login&view=2");
+  const picture = page.locator(".sekka-launch__artwork");
+  await expect(picture).toBeVisible();
+  await expect(picture).toHaveCSS("animation-name", "none");
+  await expect(page.locator(".sekka-launch")).toHaveCount(0, { timeout: 4500 });
 });
