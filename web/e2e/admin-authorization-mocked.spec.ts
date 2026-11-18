@@ -353,3 +353,23 @@ for(const [width,height] of [[320,700],[360,800],[390,844],[412,915]] as const){
   }
  }
 }
+
+test('MOCKED rider menu separates trip requests from saved seat bookings and survives refresh',async({page})=>{
+ await setup(page,{isAdmin:false},'en','light');
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/?tab=bookings');
+ await expect(page.locator('.live-bookings')).toBeVisible();
+ await page.getByRole('button',{name:'Open menu'}).click();
+ const drawer=page.getByRole('dialog',{name:'Main menu'});
+ await expect(drawer.getByRole('button',{name:'My trip requests'})).toBeVisible();
+ await drawer.getByRole('button',{name:'My trip requests'}).click();
+ await expect(drawer).toHaveCount(0);
+ await expect(page.locator('.live-trip-requests')).toBeVisible();
+ await expect(page.locator('.live-bookings')).toHaveCount(0);
+ await expect(page.getByRole('navigation',{name:'Bookings and requests'}).getByRole('button',{name:'My trip requests'})).toHaveAttribute('aria-pressed','true');
+ await page.reload();
+ await expect(page.locator('.live-trip-requests')).toBeVisible();
+ await page.getByRole('navigation',{name:'Bookings and requests'}).getByRole('button',{name:'My seat bookings'}).click();
+ await expect(page.locator('.live-bookings')).toBeVisible();
+ await expect(page.locator('.live-trip-requests')).toHaveCount(0);
+});
