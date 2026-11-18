@@ -13,15 +13,19 @@ for(const width of [360,390]){
    await expect(page.locator('.phase-review-bar,.phase-preview-note')).toHaveCount(0);
    await expect(page.locator('html')).toHaveAttribute('dir',language==='ar'?'rtl':'ltr');
    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
-   // Once on public search, the original Rider five-tab nav remains usable.
+   // The five destinations live in a single physical-left drawer, not a tab strip.
    await page.goto('/?tab=search');
-   await expect(page.locator('.sekka-bottom-nav button:not(.sekka-menu-tab)')).toHaveCount(5);
-   await expect(page.locator('.sekka-bottom-nav button.sekka-menu-tab')).toHaveCount(1);
+   await expect(page.locator('.sekka-bottom-nav')).toHaveCount(0);
    await expect(page.locator('.d-screen-9')).toBeVisible();
-   const nav=page.locator('.sekka-bottom-nav button:not(.sekka-menu-tab)');
-   await nav.nth(2).click();
+   const openMenu=page.getByRole('button',{name:language==='ar'?'فتح القائمة':'Open menu'});
+   await openMenu.click();
+   let drawer=page.getByRole('dialog',{name:language==='ar'?'القائمة الرئيسية':'Main menu'});
+   await expect(drawer).toBeVisible();
+   await drawer.getByRole('button',{name:language==='ar'?'حجوزاتي':'My bookings'}).click();
    await expect(page.getByRole('heading',{name:language==='ar'?'حجوزاتي':'My bookings'})).toBeVisible();
-   await nav.nth(4).click();
+   await openMenu.click();
+   drawer=page.getByRole('dialog',{name:language==='ar'?'القائمة الرئيسية':'Main menu'});
+   await drawer.getByRole('button',{name:language==='ar'?'حسابي':'My profile'}).click();
    await expect(page.getByRole('heading',{name:language==='ar'?'حسابي':'My profile'})).toBeVisible();
    await page.getByRole('button',{name:language==='ar'?'تسجيل الدخول بجوجل':'Sign in with Google'}).click();
    await expect(page.locator('.phase-screen-4 .phase-google-auth')).toBeVisible();
