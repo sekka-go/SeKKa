@@ -2,17 +2,20 @@ import {useEffect,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
 import {MAX_SEATS_PER_RIDER} from './reservations';
-type RequestRow={id:string;rider_id:string;origin_area_id:number;destination_area_id:number;outbound_time:string;period:string;seats:number;status:string};
+type RequestDirection='outbound'|'return'|'round_trip';
+type RequestRow={id:string;rider_id:string;origin_area_id:number;destination_area_id:number;outbound_time:string|null;return_time:string|null;direction:RequestDirection;period:string;seats:number;status:string};
 type OfferRow={id:string;request_id:string;captain_id:string;route_id:string;status:string};
 type RouteRow={id:string;title:string};
 type Area={id:number;name_ar:string;name_en:string};
-type Search={origin:string;destination:string;outbound:string;period:string};
+type Search={origin:string;destination:string;outbound:string;returnTime:string;period:string;direction?:RequestDirection};
 export default function LiveTripRequests({mode,search,onSignIn}:{mode:'rider'|'captain';search?:Search;onSignIn?:()=>void}){
  const {language}=usePreferences(),en=language==='en',t=(ar:string,english:string)=>en?english:ar;
  const [uid,setUid]=useState(''),[requests,setRequests]=useState<RequestRow[]>([]),[offers,setOffers]=useState<OfferRow[]>([]),[areas,setAreas]=useState<Area[]>([]),[routes,setRoutes]=useState<RouteRow[]>([]);
  const [seats,setSeats]=useState(1),[routeSelection,setRouteSelection]=useState<Record<string,string>>({});
  const [requestPeriod,setRequestPeriod]=useState<'weekly'|'monthly'>(search?.period==='weekly'?'weekly':'monthly');
  const [requestTime,setRequestTime]=useState(search?.outbound||'07:30');
+ const [requestReturnTime,setRequestReturnTime]=useState(search?.returnTime||'17:00');
+ const [requestDirection,setRequestDirection]=useState<RequestDirection>(search?.direction||'outbound');
  const [key,setKey]=useState(()=>crypto.randomUUID()),[busy,setBusy]=useState(false),[loading,setLoading]=useState(true),[error,setError]=useState(''),[notice,setNotice]=useState(''),[revision,setRevision]=useState(0);
  const refresh=()=>{setLoading(true);setRevision(v=>v+1);};
  useEffect(()=>{let active=true;void(async()=>{
@@ -24,7 +27,7 @@ export default function LiveTripRequests({mode,search,onSignIn}:{mode:'rider'|'c
    if(!user)throw Error('AUTH_REQUIRED');
    const [areasResult,requestResult,routesResult]=await Promise.all([
     client.from('v31_service_areas').select('id,name_ar,name_en').eq('active',true),
-    client.from('v31_trip_requests').select('id,rider_id,origin_area_id,destination_area_id,outbound_time,period,seats,status').order('created_at',{ascending:false}).limit(100),
+    client.from('v31_trip_requests').select('id,rider_id,origin_area_id,destination_area_id,outbound_time,return_time,direction,period,seats,status').order('created_at',{ascending:false}).limit(100),
     mode==='captain'?client.from('v31_routes').select('id,title').eq('captain_id',user.id).eq('status','published'):Promise.resolve({data:[],error:null})
    ]);
    if(areasResult.error||requestResult.error||routesResult.error)throw Error(areasResult.error?.message||requestResult.error?.message||routesResult.error?.message);
@@ -39,28 +42,63 @@ export default function LiveTripRequests({mode,search,onSignIn}:{mode:'rider'|'c
  const action=async(task:()=>Promise<void>)=>{setBusy(true);setError('');setNotice('');try{await task();refresh();}catch(e){const message=e instanceof Error?e.message:String(e);setError(message.includes('RIDER_MAX_TWO_SEATS')?t('الحد الأقصى شخصين فقط لكل طلب.','Maximum two people per request.'):message);}finally{setBusy(false);}};
  const create=async()=>{
   if(!client||!search)return;
-  const from=areas.find(a=>a.name_ar===search.origin||a.name_en===search.origin),to=areas.find(a=>a.name_ar===search.destination||a.name_en===search.destination);
+  const from=areas.find(a=>a.name_ar===search.origin||a.name_en===search.origin);
+  const to=areas.find(a=>a.name_ar===search.destination||a.name_en===search.destination);
   if(!uid){onSignIn?.();return;}
-  if(!Number.isInteger(seats)||seats<1||seats>MAX_SEATS_PER_RIDER){setError(t('الحد الأقصى لطلب الرحلة شخصين فقط.','You can request a trip for at most two people.'));return;}
-  if(!from||!to||from.id===to.id||!/^([01]\d|2[0-3]):[0-5]\d$/.test(requestTime)||!['weekly','monthly'].includes(requestPeriod)){
-   setError(t('راجع المناطق ووقت الذهاب ومدة الاشتراك قبل إرسال الطلب.','Check the areas, departure time and subscription period.'));return;
+  if(!Number.isInteger(seats)||seats<1||seats>MAX_SEATS_PER_RIDER){
+   setError(t('الحد الأقصى لطلب الرحلة شخصين فقط.','You can request a trip for at most two people.'));return;
+  }
+  const clockValid=(value:string)=>/^([01]\d|2[0-3]):[0-5]\d$/.test(value);
+  const outbound=requestDirection==='return'?null:requestTime;
+  const inbound=requestDirection==='outbound'?null:requestReturnTime;
+  if(!from||!to||from.id===to.id||(outbound!==null&&!clockValid(outbound))||
+    (inbound!==null&&!clockValid(inbound))||
+    !['weekly','monthly'].includes(requestPeriod)||
+    !['outbound','return','round_trip'].includes(requestDirection)){
+   setError(t('راجع المناطق واتجاه الرحلة ومواعيد الذهاب والعودة.','Check areas, journey direction and departure/return times.'));return;
   }
   await action(async()=>{
+   // Friendly preflight. Database advisory-lock guard is the final authority
+   // for a race between tabs/devices. Seats may differ; the trip identity may not.
+   const findExisting=async()=>{
+    let query=client!.from('v31_trip_requests').select('id')
+     .eq('rider_id',uid).eq('status','open')
+     .eq('origin_area_id',from.id).eq('destination_area_id',to.id)
+     .eq('period',requestPeriod).eq('direction',requestDirection);
+    query=outbound===null?query.is('outbound_time',null):query.eq('outbound_time',outbound);
+    query=inbound===null?query.is('return_time',null):query.eq('return_time',inbound);
+    const {data,error:lookupError}=await query.order('created_at',{ascending:false}).limit(1);
+    if(lookupError)throw lookupError;
+    return data?.[0]?.id as string|undefined;
+   };
+   if(await findExisting()){
+    setNotice(t('عندك طلب مفتوح مطابق بالفعل. تابعه في القائمة بدل تكراره.','An identical trip request is already open. Follow it in the list below.'));
+    return;
+   }
    const {error:insertError}=await client!.from('v31_trip_requests').insert({
     rider_id:uid,origin_area_id:from.id,destination_area_id:to.id,
-    outbound_time:requestTime,period:requestPeriod,seats,request_key:key
+    outbound_time:outbound,return_time:inbound,direction:requestDirection,
+    period:requestPeriod,seats,request_key:key
    });
+   if(insertError?.message.includes('DUPLICATE_OPEN_TRIP_REQUEST')){
+    if(await findExisting()){
+     setNotice(t('الطلب ده مفتوح بالفعل. تابعه في القائمة بدل تكراره.','This trip is already requested. Follow it below.'));
+     return;
+    }
+    throw insertError;
+   }
    if(insertError&&insertError.code!=='23505')throw insertError;
-   // The same idempotency key can already exist after a network retry.
-   // Never announce success without reading an owned, matching server row.
+   // Idempotent network retries are only successful if the owned row is real.
    const {data:saved,error:verifyError}=await client!.from('v31_trip_requests')
-    .select('id,rider_id,origin_area_id,destination_area_id,outbound_time,period,seats')
+    .select('id,rider_id,origin_area_id,destination_area_id,outbound_time,return_time,direction,period,seats')
     .eq('rider_id',uid).eq('request_key',key).maybeSingle();
    if(verifyError||!saved||saved.rider_id!==uid||
      saved.origin_area_id!==from.id||saved.destination_area_id!==to.id||
-     saved.outbound_time.slice(0,5)!==requestTime||
+     (saved.outbound_time?.slice(0,5)||null)!==outbound||
+     (saved.return_time?.slice(0,5)||null)!==inbound||
+     saved.direction!==requestDirection||
      saved.period!==requestPeriod||saved.seats!==seats)throw Error('REQUEST_SAVE_NOT_VERIFIED');
-   setNotice(t('اتحفظ طلب رحلتك فعلًا، وتقدر تتابعه هنا. ده مش حجز مقعد.','Your trip request is saved and appears here. This is not a seat booking.'));
+   setNotice(t('اتحفظ طلبك بكامل تفاصيل الذهاب والعودة. تقدر تتابعه هنا.','Your request and journey schedule are saved. Follow it here.'));
    setKey(crypto.randomUUID());
   });
  };
