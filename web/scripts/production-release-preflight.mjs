@@ -55,7 +55,7 @@ export async function runProductionPreflight(env=process.env){
  // We only query empty sets. RLS/grant refusal may be legitimate; missing
  // relation and network errors are not. No actual records are returned.
  for(const table of required){
-  const {error,status}=await client.from(table).select('id',{head:true}).limit(0);
+  const {error,status}=await client.from(table).select('*',{head:true}).limit(0);
   if(!error)continue;
   const info=String(error.code||'')+' '+String(error.message||'');
   if(/PGRST205|42P01|schema cache|could not find the table|does not exist/i.test(info))
