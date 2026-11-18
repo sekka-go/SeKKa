@@ -2,6 +2,7 @@ import {useEffect,useMemo,useState} from 'react';
 import {client} from './api';
 import {enrollCaptain} from './captainEnrollment';
 import LiveVehicles from './LiveVehicles';
+import EgyptianPlateInput from './EgyptianPlateInput';
 import {usePreferences} from './preferences';
 import {
  captainPersonalErrors,captainVehicleErrors,normalizeNumerals,canonicalEgyptianPlate
@@ -77,6 +78,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
  const [busy,setBusy]=useState(false),[error,setError]=useState('');
  const [loadError,setLoadError]=useState(''),[showPersonalErrors,setShowPersonalErrors]=useState(false);
  const [showVehicleErrors,setShowVehicleErrors]=useState(false);
+ const [vehicleSubmitFeedback,setVehicleSubmitFeedback]=useState('');
  const [notice,setNotice]=useState(''),[loading,setLoading]=useState(true),[revision,setRevision]=useState(0);
  const [uploadingKind,setUploadingKind]=useState<string|null>(null),[uploadError,setUploadError]=useState(''),[uploadErrorKind,setUploadErrorKind]=useState<string|null>(null);
  const [uploadingFileName,setUploadingFileName]=useState('');
@@ -157,10 +159,10 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
   return()=>{active=false;};
  },[makeId,modelId]);
 
- const run=async(action:()=>Promise<void>)=>{
+ const run=async(action:()=>Promise<void>,onFailure?:(message:string)=>void)=>{
   setBusy(true);setError('');setNotice('');
   try{await action();setRevision(n=>n+1);}
-  catch(e){setError(messageFor(e,t));}
+  catch(e){const message=messageFor(e,t);setError(message);onFailure?.(message);}
   finally{setBusy(false);}
  };
  const expectRpc=(data:unknown,expected:string)=>{
@@ -177,7 +179,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
  const focusField=(name:string)=>{
   const field=document.getElementById(`captain-${name}`);
   field?.scrollIntoView({block:'center',behavior:'smooth'});
-  field?.focus({preventScroll:true});
+  (name==='plate'?document.getElementById('captain-plate-letter-0'):field)?.focus({preventScroll:true});
  };
  const personalErrorText=(field:CaptainPersonalField,error:CaptainFieldError)=>{
   const messages:Record<CaptainPersonalField,Record<CaptainFieldError,[string,string]>>={
@@ -251,11 +253,13 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
   });
  };
  const saveVehicle=async(next:boolean)=>{
+ setVehicleSubmitFeedback('');
  const fieldErrors=vehicleErrors;
  const invalidDraft=Object.values(fieldErrors).some(value=>value==='invalid');
  if((next&&Object.keys(fieldErrors).length>0)||(!next&&invalidDraft)){
   setError('');
   setShowVehicleErrors(true);
+  setVehicleSubmitFeedback(t('راجع البيانات المحددة باللون الأحمر، وبالأخص حروف وأرقام اللوحة، ثم حاول تاني.','Check the highlighted fields, especially each plate letter and digit, and retry.'));
   const firstField=Object.keys(fieldErrors)[0];
   if(firstField)focusField(firstField);
    return;
@@ -279,7 +283,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
       saved.vehicle_color_other!==normalizedColorOther||
       saved.intended_plate!==(plate.trim()?canonicalEgyptianPlate(plate):null))throw Error('DRAFT_SAVE_NOT_VERIFIED');
    if(next)onNext(38);else setNotice(t('اتحفظت بيانات العربية، وتقدر تكمّل بعدين.','Vehicle details saved. You can continue later.'));
-  });
+  },message=>setVehicleSubmitFeedback(t('حفظ بيانات العربية فشل: ','Vehicle save failed: ')+message));
  };
  const begin=()=>void run(async()=>{
   await enrollCaptain();
@@ -517,15 +521,14 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
     {visibleVehicleErrors.colorOther&&<span id="captain-colorOther-error" className="c-field-error" role="alert">
      {vehicleErrorText('colorOther',visibleVehicleErrors.colorOther)}</span>}
    </label>}
-   <label htmlFor="captain-plate">{t('لوحة العربية (حروف وأرقام)','License plate number (letters and digits)')}
-    <input id="captain-plate" autoCapitalize="characters" maxLength={24} value={plate} disabled={!editable}
-     aria-invalid={Boolean(visibleVehicleErrors.plate)}
-     aria-describedby={visibleVehicleErrors.plate?'captain-plate-error':undefined}
-     onChange={event=>setPlate(normalizeNumerals(event.target.value))} onBlur={()=>setShowVehicleErrors(true)}/>
-    {visibleVehicleErrors.plate&&<span id="captain-plate-error" className="c-field-error" role="alert">
-     {vehicleErrorText('plate',visibleVehicleErrors.plate)}</span>}
-   </label>
-   <p className="c-form-hint">{t('مثال: القاهرة أ ب ج 123، الجيزة م س 6587. تقدر تكتب من غير مسافات.','Examples: Cairo أ ب ج 123, Giza م س 6587. You can omit spaces.')}</p>
+   <EgyptianPlateInput language={language} value={plate} disabled={!editable}
+    invalid={Boolean(visibleVehicleErrors.plate)}
+    onChange={next=>{setPlate(next);setVehicleSubmitFeedback('');}}
+    onTouched={()=>setShowVehicleErrors(true)}/>
+   {visibleVehicleErrors.plate&&<p id="captain-plate-error" className="c-field-error" role="alert">
+    {vehicleErrorText('plate',visibleVehicleErrors.plate)}</p>}
+   <p className="c-form-hint">{t('مثال: القاهرة أ ب ج 123، الجيزة م س 6587. الخانات منفصلة، والحفظ يتم بنفس تنسيق اللوحة المعتمد.','Examples: Cairo أ ب ج 123, Giza م س 6587. Each character has its own box; the server receives the same canonical plate.')}</p>
+   {vehicleSubmitFeedback&&<p className="c-vehicle-save-feedback" role="alert">{vehicleSubmitFeedback}</p>}
    {editable&&<div className="c-registration-actions">
     <button type="button" disabled={busy} onClick={()=>void saveVehicle(false)}>{t('حفظ واستكمال لاحقًا','Save for later')}</button>
     <button type="button" className="d-primary" disabled={busy}
