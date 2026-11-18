@@ -1,4 +1,4 @@
-/* Owner-approved 3-second launch sequence. Isolated from all 73 approved screens. */
+/* Static owner artwork: full PWA viewport, black background, no animations. */
 .sekka-launch {
   position: fixed;
   inset: 0;
@@ -6,89 +6,24 @@
   width: 100%;
   height: 100vh;
   height: 100dvh;
-  margin: 0;
-  padding: 0;
   overflow: hidden;
-  background: #09090b;
-  isolation: isolate;
-  display: block;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   direction: ltr;
 }
-.sekka-launch__map {
-  position: absolute;
-  inset: 0;
+
+.sekka-launch__artwork {
   display: block;
   width: 100%;
   height: 100%;
-}
-.sekka-launch__route {
-  animation: sekka-route-fade 3s linear both;
-}
-.sekka-launch__route-line, .sekka-launch__route-halo {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  animation: sekka-route-trace 1.78s cubic-bezier(.37,.05,.54,.97) forwards;
-}
-.sekka-launch__route-halo { opacity: .22; }
-.sekka-launch__destination {
-  opacity: 0;
-  animation: sekka-arrive .45s ease-out 1.69s forwards;
-}
-.sekka-launch__point {
-  opacity: .08;
-  animation: sekka-waypoint .44s ease-in-out both;
-}
-.sekka-launch__point--1 { animation-delay: .06s; }
-.sekka-launch__point--2 { animation-delay: .32s; }
-.sekka-launch__point--3 { animation-delay: .60s; }
-.sekka-launch__point--4 { animation-delay: .83s; }
-.sekka-launch__point--5 { animation-delay: 1.07s; }
-.sekka-launch__point--6 { animation-delay: 1.32s; }
-.sekka-launch__point--7 { animation-delay: 1.53s; }
-.sekka-launch__destination {
-  transform-box: fill-box;
-  transform-origin: center;
+  max-width: none;
+  max-height: none;
+  object-fit: contain;
+  object-position: center;
+  pointer-events: none;
+  user-select: none;
 }
 
-.sekka-launch__wordmark {
-  display: block;
-  position: absolute;
-  left: 50%;
-  top: 49%;
-  width: min(68vw, 340px);
-  max-width: calc(100% - 48px);
-  height: auto;
-  opacity: 0;
-  transform: translate(-50%, -50%) scale(.94);
-  animation: sekka-logo-reveal 3s ease-out both;
-  will-change: transform, opacity;
-}
-@keyframes sekka-route-trace {
-  from { stroke-dashoffset: 1; }
-  to { stroke-dashoffset: 0; }
-}
-@keyframes sekka-route-fade {
-  0%, 60% { opacity: 1; }
-  74%, 100% { opacity: 0; }
-}
-@keyframes sekka-waypoint {
-  0%, 100% { opacity: .12; }
-  40% { opacity: 1; }
-}
-@keyframes sekka-arrive {
-  from { opacity: 0; transform: scale(.7); }
-  to { opacity: 1; transform: scale(1); }
-}
-@keyframes sekka-logo-reveal {
-  0%, 78% { opacity: 0; transform: translate(-50%, -48%) scale(.94); }
-  95%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .sekka-launch__route, .sekka-launch__point, .sekka-launch__route-line,
-  .sekka-launch__route-halo, .sekka-launch__destination,
-  .sekka-launch__wordmark {
-    animation: none !important;
-  }
-  .sekka-launch__route { opacity: 0; }
-  .sekka-launch__wordmark { opacity: 1; transform: translate(-50%,-50%); }
-  }
+/* There are intentionally no CSS animations or transition effects. */
