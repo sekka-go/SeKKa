@@ -84,11 +84,13 @@ export default function EgyptianPlateInput({value,onChange,disabled=false,invali
     aria-invalid={invalid} aria-describedby={invalid?'captain-plate-error':undefined}
     onChange={e=>enter(kind,index,e.target.value)}
     onKeyDown={e=>onKey(e,kind,index)}
-    onPaste={e=>paste(e,kind,index)}
-    onBlur={onTouched}/>
+    onPaste={e=>paste(e,kind,index)}/>
   ));
  return <fieldset id="captain-plate" className="c-plate-fields" disabled={disabled}
-  aria-label={t('لوحة العربية','License plate')} aria-invalid={invalid}>
+  aria-label={t('لوحة العربية','License plate')} aria-invalid={invalid}
+  onBlur={event=>{
+   if(!event.currentTarget.contains(event.relatedTarget as Node|null))onTouched?.();
+  }}>
   <legend>{t('لوحة العربية (كل حرف ورقم في مربع)','License plate (one letter or digit per box)')}</legend>
   <label className="c-plate-format-label" htmlFor="captain-plate-format">
    {t('نمط اللوحة حسب المحافظة','Plate layout by governorate')}
