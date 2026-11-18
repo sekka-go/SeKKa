@@ -1,5 +1,5 @@
 import type {Session} from '@supabase/supabase-js';
-import {useEffect,useRef,useState} from 'react';
+import {lazy,Suspense,useEffect,useRef,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
 import Onboarding from './Onboarding';
@@ -7,15 +7,17 @@ import Discovery from './Discovery';
 import type {Line} from './Discovery';
 import {fetchPublishedSelection} from './LiveRouteSearch';
 import type {LiveSelection} from './LiveRouteSearch';
-import {V31BookingJourney} from './BookingFlow';
-import CaptainRoutes from './CaptainRoutes';
-import CaptainOnboarding from './CaptainOnboarding';
+// Load role-gated flows only when the user reaches them; public search and
+// Google entry must not download Captain/Admin code on the first visit.
+const V31BookingJourney=lazy(()=>import('./BookingFlow').then(module=>({default:module.V31BookingJourney})));
+const CaptainRoutes=lazy(()=>import('./CaptainRoutes'));
+const CaptainOnboarding=lazy(()=>import('./CaptainOnboarding'));
 import {internalScreen,publicScreen} from './screenMap';
 import LiveProfile from './LiveProfile';
 import LiveBookings from './LiveBookings';
 import LiveTripRequests from './LiveTripRequests';
 import LiveNotifications from './LiveNotifications';
-import AdminDashboard from './AdminDashboard';
+const AdminDashboard=lazy(()=>import('./AdminDashboard'));
 import {mobileRouteHref,readMobileRoute} from './mobileNavigation';
 import type {MobileRoute,RouteSelection} from './mobileNavigation';
 import './mobile-app.css';
@@ -300,10 +302,10 @@ export default function MobileApp(){
   }catch{/* Authentication continues in the current page context when storage is disabled. */}
   navigate({tab:'captain-onboarding',view:35});
  };
- const approvedCaptainOnboarding=(step:number)=><CaptainOnboarding production screen={internalScreen(step)} journeyScreen={step}
+ const approvedCaptainOnboarding=(step:number)=><Suspense fallback={<p role="status">{t('بنحمّل تسجيل الكابتن…','Loading Captain registration…')}</p>}><CaptainOnboarding production screen={internalScreen(step)} journeyScreen={step}
    theme={p.theme} onTheme={p.setThemePreference} go={captainGo} onJourneyGo={captainOnboardingGo}
    onJourneyBack={()=>navigate({tab:'home'})} profile={null} signedIn={Boolean(userId)}
-   rows={[]} busy={false} error="" onRefresh={()=>{}} onEnrolled={()=>setCaptain(true)}/>;
+   rows={[]} busy={false} error="" onRefresh={()=>{}} onEnrolled={()=>setCaptain(true)}/></Suspense>;
  const signOut=async()=>{
   if(!client)return;
   const {error:e}=await client.auth.signOut();
@@ -383,15 +385,15 @@ export default function MobileApp(){
    <button type="button" onClick={startCaptainJourney}>{captainApproved?t('فتح حساب الكابتن','Open Captain journey'):t('ابدأ ككابتن','Enter Captain journey')}</button><button type="button" onClick={()=>void signOut()}>{t('تسجيل الخروج','Sign out')}</button></section>:<section className="sekka-mobile-card"><h1>{t('حسابي','My profile')}</h1><p>{t('سجّل بجوجل علشان تكمل بياناتك.','Sign in with Google to complete your profile.')}</p><button className="sekka-action" onClick={()=>signInFor('/?tab=login&view=6')}>{t('تسجيل الدخول بجوجل','Sign in with Google')}</button></section>)}
    {selectionError&&['search','booking'].includes(tab)&&<div role="alert" className="sekka-mobile-alert">{selectionError}<button type="button" onClick={()=>setSelectionVersion(v=>v+1)}>{t('إعادة المحاولة','Retry')}</button></div>}
    {tab==='search'&&approvedDiscovery(discoveryScreen)}
-   {ready&&tab==='booking'&&<V31BookingJourney offer={bookingOffer} routeId={liveSelection?.route.id||''}
+   {ready&&tab==='booking'&&<Suspense fallback={<p role="status">{t('بنحمّل الحجز…','Loading booking…')}</p>}><V31BookingJourney offer={bookingOffer} routeId={liveSelection?.route.id||''}
      pickupId={new URL(location.href).searchParams.get('pickup')||''} dropoffId={new URL(location.href).searchParams.get('dropoff')||''}
      reverse={new URL(location.href).searchParams.get('reverse')==='1'} bookingId={bookingId}
      onBack={()=>{if(bookingId)navigate({tab:'bookings'});else navigate({tab:'search',view:12});}}
      onLogin={()=>signInFor(location.pathname+location.search+location.hash)}
-     onBooked={bookingSaved}/>}
+     onBooked={bookingSaved}/></Suspense>}
 
    {ready&&tab==='captain-onboarding'&&(userId?approvedCaptainOnboarding(captainStep):<Onboarding production screen={4} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={selectRole}/>)}
-   {ready&&tab==='routes'&&(captain&&captainApproved?<CaptainRoutes production screen={internalScreen(captainScreen)} theme={p.theme} onTheme={p.setThemePreference} go={captainGo}/> :<section className="sekka-mobile-card"><h1>{t('خطوط الكابتن','Captain routes')}</h1><p>{captain?t('حساب الكابتن لم يُعتمد بعد.','Captain access is not approved yet.'):t('ابدأ تسجيل الكابتن لمتابعة طلب الاعتماد.','Start Captain enrollment to continue.')}</p><button className="sekka-action" onClick={()=>captain?navigate({tab:'captain-onboarding',view:40}):startCaptainJourney()}>{captain?t('متابعة حالة الطلب','View application status'):t('بدء تسجيل الكابتن','Start Captain enrollment')}</button></section>)}
+   {ready&&tab==='routes'&&(captain&&captainApproved?<Suspense fallback={<p role="status">{t('بنحمّل الخطوط…','Loading routes…')}</p>}><CaptainRoutes production screen={internalScreen(captainScreen)} theme={p.theme} onTheme={p.setThemePreference} go={captainGo}/></Suspense> :<section className="sekka-mobile-card"><h1>{t('خطوط الكابتن','Captain routes')}</h1><p>{captain?t('حساب الكابتن لم يُعتمد بعد.','Captain access is not approved yet.'):t('ابدأ تسجيل الكابتن لمتابعة طلب الاعتماد.','Start Captain enrollment to continue.')}</p><button className="sekka-action" onClick={()=>captain?navigate({tab:'captain-onboarding',view:40}):startCaptainJourney()}>{captain?t('متابعة حالة الطلب','View application status'):t('بدء تسجيل الكابتن','Start Captain enrollment')}</button></section>)}
    {ready&&tab==='bookings'&&(userId?<section className="sekka-bookings-workspace">
     <nav className="sekka-bookings-section-tabs" aria-label={t('إدارة الحجوزات والطلبات','Bookings and requests')}>
      <button type="button" aria-pressed={bookingsSection==='bookings'} onClick={()=>setBookingsSection('bookings')}>{t('حجوزاتي المؤكدة وقيد الانتظار','My seat bookings')}</button>
@@ -400,8 +402,8 @@ export default function MobileApp(){
     {bookingsSection==='bookings'?<LiveBookings mode="rider" onFindRide={()=>navigate({tab:'search',view:9})}/>:<LiveTripRequests mode="rider"/>}
    </section>:<section className="sekka-mobile-card"><h1>{t('حجوزاتي','My bookings')}</h1><p>{t('سجّل دخولك علشان تشوف حجوزاتك الحقيقية.','Sign in to view your bookings.')}</p><button className="sekka-action" onClick={()=>signInFor('/?tab=bookings')}>{t('تسجيل الدخول','Sign in')}</button></section>)}
    {ready&&tab==='notifications'&&(userId?<LiveNotifications/>:<section className="sekka-mobile-card"><h1>{t('الإشعارات','Notifications')}</h1><button className="sekka-action" onClick={()=>signInFor('/?tab=notifications')}>{t('تسجيل الدخول','Sign in')}</button></section>)}
-   {tab==='admin'&&(!ready?<p role="status">{t('بنتأكد من صلاحية الإدارة…','Checking Admin authorization…')}</p>:admin?<AdminDashboard production screen={internalScreen(adminScreen)} theme={p.theme}
-      onTheme={p.setThemePreference} go={id=>{const n=publicScreen(id);if(n>=62&&n<=73)navigate({tab:'admin',view:n as 62|63|64|65|66|67|68|69|70|71|72|73});}}/>:<section className="sekka-mobile-card"><h1>{t('غير مسموح','Access restricted')}</h1><p>{adminLookupError||t('لوحة الإدارة للحسابات المصرح لها فقط.','The admin dashboard requires authorization.')}</p>
+   {tab==='admin'&&(!ready?<p role="status">{t('بنتأكد من صلاحية الإدارة…','Checking Admin authorization…')}</p>:admin?<Suspense fallback={<p role="status">{t('بنحمّل لوحة الإدارة…','Loading Admin dashboard…')}</p>}><AdminDashboard production screen={internalScreen(adminScreen)} theme={p.theme}
+      onTheme={p.setThemePreference} go={id=>{const n=publicScreen(id);if(n>=62&&n<=73)navigate({tab:'admin',view:n as 62|63|64|65|66|67|68|69|70|71|72|73});}}/></Suspense>:<section className="sekka-mobile-card"><h1>{t('غير مسموح','Access restricted')}</h1><p>{adminLookupError||t('لوحة الإدارة للحسابات المصرح لها فقط.','The admin dashboard requires authorization.')}</p>
    {adminLookupError&&<button type="button" onClick={()=>setAuthCheckRevision(v=>v+1)}>{t('إعادة فحص الصلاحيات','Retry authorization')}</button>}
    <button onClick={()=>navigate({tab:'home'})}>{t('العودة','Back')}</button></section>)}
   </main>
