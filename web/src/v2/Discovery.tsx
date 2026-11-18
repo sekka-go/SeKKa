@@ -498,6 +498,7 @@ export default function Discovery(p: DiscoveryProps) {
   const savedHome=savedAreas.home&&storedAreaNames.has(savedAreas.home)?savedAreas.home:undefined;
   const savedWork=savedAreas.work&&storedAreaNames.has(savedAreas.work)?savedAreas.work:undefined;
   const savedRecent=(savedAreas.recent||[]).filter(item=>storedAreaNames.has(item.origin)&&storedAreaNames.has(item.destination)&&item.origin!==item.destination);
+  const areaDisplay=(name:string)=>language==='en'?(p.serviceAreas?.find(area=>area.name_ar===name)?.name_en||name):name;
   function persistSavedAreas(next:RiderSavedAreas){
    if(!p.production||!p.signedIn||!p.riderId)return;
    setSavedAreas(next);
@@ -879,8 +880,8 @@ export default function Discovery(p: DiscoveryProps) {
                   <span>{tr("آخر عمليات البحث")}</span>
                   {savedRecent.map((item,index)=><button type="button" key={item.origin+':'+item.destination+':'+index}
                    onClick={()=>{setOrigin(item.origin);setDestination(item.destination);}}
-                   aria-label={tr("إعادة البحث عن ")+item.origin+' - '+item.destination}>
-                    {item.origin} ← {item.destination}
+                   aria-label={tr("إعادة البحث عن ")+areaDisplay(item.origin)+' - '+areaDisplay(item.destination)}>
+                    {areaDisplay(item.origin)} ← {areaDisplay(item.destination)}
                   </button>)}
                 </div>}
               </div>}
