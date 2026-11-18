@@ -15,9 +15,16 @@ test('production gate recognizes the live main site and checks its project',()=>
  assert.equal(new URL(config.url).hostname,`${PRODUCTION_REF}.supabase.co`);
 });
 
-test('production release gate never queries database on previews',()=>{
- assert.equal(releaseTarget({...production,CF_PAGES_BRANCH:'feature/test'}),'skip-preview');
- assert.equal(releaseTarget({...production,CF_PAGES_BRANCH:undefined}),'skip-preview');
+test('production project previews safely probe actual production backend before merge',()=>{
+ assert.equal(releaseTarget({...production,CF_PAGES_BRANCH:'feature/test'}),'production');
+ assert.equal(releaseTarget({...production,CF_PAGES_BRANCH:undefined}),'production');
+ assert.equal(releaseTarget({...production,CF_PAGES_URL:'https://abcd1234.sekka-go.pages.dev',CF_PAGES_BRANCH:'feature/test'}),'production');
+});
+
+test('local builds without Pages URL remain offline and cannot accidentally target production',()=>{
+ assert.equal(releaseTarget({}),'skip-local');
+ assert.equal(releaseTarget({...production,CF_PAGES_URL:undefined,CF_PAGES_BRANCH:'feature/test'}),'skip-local');
+ assert.throws(()=>releaseTarget({...production,CF_PAGES_URL:undefined}),/PRODUCTION_GATE_CANNOT_VERIFY_PAGES_URL/);
 });
 
 test('the separate Staging main deployment must not use Production credentials',()=>{
