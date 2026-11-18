@@ -70,3 +70,14 @@ test('full-plate paste allows only supported complete patterns',()=>{
  assert.equal(pastePlate('','ABCD1234','letter',0),'');
  assert.equal(pastePlate('مس6587','م1234','letter',0),'مس6587');
 });
+
+test('whole-plate paste is restricted to first letter slot and rejects extra symbols',()=>{
+ assert.equal(pastePlate('م','مس6587','letter',1),'م');
+ assert.equal(pastePlate('مس','أبج123','digit',0),'مس');
+ assert.equal(pastePlate('مس6587','أبج1234','letter',1),'مس6587');
+ assert.equal(pastePlate('','م س ٦٥٨٧ xyz','letter',0),'');
+ assert.equal(pastePlate('','أبج123@','letter',0),'');
+ assert.equal(pastePlate('','أبج12345','letter',0),'');
+ assert.equal(pastePlate('','٦٥٨٧ م س','letter',0),'مس6587');
+ assert.equal(pastePlate('مس6587','أ ب ج ١٢٣','letter',0),'أبج123');
+});
