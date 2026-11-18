@@ -94,6 +94,8 @@ test('MOCKED Android-width private document upload: denied, retry, verified pers
   await route.fulfill({status,contentType:'application/json',body:JSON.stringify(result)});
  });
  await page.goto('/?tab=captain-onboarding&view=38');
+ await expect(page.getByRole('button',{name:'Open menu'})).toBeVisible();
+ await expect(page.locator('.sekka-bottom-nav')).toHaveCount(0);
  const picker=page.locator('.c-file-picker').first();
  await expect(picker.locator('input[type=file]')).toBeEnabled();
  await expect(page.getByText('0/4 required documents complete')).toBeVisible();
