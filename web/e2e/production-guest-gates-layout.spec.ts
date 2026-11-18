@@ -18,10 +18,18 @@ for(const width of [360,390])for(const language of ['ar','en'] as const)for(cons
    await page.goto(`/?tab=${scene.tab}&view=${scene.view}`);
    await expect(page.locator(scene.expected).first()).toBeVisible();
    await expect(page.locator('.sekka-launch')).toBeHidden();
-   if(scene.tab==='search'||scene.tab==='booking'||scene.tab==='captain-onboarding')
-    await expect(page.locator('.sekka-mobile-header')).toBeHidden();
    if(scene.tab==='captain-onboarding')
-    await expect(page.locator('.sekka-bottom-nav')).toBeHidden();
+    await expect(page.locator('.sekka-mobile-header')).toBeHidden();
+   else if(scene.tab==='search'||scene.tab==='booking'){
+    await expect(page.locator('.sekka-mobile-header')).toBeVisible();
+    await expect(page.locator('.sekka-mobile-header .sekka-approved-logo')).toHaveCount(0);
+    const menu=page.getByRole('button',{name:language==='ar'?'فتح القائمة':'Open menu'});
+    await expect(menu).toBeVisible();
+    const bounds=await menu.boundingBox();
+    expect(bounds).not.toBeNull();
+    expect(bounds!.x+bounds!.width/2,'Menu must be on the physical left').toBeLessThan(width/2);
+   }
+   await expect(page.locator('.sekka-bottom-nav')).toHaveCount(0);
    if(scene.tab==='admin'){
     await expect(page.locator('.admin-stage')).toHaveCount(0);
     await expect(page.getByRole('button',{name:/Approve captain|اعتماد الكابتن/})).toHaveCount(0);
