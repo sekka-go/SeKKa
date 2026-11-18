@@ -417,6 +417,7 @@ function Empty({ children }: { children: ReactNode }) {
 export type DiscoveryProps = {
   screen: number;
   production?: boolean;
+  riderId?: string | null;
   serviceAreas?: {id:number;name_ar:string;name_en:string}[];
   liveSelection?: LiveSelection | null;
   onLiveSelect?: (selection:LiveSelection)=>void;
@@ -456,6 +457,28 @@ type RiderDraft = {
   searched?: boolean; pickup?: string; dropoff?: string; filterDirection?: string;
   filterPrice?: string; onlyAvailable?: boolean; appliedFilters?: boolean;
 };
+
+/* Per-Google-account local search shortcuts: no fake route inventory, and no
+ * sharing saved home/work areas between users of the same device. */
+type RiderSavedAreas = {
+  home?: string; work?: string; recent?: {origin:string;destination:string}[];
+};
+function readRiderSavedAreas(riderId?:string|null):RiderSavedAreas{
+ if(!riderId)return {};
+ try{
+  const stored:unknown=JSON.parse(localStorage.getItem('sekka.rider.savedAreas.v1.'+riderId)||'null');
+  if(!stored||typeof stored!=='object'||Array.isArray(stored))return {};
+  const saved=stored as RiderSavedAreas;
+  const valid=(value:unknown)=>typeof value==='string'&&value.length<=120;
+  return {
+   home:valid(saved.home)?saved.home:undefined,
+   work:valid(saved.work)?saved.work:undefined,
+   recent:Array.isArray(saved.recent)?saved.recent.filter((item):item is {origin:string;destination:string}=>
+    !!item&&valid(item.origin)&&valid(item.destination)).slice(0,3):[]
+  };
+ }catch{return {};}
+}
+
 function readRiderDraft(): RiderDraft {
   try {
     const value: unknown = JSON.parse(sessionStorage.getItem(riderDraftKey) || "null");
@@ -469,6 +492,18 @@ export default function Discovery(p: DiscoveryProps) {
   const tr=(text:string)=>translate(text,language);
   const demo = !p.production && new URLSearchParams(location.search).get("preview") === "phase2";
   const restored = useMemo(readRiderDraft, []);
+  const [savedAreas,setSavedAreas]=useState<RiderSavedAreas>(()=>readRiderSavedAreas(p.riderId));
+  useEffect(()=>{setSavedAreas(readRiderSavedAreas(p.riderId));},[p.riderId]);
+  const storedAreaNames=new Set(p.serviceAreas?.map(area=>area.name_ar)||[]);
+  const savedHome=savedAreas.home&&storedAreaNames.has(savedAreas.home)?savedAreas.home:undefined;
+  const savedWork=savedAreas.work&&storedAreaNames.has(savedAreas.work)?savedAreas.work:undefined;
+  const savedRecent=(savedAreas.recent||[]).filter(item=>storedAreaNames.has(item.origin)&&storedAreaNames.has(item.destination)&&item.origin!==item.destination);
+  function persistSavedAreas(next:RiderSavedAreas){
+   if(!p.production||!p.signedIn||!p.riderId)return;
+   setSavedAreas(next);
+   try{localStorage.setItem('sekka.rider.savedAreas.v1.'+p.riderId,JSON.stringify(next));}
+   catch{/* The active search is still usable if browser storage is restricted. */}
+  }
   const [origin, setOrigin] = useState(restored.origin ?? (demo ? "المعادي" : "")),
     [destination, setDestination] = useState(restored.destination ?? (demo ? "التجمع" : ""));
   const [outbound, setOutbound] = useState(restored.outbound ?? "07:30"),
@@ -594,6 +629,11 @@ export default function Discovery(p: DiscoveryProps) {
       setMessage(tr("اختار منطقتين مختلفتين."));
       return;
     }
+    if(p.production&&p.riderId){
+      persistSavedAreas({...savedAreas,recent:[
+       {origin,destination},...savedRecent.filter(item=>item.origin!==origin||item.destination!==destination)
+      ].slice(0,3)});
+    }
     setSearched(true); setRequestSent(false);
     if (demo) nav(11);
     else {
@@ -650,8 +690,8 @@ export default function Discovery(p: DiscoveryProps) {
       <option value="" disabled>
         {label}
       </option>
-      {(p.production ? (p.serviceAreas || []).map(a => a.name_ar) : servedAreas).map((a) => (
-        <option key={a} value={a}>{tr(a)}</option>
+      {(p.production ? (p.serviceAreas || []).map(a => ({value:a.name_ar,label:language==='en'?a.name_en||a.name_ar:a.name_ar})) : servedAreas.map(a=>({value:a,label:tr(a)}))).map((a) => (
+        <option key={a.value} value={a.value}>{a.label}</option>
       ))}
     </select>
   );
@@ -816,6 +856,34 @@ export default function Discovery(p: DiscoveryProps) {
                   <DiscoveryIcon name="pin" />
                 </label>
               </div>
+              {p.production&&p.signedIn&&p.riderId&&<div className="sekka-search-shortcuts" aria-label={tr("اختصارات المناطق المحفوظة")}>
+                <div className="sekka-search-shortcuts__actions">
+                  <button type="button" disabled={!origin||!storedAreaNames.has(origin)}
+                   onClick={()=>persistSavedAreas({...savedAreas,home:origin})}>
+                    {savedHome===origin?tr("✓ البيت محفوظ"):tr("احفظ البداية كبيت")}
+                  </button>
+                  <button type="button" disabled={!destination||!storedAreaNames.has(destination)}
+                   onClick={()=>persistSavedAreas({...savedAreas,work:destination})}>
+                    {savedWork===destination?tr("✓ الشغل محفوظ"):tr("احفظ الوصول كشغل")}
+                  </button>
+                </div>
+                {savedHome&&savedWork&&savedHome!==savedWork&&<div className="sekka-search-shortcuts__actions">
+                  <button type="button" onClick={()=>{setOrigin(savedHome);setDestination(savedWork);}}>
+                   {tr("البيت ← الشغل")}
+                  </button>
+                  <button type="button" onClick={()=>{setOrigin(savedWork);setDestination(savedHome);}}>
+                   {tr("الشغل ← البيت")}
+                  </button>
+                </div>}
+                {savedRecent.length>0&&<div className="sekka-search-shortcuts__recent">
+                  <span>{tr("آخر عمليات البحث")}</span>
+                  {savedRecent.map((item,index)=><button type="button" key={item.origin+':'+item.destination+':'+index}
+                   onClick={()=>{setOrigin(item.origin);setDestination(item.destination);}}
+                   aria-label={tr("إعادة البحث عن ")+item.origin+' - '+item.destination}>
+                    {item.origin} ← {item.destination}
+                  </button>)}
+                </div>}
+              </div>}
               <div className="d-box d-time-picker">
                 <label>
                   <DiscoveryIcon name="calendar" />
