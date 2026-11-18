@@ -1,4 +1,4 @@
-/* Static owner artwork: full PWA viewport, black background, no animations. */
+/* Owner-approved English seKKa logo, centered on a black full-screen launch. */
 .sekka-launch {
   position: fixed;
   inset: 0;
@@ -16,14 +16,33 @@
 
 .sekka-launch__artwork {
   display: block;
-  width: 100%;
-  height: 100%;
-  max-width: none;
-  max-height: none;
+  width: min(64vw, 300px);
+  height: auto;
+  max-width: calc(100% - 64px);
   object-fit: contain;
   object-position: center;
+  flex-shrink: 0;
   pointer-events: none;
   user-select: none;
+  transform-origin: center;
+  animation: sekka-launch-pulse 1.15s ease-in-out infinite;
 }
 
-/* There are intentionally no CSS animations or transition effects. */
+@keyframes sekka-launch-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: .96;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sekka-launch__artwork {
+    animation: none !important;
+    transform: none;
+    opacity: 1;
+  }
+}
