@@ -120,6 +120,11 @@ test('MOCKED Android-width private document upload: denied, retry, verified pers
  await tapVisibleButton();
  await (await firstChooser).setFiles(mockFile);
  await expect(page.locator('.c-document').first().getByRole('alert')).toContainText('Document was not saved while uploading the file');
+ // Diagnostic exposes the failing stage and status, never a private object path,
+ // user identity, file name, or authentication token.
+ const diagnostic=page.locator('.c-document').first().getByTestId('captain-upload-diagnostic');
+ await expect(diagnostic).toContainText(/STORAGE_REQUEST\/403\/UNKNOWN/);
+ await expect(diagnostic).not.toContainText('synthetic-test.jpg');
  await expect(page.getByText('0/4 required documents complete')).toBeVisible();
  const retryChooser=page.waitForEvent('filechooser');
  await tapVisibleButton();
