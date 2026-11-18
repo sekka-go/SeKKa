@@ -33,30 +33,31 @@ test('explicit Captain selection survives route history and prepares its own OAu
 });
 
 for(const width of [320,360,390,412]){
- test('language icon switches Arabic and English independently of theme at '+width+'px',async({page})=>{
+ test('drawer globe switches Arabic and English without changing theme at '+width+'px',async({page})=>{
   await page.setViewportSize({width,height:width===320?700:844});
-  // Seed the preference once, before the first tested load. addInitScript
-  // re-runs on every reload and would overwrite the preference under test.
   await page.goto('/?tab=profile');
   await page.evaluate(()=>{
    localStorage.setItem('language_preference','ar');
    localStorage.setItem('theme_preference','dark');
   });
   await page.reload();
-  const toggle=page.locator('.sekka-mobile-header .sekka-language');
-  await expect(toggle).toBeVisible();
+  const trigger=page.getByRole('button',{name:'فتح القائمة'});
+  await trigger.click();
+  const drawer=page.getByRole('dialog',{name:'القائمة الرئيسية'});
+  const toggle=drawer.locator('.sekka-language');
   await expect(toggle).toHaveAttribute('aria-label','التبديل إلى الإنجليزية');
-  await expect(page.locator('html')).toHaveAttribute('dir','rtl');
+  await expect(toggle.locator('.sekka-drawer-pref-icon')).toHaveText('🌐');
   await toggle.click();
   await expect(page.locator('html')).toHaveAttribute('dir','ltr');
   await expect(toggle).toHaveAttribute('aria-label','Switch to Arabic');
-  await expect(page.getByRole('heading',{name:'My profile'})).toBeVisible();
   await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
   expect(await page.evaluate(()=>localStorage.getItem('language_preference'))).toBe('en');
+  await page.getByRole('button',{name:'Close menu'}).last().click();
+  await expect(page.getByRole('heading',{name:'My profile'})).toBeVisible();
   await page.reload();
-  await expect(toggle).toHaveAttribute('aria-label','Switch to Arabic');
-  await expect(page.locator('html')).toHaveAttribute('dir','ltr');
-  await toggle.click();
+  await page.getByRole('button',{name:'Open menu'}).click();
+  await expect(page.getByRole('dialog',{name:'Main menu'}).locator('.sekka-language')).toHaveAttribute('aria-label','Switch to Arabic');
+  await page.getByRole('dialog',{name:'Main menu'}).locator('.sekka-language').click();
   await expect(page.locator('html')).toHaveAttribute('dir','rtl');
   await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
@@ -65,29 +66,28 @@ for(const width of [320,360,390,412]){
 
 for(const language of ['ar','en'] as const){
  for(const width of [320,360,390,412]){
-  test('header logo centered and language at the '+(language==='ar'?'left':'right')+' edge '+width+'px',async({page})=>{
+  test('single drawer menu occupies physical left; header no duplicate logo '+width+'px '+language,async({page})=>{
    await page.setViewportSize({width,height:width===320?700:844});
    await page.addInitScript(language=>{
     localStorage.setItem('language_preference',language);
     localStorage.setItem('theme_preference','light');
    },language);
    await page.goto('/?tab=profile');
-   const brand=page.locator('.sekka-mobile-header .sekka-brand-button');
-   const languageButton=page.locator('.sekka-mobile-header .sekka-language');
-   const themeButton=page.locator('.sekka-mobile-header .sekka-theme:not(.sekka-language)');
-   await expect(brand).toBeVisible();
-   await expect(languageButton).toBeVisible();
-   const b=await brand.boundingBox(),l=await languageButton.boundingBox(),t=await themeButton.boundingBox();
-   expect(b&&l&&t).toBeTruthy();
-   expect(Math.abs(b!.x+b!.width/2-width/2),'logo must be centered on full viewport').toBeLessThanOrEqual(1.5);
-   expect(l!.width).toBeGreaterThanOrEqual(44);
-   expect(t!.width).toBeGreaterThanOrEqual(44);
-   if(language==='ar'){
-    expect(l!.x+l!.width,'language on physical left when Arabic').toBeLessThan(b!.x);
-    expect(t!.x,'theme on physical right').toBeGreaterThan(b!.x+b!.width);
-   }else{
-    expect(l!.x,'language on physical right when English').toBeGreaterThan(b!.x+b!.width);
-    expect(t!.x+t!.width,'theme on physical left').toBeLessThan(b!.x);
+   await expect(page.locator('.sekka-mobile-header .sekka-approved-logo')).toHaveCount(0);
+   await expect(page.locator('.sekka-bottom-nav')).toHaveCount(0);
+   const trigger=page.getByRole('button',{name:language==='ar'?'فتح القائمة':'Open menu'});
+   const b=await trigger.boundingBox();
+   expect(b).not.toBeNull();
+   expect(b!.width).toBeGreaterThanOrEqual(44);
+   expect(b!.x+b!.width/2).toBeLessThan(width/2);
+   await trigger.click();
+   const drawer=page.getByRole('dialog',{name:language==='ar'?'القائمة الرئيسية':'Main menu'});
+   await expect(drawer.locator('.sekka-language')).toBeVisible();
+   await expect(drawer.locator('.sekka-theme')).toBeVisible();
+   for(const pref of [drawer.locator('.sekka-language'),drawer.locator('.sekka-theme')]){
+    const rect=await pref.boundingBox();
+    expect(rect).not.toBeNull();
+    expect(rect!.height).toBeGreaterThanOrEqual(44);
    }
    expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
   });
