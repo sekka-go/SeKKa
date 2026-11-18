@@ -1,4 +1,4 @@
-import {canonicalEgyptianPlate,normalizeNumerals} from './captainValidation';
+import {canonicalEgyptianPlate,normalizeNumerals} from './captainValidation.ts';
 
 export type PlateSegment='letter'|'digit';
 export const MAX_PLATE_LETTERS=3;
