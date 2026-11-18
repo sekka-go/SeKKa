@@ -76,7 +76,7 @@ test('MOCKED Android-width private document upload: denied, retry, verified pers
     result={code:'DOCUMENT_NOT_UPLOADED',message:'Missing file'};
    }else{
     const doc:MockDocument={
-     id:'22222222-2222-4222-8222-222222222222',kind:body.p_kind,
+     id:'22222222-2222-4222-8222-'+String(docs.length+1).padStart(12,'0'),kind:body.p_kind,
      object_name:body.p_object_name,created_at:'2026-11-17T00:00:00Z'
     };
     docs.push(doc);
@@ -94,10 +94,14 @@ test('MOCKED Android-width private document upload: denied, retry, verified pers
  const input=picker.locator('input[type=file]');
  // Android document providers sometimes send a generic MIME type. Validated JPEG signature still uploads.
  const mockFile={name:'synthetic-test.jpg',mimeType:'application/octet-stream',buffer:Buffer.from([0xff,0xd8,0xff,0xe0,0x00,0x10,0x4a,0x46,0x49,0x46,0xff,0xd9])};
- await input.setInputFiles(mockFile);
- await expect(page.locator('.c-document').first().getByRole('alert')).toContainText('Document upload failed');
+ const firstChooser=page.waitForEvent('filechooser');
+ await picker.click();
+ await (await firstChooser).setFiles(mockFile);
+ await expect(page.locator('.c-document').first().getByRole('alert')).toContainText('Document was not saved while uploading the file');
  await expect(page.getByText('0/4 required documents complete')).toBeVisible();
- await input.setInputFiles(mockFile);
+ const retryChooser=page.waitForEvent('filechooser');
+ await picker.click();
+ await (await retryChooser).setFiles(mockFile);
  await expect(page.getByText('1/4 required documents complete')).toBeVisible();
  await expect(page.locator('.c-document').first().locator('.c-document-label')).toContainText('Uploaded');
  expect(docs).toHaveLength(1);
@@ -105,5 +109,18 @@ test('MOCKED Android-width private document upload: denied, retry, verified pers
  await expect(page.getByText('1/4 required documents complete')).toBeVisible();
  await expect(page.locator('.c-file-picker').first().locator('.c-file-picker-name')).toHaveText('A file is saved');
  await expect(page.getByRole('button',{name:'Review application'})).toBeDisabled();
+ // Four different documents must be present after reloading, not just an
+ // optimistic client counter. Use realistic chooser clicks on all four rows.
+ for(let i=1;i<4;i++){
+  const chooser=page.waitForEvent('filechooser');
+  await page.locator('.c-file-picker').nth(i).click();
+  await (await chooser).setFiles(mockFile);
+  await expect(page.getByText((i+1)+'/4 required documents complete')).toBeVisible();
+ }
+ expect(docs).toHaveLength(4);
+ expect(uploaded.size).toBe(4);
+ await page.reload();
+ await expect(page.getByText('4/4 required documents complete')).toBeVisible();
+ await expect(page.getByRole('button',{name:'Review application'})).toBeEnabled();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
