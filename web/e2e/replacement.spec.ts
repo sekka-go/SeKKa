@@ -611,6 +611,9 @@ test("phase seven captain operations isolate previews and confirm receipt once",
 test("phase eight admin preview is responsive and mutations remain local", async ({
   page,
 }) => {
+  // Twelve code-split admin pages at 2 viewport sizes and both themes,
+  // plus full mutation safety assertions, need a suite-level budget.
+  test.setTimeout(180000);
   const writes: string[] = [];
   page.on("request", (r) => {
     if (r.method() === "POST") writes.push(r.url());
@@ -620,7 +623,7 @@ test("phase eight admin preview is responsive and mutations remain local", async
     for (const theme of ["dark", "light"]) {
       for (let screen = 62; screen <= 73; screen++) {
         await page.goto(`/dev/screens?screen=${screen}&theme=${theme}&preview=phase8`);
-        await expect(page.locator("main h1")).toBeVisible();
+        await expect(page.locator("main h1"),"Admin gallery screen "+screen+" did not mount").toBeVisible({timeout:15000});
         expect(
           await page.evaluate(
             () => document.documentElement.scrollWidth <= innerWidth,
