@@ -95,6 +95,21 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
  const [uploadingFileName,setUploadingFileName]=useState('');
  const [uploadStage,setUploadStage]=useState<'idle'|'reading'|'uploading'|'registering'|'verifying'>('idle');
  const [uploadDiagnostic,setUploadDiagnostic]=useState('PICKER_READY');
+ const [deployedSha,setDeployedSha]=useState('');
+ // Diagnose stale installed PWAs without leaking user identity or Storage paths.
+ // build-info.json is deliberately not cached by the PWA service worker.
+ useEffect(()=>{
+  let active=true;
+  void fetch('/build-info.json',{cache:'no-store'})
+   .then(response=>response.ok?response.json():null)
+   .then((data:unknown)=>{
+    const sha=(data&&typeof data==='object'&&'sourceCommitSha' in data
+     ?(data as {sourceCommitSha?:unknown}).sourceCommitSha:null);
+    if(active&&typeof sha==='string'&&/^[a-f0-9]{40}$/i.test(sha))
+     setDeployedSha(sha.slice(0,8));
+   }).catch(()=>{ /* Version is optional; upload remains available offline. */ });
+  return()=>{active=false;};
+ },[]);
  const currentYear=new Date().getFullYear();
  const availableYears=useMemo(()=>Array.from({length:currentYear-1979},(_,i)=>String(currentYear-i)),[currentYear]);
  const requiredKinds=documentKinds.map(([kind])=>kind);
@@ -617,6 +632,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
    <p data-testid="captain-upload-stage" className="c-form-hint" role="status">
     {t('حالة اختيار/رفع الملف: ','File selection/upload stage: ')}
     <code dir="ltr">{uploadDiagnostic}</code>
+    {deployedSha&&<span data-testid="captain-upload-build" dir="ltr"> · seKKa {deployedSha}</span>}
    </p>
    {!hasDocuments&&<p className="c-form-hint">{t('ارفع المستندات الأربعة المطلوبة قبل المتابعة.','Upload all four required documents before continuing.')}</p>}
    {editable&&<button type="button" className="d-primary" disabled={busy||!hasDocuments}
