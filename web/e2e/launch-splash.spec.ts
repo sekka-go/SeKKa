@@ -91,18 +91,34 @@ test("refresh restores current page without replaying splash", async ({ page }) 
   await expect(page.locator(".phase-screen-2")).toBeVisible();
 });
 
-test("installed PWA keeps its icon but labels the app seKKa", async ({ request }) => {
+test("Android-installed PWA uses English logo icon instead of the old yellow Arabic one", async ({ request }) => {
   const manifestResponse = await request.get("/manifest.webmanifest");
   expect(manifestResponse.ok()).toBeTruthy();
   const manifest = await manifestResponse.json();
   expect(manifest.name).toBe("seKKa");
   expect(manifest.short_name).toBe("seKKa");
+  expect(manifest.dir).toBe("ltr");
+  expect(manifest.background_color).toBe("#000000");
+  expect(manifest.theme_color).toBe("#000000");
   expect(manifest.icons.map((icon: {src:string}) => icon.src)).toEqual([
-    "/brand/sekka-pwa-20261115-192.png",
-    "/brand/sekka-pwa-20261115-512.png"
+    "/brand/sekka-pwa-en-20261118-192.png",
+    "/brand/sekka-pwa-en-20261118-512.png"
   ]);
+  for (const icon of manifest.icons) {
+    const response = await request.get(icon.src);
+    expect(response.ok()).toBeTruthy();
+    const bytes = await response.body();
+    expect(bytes.subarray(0,8).toString("hex")).toBe("89504e470d0a1a0a");
+    const size = Number(icon.sizes.split("x")[0]);
+    expect(bytes.readUInt32BE(16)).toBe(size);
+    expect(bytes.readUInt32BE(20)).toBe(size);
+    expect(icon.type).toBe("image/png");
+  }
   const index = await (await request.get("/")).text();
   expect(index).toContain(artwork);
+  expect(index).toContain("/brand/sekka-pwa-en-20261118-192.png");
+  expect(index).not.toContain("/brand/sekka-pwa-20261115-192.png");
+  expect(index).not.toContain('href="/brand/sekka-user-icon.svg"');
   expect(index).not.toContain('href="/brand/sekka-splash-wordmark.svg"');
 });
 
