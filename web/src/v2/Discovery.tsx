@@ -520,7 +520,12 @@ export default function Discovery(p: DiscoveryProps) {
       return favoriteExamples.map(row => row.id);
     });
   const [favoriteDetail, setFavoriteDetail] = useState<Line | null>(restored.favoriteDetail ?? null);
-  const [searched, setSearched] = useState(() => new URLSearchParams(location.search).get("screen") === "11" && restored.searched === true);
+  const [searched, setSearched] = useState(() => {
+    const query = new URLSearchParams(location.search);
+    // The developer gallery uses screen=11; the live PWA uses view=11.
+    // Restore search intent after the Google sign-in return journey.
+    return (query.get("screen") === "11" || query.get("view") === "11") && restored.searched === true;
+  });
   const [favoriteSignInRequired, setFavoriteSignInRequired] = useState(false);
   const [favoriteRetryId, setFavoriteRetryId] = useState<string | null>(null);
   const [requestSent, setRequestSent] = useState(false);
