@@ -1,5 +1,8 @@
 import {test,expect} from '@playwright/test';
 
+// Android-like touch semantics without relying on a real customer's Google login.
+test.use({hasTouch:true,isMobile:true});
+
 // Synthetic browser regression ONLY. Real Google login and real Staging Storage
 // still require an authorized user/device test. No real documents are uploaded.
 const endpoint='https://sekka-auth-e2e.supabase.co';
@@ -114,7 +117,7 @@ test('MOCKED Android-width private document upload: denied, retry, verified pers
  const tapVisibleButton=async(row=picker)=>{
   const target=await row.locator('.c-file-picker-button').boundingBox();
   expect(target).not.toBeNull();
-  await page.mouse.click(target!.x+target!.width/2,target!.y+target!.height/2);
+  await page.touchscreen.tap(target!.x+target!.width/2,target!.y+target!.height/2);
  };
  // Android document providers sometimes send a generic MIME type. Validated JPEG signature still uploads.
  const mockFile={name:'synthetic-test.jpg',mimeType:'application/octet-stream',buffer:Buffer.from([0xff,0xd8,0xff,0xe0,0x00,0x10,0x4a,0x46,0x49,0x46,0xff,0xd9])};
