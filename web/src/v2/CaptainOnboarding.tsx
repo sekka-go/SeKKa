@@ -1,7 +1,7 @@
 import {usePreferences} from "./preferences";
 import {translate} from "./translations";
 import { publicScreen, internalScreen, screenTitle } from "./screenMap";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Wordmark, type Appearance } from "./Onboarding";
 import { DiscoveryIcon } from "./Discovery";
 import type { Profile } from "./api";
@@ -36,6 +36,12 @@ export default function CaptainOnboarding(p: {
 }) {
   const {language}=usePreferences();
   const tr=(text:string)=>translate(text,language);
+  // A new Captain wizard step must start below the sticky application header,
+  // not inherit the scroll position of the previous long form. This runs
+  // after React commits the new step (including browser Back navigation).
+  useEffect(()=>{
+    if(p.production)window.scrollTo(0,0);
+  },[p.production,p.journeyScreen,p.screen]);
   const demo = new URLSearchParams(location.search).get("preview") === "phase5";
   const [name, setName] = useState("");
   const [experience, setExperience] = useState("");
