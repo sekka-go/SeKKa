@@ -1,119 +1,98 @@
-import {useEffect,useRef,useState} from 'react';
-import {combinePlate,cleanPlateChars,parseEgyptianPlate,plateFormats} from './plateSegments';
-import type {PlateFormat} from './plateSegments';
+import {useRef,useState} from 'react';
+import type {ClipboardEvent,KeyboardEvent} from 'react';
+import {MAX_PLATE_DIGITS,MAX_PLATE_LETTERS,parseEgyptianPlate,editPlateSlot,pastePlate} from './plateSegments';
+import type {PlateSegment} from './plateSegments';
 
+/** Fixed 3 letters / 4 digits. Only left-to-right, gapless *input order*
+ * is permitted, regardless of the display's Arabic direction. */
 export default function EgyptianPlateInput({value,onChange,disabled=false,invalid=false,
  onTouched,language}:{value:string;onChange:(value:string)=>void;disabled?:boolean;
  invalid?:boolean;onTouched?:()=>void;language:'ar'|'en'}) {
- const en=language==='en',t=(ar:string,english:string)=>en?english:ar;
- const initial=parseEgyptianPlate(value);
- const [format,setFormat]=useState<PlateFormat>(initial.format);
- const [letters,setLetters]=useState<string[]>(initial.letters);
- const [digits,setDigits]=useState<string[]>(initial.digits);
- const lastEmitted=useRef(value);
+ const t=(ar:string,en:string)=>language==='en'?en:ar;
+ const {letters,digits}=parseEgyptianPlate(value);
+ const [pasteError,setPasteError]=useState(false);
  const fields=useRef<Record<string,HTMLInputElement|null>>({});
- useEffect(()=>{
-  if(value===lastEmitted.current)return;
-  const parsed=parseEgyptianPlate(value);
-  setFormat(parsed.format);setLetters(parsed.letters);setDigits(parsed.digits);
-  lastEmitted.current=value;
- },[value]);
- const config=plateFormats[format];
- const refId=(kind:'letter'|'digit',index:number)=>'captain-plate-'+kind+'-'+index;
- const focus=(kind:'letter'|'digit',index:number)=>{
-  const element=fields.current[refId(kind,index)];
-  element?.focus();element?.select();
+ const slotId=(kind:PlateSegment,index:number)=>'captain-plate-'+kind+'-'+index;
+ const focus=(kind:PlateSegment,index:number)=>{
+  const input=fields.current[slotId(kind,index)];
+  if(input&&!input.disabled){input.focus();input.select();}
  };
- const advance=(kind:'letter'|'digit',index:number)=>{
-  if(kind==='letter'&&index+1<config.letters)focus('letter',index+1);
+ const advance=(kind:PlateSegment,index:number,count:number)=>{
+  if(kind==='letter'&&index+count<MAX_PLATE_LETTERS)focus('letter',index+count);
   else if(kind==='letter')focus('digit',0);
-  else if(index+1<config.digits)focus('digit',index+1);
+  else if(index+count<MAX_PLATE_DIGITS)focus('digit',index+count);
  };
- const commit=(newLetters:string[],newDigits:string[],nextFormat:PlateFormat=format)=>{
-  const trimmedLetters=newLetters.slice(0,plateFormats[nextFormat].letters);
-  const trimmedDigits=newDigits.slice(0,plateFormats[nextFormat].digits);
-  setLetters(trimmedLetters);setDigits(trimmedDigits);
-  const next=combinePlate(trimmedLetters,trimmedDigits);
-  lastEmitted.current=next;onChange(next);
- };
- const enter=(kind:'letter'|'digit',index:number,raw:string)=>{
-  const incoming=cleanPlateChars(raw,kind);
-  const current=kind==='letter'?[...letters]:[...digits];
-  if(!raw){current[index]='';}
-  else if(!incoming.length)return;
-  else incoming.forEach((ch,offset)=>{
-   const limit=kind==='letter'?config.letters:config.digits;
-   if(index+offset<limit)current[index+offset]=ch;
-  });
-  if(kind==='letter')commit(current,digits);
-  else commit(letters,current);
-  if(incoming.length)requestAnimationFrame(()=>advance(kind,Math.min(index+incoming.length-1,(kind==='letter'?config.letters:config.digits)-1)));
- };
- const paste=(event:React.ClipboardEvent<HTMLInputElement>,kind:'letter'|'digit',index:number)=>{
-  const raw=event.clipboardData.getData('text');
-  const chars=cleanPlateChars(raw,'letter'),nums=cleanPlateChars(raw,'digit');
-  if(!chars.length&&!nums.length)return;
-  event.preventDefault();
-  if(chars.length&&nums.length){
-   const detected:PlateFormat=chars.length===2?'giza':nums.length===3?'cairo':'other';
-   setFormat(detected);commit(chars,nums,detected);
-   requestAnimationFrame(()=>focus('digit',Math.min(nums.length,plateFormats[detected].digits)-1));
-  }else enter(kind,index,raw);
- };
- const onKey=(event:React.KeyboardEvent<HTMLInputElement>,kind:'letter'|'digit',index:number)=>{
-  if(event.key==='Backspace'&&!(kind==='letter'?letters:digits)[index]){
-   event.preventDefault();
-   if(kind==='digit'&&index===0)focus('letter',config.letters-1);
-   else if(index>0)focus(kind,index-1);
-  }else if(event.key==='ArrowLeft'||event.key==='ArrowRight'){
-   const next=index+(event.key==='ArrowLeft'?1:-1);
-   if(next>=0&&next<(kind==='letter'?config.letters:config.digits)){
-    event.preventDefault();focus(kind,next);
-   }
+ const change=(kind:PlateSegment,index:number,raw:string)=>{
+  const next=editPlateSlot(value,kind,index,raw);
+  if(next!==value){setPasteError(false);onChange(next);}
+  if(raw){
+   const count=Math.min([...raw].length,kind==='letter'?MAX_PLATE_LETTERS:MAX_PLATE_DIGITS);
+   // React commits the new value before moving to an enabled next input.
+   requestAnimationFrame(()=>advance(kind,index,count));
   }
  };
- const renderBoxes=(kind:'letter'|'digit')=>
-  Array.from({length:kind==='letter'?config.letters:config.digits},(_,index)=>(
-   <input key={refId(kind,index)} id={refId(kind,index)}
-    ref={node=>{fields.current[refId(kind,index)]=node;}}
+ const paste=(event:ClipboardEvent<HTMLInputElement>,kind:PlateSegment,index:number)=>{
+  const raw=event.clipboardData.getData('text');
+  event.preventDefault();
+  const next=pastePlate(value,raw,kind,index);
+  if(next!==value){
+   onChange(next);setPasteError(false);
+   const result=parseEgyptianPlate(next);
+   requestAnimationFrame(()=>focus('digit',Math.min(result.digits.length,MAX_PLATE_DIGITS-1)));
+  }else setPasteError(true);
+ };
+ const onKey=(event:KeyboardEvent<HTMLInputElement>,kind:PlateSegment,index:number)=>{
+  if(event.key==='Backspace'&&!(kind==='letter'?letters:digits)[index]){
+   event.preventDefault();
+   if(index>0)focus(kind,index-1);
+   else if(kind==='digit')focus('letter',letters.length>=MAX_PLATE_LETTERS?MAX_PLATE_LETTERS-1:Math.max(0,letters.length-1));
+  }
+ };
+ const inputs=(kind:PlateSegment)=>{
+  const count=kind==='letter'?MAX_PLATE_LETTERS:MAX_PLATE_DIGITS;
+  const group=kind==='letter'?letters:digits;
+  return Array.from({length:count},(_,index)=>{
+   const locked=disabled||index>group.length||(kind==='digit'&&letters.length<2);
+   return <input key={slotId(kind,index)} id={slotId(kind,index)}
+    ref={node=>{fields.current[slotId(kind,index)]=node;}}
     type="text" inputMode={kind==='digit'?'numeric':'text'} maxLength={1}
     dir={kind==='digit'?'ltr':'rtl'} autoComplete="off" autoCapitalize="off" spellCheck={false}
-    value={(kind==='letter'?letters:digits)[index]||''} disabled={disabled}
+    value={group[index]||''} disabled={locked}
     aria-label={kind==='letter'?t('حرف اللوحة '+(index+1),'Plate letter '+(index+1)):
      t('رقم اللوحة '+(index+1),'Plate digit '+(index+1))}
     aria-invalid={invalid} aria-describedby={invalid?'captain-plate-error':undefined}
-    onChange={e=>enter(kind,index,e.target.value)}
-    onKeyDown={e=>onKey(e,kind,index)}
-    onPaste={e=>paste(e,kind,index)}/>
-  ));
+    onChange={event=>change(kind,index,event.target.value)}
+    onPaste={event=>paste(event,kind,index)}
+    onKeyDown={event=>onKey(event,kind,index)}/>;
+  });
+ };
  return <fieldset id="captain-plate" className="c-plate-fields" disabled={disabled}
   aria-label={t('لوحة العربية','License plate')} aria-invalid={invalid}
   onBlur={event=>{
    if(!event.currentTarget.contains(event.relatedTarget as Node|null))onTouched?.();
   }}>
-  <legend>{t('لوحة العربية (كل حرف ورقم في مربع)','License plate (one letter or digit per box)')}</legend>
-  <label className="c-plate-format-label" htmlFor="captain-plate-format">
-   {t('نمط اللوحة حسب المحافظة','Plate layout by governorate')}
-   <select id="captain-plate-format" value={format}
-    onChange={e=>{
-     const next=e.target.value as PlateFormat;
-     setFormat(next);commit(letters,digits,next);requestAnimationFrame(()=>focus('letter',0));
-    }}>
-    <option value="cairo">{t('القاهرة: ٣ حروف + ٣ أرقام','Cairo: 3 letters + 3 digits')}</option>
-    <option value="giza">{t('الجيزة: حرفين + ٤ أرقام','Giza: 2 letters + 4 digits')}</option>
-    <option value="other">{t('باقي المحافظات: ٣ حروف + ٤ أرقام','Other governorates: 3 letters + 4 digits')}</option>
-   </select>
-  </label>
+  <legend>{t('لوحة العربية','License plate')}</legend>
+  <p className="c-form-hint">{t(
+   'ابدأ من أول مربع في كل صف واملا الخانات بالترتيب، وسيب غير المستخدم في الآخر فقط.',
+   'Start at the first box of each row and fill consecutive boxes. Leave unused boxes only at the end.'
+  )}</p>
   <div className="c-plate-segments" dir="rtl">
    <div className="c-plate-segment" role="group" aria-label={t('حروف اللوحة','Plate letters')}>
-    <strong>{t('الحروف','Letters')}</strong>
-    <div className="c-plate-boxes" dir="rtl">{renderBoxes('letter')}</div>
+    <strong>{t('الحروف (حرفين أو ٣)','Letters (2 or 3)')}</strong>
+    <div className="c-plate-boxes" dir="rtl">{inputs('letter')}</div>
    </div>
    <div className="c-plate-segment" role="group" aria-label={t('أرقام اللوحة','Plate digits')}>
-    <strong>{t('الأرقام','Digits')}</strong>
-    <div className="c-plate-boxes" dir="ltr">{renderBoxes('digit')}</div>
+    <strong>{t('الأرقام (٣ أو ٤)','Digits (3 or 4)')}</strong>
+    <div className="c-plate-boxes" dir="ltr">{inputs('digit')}</div>
    </div>
   </div>
-  <p className="c-form-hint">{t('اكتب حرف أو رقم في كل مربع. المؤشر بينتقل تلقائيًا، وتقدر تلصق اللوحة كاملة.','One character per box. Focus advances automatically; you can also paste a complete plate.')}</p>
+  <p className="c-form-hint">{t(
+   'لازم حرفين و٤ أرقام، أو ٣ حروف و٣ أو ٤ أرقام. المربع التالي بيفتح بعد ملء السابق.',
+   'Use 2 letters + 4 digits, or 3 letters + 3/4 digits. Each next box unlocks when the previous one is filled.'
+  )}</p>
+  {pasteError&&<p className="c-field-error" role="alert">{t(
+   'النص الملصوق مش لوحة مكتملة وصحيحة. ابدأ من أول مربع.',
+   'The pasted text is not a valid complete plate. Start at the first box.'
+  )}</p>}
  </fieldset>;
 }
