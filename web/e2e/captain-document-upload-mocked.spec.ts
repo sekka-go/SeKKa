@@ -102,6 +102,7 @@ test('MOCKED Android-width private document upload: denied, retry, verified pers
  const picker=page.locator('.c-file-picker').first();
  await expect(picker.locator('input[type=file]')).toBeEnabled();
  await expect(page.getByText('0/4 required documents complete')).toBeVisible();
+ await expect(page.getByTestId('captain-upload-stage')).toContainText('PICKER_READY');
  const input=picker.locator('input[type=file]');
  // A real, visible native input is required for the Android system chooser.
  // Its frame and opacity must not be clipped by custom overlays.
@@ -130,6 +131,7 @@ test('MOCKED Android-width private document upload: denied, retry, verified pers
  await tapVisibleButton();
  await (await retryChooser).setFiles(mockFile);
  await expect(page.getByText('1/4 required documents complete')).toBeVisible();
+ await expect(page.getByTestId('captain-upload-stage')).toContainText('UI_PROGRESS_UPDATED');
  await expect(page.locator('.c-document').first().locator('.c-document-label')).toContainText('Uploaded');
  expect(docs).toHaveLength(1);
  await page.reload();
