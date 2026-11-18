@@ -62,6 +62,27 @@ function messageFor(error:unknown,t:(ar:string,en:string)=>string){
  return code?t(...translations[code]):message==='UNKNOWN_SERVER_ERROR'?t('حصل خطأ غير متوقع. جرّب تاني.','An unexpected error occurred. Please retry.'):message;
 }
 
+// Android file providers can expose a genuine File whose arrayBuffer() fails.
+// FileReader is a separate native read path; no file bytes leave the browser
+// unless the subsequent authenticated Storage upload succeeds.
+async function readCaptainUploadBuffer(file:File):Promise<ArrayBuffer>{
+ try{
+  const buffer=await file.arrayBuffer();
+  if(buffer.byteLength>0)return buffer;
+ }catch{ /* Android provider read failure; try the FileReader path below. */ }
+ if(typeof FileReader==='undefined')throw Error('FILE_READ_FAILED');
+ return await new Promise<ArrayBuffer>((resolve,reject)=>{
+  const reader=new FileReader();
+  reader.onerror=()=>reject(Error('FILE_READ_FAILED'));
+  reader.onabort=()=>reject(Error('FILE_READ_FAILED'));
+  reader.onload=()=>{
+   if(reader.result instanceof ArrayBuffer&&reader.result.byteLength>0)resolve(reader.result);
+   else reject(Error('FILE_READ_FAILED'));
+  };
+  try{reader.readAsArrayBuffer(file);}catch{reject(Error('FILE_READ_FAILED'));}
+ });
+}
+
 // Safe troubleshooting markers: no file names, user IDs, tokens or private paths.
 function uploadFailureMarker(stage:string,error:unknown):string {
  const item=(typeof error==='object'&&error!==null?error:{}) as {code?:unknown;statusCode?:unknown;status?:unknown};
@@ -346,9 +367,8 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
      throw Error(t('اختار ملف أكبر من صفر ولحد 5 ميجابايت.','Choose a non-empty file up to 5 MB.'));
     // Android document providers often return generic MIME types. Verify
     // magic bytes and upload the exact ArrayBuffer with an explicit type.
-    let buffer:ArrayBuffer;
     phase='FILE_READ';setUploadDiagnostic(phase);
-    try{buffer=await file.arrayBuffer();}catch{throw Error('FILE_READ_FAILED');}
+    const buffer=await readCaptainUploadBuffer(file);
     const bytes=new Uint8Array(buffer,0,Math.min(8,buffer.byteLength));
     const jpeg=bytes[0]===0xff&&bytes[1]===0xd8&&bytes[2]===0xff;
     const png=bytes[0]===0x89&&bytes[1]===0x50&&bytes[2]===0x4e&&bytes[3]===0x47&&bytes[4]===0x0d&&bytes[5]===0x0a&&bytes[6]===0x1a&&bytes[7]===0x0a;
