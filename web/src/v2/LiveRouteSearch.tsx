@@ -39,6 +39,14 @@ export default function LiveRouteSearch({origin,destination,outbound,returnTime,
  const [bookingError,setBookingError]=useState('');
  const [bookingSuccess,setBookingSuccess]=useState('');
  const [seatCounts,setSeatCounts]=useState<Record<string,number>>({});
+ const [sortBy,setSortBy]=useState<'time'|'price'|'seats'>('time');
+ const visibleItems=[...items].sort((a,b)=>{
+  if(sortBy==='price')return a.route.price_egp-b.route.price_egp;
+  if(sortBy==='seats')return b.remaining-a.remaining;
+  const aTime=a.reverse?a.route.return_time:a.route.outbound_time;
+  const bTime=b.reverse?b.route.return_time:b.route.outbound_time;
+  return (aTime||'99:99').localeCompare(bTime||'99:99');
+ });
  const [bookingKeys,setBookingKeys]=useState<Record<string,string>>({});
  const book=async(routeId:string,pickupStopId:string,dropoffStopId:string,reverse:boolean)=>{
   const seats=seatCounts[routeId]||1;
@@ -76,10 +84,20 @@ export default function LiveRouteSearch({origin,destination,outbound,returnTime,
      if(period&&route.period!==period)continue;
      if(categories.length&&!categories.includes(route.category))continue;
      const sequence=all.filter(s=>s.route_id===route.id).sort((a,b)=>a.position-b.position);
-     // Only use stop pairs that are valid in the advertised journey direction.
+     // A round-trip search must match both schedules on one published
+     // round-trip offer. Never claim that two unrelated one-ways form a subscription.
      const directions: {reverse:boolean;time:string|null}[]=[];
-     if(route.direction!=='return')directions.push({reverse:false,time:route.outbound_time});
-     if(route.direction!=='outbound'&&route.return_supported)directions.push({reverse:true,time:route.return_time});
+     if(direction==='round_trip'){
+      if(route.direction!=='round_trip'||!route.return_supported||
+       (outbound&&route.outbound_time?.slice(0,5)!==outbound)||
+       (returnTime&&route.return_time?.slice(0,5)!==returnTime))continue;
+      directions.push({reverse:false,time:route.outbound_time});
+     }else if(direction==='return'){
+      if(route.direction!=='outbound'&&route.return_supported)
+       directions.push({reverse:true,time:route.return_time});
+     }else if(route.direction!=='return'){
+      directions.push({reverse:false,time:route.outbound_time});
+     }
      for(const candidate of directions){
       if(candidate.reverse? (returnTime&&candidate.time?.slice(0,5)!==returnTime) : (outbound&&candidate.time?.slice(0,5)!==outbound))continue;
       const ordered=candidate.reverse?[...sequence].reverse():sequence;
@@ -106,7 +124,7 @@ export default function LiveRouteSearch({origin,destination,outbound,returnTime,
    finally{if(active)setLoading(false);}
   })();
   return ()=>{active=false;};
- },[origin,destination,outbound,returnTime,period,categories.join(','),retry]);
+ },[origin,destination,outbound,returnTime,period,direction,categories.join(','),retry]);
  return <section className="d-live-search">
   <p>{t('نتائج فعلية من الخطوط المنشورة للكباتن المعتمدين فقط.','Live results from published routes only.')}</p>
   {!client&&<p role="status">{t('البحث الحقيقي محتاج ربط إعدادات Supabase العامة.','Live search requires public Supabase configuration.')}</p>}
@@ -119,10 +137,26 @@ export default function LiveRouteSearch({origin,destination,outbound,returnTime,
   }} onSignIn={onSignIn}/>}
   {bookingError&&<p role="alert">{bookingError}</p>}
   {bookingSuccess&&<p role="status">{bookingSuccess}</p>}
-  {items.map((selection)=><article className="d-box d-result" key={selection.route.id+String(selection.reverse)+selection.from.id+selection.to.id}>{(()=>{const {route,from,to,reverse}=selection;return <>
+  {!loading&&!error&&items.length>1&&<label className="sekka-live-sort">
+   {t('رتّب الخطوط حسب','Sort routes by')}
+   <select value={sortBy} onChange={e=>setSortBy(e.target.value as 'time'|'price'|'seats')}>
+    <option value="time">{t('أقرب ميعاد','Earliest departure')}</option>
+    <option value="price">{t('السعر الأقل','Lowest listed price')}</option>
+    <option value="seats">{t('المقاعد الأكثر','Most available seats')}</option>
+   </select>
+  </label>}
+  {visibleItems.map((selection)=><article className="d-box d-result" key={selection.route.id+String(selection.reverse)+selection.from.id+selection.to.id}>{(()=>{const {route,from,to,reverse}=selection;return <>
    <h2>{route.title}</h2>
-   <p>{from.name} ← {to.name}</p>
-   <p>{route.category} · {selection.remaining} {t('مقاعد متاحة الآن من','seats currently available out of')} {route.seat_capacity} · {route.price_egp} {t('جنيه','EGP')}</p>
+   <p className="sekka-live-stops">{from.name} ← {to.name}</p>
+   <p className="sekka-live-schedule">
+    <strong>{reverse?t('العودة','Return'):t('الذهاب','Outbound')}</strong>
+    {' · '}{(reverse?route.return_time:route.outbound_time)?.slice(0,5)||t('الوقت غير محدد','Time unavailable')}
+    {' · '}{route.period==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')}
+    {route.direction==='round_trip'&&route.return_supported&&
+     <span>{' · '}{t('يدعم الذهاب والعودة','Round trip supported')}</span>}
+   </p>
+   <p className="sekka-live-meta">{route.category} · {selection.remaining} {t('مقاعد متاحة من','available of')} {route.seat_capacity}</p>
+   <p className="sekka-live-price">{t('السعر المعلن','Listed price')}: <strong>{route.price_egp.toLocaleString('en-US')} {t('جنيه','EGP')}</strong></p>
    {onSelect&&<button type="button" className="d-offer-select" onClick={()=>onSelect(selection)}>{t('عرض تفاصيل الخط','View route details')}</button>}
    {!onSelect&&<>
    <p>{reverse?t('العودة','Return'):t('الذهاب','Outbound')} · {(reverse?route.return_time:route.outbound_time)?.slice(0,5)} · {period==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')}</p>
