@@ -109,33 +109,46 @@
   font-weight:900;
 }
 .c-canvas .c-file-picker-name { min-width:0; overflow-wrap:anywhere; }
-/* Android/PWA fix: tap the REAL file input, not a fully clipped 1px input
-   activated indirectly by a label. The full-row native hit target triggers the
-   system Files/Photos chooser on Chrome and installed WebAPKs. */
+/* Production Android/PWA documents: expose the native file selector so
+   system Files/Photos opens from the actual control, never a hidden proxy. */
 .captain-onboarding-canvas .c-registration-form input.c-file-native {
-  position:absolute!important;
-  inset:0!important;
-  z-index:2;
+  position:static!important;
+  inset:auto!important;
   display:block!important;
+  z-index:auto!important;
   box-sizing:border-box!important;
   width:100%!important;
-  height:100%!important;
-  min-height:0!important;
-  max-width:none!important;
-  padding:0!important;
+  height:auto!important;
+  min-height:48px!important;
+  max-width:100%!important;
+  padding:4px!important;
   margin:0!important;
   border:0!important;
-  border-radius:inherit;
+  border-radius:10px;
   overflow:visible!important;
   clip:auto!important;
   clip-path:none!important;
-  opacity:0!important;
+  opacity:1!important;
+  background:transparent!important;
+  color:var(--phase-text)!important;
   cursor:pointer;
-  font-size:16px;
+  font-size:14px;
+}
+.captain-onboarding-canvas .c-file-native::file-selector-button {
+  min-height:44px;
+  margin-inline-end:12px;
+  padding:9px 14px;
+  border:0;
+  border-radius:10px;
+  background:#ffc400;
+  color:#171c22;
+  font:inherit;
+  font-weight:900;
+  cursor:pointer;
 }
 .captain-onboarding-canvas .c-file-picker:focus-within {outline:3px solid #ffc400;outline-offset:2px;}
 .captain-onboarding-canvas .c-file-picker--locked {cursor:not-allowed;opacity:.72;}
-.captain-onboarding-canvas .c-file-picker--locked .c-file-picker-button {background:#c9c9c9;color:#454545;}
+.captain-onboarding-canvas .c-file-picker--locked .c-file-native::file-selector-button {background:#c9c9c9;color:#454545;}
 .captain-onboarding-canvas .c-file-native:disabled {cursor:not-allowed;}
 .captain-routes-canvas .d-box {
   display: flow-root;
@@ -347,24 +360,28 @@ html[data-theme="dark"] .captain-onboarding-canvas .c-registration-form [aria-in
 }
 
 
-/* Production Captain document picker: expose a real full-size tap target in
- * Android/iOS PWA; old .c-canvas rules did not match this production canvas. */
+/* Production upload layout: the visible native control owns the tap. */
 .captain-onboarding-canvas .c-file-picker {
- position:relative; display:flex; align-items:center; gap:12px; min-width:0;
- min-height:48px; padding:8px 10px; border:1px solid var(--d-line);
- border-radius:12px; background:var(--phase-card); cursor:pointer;
+  position:relative;
+  display:grid;
+  gap:4px;
+  min-width:0;
+  padding:8px 10px;
+  border:1px solid var(--d-line);
+  border-radius:12px;
+  background:var(--phase-card);
 }
-.captain-onboarding-canvas .c-file-picker-button {
- flex:0 0 auto; padding:8px 12px; border-radius:9px;
- background:#ffc400; color:#171c22; font-weight:900; pointer-events:none;
-}
-.captain-onboarding-canvas .c-file-picker-name { min-width:0; overflow-wrap:anywhere; pointer-events:none; }
-.captain-onboarding-canvas .c-file-native {
- position:absolute; inset:0; width:100%; height:100%; opacity:0;
- cursor:pointer; z-index:1; font-size:16px;
+.captain-onboarding-canvas .c-file-picker-name {
+  display:block;
+  min-width:0;
+  overflow-wrap:anywhere;
+  font-size:.88em;
+  line-height:1.5;
+  color:var(--phase-muted,var(--muted));
 }
 .captain-onboarding-canvas .c-file-picker:focus-within {
- outline:3px solid #ffc400; outline-offset:2px;
+  outline:3px solid #ffc400;
+  outline-offset:2px;
 }
 
 /* Android-friendly Egyptian plates: discrete editable boxes, avoiding merged
