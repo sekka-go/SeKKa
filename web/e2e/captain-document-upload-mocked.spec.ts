@@ -49,8 +49,14 @@ test('MOCKED Android-width private document upload: denied, retry, verified pers
   else if(pathname.startsWith('/rest/v1/v31_captain_applications'))
    result=application;
   else if(pathname.startsWith('/rest/v1/v31_captain_documents')){
-   const item=docs.find(d=>url.searchParams.get('object_name')?.includes(d.object_name));
-   result=request.headers()['accept']?.includes('vnd.pgrst.object+json')?item||null:docs;
+   // PostgREST maybeSingle() on GET may request application/json and
+   // unwrap a one-element array itself. Always honor eq filters even when
+   // Accept is not the singular-object media type; otherwise the second
+   // document readback incorrectly returns two rows and fails.
+   const kind=url.searchParams.get('kind')?.replace(/^eq\./,'');
+   const objectName=url.searchParams.get('object_name')?.replace(/^eq\./,'');
+   const matches=docs.filter(d=>(!kind||d.kind===kind)&&(!objectName||d.object_name===objectName));
+   result=request.headers()['accept']?.includes('vnd.pgrst.object+json')?matches[0]||null:matches;
   }
   else if(pathname.startsWith('/rest/v1/v31_vehicle_makes'))
    result=[{id:1,name_ar:'تويوتا',name_en:'Toyota',active:true}];
