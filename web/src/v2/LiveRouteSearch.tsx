@@ -153,7 +153,8 @@ export default function LiveRouteSearch({origin,destination,outbound,returnTime,
     {' · '}{(reverse?route.return_time:route.outbound_time)?.slice(0,5)||t('الوقت غير محدد','Time unavailable')}
     {' · '}{route.period==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')}
     {route.direction==='round_trip'&&route.return_supported&&
-     <span>{' · '}{t('يدعم الذهاب والعودة','Round trip supported')}</span>}
+     <span>{' · '}{t('العودة','Return')} {(route.return_time||'').slice(0,5)}
+      {' · '}{t('ذهاب وعودة','Round trip supported')}</span>}
    </p>
    <p className="sekka-live-meta">{route.category} · {selection.remaining} {t('مقاعد متاحة من','available of')} {route.seat_capacity}</p>
    <p className="sekka-live-price">{t('السعر المعلن','Listed price')}: <strong>{route.price_egp.toLocaleString('en-US')} {t('جنيه','EGP')}</strong></p>
