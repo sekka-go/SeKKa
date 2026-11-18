@@ -26,8 +26,8 @@ export async function fetchPublishedSelection(routeId:string,fromId:string,toId:
  if(typeof remaining!=='number'||remaining<0)throw Error('CAPACITY_UNAVAILABLE');
  return {route:route as Route,from,to,reverse,stops,remaining};
 }
-export default function LiveRouteSearch({origin,destination,outbound,returnTime,period,requestPeriod,categories,onSelect,onSignIn}:{
- origin:string;destination:string;outbound:string;returnTime:string;period:string;requestPeriod:string;categories:string[];onSelect?:(selection:LiveSelection)=>void;onSignIn?:()=>void;
+export default function LiveRouteSearch({origin,destination,outbound,returnTime,period,requestPeriod,direction,categories,onSelect,onSignIn}:{
+ origin:string;destination:string;outbound:string;returnTime:string;period:string;requestPeriod:string;direction:string;categories:string[];onSelect?:(selection:LiveSelection)=>void;onSignIn?:()=>void;
 }){
  const {language}=usePreferences(),en=language==='en';
  const t=(ar:string,english:string)=>en?english:ar;
@@ -115,7 +115,7 @@ export default function LiveRouteSearch({origin,destination,outbound,returnTime,
   {!loading&&!error&&items.length===0&&<div role="status"><p>{t('لسه مفيش خط مناسب.','No suitable route yet.')}</p><p>{t('لسه مفيش خطوط منشورة مطابقة لنقط الركوب والنزول ومواعيدك.','No published routes match your pickup, drop-off and schedule yet.')}</p></div>}
   {!loading&&!error&&items.length===0&&origin&&destination&&<LiveTripRequests mode="rider" search={{
    origin,destination,outbound,returnTime,period:requestPeriod,
-   direction:returnTime?'round_trip':'outbound'
+   direction:direction==='outbound'||direction==='return'||direction==='round_trip'?direction:(returnTime?'round_trip':'outbound')
   }} onSignIn={onSignIn}/>}
   {bookingError&&<p role="alert">{bookingError}</p>}
   {bookingSuccess&&<p role="status">{bookingSuccess}</p>}
