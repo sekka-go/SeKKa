@@ -140,7 +140,7 @@ test('developer gallery stays lazy and only exact /dev/screens path opens it',as
  await expect(page.locator('.phase-preview-note')).toBeVisible();
  await expect(page.locator('.sekka-mobile')).toHaveCount(0);
 
- await page.goto('/dev/screens/');
+ await page.goto('/dev/screens/?screen=2');
  await expect(page.locator('.phase-preview-note')).toBeVisible();
  await expect(page.locator('.sekka-mobile')).toHaveCount(0);
 
