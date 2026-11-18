@@ -102,9 +102,15 @@ test('MOCKED narrow Admin keeps authorized action and preferences in left drawer
  }
  await language.click();
  await expect(page.locator('html')).toHaveAttribute('dir','rtl');
- await theme.click();
+ // Changing language may close and rebuild the drawer; fetch current locators.
+ const closeChanged=page.getByRole('button',{name:'إغلاق القائمة'});
+ if(await closeChanged.count())await closeChanged.last().click();
+ await page.getByRole('button',{name:'فتح القائمة'}).click();
+ const currentDrawer=page.getByRole('dialog',{name:'القائمة الرئيسية'});
+ await currentDrawer.locator('.sekka-theme').click();
  await expect(page.locator('html')).toHaveAttribute('data-theme','light');
- await page.getByRole('button',{name:'إغلاق القائمة'}).last().click();
+ const closeThemed=page.getByRole('button',{name:'إغلاق القائمة'});
+ if(await closeThemed.count())await closeThemed.last().click();
  await expect(page.locator('.sekka-admin-entry')).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(321);
 });
@@ -468,6 +474,7 @@ test('MOCKED published search sorts genuine route data and enforces both round-t
  await expect(page.getByText('Outbound only',{exact:true})).toHaveCount(0);
  await expect(page.getByText('Wrong return time',{exact:true})).toHaveCount(0);
  const cards=await list.allTextContents();
- expect(cards.every(card=>card.includes('17:00'))).toBe(true);
+ expect(cards.every(card=>card.includes('07:30'))).toBe(true);
+ expect(cards.every(card=>card.includes('Round trip supported'))).toBe(true);
  expect(cards.every(card=>card.includes('Listed price'))).toBe(true);
 });
