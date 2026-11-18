@@ -7,8 +7,10 @@ test('v3.1 registry has exactly 73 unique reversible screen identifiers',()=>{
  expect(publicScreen(13)).toBe(18);
 });
 test('73 guest entries render without client exceptions',async({page})=>{
+ // All 73 lazy-loaded gallery pages must render, not just return HTTP 200.
+ test.setTimeout(180000);
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
- for(let n=1;n<=73;n++){await page.goto(`/dev/screens?screen=${n}`);await expect(page.locator('main')).toBeVisible();await expect(page.locator('main h1,main h2').first()).not.toBeEmpty();}expect(errors).toEqual([]);
+ for(let n=1;n<=73;n++){await page.goto(`/dev/screens?screen=${n}`);await expect(page.locator('main')).toBeVisible({timeout:15000});await expect(page.locator('main h1,main h2').first()).not.toBeEmpty();}expect(errors).toEqual([]);
 });
 test('no-results request reuses search, prevents duplicate confirmation and direct entry',async({page})=>{
  await page.goto('/dev/screens?screen=9&preview=phase2');
@@ -291,6 +293,7 @@ test('filtered empty states offer immediate recovery without losing the page',as
 
 
 test('73 public screens load in English LTR on a small phone without runtime exceptions',async({browser})=>{
+ test.setTimeout(180000);
  const context=await browser.newContext({locale:'en-GB',viewport:{width:390,height:844},colorScheme:'light'});
  const page=await context.newPage();
  const errors:string[]=[];
@@ -300,7 +303,7 @@ test('73 public screens load in English LTR on a small phone without runtime exc
   await expect(page.locator('html')).toHaveAttribute('lang','en');
   await expect(page.locator('html')).toHaveAttribute('dir','ltr');
   await expect(page.locator('html')).toHaveAttribute('data-theme','light');
-  await expect(page.locator('main')).toBeVisible();
+  await expect(page.locator('main')).toBeVisible({timeout:15000});
   await expect(page.locator('main h1,main h2').first()).not.toBeEmpty();
  }
  expect(errors).toEqual([]);
@@ -309,7 +312,7 @@ test('73 public screens load in English LTR on a small phone without runtime exc
 
 
 test('all 66 rider, captain and admin screens render their real phase previews in both languages',async({browser})=>{
- test.setTimeout(120000);
+ test.setTimeout(240000);
  for (const locale of ['ar-EG','en-GB']) {
   const context=await browser.newContext({locale,viewport:{width:390,height:844}});
   const page=await context.newPage();
@@ -319,8 +322,9 @@ test('all 66 rider, captain and admin screens render their real phase previews i
    const phase=n<=14?2:n<=21?3:n<=34?4:n<=41?5:n<=49?6:n<=61?7:8;
    await page.goto('/dev/screens?screen='+n+'&preview=phase'+phase);
    const surface=n>=62?'main.ad-content':'main.phase-canvas';
-   if(await page.locator(surface).count()===0) throw new Error('Missing phase preview screen '+n+' ('+locale+'): '+(await page.locator('body').innerText()).slice(0,250));
-   await expect(page.locator(surface)).toBeVisible();
+   // Wait for the actual screen after the separate gallery JS chunk loads.
+   // Do not treat the Suspense fallback as a completed screen.
+   await expect(page.locator(surface),'Approved screen '+n+' ('+locale+') must render').toBeVisible({timeout:15000});
    await expect(page.locator('main h1,main h2').first()).not.toBeEmpty();
    await expect(page.locator('html')).toHaveAttribute('dir',locale==='ar-EG'?'rtl':'ltr');
    await expect(page.locator('html')).toHaveAttribute('lang',locale==='ar-EG'?'ar':'en');
