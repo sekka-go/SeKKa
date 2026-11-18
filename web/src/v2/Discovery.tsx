@@ -538,7 +538,7 @@ export default function Discovery(p: DiscoveryProps) {
     destination:p.serviceAreas?.find(a=>a.id===live.to.area_id)?.name_ar||live.to.name,
     category:live.route.category,available:live.remaining,
     outbound:live.route.outbound_time?.slice(0,5)||'',returnTime:live.route.return_time?.slice(0,5)||'',
-    period:live.route.period,direction:live.reverse?'return':'outbound',amount:live.route.price_egp,
+    period:live.route.period,direction:live.reverse?'return':live.route.direction==='round_trip'?'round_trip':'outbound',amount:live.route.price_egp,
     stops:(live.reverse?[...live.stops].reverse():live.stops).map(s=>({
       id:s.id,name:s.name,area:p.serviceAreas?.find(a=>a.id===s.area_id)?.name_ar||s.name,
       pickup:live.reverse?s.dropoff_allowed:s.pickup_allowed,
