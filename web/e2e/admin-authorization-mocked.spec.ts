@@ -210,7 +210,7 @@ test('MOCKED rider no-match flow saves selected weekly request and reads it back
   {id:21,name_ar:'التجمع',name_en:'New Cairo'},
   {id:22,name_ar:'الزمالك',name_en:'Zamalek'}
  ];
- let saved:null|{id:string;rider_id:string;origin_area_id:number;destination_area_id:number;outbound_time:string;period:string;seats:number;request_key:string;status:string}=null;
+ let saved:null|{id:string;rider_id:string;origin_area_id:number;destination_area_id:number;outbound_time:string|null;return_time:string|null;direction:string;period:string;seats:number;request_key:string;status:string}=null;
  let inserts=0;
  await page.route(endpoint+'/rest/v1/v31_service_areas*',async route=>{
   await route.fulfill({contentType:'application/json',body:JSON.stringify(areas)});
@@ -235,6 +235,9 @@ test('MOCKED rider no-match flow saves selected weekly request and reads it back
  await page.goto('/?tab=search&view=11');
  const panel=page.locator('.live-trip-requests');
  await expect(panel.getByRole('heading',{name:'No match? Review your request'})).toBeVisible();
+ await expect(panel.getByLabel('Journey direction')).toHaveValue('round_trip');
+ await expect(panel.getByLabel('Departure time')).toHaveValue('07:30');
+ await expect(panel.getByLabel('Return time')).toHaveValue('17:00');
  await panel.getByLabel('Subscription period').selectOption('weekly');
  const count=panel.getByLabel('Seats needed');
  await expect(count).toHaveAttribute('max','2');
@@ -244,12 +247,17 @@ test('MOCKED rider no-match flow saves selected weekly request and reads it back
  await count.fill('2');
  await expect(panel.getByRole('button',{name:'Confirm and save trip request'})).toBeEnabled();
  await panel.getByRole('button',{name:'Confirm and save trip request'}).click();
- await expect(panel.getByRole('status')).toContainText('Your trip request is saved');
+ await expect(panel.getByRole('status')).toContainText('Your request and journey schedule are saved');
  expect(inserts).toBe(1);
  expect(saved).not.toBeNull();
  expect(saved?.period).toBe('weekly');
  expect(saved?.seats).toBe(2);
  expect(saved?.outbound_time).toBe('07:30');
+ expect(saved?.return_time).toBe('17:00');
+ expect(saved?.direction).toBe('round_trip');
+ await panel.getByRole('button',{name:'Confirm and save trip request'}).click();
+ await expect(panel.getByRole('status')).toContainText('already open');
+ expect(inserts).toBe(1);
  await expect(panel.getByText(/weekly/)).toBeVisible();
 });
 
