@@ -134,3 +134,20 @@ test('refresh keeps the current onboarding step, without redirecting or replayin
  await page.locator('.phase-screen-3 .phase-back').click();
  await expect(page.locator('.phase-screen-2')).toBeVisible();
 });
+
+test('developer gallery stays lazy and only exact /dev/screens path opens it',async({page})=>{
+ await page.goto('/dev/screens?screen=2');
+ await expect(page.locator('.phase-preview-note')).toBeVisible();
+ await expect(page.locator('.sekka-mobile')).toHaveCount(0);
+
+ await page.goto('/dev/screens/');
+ await expect(page.locator('.phase-preview-note')).toBeVisible();
+ await expect(page.locator('.sekka-mobile')).toHaveCount(0);
+
+ // A similar-looking or nested URL must never open the preview gallery.
+ for(const path of ['/dev/screens-preview','/dev/screens/unknown']){
+  await page.goto(path);
+  await expect(page.locator('.sekka-mobile')).toBeVisible();
+  await expect(page.locator('.phase-preview-note')).toHaveCount(0);
+ }
+});
