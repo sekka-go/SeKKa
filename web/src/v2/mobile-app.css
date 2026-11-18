@@ -452,3 +452,82 @@
 }
 .sekka-bookings-section-tabs button[aria-pressed="true"]{background:#ffc400;color:#151515;border-color:#ffc400}
 .sekka-bookings-section-tabs button:focus-visible{outline:3px solid #b68b00;outline-offset:2px}
+
+
+/* 2026-11-18 owner-approved production-only light palette and single-drawer
+ * navigation. Dev/gallery originals are intentionally left untouched. */
+.sekka-mobile{
+  --bg:#f7f8fa;--ink:#0b0b0d;--card:#fff;--line:#e2e5e9;
+  --muted:#535d69;--sekka-brand:#ffc400;--sekka-icon-accent:#c2410c;
+  --sekka-nav-height:0px;
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+html[data-theme="dark"] .sekka-mobile{
+  --bg:#0d151e;--ink:#f0f3f5;--card:#15212e;--line:#354452;
+  --muted:#b4c0c9;--sekka-icon-accent:#ffb179;
+}
+/* Top bar is for one 48px physical-left menu control, not a second wordmark
+ * or duplicate preference buttons. Keep the official art within its screen. */
+.sekka-mobile-header,
+.sekka-tab-search > .sekka-mobile-header,
+.sekka-tab-booking > .sekka-mobile-header{
+  display:flex;position:sticky;top:0;isolation:isolate;
+  justify-content:center;align-items:center;
+  min-height:56px;height:56px;padding:0 68px;
+  background:var(--card);border-bottom:1px solid var(--line);
+}
+.sekka-mobile-header>.sekka-shell-menu{
+  position:absolute;top:4px;left:max(12px,env(safe-area-inset-left,0px));
+  right:auto;display:flex;align-items:center;justify-content:center;
+  min-width:48px;width:48px;min-height:48px;height:48px;
+  padding:0;background:var(--bg);color:var(--ink);
+  border:1px solid var(--line);border-radius:12px;
+  font:inherit;font-size:25px;line-height:1;cursor:pointer;
+}
+.sekka-mobile-header>.sekka-current-section{
+  position:static;display:block;min-width:0;max-width:100%;flex:none;
+  text-align:center;font-size:16px;line-height:1.35;font-weight:900;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink);
+}
+.sekka-mobile-header.sekka-mobile-header-admin{
+  min-height:102px;height:102px;
+}
+.sekka-mobile-header.sekka-mobile-header-admin>.sekka-admin-entry{
+  top:57px;min-height:40px;
+}
+.sekka-tab-captain-onboarding > .sekka-mobile-header,
+.sekka-guest-welcome > .sekka-mobile-header,
+.sekka-tab-login > .sekka-mobile-header{display:none}
+/* Content is no longer clipped behind a fixed 68px tab strip. */
+.sekka-mobile-content > .phase-one-stage{
+  padding-block-end:calc(22px + env(safe-area-inset-bottom,0px));
+}
+.sekka-mobile-content :is(button,input,select,textarea,a){
+  scroll-margin-block:64px calc(20px + env(safe-area-inset-bottom,0px));
+}
+.sekka-mobile-content .live-home__hero{min-height:152px;padding-bottom:52px}
+.sekka-mobile-content .live-home__panel{margin-top:-20px}
+.sekka-side-drawer nav .sekka-drawer-preference{
+  display:flex;align-items:center;gap:12px;direction:inherit;
+  text-align:start;min-height:52px;
+}
+.sekka-side-drawer .sekka-drawer-pref-icon{
+  display:inline-flex;align-items:center;justify-content:center;
+  flex:0 0 35px;width:35px;height:35px;font-size:24px;line-height:1;
+  background:var(--card);border:1px solid var(--line);border-radius:9px;
+}
+.sekka-mobile .discovery-stage.light .d-title>.discovery-icon,
+.sekka-mobile .discovery-stage.light .d-place>.discovery-icon,
+.sekka-mobile .discovery-stage.light .d-category-grid button:not([aria-pressed="true"])>.discovery-icon{
+  color:var(--sekka-icon-accent);
+}
+.sekka-mobile .discovery-stage.light .d-origin-dot{border-color:var(--sekka-icon-accent)}
+.sekka-mobile .discovery-stage.light .d-origin-dot:after{background:var(--sekka-icon-accent)}
+.sekka-mobile .discovery-stage.dark .d-place>.discovery-icon,
+.sekka-mobile .discovery-stage.dark .d-title>.discovery-icon{
+  color:var(--sekka-icon-accent);
+}
+@media(max-width:359px){
+ .sekka-mobile-header>.sekka-shell-menu{left:max(8px,env(safe-area-inset-left,0px))}
+ .sekka-mobile-header>.sekka-current-section{font-size:14px}
+}
