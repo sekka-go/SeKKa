@@ -543,7 +543,12 @@ export default function Discovery(p: DiscoveryProps) {
       id:s.id,name:s.name,area:p.serviceAreas?.find(a=>a.id===s.area_id)?.name_ar||s.name,
       pickup:live.reverse?s.dropoff_allowed:s.pickup_allowed,
       dropoff:live.reverse?s.pickup_allowed:s.dropoff_allowed
-    }))
+    })),
+    returnStops:live.route.direction==='round_trip'&&live.route.return_supported
+     ?[...live.stops].reverse().map(s=>({
+       id:s.id,name:s.name,area:p.serviceAreas?.find(a=>a.id===s.area_id)?.name_ar||s.name,
+       pickup:s.dropoff_allowed,dropoff:s.pickup_allowed
+     })):undefined
   }:null;
   const selected = p.production ? liveRouteLine : demo
     ? favoriteDetail || lines.find((l) => l.id === selectedId) || examples[0]
