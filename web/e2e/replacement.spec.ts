@@ -28,11 +28,14 @@ test("public planner, real empty results, and protected wallet", async ({
 test("all 73 screen entries render without client errors for guests", async ({
   page,
 }) => {
+  // Visiting 73 distinct lazy-loaded gallery routes cannot complete within
+  // the default 20s browser-test budget. Verify real mounted content for each.
+  test.setTimeout(180000);
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   for (let i = 1; i <= 73; i++) {
     await page.goto(`/dev/screens?screen=${i}`);
-    await expect(page.locator("main")).toBeVisible();
+    await expect(page.locator("main"), "Gallery screen "+i+" did not mount").toBeVisible({timeout:15000});
     await expect(page.locator("main h1, main h2").first()).not.toBeEmpty();
   }
   expect(errors).toEqual([]);
