@@ -110,6 +110,9 @@ test('MOCKED Android-width private document upload: denied, retry, verified pers
  await expect(page.getByText('0/4 required documents complete')).toBeVisible();
  await expect(page.getByTestId('captain-upload-stage')).toContainText('PICKER_READY');
  await expect(page.getByTestId('captain-upload-build')).toContainText('abcdef01');
+ // Development builds have no embedded production SHA, so a mocked current
+ // deployment must never trigger a false stale-installed-PWA warning.
+ await expect(page.getByTestId('captain-upload-stale')).toHaveCount(0);
  const input=picker.locator('input[type=file]');
  // A real, visible native input is required for the Android system chooser.
  // Its frame and opacity must not be clipped by custom overlays.
