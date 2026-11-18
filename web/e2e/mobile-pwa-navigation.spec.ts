@@ -25,10 +25,9 @@ test('guest app supports browser Back/Forward between real tabs',async({page})=>
  // The approved guest welcome is a standalone screen and has no tabs.
  // Start in the real tabbed Search experience before exercising history.
  await page.goto('/?tab=search');
- await expect(page.locator('.sekka-bottom-nav')).toBeVisible();
- await page.getByRole('navigation',{name:/Main navigation|التنقل الرئيسي/}).getByRole('button',{name:/Search|بحث/}).click();
- await expect(page).toHaveURL(/tab=search/);
- await page.getByRole('navigation',{name:/Main navigation|التنقل الرئيسي/}).getByRole('button',{name:/Bookings|حجوزاتي/}).click();
+ await expect(page.locator('.sekka-bottom-nav')).toHaveCount(0);
+ await page.getByRole('button',{name:/Open menu|فتح القائمة/}).click();
+ await page.getByRole('dialog',{name:/Main menu|القائمة الرئيسية/}).getByRole('button',{name:/My bookings|حجوزاتي/}).click();
  await expect(page).toHaveURL(/tab=bookings/);
  await page.goBack();
  await expect(page).toHaveURL(/tab=search/);
