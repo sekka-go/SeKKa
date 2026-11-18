@@ -145,3 +145,11 @@ test('rejects partial, abbreviated, or non-hex commit identifiers',()=>{
  assert.throws(()=>requireCommitSha(expectedSha.slice(0,7),'Expected SHA'),/full 40-character/);
  assert.throws(()=>requireCommitSha('g'.repeat(40),'Expected SHA'),/full 40-character/);
 });
+
+test('visual collector honors strict CSP without weakening style-src',async()=>{
+ const source=await readFile(new URL('./collect-visual-audit.mjs',import.meta.url),'utf8');
+ assert.doesNotMatch(source,/page\.addStyleTag\(/);
+ assert.match(source,/splash\.style\.display='none'/);
+ assert.match(source,/SCREENSHOT_SPLASH_COULD_NOT_BE_HIDDEN/);
+ assert.match(source,/page\.locator\('main'\)\.first\(\)\.waitFor/);
+});
