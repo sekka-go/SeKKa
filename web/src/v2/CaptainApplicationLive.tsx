@@ -107,7 +107,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
      ?(data as {sourceCommitSha?:unknown}).sourceCommitSha:null);
     if(active&&typeof sha==='string'&&/^[a-f0-9]{40}$/i.test(sha))
      setDeployedSha(sha.slice(0,8));
-   }).catch(()=>{ /* Version is optional; upload remains available offline. */ });
+   }).catch(()=>{ /* Version lookup can fail; file selection stays available. */ });
   return()=>{active=false;};
  },[]);
  const currentYear=new Date().getFullYear();
