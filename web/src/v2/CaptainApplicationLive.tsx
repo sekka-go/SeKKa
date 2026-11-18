@@ -663,7 +663,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
    {stalePwa&&<p data-testid="captain-upload-stale" className="c-field-error" role="alert">
     {t('التطبيق على جهازك بيشغّل نسخة قديمة. اقفله وافتح الرابط من Chrome وحدّث الصفحة، ولو النسخة المثبتة فضلت قديمة أعد تثبيتها قبل اختبار الرفع.',
        'This device is running an older app version. Reopen the link in Chrome and refresh; reinstall the installed PWA if it remains outdated before testing uploads.')}
-   </p>
+   </p>}
    {!hasDocuments&&<p className="c-form-hint">{t('ارفع المستندات الأربعة المطلوبة قبل المتابعة.','Upload all four required documents before continuing.')}</p>}
    {editable&&<button type="button" className="d-primary" disabled={busy||!hasDocuments}
     onClick={()=>onNext(39)}>{t('مراجعة الطلب','Review application')}</button>}
