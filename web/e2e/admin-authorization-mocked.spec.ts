@@ -247,7 +247,7 @@ test('MOCKED rider no-match flow saves selected weekly request and reads it back
  await count.fill('2');
  await expect(panel.getByRole('button',{name:'Confirm and save trip request'})).toBeEnabled();
  await panel.getByRole('button',{name:'Confirm and save trip request'}).click();
- await expect(panel.getByRole('status')).toContainText('Your request and journey schedule are saved');
+ await expect(panel.getByRole('status').filter({hasText:'Your request and journey schedule are saved'})).toBeVisible();
  expect(inserts).toBe(1);
  expect(saved).not.toBeNull();
  expect(saved?.period).toBe('weekly');
@@ -256,7 +256,7 @@ test('MOCKED rider no-match flow saves selected weekly request and reads it back
  expect(saved?.return_time).toBe('17:00');
  expect(saved?.direction).toBe('round_trip');
  await panel.getByRole('button',{name:'Confirm and save trip request'}).click();
- await expect(panel.getByRole('status')).toContainText('already open');
+ await expect(panel.getByRole('status').filter({hasText:'already open'})).toBeVisible();
  expect(inserts).toBe(1);
  await expect(panel.getByText(/weekly/)).toBeVisible();
 });
