@@ -531,3 +531,9 @@ html[data-theme="dark"] .sekka-mobile{
  .sekka-mobile-header>.sekka-shell-menu{left:max(8px,env(safe-area-inset-left,0px))}
  .sekka-mobile-header>.sekka-current-section{font-size:14px}
 }
+
+/* A logged-in Captain must never be trapped in the seven-step onboarding flow
+ * once the old bottom navigation has been removed. Guest OAuth stays full-screen. */
+.sekka-captain-logged-in > .sekka-mobile-header{
+ display:flex;position:sticky;top:0;min-height:56px;height:56px;
+}
