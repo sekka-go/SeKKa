@@ -109,11 +109,34 @@
   font-weight:900;
 }
 .c-canvas .c-file-picker-name { min-width:0; overflow-wrap:anywhere; }
-.c-canvas .c-file-native {
-  position:absolute!important; width:1px!important; height:1px!important; padding:0!important;
-  margin:-1px!important; overflow:hidden!important; clip:rect(0,0,0,0)!important;
-  clip-path:inset(50%)!important; white-space:nowrap!important; border:0!important;
+/* Android/PWA fix: tap the REAL file input, not a fully clipped 1px input
+   activated indirectly by a label. The full-row native hit target triggers the
+   system Files/Photos chooser on Chrome and installed WebAPKs. */
+.captain-onboarding-canvas .c-registration-form input.c-file-native {
+  position:absolute!important;
+  inset:0!important;
+  z-index:2;
+  display:block!important;
+  box-sizing:border-box!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  max-width:none!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:inherit;
+  overflow:visible!important;
+  clip:auto!important;
+  clip-path:none!important;
+  opacity:0!important;
+  cursor:pointer;
+  font-size:16px;
 }
+.captain-onboarding-canvas .c-file-picker:focus-within {outline:3px solid #ffc400;outline-offset:2px;}
+.captain-onboarding-canvas .c-file-picker--locked {cursor:not-allowed;opacity:.72;}
+.captain-onboarding-canvas .c-file-picker--locked .c-file-picker-button {background:#c9c9c9;color:#454545;}
+.captain-onboarding-canvas .c-file-native:disabled {cursor:not-allowed;}
 .captain-routes-canvas .d-box {
   display: flow-root;
   padding: clamp(14px, 3cqw, 24px);
