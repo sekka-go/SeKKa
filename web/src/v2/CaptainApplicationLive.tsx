@@ -62,6 +62,16 @@ function messageFor(error:unknown,t:(ar:string,en:string)=>string){
  return code?t(...translations[code]):message==='UNKNOWN_SERVER_ERROR'?t('حصل خطأ غير متوقع. جرّب تاني.','An unexpected error occurred. Please retry.'):message;
 }
 
+// Safe troubleshooting markers: no file names, user IDs, tokens or private paths.
+function uploadFailureMarker(stage:string,error:unknown):string {
+ const item=(typeof error==='object'&&error!==null?error:{}) as {code?:unknown;statusCode?:unknown;status?:unknown};
+ const rawStatus=String(item.statusCode??item.status??'');
+ const status=/^[1-5][0-9]{2}$/.test(rawStatus)?rawStatus:'NA';
+ const rawCode=typeof item.code==='string'?item.code:'UNKNOWN';
+ const code=/^[A-Za-z0-9_]{1,40}$/.test(rawCode)?rawCode.toUpperCase():'UNKNOWN';
+ return stage.toUpperCase()+'/'+status+'/'+code;
+}
+
 export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
  screen:number;onNext:(screen:number)=>void;onEnrolled?:()=>void;
 }){
@@ -84,6 +94,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
  const [uploadingKind,setUploadingKind]=useState<string|null>(null),[uploadError,setUploadError]=useState(''),[uploadErrorKind,setUploadErrorKind]=useState<string|null>(null);
  const [uploadingFileName,setUploadingFileName]=useState('');
  const [uploadStage,setUploadStage]=useState<'idle'|'reading'|'uploading'|'registering'|'verifying'>('idle');
+ const [uploadDiagnostic,setUploadDiagnostic]=useState('');
  const currentYear=new Date().getFullYear();
  const availableYears=useMemo(()=>Array.from({length:currentYear-1979},(_,i)=>String(currentYear-i)),[currentYear]);
  const requiredKinds=documentKinds.map(([kind])=>kind);
@@ -307,6 +318,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
   if(uploadingKind||busy)return;
   setUploadingKind(kind);setUploadingFileName(file.name);
   setUploadStage('reading');setUploadError('');setUploadErrorKind(kind);
+  setUploadDiagnostic('FILE_SELECTED');
   void run(async()=>{
    let stage:'reading'|'uploading'|'registering'|'verifying'='reading';
    try{
@@ -319,35 +331,41 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
     // Android document providers often return generic MIME types. Verify
     // magic bytes and upload the exact ArrayBuffer with an explicit type.
     let buffer:ArrayBuffer;
+    setUploadDiagnostic('FILE_READ');
     try{buffer=await file.arrayBuffer();}catch{throw Error('FILE_READ_FAILED');}
     const bytes=new Uint8Array(buffer,0,Math.min(8,buffer.byteLength));
     const jpeg=bytes[0]===0xff&&bytes[1]===0xd8&&bytes[2]===0xff;
     const png=bytes[0]===0x89&&bytes[1]===0x50&&bytes[2]===0x4e&&bytes[3]===0x47&&bytes[4]===0x0d&&bytes[5]===0x0a&&bytes[6]===0x1a&&bytes[7]===0x0a;
     const pdf=bytes[0]===0x25&&bytes[1]===0x50&&bytes[2]===0x44&&bytes[3]===0x46&&bytes[4]===0x2d;
     if(!jpeg&&!png&&!pdf)throw Error(t('صيغة الملف غير مدعومة. اختار JPG أو PNG أو PDF حقيقي.','Unsupported format. Select a genuine JPG, PNG, or PDF.'));
+    setUploadDiagnostic('FILE_VALIDATED');
     const extension=pdf?'pdf':png?'png':'jpg';
     const verifiedMime=pdf?'application/pdf':png?'image/png':'image/jpeg';
     const objectName=uid+'/'+crypto.randomUUID()+'.'+extension;
-    stage='uploading';setUploadStage(stage);
+    stage='uploading';setUploadStage(stage);setUploadDiagnostic('STORAGE_REQUEST');
     const {data:uploaded,error:storageError}=await client.storage.from(bucket)
      .upload(objectName,buffer,{upsert:false,contentType:verifiedMime});
     if(storageError)throw storageError;
     if(uploaded?.path!==objectName)throw Error('UPLOAD_NOT_VERIFIED');
-    stage='registering';setUploadStage(stage);
+    setUploadDiagnostic('STORAGE_CONFIRMED');
+    stage='registering';setUploadStage(stage);setUploadDiagnostic('DOCUMENT_RPC');
     const {data,error:registerError}=await client.rpc('v31_register_captain_document',{
      p_kind:kind,p_object_name:objectName
     });
     if(registerError)throw registerError;
     if(typeof data!=='string')throw Error('DOCUMENT_NOT_REGISTERED');
-    stage='verifying';setUploadStage(stage);
+    stage='verifying';setUploadStage(stage);setUploadDiagnostic('SERVER_READBACK');
     const {data:registered,error:readError}=await client.from('v31_captain_documents')
      .select('id,kind,object_name,created_at').eq('captain_id',uid).eq('kind',kind)
      .eq('object_name',objectName).maybeSingle();
     if(readError)throw readError;
     if(!registered||registered.id!==data)throw Error('DOCUMENT_NOT_REGISTERED');
     setDocs(current=>[registered as DocumentRow,...current.filter(doc=>doc.id!==registered.id)]);
+    setUploadDiagnostic('UI_PROGRESS_UPDATED');
     setNotice(t('المستند اتحفظ واتأكدنا منه على الخادم.','Document uploaded and verified on the server.'));
    }catch(e){
+    const marker=uploadFailureMarker(uploadDiagnostic==='FILE_READ'?'FILE_READ':stage==='reading'?'AUTH_OR_VALIDATION':uploadDiagnostic||stage,e);
+    setUploadDiagnostic(marker);
     const stageLabel:Record<typeof stage,[string,string]>={
      reading:['قراءة الملف','reading the file'],uploading:['رفع الملف','uploading the file'],
      registering:['تسجيل المستند','registering the document'],verifying:['التحقق من الحفظ','verifying the saved document']
@@ -585,6 +603,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
      </div>
      {uploadError&&uploadErrorKind===kind&&uploadingKind===null&&<div className="c-document-upload-error">
       <p className="c-field-error" role="alert">{uploadError}</p>
+      <p data-testid="captain-upload-diagnostic">{t('رمز تشخيص آمن: ','Safe diagnostic code: ')}<code dir="ltr">{uploadDiagnostic}</code></p>
       {editable&&<button type="button" onClick={()=>{
        setUploadError('');
        const picker=document.getElementById('captain-document-'+kind);
