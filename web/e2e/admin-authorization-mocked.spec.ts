@@ -407,7 +407,7 @@ test('MOCKED signed-in rider saves validated Home/Work shortcuts and recent sear
  await page.locator('.d-screen-9 .d-planner > .d-primary').click();
  await page.goto('/?tab=search&view=9');
  await expect(shortcuts.getByText('Recent searches')).toBeVisible();
- await expect(shortcuts.getByRole('button',{name:'Reuse route التجمع - المعادي'})).toBeVisible();
+ await expect(shortcuts.getByRole('button',{name:'Reuse route New Cairo - Maadi'})).toBeVisible();
  const key='sekka.rider.savedAreas.v1.'+userId;
  const stored=await page.evaluate(key=>JSON.parse(localStorage.getItem(key)||'null'),key);
  expect(stored.home).toBe('المعادي');
