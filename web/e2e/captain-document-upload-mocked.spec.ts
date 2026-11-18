@@ -129,7 +129,7 @@ test('MOCKED Android-width private document upload: denied, retry, verified pers
  expect(docs).toHaveLength(1);
  await page.reload();
  await expect(page.getByText('1/4 required documents complete')).toBeVisible();
- await expect(page.locator('.c-file-picker').first().locator('.c-file-picker-name')).toHaveText('A file is saved');
+ await expect(page.locator('.c-file-picker').first().locator('.c-file-picker-name')).toHaveText('A file is already saved');
  await expect(page.getByRole('button',{name:'Review application'})).toBeDisabled();
  // Four different documents must be present after reloading, not just an
  // optimistic client counter. Use realistic chooser clicks on all four rows.
