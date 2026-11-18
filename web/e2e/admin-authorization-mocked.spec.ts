@@ -420,3 +420,54 @@ test('MOCKED signed-in rider saves validated Home/Work shortcuts and recent sear
  await expect(to).toHaveValue('التجمع');
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
+
+test('MOCKED published search sorts genuine route data and enforces both round-trip times',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await setup(page,{isAdmin:false},'en','light');
+ const areaRows=[
+  {id:1,name_ar:'المعادي',name_en:'Maadi'},
+  {id:2,name_ar:'التجمع',name_en:'New Cairo'}
+ ];
+ const routes=[
+  {id:'route-a',title:'Round A',category:'SAVER',seat_capacity:4,period:'monthly',direction:'round_trip',outbound_time:'07:30:00',return_time:'17:00:00',price_egp:1200,return_supported:true},
+  {id:'route-b',title:'Outbound only',category:'SAVER',seat_capacity:4,period:'monthly',direction:'outbound',outbound_time:'07:30:00',return_time:null,price_egp:700,return_supported:false},
+  {id:'route-c',title:'Round C',category:'SPACE',seat_capacity:9,period:'monthly',direction:'round_trip',outbound_time:'07:30:00',return_time:'17:00:00',price_egp:900,return_supported:true},
+  {id:'route-d',title:'Wrong return time',category:'SAVER',seat_capacity:4,period:'monthly',direction:'round_trip',outbound_time:'07:30:00',return_time:'18:00:00',price_egp:500,return_supported:true}
+ ];
+ const stops=routes.flatMap(route=>[
+  {id:route.id+'-1',route_id:route.id,area_id:1,position:1,name:'Maadi',pickup_allowed:true,dropoff_allowed:true},
+  {id:route.id+'-2',route_id:route.id,area_id:2,position:2,name:'New Cairo',pickup_allowed:true,dropoff_allowed:true}
+ ]);
+ await page.route(endpoint+'/rest/v1/**',async route=>{
+  const path=new URL(route.request().url()).pathname;
+  let result:unknown;
+  if(path.endsWith('/v31_service_areas'))result=areaRows;
+  else if(path.endsWith('/v31_routes'))result=routes;
+  else if(path.endsWith('/v31_route_stops'))result=stops;
+  else if(path.endsWith('/rpc/v31_published_route_available_seats'))result=3;
+  else{return route.fallback();}
+  await route.fulfill({contentType:'application/json',body:JSON.stringify(result)});
+ });
+ await page.goto('/?tab=search&view=9');
+ const origin=page.locator('.d-planner-places .d-place select').first();
+ const dest=page.locator('.d-planner-places .d-place select').last();
+ await expect(origin.locator('option[value="المعادي"]')).toBeAttached();
+ await origin.selectOption('المعادي');
+ await dest.selectOption('التجمع');
+ await page.locator('.d-screen-9 .d-planner > .d-primary').click();
+ const list=page.locator('.d-live-search article.d-result');
+ await expect(list).toHaveCount(4);
+ await page.getByRole('combobox',{name:'Sort routes by'}).selectOption('price');
+ await expect(list.first().getByRole('heading',{name:'Wrong return time'})).toBeVisible();
+ await page.goto('/?tab=search&view=10');
+ await page.locator('.d-screen-10 select').selectOption('round_trip');
+ await page.getByRole('button',{name:'Show results'}).click();
+ await expect(list).toHaveCount(2);
+ await expect(page.getByText('Round A',{exact:true})).toBeVisible();
+ await expect(page.getByText('Round C',{exact:true})).toBeVisible();
+ await expect(page.getByText('Outbound only',{exact:true})).toHaveCount(0);
+ await expect(page.getByText('Wrong return time',{exact:true})).toHaveCount(0);
+ const cards=await list.allTextContents();
+ expect(cards.every(card=>card.includes('17:00'))).toBe(true);
+ expect(cards.every(card=>card.includes('Listed price'))).toBe(true);
+});
