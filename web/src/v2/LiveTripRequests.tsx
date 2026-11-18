@@ -117,6 +117,10 @@ export default function LiveTripRequests({mode,search,onSignIn}:{mode:'rider'|'c
  };
  const accept=async(id:string)=>{if(!client)return;await action(async()=>{const {data,error:rpcError}=await client!.rpc('v31_accept_trip_offer',{p_offer:id});if(rpcError)throw rpcError;setNotice(t('تم حجز المقاعد قيد الانتظار: '+data,'Pending seats booked: '+data));});};
  const cancel=async(id:string)=>{if(!client)return;await action(async()=>{const {error:rpcError}=await client!.rpc('v31_cancel_trip_request',{p_request:id});if(rpcError)throw rpcError;});};
+ const offerStatus=(status:string)=>({
+   offered:t('عرض متاح','Offered'),accepted:t('مقبول','Accepted'),
+   rejected:t('مرفوض','Rejected'),withdrawn:t('مسحوب','Withdrawn')
+  } as Record<string,string>)[status]||t('حالة غير معروفة','Unknown status');
  const area=(id:number)=>{const a=areas.find(x=>x.id===id);return a?(en?a.name_en:a.name_ar):String(id);};
  const visible=requests.filter(r=>mode==='captain'?r.status==='open':r.rider_id===uid);
  return <section className="d-box live-trip-requests">
@@ -157,7 +161,7 @@ export default function LiveTripRequests({mode,search,onSignIn}:{mode:'rider'|'c
     <select aria-label={t('الخط المراد عرضه','Offer route')} value={routeSelection[r.id]||routes[0]?.id||''} onChange={e=>setRouteSelection(v=>({...v,[r.id]:e.target.value}))}>{routes.map(route=><option key={route.id} value={route.id}>{route.title}</option>)}</select>
     <button type="button" disabled={busy||offers.some(o=>o.request_id===r.id&&o.captain_id===uid)} onClick={()=>void sendOffer(r.id)}>{t('إرسال عرض خط','Offer route')}</button>
    </div>}
-   {mode==='rider'&&offers.filter(o=>o.request_id===r.id).map(o=><div key={o.id}>{t('عرض كابتن','Captain offer')} · {o.status}
+   {mode==='rider'&&offers.filter(o=>o.request_id===r.id).map(o=><div key={o.id}>{t('عرض كابتن','Captain offer')} · {offerStatus(o.status)}
     {r.status==='open'&&o.status==='offered'&&<button type="button" disabled={busy} onClick={()=>void accept(o.id)}>{t('اقبل واحجز المقاعد','Accept and reserve seats')}</button>}
    </div>)}
   </li>)}</ul>
