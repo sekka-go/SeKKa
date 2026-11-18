@@ -45,7 +45,10 @@ function messageFor(error:unknown,t:(ar:string,en:string)=>string){
   HIACE_CATEGORY_REVIEW_REQUIRED:['يجب على المسؤول تحديد فئات خدمة الهايس عند المراجعة.','An administrator must select the Hiace service categories during review.'],
   DRAFT_SAVE_NOT_VERIFIED:['ما قدرناش نتأكد من حفظ بياناتك. حاول تاني.','We could not verify that your draft was saved. Please retry.'],
   SERVER_RESPONSE_NOT_VERIFIED:['ما قدرناش نتأكد من حالة الطلب. حاول تاني.','We could not verify the application status. Please retry.'],
-  DOCUMENT_NOT_REGISTERED:['ما قدرناش نتأكد من حفظ المستند. حاول تاني.','We could not verify that the document was saved. Please retry.']
+  DOCUMENT_NOT_REGISTERED:['ما قدرناش نتأكد من حفظ المستند. حاول تاني.','We could not verify that the document was saved. Please retry.'],
+  UPLOAD_NOT_VERIFIED:['التخزين ما أكدش رفع الملف. حاول تاني.','Storage did not verify the upload. Retry.'],
+  FILE_READ_FAILED:['الموبايل ما قدرش يقرأ الملف. افتحه من الملفات أو الصور وحاول تاني.','The device could not read the file. Choose it again from Files or Photos.'],
+  APPLICATION_LOCKED:['الطلب في حالة لا تسمح بالرفع. راجع حالته.','The application is not editable. Review its status.']
  };
  const code=Object.keys(translations).find(key=>message.includes(key));
  return code?t(...translations[code]):message;
@@ -71,6 +74,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
  const [notice,setNotice]=useState(''),[loading,setLoading]=useState(true),[revision,setRevision]=useState(0);
  const [uploadingKind,setUploadingKind]=useState<string|null>(null),[uploadError,setUploadError]=useState(''),[uploadErrorKind,setUploadErrorKind]=useState<string|null>(null);
  const [uploadingFileName,setUploadingFileName]=useState('');
+ const [uploadStage,setUploadStage]=useState<'idle'|'reading'|'uploading'|'registering'|'verifying'>('idle');
  const currentYear=new Date().getFullYear();
  const availableYears=useMemo(()=>Array.from({length:currentYear-1979},(_,i)=>String(currentYear-i)),[currentYear]);
  const requiredKinds=documentKinds.map(([kind])=>kind);
@@ -284,41 +288,58 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
   onEnrolled?.();onNext(36);
  });
  const upload=(kind:string,file:File)=>{
-  if(uploadingKind||busy)return;
-  setUploadingKind(kind);setUploadingFileName(file.name);setUploadError('');setUploadErrorKind(kind);
+  if(!editable||uploadingKind||busy)return;
+  setUploadingKind(kind);setUploadingFileName(file.name);
+  setUploadStage('reading');setUploadError('');setUploadErrorKind(kind);
   void run(async()=>{
+   let stage:'reading'|'uploading'|'registering'|'verifying'='reading';
    try{
-  if(!uid||!client)throw Error('AUTH_REQUIRED');
-  if(file.size<1||file.size>5242880)
-   throw Error(t('اختار ملف أكبر من صفر ولحد 5 ميجابايت.','Choose a non-empty file up to 5 MB.'));
-  // Android document providers may report an empty or generic file.type.
-  // Verify the file signature instead of trusting its name or MIME metadata.
-  const bytes=new Uint8Array(await file.slice(0,8).arrayBuffer());
-  const jpeg=bytes[0]===0xff&&bytes[1]===0xd8&&bytes[2]===0xff;
-  const png=bytes[0]===0x89&&bytes[1]===0x50&&bytes[2]===0x4e&&bytes[3]===0x47&&bytes[4]===0x0d&&bytes[5]===0x0a&&bytes[6]===0x1a&&bytes[7]===0x0a;
-  const pdf=bytes[0]===0x25&&bytes[1]===0x50&&bytes[2]===0x44&&bytes[3]===0x46&&bytes[4]===0x2d;
-  if(!jpeg&&!png&&!pdf)throw Error(t('صيغة الملف غير مدعومة. اختار JPG أو PNG أو PDF حقيقي.','Unsupported file format. Select a valid JPG, PNG, or PDF.'));
-  const extension=pdf?'pdf':png?'png':'jpg';
-  const verifiedMime=pdf?'application/pdf':png?'image/png':'image/jpeg';
-  const objectName=`${uid}/${crypto.randomUUID()}.${extension}`;
-  const {error:storageError}=await client.storage.from(bucket).upload(objectName,file,{
-   upsert:false,contentType:verifiedMime
-  });
-  if(storageError)throw storageError;
-  const {data,error:registerError}=await client.rpc('v31_register_captain_document',{
-   p_kind:kind,p_object_name:objectName
-  });
-  if(registerError)throw registerError;
-  if(typeof data!=='string')throw Error('DOCUMENT_NOT_REGISTERED');
-  const {data:registered,error:readError}=await client.from('v31_captain_documents')
-   .select('id,kind,object_name,created_at').eq('captain_id',uid).eq('kind',kind)
-   .eq('object_name',objectName).maybeSingle();
-  if(readError)throw readError;
-  if(!registered)throw Error('DOCUMENT_NOT_REGISTERED');
-  setDocs(current=>[registered as DocumentRow,...current.filter(doc=>doc.id!==registered.id)]);
-  setNotice(t('اتحفظ المستند، تقدر تكمّل.','Document saved. You can continue.'));
-   }catch(e){setUploadError(t('فشل رفع المستند. جرب JPG أو PNG أو PDF أقل من 5 ميجابايت.','Document upload failed. Try a JPG, PNG or PDF under 5 MB.')+' '+messageFor(e,t));throw e;}
-  }).finally(()=>{setUploadingKind(null);setUploadingFileName('');});
+    if(!uid||!client)throw Error('AUTH_REQUIRED');
+    if(!editable)throw Error('APPLICATION_LOCKED');
+    const {data:{user},error:authError}=await client.auth.getUser();
+    if(authError||user?.id!==uid)throw Error('AUTH_REQUIRED');
+    if(file.size<1||file.size>5242880)
+     throw Error(t('اختار ملف أكبر من صفر ولحد 5 ميجابايت.','Choose a non-empty file up to 5 MB.'));
+    // Android document providers often return generic MIME types. Verify
+    // magic bytes and upload the exact ArrayBuffer with an explicit type.
+    let buffer:ArrayBuffer;
+    try{buffer=await file.arrayBuffer();}catch{throw Error('FILE_READ_FAILED');}
+    const bytes=new Uint8Array(buffer,0,Math.min(8,buffer.byteLength));
+    const jpeg=bytes[0]===0xff&&bytes[1]===0xd8&&bytes[2]===0xff;
+    const png=bytes[0]===0x89&&bytes[1]===0x50&&bytes[2]===0x4e&&bytes[3]===0x47&&bytes[4]===0x0d&&bytes[5]===0x0a&&bytes[6]===0x1a&&bytes[7]===0x0a;
+    const pdf=bytes[0]===0x25&&bytes[1]===0x50&&bytes[2]===0x44&&bytes[3]===0x46&&bytes[4]===0x2d;
+    if(!jpeg&&!png&&!pdf)throw Error(t('صيغة الملف غير مدعومة. اختار JPG أو PNG أو PDF حقيقي.','Unsupported format. Select a genuine JPG, PNG, or PDF.'));
+    const extension=pdf?'pdf':png?'png':'jpg';
+    const verifiedMime=pdf?'application/pdf':png?'image/png':'image/jpeg';
+    const objectName=uid+'/'+crypto.randomUUID()+'.'+extension;
+    stage='uploading';setUploadStage(stage);
+    const {data:uploaded,error:storageError}=await client.storage.from(bucket)
+     .upload(objectName,buffer,{upsert:false,contentType:verifiedMime});
+    if(storageError)throw storageError;
+    if(uploaded?.path!==objectName)throw Error('UPLOAD_NOT_VERIFIED');
+    stage='registering';setUploadStage(stage);
+    const {data,error:registerError}=await client.rpc('v31_register_captain_document',{
+     p_kind:kind,p_object_name:objectName
+    });
+    if(registerError)throw registerError;
+    if(typeof data!=='string')throw Error('DOCUMENT_NOT_REGISTERED');
+    stage='verifying';setUploadStage(stage);
+    const {data:registered,error:readError}=await client.from('v31_captain_documents')
+     .select('id,kind,object_name,created_at').eq('captain_id',uid).eq('kind',kind)
+     .eq('object_name',objectName).maybeSingle();
+    if(readError)throw readError;
+    if(!registered||registered.id!==data)throw Error('DOCUMENT_NOT_REGISTERED');
+    setDocs(current=>[registered as DocumentRow,...current.filter(doc=>doc.id!==registered.id)]);
+    setNotice(t('المستند اتحفظ واتأكدنا منه على الخادم.','Document uploaded and verified on the server.'));
+   }catch(e){
+    const stageLabel:Record<typeof stage,[string,string]>={
+     reading:['قراءة الملف','reading the file'],uploading:['رفع الملف','uploading the file'],
+     registering:['تسجيل المستند','registering the document'],verifying:['التحقق من الحفظ','verifying the saved document']
+    };
+    setUploadError(t('المستند ما اتحفظش أثناء ','Document was not saved while ')+t(...stageLabel[stage])+'. '+messageFor(e,t));
+    throw e;
+   }
+  }).finally(()=>{setUploadingKind(null);setUploadingFileName('');setUploadStage('idle');});
  };
  const submit=()=>void run(async()=>{
   if(!personalComplete||!vehicleComplete||!hasDocuments)
@@ -522,7 +543,9 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
      <label className="c-file-picker">
       <span className="c-file-picker-button">{t('اختيار ملف','Choose file')}</span>
       <span className="c-file-picker-name" aria-live="polite">
-       {uploadingKind===kind?t('جارٍ رفع: ','Uploading: ')+uploadingFileName:saved?t('يوجد ملف محفوظ','A file is saved'):t('اضغط لاختيار ملف','Tap to select a file')}
+       {uploadingKind===kind
+       ?(uploadStage==='reading'?t('بنقرأ الملف… ','Reading file… '):uploadStage==='uploading'?t('بنرفع الملف… ','Uploading file… '):uploadStage==='registering'?t('بنسجّل المستند… ','Registering document… '):t('بنتأكد من الحفظ… ','Verifying saved document… '))+uploadingFileName
+       :saved?t('يوجد ملف محفوظ','A file is saved'):t('اضغط لاختيار ملف','Tap to select a file')}
       </span>
       <input className="c-file-native" type="file" aria-label={t(ar,label)}
        accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
