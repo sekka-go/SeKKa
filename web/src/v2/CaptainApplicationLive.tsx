@@ -299,7 +299,12 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
   onEnrolled?.();onNext(36);
  });
  const upload=(kind:string,file:File)=>{
-  if(!editable||uploadingKind||busy)return;
+  if(!editable){
+   setUploadErrorKind(kind);
+   setUploadError(t('رفع المستندات غير متاح لأن الطلب مش مسودة قابلة للتعديل. تابع حالة الطلب.','Uploads are locked because this application is not an editable draft. Check its status.'));
+   return;
+  }
+  if(uploadingKind||busy)return;
   setUploadingKind(kind);setUploadingFileName(file.name);
   setUploadStage('reading');setUploadError('');setUploadErrorKind(kind);
   void run(async()=>{
@@ -551,14 +556,18 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
    </div>}
   {!loading&&!loadError&&application&&screen===38&&personalComplete&&vehicleComplete&&<div className="d-box c-registration-form">
    <h2>{t('المستندات المطلوبة','Required documents')}</h2>
+   {!editable&&<div role="alert" className="c-document-upload-error">
+    <p>{t('حالة الطلب: ','Application status: ')}{statusLabel(application.status)}. {t('مش ممكن ترفع مستندات في الحالة دي.','Uploads are disabled in this status.')}</p>
+    <button type="button" onClick={()=>onNext(40)}>{t('متابعة حالة الطلب','View application status')}</button>
+   </div>}
    <p>{t('ارفع المستندات الأربعة قبل الانتقال للمراجعة. الملفات خاصة ولا تُعد موافقة أو تحققًا.',
     'Upload all four documents before review. Files are private and do not imply verification or approval.')}</p>
    {documentKinds.map(([kind,ar,label])=>{
     const saved=docs.some(doc=>doc.kind===kind);
     return <div className="c-document" key={kind}>
      <span className="c-document-label">{t(ar,label)} · {saved?t('تم الرفع','Uploaded'):t('مطلوب','Required')}</span>
-     <label className="c-file-picker">
-      <span className="c-file-picker-button">{t('اختيار ملف','Choose file')}</span>
+     <label className={`c-file-picker${!editable?' c-file-picker--locked':''}`}>
+      <span className="c-file-picker-button">{editable?t('اختيار ملف','Choose file'):t('الرفع غير متاح','Upload unavailable')}</span>
       <span className="c-file-picker-name" aria-live="polite">
        {uploadingKind===kind
        ?(uploadStage==='reading'?t('بنقرأ الملف… ','Reading file… '):uploadStage==='uploading'?t('بنرفع الملف… ','Uploading file… '):uploadStage==='registering'?t('بنسجّل المستند… ','Registering document… '):t('بنتأكد من الحفظ… ','Verifying saved document… '))+uploadingFileName
@@ -568,8 +577,8 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
        accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
        disabled={!editable||busy} onChange={event=>{
         const file=event.currentTarget.files?.[0];
+        // Canceling the Android document chooser is not an upload error.
         if(file)upload(kind,file);
-        else{setUploadErrorKind(kind);setUploadError(t('لم يتم اختيار ملف. حاول تاني.','No file selected. Please retry.'));}
         event.currentTarget.value='';
        }}/>
      </label>
@@ -577,7 +586,8 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
       <p className="c-field-error" role="alert">{uploadError}</p>
       {editable&&<button type="button" onClick={()=>{
        setUploadError('');
-       document.getElementById('captain-document-'+kind)?.click();
+       const picker=document.getElementById('captain-document-'+kind);
+       if(picker instanceof HTMLInputElement && !picker.disabled)picker.click();
       }}>{t('اختيار الملف والمحاولة تاني','Choose file and retry')}</button>}
      </div>}
     </div>;
