@@ -73,3 +73,21 @@ for(const language of ['ar','en'] as const){
   await expect(page.getByRole('dialog')).toHaveCount(0);
  });
 }
+
+test('production light mode uses legible location icons while preserving seKKa brand yellow',async({page})=>{
+ await page.addInitScript(()=>{
+  localStorage.setItem('language_preference','ar');
+  localStorage.setItem('theme_preference','light');
+ });
+ await page.goto('/?tab=search&view=9');
+ const stage=page.locator('.sekka-mobile .discovery-stage.light');
+ await expect(stage).toBeVisible();
+ const icon=stage.locator('.d-place > .discovery-icon').first();
+ await expect(icon).toHaveCSS('color','rgb(194, 65, 12)');
+ const origin=stage.locator('.d-origin-dot').first();
+ await expect(origin).toHaveCSS('border-top-color','rgb(194, 65, 12)');
+ const brand=await page.locator('.sekka-mobile').evaluate(node=>getComputedStyle(node).getPropertyValue('--sekka-brand').trim());
+ expect(brand).toBe('#ffc400');
+ await expect(page.locator('.sekka-bottom-nav')).toHaveCount(0);
+ await expect(page.locator('.sekka-mobile-header .sekka-approved-logo')).toHaveCount(0);
+});
