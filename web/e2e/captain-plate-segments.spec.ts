@@ -25,7 +25,7 @@ for(const width of [320,390]){
    professional_notes:'Professional driver committed to safe passenger travel',
    experience_years:3,rejection_reason:null,vehicle_type:'private_car',
    vehicle_make_id:1,vehicle_model_id:1,manufacture_year:2010,
-   vehicle_color_code:'white',vehicle_color_other:null,intended_plate:null,
+   vehicle_color_code:'white',vehicle_color_other:null,intended_plate:null as string|null,
    approved_vehicle_id:null,submitted_at:null,reviewed_at:null
   };
   let failSave=true,saves=0;
