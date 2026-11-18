@@ -49,12 +49,16 @@ export function editPlateSlot(value:string,kind:PlateSegment,index:number,raw:st
  return kind==='letter'?combinePlate(next,next.length>=2?digits:[]):combinePlate(letters,next);
 }
 
-/** Paste an entire valid plate, regardless of which slot is focused. */
+/** An entire plate can only be pasted into the FIRST letter box.
+ * Reject extra symbols instead of silently dropping invalid characters:
+ * the plate submitted to the server must match what the captain pasted.
+ */
 export function pastePlate(value:string,raw:string,kind:PlateSegment,index:number):string{
  const chars=cleanPlateChars(raw,'letter'),nums=cleanPlateChars(raw,'digit');
  if(chars.length&&nums.length){
-  if(isCompletePlate(chars,nums))return combinePlate(chars,nums);
-  return value;
+  if(kind!=='letter'||index!==0)return value;
+  const canonical=canonicalEgyptianPlate(raw);
+  return /^(?:[ء-ي]{2}[0-9]{4}|[ء-ي]{3}[0-9]{3,4})$/u.test(canonical)?canonical:value;
  }
  return editPlateSlot(value,kind,index,raw);
 }
