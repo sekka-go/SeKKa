@@ -478,3 +478,66 @@ test('MOCKED published search sorts genuine route data and enforces both round-t
  expect(cards.every(card=>card.includes('Round trip supported'))).toBe(true);
  expect(cards.every(card=>card.includes('Listed price'))).toBe(true);
 });
+
+test('MOCKED genuine round-trip offer reaches transparent one-or-two person booking review',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await setup(page,{isAdmin:false},'en','light');
+ const routeId='11111111-1111-4111-8111-111111111111';
+ const fromStop='22222222-2222-4222-8222-222222222221';
+ const toStop='22222222-2222-4222-8222-222222222222';
+ const published={
+  id:routeId,title:'Verified Round Trip',category:'SAVER',seat_capacity:4,
+  period:'monthly',direction:'round_trip',outbound_time:'07:30:00',
+  return_time:'17:00:00',price_egp:1200,return_supported:true
+ };
+ const stops=[
+  {id:fromStop,route_id:routeId,area_id:1,position:1,name:'Maadi pickup',pickup_allowed:true,dropoff_allowed:true},
+  {id:toStop,route_id:routeId,area_id:2,position:2,name:'New Cairo pickup',pickup_allowed:true,dropoff_allowed:true}
+ ];
+ let reserveRequests=0;
+ await page.route(endpoint+'/rest/v1/**',async request=>{
+  const url=new URL(request.request().url());
+  const path=url.pathname;
+  let result:unknown;
+  if(path.endsWith('/v31_service_areas'))result=[
+   {id:1,name_ar:'المعادي',name_en:'Maadi'},
+   {id:2,name_ar:'التجمع',name_en:'New Cairo'}
+  ];
+  else if(path.endsWith('/v31_routes')){
+   const matched=url.searchParams.has('id');
+   result=matched?[published]:[published];
+   if(matched&&request.request().headers()['accept']?.includes('vnd.pgrst.object+json'))
+    result=published;
+  }
+  else if(path.endsWith('/v31_route_stops'))result=stops;
+  else if(path.endsWith('/rpc/v31_published_route_available_seats'))result=3;
+  else if(path.endsWith('/rpc/v31_reserve_seats_with_stops')){reserveRequests++;result='33333333-3333-4333-8333-333333333333';}
+  else return request.fallback();
+  await request.fulfill({contentType:'application/json',body:JSON.stringify(result)});
+ });
+ await page.goto('/?tab=search&view=9');
+ await page.locator('.d-planner-places .d-place select').first().selectOption('المعادي');
+ await page.locator('.d-planner-places .d-place select').last().selectOption('التجمع');
+ await page.locator('.d-screen-9 .d-planner > .d-primary').click();
+ await expect(page.getByRole('heading',{name:'Verified Round Trip'})).toBeVisible();
+ await page.getByRole('button',{name:'View route details'}).click();
+ await expect(page.getByText('Verified Round Trip',{exact:true})).toHaveCount(0);
+ await expect(page.locator('.d-screen-12')).toBeVisible();
+ await page.getByRole('combobox',{name:'Pickup stop'}).selectOption(fromStop);
+ await page.getByRole('combobox',{name:'Drop-off stop'}).selectOption(toStop);
+ await page.getByRole('button',{name:'Book subscription'}).click();
+ await expect(page).toHaveURL(/tab=booking/);
+ await expect(page.locator('.booking-stage')).toBeVisible();
+ await expect(page.getByText('Round trip',{exact:false}).first()).toBeVisible();
+ const controls=page.getByRole('group',{name:'Number of people'});
+ await expect(controls).toContainText('1');
+ await controls.getByRole('button',{name:'Add one person'}).click();
+ await expect(controls).toContainText('2');
+ await expect(controls.getByRole('button',{name:'Add one person'})).toBeDisabled();
+ await controls.getByRole('button',{name:'Remove one person'}).click();
+ await expect(controls).toContainText('1');
+ await expect(page.getByText(/does not debit or hold this amount from your wallet/i)).toBeVisible();
+ await expect(page.getByText(/not a final invoice adjusted for passenger count/i)).toBeVisible();
+ expect(reserveRequests).toBe(0);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
