@@ -17,7 +17,7 @@
  * test fixtures, not identity evidence or production documents.
  */
 import {createClient} from '@supabase/supabase-js';
-import {randomUUID} from 'node:crypto';
+import {randomInt,randomUUID} from 'node:crypto';
 import assert from 'node:assert/strict';
 
 const env=process.env;
@@ -62,6 +62,13 @@ else must(await captain.from('v31_captain_profiles')
  .insert({user_id:captainUser.id,approval_status:'pending'}),'Captain enrollment');
 
 const tag=randomUUID().slice(0,8),fullName=`QA Captain ${tag}`,phone='01012345678';
+// Acceptance data must pass the same plate format as the live Android form:
+// three Arabic letters and four digits. An English "STG-..." placeholder
+// would be rejected by the server before this test reaches Admin review.
+const plateAlphabet='أبجدرسعفقلمنهوي';
+const qaPlate=Array.from({length:3},()=>plateAlphabet[randomInt(plateAlphabet.length)]).join('')
+ + String(randomInt(1000,10000));
+assert.match(qaPlate,/^[ء-ي]{3}[0-9]{4}$/u,'QA plate must satisfy the actual Egyptian registration format');
 mustFail(await captain.rpc('v31_save_captain_application',{
  p_full_name:fullName,p_phone:phone,p_notes:'Staging professional background',p_experience:-1
 }),'INVALID_PROFESSIONAL_DETAILS','Negative years of experience');
@@ -73,11 +80,11 @@ const make=must(await captain.from('v31_vehicle_makes').select('id').eq('slug','
 const model=must(await captain.from('v31_vehicle_models').select('id').eq('make_id',make.id).eq('slug','corolla').single(),'Corolla catalog entry');
 mustFail(await captain.rpc('v31_save_captain_vehicle_intent',{
  p_vehicle_type:'private_car',p_make_id:make.id,p_model_id:-1,p_year:2018,
- p_color_code:'white',p_color_other:null,p_plate:`STG-${tag}`
+ p_color_code:'white',p_color_other:null,p_plate:qaPlate
 }),'INVALID_VEHICLE_DETAILS','Model outside selected manufacturer');
 assert.equal(must(await captain.rpc('v31_save_captain_vehicle_intent',{
  p_vehicle_type:'private_car',p_make_id:make.id,p_model_id:model.id,p_year:2018,
- p_color_code:'white',p_color_other:null,p_plate:`STG-${tag}`
+ p_color_code:'white',p_color_other:null,p_plate:qaPlate
 }),'Save required vehicle details'),'draft');
 
 mustFail(await captain.rpc('v31_submit_captain_application'),'CAPTAIN_DOCUMENTS_INCOMPLETE',
@@ -141,7 +148,7 @@ assert.equal(application.data.vehicle_make_id,make.id);
 assert.equal(application.data.vehicle_model_id,model.id);
 assert.equal(application.data.manufacture_year,2018);
 assert.equal(application.data.vehicle_color_code,'white');
-assert.equal(application.data.intended_plate,`STG-${tag}`);
+assert.equal(application.data.intended_plate,qaPlate);
 const vehicle=must(await captain.from('v31_vehicles')
  .select('id,status,vehicle_type,model,plate_number,manufacture_year,color_code,seats,enabled_categories')
  .eq('captain_id',captainUser.id).eq('id',application.data.approved_vehicle_id).single(),'Activated vehicle');
