@@ -50,6 +50,10 @@ function messageFor(error:unknown,t:(ar:string,en:string)=>string){
   FILE_READ_FAILED:['الموبايل ما قدرش يقرأ الملف. افتحه من الملفات أو الصور وحاول تاني.','The device could not read the file. Choose it again from Files or Photos.'],
   APPLICATION_LOCKED:['الطلب في حالة لا تسمح بالرفع. راجع حالته.','The application is not editable. Review its status.']
  };
+ if(/row.level security|permission denied|\b403\b|AccessDenied|not authorized/i.test(message))
+  return t('التخزين رفض العملية. تأكد إن طلب الكابتن مسودة وإنك داخل بنفس حساب Google، ثم جرّب تاني.','Storage denied the operation. Check that your Captain application is a draft and you are signed into the same Google account, then retry.');
+ if(/failed to fetch|networkerror|network request failed|timeout/i.test(message))
+  return t('الاتصال اتقطع أثناء الحفظ. راجع الإنترنت وجرب تاني.','The connection was interrupted. Check your internet connection and retry.');
  const code=Object.keys(translations).find(key=>message.includes(key));
  return code?t(...translations[code]):message;
 }
@@ -547,7 +551,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
        ?(uploadStage==='reading'?t('بنقرأ الملف… ','Reading file… '):uploadStage==='uploading'?t('بنرفع الملف… ','Uploading file… '):uploadStage==='registering'?t('بنسجّل المستند… ','Registering document… '):t('بنتأكد من الحفظ… ','Verifying saved document… '))+uploadingFileName
        :saved?t('يوجد ملف محفوظ','A file is saved'):t('اضغط لاختيار ملف','Tap to select a file')}
       </span>
-      <input className="c-file-native" type="file" aria-label={t(ar,label)}
+      <input id={'captain-document-'+kind} className="c-file-native" type="file" aria-label={t(ar,label)}
        accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
        disabled={!editable||busy} onChange={event=>{
         const file=event.currentTarget.files?.[0];
@@ -556,7 +560,13 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
         event.currentTarget.value='';
        }}/>
      </label>
-     {uploadError&&uploadErrorKind===kind&&uploadingKind===null&&<p className="c-field-error" role="alert">{uploadError}</p>}
+     {uploadError&&uploadErrorKind===kind&&uploadingKind===null&&<div className="c-document-upload-error">
+      <p className="c-field-error" role="alert">{uploadError}</p>
+      {editable&&<button type="button" onClick={()=>{
+       setUploadError('');
+       document.getElementById('captain-document-'+kind)?.click();
+      }}>{t('اختيار الملف والمحاولة تاني','Choose file and retry')}</button>}
+     </div>}
     </div>;
    })}
    <p role="status">{documentProgress}/4 {t('مستندات مطلوبة مكتملة','required documents complete')}</p>
