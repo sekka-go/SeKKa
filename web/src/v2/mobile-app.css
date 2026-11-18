@@ -560,3 +560,22 @@ html[data-theme="dark"] .sekka-mobile{
 .sekka-mobile .sekka-search-shortcuts__recent{display:flex;flex-direction:column;gap:6px}
 .sekka-mobile .sekka-search-shortcuts__recent>span{color:var(--muted);font-weight:800}
 .sekka-mobile .sekka-search-shortcuts__recent button{justify-content:flex-start;text-align:start}
+
+/* Published-route comparisons: real database values only, never demo prices. */
+.sekka-mobile .d-live-search .sekka-live-sort{
+ display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+ gap:9px;margin:10px 0 16px;font-size:14px;font-weight:800;
+}
+.sekka-mobile .d-live-search .sekka-live-sort select{
+ flex:1 1 170px;max-width:100%;min-width:0;min-height:44px;
+ padding:8px 11px;border:1px solid var(--line);border-radius:11px;
+ background:var(--card);color:var(--ink);font:inherit;
+}
+.sekka-mobile .d-live-search .sekka-live-stops{font-weight:900;overflow-wrap:anywhere}
+.sekka-mobile .d-live-search .sekka-live-schedule{
+ line-height:1.5;margin-block:9px;
+ color:var(--phase-text);overflow-wrap:anywhere;
+}
+.sekka-mobile .d-live-search .sekka-live-meta{color:var(--phase-muted)}
+.sekka-mobile .d-live-search .sekka-live-price{font-weight:800}
+.sekka-mobile .d-live-search .sekka-live-price strong{font-size:1.1em;color:var(--phase-text)}
