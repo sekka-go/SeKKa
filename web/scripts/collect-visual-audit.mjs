@@ -122,16 +122,23 @@ async function visit(page,path,action){
  await page.goto(base+path,{waitUntil:'domcontentloaded',timeout:30000});
  if(new URL(page.url()).origin!==base)throw Error('CLOUDFLARE_PREVIEW_REDIRECTED: refusing to capture a different origin');
  await page.locator('body').waitFor({state:'visible',timeout:10000});
- // This audit compares the 73 underlying screens, not the 1.6s launch cover.
- // Hide only the static launch overlay within this disposable screenshot page;
- // real-app launch behavior remains tested separately in Playwright.
- await page.addStyleTag({content:'.sekka-launch{display:none !important}'});
- // The approved dev gallery is now code-split. DOMContentLoaded may precede
- // its JS chunk, so never screenshot the Suspense loading placeholder.
+ // Require real application/gallery content, never screenshot the Suspense
+ // placeholder. The Cloudflare preview has a strict style-src 'self' CSP.
  if(path.startsWith('/dev/screens')){
-  // The React Suspense fallback can occupy #root while the gallery
-  // chunk downloads. Screenshot only after real approved content mounts.
   await page.locator('main').first().waitFor({state:'visible',timeout:20000});
+ }else{
+  await page.locator('.sekka-mobile').first().waitFor({state:'visible',timeout:20000});
+  // Only suppress the 1.6-second launch overlay in this disposable evidence
+  // page. Direct CSSOM property assignment is CSP-safe; addStyleTag() is NOT,
+  // and previously caused every single visual capture to fail under CSP.
+  await page.evaluate(()=>{
+   const splash=document.querySelector('.sekka-launch');
+   if(splash instanceof HTMLElement){
+    splash.style.display='none';
+    if(getComputedStyle(splash).display!=='none')
+     throw Error('SCREENSHOT_SPLASH_COULD_NOT_BE_HIDDEN');
+   }
+  });
  }
  if(action==='welcome'){
   const b=page.getByRole('button',{name:/ابدأ الآن|Get started/i});
