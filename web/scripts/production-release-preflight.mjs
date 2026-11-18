@@ -11,7 +11,13 @@ export const PRODUCTION_REF='uorxfakceqnhxqnaawdy';
 export const STAGING_REF='zgcvumykzivsvnlflbyp';
 
 export function releaseTarget(env){
- if(env.CF_PAGES_BRANCH!=='main')return 'skip-preview';
+ // The live Pages project uses its Production Supabase config for BOTH
+ // preview and main builds. Probe those credentials read-only BEFORE merge
+ // to main. Staging is a different Pages project and must always be skipped.
+ if(!env.CF_PAGES_URL){
+  if(env.CF_PAGES_BRANCH==='main')throw Error('PRODUCTION_GATE_CANNOT_VERIFY_PAGES_URL');
+  return 'skip-local';
+ }
  let site;
  try{site=new URL(env.CF_PAGES_URL).hostname;}catch{
   throw Error('PRODUCTION_GATE_CANNOT_VERIFY_PAGES_URL');
