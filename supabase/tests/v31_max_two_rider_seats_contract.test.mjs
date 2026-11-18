@@ -28,7 +28,9 @@ test('all production client reservation paths impose the same cap',()=>{
  assert.match(reservations,/MAX_SEATS_PER_RIDER = 2/);
  const guards=reservations.match(/seats>MAX_SEATS_PER_RIDER/g)||[];
  assert.equal(guards.length,2,'both reservation RPC wrappers validate two-seat maximum');
- assert.match(booking,/max=\{Math\.min\(MAX_SEATS_PER_RIDER,offer\.available\)\}/);
+ assert.match(booking,/seats>=MAX_SEATS_PER_RIDER\|\|seats>=offer\.available/);
+ assert.match(booking,/setSeats\(v=>Math\.min\(MAX_SEATS_PER_RIDER,offer\.available,v\+1\)\)/);
+ assert.match(booking,/seats>MAX_SEATS_PER_RIDER\|\|seats>offer\.available/);
  assert.match(requests,/max=\{MAX_SEATS_PER_RIDER\}/);
  assert.match(requests,/seats>MAX_SEATS_PER_RIDER/);
 });
