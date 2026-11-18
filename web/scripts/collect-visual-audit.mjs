@@ -122,6 +122,10 @@ async function visit(page,path,action){
  await page.goto(base+path,{waitUntil:'domcontentloaded',timeout:30000});
  if(new URL(page.url()).origin!==base)throw Error('CLOUDFLARE_PREVIEW_REDIRECTED: refusing to capture a different origin');
  await page.locator('body').waitFor({state:'visible',timeout:10000});
+ // This audit compares the 73 underlying screens, not the 1.6s launch cover.
+ // Hide only the static launch overlay within this disposable screenshot page;
+ // real-app launch behavior remains tested separately in Playwright.
+ await page.addStyleTag({content:'.sekka-launch{display:none !important}'});
  // The approved dev gallery is now code-split. DOMContentLoaded may precede
  // its JS chunk, so never screenshot the Suspense loading placeholder.
  if(path.startsWith('/dev/screens')){
