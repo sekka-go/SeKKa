@@ -258,7 +258,7 @@ test('MOCKED rider no-match flow saves selected weekly request and reads it back
  await panel.getByRole('button',{name:'Confirm and save trip request'}).click();
  await expect(panel.getByRole('status').filter({hasText:'already open'})).toBeVisible();
  expect(inserts).toBe(1);
- await expect(panel.getByText(/weekly/)).toBeVisible();
+ await expect(panel.locator('ul li').first()).toContainText('Weekly');
 });
 
 // Simulated PostgREST persistence, not a Staging user-session test.
