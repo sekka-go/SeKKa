@@ -3,6 +3,7 @@ import {client} from './api';
 import {enrollCaptain} from './captainEnrollment';
 import LiveVehicles from './LiveVehicles';
 import EgyptianPlateInput from './EgyptianPlateInput';
+import {parseEgyptianPlate} from './plateSegments';
 import {usePreferences} from './preferences';
 import {
  captainPersonalErrors,captainVehicleErrors,normalizeNumerals,canonicalEgyptianPlate
@@ -40,7 +41,7 @@ function messageFor(error:unknown,t:(ar:string,en:string)=>string){
   BACKEND_NOT_CONFIGURED:['الاتصال بالخادم غير متاح.','The backend is not configured.'],
   INVALID_PROFESSIONAL_DETAILS:['راجع الاسم ورقم الهاتف والخلفية المهنية وسنوات الخبرة.','Check your full name, Egyptian mobile number, professional background, and experience.'],
   INVALID_VEHICLE_DETAILS:['راجع بيانات المركبة واختر قيمًا صالحة من القوائم.','Check the vehicle details and choose valid catalog values.'],
-  DUPLICATE_LICENSE_PLATE:['رقم اللوحة مستخدم بالفعل.','This license plate is already registered.'],
+  DUPLICATE_LICENSE_PLATE:['رقم اللوحة ده مسجل بالفعل على حساب آخر. راجع الحروف والأرقام، ولو دي عربيتك تواصل مع الدعم لحل التعارض.','This plate is already registered to another account. Check every letter and digit. If you own the vehicle, contact support to resolve the conflict.'],
   CAPTAIN_PROFILE_INCOMPLETE:['أكمل البيانات الشخصية المطلوبة قبل الإرسال.','Complete the required personal details before submitting.'],
   CAPTAIN_VEHICLE_INCOMPLETE:['أكمل بيانات المركبة المطلوبة قبل الإرسال.','Complete the required vehicle details before submitting.'],
   CAPTAIN_DOCUMENTS_INCOMPLETE:['ارفع المستندات الأربعة المطلوبة قبل الإرسال.','Upload all four required documents before submitting.'],
@@ -211,7 +212,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
    year:{required:['اختار سنة الصنع.','Select the manufacture year.'],invalid:['اختار سنة من 1980 لحد السنة الحالية.','Choose a year from 1980 through the current year.']},
    colorCode:{required:['اختار لون العربية.','Select a vehicle color.'],invalid:['اختار لونًا من القائمة.','Choose a color from the list.']},
    colorOther:{required:['اكتب لون العربية.','Enter the vehicle color.'],invalid:['اكتب لونًا من حرفين على الأقل.','Enter a color with at least 2 characters.']},
-   plate:{required:['اكتب رقم لوحة العربية.','Enter the license plate number.'],invalid:['لوحة عادية: القاهرة 3 حروف و3 أرقام، الجيزة حرفين و4 أرقام، وباقي المحافظات 3 حروف و4 أرقام.','Standard plate: Cairo 3 letters/3 digits, Giza 2 letters/4 digits, other governorates 3 letters/4 digits.']}
+   plate:{required:['اكتب حرفين على الأقل و٣ أرقام على الأقل، بدءًا من أول خانة.','Start at the first slot and enter at least 2 letters and 3 digits.'],invalid:['اكتب حرفين و٤ أرقام، أو ٣ حروف و٣ أو ٤ أرقام، بدون خانات فاضية في النص.','Enter 2 letters and 4 digits, or 3 letters and 3/4 digits, without gaps.']}
   };
   const [ar,enMessage]=messages[field][error];
   return t(ar,enMessage);
@@ -283,7 +284,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
       saved.vehicle_color_other!==normalizedColorOther||
       saved.intended_plate!==(plate.trim()?canonicalEgyptianPlate(plate):null))throw Error('DRAFT_SAVE_NOT_VERIFIED');
    if(next)onNext(38);else setNotice(t('اتحفظت بيانات العربية، وتقدر تكمّل بعدين.','Vehicle details saved. You can continue later.'));
-  },message=>setVehicleSubmitFeedback(t('حفظ بيانات العربية فشل: ','Vehicle save failed: ')+message));
+  },message=>setVehicleSubmitFeedback(message));
  };
  const begin=()=>void run(async()=>{
   await enrollCaptain();
@@ -525,9 +526,16 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
     invalid={Boolean(visibleVehicleErrors.plate)}
     onChange={next=>{setPlate(next);setVehicleSubmitFeedback('');}}
     onTouched={()=>setShowVehicleErrors(true)}/>
-   {visibleVehicleErrors.plate&&<p id="captain-plate-error" className="c-field-error" role="alert">
-    {vehicleErrorText('plate',visibleVehicleErrors.plate)}</p>}
-   <p className="c-form-hint">{t('مثال: القاهرة أ ب ج 123، الجيزة م س 6587. الخانات منفصلة، والحفظ يتم بنفس تنسيق اللوحة المعتمد.','Examples: Cairo أ ب ج 123, Giza م س 6587. Each character has its own box; the server receives the same canonical plate.')}</p>
+   {visibleVehicleErrors.plate&&<p id="captain-plate-error" className="c-field-error" role="alert">{
+    parseEgyptianPlate(plate).letters.length<2
+     ?t('لازم تكتب حرفين على الأقل، من أول مربع.','Enter at least two letters, starting with the first box.')
+     :parseEgyptianPlate(plate).digits.length<3
+     ?t('لازم تكتب ٣ أرقام على الأقل، من أول مربع.','Enter at least three consecutive digits, starting with the first box.')
+     :parseEgyptianPlate(plate).letters.length===2&&parseEgyptianPlate(plate).digits.length===3
+     ?t('لو كتبت حرفين، لازم تكمّل ٤ أرقام.','With two letters, all four digits are required.')
+     :vehicleErrorText('plate',visibleVehicleErrors.plate)
+   }</p>}
+   <p className="c-form-hint">{t('الحروف: من ٢ إلى ٣. الأرقام: من ٣ إلى ٤. الخانات الفاضية مسموحة في الآخر فقط، مش بين الخانات.','2 or 3 letters and 3 or 4 digits. Unused slots are only allowed at the end, never between characters.')}</p>
    {vehicleSubmitFeedback&&<p className="c-vehicle-save-feedback" role="alert">{vehicleSubmitFeedback}</p>}
    {editable&&<div className="c-registration-actions">
     <button type="button" disabled={busy} onClick={()=>void saveVehicle(false)}>{t('حفظ واستكمال لاحقًا','Save for later')}</button>
