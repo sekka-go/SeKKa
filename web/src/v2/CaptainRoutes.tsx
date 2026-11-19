@@ -9,6 +9,7 @@ import type { Stop } from '../../../packages/domain/stops';
 import { usePreferences } from './preferences';
 import type { Line } from './Discovery';
 import './captain.css';
+import './captain-journey.css';
 import LiveCaptainDraft from './LiveCaptainDraft';
 import LiveCaptainRouteList from './LiveCaptainRouteList';
 export const captainRouteScreens = Array.from({length:8},(_,i)=>internalScreen(i+42));
@@ -59,12 +60,24 @@ export default function CaptainRoutes(p:{screen:number;theme:Appearance;onTheme:
  const selectedOffer=offers.find(o=>o.id===selected);
  return <div className={`phase-one-stage discovery-stage ${p.theme}`}>
  {!p.production&&<nav className="phase-review-bar"><select aria-label={t('شاشة خطوط الكابتن','Captain routes screen')} value={n} onChange={e=>go(+e.target.value)}>{captainRouteScreens.map(s=><option key={s} value={publicScreen(s)}>{publicScreen(s)} · {screenTitle(s,language)}</option>)}</select><button onClick={()=>p.onTheme(p.theme==='dark'?'light':'dark')}>{t('تبديل المظهر','Switch theme')}</button></nav>}
- <main className="phase-canvas d-canvas captain-routes-canvas">{!p.production&&<Wordmark/>}{(n!==43||!p.production)&&<h1>{screenTitle(p.screen,language)}</h1>}{!p.production&&<p>{t('معاينة محلية فقط — لا يتم نشر عروض حقيقية.','Local preview only — no real offers are published.')}</p>}{message&&<p role="status">{message}</p>}
+ <main className="phase-canvas d-canvas captain-routes-canvas">{!p.production&&<Wordmark/>}{!p.production&&n!==43&&<h1>{screenTitle(p.screen,language)}</h1>}{!p.production&&<p>{t('معاينة محلية فقط — لا يتم نشر عروض حقيقية.','Local preview only — no real offers are published.')}</p>}{message&&<p role="status">{message}</p>}
  {!demo?(p.production?<>
- {n===42&&<><LiveCaptainRouteList/><button type="button" className="d-primary" onClick={()=>go(43)}>{t('إنشاء خط جديد','Create a new route')}</button></>}
- {n===43&&<><LiveCaptainDraft/><button type="button" className="d-outline" onClick={()=>go(42)}>{t('العودة لخطوطي','Back to my routes')}</button></>}
- {n===49&&<><LiveCaptainRouteList/><LiveBookings mode="captain"/></>}
- {[44,45,46,47,48].includes(n)&&<section className="d-box"><p>{t('بيانات المسار والمواعيد والمقاعد والنشر متاحة في نموذج المسودة الحقيقي. هنحافظ على الشاشات المعتمدة لحد ربط كل خطوة.','Route, schedule, seats and publishing are managed in the real draft form while these approved steps await integration.')}</p><button type="button" className="d-primary" onClick={()=>go(43)}>{t('إكمال المسودة الحقيقية','Continue real draft')}</button></section>}
+ {n===42&&<>
+   <section className="cj-hero"><small>{t('لوحة قيادة الكابتن','Captain workspace')}</small>
+    <h2>{t('رحلتك الجاية تبدأ من هنا','Your next journey starts here')}</h2>
+    <p>{t('أنشئ خطك، راجع حجوزاتك، وتابع حالة النشر من مكان واحد.','Create your route, review reservations and manage publication in one place.')}</p>
+    <button type="button" onClick={()=>go(43)}>{t('＋ إنشاء رحلة جديدة','＋ Create a new route')}</button>
+   </section>
+   <div className="cj-dashboard-actions"><button type="button" onClick={()=>go(49)}>{t('♧ عرض الحجوزات','♧ View bookings')}</button><button type="button" onClick={()=>go(44)}>{t('◷ إدارة الرحلات','◷ Manage routes')}</button></div>
+   <LiveCaptainRouteList/></>}
+ {n===43&&<><LiveCaptainDraft/><button type="button" className="cj-back" onClick={()=>go(42)}>{t('رجوع إلى رحلاتي','Back to my routes')}</button></>}
+ {n===49&&<><h1>{t('الحجوزات والرحلات','Bookings & routes')}</h1><LiveBookings mode="captain"/><LiveCaptainRouteList/></>}
+ {[44,45,46,47,48].includes(n)&&<><h1>{t('إدارة خطوط الكابتن','Captain route management')}</h1>
+   <p className="cj-subtitle">{t('اختر خطًا لمراجعة تفاصيله ومقاعده أو نشر مسودته بعد اعتمادها.','Select a route to review its details, seating or publish an approved draft.')}</p>
+   <LiveCaptainRouteList/>
+   {(n===47||n===48)&&<LiveBookings mode="captain"/>}
+   <button className="cj-back" type="button" onClick={()=>go(43)}>{t('إنشاء خط جديد','Create another route')}</button>
+  </>}
  </>:<><LiveVehicles/><LiveCaptainRouteList/><LiveBookings mode="captain"/><LiveTripRequests mode="captain"/><LiveCaptainDraft/></>):<>
  {n===42&&<><button className="d-primary" onClick={()=>go(43)}>{t('إنشاء خط جديد','Create route')}</button>{offers.length===0&&<p>{t('لا توجد عروض منشورة في هذه المعاينة.','No offers published in this preview.')}</p>}{offers.map(o=><section className="d-box" key={o.id}><h2>{o.origin} ← {o.destination}</h2><p>{o.category} · {o.amount} EGP · {o.available}</p><button onClick={()=>{setSelected(o.id);go(49);}}>{t('إدارة العرض','Manage offer')}</button></section>)}</>}
  {n===43&&<section className="d-box"><label>{t('وصف الخط','Route description')}<input value={title} onChange={e=>change('title',e.target.value)} maxLength={120}/></label><p>{t('أكمل المسار والمواعيد والشروط قبل النشر.','Complete the stops, schedule and offer terms before publishing.')}</p></section>}
