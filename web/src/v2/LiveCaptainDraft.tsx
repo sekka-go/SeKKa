@@ -1,7 +1,7 @@
-import {useEffect,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import {client} from './api';
 import GeoPlaceInput from './GeoPlaceInput';
-import {inLaunchRegion} from './geoPlace';
+import {inLaunchRegion,mapPlacesFromPhoton,placeMatchesArea} from './geoPlace';
 import type {PlaceChoice} from './geoPlace';
 import {straightLineKm} from './nearbyRoutes';
 import type {GeoPoint} from './nearbyRoutes';
@@ -14,13 +14,14 @@ type Vehicle={id:string;model:string;plate_number:string;enabled_categories:stri
 const categorySeats:Record<Category,number>={PRIME:3,SAVER:4,SPACE:9,MAX:13};
 
 /** Authenticated draft creation only. Publishing requires a separate audited server operation. */
-export default function LiveCaptainDraft(){
+export default function LiveCaptainDraft({onSaved}:{onSaved?:(id:string)=>void}={}){
  const {language}=usePreferences(),en=language==='en';
  const t=(ar:string,english:string)=>en?english:ar;
  const [uid,setUid]=useState<string|null>(null);
  const [areas,setAreas]=useState<Area[]>([]);
  const [vehicles,setVehicles]=useState<Vehicle[]>([]);
  const [areaId,setAreaId]=useState('');
+ const activeAreaId=useRef('');
  const [placeLabel,setPlaceLabel]=useState('');
  const [placeChoice,setPlaceChoice]=useState<PlaceChoice|null>(null);
  const [stopPoint,setStopPoint]=useState<GeoPoint|null>(null);
@@ -86,24 +87,39 @@ export default function LiveCaptainDraft(){
  },[vehicleId,eligibleCategories.join(':')]);
  const useMyStopPosition=()=>{
   setError('');
+  if(!selectedArea){setError(t('اختار المنطقة الأول علشان نتحقق من مكانك.','Choose an area before locating your stop.'));return;}
+  const checkedArea=selectedArea;
   if(!window.isSecureContext||!navigator.geolocation){
    setError(t('الموقع محتاج إذن GPS واتصال آمن.','Your location requires GPS permission and a secure connection.'));return;
   }
   setLocatingStop(true);
   navigator.geolocation.getCurrentPosition(
-   position=>{
-    setLocatingStop(false);
+   position=>{void(async()=>{
     const point={latitude:position.coords.latitude,longitude:position.coords.longitude};
-    if(position.coords.accuracy>250||!inLaunchRegion(point)){
-     setError(t('مش قادرين نحدد مكان دقيق داخل القاهرة والجيزة. جرّب تاني أو ابحث عن الموقع بالاسم.',
-      'We could not locate an accurate Cairo/Giza stop. Retry or search for the place by name.'));return;
+    if(position.coords.accuracy>100||!inLaunchRegion(point)){
+     setLocatingStop(false);
+     setError(t('دقة GPS مش كفاية أو الموقع خارج القاهرة والجيزة. فعّل الموقع الدقيق، أو ابحث عن مكان على الخريطة.',
+      'GPS is not accurate enough or outside Cairo/Giza. Enable precise GPS or use map search.'));return;
     }
-    setStopPoint(point);
-    setShowMapPreview(false);
-    setPlaceChoice(null);
-    setPlaceLabel((en?'Pickup point — ':'نقطة ركوب — ')+(en?selectedArea?.name_en||'My location':selectedArea?.name_ar||'موقعي'));
-   },
-   ()=>{setLocatingStop(false);setError(t('GPS مش متاح. ابحث عن نقطة الوقوف بالاسم على الخريطة.','GPS is unavailable. Search for the stop on the map.'));},
+    try{
+     const url=new URL('https://photon.komoot.io/reverse');
+     url.searchParams.set('lat',String(point.latitude));url.searchParams.set('lon',String(point.longitude));
+     url.searchParams.set('limit','10');
+     const response=await fetch(url.toString(),{headers:{Accept:'application/json'},signal:AbortSignal.timeout(9000)});
+     if(!response.ok)throw Error('REVERSE_UNAVAILABLE');
+     const match=mapPlacesFromPhoton(await response.json()).find(place=>placeMatchesArea(place,checkedArea));
+     if(activeAreaId.current!==String(checkedArea.id))return;
+     if(!match){setError(t('GPS حدد مكانك لكن بيانات الخريطة ما أكدتش إنه في '+checkedArea.name_ar+'. اختار شارع أو معلم من بحث المنطقة.',
+       'GPS located you but the map could not verify '+checkedArea.name_en+'. Pick a street or landmark in that area.'));return;}
+     const verified={...match,latitude:point.latitude,longitude:point.longitude};
+     setStopPoint(point);setPlaceChoice({kind:'map',place:verified});
+     setPlaceLabel(t('موقعي — ','My location — ')+match.name);setShowMapPreview(false);
+    }catch{if(activeAreaId.current===String(checkedArea.id))setError(t('تعذّر تأكيد المنطقة من الخريطة. جرّب البحث عن شارع أو معلم قريب.',
+      'The map could not verify your area. Search for a nearby street or landmark.'));}
+    finally{setLocatingStop(false);}
+   })();},
+   ()=>{setLocatingStop(false);setError(t('تعذّر الوصول للموقع. اسمح بالموقع الدقيق أو ابحث على الخريطة.',
+    'Precise location access failed. Allow GPS or search the map.'));},
    {enableHighAccuracy:true,timeout:12000,maximumAge:0}
   );
  };
@@ -112,6 +128,9 @@ export default function LiveCaptainDraft(){
   const name=placeChoice?.kind==='map'?placeChoice.place.name.trim():placeLabel.trim();
   const point=placeChoice?.kind==='map'?placeChoice.place:stopPoint;
   if(!areaId||!selectedArea){setError(t('اختار منطقة الخدمة أولًا.','Choose the service area first.'));return;}
+  if(placeChoice?.kind==='map'&&!placeMatchesArea(placeChoice.place,selectedArea)){
+   setError(t('المكان ده مش متحقق داخل المنطقة المختارة؛ اختار نتيجة من بحث المنطقة.','This location is not verified inside your selected area.'));return;
+  }
   if(!point||!inLaunchRegion(point)||name.length<3||name.length>100){
    setError(t('حدد نقطة الوقوف من نتائج بحث الخريطة أو GPS. الكتابة وحدها مش كفاية.',
     'Choose a stop from map results or GPS. Typing alone is not enough.'));return;
@@ -190,6 +209,8 @@ export default function LiveCaptainDraft(){
       :t('المسودة اتحفظت، لكن من غير إحداثيات، الخط مش هيظهر في نتائج GPS القريبة.',
        'Draft saved without GPS coordinates. It will not appear in nearby GPS results.'));
      setStops([]);setPlaceLabel('');setPlaceChoice(null);setStopPoint(null);setPrice('');
+     setStep(1);
+     onSaved?.(routeId);
    }catch(e){setError(e instanceof Error?e.message:String(e));}
    finally{setBusy(false);}
  };
@@ -223,19 +244,19 @@ export default function LiveCaptainDraft(){
 
   {step===1&&<fieldset className="sekka-route-step">
    <legend><span>1</span> {t('مسار الرحلة','Route stops')}</legend>
-   <p>{t('ابحث عن الشارع أو المعلم عند نقطة الركوب الفعلية. اختار النتيجة من الخريطة، مش مجرد كتابة اسم.',
-     'Search for the actual pickup street or landmark and select a map result.')}</p>
+   <p>{t('اختار منطقة الخدمة وبعدها شارع أو معلم بداخلها. البحث بيتحقق من المنطقة على OpenStreetMap قبل إضافة النقطة.',
+     'Choose a service area, then a verified street or landmark inside it using OpenStreetMap.')}</p>
    <label className="sekka-route-field">{t('منطقة الخدمة','Service area')}
     <select aria-label={t('منطقة الخدمة','Service area')} value={areaId}
-     onChange={e=>{setAreaId(e.target.value);setPlaceChoice(null);setPlaceLabel('');setStopPoint(null);setShowMapPreview(false);}}>
+     onChange={e=>{activeAreaId.current=e.target.value;setAreaId(e.target.value);setPlaceChoice(null);setPlaceLabel('');setStopPoint(null);setShowMapPreview(false);}}>
      <option value="">{t('اختار منطقة','Select an area')}</option>
      {areas.map(area=><option key={area.id} value={area.id}>{en?area.name_en:area.name_ar}</option>)}
     </select>
    </label>
    <div className="sekka-route-field">
-    <span>{t('نقطة الوقوف على الخريطة','Stop on the map')}</span>
+    <span>{stops.length===0?t('مكان الانطلاق على الخريطة','Origin on the map'):t('مكان الوجهة أو محطة الطريق','Destination or route stop')}</span>
     <GeoPlaceInput label={t('ابحث عن شارع أو مكان','Search street or landmark')} value={placeLabel}
-     choice={placeChoice} areas={[]}
+     choice={placeChoice} areas={[]} searchArea={selectedArea}
      onPick={(value,choice)=>{
       setPlaceLabel(value);setPlaceChoice(choice);
       setStopPoint(choice?.kind==='map'?choice.place:null);setShowMapPreview(false);setError('');
@@ -276,7 +297,9 @@ export default function LiveCaptainDraft(){
      <button type="button" onClick={()=>setStops(v=>v.filter((_,i)=>i!==index))}>{t('حذف','Remove')}</button>
     </div>
    </li>)}</ol>}
-   {stops.length<2&&<p className="sekka-route-guidance">{t('لازم تضيف نقطتين على الأقل: بداية الخط ونهايته.','Add at least an origin and a destination.')}</p>}
+   {stops.length<2&&<p className="sekka-route-guidance" role="status">{stops.length===0?
+    t('اختار منطقة الانطلاق، ثم حدد مكانًا واضغط «تأكيد وإضافة نقطة الوقوف».','Choose an origin area, select its location, then Add this stop.'):
+    t('تم إضافة الانطلاق. اختار منطقة وجهة مختلفة وحدد موقعها، ثم اضغط إضافة النقطة لتفعيل «التالي».','Origin added. Choose a different destination area, verify its location and add it to enable Continue.')}</p>}
    {stops.length>=2&&<p className="sekka-route-generated-title">
     {t('اسم الخط تلقائيًا:','Automatic route name:')} <strong>{title}</strong>
    </p>}
