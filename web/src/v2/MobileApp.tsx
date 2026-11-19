@@ -324,7 +324,7 @@ export default function MobileApp(){
    theme={p.theme} onTheme={p.setThemePreference} go={captainGo} onJourneyGo={captainOnboardingGo}
    onJourneyBack={()=>navigate({tab:'home'})} profile={null} signedIn={Boolean(userId)}
    rows={[]} busy={false} error="" onRefresh={()=>{}} onEnrolled={()=>setCaptain(true)}/></Suspense>;
- const signOut=async()=>{
+ const signOut=async(destination:MobileRoute={tab:'home'})=>{
   if(!client)return;
   const {error:e}=await client.auth.signOut();
   if(e){setError(t('تعذّر تسجيل الخروج. حاول تاني.','Unable to sign out. Please try again.'));return;}
@@ -334,7 +334,7 @@ export default function MobileApp(){
    sessionStorage.removeItem('sekka.pendingRole');
    sessionStorage.removeItem('sekka.postAuthPath');
   }catch{/* Sign-out still clears the Supabase session. */}
-  navigate({tab:'home'},{replace:true});
+  navigate(destination,{replace:true});
  };
  const onboardingGo=(n:number)=>{
   // The signed-out onboarding sequence is Welcome (root) -> Role -> Google.
@@ -350,7 +350,8 @@ export default function MobileApp(){
   if(n===5||n===7)n=6;
   if(n>=1&&n<=6){
    if(n===4){
-    const captainIntent=selectedRole==='captain'||tab==='captain-onboarding';
+    // Role chosen by the person wins over stale deep links.
+    const captainIntent=selectedRole==='captain';
     try{
      if(captainIntent)sessionStorage.setItem('sekka.pendingRole','captain');
      else sessionStorage.setItem('sekka.pendingRole','rider');
@@ -364,7 +365,10 @@ export default function MobileApp(){
  const selectRole=(role:string)=>{
   setSelectedRole(role);
   if(role==='rider'||role==='captain'){
-   try{sessionStorage.setItem('sekka.pendingRole',role);}catch{/* Role selection remains in memory. */}
+   try{
+    sessionStorage.setItem('sekka.pendingRole',role);
+    sessionStorage.removeItem('sekka.postAuthPath');
+   }catch{/* Role selection remains in memory. */}
   }
  };
 
@@ -414,7 +418,9 @@ export default function MobileApp(){
     ?<section className="sekka-mobile-card"><h1>{t('غير مسموح','Access restricted')}</h1>
       <p>{t('تسجيل الكابتن غير متاح من حساب راكب. سجّل الخروج واختار كابتن عند إنشاء حساب منفصل.',
         'Captain enrollment is not available from a Rider account. Sign out and select Captain with a separate account.')}</p>
-      <button type="button" onClick={()=>navigate({tab:'profile'},{replace:true})}>{t('العودة لحسابي','Back to profile')}</button></section>
+      <button type="button" onClick={()=>navigate({tab:'profile'},{replace:true})}>{t('العودة لحسابي','Back to profile')}</button>
+      <button type="button" className="sekka-action" onClick={()=>void signOut({tab:'login',view:3})}>
+       {t('تسجيل الخروج واختيار حساب كابتن منفصل','Sign out and select a separate Captain account')}</button></section>
     :userId?approvedCaptainOnboarding(captainStep):<Onboarding production screen={4} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={selectRole}/>)}
    {ready&&tab==='routes'&&(captain&&accountRole==='captain'&&captainApproved?<Suspense fallback={<p role="status">{t('بنحمّل الخطوط…','Loading routes…')}</p>}><CaptainRoutes production screen={internalScreen(captainScreen)} theme={p.theme} onTheme={p.setThemePreference} go={captainGo}/></Suspense> :<section className="sekka-mobile-card"><h1>{t('خطوط الكابتن','Captain routes')}</h1><p>{userId&&accountRole!=='captain'?t('خطوط الكابتن مخصصة لحسابات الكباتن فقط.','Captain routes are only available to Captain accounts.'):captain?t('حساب الكابتن لم يُعتمد بعد.','Captain access is not approved yet.'):t('اختار حساب كابتن من البداية لتقديم طلب الاعتماد.','Select Captain before sign-in to apply for approval.')}</p>{captain&&accountRole==='captain'&&<button className="sekka-action" onClick={()=>captain?navigate({tab:'captain-onboarding',view:40}):startCaptainJourney()}>{captain?t('متابعة حالة الطلب','View application status'):t('بدء تسجيل الكابتن','Start Captain enrollment')}</button>}</section>)}
    {ready&&tab==='bookings'&&(userId?<section className="sekka-bookings-workspace">
