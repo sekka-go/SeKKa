@@ -171,19 +171,19 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
  const visible=requests.filter(r=>mode==='captain'?r.status==='open':r.rider_id===uid);
  const active=visible.filter(r=>r.status==='open');
  const history=mode==='rider'?visible.filter(r=>r.status!=='open'):[];
- const requestList=(items:RequestRow[])=><ul>{items.map(r=><li key={r.id}>
-   <strong>{area(r.origin_area_id)} ← {area(r.destination_area_id)}</strong>
+ const requestList=(items:RequestRow[])=><ul className="sekka-request-list">{items.map(r=><li className="sekka-request-card" key={r.id}>
+   <strong className="sekka-request-card__route">{area(r.origin_area_id)} ← {area(r.destination_area_id)}</strong>
    {' · '}{r.direction==='round_trip'?t('ذهاب وعودة','Round trip'):r.direction==='return'?t('عودة فقط','Return only'):t('ذهاب فقط','Outbound only')}
    {r.outbound_time&&' · '+t('الذهاب ','Outbound ')+r.outbound_time.slice(0,5)}
    {r.return_time&&' · '+t('العودة ','Return ')+r.return_time.slice(0,5)}
    {' · '}{r.period==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')}
    {' · '}{r.seats} {t('مقاعد','seats')}
    {' · '}{r.status==='open'?t('مفتوح','Open'):r.status==='accepted'?t('مقبول','Accepted'):r.status==='cancelled'?t('ملغي','Cancelled'):r.status}
-   {mode==='rider'&&r.status==='open'&&<>
-    {!offers.some(o=>o.request_id===r.id)&&<button type="button" disabled={busy}
-     onClick={()=>startEdit(r)}>{t('تعديل الطلب','Edit request')}</button>}
-    <button type="button" disabled={busy} onClick={()=>void cancel(r.id)}>{t('إلغاء الطلب','Cancel request')}</button>
-   </>}
+   {mode==='rider'&&r.status==='open'&&<div className="sekka-request-card__actions">
+    {!offers.some(o=>o.request_id===r.id)&&<button type="button" className="sekka-request-edit" disabled={busy}
+     onClick={()=>startEdit(r)}>{t('تعديل','Edit')}</button>}
+    <button type="button" className="sekka-request-cancel" disabled={busy} onClick={()=>void cancel(r.id)}>{t('إلغاء الطلب','Cancel request')}</button>
+   </div>
    {mode==='rider'&&editing?.id===r.id&&<div className="d-box" aria-label={t('تعديل تفاصيل الطلب','Edit request details')}>
     <p>{t('عدّل المقاعد والمواعيد بدل إنشاء طلب مكرر.','Change seats and times instead of submitting a duplicate.')}</p>
     <label>{t('اتجاه الرحلة','Journey direction')}<select value={editing.direction}
