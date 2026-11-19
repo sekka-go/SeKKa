@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {File} from 'node:buffer';
+import {TextEncoder} from 'node:util';
 import {prepareCaptainDocument,MAX_CAPTAIN_DOCUMENT_BYTES} from './captainUpload.ts';
 
 test('private Captain upload uses actual verified JPEG Blob despite generic Android MIME',async()=>{
