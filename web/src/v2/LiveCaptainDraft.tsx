@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
 import {client} from './api';
-import GeoPlaceInput from './GeoPlaceInput';
+import CaptainPlacePicker from './CaptainPlacePicker';
 import {inLaunchRegion,mapPlacesFromPhoton,placeMatchesArea} from './geoPlace';
 import type {MapPlace} from './geoPlace';
 import type {PlaceChoice} from './geoPlace';
@@ -270,7 +270,7 @@ export default function LiveCaptainDraft({onSaved}:{onSaved?:(id:string)=>void}=
      <span>{t('المنطقة: ','Area: ')}<strong>{en?selectedArea.name_en:selectedArea.name_ar}</strong></span>
      <span>{t('تغيير','Change')}</span>
     </button>
-    <GeoPlaceInput label={t('ابحث عن شارع أو مكان','Search street or landmark')}
+    <CaptainPlacePicker label={t('ابحث عن شارع أو مكان','Search street or landmark')}
      value={placeLabel} choice={placeChoice} searchArea={selectedArea}
      onPick={(value,choice)=>{setPlaceLabel(value);setPlaceChoice(choice);setError('');}}
      onVerified={addVerifiedStop}/>
