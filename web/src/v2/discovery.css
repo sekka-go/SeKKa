@@ -1804,3 +1804,8 @@ html[dir="ltr"] .booking-stage .b-canvas .b-timeline > div:not(:last-child)::bef
 .sekka-captain-coordinates label {display:grid;gap:5px;min-width:0}
 .sekka-captain-coordinates input {width:100%;max-width:100%;min-height:44px}
 .sekka-captain-coordinates button {min-height:44px}
+
+/* Browser permission denial: keep actionable settings instructions legible. */
+.sekka-nearby__permission {display:grid;gap:9px;padding:12px;border:1px solid var(--d-line,#576474);border-radius:12px;min-width:0}
+.sekka-nearby__permission strong {font-size:1em}
+.sekka-nearby__permission button {justify-self:start;min-height:44px;max-width:100%;white-space:normal}
