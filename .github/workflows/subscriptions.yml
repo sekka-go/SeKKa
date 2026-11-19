@@ -89,6 +89,8 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Android Captain plate and document-picker touch regression (MOCKED)
         run: npx playwright test e2e/captain-plate-segments.spec.ts e2e/captain-document-upload-mocked.spec.ts --timeout=20000
+      - name: Approved Captain route UX and OSM stop picker (MOCKED)
+        run: npx playwright test e2e/captain-route-geolocated-mocked.spec.ts --timeout=20000
       - name: Upload Captain form failure evidence
         if: failure()
         uses: actions/upload-artifact@v4
