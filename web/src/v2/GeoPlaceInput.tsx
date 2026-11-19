@@ -33,7 +33,7 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
    url.searchParams.set('q',q);
    url.searchParams.set('bbox','30.45,29.45,31.95,30.45');
    url.searchParams.set('limit','10');
-   url.searchParams.set('lang',en?'en':'ar');
+   if(en)url.searchParams.set('lang','en'); // Arabic falls back to native OSM names if not indexed.
    const response=await fetch(url.toString(),{headers:{Accept:'application/json'},signal:AbortSignal.timeout(9000)});
    if(!response.ok)throw Error('MAP_SEARCH_UNAVAILABLE');
    const places=mapPlacesFromPhoton(await response.json());
