@@ -97,7 +97,7 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  const place=entry.getByRole('combobox',{name:'Search street or landmark'});
  await place.fill('Outside street');
  await entry.getByRole('button',{name:'Find this street or place on the map'}).click();
- await expect(entry.getByText(/No verified place found inside Maadi/)).toBeVisible();
+ await expect(entry.getByText(/No verified location in Maadi/)).toBeVisible();
  await expect(entry.getByRole('button',{name:'Add this stop'})).toBeDisabled();
  await place.fill('Maadi Market');
  await entry.getByRole('button',{name:'Find this street or place on the map'}).click();
