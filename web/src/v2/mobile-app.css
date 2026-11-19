@@ -600,3 +600,11 @@ html[data-theme="dark"] .sekka-mobile{
  .sekka-mobile-header>.sekka-brand-button{width:112px;max-width:calc(100% - 125px)}
  .sekka-mobile .d-header>.sekka-discovery-logo-en{width:112px}
 }
+
+/* Real app only: Onboarding and Captain screens share the official English
+ * launch mark while the 73-screen reference gallery keeps its original assets. */
+.sekka-mobile .phase-wordmark{
+ background:#000 url("/brand/sekka-wordmark-en-20261119.svg") center/contain no-repeat;
+ border-radius:10px;mix-blend-mode:normal
+}
+.sekka-mobile .phase-wordmark>.reference-art{visibility:hidden}
