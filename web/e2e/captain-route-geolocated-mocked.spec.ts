@@ -89,6 +89,11 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  const entry=page.locator('.sekka-captain-route-wizard');
  await expect(entry.getByRole('button',{name:'Add this stop'})).toBeDisabled();
  await entry.getByRole('combobox',{name:'Service area'}).selectOption('11');
+ await expect(entry.getByRole('button',{name:'Find Maadi Grand Mall'})).toBeVisible();
+ await entry.getByRole('button',{name:/Malls/}).click();
+ await expect(entry.getByRole('button',{name:'Find Maadi Grand Mall'})).toBeVisible();
+ await entry.getByRole('button',{name:'Find Maadi Grand Mall'}).click();
+ await expect(entry.getByRole('button',{name:/Maadi Market/})).toBeVisible();
  const place=entry.getByRole('combobox',{name:'Search street or landmark'});
  await place.fill('Outside street');
  await entry.getByRole('button',{name:'Find this street or place on the map'}).click();
