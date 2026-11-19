@@ -141,7 +141,7 @@ test('MOCKED Android-width private document upload: denied, retry, verified pers
  const oversizedChooser=page.waitForEvent('filechooser');
  await tapVisibleButton();
  await (await oversizedChooser).setFiles(mockFile);
- await expect(page.locator('.c-document').first().getByRole('alert')).toContainText('up to 5 MB');
+ await expect(page.locator('.c-document').first().getByRole('alert')).toContainText('up to 16 MB');
  await expect(page.getByTestId('captain-upload-stage')).toContainText('FILE_READ/NA/FILE_INVALID_SIZE');
  expect(storageRequests).toBe(0);
  expect(docs).toHaveLength(0);
@@ -153,7 +153,7 @@ test('MOCKED Android-width private document upload: denied, retry, verified pers
  await (await invalidChooser).setFiles({
   name:'not-a-real-image.jpg',mimeType:'image/jpeg',buffer:Buffer.from('NOT_A_VALID_IMAGE')
  });
- await expect(page.locator('.c-document').first().getByRole('alert')).toContainText('genuine JPG, PNG, or PDF');
+ await expect(page.locator('.c-document').first().getByRole('alert')).toContainText('genuine JPG, PNG, WebP or PDF');
  await expect(page.getByTestId('captain-upload-stage')).toContainText('FILE_READ/NA/FILE_INVALID_SIGNATURE');
  expect(storageRequests).toBe(0);
  expect(docs).toHaveLength(0);
