@@ -36,7 +36,8 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
    if(!user)throw Error('AUTH_REQUIRED');
    const [areasResult,requestResult,routesResult]=await Promise.all([
     client.from('v31_service_areas').select('id,name_ar,name_en').eq('active',true),
-    client.from('v31_trip_requests').select('id,rider_id,origin_area_id,destination_area_id,outbound_time,return_time,direction,period,seats,status').order('created_at',{ascending:false}).limit(100),
+    compact&&mode==='rider'?Promise.resolve({data:[],error:null}):
+     client.from('v31_trip_requests').select('id,rider_id,origin_area_id,destination_area_id,outbound_time,return_time,direction,period,seats,status').order('created_at',{ascending:false}).limit(100),
     mode==='captain'?client.from('v31_routes').select('id,title').eq('captain_id',user.id).eq('status','published'):Promise.resolve({data:[],error:null})
    ]);
    if(areasResult.error||requestResult.error||routesResult.error)throw Error(areasResult.error?.message||requestResult.error?.message||routesResult.error?.message);
