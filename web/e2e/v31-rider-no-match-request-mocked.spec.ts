@@ -98,7 +98,7 @@ test('MOCKED Rider no-match journey saves the selected period and re-reads the o
  await expect(request.locator('input,select,textarea')).toHaveCount(0);
  await expect(result.locator('.live-trip-requests')).toHaveCount(0);
  await request.getByRole('button',{name:'Request a trip using this search'}).click();
- await expect(request.getByText('Your request and journey schedule are saved. Follow it here.')).toBeVisible();
+ await expect(request.getByText('Your request was saved using your search details. Follow it in My bookings → My trip requests.')).toBeVisible();
  expect(insertCount).toBe(1);
  expect(saved).toMatchObject({
   rider_id:userId,origin_area_id:11,destination_area_id:22,
@@ -110,7 +110,7 @@ test('MOCKED Rider no-match journey saves the selected period and re-reads the o
  const again=page.locator('.sekka-no-match-action');
  await expect(again.locator('input,select,textarea')).toHaveCount(0);
  await again.getByRole('button',{name:'Request a trip using this search'}).click();
- await expect(again.getByText('An identical trip request is already open. Follow it in the list below.')).toBeVisible();
+ await expect(again.getByText('You already have this trip request. Find it in My bookings → My trip requests.')).toBeVisible();
  expect(insertCount).toBe(1);
  // Existing requests are managed from My bookings, not duplicated under no-match.
  await page.goto('/?tab=bookings');
