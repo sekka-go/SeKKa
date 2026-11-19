@@ -435,3 +435,118 @@ html[data-theme="dark"] .captain-onboarding-canvas .c-vehicle-save-feedback{
   width:44px;min-width:44px;height:48px;
  }
 }
+
+
+/* Captain route flow: self-explanatory steps, location search instead of raw GPS
+ * numbers, automatic route title, mobile-safe actions. Production only. */
+.sekka-mobile .captain-routes-canvas .sekka-captain-route-wizard{
+ display:flex;flex-direction:column;gap:18px;overflow:visible;
+ padding:14px;min-width:0;max-width:100%;margin:12px auto 18px
+}
+.sekka-mobile .sekka-route-intro{display:grid;gap:7px;text-align:start}
+.sekka-mobile .sekka-route-intro>h2{font-size:clamp(20px,5vw,25px);line-height:1.3;margin:0}
+.sekka-mobile .sekka-route-intro>p{margin:0;font-size:14px;line-height:1.55}
+.sekka-mobile .sekka-route-intro>.sekka-route-eyebrow{
+ display:inline-flex;width:max-content;max-width:100%;padding:5px 10px;
+ border-radius:999px;background:#ffc40024;color:var(--phase-text);font-size:12px;font-weight:800
+}
+.sekka-mobile .sekka-captain-route-wizard>.sekka-route-step{
+ display:grid;gap:12px;border:1px solid var(--d-line);border-radius:16px;
+ min-inline-size:0;margin:0;padding:14px 12px 16px;
+ background:var(--phase-card);box-sizing:border-box
+}
+.sekka-mobile .sekka-route-step>legend{
+ padding:0 6px;font-weight:900;font-size:16px;line-height:1.4
+}
+.sekka-mobile .sekka-route-step>legend span{
+ display:inline-flex;align-items:center;justify-content:center;
+ width:25px;height:25px;border-radius:50%;margin-inline-end:7px;
+ background:#ffc400;color:#161b22;font-weight:900;font-size:13px
+}
+.sekka-mobile .sekka-route-step>p{margin:0;font-size:13px;line-height:1.65}
+.sekka-mobile .sekka-route-step>.sekka-route-field{
+ display:grid;gap:8px;min-width:0;margin:0;
+ font-size:14px;font-weight:800;line-height:1.4
+}
+.sekka-mobile .sekka-route-field>select,
+.sekka-mobile .sekka-route-field>input{
+ box-sizing:border-box;display:block;width:100%;max-width:100%;
+ min-height:48px;margin:0;padding:9px 12px;
+ border:1px solid var(--d-line);border-radius:12px;
+ background:var(--phase-card);color:var(--phase-text);
+ font:inherit;font-size:16px;font-weight:500
+}
+.sekka-mobile .sekka-route-step .sekka-place-lookup{
+ width:100%;min-width:0;display:grid;gap:7px
+}
+.sekka-mobile .sekka-route-step .sekka-place-lookup input{
+ width:100%;max-width:100%;min-height:50px;margin:0;
+ padding:10px 12px;border-radius:12px;font-size:16px;
+ background:var(--phase-card);color:var(--phase-text);
+ border:1px solid var(--d-line);box-sizing:border-box
+}
+.sekka-mobile .sekka-route-step .sekka-place-lookup__suggestions{
+ min-width:0;max-height:250px;overflow:auto;display:grid;gap:4px;
+ padding:7px;border-radius:12px;border:1px solid var(--d-line)
+}
+.sekka-mobile .sekka-route-step .sekka-place-lookup__suggestions>button{
+ display:flex;flex-direction:column;align-items:flex-start;
+ gap:3px;text-align:start;min-height:44px;padding:9px 10px;
+ border-radius:10px;background:var(--phase-card);color:var(--phase-text);
+ border:1px solid var(--d-line);margin:0;overflow-wrap:anywhere;white-space:normal
+}
+.sekka-mobile .sekka-route-step .sekka-place-lookup__suggestions>button small{opacity:.72}
+.sekka-mobile .sekka-route-step .sekka-place-lookup__suggestions>.sekka-place-lookup__map-search{
+ background:#ffc400;color:#171b22;border-color:#ffc400;font-weight:800
+}
+.sekka-mobile .sekka-route-stop-tools{display:grid;gap:8px;min-width:0}
+.sekka-mobile .sekka-route-stop-tools .sekka-route-secondary,
+.sekka-mobile .sekka-route-step .sekka-route-add{
+ width:100%;min-height:46px;padding:10px;border-radius:12px;margin:0;
+ border:1px solid var(--d-line);background:transparent;color:var(--phase-text);
+ font-size:14px;font-weight:800
+}
+.sekka-mobile .sekka-route-stop-tools .sekka-route-secondary:disabled,
+.sekka-mobile .sekka-route-step .sekka-route-add:disabled,
+.sekka-mobile .sekka-route-step .sekka-route-save:disabled{opacity:.55}
+.sekka-mobile .sekka-route-step .sekka-route-add{
+ background:#ffc400;color:#171b22;border-color:#ffc400
+}
+.sekka-mobile .sekka-route-map-confirm{font-size:13px;line-height:1.55;overflow-wrap:anywhere}
+.sekka-mobile .sekka-route-map-confirm a{color:inherit;text-decoration:underline;font-weight:800}
+.sekka-mobile .sekka-route-stop-list{display:grid;gap:8px;list-style:none;margin:0;padding:0}
+.sekka-mobile .sekka-route-stop-list>li{
+ display:grid;gap:9px;padding:10px;border:1px solid var(--d-line);
+ border-radius:12px;min-width:0;margin:0
+}
+.sekka-mobile .sekka-route-stop-copy{display:flex;gap:9px;align-items:center;min-width:0}
+.sekka-mobile .sekka-route-stop-copy div{display:grid;gap:2px;min-width:0;overflow-wrap:anywhere}
+.sekka-mobile .sekka-route-stop-copy small{font-size:12px;opacity:.75}
+.sekka-mobile .sekka-route-stop-order{display:flex;justify-content:center;align-items:center;flex:none;
+ width:28px;height:28px;border-radius:50%;background:#ffc400;color:#171b22;font-weight:900}
+.sekka-mobile .sekka-route-stop-list .live-route-controls{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:0
+}
+.sekka-mobile .sekka-route-stop-list .live-route-controls button{
+ min-height:42px;min-width:0;margin:0;padding:7px 3px;
+ border:1px solid var(--d-line);border-radius:9px;font-size:12px;
+ background:transparent;color:var(--phase-text)
+}
+.sekka-mobile .sekka-route-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.sekka-mobile .sekka-route-step .sekka-route-check{display:flex;align-items:center;gap:10px;font-size:13px;line-height:1.5}
+.sekka-mobile .sekka-route-step .sekka-route-check input{width:22px;height:22px;min-height:22px;flex:none}
+.sekka-mobile .sekka-route-generated-title,.sekka-mobile .sekka-route-review{
+ display:grid;gap:5px;padding:12px;border-radius:12px;
+ background:#ffc40018;border:1px solid #ffc40066;overflow-wrap:anywhere
+}
+.sekka-mobile .sekka-route-review span{font-size:13px}
+.sekka-mobile .sekka-route-step .sekka-route-save{
+ width:100%;min-height:52px;margin:0;border-radius:13px;font-weight:900;font-size:16px
+}
+.sekka-mobile .sekka-route-step .sekka-route-guidance{opacity:.82;font-size:12px;line-height:1.6}
+.sekka-mobile .sekka-route-step .sekka-route-alert{color:#a82719;line-height:1.5}
+@media(max-width:359px){
+ .sekka-mobile .captain-routes-canvas .sekka-captain-route-wizard{padding:9px;gap:14px}
+ .sekka-mobile .sekka-route-step>.sekka-route-field{font-size:13px}
+ .sekka-mobile .sekka-route-pair{grid-template-columns:minmax(0,1fr)}
+}
