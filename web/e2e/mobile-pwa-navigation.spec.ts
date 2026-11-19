@@ -63,7 +63,8 @@ for(const language of ['ar','en'] as const){
   const bounds=await drawer.boundingBox();
   expect(bounds).not.toBeNull();
   expect(bounds!.x).toBeLessThanOrEqual(1);
-  await expect(drawer.getByRole('button',{name:language==='ar'?'تسجيل / متابعة طلب الكابتن':'Captain registration / application'})).toBeVisible();
+  // Captain onboarding only starts at signed-out account-type selection, not from the guest drawer.
+   await expect(drawer.getByRole('button',{name:language==='ar'?'تسجيل / متابعة طلب الكابتن':'Captain registration / application'})).toHaveCount(0);
   await drawer.getByRole('button',{name:language==='ar'?'حسابي':'My profile'}).click();
   await expect(page).toHaveURL(/tab=profile/);
   await expect(drawer).toHaveCount(0);
