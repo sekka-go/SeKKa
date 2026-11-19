@@ -307,3 +307,14 @@ for(const language of ['ar','en'] as const){
   expect(captainWrites).toBe(0);
  });
 }
+
+test('Guest drawer has no Captain signup shortcut; role selection remains on initial onboarding',async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('language_preference','en'));
+ await page.goto('/?tab=profile');
+ await expect(page.getByRole('heading',{name:'My profile'})).toBeVisible();
+ await page.getByRole('button',{name:'Open menu'}).click();
+ const drawer=page.getByRole('dialog',{name:'Main menu'});
+ await expect(drawer.getByRole('button',{name:'Captain registration / application'})).toHaveCount(0);
+ await page.goto('/?tab=login&view=3');
+ await expect(page.getByRole('radio',{name:/Captain/})).toBeVisible();
+});
