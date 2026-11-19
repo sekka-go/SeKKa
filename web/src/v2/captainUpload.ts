@@ -57,7 +57,9 @@ async function compressPhoto(blob:Blob):Promise<Blob>{
 export async function prepareCaptainDocument(file:File):Promise<PreparedCaptainDocument>{
  if(file.size>MAX_IMAGE_INPUT_BYTES)throw Error('FILE_INVALID_SIZE');
  const array=await readBytes(file);
- if(array.byteLength<1||array.byteLength>MAX_IMAGE_INPUT_BYTES)throw Error('FILE_INVALID_SIZE');
+ if(array.byteLength<1||array.byteLength>MAX_IMAGE_INPUT_BYTES||
+    (array.byteLength>MAX_CAPTAIN_DOCUMENT_BYTES&&file.size<=MAX_CAPTAIN_DOCUMENT_BYTES))
+  throw Error('FILE_INVALID_SIZE');
  const kind=formatOf(new Uint8Array(array,0,Math.min(array.byteLength,12)));
  if(!kind)throw Error('FILE_INVALID_SIGNATURE');
  const original=new Blob([array],{type:kind==='pdf'?'application/pdf':kind==='png'?'image/png':kind==='webp'?'image/webp':'image/jpeg'});
