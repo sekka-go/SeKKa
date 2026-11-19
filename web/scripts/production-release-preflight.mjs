@@ -31,6 +31,19 @@ export function releaseTarget(env){
  throw Error('PRODUCTION_GATE_UNKNOWN_MAIN_SITE');
 }
 
+// Public read-only probes may legitimately lack SELECT grants on a private
+// table. Treat ONLY the explicit SQL privilege error as permission-limited;
+// arbitrary 401/403/404, timeouts and missing relations must FAIL CLOSED.
+export function assertTableProbe(table,error,status){
+ if(!error)return;
+ const code=String(error.code||'');
+ const message=String(error.message||'');
+ if(code==='42501'&&/permission denied/i.test(message))return;
+ if(code==='PGRST205'||code==='42P01'||/could not find the table|does not exist|schema cache/i.test(message))
+  throw Error('PRODUCTION_GATE_MISSING_TABLE: '+table);
+ throw Error('PRODUCTION_GATE_TABLE_PROBE_FAILED: '+table+' '+String(code||status||'UNKNOWN'));
+}
+
 export function validateProductionConfig(env){
  assert.equal(releaseTarget(env),'production');
  const url=env.VITE_SUPABASE_URL;
@@ -58,17 +71,13 @@ export async function runProductionPreflight(env=process.env){
   'v31_bookings','v31_trip_requests','v31_trip_offers',
   'v31_notifications','v31_service_areas','v31_captain_approval_audit'
  ];
- // We only query empty sets. RLS/grant refusal may be legitimate; missing
- // relation and network errors are not. No actual records are returned.
+ // IMPORTANT: never use HEAD here. Some PostgREST configurations return
+ // an empty HEAD response for a table missing from the schema cache, hiding
+ // PGRST205 and giving an incorrect PASS. GET with limit=0 returns zero
+ // rows, but always exposes the machine-readable API error body.
  for(const table of required){
-  const {error,status}=await client.from(table).select('*',{head:true}).limit(0);
-  if(!error)continue;
-  const info=String(error.code||'')+' '+String(error.message||'');
-  if(/PGRST205|42P01|schema cache|could not find the table|does not exist/i.test(info))
-   throw Error('PRODUCTION_GATE_MISSING_TABLE: '+table);
-  if(status===401||status===403||/42501|permission denied/i.test(info))
-   continue;
-  throw Error('PRODUCTION_GATE_TABLE_PROBE_FAILED: '+table+' '+String(error.code||status||'UNKNOWN'));
+  const {error,status}=await client.from(table).select('*').limit(0);
+  assertTableProbe(table,error,status);
  }
  // Do not claim Captain uploads work without authenticated Android evidence.
  // But reject deployments where even the public capacity API is absent.
