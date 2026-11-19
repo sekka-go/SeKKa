@@ -1784,3 +1784,23 @@ html[dir="ltr"] .booking-stage .b-canvas .b-timeline > div:not(:last-child)::bef
     gap: 12px;
   }
 }
+
+/* Consent-only GPS discovery: natural scrolling on 320px–412px mobile, RTL/LTR. */
+.sekka-nearby {display:grid;gap:12px;min-width:0;margin-block:16px}
+.sekka-nearby h2 {margin:0;font-size:clamp(17px,4.5cqw,21px)}
+.sekka-nearby p {margin:0;line-height:1.55;overflow-wrap:anywhere}
+.sekka-nearby button,.sekka-nearby select {min-height:44px;max-width:100%}
+.sekka-nearby button {border-radius:12px;padding:9px 12px;cursor:pointer}
+.sekka-nearby .sekka-nearby__locate {font-weight:700;background:#ffbf00;color:#111b28;border:0}
+.sekka-nearby__controls {display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.sekka-nearby__controls label {display:grid;gap:5px;flex:1;min-width:150px}
+.sekka-nearby__controls select {width:100%;padding:7px}
+.sekka-nearby__hint {font-size:0.86em;opacity:0.86}
+.sekka-nearby__results ul {display:grid;gap:10px;list-style:none;padding:0;margin:0}
+.sekka-nearby__results li {display:grid;gap:6px;border:1px solid var(--d-line,#576474);padding:12px;border-radius:12px;overflow-wrap:anywhere}
+.sekka-nearby__results li span {font-size:0.92em}
+.sekka-nearby__results li button {justify-self:stretch}
+.sekka-captain-coordinates {display:grid;gap:10px;margin:10px 0}
+.sekka-captain-coordinates label {display:grid;gap:5px;min-width:0}
+.sekka-captain-coordinates input {width:100%;max-width:100%;min-height:44px}
+.sekka-captain-coordinates button {min-height:44px}
