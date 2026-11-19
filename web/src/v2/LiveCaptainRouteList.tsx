@@ -44,13 +44,14 @@ export default function LiveCaptainRouteList(){
     ]);
     if(approvalError||listError)throw Error(approvalError?.message||listError?.message||'ROUTE_LOAD_FAILED');
     if(!active)return;
-    const next=(rows||[]) as RouteRow[];
+    if(!Array.isArray(rows))throw Error('ROUTES_RESPONSE_INVALID');
+    const next=rows as RouteRow[];
     setApproval(captain?.approval_status||'pending');
     setRoutes(next);
     if(next.length){
      const {data:seatRows,error:seatError}=await client.from('v31_bookings')
       .select('route_id,seats,status').in('route_id',next.map(route=>route.id)).limit(500);
-     if(active)setBookings(seatError?null:(seatRows||[]) as BookingSeat[]);
+     if(active)setBookings(seatError||!Array.isArray(seatRows)?null:seatRows as BookingSeat[]);
     }else setBookings([]);
     setError('');
    }catch(e){if(active)setError(e instanceof Error?e.message:String(e));}
@@ -64,7 +65,8 @@ export default function LiveCaptainRouteList(){
   void client.from('v31_route_stops').select('id,name,position').eq('route_id',expanded).order('position').then(({data,error})=>{
    if(!active)return;
    if(error){setStopsError(error.message);setRouteStops([]);}
-   else setRouteStops((data||[]) as RouteStop[]);
+   else if(!Array.isArray(data)){setStopsError('ROUTE_STOPS_RESPONSE_INVALID');setRouteStops([]);}
+   else setRouteStops(data as RouteStop[]);
    setStopsBusy(false);
   });
   return ()=>{active=false;};
