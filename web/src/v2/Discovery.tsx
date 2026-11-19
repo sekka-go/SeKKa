@@ -801,9 +801,11 @@ export default function Discovery(p: DiscoveryProps) {
           >
             <DiscoveryIcon name="back" />
           </button>
-          <Wordmark />
+          {p.production
+            ?<img className="sekka-discovery-logo-en" src="/brand/sekka-wordmark-en-20261119.svg" alt="seKKa"/>
+            :<Wordmark/>}
         </header>
-        <h1 className="d-title">
+        <h1 className={p.production?"sr-only":"d-title"}>
           <DiscoveryIcon name={titleIcon} />
           {heading}
         </h1>
