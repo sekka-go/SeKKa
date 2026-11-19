@@ -61,7 +61,7 @@ export default function CaptainRoutes(p:{screen:number;theme:Appearance;onTheme:
  const selectedOffer=offers.find(o=>o.id===selected);
  return <div className={`phase-one-stage discovery-stage ${p.theme}`}>
  {!p.production&&<nav className="phase-review-bar"><select aria-label={t('شاشة خطوط الكابتن','Captain routes screen')} value={n} onChange={e=>go(+e.target.value)}>{captainRouteScreens.map(s=><option key={s} value={publicScreen(s)}>{publicScreen(s)} · {screenTitle(s,language)}</option>)}</select><button onClick={()=>p.onTheme(p.theme==='dark'?'light':'dark')}>{t('تبديل المظهر','Switch theme')}</button></nav>}
- <main className="phase-canvas d-canvas captain-routes-canvas">{!p.production&&<Wordmark/>}{!p.production&&n!==43&&<h1>{screenTitle(p.screen,language)}</h1>}{!p.production&&<p>{t('معاينة محلية فقط — لا يتم نشر عروض حقيقية.','Local preview only — no real offers are published.')}</p>}{message&&<p role="status">{message}</p>}
+ <main className="phase-canvas d-canvas captain-routes-canvas">{!p.production&&<Wordmark/>}{!p.production&&<h1>{screenTitle(p.screen,language)}</h1>}{!p.production&&<p>{t('معاينة محلية فقط — لا يتم نشر عروض حقيقية.','Local preview only — no real offers are published.')}</p>}{message&&<p role="status">{message}</p>}
  {!demo?(p.production?<>
  {n===42&&<>
    <section className="cj-hero"><small>{t('لوحة قيادة الكابتن','Captain workspace')}</small>
