@@ -353,7 +353,7 @@ export default function LiveCaptainDraft(){
     <small>{t('دي مسودة فقط؛ النشر بيتم بعد المراجعة والتحقق من السيرفر.','This saves only a draft. Publication requires server-verified approval.')}</small>
    </div>}
    <button type="button" className="d-primary sekka-route-save" disabled={busy||!draftReady} onClick={()=>void save()}>
-    {busy?t('جارٍ الحفظ…','Saving…'):t('حفظ مسودة الخط','Save route draft')}
+    {busy?t('جارٍ الحفظ…','Saving…'):t('حفظ المسودة ومراجعة النشر','Save draft for publishing')}
    </button>
    {!draftReady&&<p className="sekka-route-guidance">
     {t('بعد تحديد نقطتي البداية والنهاية والعربية والمواعيد والسعر هتقدر تحفظ المسودة.',
