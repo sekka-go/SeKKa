@@ -294,7 +294,7 @@ export default function AdminDashboard(p: {
   // real backend integration; never render preview sample rows as live data.
   if(p.production&&(n===63||n===65||n===66))return <div className={`admin-stage ${p.theme}`}>
     <header className="ad-top">
-      <div className="ad-brand"><Wordmark/><span>{tr("لوحة الإدارة")}</span></div>
+      <div className="ad-brand"><span>{tr("لوحة الإدارة")}</span></div>
       <div className="ad-themes">
         {(["dark","light"] as const).map(theme=><button key={theme} type="button"
           aria-pressed={p.theme===theme} onClick={()=>p.onTheme(theme)}>
@@ -337,7 +337,7 @@ export default function AdminDashboard(p: {
     <div className={`admin-stage ${p.theme}`} >
       <header className="ad-top">
         <div className="ad-brand">
-          <Wordmark />
+          {!p.production&&<Wordmark />}
           <span>{tr("لوحة الإدارة")}</span>
         </div>
         <div className="ad-themes">
