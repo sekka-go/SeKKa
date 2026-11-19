@@ -21,6 +21,8 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
  const [point,setPoint]=useState<GeoPoint|null>(null);
  const [accuracy,setAccuracy]=useState<number|null>(null);
  const [permissionBusy,setPermissionBusy]=useState(false);
+ const [permissionDenied,setPermissionDenied]=useState(false);
+ const [deviceLocationUnavailable,setDeviceLocationUnavailable]=useState(false);
  const [loading,setLoading]=useState(false);
  const [error,setError]=useState('');
  const [candidates,setCandidates]=useState<Pick[]>([]);
@@ -28,7 +30,7 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
  const [retry,setRetry]=useState(0);
  const [opening,setOpening]=useState<string|null>(null);
  const findMe=()=>{
-  setError('');
+  setError('');setDeviceLocationUnavailable(false);
   if(!window.isSecureContext||!navigator.geolocation){
    setError(t('خدمة الموقع محتاجة HTTPS ومتصفح بيدعم GPS. تقدر تبحث يدويًا بدلها.',
     'Location requires HTTPS and a browser with GPS support. You can still search manually.'));
@@ -37,7 +39,7 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
   setPermissionBusy(true);
   navigator.geolocation.getCurrentPosition(
    result=>{
-    setPermissionBusy(false);
+    setPermissionBusy(false);setPermissionDenied(false);setDeviceLocationUnavailable(false);
     const next={latitude:result.coords.latitude,longitude:result.coords.longitude};
     if(!validCoordinates(next)||!Number.isFinite(result.coords.accuracy)){
      setError(t('الموقع غير دقيق، جرّب تاني أو اختار المنطقة يدويًا.','Location was not reliable. Try again or use manual search.'));
@@ -47,6 +49,8 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
    },
    issue=>{
     setPermissionBusy(false);
+    setPermissionDenied(issue.code===1);
+    setDeviceLocationUnavailable(issue.code===2);
     setPoint(null);setAccuracy(null);setCandidates([]);
     setError(issue.code===1
      ?t('تم رفض إذن الموقع. اسمح للموقع من إعدادات Chrome أو استخدم البحث اليدوي.',
@@ -59,6 +63,22 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
    },{enableHighAccuracy:true,timeout:12000,maximumAge:0}
   );
  };
+ // If the Rider manually unblocks the site in Chrome settings and returns,
+ // pick up the location immediately, without asking for a second tap.
+ // Only after an earlier explicit request, never on first page load.
+ useEffect(()=>{
+  if(!permissionDenied||!navigator.permissions)return;
+  let active=true;
+  const check=()=>{
+   if(document.visibilityState!=='visible')return;
+   void navigator.permissions.query({name:'geolocation'}).then(status=>{
+    if(active&&status.state==='granted'){setPermissionDenied(false);findMe();}
+   }).catch(()=>{/* Permission API unsupported: the manual retry still works. */});
+  };
+  window.addEventListener('focus',check);
+  document.addEventListener('visibilitychange',check);
+  return()=>{active=false;window.removeEventListener('focus',check);document.removeEventListener('visibilitychange',check);};
+ },[permissionDenied]);
  useEffect(()=>{
   if(!point||!client)return;
   let active=true;
@@ -113,7 +133,17 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
   <p>{t('نستخدم مكانك مرة واحدة لما تضغط الزر، ونقارن المسافة بنقط ركوب حقيقية نشرها الكباتن. موقعك مش بيتحفظ على الخادم.',
     'Only when you tap the button, we use your location to find real Captain pickup points. Your location is not saved to our server.')}</p>
   <button type="button" className="sekka-nearby__locate" disabled={permissionBusy}
-   onClick={findMe}>{permissionBusy?t('بنحدد مكانك…','Locating you…'):point?t('تحديث موقعي','Update my location'):t('📍 استخدم موقعي (GPS)','📍 Use my GPS location')}</button>
+   onClick={findMe}>{permissionBusy?t('بنحدد مكانك…','Locating you…'):point?t('تحديث موقعي','Update my location'):t('📍 تفعيل GPS واكتشاف الرحلات القريبة','📍 Enable GPS and find nearby routes')}</button>
+  {permissionDenied&&<div className="sekka-nearby__permission" role="status">
+   <strong>{t('إذن الموقع محظور في المتصفح','Location is blocked in your browser')}</strong>
+   <p>{t('Chrome مش بيسمح للموقع إنه يفتح طلب السماح تاني بعد الحظر. افتح رمز القفل أو الإعدادات جنب عنوان سِكّة، وبعدها أذونات الموقع ← سماح، وارجع هنا.',
+    'Chrome will not show the Allow popup again after you block the site. Tap the site controls next to the address, choose Permissions → Location → Allow, then return here.')}</p>
+   <p>{t('اتأكد كمان إن «الموقع» مفتوح في إعدادات الموبايل، وإن Chrome مسموح له يستخدمه.',
+    'Also turn on Location on your phone and allow location access for Chrome.')}</p>
+   <button type="button" disabled={permissionBusy} onClick={findMe}>{t('جرّب تفعيل الموقع تاني','Retry location permission')}</button>
+  </div>}
+  {deviceLocationUnavailable&&<p role="status">{t('شغّل الموقع (Location) من اختصارات الموبايل، وبعدها اضغط زر GPS تاني.',
+   'Enable Location in your phone’s Quick Settings, then try GPS again.')}</p>
   {point&&<div className="sekka-nearby__controls">
    <label>{t('أقصى مسافة لنقطة الركوب','Maximum pickup distance')}
     <select value={radius} onChange={event=>setRadius(Number(event.target.value))}>
