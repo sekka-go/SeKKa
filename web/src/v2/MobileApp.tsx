@@ -57,6 +57,7 @@ export default function MobileApp(){
  const [sessionLookupError,setSessionLookupError]=useState(false);
  const [authCheckRevision,setAuthCheckRevision]=useState(0);
  const sessionReadId=useRef(0);
+ const verifiedUserId=useRef<string|null>(null);
  const [areasError,setAreasError]=useState('');
  const [areas,setAreas]=useState<{id:number;name_ar:string;name_en:string}[]>([]);
  useEffect(()=>{const back=()=>{setRoute(readMobileRoute());setBookingId(new URL(location.href).searchParams.get('booking'));setSelectionVersion(v=>v+1);};addEventListener('popstate',back);return()=>removeEventListener('popstate',back);},[]);
@@ -126,8 +127,14 @@ export default function MobileApp(){
   async function read(supplied?:Session|null){
    const readId=++sessionReadId.current;
    if(!client){if(active)setReady(true);return;}
-   setReady(false);
-   setAdmin(false);setAdminLookupError('');setSessionLookupError(false);
+   // Android opens Files/Photos as a separate activity. On focus return,
+   // Supabase may emit SIGNED_IN/TOKEN_REFRESHED for the SAME verified user.
+   // Do not unmount their file input mid-selection. Reverify in the background,
+   // but fail closed immediately if actor changes or verification fails.
+   const sameVerifiedActor=Boolean(supplied?.user?.id&&
+    verifiedUserId.current===supplied.user.id);
+   if(!sameVerifiedActor){setReady(false);setAdmin(false);}
+   setAdminLookupError('');setSessionLookupError(false);
    try{
     const {data:sessionData,error:sessionError}=supplied===undefined
       ?await client.auth.getSession():{data:{session:supplied},error:null};
@@ -135,6 +142,7 @@ export default function MobileApp(){
     if(sessionError)throw sessionError;
     const session=sessionData.session;
     if(!session){
+     verifiedUserId.current=null;
      setUserId(null);setCaptain(false);setCaptainApproved(false);setAccountRole(null);
      setAdmin(false);setAdminLookupError('');setReady(true);return;
     }
@@ -213,6 +221,7 @@ export default function MobileApp(){
       }
     }
     if(!active||readId!==sessionReadId.current)return;
+    verifiedUserId.current=user.id;
     setUserId(user.id);setCaptain(enrolled);setAccountRole(resolvedAccountRole);
     setCaptainApproved(captainRow?.approval_status==='approved');
     // Admin landing is a navigation preference, not permission assignment.
@@ -233,6 +242,7 @@ export default function MobileApp(){
     setReady(true);
    }catch{
     if(!active||readId!==sessionReadId.current)return;
+    verifiedUserId.current=null;
     setUserId(null);setCaptain(false);setCaptainApproved(false);setAccountRole(null);setAdmin(false);
     setAdminLookupError('');setSessionLookupError(true);
     setError(t('تعذر التحقق من جلسة الدخول. افحص اتصالك وحاول تاني.','Could not verify your sign-in session. Check your connection and retry.'));
