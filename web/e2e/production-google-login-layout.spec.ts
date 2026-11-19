@@ -15,21 +15,22 @@ for(const width of [360,390]){
     await page.getByRole('button',{name:language==='ar'?'تسجيل الدخول بجوجل':'Sign in with Google'}).click();
     const root=page.locator('.phase-screen-4');
     const primary=root.locator('.phase-google-auth .phase-primary');
-    const back=root.locator('.phase-back'),logo=root.locator('.phase-logo');
+    const back=root.locator('.phase-back');
+    // By owner decision the logo appears only on the animated launch splash.
+    await expect(root.locator('.phase-logo')).toHaveCount(0);
     await expect(primary).toBeVisible();
     await expect(root.locator('.phase-google-auth .phase-title')).toBeVisible();
     // Approved onboarding is a standalone canvas, not a screen inside the
     // five-tab shell. The old test incorrectly required the nav to be visible.
     await expect(page.locator('.sekka-bottom-nav')).toBeHidden();
     await expect(page.locator('.sekka-mobile-header')).toBeHidden();
-    const boxes=await Promise.all([primary,back,logo].map(el=>el.boundingBox()));
+    const boxes=await Promise.all([primary,back].map(el=>el.boundingBox()));
     for(const box of boxes)expect(box).not.toBeNull();
-    const [action,previous,brand]=boxes as NonNullable<(typeof boxes)[number]>[];
+    const [action,previous]=boxes as NonNullable<(typeof boxes)[number]>[];
     const overlaps=(a:typeof action,b:typeof action)=>
       Math.max(0,Math.min(a.x+a.width,b.x+b.width)-Math.max(a.x,b.x))*
       Math.max(0,Math.min(a.y+a.height,b.y+b.height)-Math.max(a.y,b.y));
     expect(overlaps(action,previous),'Google CTA must not cover the Back button').toBe(0);
-    expect(overlaps(action,brand),'Google CTA must not cover the logo').toBe(0);
     expect(action.x).toBeGreaterThanOrEqual(0);
     expect(action.x+action.width).toBeLessThanOrEqual(width+1);
     expect(action.height).toBeGreaterThanOrEqual(44);
