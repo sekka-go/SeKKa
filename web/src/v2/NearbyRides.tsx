@@ -139,11 +139,13 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
   }finally{setOpening(null);}
  };
  return <section className="d-box sekka-nearby" aria-label={t('الرحلات القريبة مني','Nearby routes')}>
-  <h2>{t('رحلات قريبة مني','Routes near me')}</h2>
-  <p>{t('أول مرة اضغط تفعيل GPS ووافق على إذن المتصفح، وبعد كده هنبحث تلقائيًا لو الإذن محفوظ. موقعك مش بيتحفظ على الخادم.',
-    'Tap Enable GPS once to grant browser permission. We search automatically on later visits if permission remains granted. Your location is not stored on our server.')}</p>
-  <button type="button" className="sekka-nearby__locate" disabled={permissionBusy}
-   onClick={findMe}>{permissionBusy?t('بنحدد مكانك…','Locating you…'):point?t('تحديث موقعي','Update my location'):t('📍 تفعيل GPS واكتشاف الرحلات القريبة','📍 Enable GPS and find nearby routes')}</button>
+  <div className="sekka-nearby__heading">
+   <h2>{t('رحلات قريبة مني','Routes near me')}</h2>
+   <button type="button" className="sekka-nearby__locate" disabled={permissionBusy}
+    onClick={findMe}>{permissionBusy?t('بنحدد موقعك…','Locating…'):point?t('تحديث GPS','Update GPS'):t('📍 تفعيل الموقع','📍 Enable GPS')}</button>
+  </div>
+  {!point&&!permissionBusy&&!permissionDenied&&<p className="sekka-nearby__intro">{t('وافق على إذن الموقع لعرض أقرب نقط ركوب. مش بنحتفظ بمكانك.',
+   'Allow location to find nearby pickup points. We never store your position.')}</p>}
   {permissionDenied&&<div className="sekka-nearby__permission" role="status">
    <strong>{t('إذن الموقع محظور في المتصفح','Location is blocked in your browser')}</strong>
    <p>{t('Chrome مش بيسمح للموقع إنه يفتح طلب السماح تاني بعد الحظر. افتح رمز القفل أو الإعدادات جنب عنوان سِكّة، وبعدها أذونات الموقع ← سماح، وارجع هنا.',
@@ -154,22 +156,25 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
   </div>}
   {deviceLocationUnavailable&&<p role="status">{t('شغّل الموقع (Location) من اختصارات الموبايل، وبعدها اضغط زر GPS تاني.',
    'Enable Location in your phone’s Quick Settings, then try GPS again.')}</p>}
-  {point&&<div className="sekka-nearby__controls">
-   <label>{t('أقصى مسافة لنقطة الركوب','Maximum pickup distance')}
-    <select value={radius} onChange={event=>setRadius(Number(event.target.value))}>
-     {RADIUS_OPTIONS.map(value=><option key={value} value={value}>{value} {t('كم','km')}</option>)}
-    </select>
-   </label>
-   <button type="button" disabled={loading} onClick={()=>setRetry(v=>v+1)}>{t('تحديث الرحلات','Refresh routes')}</button>
-  </div>}
-  {point&&<p className="sekka-nearby__hint">{t('المسافة خط مستقيم تقريبية، مش وقت مشي أو مسافة طريق.',
+  {point&&<details className="sekka-nearby__filters">
+   <summary>{t('نطاق البحث','Search radius')}: {radius} {t('كم','km')} · {t('تغيير','Change')}</summary>
+   <div className="sekka-nearby__controls">
+    <label>{t('أقصى مسافة لنقطة الركوب','Maximum pickup distance')}
+     <select value={radius} onChange={event=>setRadius(Number(event.target.value))}>
+      {RADIUS_OPTIONS.map(value=><option key={value} value={value}>{value} {t('كم','km')}</option>)}
+     </select>
+    </label>
+    <button type="button" disabled={loading} onClick={()=>setRetry(v=>v+1)}>{t('تحديث الرحلات','Refresh routes')}</button>
+   </div>
+  </details>}
+  {point&&candidates.length>0&&<p className="sekka-nearby__hint">{t('المسافة خط مستقيم تقريبية، مش وقت مشي أو مسافة طريق.',
    'Distances are approximate straight-line values, not walking times or road distances.')}
    {accuracy!==null&&accuracy>250&&' · '+t('دقة GPS حوالي ','GPS accuracy about ')+Math.round(accuracy)+' '+t('متر','m')}</p>}
   {loading&&<p role="status">{t('بندور على أقرب نقط ركوب منشورة…','Finding nearby published pickup points…')}</p>}
   {error&&<div role="alert"><p>{error}</p></div>}
   {point&&!loading&&!error&&candidates.length===0&&<p role="status">{t(
-   'مفيش خطوط منشورة بنقط ركوب محددة على GPS في المسافة دي حاليًا. جرّب نطاق أكبر أو ابحث بالمنطقة.',
-   'No published routes with GPS-marked pickup points are within this distance. Try a wider radius or search by area.')}</p>}
+   'مفيش رحلات قريبة متاحة حاليًا. تقدر توسّع النطاق أو تبحث بالمنطقة.',
+   'No nearby rides are available yet. Widen the radius or search by area.')}</p>}
   {point&&!loading&&candidates.length>0&&<div className="sekka-nearby__results">
    <p>{t('مرتبة من أقرب نقطة ركوب للأبعد','Sorted by nearest eligible pickup point')}</p>
    <ul>{candidates.map(pick=><li key={pick.routeId+pick.pickupStopId+String(pick.reverse)}>
