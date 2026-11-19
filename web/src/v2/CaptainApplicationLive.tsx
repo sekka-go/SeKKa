@@ -54,6 +54,8 @@ function messageFor(error:unknown,t:(ar:string,en:string)=>string){
   DOCUMENT_NOT_REGISTERED:['ما قدرناش نتأكد من حفظ المستند. حاول تاني.','We could not verify that the document was saved. Please retry.'],
   UPLOAD_NOT_VERIFIED:['التخزين ما أكدش رفع الملف. حاول تاني.','Storage did not verify the upload. Retry.'],
   FILE_READ_FAILED:['الموبايل ما قدرش يقرأ الملف. افتحه من الملفات أو الصور وحاول تاني.','The device could not read the file. Choose it again from Files or Photos.'],
+  FILE_INVALID_SIZE:['اختار ملف أكبر من صفر ولحد 5 ميجابايت.','Choose a non-empty file up to 5 MB.'],
+  FILE_INVALID_SIGNATURE:['صيغة الملف غير مدعومة. اختار JPG أو PNG أو PDF حقيقي.','Unsupported format. Select a genuine JPG, PNG, or PDF.'],
   APPLICATION_LOCKED:['الطلب في حالة لا تسمح بالرفع. راجع حالته.','The application is not editable. Review its status.']
  };
  if(/row.level security|permission denied|\b403\b|AccessDenied|not authorized/i.test(message))
@@ -90,8 +92,16 @@ function uploadFailureMarker(stage:string,error:unknown):string {
  const item=(typeof error==='object'&&error!==null?error:{}) as {code?:unknown;statusCode?:unknown;status?:unknown};
  const rawStatus=String(item.statusCode??item.status??'');
  const status=/^[1-5][0-9]{2}$/.test(rawStatus)?rawStatus:'NA';
- const rawCode=typeof item.code==='string'?item.code:'UNKNOWN';
- const code=/^[A-Za-z0-9_]{1,40}$/.test(rawCode)?rawCode.toUpperCase():'UNKNOWN';
+ const rawCode=typeof item.code==='string'?item.code:'';
+ // Local validation failures have no network status or Supabase code.
+ // Map only a strict allowlist of exact symbolic errors, never raw
+ // exception messages that might contain filenames, URLs or identifiers.
+ const rawMessage=error instanceof Error?error.message:'';
+ const localCodes=['AUTH_REQUIRED','APPLICATION_LOCKED','FILE_READ_FAILED',
+  'FILE_INVALID_SIZE','FILE_INVALID_SIGNATURE','UPLOAD_NOT_VERIFIED',
+  'DOCUMENT_NOT_REGISTERED'];
+ const diagnosticCode=rawCode||(localCodes.includes(rawMessage)?rawMessage:'UNKNOWN');
+ const code=/^[A-Za-z0-9_]{1,40}$/.test(diagnosticCode)?diagnosticCode.toUpperCase():'UNKNOWN';
  return stage.toUpperCase()+'/'+status+'/'+code;
 }
 
@@ -369,18 +379,18 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
     const {data:{user},error:authError}=await client.auth.getUser();
     if(authError||user?.id!==uid)throw Error('AUTH_REQUIRED');
     if(file.size>5242880)
-     throw Error(t('اختار ملف أكبر من صفر ولحد 5 ميجابايت.','Choose a non-empty file up to 5 MB.'));
+     throw Error('FILE_INVALID_SIZE');
     // Android document providers often return generic MIME types. Verify
     // magic bytes and upload the exact ArrayBuffer with an explicit type.
     phase='FILE_READ';setUploadDiagnostic(phase);
     const buffer=await readCaptainUploadBuffer(file);
     if(buffer.byteLength<1||buffer.byteLength>5242880)
-     throw Error(t('اختار ملف أكبر من صفر ولحد 5 ميجابايت.','Choose a non-empty file up to 5 MB.'));
+     throw Error('FILE_INVALID_SIZE');
     const bytes=new Uint8Array(buffer,0,Math.min(8,buffer.byteLength));
     const jpeg=bytes[0]===0xff&&bytes[1]===0xd8&&bytes[2]===0xff;
     const png=bytes[0]===0x89&&bytes[1]===0x50&&bytes[2]===0x4e&&bytes[3]===0x47&&bytes[4]===0x0d&&bytes[5]===0x0a&&bytes[6]===0x1a&&bytes[7]===0x0a;
     const pdf=bytes[0]===0x25&&bytes[1]===0x50&&bytes[2]===0x44&&bytes[3]===0x46&&bytes[4]===0x2d;
-    if(!jpeg&&!png&&!pdf)throw Error(t('صيغة الملف غير مدعومة. اختار JPG أو PNG أو PDF حقيقي.','Unsupported format. Select a genuine JPG, PNG, or PDF.'));
+    if(!jpeg&&!png&&!pdf)throw Error('FILE_INVALID_SIGNATURE');
     phase='FILE_VALIDATED';setUploadDiagnostic(phase);
     const extension=pdf?'pdf':png?'png':'jpg';
     const verifiedMime=pdf?'application/pdf':png?'image/png':'image/jpeg';
