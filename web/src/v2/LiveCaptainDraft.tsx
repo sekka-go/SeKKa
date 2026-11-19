@@ -235,97 +235,53 @@ export default function LiveCaptainDraft({onSaved}:{onSaved?:(id:string)=>void}=
   <header className="sekka-route-intro">
    <p className="sekka-route-eyebrow">{t('حساب كابتن معتمد','Approved Captain')}</p>
    <h2>{t('إنشاء رحلة جديدة','Create a new trip')}</h2>
-   <p>{t('حدد البداية والوجهة من الخريطة، اختار عربيتك المعتمدة وراجع السعر. اسم الخط وعدد المقاعد بيتحددوا تلقائيًا.',
-    'Choose map stops, your approved vehicle and private vehicle price. Route name and capacity are automatic.')}</p>
+   <p>{t('منين؟ لفين؟ اختار المنطقة والمكان، والباقي بسيط.','Where from and where to? Choose an area and a place.')}</p>
   </header>
   {error&&<p role="alert" className="cj-feedback">{error}</p>}
   {message&&<p role="status" className="cj-feedback">{message}</p>}
 
   {step===1&&<fieldset className="sekka-route-step">
    <legend><span>1</span> {t('مسار الرحلة','Route stops')}</legend>
-   <p>{t('اختار منطقة الخدمة وبعدها شارع أو معلم بداخلها. البحث بيتحقق من المنطقة على OpenStreetMap قبل إضافة النقطة.',
-     'Choose a service area, then a verified street or landmark inside it using OpenStreetMap.')}</p>
-   <div className="cj-place-step-label"><span>01</span>
-    <div><strong>{t('اختار المنطقة الرئيسية','Choose the main area')}</strong>
-    <small>{t('أكتوبر، التجمع، الدقي، المعادي، وغيرها','October City, New Cairo, Dokki, Maadi and more')}</small></div>
+   <p className="cj-route-hint">{t('اختار منطقة وبعدها مكان. الموقع بيتحدد تلقائيًا لما يتأكد من الخريطة.',
+    'Choose an area, then a landmark. The location is verified automatically.')}</p>
+   <div className="cj-easy-route-top">
+    <strong>{stops.length===0?t('منين هتبدأ؟','Where from?'):stops.length===1?t('رايح فين؟','Where to?'):
+      t('محطة إضافية','Additional stop')}</strong>
+    <small>{stops.length===0?t('اختار منطقة البداية','Choose the pickup area'):
+      stops.length===1?t('اختار منطقة الوصول','Choose the destination'):
+      t('تقدر تضيف محطة تانية','Add another stop')}</small>
    </div>
-   <div className="cj-area-grid" role="group" aria-label={t('المناطق الرئيسية','Main areas')}>
-    {(showAllAreas?orderedAreas:orderedAreas.slice(0,6)).map(area=><button
-     key={area.id} type="button" aria-pressed={areaId===String(area.id)}
-     onClick={()=>chooseArea(String(area.id))}>
-     <span className="cj-area-icon" aria-hidden="true">⌖</span>
-     <span><strong>{en?area.name_en:area.name_ar}</strong>
-      <small>{area.region==='Giza'?t('الجيزة','Giza'):area.region==='Cairo'?t('القاهرة','Cairo'):''}</small>
-     </span>
-     {areaId===String(area.id)&&<span className="cj-area-check" aria-hidden="true">✓</span>}
-    </button>)}
-   </div>
-   {!showAllAreas&&orderedAreas.length>6&&<button type="button" className="cj-area-more" onClick={()=>setShowAllAreas(true)}>
-    {t('عرض باقي المناطق','See more areas')} ({orderedAreas.length-6})
-   </button>}
-   <label className="sekka-route-field cj-area-select">{t('أو اختار من قائمة المناطق','Or choose from the area list')}
-    <select aria-label={t('منطقة الخدمة','Service area')} value={areaId} onChange={e=>chooseArea(e.target.value)}>
-     <option value="">{t('اختار المنطقة الرئيسية','Choose main area')}</option>
-     {orderedAreas.map(area=><option key={area.id} value={area.id}>{en?area.name_en:area.name_ar}</option>)}
-    </select>
-   </label>
-   {selectedArea&&<div className="cj-selected-area" role="status">
-     <span aria-hidden="true">✓</span><strong>{en?selectedArea.name_en:selectedArea.name_ar}</strong>
-     <small>{t('دلوقتي اختار مكان معروف جوّاها','Now choose a well-known place inside it')}</small>
-   </div>}
-   <div className="cj-place-step-label"><span>02</span>
-    <div><strong>{t('اختار الحي أو الميدان أو المعلم','Choose a district or landmark')}</strong>
-     <small>{t('من المقترحات أو ابحث باسم أي مكان','Use a suggestion or search any place by name')}</small>
-    </div>
-   </div>
-   <div className="sekka-route-field">
-    <span>{stops.length===0?t('مكان الانطلاق على الخريطة','Origin on the map'):t('مكان الوجهة أو محطة الطريق','Destination or route stop')}</span>
-    <GeoPlaceInput label={t('ابحث عن شارع أو مكان','Search street or landmark')} value={placeLabel}
-     choice={placeChoice} areas={[]} searchArea={selectedArea} disabled={!selectedArea}
-     onPick={(value,choice)=>{
-      setPlaceLabel(value);setPlaceChoice(choice);
-      setStopPoint(choice?.kind==='map'?choice.place:null);setShowMapPreview(false);setError('');
-     }}/>
-   </div>
-   <div className="sekka-route-stop-tools">
-    <button type="button" className="sekka-route-secondary" disabled={locatingStop||!areaId} onClick={useMyStopPosition}>
-     {locatingStop?t('جارٍ تحديد الموقع…','Locating…'):t('📍 أنا واقف عند النقطة','📍 I am at this stop')}
-    </button>
-    {stopPoint&&<span className="sekka-route-map-confirm">✓ {t('تم تحديد مكان النقطة','Stop location confirmed')}</span>}
-   </div>
-   {canPreviewMap&&<section className="sekka-route-map-card" aria-label={t('معاينة الموقع على OpenStreetMap','OpenStreetMap location preview')}>
-    <div className="sekka-route-map-card__heading">
-     <div><strong>{t('مكان نقطة الوقوف','Stop location')}</strong><small>{t('خريطة OpenStreetMap · عرض تفاعلي','OpenStreetMap · interactive preview')}</small></div>
-     <button type="button" className="sekka-route-secondary" aria-expanded={showMapPreview}
-      onClick={()=>setShowMapPreview(value=>!value)}>
-      {showMapPreview?t('إخفاء الخريطة','Hide map'):t('عرض الخريطة','Show map')}
-     </button>
-    </div>
-    {showMapPreview&&<>
-     <iframe title={t('خريطة تفاعلية لموقع الوقوف','Interactive map of the stop')}
-      loading="lazy" referrerPolicy="no-referrer" className="sekka-route-map-card__frame"
-      src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapBBox}&layer=mapnik&marker=${previewLat.toFixed(6)},${previewLng.toFixed(6)}`}/>
-     <p className="sekka-route-map-card__note">{t('الخريطة للمعاينة. تحديد النقطة الفعلية بيكون من نتيجة البحث أو GPS؛ فتح المعاينة بيشارك الموقع مع OpenStreetMap.',
-      'Preview only. Select stops through search or GPS. Opening the map shares this location with OpenStreetMap.')}</p>
-    </>}
-   </section>}
-   <button type="button" className="sekka-route-add" disabled={!areaId||!stopPoint||!placeLabel.trim()||busy}
-    onClick={addStop}>{t('تأكيد وإضافة نقطة الوقوف','Add this stop')}</button>
-   {stops.length>0&&<div className="cj-added-stops-head"><strong>{t('نقط الرحلة اللي ضفتها','Added trip stops')}</strong><span>{stops.length} / 30</span></div>}
-   {stops.length>0&&<ol className="live-route-stops sekka-route-stop-list">{stops.map((stop,index)=><li key={index}>
-    <div className="sekka-route-stop-copy">
-     <span className="sekka-route-stop-order">{index+1}</span>
+   {stops.length>0&&<ol className="cj-easy-selected-stops" aria-label={t('نقط الرحلة','Trip stops')}>
+    {stops.map((stop,index)=><li key={index}>
+     <span className="cj-easy-stop-number">{index+1}</span>
      <div><strong>{stop.name}</strong><small>{en?areas.find(a=>a.id===stop.areaId)?.name_en:areas.find(a=>a.id===stop.areaId)?.name_ar}</small></div>
+     <button type="button" onClick={()=>{setStops(old=>old.filter((_,i)=>i!==index));chooseArea('');}}
+      aria-label={t('احذف ','Remove ')+stop.name}>{t('حذف','Remove')}</button>
+    </li>)}
+   </ol>}
+   {!selectedArea?<>
+    <div className="cj-easy-areas" role="group" aria-label={t('المناطق الرئيسية','Main areas')}>
+     {orderedAreas.filter(area=>stops.length!==1||area.id!==stops[0].areaId).map(area=><button type="button"
+      key={area.id} onClick={()=>chooseArea(String(area.id))}>
+      <strong>{en?area.name_en:area.name_ar}</strong><span aria-hidden="true">‹</span>
+     </button>)}
     </div>
-    <div className="live-route-controls">
-     <button type="button" disabled={index===0} onClick={()=>setStops(v=>{const next=[...v];[next[index-1],next[index]]=[next[index],next[index-1]];return next;})}>{t('↑ أعلى','↑ Up')}</button>
-     <button type="button" disabled={index===stops.length-1} onClick={()=>setStops(v=>{const next=[...v];[next[index+1],next[index]]=[next[index],next[index+1]];return next;})}>{t('↓ أسفل','↓ Down')}</button>
-     <button type="button" onClick={()=>setStops(v=>v.filter((_,i)=>i!==index))}>{t('حذف','Remove')}</button>
-    </div>
-   </li>)}</ol>}
-   {stops.length<2&&<p className="sekka-route-guidance" role="status">{stops.length===0?
-    t('اختار منطقة الانطلاق، ثم حدد مكانًا واضغط «تأكيد وإضافة نقطة الوقوف».','Choose an origin area, select its location, then Add this stop.'):
-    t('تم إضافة الانطلاق. اختار منطقة وجهة مختلفة وحدد موقعها، ثم اضغط إضافة النقطة لتفعيل «التالي».','Origin added. Choose a different destination area, verify its location and add it to enable Continue.')}</p>}
+   </>:<>
+    <button type="button" className="cj-easy-change" onClick={()=>chooseArea('')}>
+     <span>{t('المنطقة: ','Area: ')}<strong>{en?selectedArea.name_en:selectedArea.name_ar}</strong></span>
+     <span>{t('تغيير','Change')}</span>
+    </button>
+    <GeoPlaceInput label={t('ابحث عن شارع أو مكان','Search street or landmark')}
+     value={placeLabel} choice={placeChoice} searchArea={selectedArea}
+     onPick={(value,choice)=>{setPlaceLabel(value);setPlaceChoice(choice);setError('');}}
+     onVerified={addVerifiedStop}/>
+    <button type="button" className="cj-easy-gps" disabled={locatingStop}
+     onClick={useMyStopPosition}>{locatingStop?t('بنحدد موقعك…','Locating…'):
+      t('⌖ استخدم موقعي الحالي','⌖ Use my current location')}</button>
+   </>}
+   {stops.length<2&&<p className="cj-easy-help" role="status">{stops.length===0?
+    t('اختار منطقة ثم مكان، وهتتضاف النقطة تلقائيًا.','Select an area and a place; the stop is added automatically.'):
+    t('✓ نقطة البداية اتضافت. اختار الوجهة.','✓ Pickup added. Choose destination.')}</p>}
    {stops.length>=2&&<p className="sekka-route-generated-title">
     {t('اسم الخط تلقائيًا:','Automatic route name:')} <strong>{title}</strong>
    </p>}
