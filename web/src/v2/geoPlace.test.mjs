@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mapPlacesFromPhoton,serviceMatches,stopNearPoint,geoRequestAvailable,inLaunchRegion} from './geoPlace.ts';
+import {mapPlacesFromPhoton,serviceMatches,placeMatchesArea,stopNearPoint,geoRequestAvailable,inLaunchRegion} from './geoPlace.ts';
 
 const areas=[
  {id:1,name_ar:'المعادي',name_en:'Maadi'},
@@ -26,6 +26,19 @@ test('Photon place parsing accepts Cairo/Giza Egypt coordinates, rejects out-of-
  assert.equal(result[0]?.latitude,30.0444);
  assert.ok(inLaunchRegion(result[0]));
  assert.equal(mapPlacesFromPhoton({features:[]}).length,0);
+});
+test('map stop locality must belong to the explicitly chosen seKKa service area',()=>{
+ const maadi={...mapPlacesFromPhoton({features:[{
+  geometry:{coordinates:[31.25,29.96]},
+  properties:{name:'Maadi Market',district:'Maadi',city:'Cairo',countrycode:'EG',osm_id:101}
+ }]})[0]};
+ assert.equal(placeMatchesArea(maadi,areas[0]),true);
+ assert.equal(placeMatchesArea(maadi,areas[1]),false);
+ const ambiguous={...maadi,locality:['Cairo'],detail:'Cairo'};
+ assert.equal(placeMatchesArea(ambiguous,areas[0]),false);
+ const arabic={...maadi,locality:['مدينة نصر']};
+ assert.equal(placeMatchesArea(arabic,areas[1]),true);
+ assert.equal(placeMatchesArea(arabic,areas[0]),false);
 });
 test('spatial matching uses real stop coordinates with a 3km cap',()=>{
  const stop={latitude:30.048,longitude:31.2357},near={latitude:30.045,longitude:31.2357},
