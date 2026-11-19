@@ -33,7 +33,10 @@ export default function GeoPlaceInput({label,value,choice,onPick,onVerified,disa
   requestSerial.current++;
   setQuery('');setFound([]);setError('');setBusy(false);setShowAll(false);
  },[searchArea?.id]);
- const suggestions=searchArea?popularPlacesForArea(searchArea.name_en):[];
+ const suggestions=searchArea?[...popularPlacesForArea(searchArea.name_en)].sort((a,b)=>{
+  const priority:Record<PopularPlace['type'],number>={square:1,mall:2,university:3,gathering:4,neighborhood:5,mosque:6};
+  return priority[a.type]-priority[b.type];
+ }):[];
  const visible=showAll?suggestions:suggestions.slice(0,5);
  const choose=(place:MapPlace)=>{
   requestSerial.current++;
