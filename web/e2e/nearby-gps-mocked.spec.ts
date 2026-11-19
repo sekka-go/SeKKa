@@ -37,9 +37,9 @@ test('GPS opt-in finds nearby published pickup, shows straight-line km and opens
  });
  await page.goto('/?tab=home');
  const nearby=page.getByRole('region',{name:'Routes near me'});
- await expect(nearby.getByRole('button',{name:/Use my GPS location/})).toBeVisible();
+ await expect(nearby.getByRole('button',{name:/Enable GPS and find nearby routes/})).toBeVisible();
  await expect(nearby.getByText('Pickup near me')).toHaveCount(0);
- await nearby.getByRole('button',{name:/Use my GPS location/}).click();
+ await nearby.getByRole('button',{name:/Enable GPS and find nearby routes/}).click();
  await expect(nearby.getByText('Pickup near me')).toBeVisible();
  await expect(nearby.getByText(/km from your location/)).toContainText('0.1');
  expect(remoteCalls.some(url=>url.includes('30.04'))).toBe(false);
@@ -56,8 +56,10 @@ test('denied GPS permission offers manual search and never lists fabricated rout
  });
  await page.goto('/?tab=search&view=9');
  const nearby=page.getByRole('region',{name:'Routes near me'});
- await nearby.getByRole('button',{name:/Use my GPS location/}).click();
+ await nearby.getByRole('button',{name:/Enable GPS and find nearby routes/}).click();
  await expect(nearby.getByRole('alert')).toContainText('Location permission was denied');
+ await expect(nearby.getByText('Location is blocked in your browser')).toBeVisible();
+ await expect(nearby.getByRole('button',{name:'Retry location permission'})).toBeVisible();
  await expect(page.locator('.d-planner-places select').first()).toBeVisible();
  await expect(nearby.getByRole('button',{name:'View route details'})).toHaveCount(0);
 });
