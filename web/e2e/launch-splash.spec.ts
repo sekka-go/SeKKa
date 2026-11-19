@@ -14,6 +14,7 @@ test("fresh app open shows a smaller centered seKKa logo with a gentle pulse bef
   await expect(picture).toBeVisible();
   await expect(splash.locator("svg,.sekka-launch__map,.sekka-launch__route,.sekka-launch__wordmark")).toHaveCount(0);
   await expect(splash).not.toContainText("سكة");
+  await expect(splash.locator(".sekka-launch__loading")).toContainText("Loading");
   const box = await splash.boundingBox();
   expect(box).not.toBeNull();
   expect(box!.x).toBe(0);
@@ -81,13 +82,15 @@ for (const [width, height] of [[320, 700], [360, 800], [412, 915]] as const) {
   });
 }
 
-test("refresh restores current page without replaying splash", async ({ page }) => {
+test("refresh replays branded Loading screen while preserving current page", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/?tab=login&view=2");
   await expect(page.locator(".sekka-launch")).toBeVisible();
   await expect(page.locator(".sekka-launch")).toHaveCount(0, { timeout: 4500 });
   await page.reload();
-  await expect(page.locator(".sekka-launch")).toHaveCount(0);
+  await expect(page.locator(".sekka-launch")).toBeVisible();
+  await expect(page.locator(".sekka-launch__loading")).toContainText("Loading");
+  await expect(page.locator(".sekka-launch")).toHaveCount(0, { timeout: 4500 });
   await expect(page.locator(".phase-screen-2")).toBeVisible();
 });
 
@@ -101,18 +104,24 @@ test("Android-installed PWA uses English logo icon instead of the old yellow Ara
   expect(manifest.background_color).toBe("#000000");
   expect(manifest.theme_color).toBe("#000000");
   expect(manifest.icons.map((icon: {src:string}) => icon.src)).toEqual([
+    artwork,
     "/brand/sekka-pwa-en-20261118-192.png",
     "/brand/sekka-pwa-en-20261118-512.png"
   ]);
   for (const icon of manifest.icons) {
     const response = await request.get(icon.src);
     expect(response.ok()).toBeTruthy();
-    const bytes = await response.body();
-    expect(bytes.subarray(0,8).toString("hex")).toBe("89504e470d0a1a0a");
-    const size = Number(icon.sizes.split("x")[0]);
-    expect(bytes.readUInt32BE(16)).toBe(size);
-    expect(bytes.readUInt32BE(20)).toBe(size);
-    expect(icon.type).toBe("image/png");
+    if(icon.type==="image/svg+xml"){
+      expect(icon.sizes).toBe("any");
+      expect(await response.text()).toContain('aria-label="seKKa"');
+    }else{
+      const bytes = await response.body();
+      expect(bytes.subarray(0,8).toString("hex")).toBe("89504e470d0a1a0a");
+      const size = Number(icon.sizes.split("x")[0]);
+      expect(bytes.readUInt32BE(16)).toBe(size);
+      expect(bytes.readUInt32BE(20)).toBe(size);
+      expect(icon.type).toBe("image/png");
+    }
   }
   const index = await (await request.get("/")).text();
   expect(index).toContain(artwork);
