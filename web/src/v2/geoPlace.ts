@@ -2,8 +2,8 @@
  * Never manufacture a service-area ID from a map coordinate.
  * OSM is a discovery source; published Captain stops remain booking authority.
  */
-import {straightLineKm,validCoordinates} from './nearbyRoutes';
-import type {GeoPoint} from './nearbyRoutes';
+import {straightLineKm,validCoordinates} from './nearbyRoutes.ts';
+import type {GeoPoint} from './nearbyRoutes.ts';
 export type MapPlace=GeoPoint&{id:string;name:string;detail:string;source:'map'};
 export type ServiceArea={id:number;name_ar:string;name_en:string};
 export type PlaceChoice={kind:'service';area:ServiceArea}|{kind:'map';place:MapPlace};
