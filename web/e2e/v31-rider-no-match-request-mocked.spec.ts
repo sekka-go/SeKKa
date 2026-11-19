@@ -33,7 +33,7 @@ test('MOCKED Rider no-match journey saves the selected period and re-reads the o
   localStorage.setItem('theme_preference','light');
  },{endpoint,user});
  let saved:RequestRecord|null=null;
- let insertCount=0;
+ let insertCount=0,editCount=0,cancelCount=0;
  await page.route(endpoint+'/**',async route=>{
   const req=route.request(),url=new URL(req.url()),path=url.pathname;
   let data:unknown=[];
@@ -44,6 +44,24 @@ test('MOCKED Rider no-match journey saves the selected period and re-reads the o
   else if(path.startsWith('/rest/v1/v31_service_areas'))data=areas;
   else if(path.startsWith('/rest/v1/v31_routes'))data=[];
   else if(path.startsWith('/rest/v1/v31_trip_offers'))data=[];
+  else if(path==='/rest/v1/rpc/v31_edit_open_trip_request'){
+   const body=req.postDataJSON() as {
+    p_request:string;p_direction:string;p_outbound_time:string|null;p_return_time:string|null;p_period:string;p_seats:number
+   };
+   if(!saved||saved.id!==body.p_request||saved.status!=='open'){
+    status=400;data={message:'REQUEST_NOT_EDITABLE'};
+   }else{
+    editCount++;
+    saved={...saved,seats:body.p_seats,period:body.p_period,direction:body.p_direction,
+     outbound_time:body.p_outbound_time,return_time:body.p_return_time};
+    data=saved.id;
+   }
+  }
+  else if(path==='/rest/v1/rpc/v31_cancel_trip_request'){
+   cancelCount++;
+   if(saved)saved.status='cancelled';
+   data=null;
+  }
   else if(path.startsWith('/rest/v1/v31_trip_requests')){
    if(req.method()==='POST'){
     insertCount++;
@@ -55,7 +73,7 @@ test('MOCKED Rider no-match journey saves the selected period and re-reads the o
     const key=url.searchParams.get('request_key')?.replace(/^eq\./,'');
     data=saved?.request_key===key?saved:null;
    }else if(url.searchParams.has('origin_area_id')&&url.searchParams.has('status')){
-    data=saved?[{id:saved.id}]:[];
+    data=saved?.status==='open'?[{id:saved.id}]:[];
    }else data=saved?[saved]:[];
   }
   else if(path.startsWith('/rest/v1/v31_profiles'))data=null;
@@ -85,4 +103,28 @@ test('MOCKED Rider no-match journey saves the selected period and re-reads the o
  await expect(page).toHaveURL(/tab=search&view=11/);
  await expect(page.locator('.live-trip-requests ul li').first()).toContainText('Weekly');
  expect(insertCount).toBe(1);
+ await expect(page.getByRole('heading',{name:'Active requests (1)'})).toBeVisible();
+ // A second identical trip need, even with a different seat count, is not inserted.
+ await request.getByRole('spinbutton',{name:'Seats needed'}).first().fill('2');
+ await request.getByRole('button',{name:'Confirm and save trip request'}).click();
+ await expect(request.getByText('An identical trip request is already open. Follow it in the list below.')).toBeVisible();
+ expect(insertCount).toBe(1);
+ // Edit the same request instead of proliferating additional rows.
+ await request.getByRole('button',{name:'Edit request'}).click();
+ const editPanel=request.getByLabel('Edit request details');
+ await editPanel.getByRole('spinbutton',{name:'Seats needed'}).fill('2');
+ await editPanel.getByRole('button',{name:'Save changes'}).click();
+ await expect(request.getByText('Request updated and verified.')).toBeVisible();
+ expect(editCount).toBe(1);
+ expect(saved?.seats).toBe(2);
+ expect(insertCount).toBe(1);
+ // Cancelled records must leave the active section and remain readable as history.
+ await request.getByRole('button',{name:'Cancel request'}).click();
+ await expect(page.getByRole('heading',{name:'Active requests (0)'})).toBeVisible();
+ await expect(page.getByText('No active requests right now.')).toBeVisible();
+ const archived=request.locator('details.d-request-history');
+ await expect(archived.getByText('Previous and cancelled requests (1)')).toBeVisible();
+ await archived.locator('summary').click();
+ await expect(archived.locator('li')).toContainText('Cancelled');
+ expect(cancelCount).toBe(1);
 });
