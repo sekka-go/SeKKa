@@ -394,10 +394,10 @@ export default function MobileApp(){
     aria-expanded={menuOpen} aria-controls="sekka-side-menu" onClick={()=>setMenuOpen(true)}>
     <span aria-hidden="true">☰</span>
    </button>
-   <span className="sekka-current-section">{tab==='home'?t('الرئيسية','Home'):tab==='search'?t('البحث','Search'):
-    tab==='booking'?t('الحجز','Booking'):tab==='bookings'?t('حجوزاتي','My bookings'):
-    tab==='notifications'?t('الإشعارات','Notifications'):tab==='profile'?t('حسابي','My profile'):
-    tab==='routes'?t('خطوط الكابتن','Captain routes'):tab==='captain-onboarding'?t('ملف الكابتن','Captain application'):tab==='admin'?t('الإدارة','Admin'):t('سِكّة','seKKa')}</span>
+   <button type="button" className="sekka-brand-button" onClick={()=>navigate({tab:'home'})}
+    aria-label={t('سِكّة — العودة للرئيسية','seKKa — go to home')}>
+    <img className="sekka-wordmark-en" src="/brand/sekka-wordmark-en-20261119.svg" alt="seKKa"/>
+   </button>
    {ready&&admin&&<button type="button" className="sekka-admin-entry" aria-current={tab==='admin'?'page':undefined}
      onClick={openAdmin}>{t('لوحة الإدارة','Admin dashboard')}</button>}
   </header>
