@@ -838,6 +838,7 @@ export default function Discovery(p: DiscoveryProps) {
           <>
             <p className="d-subtitle">
               {tr("حدد نقطة الانطلاق والوجهة، وابدأ رحلتك بسهولة")}</p>
+            {p.production&&<NearbyRides onSelect={p.onLiveSelect}/>}
             <form
               className="d-planner"
               onSubmit={(e) => {
@@ -1037,7 +1038,6 @@ export default function Discovery(p: DiscoveryProps) {
               {tr("عرض النتائج")}</Action>
           </>
         )}
-        {p.production&&[8,9].includes(screen)&&<NearbyRides onSelect={p.onLiveSelect}/>}
         {screen === 8 && (
           <section className="d-box">
             <h2>{tr("أهلًا بيك في سِكّة")}</h2>
