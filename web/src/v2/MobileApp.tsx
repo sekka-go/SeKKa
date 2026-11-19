@@ -455,7 +455,9 @@ export default function MobileApp(){
    {ready&&tab==='login'&&!blockedRiderTab&&<Onboarding production screen={userId?6:!ready?4:onboardingScreen} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={selectRole}/>}
    {ready&&tab==='profile'&&(userId?<section className="sekka-mobile-card"><LiveProfile/>{ready&&admin&&<button type="button" className="sekka-action" onClick={openAdmin}>
      {t('فتح لوحة الإدارة','Open Admin dashboard')}</button>}
-   {captain&&accountRole==='captain'&&<button type="button" onClick={startCaptainJourney}>{captainApproved?t('فتح حساب الكابتن','Open Captain journey'):t('متابعة طلب الكابتن','Continue Captain application')}</button>}<button type="button" onClick={()=>void signOut()}>{t('تسجيل الخروج','Sign out')}</button></section>:<section className="sekka-mobile-card"><h1>{t('حسابي','My profile')}</h1><p>{t('سجّل بجوجل علشان تكمل بياناتك.','Sign in with Google to complete your profile.')}</p><button className="sekka-action" onClick={()=>signInFor('/?tab=login&view=6')}>{t('تسجيل الدخول بجوجل','Sign in with Google')}</button></section>)}
+   {captain&&accountRole==='captain'&&(captainApproved
+    ?<button type="button" className="sekka-action" onClick={()=>navigate({tab:'routes',view:42})}>{t('الذهاب إلى خطوطي','Open my routes')}</button>
+    :<button type="button" onClick={startCaptainJourney}>{t('متابعة طلب الكابتن','Continue Captain application')}</button>)}<button type="button" onClick={()=>void signOut()}>{t('تسجيل الخروج','Sign out')}</button></section>:<section className="sekka-mobile-card"><h1>{t('حسابي','My profile')}</h1><p>{t('سجّل بجوجل علشان تكمل بياناتك.','Sign in with Google to complete your profile.')}</p><button className="sekka-action" onClick={()=>signInFor('/?tab=login&view=6')}>{t('تسجيل الدخول بجوجل','Sign in with Google')}</button></section>)}
    {selectionError&&['search','booking'].includes(tab)&&<div role="alert" className="sekka-mobile-alert">{selectionError}<button type="button" onClick={()=>setSelectionVersion(v=>v+1)}>{t('إعادة المحاولة','Retry')}</button></div>}
    {tab==='search'&&!blockedRiderTab&&approvedDiscovery(discoveryScreen)}
    {ready&&tab==='booking'&&!blockedRiderTab&&<Suspense fallback={<p role="status">{t('بنحمّل الحجز…','Loading booking…')}</p>}><V31BookingJourney offer={bookingOffer} routeId={liveSelection?.route.id||''}
@@ -506,7 +508,7 @@ export default function MobileApp(){
      {menuLink(t('الإشعارات','Notifications'),{tab:'notifications'})}
      {menuLink(t('حسابي','My profile'),{tab:'profile'})}
      {ready&&userId&&captain&&accountRole==='captain'&&<><h2>{t('الكابتن','Captain')}</h2>
-     <button type="button" onClick={startCaptainJourney}>{t('تسجيل / متابعة طلب الكابتن','Captain registration / application')}</button></>}
+      {!captainApproved&&<button type="button" onClick={startCaptainJourney}>{t('متابعة طلب الاعتماد','Review Captain application')}</button>}</>}
      {ready&&captain&&accountRole==='captain'&&captainApproved&&menuLink(t('خطوطي','My routes'),{tab:'routes',view:42})}
      {ready&&admin&&<><h2>{t('الإدارة','Administration')}</h2>
       {menuLink(t('لوحة الإدارة','Admin dashboard'),{tab:'admin',view:62})}</>}
