@@ -180,9 +180,9 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
    {' · '}{r.seats} {t('مقاعد','seats')}
    {' · '}{r.status==='open'?t('مفتوح','Open'):r.status==='accepted'?t('مقبول','Accepted'):r.status==='cancelled'?t('ملغي','Cancelled'):r.status}
    {mode==='rider'&&r.status==='open'&&<div className="sekka-request-card__actions">
-    {!offers.some(o=>o.request_id===r.id)&&<button type="button" className="sekka-request-edit" disabled={busy}
+    {!offers.some(o=>o.request_id===r.id)&&<button type="button" className="sekka-request-edit" aria-label={t('تعديل الطلب','Edit request')} disabled={busy}
      onClick={()=>startEdit(r)}>{t('تعديل','Edit')}</button>}
-    <button type="button" className="sekka-request-cancel" disabled={busy} onClick={()=>void cancel(r.id)}>{t('إلغاء الطلب','Cancel request')}</button>
+    <button type="button" className="sekka-request-cancel" aria-label={t('إلغاء الطلب','Cancel request')} disabled={busy} onClick={()=>void cancel(r.id)}>{t('إلغاء الطلب','Cancel request')}</button>
    </div>
    {mode==='rider'&&editing?.id===r.id&&<div className="d-box" aria-label={t('تعديل تفاصيل الطلب','Edit request details')}>
     <p>{t('عدّل المقاعد والمواعيد بدل إنشاء طلب مكرر.','Change seats and times instead of submitting a duplicate.')}</p>
