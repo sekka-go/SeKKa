@@ -108,6 +108,10 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  await entry.locator('.cj-easy-results').getByRole('button',{name:/Nasr City Square/}).click();
  // Second verified stop advances straight to the real vehicle step.
  await expect(entry.getByRole('combobox',{name:'Approved vehicle'})).toBeVisible();
+ await entry.getByRole('button',{name:'Back'}).click();
+ await expect(entry.locator('.cj-easy-selected-stops>li')).toHaveCount(2);
+ await entry.getByRole('button',{name:'Continue'}).click();
+ await expect(entry.getByRole('combobox',{name:'Approved vehicle'})).toBeVisible();
  await expect(entry.getByRole('button',{name:'Add this stop'})).toHaveCount(0);
  await expect(entry.locator('iframe.sekka-route-map-card__frame')).toHaveCount(0);
  await expect(entry.getByRole('combobox',{name:'Approved vehicle'})).toBeVisible();
