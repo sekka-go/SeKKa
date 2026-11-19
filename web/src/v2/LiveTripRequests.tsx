@@ -92,7 +92,7 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
     return data?.[0]?.id as string|undefined;
    };
    if(await findExisting()){
-    setNotice(compact?t('عندك طلب مطابق مفتوح بالفعل. تابعه من حجوزاتي ← طلبات رحلاتي.','You already have this trip request. Find it in My bookings → My trip requests.'):t('عندك طلب مفتوح مطابق بالفعل. تابعه في القائمة بدل تكراره.','An identical trip request is already open. Follow it in the list below.'));
+    setNotice('REQUEST_DUPLICATE');
     return;
    }
    const {error:insertError}=await client!.from('v31_trip_requests').insert({
@@ -102,7 +102,7 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
    });
    if(insertError?.message.includes('DUPLICATE_OPEN_TRIP_REQUEST')){
     if(await findExisting()){
-     setNotice(compact?t('الطلب موجود بالفعل في حجوزاتي ← طلبات رحلاتي.','This request already exists in My bookings → My trip requests.'):t('الطلب ده مفتوح بالفعل. تابعه في القائمة بدل تكراره.','This trip is already requested. Follow it below.'));
+     setNotice('REQUEST_EXISTS');
      return;
     }
     throw insertError;
@@ -118,7 +118,7 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
      (saved.return_time?.slice(0,5)||null)!==inbound||
      saved.direction!==requestDirection||
      saved.period!==requestPeriod||saved.seats!==seats)throw Error('REQUEST_SAVE_NOT_VERIFIED');
-   setNotice(compact?t('طلبك اتحفظ بنفس بيانات البحث. تابعه من حجوزاتي ← طلبات رحلاتي.','Your request was saved using your search details. Follow it in My bookings → My trip requests.'):t('اتحفظ طلبك بكامل تفاصيل الذهاب والعودة. تقدر تتابعه هنا.','Your request and journey schedule are saved. Follow it here.'));
+   setNotice('REQUEST_SAVED');
    setKey(crypto.randomUUID());
   });
  };
@@ -152,7 +152,7 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
     (saved.outbound_time?.slice(0,5)||null)!==outbound||
     (saved.return_time?.slice(0,5)||null)!==inbound)throw Error('REQUEST_EDIT_NOT_VERIFIED');
    setEditing(null);
-   setNotice(t('تم تعديل الطلب والتحقق من حفظه.','Request updated and verified.'));
+   setNotice('REQUEST_UPDATED');
   });
  };
  const sendOffer=async(id:string)=>{
@@ -219,6 +219,13 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
      onClick={()=>void accept(o.id)}>{t('اقبل واحجز المقاعد','Accept and reserve seats')}</button>}
    </div>)}
   </li>)}</ul>;
+ const noticeText=notice==='REQUEST_DUPLICATE'
+  ?compact?t('عندك طلب مطابق مفتوح بالفعل. تابعه من حجوزاتي ← طلبات رحلاتي.','You already have this trip request. Find it in My bookings → My trip requests.'):t('عندك طلب مفتوح مطابق بالفعل. تابعه في القائمة بدل تكراره.','An identical trip request is already open. Follow it in the list below.')
+  :notice==='REQUEST_EXISTS'
+  ?compact?t('الطلب موجود بالفعل في حجوزاتي ← طلبات رحلاتي.','This request already exists in My bookings → My trip requests.'):t('الطلب ده مفتوح بالفعل. تابعه في القائمة بدل تكراره.','This trip is already requested. Follow it below.')
+  :notice==='REQUEST_SAVED'
+  ?compact?t('طلبك اتحفظ بنفس بيانات البحث. تابعه من حجوزاتي ← طلبات رحلاتي.','Your request was saved using your search details. Follow it in My bookings → My trip requests.'):t('اتحفظ طلبك بكامل تفاصيل الذهاب والعودة. تقدر تتابعه هنا.','Your request and journey schedule are saved. Follow it here.')
+  :notice==='REQUEST_UPDATED'?t('تم تعديل الطلب والتحقق من حفظه.','Request updated and verified.'):notice;
  // No-match results reuse the passenger's original search. A single click
  // creates a one-seat request; account ownership, idempotency, and duplicate
  // prevention remain enforced by Supabase and verified after insertion.
@@ -226,7 +233,7 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
   return <div className="sekka-no-match-action" aria-label={t('طلب رحلة بالبحث الحالي','Trip request from current search')}>
    {loading&&<p role="status">{t('بنراجع طلباتك…','Checking your requests…')}</p>}
    {error&&<p role="alert">{error}</p>}
-   {notice&&<p role="status">{notice}</p>}
+   {notice&&<p role="status">{noticeText}</p>}
    {!loading&&!notice&&<button type="button" className="d-primary"
     disabled={busy||!search.origin||!search.destination}
     onClick={()=>void create()}>{busy?t('بنحفظ طلب رحلتك…','Saving your trip request…'):
@@ -239,7 +246,7 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
   <h2>{mode==='captain'?t('طلبات الركاب المفتوحة','Open passenger requests'):t('طلبات رحلاتي','My trip requests')}</h2>
   {loading&&<p role="status">{t('جارٍ التحميل…','Loading…')}</p>}
   {error&&<div role="alert"><p>{error}</p><button type="button" onClick={()=>{setError('');refresh();}}>{t('إعادة المحاولة','Retry')}</button></div>}
-  {notice&&<p role="status">{notice}</p>}
+  {notice&&<p role="status">{noticeText}</p>}
   {!loading&&visible.length===0&&mode==='captain'&&<p>{t('مفيش طلبات مفتوحة حاليًا.','No open requests right now.')}</p>}
   {mode==='rider'&&search&&!loading&&!uid&&<div className="d-feedback"><p>{t('سجّل بجوجل علشان تحفظ طلب رحلتك. البحث متاح من غير حساب.','Sign in with Google to save your trip request. Searching does not require an account.')}</p><button type="button" onClick={onSignIn}>{t('تسجيل الدخول والمتابعة','Sign in and continue')}</button></div>}
   {mode==='rider'&&search&&!loading&&Boolean(uid)&&<div>
