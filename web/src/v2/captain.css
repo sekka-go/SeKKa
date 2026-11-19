@@ -550,3 +550,18 @@ html[data-theme="dark"] .captain-onboarding-canvas .c-vehicle-save-feedback{
  .sekka-mobile .sekka-route-step>.sekka-route-field{font-size:13px}
  .sekka-mobile .sekka-route-pair{grid-template-columns:minmax(0,1fr)}
 }
+
+
+/* A real Captain screen grows with content; no 900px reference-canvas blank space. */
+.sekka-mobile .captain-routes-canvas{
+ height:auto;min-height:0;max-width:100%;overflow:visible;
+ box-sizing:border-box;padding-bottom:max(20px,env(safe-area-inset-bottom))
+}
+.sekka-mobile .captain-routes-canvas::before,
+.sekka-mobile .captain-routes-canvas::after{pointer-events:none}
+.sekka-mobile .captain-routes-canvas>.sekka-captain-route-wizard{width:100%}
+.sekka-mobile .captain-routes-canvas .sekka-route-step button:focus-visible,
+.sekka-mobile .captain-routes-canvas .sekka-route-step input:focus-visible,
+.sekka-mobile .captain-routes-canvas .sekka-route-step select:focus-visible{
+ outline:3px solid #d39c00;outline-offset:2px
+}
