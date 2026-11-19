@@ -1819,3 +1819,15 @@ html[dir="ltr"] .booking-stage .b-canvas .b-timeline > div:not(:last-child)::bef
 .sekka-nearby__filters summary {cursor:pointer;min-height:36px;padding:8px 0;font-size:.91em}
 .sekka-nearby__filters .sekka-nearby__controls {padding-top:8px}
 @media(max-width:360px){.sekka-nearby__heading h2 {font-size:17px}.sekka-nearby__heading .sekka-nearby__locate{padding:8px 10px}}
+
+
+/* A no-match result is one inline action, NOT another request form/panel. */
+.d-live-search .sekka-no-match {display:grid;gap:12px;margin:8px 0 16px;min-width:0}
+.d-live-search .sekka-no-match>p {margin:0;line-height:1.55}
+.d-live-search .sekka-no-match-action {display:grid;gap:10px;min-width:0}
+.d-live-search .sekka-no-match-action>button {width:100%;min-height:52px;max-width:100%;
+ display:flex;align-items:center;justify-content:center;text-align:center;
+ border:0;border-radius:14px;font-weight:900;padding:12px 14px;
+ color:#121c27;background:#ffc400;white-space:normal;line-height:1.4}
+.d-live-search .sekka-no-match-action>button:disabled {opacity:.6;cursor:wait}
+.d-live-search .sekka-no-match-action p {margin:0;line-height:1.55;overflow-wrap:anywhere}
