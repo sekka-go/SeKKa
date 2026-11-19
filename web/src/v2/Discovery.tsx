@@ -838,7 +838,6 @@ export default function Discovery(p: DiscoveryProps) {
           <>
             {!p.production&&<p className="d-subtitle">
               {tr("حدد نقطة الانطلاق والوجهة، وابدأ رحلتك بسهولة")}</p>}
-            {p.production&&<NearbyRides onSelect={p.onLiveSelect}/>}
             <form
               className="d-planner"
               onSubmit={(e) => {
@@ -869,6 +868,10 @@ export default function Discovery(p: DiscoveryProps) {
                   <DiscoveryIcon name="pin" />
                 </label>
               </div>
+              {p.production&&<details className="sekka-gps-inline">
+               <summary>{tr("📍 اكتشف الرحلات القريبة من موقعي")}</summary>
+               <NearbyRides onSelect={p.onLiveSelect}/>
+              </details>}
               {p.production&&p.signedIn&&p.riderId&&<div className="sekka-search-shortcuts" aria-label={tr("اختصارات المناطق المحفوظة")}>
                 <div className="sekka-search-shortcuts__actions">
                   <button type="button" disabled={!origin||!storedAreaNames.has(origin)}
