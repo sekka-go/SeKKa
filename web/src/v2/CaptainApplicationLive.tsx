@@ -126,10 +126,10 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
  const pickerOpened=(kind:string)=>{
   setPickerInterrupted(false);setUploadError('');setUploadErrorKind(null);
   setUploadDiagnostic('PICKER_TAPPED');
-  try{sessionStorage.setItem('sekka.captain.pendingPicker',kind+':'+Date.now());}catch{/* Optional diagnostic. */}
+  try{sessionStorage.setItem('sekka.captain.pendingPicker',kind+':'+Date.now());}catch{/* Session storage may be blocked. */}
  };
  const pickerFinished=(hasFile:boolean,kind:string)=>{
-  try{sessionStorage.removeItem('sekka.captain.pendingPicker');}catch{/* Optional. */}
+  try{sessionStorage.removeItem('sekka.captain.pendingPicker');}catch{/* Session storage may be blocked. */}
   if(!hasFile){
    setUploadErrorKind(kind);
    setUploadError(t('مافيش ملف اتحدد. اختار الصورة واضغط «فتح» من تطبيق الملفات، أو جرّب معرض الصور.',
