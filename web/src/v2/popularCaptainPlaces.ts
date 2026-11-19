@@ -39,7 +39,7 @@ const catalog:Record<string,PopularPlace[]>={
   p('square','ميدان الدقي','Dokki Square'),
   p('square','ميدان المساحة','Mesaha Square Dokki'),
   p('university','كلية التربية النوعية بالدقي','Faculty of Specific Education Dokki'),
-  p('mall','مول الدقي','Dokki Mall'),
+  p('gathering','شارع محيي الدين أبو العز','Mohi El Din Abou El Ezz Street Dokki'),
   p('mosque','مسجد أسد بن الفرات','Asad Ibn Al Furat Mosque'),
   p('gathering','محطة مترو الدقي','Dokki Metro Station'),
   p('gathering','نادي الصيد المصري','Egyptian Shooting Club Dokki')
@@ -79,7 +79,7 @@ const catalog:Record<string,PopularPlace[]>={
   p('neighborhood','شارع محمد مظهر','Mohamed Mazhar Street Zamalek'),
   p('square','ميدان الجزيرة','Gezira Square Zamalek'),
   p('university','كلية الفنون الجميلة بالزمالك','Faculty of Fine Arts Zamalek'),
-  p('mosque','مسجد عمر مكرم بالزمالك','Omar Makram Mosque Zamalek'),
+  p('gathering','ساقية الصاوي','El Sawy Culturewheel Zamalek'),
   p('gathering','نادي الجزيرة الرياضي','Gezira Sporting Club'),
   p('gathering','دار الأوبرا المصرية','Cairo Opera House'),
   p('gathering','برج القاهرة','Cairo Tower')
