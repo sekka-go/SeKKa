@@ -674,12 +674,15 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
     <button type="button" onClick={()=>setPickerInterrupted(false)}>{t('فهمت','Got it')}</button>
    </div>}
    <p role="status">{documentProgress}/4 {t('مستندات مطلوبة مكتملة','required documents complete')}</p>
-   <p data-testid="captain-upload-stage" className="c-form-hint" role="status">
-    {t('حالة اختيار/رفع الملف: ','File selection/upload stage: ')}
-    <code dir="ltr">{uploadDiagnostic}</code>
-    {deployedSha&&<span data-testid="captain-upload-build" dir="ltr"> · seKKa {deployedSha}</span>}
-    {runtimeSha&&<span data-testid="captain-runtime-build" dir="ltr"> · {t('نسخة الجهاز','Running app')} {runtimeSha}</span>}
-   </p>
+   <details className="c-upload-diagnostics">
+    <summary>{t('تفاصيل المساعدة الفنية','Technical help details')}</summary>
+    <p data-testid="captain-upload-stage" className="c-form-hint">
+     {t('حالة اختيار/رفع الملف: ','File selection/upload stage: ')}
+     <code dir="ltr">{uploadDiagnostic}</code>
+     {deployedSha&&<span data-testid="captain-upload-build" dir="ltr"> · seKKa {deployedSha}</span>}
+     {runtimeSha&&<span data-testid="captain-runtime-build" dir="ltr"> · {t('نسخة الجهاز','Running app')} {runtimeSha}</span>}
+    </p>
+   </details>
    {stalePwa&&<p data-testid="captain-upload-stale" className="c-field-error" role="alert">
     {t('التطبيق على جهازك بيشغّل نسخة قديمة. اقفله وافتح الرابط من Chrome وحدّث الصفحة، ولو النسخة المثبتة فضلت قديمة أعد تثبيتها قبل اختبار الرفع.',
        'This device is running an older app version. Reopen the link in Chrome and refresh; reinstall the installed PWA if it remains outdated before testing uploads.')}
