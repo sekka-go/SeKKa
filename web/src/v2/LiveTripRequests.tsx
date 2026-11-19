@@ -8,10 +8,12 @@ type OfferRow={id:string;request_id:string;captain_id:string;route_id:string;sta
 type RouteRow={id:string;title:string};
 type Area={id:number;name_ar:string;name_en:string};
 type Search={origin:string;destination:string;outbound:string;returnTime:string;period:string;direction?:RequestDirection};
+type RequestEdit={id:string;direction:RequestDirection;outbound:string;returnTime:string;period:'weekly'|'monthly';seats:number};
 export default function LiveTripRequests({mode,search,onSignIn}:{mode:'rider'|'captain';search?:Search;onSignIn?:()=>void}){
  const {language}=usePreferences(),en=language==='en',t=(ar:string,english:string)=>en?english:ar;
  const [uid,setUid]=useState(''),[requests,setRequests]=useState<RequestRow[]>([]),[offers,setOffers]=useState<OfferRow[]>([]),[areas,setAreas]=useState<Area[]>([]),[routes,setRoutes]=useState<RouteRow[]>([]);
  const [seats,setSeats]=useState(1),[routeSelection,setRouteSelection]=useState<Record<string,string>>({});
+ const [editing,setEditing]=useState<RequestEdit|null>(null);
  const [requestPeriod,setRequestPeriod]=useState<'weekly'|'monthly'>(search?.period==='weekly'?'weekly':'monthly');
  const [requestTime,setRequestTime]=useState(search?.outbound||'07:30');
  const [requestReturnTime,setRequestReturnTime]=useState(search?.returnTime||'17:00');
@@ -46,7 +48,17 @@ export default function LiveTripRequests({mode,search,onSignIn}:{mode:'rider'|'c
   }catch(e){if(active)setError(e instanceof Error?e.message:String(e));}
   finally{if(active)setLoading(false);}
  })();return()=>{active=false;};},[mode,revision]);
- const action=async(task:()=>Promise<void>)=>{setBusy(true);setError('');setNotice('');try{await task();refresh();}catch(e){const message=e instanceof Error?e.message:String(e);setError(message.includes('RIDER_MAX_TWO_SEATS')?t('الحد الأقصى شخصين فقط لكل طلب.','Maximum two people per request.'):message);}finally{setBusy(false);}};
+ const action=async(task:()=>Promise<void>)=>{
+  setBusy(true);setError('');setNotice('');
+  try{await task();refresh();}
+  catch(e){
+   const message=e instanceof Error?e.message:String(e);
+   setError(message.includes('RIDER_MAX_TWO_SEATS')?t('الحد الأقصى شخصين فقط لكل طلب.','Maximum two people per request.'):
+    message.includes('DUPLICATE_OPEN_TRIP_REQUEST')?t('عندك بالفعل طلب نشط بنفس تفاصيل الرحلة. عدّله بدل تكراره.','A matching active request already exists. Edit it instead.'):
+    message.includes('REQUEST_HAS_OFFERS')?t('وصلت عروض كباتن للطلب ده، ومش ممكن نغيّر تفاصيله بعد وصول العروض.','Captain offers have already been received, so this request can no longer be edited.'):
+    message.includes('REQUEST_NOT_EDITABLE')?t('الطلب ده ما بقاش مفتوح للتعديل.','This request is no longer open for editing.'):message);
+  }finally{setBusy(false);}
+ };
  const create=async()=>{
   if(!client||!search)return;
   const from=areas.find(a=>a.name_ar===search.origin||a.name_en===search.origin);
@@ -109,6 +121,39 @@ export default function LiveTripRequests({mode,search,onSignIn}:{mode:'rider'|'c
    setKey(crypto.randomUUID());
   });
  };
+ const startEdit=(request:RequestRow)=>setEditing({
+  id:request.id,direction:request.direction,outbound:request.outbound_time?.slice(0,5)||'07:30',
+  returnTime:request.return_time?.slice(0,5)||'17:00',
+  period:request.period==='weekly'?'weekly':'monthly',seats:request.seats
+ });
+ const saveEdit=async()=>{
+  if(!client||!editing||!uid)return;
+  const draft=editing;
+  const clockValid=(value:string)=>/^([01]\d|2[0-3]):[0-5]\d$/.test(value);
+  const outbound=draft.direction==='return'?null:draft.outbound;
+  const inbound=draft.direction==='outbound'?null:draft.returnTime;
+  if(!Number.isInteger(draft.seats)||draft.seats<1||draft.seats>MAX_SEATS_PER_RIDER||
+    (outbound!==null&&!clockValid(outbound))||(inbound!==null&&!clockValid(inbound))){
+   setError(t('راجع عدد المقاعد ومواعيد الذهاب والعودة.','Check seats and departure/return times.'));return;
+  }
+  await action(async()=>{
+   const {data:id,error:editError}=await client!.rpc('v31_edit_open_trip_request',{
+    p_request:draft.id,p_direction:draft.direction,p_period:draft.period,
+    p_outbound_time:outbound,p_return_time:inbound,p_seats:draft.seats
+   });
+   if(editError)throw editError;
+   if(id!==draft.id)throw Error('REQUEST_EDIT_NOT_VERIFIED');
+   const {data:saved,error:verifyError}=await client!.from('v31_trip_requests')
+    .select('id,rider_id,direction,outbound_time,return_time,period,seats,status')
+    .eq('id',draft.id).eq('rider_id',uid).maybeSingle();
+   if(verifyError||!saved||saved.status!=='open'||saved.rider_id!==uid||
+    saved.direction!==draft.direction||saved.period!==draft.period||saved.seats!==draft.seats||
+    (saved.outbound_time?.slice(0,5)||null)!==outbound||
+    (saved.return_time?.slice(0,5)||null)!==inbound)throw Error('REQUEST_EDIT_NOT_VERIFIED');
+   setEditing(null);
+   setNotice(t('تم تعديل الطلب والتحقق من حفظه.','Request updated and verified.'));
+  });
+ };
  const sendOffer=async(id:string)=>{
   if(!client)return;
   const routeId=routeSelection[id]||routes[0]?.id;
@@ -123,12 +168,62 @@ export default function LiveTripRequests({mode,search,onSignIn}:{mode:'rider'|'c
   } as Record<string,string>)[status]||t('حالة غير معروفة','Unknown status');
  const area=(id:number)=>{const a=areas.find(x=>x.id===id);return a?(en?a.name_en:a.name_ar):String(id);};
  const visible=requests.filter(r=>mode==='captain'?r.status==='open':r.rider_id===uid);
+ const active=visible.filter(r=>r.status==='open');
+ const history=mode==='rider'?visible.filter(r=>r.status!=='open'):[];
+ const requestList=(items:RequestRow[])=><ul>{items.map(r=><li key={r.id}>
+   <strong>{area(r.origin_area_id)} ← {area(r.destination_area_id)}</strong>
+   {' · '}{r.direction==='round_trip'?t('ذهاب وعودة','Round trip'):r.direction==='return'?t('عودة فقط','Return only'):t('ذهاب فقط','Outbound only')}
+   {r.outbound_time&&' · '+t('الذهاب ','Outbound ')+r.outbound_time.slice(0,5)}
+   {r.return_time&&' · '+t('العودة ','Return ')+r.return_time.slice(0,5)}
+   {' · '}{r.period==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')}
+   {' · '}{r.seats} {t('مقاعد','seats')}
+   {' · '}{r.status==='open'?t('مفتوح','Open'):r.status==='accepted'?t('مقبول','Accepted'):r.status==='cancelled'?t('ملغي','Cancelled'):r.status}
+   {mode==='rider'&&r.status==='open'&&<>
+    {!offers.some(o=>o.request_id===r.id)&&<button type="button" disabled={busy}
+     onClick={()=>startEdit(r)}>{t('تعديل الطلب','Edit request')}</button>}
+    <button type="button" disabled={busy} onClick={()=>void cancel(r.id)}>{t('إلغاء الطلب','Cancel request')}</button>
+   </>}
+   {mode==='rider'&&editing?.id===r.id&&<div className="d-box" aria-label={t('تعديل تفاصيل الطلب','Edit request details')}>
+    <p>{t('عدّل المقاعد والمواعيد بدل إنشاء طلب مكرر.','Change seats and times instead of submitting a duplicate.')}</p>
+    <label>{t('اتجاه الرحلة','Journey direction')}<select value={editing.direction}
+     onChange={e=>setEditing(v=>v?{...v,direction:e.target.value as RequestDirection}:v)}>
+     <option value="outbound">{t('ذهاب فقط','Outbound only')}</option>
+     <option value="return">{t('عودة فقط','Return only')}</option>
+     <option value="round_trip">{t('ذهاب وعودة','Round trip')}</option>
+    </select></label>
+    {editing.direction!=='return'&&<label>{t('وقت الذهاب','Departure time')}
+     <input type="time" value={editing.outbound} onChange={e=>setEditing(v=>v?{...v,outbound:e.target.value}:v)}/></label>}
+    {editing.direction!=='outbound'&&<label>{t('وقت العودة','Return time')}
+     <input type="time" value={editing.returnTime} onChange={e=>setEditing(v=>v?{...v,returnTime:e.target.value}:v)}/></label>}
+    <label>{t('مدة الاشتراك','Subscription period')}<select value={editing.period}
+     onChange={e=>setEditing(v=>v?{...v,period:e.target.value as 'weekly'|'monthly'}:v)}>
+     <option value="weekly">{t('أسبوعي','Weekly')}</option>
+     <option value="monthly">{t('شهري','Monthly')}</option></select></label>
+    <label>{t('عدد المقاعد المطلوبة','Seats needed')}
+     <input type="number" min={1} max={MAX_SEATS_PER_RIDER} value={editing.seats}
+      onChange={e=>setEditing(v=>v?{...v,seats:Number(e.target.value)}:v)}/></label>
+    <button type="button" disabled={busy} onClick={()=>void saveEdit()}>{busy?t('جارٍ الحفظ…','Saving…'):t('حفظ التعديل','Save changes')}</button>
+    <button type="button" disabled={busy} onClick={()=>setEditing(null)}>{t('رجوع','Back')}</button>
+   </div>}
+   {mode==='captain'&&routes.length>0&&<div>
+    <select aria-label={t('الخط المراد عرضه','Offer route')} value={routeSelection[r.id]||routes[0]?.id||''}
+     onChange={e=>setRouteSelection(v=>({...v,[r.id]:e.target.value}))}>
+     {routes.map(route=><option key={route.id} value={route.id}>{route.title}</option>)}</select>
+    <button type="button" disabled={busy||offers.some(o=>o.request_id===r.id&&o.captain_id===uid)}
+     onClick={()=>void sendOffer(r.id)}>{t('إرسال عرض خط','Offer route')}</button>
+   </div>}
+   {mode==='rider'&&offers.filter(o=>o.request_id===r.id).map(o=><div key={o.id}>
+    {t('عرض كابتن','Captain offer')} · {offerStatus(o.status)}
+    {r.status==='open'&&o.status==='offered'&&<button type="button" disabled={busy}
+     onClick={()=>void accept(o.id)}>{t('اقبل واحجز المقاعد','Accept and reserve seats')}</button>}
+   </div>)}
+  </li>)}</ul>;
  return <section className="d-box live-trip-requests">
   <h2>{mode==='captain'?t('طلبات الركاب المفتوحة','Open passenger requests'):t('طلبات رحلاتي','My trip requests')}</h2>
   {loading&&<p role="status">{t('جارٍ التحميل…','Loading…')}</p>}
   {error&&<div role="alert"><p>{error}</p><button type="button" onClick={()=>{setError('');refresh();}}>{t('إعادة المحاولة','Retry')}</button></div>}
   {notice&&<p role="status">{notice}</p>}
-  {!loading&&visible.length===0&&<p>{t('مفيش طلبات حاليًا.','No requests yet.')}</p>}
+  {!loading&&visible.length===0&&mode==='captain'&&<p>{t('مفيش طلبات مفتوحة حاليًا.','No open requests right now.')}</p>}
   {mode==='rider'&&search&&!loading&&!uid&&<div className="d-feedback"><p>{t('سجّل بجوجل علشان تحفظ طلب رحلتك. البحث متاح من غير حساب.','Sign in with Google to save your trip request. Searching does not require an account.')}</p><button type="button" onClick={onSignIn}>{t('تسجيل الدخول والمتابعة','Sign in and continue')}</button></div>}
   {mode==='rider'&&search&&!loading&&Boolean(uid)&&<div>
    <h3>{t('لم تجد خطًا؟ راجع بيانات طلبك','No match? Review your request')}</h3>
@@ -148,23 +243,13 @@ export default function LiveTripRequests({mode,search,onSignIn}:{mode:'rider'|'c
     (requestDirection!=='return'&&!requestTime)||(requestDirection!=='outbound'&&!requestReturnTime)} onClick={()=>void create()}>{busy?t('جارٍ حفظ الطلب…','Saving request…'):t('تأكيد وحفظ طلب الرحلة','Confirm and save trip request')}</button>
    <p>{t('الطلب مش حجز ومفيش أي دفع.','Requesting does not reserve seats or charge money.')}</p>
   </div>}
-  <ul>{visible.map(r=><li key={r.id}>
-   <strong>{area(r.origin_area_id)} ← {area(r.destination_area_id)}</strong>
-   {' · '}{r.direction==='round_trip'?t('ذهاب وعودة','Round trip'):r.direction==='return'?t('عودة فقط','Return only'):t('ذهاب فقط','Outbound only')}
-   {r.outbound_time&&' · '+t('الذهاب ','Outbound ')+r.outbound_time.slice(0,5)}
-   {r.return_time&&' · '+t('العودة ','Return ')+r.return_time.slice(0,5)}
-   {' · '}{r.period==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')}
-   {' · '}{r.seats} {t('مقاعد','seats')}
-   {' · '}{r.status==='open'?t('مفتوح','Open'):r.status==='accepted'?t('مقبول','Accepted'):r.status==='cancelled'?t('ملغي','Cancelled'):r.status}
-   {mode==='rider'&&r.status==='open'&&<button type="button" disabled={busy} onClick={()=>void cancel(r.id)}>{t('إلغاء الطلب','Cancel request')}</button>}
-   {mode==='captain'&&routes.length>0&&<div>
-    <select aria-label={t('الخط المراد عرضه','Offer route')} value={routeSelection[r.id]||routes[0]?.id||''} onChange={e=>setRouteSelection(v=>({...v,[r.id]:e.target.value}))}>{routes.map(route=><option key={route.id} value={route.id}>{route.title}</option>)}</select>
-    <button type="button" disabled={busy||offers.some(o=>o.request_id===r.id&&o.captain_id===uid)} onClick={()=>void sendOffer(r.id)}>{t('إرسال عرض خط','Offer route')}</button>
-   </div>}
-   {mode==='rider'&&offers.filter(o=>o.request_id===r.id).map(o=><div key={o.id}>{t('عرض كابتن','Captain offer')} · {offerStatus(o.status)}
-    {r.status==='open'&&o.status==='offered'&&<button type="button" disabled={busy} onClick={()=>void accept(o.id)}>{t('اقبل واحجز المقاعد','Accept and reserve seats')}</button>}
-   </div>)}
-  </li>)}</ul>
+  {mode==='rider'&&<h3>{t('الطلبات النشطة','Active requests')} ({active.length})</h3>}
+  {!loading&&active.length===0&&mode==='rider'&&<p>{t('مفيش طلبات نشطة حاليًا.','No active requests right now.')}</p>}
+  {requestList(active)}
+  {mode==='rider'&&history.length>0&&<details className="d-request-history">
+   <summary>{t('الطلبات السابقة والملغية','Previous and cancelled requests')} ({history.length})</summary>
+   {requestList(history)}
+  </details>}
   <button type="button" onClick={refresh}>{t('تحديث الطلبات','Refresh requests')}</button>
  </section>;
 }
