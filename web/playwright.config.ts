@@ -11,7 +11,8 @@ export default defineConfig({
       '**/mobile-navigation-role.spec.ts',
       '**/captain-onboarding-validation.spec.ts',
       '**/captain-document-upload-mocked.spec.ts',
-      '**/captain-plate-segments.spec.ts'
+      '**/captain-plate-segments.spec.ts',
+      '**/v31-rider-no-match-request-mocked.spec.ts'
     ],
   use: {
     baseURL: "http://127.0.0.1:4173",
