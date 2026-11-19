@@ -14,7 +14,7 @@ test("fresh app open shows a smaller centered seKKa logo with a gentle pulse bef
   await expect(picture).toBeVisible();
   await expect(splash.locator("svg,.sekka-launch__map,.sekka-launch__route,.sekka-launch__wordmark")).toHaveCount(0);
   await expect(splash).not.toContainText("سكة");
-  await expect(splash.locator(".sekka-launch__loading")).toContainText("Loading");
+  await expect(splash.locator(".sekka-launch__loading")).toHaveCount(0);
   const box = await splash.boundingBox();
   expect(box).not.toBeNull();
   expect(box!.x).toBe(0);
@@ -82,14 +82,14 @@ for (const [width, height] of [[320, 700], [360, 800], [412, 915]] as const) {
   });
 }
 
-test("refresh replays branded Loading screen while preserving current page", async ({ page }) => {
+test("refresh replays the approved logo-only splash while preserving current page", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/?tab=login&view=2");
   await expect(page.locator(".sekka-launch")).toBeVisible();
   await expect(page.locator(".sekka-launch")).toHaveCount(0, { timeout: 4500 });
   await page.reload();
   await expect(page.locator(".sekka-launch")).toBeVisible();
-  await expect(page.locator(".sekka-launch__loading")).toContainText("Loading");
+  await expect(page.locator(".sekka-launch__loading")).toHaveCount(0);
   await expect(page.locator(".sekka-launch")).toHaveCount(0, { timeout: 4500 });
   await expect(page.locator(".phase-screen-2")).toBeVisible();
 });
