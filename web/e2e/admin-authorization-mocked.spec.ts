@@ -541,3 +541,50 @@ test('MOCKED genuine round-trip offer reaches transparent one-or-two person book
  expect(reserveRequests).toBe(0);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
+
+
+test('MOCKED approved Admin can see Google sign-in email for selected Captain only',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await setup(page,{isAdmin:true},'en','light');
+ const captainIds=['00000000-0000-4000-8000-0000000000b1','00000000-0000-4000-8000-0000000000b2'];
+ const applications=captainIds.map((id,index)=>({
+  user_id:id,status:'submitted',full_name:index?'Second Captain':'First Captain',
+  phone_number:null,professional_notes:'Test only',experience_years:1,
+  vehicle_type:'private_car',vehicle_make_id:null,vehicle_model_id:null,
+  manufacture_year:null,vehicle_color_code:null,vehicle_color_other:null,
+  intended_plate:null,approved_vehicle_id:null,rejection_reason:null,submitted_at:null
+ }));
+ const requestedIds:string[]=[];
+ await page.route(endpoint+'/rest/v1/v31_captain_applications*',async route=>{
+  await route.fulfill({contentType:'application/json',body:JSON.stringify(applications)});
+ });
+ await page.route(endpoint+'/rest/v1/rpc/v31_admin_captain_login_email',async route=>{
+  const id=(route.request().postDataJSON() as {p_captain:string}).p_captain;
+  requestedIds.push(id);
+  await route.fulfill({contentType:'application/json',body:JSON.stringify(
+   id===captainIds[0]?'first.captain@example.test':'second.captain@example.test'
+  )});
+ });
+ await page.goto('/?tab=admin&view=64');
+ const review=page.locator('.ad-integrated-review');
+ await review.getByRole('button',{name:/First Captain/}).click();
+ await expect(review.getByTestId('captain-admin-login-email')).toContainText('first.captain@example.test');
+ await review.getByRole('button',{name:/Second Captain/}).click();
+ await expect(review.getByTestId('captain-admin-login-email')).toContainText('second.captain@example.test');
+ await expect(review.getByTestId('captain-admin-login-email')).not.toContainText('first.captain@example.test');
+ expect(requestedIds).toEqual(captainIds);
+ await expect(review.getByText('Google sign-in email:')).toBeVisible();
+});
+
+test('MOCKED non-Admin never requests Captain Auth email even on Admin deep link',async({page})=>{
+ await setup(page,{isAdmin:false},'en','light');
+ let privateEmailReads=0;
+ await page.route(endpoint+'/rest/v1/rpc/v31_admin_captain_login_email',async route=>{
+  privateEmailReads++;
+  await route.fulfill({status:403,contentType:'application/json',body:JSON.stringify({message:'ADMIN_REQUIRED'})});
+ });
+ await page.goto('/?tab=admin&view=64');
+ await expect(page.getByRole('button',{name:'Sign out'})).toBeVisible();
+ await expect(page.locator('.ad-integrated-review')).toHaveCount(0);
+ expect(privateEmailReads).toBe(0);
+});
