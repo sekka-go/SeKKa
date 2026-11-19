@@ -4,6 +4,7 @@ import {enrollCaptain} from './captainEnrollment';
 import LiveVehicles from './LiveVehicles';
 import EgyptianPlateInput from './EgyptianPlateInput';
 import {parseEgyptianPlate} from './plateSegments';
+import {prepareCaptainDocument,MAX_CAPTAIN_DOCUMENT_BYTES} from './captainUpload';
 import {usePreferences} from './preferences';
 import {
  captainPersonalErrors,captainVehicleErrors,normalizeNumerals,canonicalEgyptianPlate
@@ -54,8 +55,9 @@ function messageFor(error:unknown,t:(ar:string,en:string)=>string){
   DOCUMENT_NOT_REGISTERED:['ما قدرناش نتأكد من حفظ المستند. حاول تاني.','We could not verify that the document was saved. Please retry.'],
   UPLOAD_NOT_VERIFIED:['التخزين ما أكدش رفع الملف. حاول تاني.','Storage did not verify the upload. Retry.'],
   FILE_READ_FAILED:['الموبايل ما قدرش يقرأ الملف. افتحه من الملفات أو الصور وحاول تاني.','The device could not read the file. Choose it again from Files or Photos.'],
-  FILE_INVALID_SIZE:['اختار ملف أكبر من صفر ولحد 5 ميجابايت.','Choose a non-empty file up to 5 MB.'],
-  FILE_INVALID_SIGNATURE:['صيغة الملف غير مدعومة. اختار JPG أو PNG أو PDF حقيقي.','Unsupported format. Select a genuine JPG, PNG, or PDF.'],
+  FILE_INVALID_SIZE:['اختار صورة لحد 16 ميجابايت ونضغطها تلقائيًا لملف أقل من 5 ميجابايت، أو PDF لحد 5 ميجابايت.','Choose a photo under 16 MB for automatic compression, or a PDF up to 5 MB.'],
+  FILE_INVALID_SIGNATURE:['صيغة الملف غير مدعومة. اختار JPG أو PNG أو WebP أو PDF حقيقي.','Unsupported format. Select a genuine JPG, PNG, WebP or PDF.'],
+  IMAGE_CONVERSION_UNAVAILABLE:['الموبايل مش قادر يحوّل الصورة دي. اختار JPG أو PNG تانية.','Your phone cannot convert this image. Try a different JPG or PNG photo.'],
   APPLICATION_LOCKED:['الطلب في حالة لا تسمح بالرفع. راجع حالته.','The application is not editable. Review its status.']
  };
  if(/row.level security|permission denied|\b403\b|AccessDenied|not authorized/i.test(message))
@@ -64,27 +66,6 @@ function messageFor(error:unknown,t:(ar:string,en:string)=>string){
   return t('الاتصال اتقطع أثناء الحفظ. راجع الإنترنت وجرب تاني.','The connection was interrupted. Check your internet connection and retry.');
  const code=Object.keys(translations).find(key=>message.includes(key));
  return code?t(...translations[code]):message==='UNKNOWN_SERVER_ERROR'?t('حصل خطأ غير متوقع. جرّب تاني.','An unexpected error occurred. Please retry.'):message;
-}
-
-// Android file providers can expose a genuine File whose arrayBuffer() fails.
-// FileReader is a separate native read path; no file bytes leave the browser
-// unless the subsequent authenticated Storage upload succeeds.
-async function readCaptainUploadBuffer(file:File):Promise<ArrayBuffer>{
- try{
-  const buffer=await file.arrayBuffer();
-  if(buffer.byteLength>0)return buffer;
- }catch{ /* Android provider read failure; try the FileReader path below. */ }
- if(typeof FileReader==='undefined')throw Error('FILE_READ_FAILED');
- return await new Promise<ArrayBuffer>((resolve,reject)=>{
-  const reader=new FileReader();
-  reader.onerror=()=>reject(Error('FILE_READ_FAILED'));
-  reader.onabort=()=>reject(Error('FILE_READ_FAILED'));
-  reader.onload=()=>{
-   if(reader.result instanceof ArrayBuffer&&reader.result.byteLength>0)resolve(reader.result);
-   else reject(Error('FILE_READ_FAILED'));
-  };
-  try{reader.readAsArrayBuffer(file);}catch{reject(Error('FILE_READ_FAILED'));}
- });
 }
 
 // Safe troubleshooting markers: no file names, user IDs, tokens or private paths.
@@ -98,7 +79,7 @@ function uploadFailureMarker(stage:string,error:unknown):string {
  // exception messages that might contain filenames, URLs or identifiers.
  const rawMessage=error instanceof Error?error.message:'';
  const localCodes=['AUTH_REQUIRED','APPLICATION_LOCKED','FILE_READ_FAILED',
-  'FILE_INVALID_SIZE','FILE_INVALID_SIGNATURE','UPLOAD_NOT_VERIFIED',
+  'FILE_INVALID_SIZE','FILE_INVALID_SIGNATURE','IMAGE_CONVERSION_UNAVAILABLE','UPLOAD_NOT_VERIFIED',
   'DOCUMENT_NOT_REGISTERED'];
  const diagnosticCode=rawCode||(localCodes.includes(rawMessage)?rawMessage:'UNKNOWN');
  const code=/^[A-Za-z0-9_]{1,40}$/.test(diagnosticCode)?diagnosticCode.toUpperCase():'UNKNOWN';
@@ -378,26 +359,16 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
     if(!editable)throw Error('APPLICATION_LOCKED');
     const {data:{user},error:authError}=await client.auth.getUser();
     if(authError||user?.id!==uid)throw Error('AUTH_REQUIRED');
-    if(file.size>5242880)
-     throw Error('FILE_INVALID_SIZE');
-    // Android document providers often return generic MIME types. Verify
-    // magic bytes and upload the exact ArrayBuffer with an explicit type.
+    // Read Android's actual file bytes and compress large mobile camera photos.
     phase='FILE_READ';setUploadDiagnostic(phase);
-    const buffer=await readCaptainUploadBuffer(file);
-    if(buffer.byteLength<1||buffer.byteLength>5242880)
+    const prepared=await prepareCaptainDocument(file);
+    if(prepared.body.size<1||prepared.body.size>MAX_CAPTAIN_DOCUMENT_BYTES)
      throw Error('FILE_INVALID_SIZE');
-    const bytes=new Uint8Array(buffer,0,Math.min(8,buffer.byteLength));
-    const jpeg=bytes[0]===0xff&&bytes[1]===0xd8&&bytes[2]===0xff;
-    const png=bytes[0]===0x89&&bytes[1]===0x50&&bytes[2]===0x4e&&bytes[3]===0x47&&bytes[4]===0x0d&&bytes[5]===0x0a&&bytes[6]===0x1a&&bytes[7]===0x0a;
-    const pdf=bytes[0]===0x25&&bytes[1]===0x50&&bytes[2]===0x44&&bytes[3]===0x46&&bytes[4]===0x2d;
-    if(!jpeg&&!png&&!pdf)throw Error('FILE_INVALID_SIGNATURE');
     phase='FILE_VALIDATED';setUploadDiagnostic(phase);
-    const extension=pdf?'pdf':png?'png':'jpg';
-    const verifiedMime=pdf?'application/pdf':png?'image/png':'image/jpeg';
-    const objectName=uid+'/'+crypto.randomUUID()+'.'+extension;
+    const objectName=uid+'/'+crypto.randomUUID()+'.'+prepared.extension;
     stage='uploading';setUploadStage(stage);phase='STORAGE_REQUEST';setUploadDiagnostic(phase);
     const {data:uploaded,error:storageError}=await client.storage.from(bucket)
-     .upload(objectName,buffer,{upsert:false,contentType:verifiedMime});
+     .upload(objectName,prepared.body,{upsert:false,contentType:prepared.contentType});
     if(storageError)throw storageError;
     if(uploaded?.path!==objectName)throw Error('UPLOAD_NOT_VERIFIED');
     phase='STORAGE_CONFIRMED';setUploadDiagnostic(phase);
@@ -415,7 +386,9 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
     if(!registered||registered.id!==data)throw Error('DOCUMENT_NOT_REGISTERED');
     setDocs(current=>[registered as DocumentRow,...current.filter(doc=>doc.id!==registered.id)]);
     phase='UI_PROGRESS_UPDATED';setUploadDiagnostic(phase);
-    setNotice(t('المستند اتحفظ واتأكدنا منه على الخادم.','Document uploaded and verified on the server.'));
+    setNotice(prepared.compressed
+     ?t('اتضغطت الصورة واتحفظ المستند واتأكدنا منه على الخادم.','Photo compressed, uploaded, and verified on the server.')
+     :t('المستند اتحفظ واتأكدنا منه على الخادم.','Document uploaded and verified on the server.'));
    }catch(e){
     const marker=uploadFailureMarker(phase,e);
     setUploadDiagnostic(marker);
@@ -642,7 +615,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
           fail to open Android's Files/Photos chooser inside installed PWAs. */}
       <input id={'captain-document-'+kind} className="c-file-native" type="file"
        aria-label={t('اختيار ملف ','Choose file for ')+t(ar,label)}
-       accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
+       accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
        disabled={!editable||busy} onClick={()=>setUploadDiagnostic('PICKER_TAPPED')} onChange={event=>{
         const file=event.currentTarget.files?.[0];
         if(file)upload(kind,file);
@@ -651,7 +624,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
       <span className="c-file-picker-name" aria-live="polite">
        {uploadingKind===kind
        ?(uploadStage==='reading'?t('بنقرأ الملف… ','Reading file… '):uploadStage==='uploading'?t('بنرفع الملف… ','Uploading file… '):uploadStage==='registering'?t('بنسجّل المستند… ','Registering document… '):t('بنتأكد من الحفظ… ','Verifying saved document… '))+uploadingFileName
-       :saved?t('يوجد ملف محفوظ بالفعل','A file is already saved'):editable?t('اختار صورة JPG أو PNG أو PDF من جهازك','Choose a JPG, PNG or PDF from your device'):t('الرفع غير متاح في حالة الطلب الحالية','Upload unavailable for this application status')}
+       :saved?t('يوجد ملف محفوظ بالفعل','A file is already saved'):editable?t('اختار JPG أو PNG أو WebP أو PDF — الصور الكبيرة بنضغطها تلقائيًا','Choose JPG, PNG, WebP or PDF — large photos are compressed automatically'):t('الرفع غير متاح في حالة الطلب الحالية','Upload unavailable for this application status')}
       </span>
      </div>
      {uploadError&&uploadErrorKind===kind&&uploadingKind===null&&<div className="c-document-upload-error">
