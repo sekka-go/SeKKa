@@ -63,6 +63,16 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
    },{enableHighAccuracy:true,timeout:12000,maximumAge:0}
   );
  };
+ // When a Rider has already granted location in a previous visit,
+ // automatically find nearby pickup stops without another click.
+ useEffect(()=>{
+  if(!window.isSecureContext||!navigator.geolocation||!navigator.permissions)return;
+  let active=true;
+  void navigator.permissions.query({name:'geolocation'}).then(status=>{
+   if(active&&status.state==='granted')findMe();
+  }).catch(()=>{/* Explicit button remains available. */});
+  return()=>{active=false;};
+ },[]);
  // If the Rider manually unblocks the site in Chrome settings and returns,
  // pick up the location immediately, without asking for a second tap.
  // Only after an earlier explicit request, never on first page load.
@@ -130,8 +140,8 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
  };
  return <section className="d-box sekka-nearby" aria-label={t('الرحلات القريبة مني','Nearby routes')}>
   <h2>{t('رحلات قريبة مني','Routes near me')}</h2>
-  <p>{t('نستخدم مكانك مرة واحدة لما تضغط الزر، ونقارن المسافة بنقط ركوب حقيقية نشرها الكباتن. موقعك مش بيتحفظ على الخادم.',
-    'Only when you tap the button, we use your location to find real Captain pickup points. Your location is not saved to our server.')}</p>
+  <p>{t('أول مرة اضغط تفعيل GPS ووافق على إذن المتصفح، وبعد كده هنبحث تلقائيًا لو الإذن محفوظ. موقعك مش بيتحفظ على الخادم.',
+    'Tap Enable GPS once to grant browser permission. We search automatically on later visits if permission remains granted. Your location is not stored on our server.')}</p>
   <button type="button" className="sekka-nearby__locate" disabled={permissionBusy}
    onClick={findMe}>{permissionBusy?t('بنحدد مكانك…','Locating you…'):point?t('تحديث موقعي','Update my location'):t('📍 تفعيل GPS واكتشاف الرحلات القريبة','📍 Enable GPS and find nearby routes')}</button>
   {permissionDenied&&<div className="sekka-nearby__permission" role="status">
