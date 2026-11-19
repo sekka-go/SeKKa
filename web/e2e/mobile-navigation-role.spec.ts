@@ -251,6 +251,7 @@ for(const language of ['ar','en'] as const){
    localStorage.setItem('theme_preference','light');
   },{endpoint,user,language});
   let captainWrites=0;
+  let legacyCaptainProfile=false;
   await page.route(endpoint+'/**',async request=>{
    const pathname=new URL(request.request().url()).pathname;
    let result:unknown=[];
@@ -258,7 +259,7 @@ for(const language of ['ar','en'] as const){
    else if(pathname==='/rest/v1/rpc/v31_is_admin')result=false;
    else if(pathname.startsWith('/rest/v1/v31_captain_profiles')){
     if(request.request().method()!=='GET')captainWrites++;
-    result=null;
+    result=legacyCaptainProfile?{user_id:userId,approval_status:'pending'}:null;
    }
    else if(pathname.startsWith('/rest/v1/v31_profiles'))
     result={user_id:userId,role_preference:'rider'};
@@ -279,6 +280,18 @@ for(const language of ['ar','en'] as const){
   await page.goto('/?tab=routes&view=42');
   await expect(page.getByText(t('خطوط الكابتن مخصصة لحسابات الكباتن فقط.','Captain routes are only available to Captain accounts.'))).toBeVisible();
   await expect(page.getByRole('button',{name:t('بدء تسجيل الكابتن','Start Captain enrollment')})).toHaveCount(0);
+
+  // A Rider who tried Captain enrollment in an older build may have a
+  // leftover Captain profile. The saved Rider role remains authoritative.
+  legacyCaptainProfile=true;
+  await page.goto('/?tab=profile');
+  await expect(page.getByRole('heading',{name:t('بيانات حسابي','My profile')})).toBeVisible();
+  await expect(page.getByRole('button',{name:/Enter Captain journey|Continue Captain application|ابدأ ككابتن|متابعة طلب الكابتن/})).toHaveCount(0);
+  await page.getByRole('button',{name:t('فتح القائمة','Open menu')}).click();
+  const legacyDrawer=page.getByRole('dialog',{name:t('القائمة الرئيسية','Main menu')});
+  await expect(legacyDrawer.getByRole('button',{name:t('تسجيل / متابعة طلب الكابتن','Captain registration / application')})).toHaveCount(0);
+  await page.goto('/?tab=captain-onboarding&view=35');
+  await expect(page.getByRole('heading',{name:t('غير مسموح','Access restricted')})).toBeVisible();
 
   // Even a forged/stale Captain OAuth intent cannot convert an existing Rider.
   await page.evaluate(()=>{
