@@ -36,6 +36,7 @@ export default function CaptainRoutes(p:{screen:number;theme:Appearance;onTheme:
  const [draft,setDraft]=useState(()=>demo ? readDraft() : blankDraft);
  const {title,stops,stopName,area,outbound,returnTime,direction,period,category,capacity,price,returnSupported}=draft;
  const [approved,setApproved]=useState(false),[message,setMessage]=useState('');
+ const [savedNotice,setSavedNotice]=useState(false);
  function change<K extends keyof typeof draft>(key:K,value:(typeof draft)[K]){
    setDraft(previous=>({...previous,[key]:value}));
  }
@@ -70,9 +71,10 @@ export default function CaptainRoutes(p:{screen:number;theme:Appearance;onTheme:
    </section>
    <div className="cj-dashboard-actions"><button type="button" onClick={()=>go(49)}>{t('♧ عرض الحجوزات','♧ View bookings')}</button><button type="button" onClick={()=>go(44)}>{t('◷ إدارة الرحلات','◷ Manage routes')}</button></div>
    <LiveCaptainRouteList/></>}
- {n===43&&<><LiveCaptainDraft/><button type="button" className="cj-back" onClick={()=>go(42)}>{t('رجوع إلى رحلاتي','Back to my routes')}</button></>}
+ {n===43&&<><LiveCaptainDraft onSaved={()=>{setSavedNotice(true);go(44)}}/><button type="button" className="cj-back" onClick={()=>go(42)}>{t('رجوع إلى رحلاتي','Back to my routes')}</button></>}
  {n===49&&<><h1>{t('الحجوزات والرحلات','Bookings & routes')}</h1><LiveBookings mode="captain"/><LiveCaptainRouteList/></>}
  {[44,45,46,47,48].includes(n)&&<><h1>{t('إدارة خطوط الكابتن','Captain route management')}</h1>
+   {savedNotice&&<p role="status" className="cj-feedback">{t('تم حفظ مسودة الرحلة. افتح تفاصيلها وراجع المحطات قبل تأكيد النشر.','Draft saved. Open its details and review stops before confirming publication.')}</p>}
    <p className="cj-subtitle">{t('اختر خطًا لمراجعة تفاصيله ومقاعده أو نشر مسودته بعد اعتمادها.','Select a route to review its details, seating or publish an approved draft.')}</p>
    <LiveCaptainRouteList/>
    {(n===47||n===48)&&<LiveBookings mode="captain"/>}
