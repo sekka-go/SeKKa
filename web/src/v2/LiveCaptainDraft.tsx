@@ -214,10 +214,12 @@ export default function LiveCaptainDraft(){
  return <section className="d-box live-route-form sekka-captain-route-wizard">
   <header className="sekka-route-intro">
    <p className="sekka-route-eyebrow">{t('حساب كابتن معتمد','Approved Captain')}</p>
-   <h2>{t('إنشاء خط جديد','Create a route')}</h2>
-   <p>{t('حدد نقاط الرحلة على الخريطة، وبعدها المواعيد والسعر. مش محتاج تكتب اسم الخط أو أي إحداثيات.',
-    'Choose stops on the map, then set schedule and price. No route title or coordinates to type.')}</p>
+   <h2>{t('إنشاء رحلة جديدة','Create a new trip')}</h2>
+   <p>{t('حدد البداية والوجهة من الخريطة، اختار عربيتك المعتمدة وراجع السعر. اسم الخط وعدد المقاعد بيتحددوا تلقائيًا.',
+    'Choose map stops, your approved vehicle and private vehicle price. Route name and capacity are automatic.')}</p>
   </header>
+  {error&&<p role="alert" className="cj-feedback">{error}</p>}
+  {message&&<p role="status" className="cj-feedback">{message}</p>}
 
   {step===1&&<fieldset className="sekka-route-step">
    <legend><span>1</span> {t('مسار الرحلة','Route stops')}</legend>
@@ -288,18 +290,25 @@ export default function LiveCaptainDraft(){
      {vehicles.map(vehicle=><option key={vehicle.id} value={vehicle.id}>{vehicle.model} — {vehicle.plate_number}</option>)}
     </select>
    </label>
-   <label className="sekka-route-field">{t('فئة الخدمة','Service category')}
-    <select value={category||''} disabled={!eligibleCategories.length} onChange={e=>setCategory((e.target.value||null) as Category|null)}>
-     <option value="">{t('لا توجد فئة مفعّلة','No category enabled')}</option>
-     {eligibleCategories.map(value=><option key={value} value={value}>{value}</option>)}
-    </select>
-   </label>
-   {category&&<p className="sekka-route-guidance">{t('المقاعد بتتحدد تلقائيًا من اعتماد المركبة:','Passenger seats are assigned from approved vehicle details:')} <strong>{categorySeats[category]}</strong></p>}
+   <div className="sekka-route-field">
+    <strong>{t('فئة المركبة وعدد المقاعد','Vehicle category and seats')}</strong>
+    <div className="cj-category-options" role="group" aria-label={t('فئة الخدمة','Service category')}>
+     {(Object.keys(categorySeats) as Category[]).map(value=><button key={value} type="button"
+      className="cj-category-option" aria-pressed={category===value}
+      disabled={!eligibleCategories.includes(value)} onClick={()=>setCategory(value)}>
+      <strong>{value}</strong>
+      <small>{categorySeats[value]} {t('مقاعد للركاب','passenger seats')}</small>
+      <small>{eligibleCategories.includes(value)?t('متاح لعربيتك','Eligible vehicle'):t('غير متاح للمركبة','Not eligible')}</small>
+     </button>)}
+    </div>
+   </div>
+   {category&&<p className="sekka-route-guidance">{t('الفئة والمقاعد متطابقين مع اعتماد العربية؛ مش ممكن تعديل السعة يدويًا.','Category and seats match the approved vehicle; capacity cannot be overridden.')} <strong>{categorySeats[category]} {t('مقاعد','seats')}</strong></p>}
    {!vehicles.length&&<p role="alert">{t('مفيش عربية معتمدة مضافة لحسابك. راجع حالة الاعتماد مع الإدارة.','No approved vehicle was found. Check your approval with Admin.')}</p>}
   </fieldset>}
 
   {step===3&&<fieldset className="sekka-route-step">
-   <legend><span>3</span> {t('المواعيد والاشتراك','Schedule')}</legend>
+   <legend><span>3</span> {t('تفضيلات خط السير','Route preferences')}</legend>
+   <p className="cj-schedule-warning">{t('الأوقات دي تفضيلات مبدئية للخط، مش موعد انطلاق مؤكد. تحديد الانطلاق الفعلي بيكون بعد اكتمال المقاعد وإبلاغ الركاب.', 'These are route preferences, not a confirmed departure. Actual departure is set after all seats fill and riders are notified.')}</p>
    <div className="sekka-route-pair">
     <label className="sekka-route-field">{t('مدة الاشتراك','Subscription period')}
      <select value={period} onChange={e=>setPeriod(e.target.value)}>
@@ -314,9 +323,9 @@ export default function LiveCaptainDraft(){
     </label>
    </div>
    <div className="sekka-route-pair">
-    {direction!=='return'&&<label className="sekka-route-field">{t('ميعاد الذهاب','Departure time')}
+    {direction!=='return'&&<label className="sekka-route-field">{t('وقت ذهاب مفضل','Preferred outbound time')}
      <input type="time" value={departure} onChange={e=>setDeparture(e.target.value)}/></label>}
-    {direction!=='outbound'&&<label className="sekka-route-field">{t('ميعاد العودة','Return time')}
+    {direction!=='outbound'&&<label className="sekka-route-field">{t('وقت عودة مفضل','Preferred return time')}
      <input type="time" value={arrival} onChange={e=>setArrival(e.target.value)}/></label>}
    </div>
    {direction==='round_trip'&&<label className="sekka-route-check">
@@ -326,7 +335,7 @@ export default function LiveCaptainDraft(){
   </fieldset>}
 
   {step===4&&<fieldset className="sekka-route-step">
-   <legend><span>4</span> {t('السعر والمراجعة','Price and review')}</legend>
+   <legend><span>4</span> {t('مراجعة الرحلة والسعر','Trip review and price')}</legend>
    <label className="sekka-route-field">{t('سعر المركبة بالكامل بالجنيه','Total vehicle price (EGP)')}
     <input type="number" inputMode="numeric" min="1" max="9999999" step="1"
      placeholder={t('اكتب سعر صحيح بالجنيه','Enter a whole EGP amount')}
@@ -334,12 +343,15 @@ export default function LiveCaptainDraft(){
    </label>
    <p className="sekka-route-guidance">{t('السعر الإجمالي يخص المركبة بالكامل، وسعر المقعد بيحسبه النظام تلقائيًا. مش هيظهر للركاب كسعر مركبة.',
     'Enter the full vehicle price. The system calculates seat prices; passengers do not see the private vehicle total.')}</p>
-   {stops.length>=2&&category&&price&&<div className="sekka-route-review">
-    <strong>{title}</strong><span>{category} · {categorySeats[category]} {t('مقاعد','seats')}</span>
-    <span>{period==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')} · {Number(price).toLocaleString(en?'en':'ar-EG')} {t('جنيه','EGP')}</span>
+   {stops.length>=2&&category&&price&&<div className="sekka-route-review" aria-label={t('ملخص المسودة','Draft summary')}>
+    <strong>{title}</strong>
+    <span>{t('نقاط الرحلة','Trip stops')}: {stops.map(stop=>stop.name).join(' ← ')}</span>
+    <span>{t('المركبة','Vehicle')}: {vehicles.find(v=>v.id===vehicleId)?.model||'—'}</span>
+    <span>{t('الفئة','Category')}: {category} · {categorySeats[category]} {t('مقاعد','seats')}</span>
+    <span>{t('تفضيلات الخط','Route preferences')}: {period==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')}</span>
+    <span>{t('سعر المركبة الخاص بالكابتن','Private whole-vehicle price')}: {Number(price).toLocaleString(en?'en':'ar-EG')} {t('جنيه','EGP')}</span>
+    <small>{t('دي مسودة فقط؛ النشر بيتم بعد المراجعة والتحقق من السيرفر.','This saves only a draft. Publication requires server-verified approval.')}</small>
    </div>}
-   {error&&<p role="alert" className="sekka-route-alert">{error}</p>}
-   {message&&<p role="status" className="sekka-route-success">{message}</p>}
    <button type="button" className="d-primary sekka-route-save" disabled={busy||!draftReady} onClick={()=>void save()}>
     {busy?t('جارٍ الحفظ…','Saving…'):t('حفظ مسودة الخط','Save route draft')}
    </button>
