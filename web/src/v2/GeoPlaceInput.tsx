@@ -1,11 +1,11 @@
 import {useEffect,useRef,useState} from 'react';
 import {usePreferences} from './preferences';
-import {mapPlacesFromPhoton,serviceMatches,PHOTON_ATTRIBUTION} from './geoPlace';
+import {mapPlacesFromPhoton,serviceMatches,placeMatchesArea,PHOTON_ATTRIBUTION} from './geoPlace';
 import type {PlaceChoice,MapPlace,ServiceArea} from './geoPlace';
 
-export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=false}:{
+export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=false,searchArea}:{
  label:string;value:string;choice:PlaceChoice|null;areas:ServiceArea[];
- onPick:(value:string,choice:PlaceChoice|null)=>void;disabled?:boolean
+ onPick:(value:string,choice:PlaceChoice|null)=>void;disabled?:boolean;searchArea?:ServiceArea
 }){
  const {language}=usePreferences(),en=language==='en';
  const t=(ar:string,english:string)=>en?english:ar;
@@ -30,21 +30,33 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
    // best-effort, fair-use staging service, never a launch SLA.
    // No Rider GPS coordinates are transmitted for search.
    const url=new URL('https://photon.komoot.io/api/');
-   url.searchParams.set('q',q);
+   const scoped=Boolean(searchArea)&&![searchArea!.name_ar,searchArea!.name_en].some(name=>q.toLocaleLowerCase().includes(name.toLocaleLowerCase()));
+   url.searchParams.set('q',scoped?q+', '+searchArea!.name_en+', Egypt':q);
    url.searchParams.set('bbox','30.45,29.45,31.95,30.45');
    url.searchParams.set('limit','10');
    if(en)url.searchParams.set('lang','en'); // Arabic falls back to native OSM names if not indexed.
    const response=await fetch(url.toString(),{headers:{Accept:'application/json'},signal:AbortSignal.timeout(9000)});
    if(!response.ok)throw Error('MAP_SEARCH_UNAVAILABLE');
-   const places=mapPlacesFromPhoton(await response.json());
+   let places=mapPlacesFromPhoton(await response.json());
+   // Provider locality must confirm the chosen area. A text query alone is not proof.
+   if(searchArea&&places.length===0&&scoped){
+    const fallback=new URL(url);
+    fallback.searchParams.set('q',q);
+    const second=await fetch(fallback.toString(),{headers:{Accept:'application/json'},signal:AbortSignal.timeout(9000)});
+    if(second.ok)places=mapPlacesFromPhoton(await second.json());
+   }
+   const matching=searchArea?places.filter(place=>placeMatchesArea(place,searchArea)):places;
    if(requestSerial.current!==token)return;
-   setFound(places);
-   if(!places.length)setError(t('مفيش مكان مطابق في القاهرة والجيزة. جرّب اسم منطقة أو شارع تاني.',
-    'No matching place found in Cairo or Giza. Try a different street or district.'));
+   setFound(matching);
+   if(!matching.length)setError(searchArea
+    ?t('مش قادرين نأكد إن المكان ده داخل المنطقة المختارة. جرّب اسم شارع واضح أو معلم داخل '+searchArea.name_ar+'.',
+      'No verified place found inside '+searchArea.name_en+'. Try an exact street or landmark in this area.')
+    :t('مفيش مكان مطابق في القاهرة والجيزة. جرّب اسم منطقة أو شارع تاني.',
+       'No matching place found in Cairo or Giza. Try a different street or district.'));
   }catch{
    if(requestSerial.current!==token)return;
-   setError(t('بحث الخريطة مش متاح مؤقتًا. تقدر تستخدم المناطق المسجلة في سِكّة.',
-    'Map search is temporarily unavailable. You can still use seKKa service areas.'));
+   setError(t('بحث الخريطة مش متاح مؤقتًا. جرّب مرة تانية؛ مينفعش نضيف مكان من غير نتيجة مؤكدة.',
+    'Map search is temporarily unavailable. Retry: a place must be verified before adding it.'));
   }finally{if(requestSerial.current===token)setBusy(false);}
  };
  return <div className="sekka-place-lookup">
