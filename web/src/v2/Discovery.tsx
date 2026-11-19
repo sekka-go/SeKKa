@@ -801,9 +801,7 @@ export default function Discovery(p: DiscoveryProps) {
           >
             <DiscoveryIcon name="back" />
           </button>
-          {p.production
-            ?<img className="sekka-discovery-logo-en" src="/brand/sekka-wordmark-en-20261119.svg" alt="seKKa"/>
-            :<Wordmark/>}
+          {!p.production&&<Wordmark/>}
         </header>
         <h1 className={p.production?"sr-only":"d-title"}>
           <DiscoveryIcon name={titleIcon} />
@@ -838,8 +836,8 @@ export default function Discovery(p: DiscoveryProps) {
         )}
         {[8, 9].includes(screen) && (
           <>
-            <p className="d-subtitle">
-              {tr("حدد نقطة الانطلاق والوجهة، وابدأ رحلتك بسهولة")}</p>
+            {!p.production&&<p className="d-subtitle">
+              {tr("حدد نقطة الانطلاق والوجهة، وابدأ رحلتك بسهولة")}</p>}
             {p.production&&<NearbyRides onSelect={p.onLiveSelect}/>}
             <form
               className="d-planner"
