@@ -252,7 +252,7 @@ export default function MobileApp(){
      // A verified Captain lands in the Captain area on opening the app or
      // finishing Google sign-in, never the Rider discovery screen.
      const destinationFromUrl=readMobileRoute();
-     if(['home','search','booking','bookings','login'].includes(destinationFromUrl.tab)){
+     if(['home','search','booking','bookings','login','captain-onboarding'].includes(destinationFromUrl.tab)){
       const captainDestination:MobileRoute={tab:'routes',view:42};
       history.replaceState({route:captainDestination},'',mobileRouteHref(captainDestination));
       setRoute(captainDestination);
@@ -417,7 +417,7 @@ export default function MobileApp(){
  const menuLink=(label:string,next:MobileRoute)=><button type="button" onClick={()=>{if(next.tab==='bookings')setBookingsSection('bookings');navigate(next)}}
   aria-current={tab===next.tab?'page':undefined}>{label}</button>;
  const isCaptainAccount=ready&&Boolean(userId)&&accountRole==='captain'&&captainApproved&&!admin;
- const blockedRiderTab=isCaptainAccount&&['home','search','bookings','booking','login'].includes(tab);
+ const blockedRiderTab=isCaptainAccount&&['home','search','bookings','booking','login','captain-onboarding'].includes(tab);
  useEffect(()=>{
   if(!blockedRiderTab)return;
   navigate({tab:'routes',view:42},{replace:true});
@@ -467,7 +467,7 @@ export default function MobileApp(){
      onLogin={()=>signInFor(location.pathname+location.search+location.hash)}
      onBooked={bookingSaved}/></Suspense>}
 
-   {ready&&tab==='captain-onboarding'&&(userId&&(!captain||accountRole!=='captain')
+   {ready&&!blockedRiderTab&&tab==='captain-onboarding'&&(userId&&(!captain||accountRole!=='captain')
     ?<section className="sekka-mobile-card"><h1>{t('غير مسموح','Access restricted')}</h1>
       <p>{t('تسجيل الكابتن غير متاح من حساب راكب. سجّل الخروج واختار كابتن عند إنشاء حساب منفصل.',
         'Captain enrollment is not available from a Rider account. Sign out and select Captain with a separate account.')}</p>
