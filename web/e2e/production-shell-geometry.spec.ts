@@ -61,12 +61,22 @@ for(const width of [360,390]){
      if(scene.id===2||scene.id===3){
       await expect(page.locator('.sekka-mobile-header')).toBeHidden();
      }else{
-      // No in-app logo or named shell: only the start splash may show seKKa artwork.
-      await expect(page.locator('.sekka-mobile-header')).toBeHidden();
+      // The real app keeps a physical-left menu; the splash is the ONLY logo.
+      const header=page.locator('.sekka-mobile-header');
+      await expect(header).toBeVisible();
+      const menu=page.locator('.sekka-shell-menu');
+      await expect(menu).toBeVisible();
+      const menuBox=await menu.boundingBox(),headerBox=await header.boundingBox();
+      expect(menuBox).not.toBeNull();expect(headerBox).not.toBeNull();
+      expect(menuBox!.width,'Accessible menu tap target').toBeGreaterThanOrEqual(44);
+      expect(menuBox!.x+menuBox!.width/2,'Menu stays physically left').toBeLessThan(width/2);
       await expect(page.locator('.sekka-bottom-nav')).toHaveCount(0);
       await expect(page.locator('.sekka-discovery-logo-en')).toHaveCount(0);
-      await expect(page.locator('.d-header .phase-back')).toBeVisible();
-      expect(actual.canvas.y,'Search must start near the top of the screen').toBeLessThanOrEqual(96);
+      await expect(page.locator('.sekka-current-section')).toHaveCount(0);
+      if(scene.id===9)await expect(page.locator('.d-header .phase-back')).toBeHidden();
+      else await expect(page.locator('.d-header .phase-back')).toBeVisible();
+      expect(actual.canvas.y,'Search starts near the shell header')
+       .toBeLessThanOrEqual(headerBox!.y+headerBox!.height+70);
      }
      if(scene.id===10){
       if(!actual.action||!reference.action)throw new Error('Missing filter action measurement');
