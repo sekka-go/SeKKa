@@ -20,7 +20,7 @@ async function snapshot(page:Page,scene:(typeof screens)[number],kind:'reference
  if(realSearch){
   await expect(page.locator(scene.heading)).toHaveCount(0);
   await expect(page.locator(scene.canvas+' > h1.sr-only')).toHaveCount(1);
-  await expect(page.locator(scene.canvas+' .sekka-discovery-logo-en')).toBeVisible();
+  await expect(page.locator(scene.canvas+' .sekka-discovery-logo-en')).toHaveCount(0);
  }else await expect(page.locator(scene.heading)).toBeVisible();
  await expect(page.locator('.sekka-launch')).toBeHidden();
  const title=realSearch?null:await rect(page,scene.heading),canvas=await rect(page,scene.canvas);
@@ -61,10 +61,10 @@ for(const width of [360,390]){
      if(scene.id===2||scene.id===3){
       await expect(page.locator('.sekka-mobile-header')).toBeHidden();
      }else{
-      // Search owns a logo/back navigation row; no duplicated named shell.
+      // No in-app logo or named shell: only the start splash may show seKKa artwork.
       await expect(page.locator('.sekka-mobile-header')).toBeHidden();
       await expect(page.locator('.sekka-bottom-nav')).toHaveCount(0);
-      await expect(page.locator('.sekka-discovery-logo-en')).toBeVisible();
+      await expect(page.locator('.sekka-discovery-logo-en')).toHaveCount(0);
       await expect(page.locator('.d-header .phase-back')).toBeVisible();
       expect(actual.canvas.y,'Search must start near the top of the screen').toBeLessThanOrEqual(96);
      }
