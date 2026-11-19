@@ -92,7 +92,7 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
     return data?.[0]?.id as string|undefined;
    };
    if(await findExisting()){
-    setNotice(t('عندك طلب مفتوح مطابق بالفعل. تابعه في القائمة بدل تكراره.','An identical trip request is already open. Follow it in the list below.'));
+    setNotice(compact?t('عندك طلب مطابق مفتوح بالفعل. تابعه من حجوزاتي ← طلبات رحلاتي.','You already have this trip request. Find it in My bookings → My trip requests.'):t('عندك طلب مفتوح مطابق بالفعل. تابعه في القائمة بدل تكراره.','An identical trip request is already open. Follow it in the list below.'));
     return;
    }
    const {error:insertError}=await client!.from('v31_trip_requests').insert({
@@ -102,7 +102,7 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
    });
    if(insertError?.message.includes('DUPLICATE_OPEN_TRIP_REQUEST')){
     if(await findExisting()){
-     setNotice(t('الطلب ده مفتوح بالفعل. تابعه في القائمة بدل تكراره.','This trip is already requested. Follow it below.'));
+     setNotice(compact?t('الطلب موجود بالفعل في حجوزاتي ← طلبات رحلاتي.','This request already exists in My bookings → My trip requests.'):t('الطلب ده مفتوح بالفعل. تابعه في القائمة بدل تكراره.','This trip is already requested. Follow it below.'));
      return;
     }
     throw insertError;
@@ -118,7 +118,7 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
      (saved.return_time?.slice(0,5)||null)!==inbound||
      saved.direction!==requestDirection||
      saved.period!==requestPeriod||saved.seats!==seats)throw Error('REQUEST_SAVE_NOT_VERIFIED');
-   setNotice(t('اتحفظ طلبك بكامل تفاصيل الذهاب والعودة. تقدر تتابعه هنا.','Your request and journey schedule are saved. Follow it here.'));
+   setNotice(compact?t('طلبك اتحفظ بنفس بيانات البحث. تابعه من حجوزاتي ← طلبات رحلاتي.','Your request was saved using your search details. Follow it in My bookings → My trip requests.'):t('اتحفظ طلبك بكامل تفاصيل الذهاب والعودة. تقدر تتابعه هنا.','Your request and journey schedule are saved. Follow it here.'));
    setKey(crypto.randomUUID());
   });
  };
