@@ -9,7 +9,7 @@ type RouteRow={id:string;title:string};
 type Area={id:number;name_ar:string;name_en:string};
 type Search={origin:string;destination:string;outbound:string;returnTime:string;period:string;direction?:RequestDirection};
 type RequestEdit={id:string;direction:RequestDirection;outbound:string;returnTime:string;period:'weekly'|'monthly';seats:number};
-export default function LiveTripRequests({mode,search,onSignIn}:{mode:'rider'|'captain';search?:Search;onSignIn?:()=>void}){
+export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{mode:'rider'|'captain';search?:Search;onSignIn?:()=>void;compact?:boolean}){
  const {language}=usePreferences(),en=language==='en',t=(ar:string,english:string)=>en?english:ar;
  const [uid,setUid]=useState(''),[requests,setRequests]=useState<RequestRow[]>([]),[offers,setOffers]=useState<OfferRow[]>([]),[areas,setAreas]=useState<Area[]>([]),[routes,setRoutes]=useState<RouteRow[]>([]);
  const [seats,setSeats]=useState(1),[routeSelection,setRouteSelection]=useState<Record<string,string>>({});
@@ -218,6 +218,22 @@ export default function LiveTripRequests({mode,search,onSignIn}:{mode:'rider'|'c
      onClick={()=>void accept(o.id)}>{t('اقبل واحجز المقاعد','Accept and reserve seats')}</button>}
    </div>)}
   </li>)}</ul>;
+ // No-match results reuse the passenger's original search. A single click
+ // creates a one-seat request; account ownership, idempotency, and duplicate
+ // prevention remain enforced by Supabase and verified after insertion.
+ if(compact&&mode==='rider'&&search){
+  return <div className="sekka-no-match-action" aria-label={t('طلب رحلة بالبحث الحالي','Trip request from current search')}>
+   {loading&&<p role="status">{t('بنراجع طلباتك…','Checking your requests…')}</p>}
+   {error&&<p role="alert">{error}</p>}
+   {notice&&<p role="status">{notice}</p>}
+   {!loading&&!notice&&<button type="button" className="d-primary"
+    disabled={busy||!search.origin||!search.destination}
+    onClick={()=>void create()}>{busy?t('بنحفظ طلب رحلتك…','Saving your trip request…'):
+     uid?t('اطلب رحلة بنفس بيانات البحث','Request a trip using this search'):
+     t('سجّل دخولك لطلب الرحلة','Sign in to request this trip')}</button>}
+   {!loading&&!notice&&!uid&&<p>{t('الدخول بجوجل مطلوب لحفظ الطلب، وبيانات البحث هتفضل موجودة.','Google sign-in is required to save a request. Your search is retained.')}</p>}
+  </div>;
+ }
  return <section className="d-box live-trip-requests">
   <h2>{mode==='captain'?t('طلبات الركاب المفتوحة','Open passenger requests'):t('طلبات رحلاتي','My trip requests')}</h2>
   {loading&&<p role="status">{t('جارٍ التحميل…','Loading…')}</p>}
