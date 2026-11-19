@@ -400,16 +400,11 @@ export default function MobileApp(){
     aria-expanded={menuOpen} aria-controls="sekka-side-menu" onClick={()=>setMenuOpen(true)}>
     <span aria-hidden="true">☰</span>
    </button>
-   <button type="button" className="sekka-brand-button" onClick={()=>navigate({tab:'home'})}
-    aria-label={t('سِكّة — العودة للرئيسية','seKKa — go to home')}>
-    <img className="sekka-wordmark-en" src="/brand/sekka-wordmark-en-20261119.svg" alt="seKKa"/>
-   </button>
    {ready&&admin&&<button type="button" className="sekka-admin-entry" aria-current={tab==='admin'?'page':undefined}
      onClick={openAdmin}>{t('لوحة الإدارة','Admin dashboard')}</button>}
   </header>
   <main id="sekka-content" className={`sekka-mobile-content${tab==='admin'&&admin?' sekka-admin-workspace':''}`}>
    {!ready&&<div className="sekka-account-loading" role="status">
-    <img src="/brand/sekka-wordmark-en-20261119.svg" alt="seKKa"/>
     <span className="sekka-account-loading__spinner" aria-hidden="true"/>
     <p>{t('بنجهّز حسابك…','Preparing your account…')}</p>
     {sessionSlow&&<div className="sekka-account-loading__slow">
