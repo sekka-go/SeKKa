@@ -86,43 +86,47 @@ test('MOCKED Rider no-match journey saves the selected period and re-reads the o
  await placeSelects.nth(1).selectOption('مدينة نصر');
  await page.locator('.d-planner button[type=submit]').click();
  await expect(page).toHaveURL(/tab=search&view=11/);
- await expect(page.getByText('No suitable route yet.')).toBeVisible();
- const request=page.locator('.d-live-search .live-trip-requests');
- await expect(request.getByRole('heading',{name:'No match? Review your request'})).toBeVisible();
- // An unfiltered route search must still carry a valid request period.
- await request.getByRole('combobox',{name:'Subscription period'}).selectOption('weekly');
- await request.getByRole('combobox',{name:'Journey direction'}).selectOption('outbound');
- await request.getByRole('button',{name:'Confirm and save trip request'}).click();
+
+ const result=page.getByRole('group',{name:'Search result'});
+ await expect(result.getByText('No matching trip available right now.')).toBeVisible();
+ const request=result.locator('.sekka-no-match-action');
+ await expect(request.getByRole('button',{name:'Request a trip using this search'})).toBeVisible();
+ await expect(request.locator('input,select,textarea')).toHaveCount(0);
+ await expect(result.locator('.live-trip-requests')).toHaveCount(0);
+ await request.getByRole('button',{name:'Request a trip using this search'}).click();
  await expect(request.getByText('Your request and journey schedule are saved. Follow it here.')).toBeVisible();
  expect(insertCount).toBe(1);
  expect(saved).toMatchObject({
   rider_id:userId,origin_area_id:11,destination_area_id:22,
-  direction:'outbound',period:'weekly',outbound_time:'07:30',return_time:null,seats:1
+  direction:'outbound',period:'monthly',outbound_time:'07:30',return_time:null,seats:1
  });
+ // The same submitted details persist through reload, with no second form.
  await page.reload();
  await expect(page).toHaveURL(/tab=search&view=11/);
- await expect(page.locator('.live-trip-requests ul li').first()).toContainText('Weekly');
+ const again=page.locator('.sekka-no-match-action');
+ await expect(again.locator('input,select,textarea')).toHaveCount(0);
+ await again.getByRole('button',{name:'Request a trip using this search'}).click();
+ await expect(again.getByText('An identical trip request is already open. Follow it in the list below.')).toBeVisible();
  expect(insertCount).toBe(1);
- await expect(page.getByRole('heading',{name:'Active requests (1)'})).toBeVisible();
- // A second identical trip need, even with a different seat count, is not inserted.
- await request.getByRole('spinbutton',{name:'Seats needed'}).first().fill('2');
- await request.getByRole('button',{name:'Confirm and save trip request'}).click();
- await expect(request.getByText('An identical trip request is already open. Follow it in the list below.')).toBeVisible();
- expect(insertCount).toBe(1);
- // Edit the same request instead of proliferating additional rows.
- await request.getByRole('button',{name:'Edit request'}).click();
- const editPanel=request.getByLabel('Edit request details');
+ // Existing requests are managed from My bookings, not duplicated under no-match.
+ await page.goto('/?tab=bookings');
+ await page.getByRole('button',{name:'My trip requests'}).click();
+ const full=page.locator('.sekka-bookings-workspace .live-trip-requests');
+ await expect(full.getByRole('heading',{name:'Active requests (1)'})).toBeVisible();
+ await expect(full.locator('ul li').first()).toContainText('Monthly');
+ await full.getByRole('button',{name:'Edit request'}).click();
+ const editPanel=full.getByLabel('Edit request details');
  await editPanel.getByRole('spinbutton',{name:'Seats needed'}).fill('2');
  await editPanel.getByRole('button',{name:'Save changes'}).click();
- await expect(request.getByText('Request updated and verified.')).toBeVisible();
+ await expect(full.getByText('Request updated and verified.')).toBeVisible();
  expect(editCount).toBe(1);
  expect(saved?.seats).toBe(2);
  expect(insertCount).toBe(1);
  // Cancelled records must leave the active section and remain readable as history.
- await request.getByRole('button',{name:'Cancel request'}).click();
- await expect(page.getByRole('heading',{name:'Active requests (0)'})).toBeVisible();
- await expect(page.getByText('No active requests right now.')).toBeVisible();
- const archived=request.locator('details.d-request-history');
+ await full.getByRole('button',{name:'Cancel request'}).click();
+ await expect(full.getByRole('heading',{name:'Active requests (0)'})).toBeVisible();
+ await expect(full.getByText('No active requests right now.')).toBeVisible();
+ const archived=full.locator('details.d-request-history');
  await expect(archived.getByText('Previous and cancelled requests (1)')).toBeVisible();
  await archived.locator('summary').click();
  await expect(archived.locator('li')).toContainText('Cancelled');
