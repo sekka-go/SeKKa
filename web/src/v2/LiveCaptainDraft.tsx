@@ -21,6 +21,7 @@ export default function LiveCaptainDraft({onSaved}:{onSaved?:(id:string)=>void}=
  const [areas,setAreas]=useState<Area[]>([]);
  const [vehicles,setVehicles]=useState<Vehicle[]>([]);
  const [areaId,setAreaId]=useState('');
+ const [showAllAreas,setShowAllAreas]=useState(false);
  const activeAreaId=useRef('');
  const [placeLabel,setPlaceLabel]=useState('');
  const [placeChoice,setPlaceChoice]=useState<PlaceChoice|null>(null);
@@ -72,6 +73,15 @@ export default function LiveCaptainDraft({onSaved}:{onSaved?:(id:string)=>void}=
  },[]);
  const title=stops.length>=2?stops[0].name.slice(0,55)+' ← '+stops[stops.length-1].name.slice(0,55):'';
  const selectedArea=areas.find(area=>String(area.id)===areaId);
+ const areaOrder=['6th of october','new cairo','dokki','maadi','nasr city','heliopolis','sheikh zayed','mohandessin','zamalek'];
+ const orderedAreas=[...areas].sort((a,b)=>{
+  const ia=areaOrder.indexOf(a.name_en.toLowerCase()),ib=areaOrder.indexOf(b.name_en.toLowerCase());
+  return (ia<0?99:ia)-(ib<0?99:ib)||a.name_ar.localeCompare(b.name_ar,'ar');
+ });
+ const chooseArea=(id:string)=>{
+  activeAreaId.current=id;setAreaId(id);setPlaceChoice(null);setPlaceLabel('');
+  setStopPoint(null);setShowMapPreview(false);setError('');
+ };
  const mapPreviewPoint=stopPoint||(stops.length>0?stops[stops.length-1]:null);
  const canPreviewMap=mapPreviewPoint?.latitude!=null&&mapPreviewPoint?.longitude!=null;
  const previewLat=mapPreviewPoint?.latitude??0;
@@ -246,17 +256,43 @@ export default function LiveCaptainDraft({onSaved}:{onSaved?:(id:string)=>void}=
    <legend><span>1</span> {t('مسار الرحلة','Route stops')}</legend>
    <p>{t('اختار منطقة الخدمة وبعدها شارع أو معلم بداخلها. البحث بيتحقق من المنطقة على OpenStreetMap قبل إضافة النقطة.',
      'Choose a service area, then a verified street or landmark inside it using OpenStreetMap.')}</p>
-   <label className="sekka-route-field">{t('منطقة الخدمة','Service area')}
-    <select aria-label={t('منطقة الخدمة','Service area')} value={areaId}
-     onChange={e=>{activeAreaId.current=e.target.value;setAreaId(e.target.value);setPlaceChoice(null);setPlaceLabel('');setStopPoint(null);setShowMapPreview(false);}}>
-     <option value="">{t('اختار منطقة','Select an area')}</option>
-     {areas.map(area=><option key={area.id} value={area.id}>{en?area.name_en:area.name_ar}</option>)}
+   <div className="cj-place-step-label"><span>01</span>
+    <div><strong>{t('اختار المنطقة الرئيسية','Choose the main area')}</strong>
+    <small>{t('أكتوبر، التجمع، الدقي، المعادي، وغيرها','October City, New Cairo, Dokki, Maadi and more')}</small></div>
+   </div>
+   <div className="cj-area-grid" role="group" aria-label={t('المناطق الرئيسية','Main areas')}>
+    {(showAllAreas?orderedAreas:orderedAreas.slice(0,6)).map(area=><button
+     key={area.id} type="button" aria-pressed={areaId===String(area.id)}
+     onClick={()=>chooseArea(String(area.id))}>
+     <span className="cj-area-icon" aria-hidden="true">⌖</span>
+     <span><strong>{en?area.name_en:area.name_ar}</strong>
+      <small>{en?(area.name_en==='Dokki'||area.name_en==='Sheikh Zayed'||area.name_en==='6th of October'||area.name_en==='Mohandessin'?'Giza':'Cairo'):(area.name_en==='Dokki'||area.name_en==='Sheikh Zayed'||area.name_en==='6th of October'||area.name_en==='Mohandessin'?'الجيزة':'القاهرة')}</small>
+     </span>
+     {areaId===String(area.id)&&<span className="cj-area-check" aria-hidden="true">✓</span>}
+    </button>)}
+   </div>
+   {!showAllAreas&&orderedAreas.length>6&&<button type="button" className="cj-area-more" onClick={()=>setShowAllAreas(true)}>
+    {t('عرض باقي المناطق','See more areas')} ({orderedAreas.length-6})
+   </button>}
+   <label className="sekka-route-field cj-area-select">{t('أو اختار من قائمة المناطق','Or choose from the area list')}
+    <select aria-label={t('منطقة الخدمة','Service area')} value={areaId} onChange={e=>chooseArea(e.target.value)}>
+     <option value="">{t('اختار المنطقة الرئيسية','Choose main area')}</option>
+     {orderedAreas.map(area=><option key={area.id} value={area.id}>{en?area.name_en:area.name_ar}</option>)}
     </select>
    </label>
+   {selectedArea&&<div className="cj-selected-area" role="status">
+     <span aria-hidden="true">✓</span><strong>{en?selectedArea.name_en:selectedArea.name_ar}</strong>
+     <small>{t('دلوقتي اختار مكان معروف جوّاها','Now choose a well-known place inside it')}</small>
+   </div>}
+   <div className="cj-place-step-label"><span>02</span>
+    <div><strong>{t('اختار الحي أو الميدان أو المعلم','Choose a district or landmark')}</strong>
+     <small>{t('من المقترحات أو ابحث باسم أي مكان','Use a suggestion or search any place by name')}</small>
+    </div>
+   </div>
    <div className="sekka-route-field">
     <span>{stops.length===0?t('مكان الانطلاق على الخريطة','Origin on the map'):t('مكان الوجهة أو محطة الطريق','Destination or route stop')}</span>
     <GeoPlaceInput label={t('ابحث عن شارع أو مكان','Search street or landmark')} value={placeLabel}
-     choice={placeChoice} areas={[]} searchArea={selectedArea}
+     choice={placeChoice} areas={[]} searchArea={selectedArea} disabled={!selectedArea}
      onPick={(value,choice)=>{
       setPlaceLabel(value);setPlaceChoice(choice);
       setStopPoint(choice?.kind==='map'?choice.place:null);setShowMapPreview(false);setError('');
@@ -286,6 +322,7 @@ export default function LiveCaptainDraft({onSaved}:{onSaved?:(id:string)=>void}=
    </section>}
    <button type="button" className="sekka-route-add" disabled={!areaId||!stopPoint||!placeLabel.trim()||busy}
     onClick={addStop}>{t('تأكيد وإضافة نقطة الوقوف','Add this stop')}</button>
+   {stops.length>0&&<div className="cj-added-stops-head"><strong>{t('نقط الرحلة اللي ضفتها','Added trip stops')}</strong><span>{stops.length} / 30</span></div>}
    {stops.length>0&&<ol className="live-route-stops sekka-route-stop-list">{stops.map((stop,index)=><li key={index}>
     <div className="sekka-route-stop-copy">
      <span className="sekka-route-stop-order">{index+1}</span>
