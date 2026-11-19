@@ -16,9 +16,14 @@ async function rect(page:Page,selector:string){
  return r as Rect;
 }
 async function snapshot(page:Page,scene:(typeof screens)[number],kind:'reference'|'after',label:string){
- await expect(page.locator(scene.heading)).toBeVisible();
+ const realSearch=kind==='after'&&scene.id>=9;
+ if(realSearch){
+  await expect(page.locator(scene.heading)).toHaveCount(0);
+  await expect(page.locator(scene.canvas+' > h1.sr-only')).toHaveCount(1);
+  await expect(page.locator(scene.canvas+' .sekka-discovery-logo-en')).toBeVisible();
+ }else await expect(page.locator(scene.heading)).toBeVisible();
  await expect(page.locator('.sekka-launch')).toBeHidden();
- const title=await rect(page,scene.heading),canvas=await rect(page,scene.canvas);
+ const title=realSearch?null:await rect(page,scene.heading),canvas=await rect(page,scene.canvas);
  const action=scene.id===10?await rect(page,'.d-screen-10 > .d-primary'):null;
  const checks=await page.evaluate(()=>({
    scrollWidth:document.documentElement.scrollWidth,
@@ -56,13 +61,12 @@ for(const width of [360,390]){
      if(scene.id===2||scene.id===3){
       await expect(page.locator('.sekka-mobile-header')).toBeHidden();
      }else{
-      await expect(page.locator('.sekka-mobile-header')).toBeVisible();
+      // Search owns a logo/back navigation row; no duplicated named shell.
+      await expect(page.locator('.sekka-mobile-header')).toBeHidden();
       await expect(page.locator('.sekka-bottom-nav')).toHaveCount(0);
-      await expect(page.locator('.sekka-mobile-header .sekka-approved-logo')).toHaveCount(0);
-      const trigger=await rect(page,'.sekka-shell-menu');
-      expect(trigger.x+trigger.width/2,'Menu should be physically left').toBeLessThan(width/2);
-      expect(trigger.width,'Menu tap target').toBeGreaterThanOrEqual(44);
-      expect(actual.canvas.y,'Search begins directly below compact menu header').toBeLessThanOrEqual(96);
+      await expect(page.locator('.sekka-discovery-logo-en')).toBeVisible();
+      await expect(page.locator('.d-header .phase-back')).toBeVisible();
+      expect(actual.canvas.y,'Search must start near the top of the screen').toBeLessThanOrEqual(96);
      }
      if(scene.id===10){
       if(!actual.action||!reference.action)throw new Error('Missing filter action measurement');
@@ -79,10 +83,12 @@ for(const width of [360,390]){
      }
      expect(Math.abs(actual.canvas.width-reference.canvas.width),
       'Root canvas must not shrink because of a duplicated outer padding').toBeLessThanOrEqual(3);
-     expect(Math.abs(actual.title.width-reference.title.width),
-      'Approved heading width must be preserved').toBeLessThanOrEqual(4);
-     expect(Math.abs((actual.title.y-actual.canvas.y)-(reference.title.y-reference.canvas.y)),
-      'Heading position *inside original artwork* must be preserved').toBeLessThanOrEqual(9);
+     if(actual.title&&reference.title){
+      expect(Math.abs(actual.title.width-reference.title.width),
+       'Onboarding heading width must be preserved').toBeLessThanOrEqual(4);
+      expect(Math.abs((actual.title.y-actual.canvas.y)-(reference.title.y-reference.canvas.y)),
+       'Onboarding heading geometry must remain stable').toBeLessThanOrEqual(9);
+     }
      // No fixed footer remains; preserve scrollability and ensure no
      // old viewport-height reservation takes usable space below actions.
      if(scene.id>=9&&scene.id!==10){
