@@ -3,7 +3,7 @@ import "./launch-splash.css";
 
 const STATIC_SPLASH_DURATION_MS = 1600;
 
-/* Show on a fresh app open, not on refresh or an OAuth callback.
+/* Show on an app open or reload, but not OAuth callbacks or browser back/forward.
  * Neither the user's route nor their Google session should be changed. */
 export function shouldPlayLaunchSplash() {
   const current = new URL(window.location.href);
@@ -13,10 +13,10 @@ export function shouldPlayLaunchSplash() {
       current.hash.includes("access_token=")) return false;
 
   const navigation = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
-  if (navigation) return navigation.type === "navigate";
+  if (navigation) return navigation.type === "navigate" || navigation.type === "reload";
 
   const legacy = (performance as Performance & { navigation?: { type: number } }).navigation;
-  return legacy?.type !== 1 && legacy?.type !== 2;
+  return legacy?.type !== 2;
 }
 
 /** One static owner-provided brand image, then the existing real application.
