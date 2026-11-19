@@ -134,7 +134,7 @@ export default function LiveRouteSearch({origin,destination,outbound,returnTime,
    <p role="status">{t('مفيش رحلة مناسبة لبحثك حاليًا.','No matching trip available right now.')}</p>
    {origin&&destination&&<LiveTripRequests mode="rider" compact search={{
     origin,destination,outbound,returnTime,period:requestPeriod,
-    direction:direction==='outbound'||direction==='return'||direction==='round_trip'?direction:'outbound'
+    direction:direction==='outbound'||direction==='return'||direction==='round_trip'?direction:(returnTime?'round_trip':'outbound')
    }} onSignIn={onSignIn}/>}
   </div>}
   {bookingError&&<p role="alert">{bookingError}</p>}
