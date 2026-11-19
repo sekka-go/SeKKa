@@ -168,7 +168,22 @@ export default function MobileApp(){
         .select('user_id,role_preference').eq('user_id',user.id).maybeSingle();
       if(!active||readId!==sessionReadId.current)return;
       if(profileError){setError(profileError.message);}
-      else{
+      else if(pendingRole==='captain'&&!enrolled&&profile?.role_preference==='rider'){
+        // A Rider's existing Google identity cannot be upgraded to Captain by
+        // a stale OAuth callback or a manually edited pendingRole.
+        setError(t('حساب الراكب لا يمكن تحويله إلى كابتن. سجّل الخروج واستخدم حساب جوجل منفصل للكابتن.',
+          'A Rider account cannot be converted to Captain. Sign out and use a separate Google account for Captain registration.'));
+        setSelectedRole('rider');
+        try{
+          sessionStorage.removeItem('sekka.pendingRole');
+          sessionStorage.removeItem('sekka.postAuthPath');
+        }catch{/* Verified account role remains unchanged. */}
+        const callbackUrl=new URL(location.href);
+        if(callbackUrl.searchParams.has('oauth_role')){
+          callbackUrl.searchParams.delete('oauth_role');
+          history.replaceState(history.state,'',callbackUrl.pathname+callbackUrl.search+callbackUrl.hash);
+        }
+      }else{
         const {error:saveError}=profile
           ?await client.from('v31_profiles').update({role_preference:pendingRole}).eq('user_id',user.id)
           :await client.from('v31_profiles').insert({user_id:user.id,role_preference:pendingRole,
@@ -294,8 +309,9 @@ export default function MobileApp(){
   navigate({tab:'login',view:4});
  };
  const startCaptainJourney=()=>{
+  // Only guests can select Captain enrollment; existing Captains can resume.
+  if(userId){if(captain)navigate({tab:'captain-onboarding',view:35});return;}
   setSelectedRole('captain');
-  if(userId){navigate({tab:'captain-onboarding',view:35});return;}
   try{
    sessionStorage.setItem('sekka.pendingRole','captain');
    sessionStorage.setItem('sekka.postAuthPath','/?tab=captain-onboarding&view=35');
@@ -382,7 +398,7 @@ export default function MobileApp(){
    {ready&&tab==='login'&&<Onboarding production screen={userId?6:!ready?4:onboardingScreen} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={selectRole}/>}
    {ready&&tab==='profile'&&(userId?<section className="sekka-mobile-card"><LiveProfile/>{ready&&admin&&<button type="button" className="sekka-action" onClick={openAdmin}>
      {t('فتح لوحة الإدارة','Open Admin dashboard')}</button>}
-   <button type="button" onClick={startCaptainJourney}>{captainApproved?t('فتح حساب الكابتن','Open Captain journey'):t('ابدأ ككابتن','Enter Captain journey')}</button><button type="button" onClick={()=>void signOut()}>{t('تسجيل الخروج','Sign out')}</button></section>:<section className="sekka-mobile-card"><h1>{t('حسابي','My profile')}</h1><p>{t('سجّل بجوجل علشان تكمل بياناتك.','Sign in with Google to complete your profile.')}</p><button className="sekka-action" onClick={()=>signInFor('/?tab=login&view=6')}>{t('تسجيل الدخول بجوجل','Sign in with Google')}</button></section>)}
+   {captain&&<button type="button" onClick={startCaptainJourney}>{captainApproved?t('فتح حساب الكابتن','Open Captain journey'):t('متابعة طلب الكابتن','Continue Captain application')}</button>}<button type="button" onClick={()=>void signOut()}>{t('تسجيل الخروج','Sign out')}</button></section>:<section className="sekka-mobile-card"><h1>{t('حسابي','My profile')}</h1><p>{t('سجّل بجوجل علشان تكمل بياناتك.','Sign in with Google to complete your profile.')}</p><button className="sekka-action" onClick={()=>signInFor('/?tab=login&view=6')}>{t('تسجيل الدخول بجوجل','Sign in with Google')}</button></section>)}
    {selectionError&&['search','booking'].includes(tab)&&<div role="alert" className="sekka-mobile-alert">{selectionError}<button type="button" onClick={()=>setSelectionVersion(v=>v+1)}>{t('إعادة المحاولة','Retry')}</button></div>}
    {tab==='search'&&approvedDiscovery(discoveryScreen)}
    {ready&&tab==='booking'&&<Suspense fallback={<p role="status">{t('بنحمّل الحجز…','Loading booking…')}</p>}><V31BookingJourney offer={bookingOffer} routeId={liveSelection?.route.id||''}
@@ -392,8 +408,13 @@ export default function MobileApp(){
      onLogin={()=>signInFor(location.pathname+location.search+location.hash)}
      onBooked={bookingSaved}/></Suspense>}
 
-   {ready&&tab==='captain-onboarding'&&(userId?approvedCaptainOnboarding(captainStep):<Onboarding production screen={4} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={selectRole}/>)}
-   {ready&&tab==='routes'&&(captain&&captainApproved?<Suspense fallback={<p role="status">{t('بنحمّل الخطوط…','Loading routes…')}</p>}><CaptainRoutes production screen={internalScreen(captainScreen)} theme={p.theme} onTheme={p.setThemePreference} go={captainGo}/></Suspense> :<section className="sekka-mobile-card"><h1>{t('خطوط الكابتن','Captain routes')}</h1><p>{captain?t('حساب الكابتن لم يُعتمد بعد.','Captain access is not approved yet.'):t('ابدأ تسجيل الكابتن لمتابعة طلب الاعتماد.','Start Captain enrollment to continue.')}</p><button className="sekka-action" onClick={()=>captain?navigate({tab:'captain-onboarding',view:40}):startCaptainJourney()}>{captain?t('متابعة حالة الطلب','View application status'):t('بدء تسجيل الكابتن','Start Captain enrollment')}</button></section>)}
+   {ready&&tab==='captain-onboarding'&&(userId&&!captain
+    ?<section className="sekka-mobile-card"><h1>{t('غير مسموح','Access restricted')}</h1>
+      <p>{t('تسجيل الكابتن غير متاح من حساب راكب. سجّل الخروج واختار كابتن عند إنشاء حساب منفصل.',
+        'Captain enrollment is not available from a Rider account. Sign out and select Captain with a separate account.')}</p>
+      <button type="button" onClick={()=>navigate({tab:'profile'},{replace:true})}>{t('العودة لحسابي','Back to profile')}</button></section>
+    :userId?approvedCaptainOnboarding(captainStep):<Onboarding production screen={4} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={selectRole}/>)}
+   {ready&&tab==='routes'&&(captain&&captainApproved?<Suspense fallback={<p role="status">{t('بنحمّل الخطوط…','Loading routes…')}</p>}><CaptainRoutes production screen={internalScreen(captainScreen)} theme={p.theme} onTheme={p.setThemePreference} go={captainGo}/></Suspense> :<section className="sekka-mobile-card"><h1>{t('خطوط الكابتن','Captain routes')}</h1><p>{userId&&!captain?t('خطوط الكابتن مخصصة لحسابات الكباتن فقط.','Captain routes are only available to Captain accounts.'):captain?t('حساب الكابتن لم يُعتمد بعد.','Captain access is not approved yet.'):t('اختار حساب كابتن من البداية لتقديم طلب الاعتماد.','Select Captain before sign-in to apply for approval.')}</p>{(!userId||captain)&&<button className="sekka-action" onClick={()=>captain?navigate({tab:'captain-onboarding',view:40}):startCaptainJourney()}>{captain?t('متابعة حالة الطلب','View application status'):t('بدء تسجيل الكابتن','Start Captain enrollment')}</button>}</section>)}
    {ready&&tab==='bookings'&&(userId?<section className="sekka-bookings-workspace">
     <nav className="sekka-bookings-section-tabs" aria-label={t('إدارة الحجوزات والطلبات','Bookings and requests')}>
      <button type="button" aria-pressed={bookingsSection==='bookings'} onClick={()=>setBookingsSection('bookings')}>{t('حجوزاتي المؤكدة وقيد الانتظار','My seat bookings')}</button>
@@ -423,8 +444,8 @@ export default function MobileApp(){
        onClick={()=>{navigate({tab:'bookings'});setBookingsSection('requests');}}>{t('طلبات رحلاتي','My trip requests')}</button>}
      {menuLink(t('الإشعارات','Notifications'),{tab:'notifications'})}
      {menuLink(t('حسابي','My profile'),{tab:'profile'})}
-     <h2>{t('الكابتن','Captain')}</h2>
-     <button type="button" onClick={startCaptainJourney}>{t('تسجيل / متابعة طلب الكابتن','Captain registration / application')}</button>
+     {ready&&(!userId||captain)&&<><h2>{t('الكابتن','Captain')}</h2>
+     <button type="button" onClick={startCaptainJourney}>{t('تسجيل / متابعة طلب الكابتن','Captain registration / application')}</button></>}
      {ready&&captain&&captainApproved&&menuLink(t('خطوطي','My routes'),{tab:'routes',view:42})}
      {ready&&admin&&<><h2>{t('الإدارة','Administration')}</h2>
       {menuLink(t('لوحة الإدارة','Admin dashboard'),{tab:'admin',view:62})}</>}
