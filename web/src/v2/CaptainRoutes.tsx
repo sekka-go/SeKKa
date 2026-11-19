@@ -59,7 +59,7 @@ export default function CaptainRoutes(p:{screen:number;theme:Appearance;onTheme:
  const selectedOffer=offers.find(o=>o.id===selected);
  return <div className={`phase-one-stage discovery-stage ${p.theme}`}>
  {!p.production&&<nav className="phase-review-bar"><select aria-label={t('شاشة خطوط الكابتن','Captain routes screen')} value={n} onChange={e=>go(+e.target.value)}>{captainRouteScreens.map(s=><option key={s} value={publicScreen(s)}>{publicScreen(s)} · {screenTitle(s,language)}</option>)}</select><button onClick={()=>p.onTheme(p.theme==='dark'?'light':'dark')}>{t('تبديل المظهر','Switch theme')}</button></nav>}
- <main className="phase-canvas d-canvas captain-routes-canvas"><Wordmark/><h1>{screenTitle(p.screen,language)}</h1>{!p.production&&<p>{t('معاينة محلية فقط — لا يتم نشر عروض حقيقية.','Local preview only — no real offers are published.')}</p>}{message&&<p role="status">{message}</p>}
+ <main className="phase-canvas d-canvas captain-routes-canvas">{!p.production&&<Wordmark/>}<h1>{screenTitle(p.screen,language)}</h1>{!p.production&&<p>{t('معاينة محلية فقط — لا يتم نشر عروض حقيقية.','Local preview only — no real offers are published.')}</p>}{message&&<p role="status">{message}</p>}
  {!demo?(p.production?<>
  {n===42&&<><LiveCaptainRouteList/><button type="button" className="d-primary" onClick={()=>go(43)}>{t('إنشاء خط جديد','Create a new route')}</button></>}
  {n===43&&<><LiveCaptainDraft/><button type="button" className="d-outline" onClick={()=>go(42)}>{t('العودة لخطوطي','Back to my routes')}</button></>}
