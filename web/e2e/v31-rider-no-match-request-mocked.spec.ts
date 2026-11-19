@@ -84,10 +84,12 @@ test('MOCKED Rider no-match journey saves the selected period and re-reads the o
   await route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
  });
  await page.goto('/?tab=search&view=9');
- const placeSelects=page.locator('.d-planner-places select');
- await expect(placeSelects.first().locator('option[value="المعادي"]')).toHaveCount(1);
- await placeSelects.nth(0).selectOption('المعادي');
- await placeSelects.nth(1).selectOption('مدينة نصر');
+ const origin=page.getByRole('combobox',{name:'From where?'});
+ await origin.fill('Maadi');
+ await page.getByRole('group',{name:'Place search suggestions'}).getByRole('button',{name:/Maadi/}).click();
+ const destination=page.getByRole('combobox',{name:'Where to?'});
+ await destination.fill('Nasr');
+ await page.getByRole('group',{name:'Place search suggestions'}).getByRole('button',{name:/Nasr City/}).click();
  await page.locator('.d-planner button[type=submit]').click();
  await expect(page).toHaveURL(/tab=search&view=11/);
 
