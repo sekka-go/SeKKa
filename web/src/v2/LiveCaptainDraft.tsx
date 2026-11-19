@@ -1,6 +1,10 @@
 import {useEffect,useState} from 'react';
 import {client} from './api';
-import {enrollCaptain} from './captainEnrollment';
+import GeoPlaceInput from './GeoPlaceInput';
+import {inLaunchRegion} from './geoPlace';
+import type {PlaceChoice} from './geoPlace';
+import {straightLineKm} from './nearbyRoutes';
+import type {GeoPoint} from './nearbyRoutes';
 import {usePreferences} from './preferences';
 import type {Category} from '../../../packages/domain/subscriptions';
 
@@ -16,10 +20,10 @@ export default function LiveCaptainDraft(){
  const [uid,setUid]=useState<string|null>(null);
  const [areas,setAreas]=useState<Area[]>([]);
  const [vehicles,setVehicles]=useState<Vehicle[]>([]);
- const [title,setTitle]=useState('');
  const [areaId,setAreaId]=useState('');
- const [stopName,setStopName]=useState('');
- const [stopLat,setStopLat]=useState(''),[stopLng,setStopLng]=useState('');
+ const [placeLabel,setPlaceLabel]=useState('');
+ const [placeChoice,setPlaceChoice]=useState<PlaceChoice|null>(null);
+ const [stopPoint,setStopPoint]=useState<GeoPoint|null>(null);
  const [locatingStop,setLocatingStop]=useState(false);
  const [stops,setStops]=useState<StopInput[]>([]);
  const [vehicleId,setVehicleId]=useState('');
@@ -62,6 +66,8 @@ export default function LiveCaptainDraft(){
    const {data:listener}=client.auth.onAuthStateChange((_event,session)=>setUid(session?.user.id??null));
    return ()=>{live=false;listener.subscription.unsubscribe();};
  },[]);
+ const title=stops.length>=2?stops[0].name+' ← '+stops[stops.length-1].name:'';
+ const selectedArea=areas.find(area=>String(area.id)===areaId);
  const eligibleCategories=(vehicles.find(vehicle=>vehicle.id===vehicleId)?.enabled_categories||[])
   .filter((value):value is Category=>value in categorySeats);
  useEffect(()=>{
@@ -70,55 +76,64 @@ export default function LiveCaptainDraft(){
   else if(eligibleCategories.length===0)setCategory(null);
  },[vehicleId,eligibleCategories.join(':')]);
  const useMyStopPosition=()=>{
-   setError('');
-   if(!window.isSecureContext||!navigator.geolocation){
-    setError(t('تحديد الموقع يحتاج HTTPS ومتصفح يدعم GPS.','Finding your location requires HTTPS and GPS support.'));
-    return;
-   }
-   setLocatingStop(true);
-   navigator.geolocation.getCurrentPosition(
-    position=>{
-     setLocatingStop(false);
-     if(position.coords.accuracy>250){
-      setError(t('دقة GPS أضعف من 250 متر. حاول من مكان مفتوح، أو اكتب إحداثيات النقطة بدقة.',
-       'GPS accuracy is worse than 250 metres. Try outdoors or enter precise stop coordinates.'));
-      return;
-     }
-     setStopLat(position.coords.latitude.toFixed(6));
-     setStopLng(position.coords.longitude.toFixed(6));
-    },
-    ()=>{setLocatingStop(false);setError(t('تعذر تحديد المكان. اكتب الإحداثيات أو أكمل بدونها.','Unable to locate. Enter coordinates or continue without them.'));},
-    {enableHighAccuracy:true,timeout:12000,maximumAge:0}
-   );
+  setError('');
+  if(!window.isSecureContext||!navigator.geolocation){
+   setError(t('الموقع محتاج إذن GPS واتصال آمن.','Your location requires GPS permission and a secure connection.'));return;
+  }
+  setLocatingStop(true);
+  navigator.geolocation.getCurrentPosition(
+   position=>{
+    setLocatingStop(false);
+    const point={latitude:position.coords.latitude,longitude:position.coords.longitude};
+    if(position.coords.accuracy>250||!inLaunchRegion(point)){
+     setError(t('مش قادرين نحدد مكان دقيق داخل القاهرة والجيزة. جرّب تاني أو ابحث عن الموقع بالاسم.',
+      'We could not locate an accurate Cairo/Giza stop. Retry or search for the place by name.'));return;
+    }
+    setStopPoint(point);
+    setPlaceChoice(null);
+    setPlaceLabel((en?'Pickup point — ':'نقطة ركوب — ')+(en?selectedArea?.name_en||'My location':selectedArea?.name_ar||'موقعي'));
+   },
+   ()=>{setLocatingStop(false);setError(t('GPS مش متاح. ابحث عن نقطة الوقوف بالاسم على الخريطة.','GPS is unavailable. Search for the stop on the map.'));},
+   {enableHighAccuracy:true,timeout:12000,maximumAge:0}
+  );
  };
  const addStop=()=>{
-   if(!areaId||stopName.trim().length<2)return;
-   const hasLat=stopLat.trim()!=='' ,hasLng=stopLng.trim()!=='';
-   const latitude=hasLat?Number(stopLat):null,longitude=hasLng?Number(stopLng):null;
-   const invalidPoint=hasLat&&(latitude===null||longitude===null||
-     !Number.isFinite(latitude)||!Number.isFinite(longitude)||
-     latitude< -90||latitude>90||longitude< -180||longitude>180);
-   if(hasLat!==hasLng||invalidPoint){
-    setError(t('أدخل خط العرض وخط الطول الصحيحين معًا أو اتركهما فارغين.','Enter valid latitude and longitude together, or leave both blank.'));return;
-   }
-   const next:StopInput={areaId:Number(areaId),name:stopName.trim(),pickup:true,dropoff:true,latitude,longitude};
-   if(stops.some(s=>s.areaId===next.areaId&&s.name.toLocaleLowerCase()===next.name.toLocaleLowerCase())){
-     setError(t('النقطة موجودة بالفعل في نفس المنطقة.','That stop already exists in this area.'));return;
-   }
-   setError('');setStops(v=>[...v,next]);setStopName('');setStopLat('');setStopLng('');
+  setError('');setMessage('');
+  const name=placeChoice?.kind==='map'?placeChoice.place.name.trim():placeLabel.trim();
+  const point=placeChoice?.kind==='map'?placeChoice.place:stopPoint;
+  if(!areaId||!selectedArea){setError(t('اختار منطقة الخدمة أولًا.','Choose the service area first.'));return;}
+  if(!point||!inLaunchRegion(point)||name.length<3||name.length>100){
+   setError(t('حدد نقطة الوقوف من نتائج بحث الخريطة أو GPS. الكتابة وحدها مش كفاية.',
+    'Choose a stop from map results or GPS. Typing alone is not enough.'));return;
+  }
+  if(stops.length>=30){setError(t('الحد الأقصى 30 نقطة للخط.','A route supports up to 30 stops.'));return;}
+  if(stops.some(s=>s.areaId===Number(areaId)&&
+    (s.name.toLocaleLowerCase()===name.toLocaleLowerCase()||
+     s.latitude!==null&&s.longitude!==null&&straightLineKm({latitude:s.latitude,longitude:s.longitude},point)<0.03))){
+   setError(t('نقطة الوقوف دي مضافة بالفعل.','This stop is already on the route.'));return;
+  }
+  setStops(current=>[...current,{areaId:Number(areaId),name,pickup:true,dropoff:true,
+   latitude:Number(point.latitude.toFixed(6)),longitude:Number(point.longitude.toFixed(6))}]);
+  setPlaceLabel('');setPlaceChoice(null);setStopPoint(null);
  };
  const save=async()=>{
    if(!client||!uid)return;
    setMessage('');setError('');
-   if(title.trim().length<3||stops.length<2||stops[0].areaId===stops.at(-1)?.areaId||
+   if(title.length<3||title.length>120||stops.length<2||stops[0].areaId===stops.at(-1)?.areaId||
+      stops.some(stop=>stop.latitude===null||stop.longitude===null||
+       !inLaunchRegion({latitude:stop.latitude,longitude:stop.longitude}))||
       !vehicleId||!category||!eligibleCategories.includes(category)||
-      !Number.isInteger(Number(price))||Number(price)<=0||
+      !/^\\d{1,7}$/.test(price)||!Number.isSafeInteger(Number(price))||Number(price)<=0||
+      !['weekly','monthly'].includes(period)||!['outbound','return','round_trip'].includes(direction)||
+      (direction!=='return'&&!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(departure))||
+      (direction!=='outbound'&&!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(arrival))||
       (direction==='round_trip'&&!returnSupported)){
      setError(t('راجع المركبة والفئة والعنوان والسعر؛ يلزم نقطتان في منطقتين مختلفتين.','Check vehicle, category, title, price and at least two stops in distinct areas.'));return;
    }
    setBusy(true);
    try{
-     await enrollCaptain();
+     // This is an approved Captain's route workflow, never enrollment.
+     // The server RPC verifies approval again before inserting any draft.
      const {data:routeId,error:routeError}=await client.rpc('v31_create_vehicle_route_draft',{
        p_title:title.trim(),p_vehicle:vehicleId,p_category:category,
        p_direction:direction,p_period:period,
@@ -164,57 +179,140 @@ export default function LiveCaptainDraft(){
        'Draft and stop coordinates verified. When published, nearby Riders can find these pickup points by GPS.')
       :t('المسودة اتحفظت، لكن من غير إحداثيات، الخط مش هيظهر في نتائج GPS القريبة.',
        'Draft saved without GPS coordinates. It will not appear in nearby GPS results.'));
-     setStops([]);setTitle('');setPrice('');
+     setStops([]);setPlaceLabel('');setPlaceChoice(null);setStopPoint(null);setPrice('');
    }catch(e){setError(e instanceof Error?e.message:String(e));}
    finally{setBusy(false);}
  };
  if(!client)return <section className="d-box"><p>{t('ربط Supabase العام لم يكتمل بعد.','Public Supabase configuration is not ready yet.')}</p></section>;
  if(!uid)return <section className="d-box"><p>{t('سجّل دخولك بجوجل قبل حفظ خط حقيقي.','Sign in with Google to create a real route draft.')}</p><a href="?screen=4">{t('الدخول بجوجل','Google sign-in')}</a></section>;
- return <section className="d-box live-route-form">
-  <h2>{t('إنشاء مسودة خط حقيقية','Create a real route draft')}</h2>
-  <p>{t('المسودة لا تظهر للركاب، ولن تُنشر قبل اعتماد الكابتن.','Drafts are private and cannot be published before captain approval.')}</p>
-  <label>{t('اسم الخط','Route title')}<input value={title} maxLength={120} onChange={e=>setTitle(e.target.value)}/></label>
-  <label>{t('المنطقة','Area')}<select value={areaId} onChange={e=>setAreaId(e.target.value)}>{areas.map(a=><option key={a.id} value={a.id}>{en?a.name_en:a.name_ar}</option>)}</select></label>
-  <label>{t('اسم نقطة الوقوف','Stop name')}<input value={stopName} maxLength={100} onChange={e=>setStopName(e.target.value)}/></label>
-  <p>{t('حدد مكان نقطة الوقوف الفعلية لو عايز الركاب القريبين يلاقوا الخط عبر GPS. لو بتستخدم موقعي لازم تكون واقف عند النقطة نفسها.',
-   'Provide the real stop location for nearby GPS discovery. Only use My location while standing at the actual pickup stop.')}</p>
-  <div className="sekka-captain-coordinates">
-   <label>{t('خط العرض (اختياري)','Latitude (optional)')}<input type="number" step="0.000001" min="-90" max="90" value={stopLat} onChange={e=>setStopLat(e.target.value)}/></label>
-   <label>{t('خط الطول (اختياري)','Longitude (optional)')}<input type="number" step="0.000001" min="-180" max="180" value={stopLng} onChange={e=>setStopLng(e.target.value)}/></label>
-   <button type="button" disabled={locatingStop} onClick={useMyStopPosition}>{locatingStop?t('بنحدد موقع النقطة…','Locating stop…'):t('📍 استخدم موقعي للنقطة','📍 Use GPS for this stop')}</button>
-  </div>
-  <button type="button" disabled={!areaId||stopName.trim().length<2} onClick={addStop}>{t('أضف نقطة','Add stop')}</button>
-  <ol className="live-route-stops">{stops.map((s,i)=><li key={i}>
-    <strong>{i+1}. {s.name} — {en?areas.find(a=>a.id===s.areaId)?.name_en:areas.find(a=>a.id===s.areaId)?.name_ar}</strong>
-    <span>{s.latitude===null?t('بدون إحداثيات GPS','No GPS coordinates'):t('موقع GPS محدد','GPS stop marked')}</span>
-    <div className="live-route-controls">
-      <button type="button" disabled={i===0} onClick={()=>setStops(v=>{const n=[...v];[n[i-1],n[i]]=[n[i],n[i-1]];return n;})}>{t('لأعلى','Up')}</button>
-      <button type="button" disabled={i===stops.length-1} onClick={()=>setStops(v=>{const n=[...v];[n[i+1],n[i]]=[n[i],n[i+1]];return n;})}>{t('لأسفل','Down')}</button>
-      <button type="button" onClick={()=>setStops(v=>v.filter((_,j)=>j!==i))}>{t('حذف','Remove')}</button>
+ const draftReady=stops.length>=2&&stops[0].areaId!==stops.at(-1)?.areaId&&
+  title.length>=3&&title.length<=120&&Boolean(vehicleId)&&Boolean(category)&&
+  eligibleCategories.includes(category as Category)&&/^\\d{1,7}$/.test(price)&&Number(price)>0&&
+  (direction!=='round_trip'||returnSupported);
+ return <section className="d-box live-route-form sekka-captain-route-wizard">
+  <header className="sekka-route-intro">
+   <p className="sekka-route-eyebrow">{t('حساب كابتن معتمد','Approved Captain')}</p>
+   <h2>{t('إنشاء خط جديد','Create a route')}</h2>
+   <p>{t('حدد نقاط الرحلة على الخريطة، وبعدها المواعيد والسعر. مش محتاج تكتب اسم الخط أو أي إحداثيات.',
+    'Choose stops on the map, then set schedule and price. No route title or coordinates to type.')}</p>
+  </header>
+
+  <fieldset className="sekka-route-step">
+   <legend><span>1</span> {t('مسار الرحلة','Route stops')}</legend>
+   <p>{t('ابحث عن الشارع أو المعلم عند نقطة الركوب الفعلية. اختار النتيجة من الخريطة، مش مجرد كتابة اسم.',
+     'Search for the actual pickup street or landmark and select a map result.')}</p>
+   <label className="sekka-route-field">{t('منطقة الخدمة','Service area')}
+    <select aria-label={t('منطقة الخدمة','Service area')} value={areaId}
+     onChange={e=>{setAreaId(e.target.value);setPlaceChoice(null);setPlaceLabel('');setStopPoint(null);}}>
+     <option value="">{t('اختار منطقة','Select an area')}</option>
+     {areas.map(area=><option key={area.id} value={area.id}>{en?area.name_en:area.name_ar}</option>)}
+    </select>
+   </label>
+   <div className="sekka-route-field">
+    <span>{t('نقطة الوقوف على الخريطة','Stop on the map')}</span>
+    <GeoPlaceInput label={t('ابحث عن شارع أو مكان','Search street or landmark')} value={placeLabel}
+     choice={placeChoice} areas={[]}
+     onPick={(value,choice)=>{
+      setPlaceLabel(value);setPlaceChoice(choice);
+      setStopPoint(choice?.kind==='map'?choice.place:null);setError('');
+     }}/>
+   </div>
+   <div className="sekka-route-stop-tools">
+    <button type="button" className="sekka-route-secondary" disabled={locatingStop||!areaId} onClick={useMyStopPosition}>
+     {locatingStop?t('جارٍ تحديد الموقع…','Locating…'):t('📍 أنا واقف عند النقطة','📍 I am at this stop')}
+    </button>
+    {stopPoint&&<span className="sekka-route-map-confirm">
+     {t('تم تحديد الموقع','Location selected')} · <a target="_blank" rel="noopener noreferrer"
+      href={`https://www.openstreetmap.org/?mlat=${stopPoint.latitude}&mlon=${stopPoint.longitude}#map=16/${stopPoint.latitude}/${stopPoint.longitude}`}>
+      {t('معاينة الموقع على الخريطة','Preview on OpenStreetMap')}</a>
+    </span>}
+   </div>
+   <button type="button" className="sekka-route-add" disabled={!areaId||!stopPoint||!placeLabel.trim()||busy}
+    onClick={addStop}>{t('إضافة النقطة للخط','Add this stop')}</button>
+   {stops.length>0&&<ol className="live-route-stops sekka-route-stop-list">{stops.map((stop,index)=><li key={index}>
+    <div className="sekka-route-stop-copy">
+     <span className="sekka-route-stop-order">{index+1}</span>
+     <div><strong>{stop.name}</strong><small>{en?areas.find(a=>a.id===stop.areaId)?.name_en:areas.find(a=>a.id===stop.areaId)?.name_ar}</small></div>
     </div>
-  </li>)}</ol>
-  <label>{t('المركبة المعتمدة','Approved vehicle')}
-   <select value={vehicleId} onChange={e=>setVehicleId(e.target.value)}>
-    <option value="">{t('اختر المركبة','Select vehicle')}</option>
-    {vehicles.map(vehicle=><option key={vehicle.id} value={vehicle.id}>{vehicle.model} — {vehicle.plate_number}</option>)}
-   </select>
-  </label>
-  <label>{t('فئة الخدمة المؤهلة','Eligible service category')}
-   <select value={category||''} onChange={e=>setCategory((e.target.value||null) as Category|null)} disabled={!eligibleCategories.length}>
-    <option value="">{t('لا توجد فئات مفعلة','No categories enabled')}</option>
-    {eligibleCategories.map(value=><option key={value} value={value}>{value}</option>)}
-   </select>
-  </label>
-  {category&&<p role="status">{t('سعة الفئة ثابتة بواسطة النظام:','Category capacity is fixed by the system:')}
-   {` ${categorySeats[category]} `}{t('مقاعد ركاب','passenger seats')}</p>}
-  <label>{t('مدة الاشتراك','Period')}<select value={period} onChange={e=>setPeriod(e.target.value)}><option value="weekly">{t('أسبوعي','Weekly')}</option><option value="monthly">{t('شهري','Monthly')}</option></select></label>
-  <label>{t('الاتجاه','Direction')}<select value={direction} onChange={e=>setDirection(e.target.value)}><option value="outbound">{t('ذهاب','Outbound')}</option><option value="return">{t('عودة','Return')}</option><option value="round_trip">{t('ذهاب وعودة','Round trip')}</option></select></label>
-  {direction!=='return'&&<label>{t('وقت الذهاب','Outbound departure')}<input type="time" value={departure} onChange={e=>setDeparture(e.target.value)}/></label>}
-  {direction!=='outbound'&&<label>{t('وقت العودة','Return departure')}<input type="time" value={arrival} onChange={e=>setArrival(e.target.value)}/></label>}
-  {direction==='round_trip'&&<label className="live-route-check"><input type="checkbox" checked={returnSupported} onChange={e=>setReturnSupported(e.target.checked)}/>{t('العودة بنفس النقاط بالترتيب العكسي','Return visits the same stops in reverse order')}</label>}
-  <label>{t('سعر الاشتراك بالجنيه','Subscription price (EGP)')}<input type="number" min={1} step={1} value={price} onChange={e=>setPrice(e.target.value)}/></label>
-  {error&&<p role="alert">{error}</p>}
-  {message&&<p role="status">{message}</p>}
-  <button type="button" className="d-primary" disabled={busy} onClick={()=>void save()}>{busy?t('جارٍ الحفظ...','Saving…'):t('حفظ مسودة حقيقية','Save real draft')}</button>
+    <div className="live-route-controls">
+     <button type="button" disabled={index===0} onClick={()=>setStops(v=>{const next=[...v];[next[index-1],next[index]]=[next[index],next[index-1]];return next;})}>{t('↑ أعلى','↑ Up')}</button>
+     <button type="button" disabled={index===stops.length-1} onClick={()=>setStops(v=>{const next=[...v];[next[index+1],next[index]]=[next[index],next[index+1]];return next;})}>{t('↓ أسفل','↓ Down')}</button>
+     <button type="button" onClick={()=>setStops(v=>v.filter((_,i)=>i!==index))}>{t('حذف','Remove')}</button>
+    </div>
+   </li>)}</ol>}
+   {stops.length<2&&<p className="sekka-route-guidance">{t('لازم تضيف نقطتين على الأقل: بداية الخط ونهايته.','Add at least an origin and a destination.')}</p>}
+   {stops.length>=2&&<p className="sekka-route-generated-title">
+    {t('اسم الخط تلقائيًا:','Automatic route name:')} <strong>{title}</strong>
+   </p>}
+  </fieldset>
+
+  <fieldset className="sekka-route-step">
+   <legend><span>2</span> {t('العربية والمقاعد','Vehicle and seats')}</legend>
+   <label className="sekka-route-field">{t('المركبة المعتمدة','Approved vehicle')}
+    <select value={vehicleId} onChange={e=>setVehicleId(e.target.value)}>
+     <option value="">{t('اختار عربية معتمدة','Select approved vehicle')}</option>
+     {vehicles.map(vehicle=><option key={vehicle.id} value={vehicle.id}>{vehicle.model} — {vehicle.plate_number}</option>)}
+    </select>
+   </label>
+   <label className="sekka-route-field">{t('فئة الخدمة','Service category')}
+    <select value={category||''} disabled={!eligibleCategories.length} onChange={e=>setCategory((e.target.value||null) as Category|null)}>
+     <option value="">{t('لا توجد فئة مفعّلة','No category enabled')}</option>
+     {eligibleCategories.map(value=><option key={value} value={value}>{value}</option>)}
+    </select>
+   </label>
+   {category&&<p className="sekka-route-guidance">{t('المقاعد بتتحدد تلقائيًا من اعتماد المركبة:','Passenger seats are assigned from approved vehicle details:')} <strong>{categorySeats[category]}</strong></p>}
+   {!vehicles.length&&<p role="alert">{t('مفيش عربية معتمدة مضافة لحسابك. راجع حالة الاعتماد مع الإدارة.','No approved vehicle was found. Check your approval with Admin.')}</p>}
+  </fieldset>
+
+  <fieldset className="sekka-route-step">
+   <legend><span>3</span> {t('المواعيد والاشتراك','Schedule')}</legend>
+   <div className="sekka-route-pair">
+    <label className="sekka-route-field">{t('مدة الاشتراك','Subscription period')}
+     <select value={period} onChange={e=>setPeriod(e.target.value)}>
+      <option value="weekly">{t('أسبوعي','Weekly')}</option><option value="monthly">{t('شهري','Monthly')}</option>
+     </select>
+    </label>
+    <label className="sekka-route-field">{t('اتجاه الرحلة','Journey direction')}
+     <select value={direction} onChange={e=>setDirection(e.target.value)}>
+      <option value="outbound">{t('ذهاب','Outbound')}</option><option value="return">{t('عودة','Return')}</option>
+      <option value="round_trip">{t('ذهاب وعودة','Round trip')}</option>
+     </select>
+    </label>
+   </div>
+   <div className="sekka-route-pair">
+    {direction!=='return'&&<label className="sekka-route-field">{t('ميعاد الذهاب','Departure time')}
+     <input type="time" value={departure} onChange={e=>setDeparture(e.target.value)}/></label>}
+    {direction!=='outbound'&&<label className="sekka-route-field">{t('ميعاد العودة','Return time')}
+     <input type="time" value={arrival} onChange={e=>setArrival(e.target.value)}/></label>}
+   </div>
+   {direction==='round_trip'&&<label className="sekka-route-check">
+    <input type="checkbox" checked={returnSupported} onChange={e=>setReturnSupported(e.target.checked)}/>
+    {t('نفس نقاط الوقوف في العودة بترتيب عكسي','Return uses the same stops in reverse order')}
+   </label>}
+  </fieldset>
+
+  <fieldset className="sekka-route-step">
+   <legend><span>4</span> {t('السعر والمراجعة','Price and review')}</legend>
+   <label className="sekka-route-field">{t('سعر المركبة بالكامل بالجنيه','Total vehicle price (EGP)')}
+    <input type="number" inputMode="numeric" min="1" max="9999999" step="1"
+     placeholder={t('اكتب سعر صحيح بالجنيه','Enter a whole EGP amount')}
+     value={price} onChange={e=>setPrice(e.target.value)}/>
+   </label>
+   <p className="sekka-route-guidance">{t('السعر الإجمالي يخص المركبة بالكامل، وسعر المقعد بيحسبه النظام تلقائيًا. مش هيظهر للركاب كسعر مركبة.',
+    'Enter the full vehicle price. The system calculates seat prices; passengers do not see the private vehicle total.')}</p>
+   {stops.length>=2&&category&&price&&<div className="sekka-route-review">
+    <strong>{title}</strong><span>{category} · {categorySeats[category]} {t('مقاعد','seats')}</span>
+    <span>{period==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')} · {Number(price).toLocaleString(en?'en':'ar-EG')} {t('جنيه','EGP')}</span>
+   </div>}
+   {error&&<p role="alert" className="sekka-route-alert">{error}</p>}
+   {message&&<p role="status" className="sekka-route-success">{message}</p>}
+   <button type="button" className="d-primary sekka-route-save" disabled={busy||!draftReady} onClick={()=>void save()}>
+    {busy?t('جارٍ الحفظ…','Saving…'):t('حفظ مسودة الخط','Save route draft')}
+   </button>
+   {!draftReady&&<p className="sekka-route-guidance">
+    {t('بعد تحديد نقطتي البداية والنهاية والعربية والمواعيد والسعر هتقدر تحفظ المسودة.',
+      'Add origin and destination stops, an approved vehicle, valid schedule and a price to save.')}
+   </p>}
+  </fieldset>
  </section>;
 }
