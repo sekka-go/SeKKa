@@ -35,7 +35,7 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
   await route.fulfill({contentType:'application/json',body:JSON.stringify({features:[{
    geometry:{coordinates:maadi?[31.25,29.96]:[31.34,30.06]},
    properties:{osm_id:maadi?101:102,osm_type:'N',name:maadi?'Maadi Market':'Nasr City Square',
-    city:'Cairo',countrycode:'EG'}
+    district:maadi?'Maadi':'Nasr City',city:'Cairo',countrycode:'EG'}
   }]})});
  });
  await page.route(endpoint+'/**',async route=>{
@@ -122,7 +122,8 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  await amount.fill('1300');
  await expect(save).toBeEnabled();
  await save.click();
- await expect(entry.getByText(/Draft and stop coordinates verified/)).toBeVisible();
+ await expect(page.getByRole('status').filter({hasText:'Draft saved.'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Captain route management'})).toBeVisible();
  expect(created).toBe(1);
  expect(payload).toMatchObject({
   p_title:'Maadi Market ← Nasr City Square',
