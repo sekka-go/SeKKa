@@ -8,7 +8,7 @@ import type {GeoPoint} from './nearbyRoutes';
 import {usePreferences} from './preferences';
 import type {Category} from '../../../packages/domain/subscriptions';
 
-type Area={id:number;name_ar:string;name_en:string};
+type Area={id:number;name_ar:string;name_en:string;region?:string};
 type StopInput={areaId:number;name:string;pickup:boolean;dropoff:boolean;latitude:number|null;longitude:number|null};
 type Vehicle={id:string;model:string;plate_number:string;enabled_categories:string[]};
 const categorySeats:Record<Category,number>={PRIME:3,SAVER:4,SPACE:9,MAX:13};
@@ -51,7 +51,7 @@ export default function LiveCaptainDraft({onSaved}:{onSaved?:(id:string)=>void}=
     setUid(user?.id??null);
     if(!user)return;
     const [areaResult,vehicleResult]=await Promise.all([
-     client.from('v31_service_areas').select('id,name_ar,name_en').order('id'),
+     client.from('v31_service_areas').select('id,name_ar,name_en,region').order('id'),
      client.from('v31_vehicles').select('id,model,plate_number,enabled_categories')
       .eq('captain_id',user.id).eq('status','active').order('created_at',{ascending:false})
     ]);
@@ -266,7 +266,7 @@ export default function LiveCaptainDraft({onSaved}:{onSaved?:(id:string)=>void}=
      onClick={()=>chooseArea(String(area.id))}>
      <span className="cj-area-icon" aria-hidden="true">⌖</span>
      <span><strong>{en?area.name_en:area.name_ar}</strong>
-      <small>{en?(area.name_en==='Dokki'||area.name_en==='Sheikh Zayed'||area.name_en==='6th of October'||area.name_en==='Mohandessin'?'Giza':'Cairo'):(area.name_en==='Dokki'||area.name_en==='Sheikh Zayed'||area.name_en==='6th of October'||area.name_en==='Mohandessin'?'الجيزة':'القاهرة')}</small>
+      <small>{area.region==='Giza'?t('الجيزة','Giza'):area.region==='Cairo'?t('القاهرة','Cairo'):''}</small>
      </span>
      {areaId===String(area.id)&&<span className="cj-area-check" aria-hidden="true">✓</span>}
     </button>)}
