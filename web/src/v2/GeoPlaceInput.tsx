@@ -39,13 +39,18 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
    if(!response.ok)throw Error('MAP_SEARCH_UNAVAILABLE');
    let places=mapPlacesFromPhoton(await response.json());
    // Provider locality must confirm the chosen area. A text query alone is not proof.
-   if(searchArea&&places.length===0&&scoped){
+   // Some Photon records are ambiguous for contextual queries: retry the raw
+   // street name once, but still require that the resulting locality matches.
+   let matching=searchArea?places.filter(place=>placeMatchesArea(place,searchArea)):places;
+   if(searchArea&&matching.length===0&&scoped){
     const fallback=new URL(url);
     fallback.searchParams.set('q',q);
     const second=await fetch(fallback.toString(),{headers:{Accept:'application/json'},signal:AbortSignal.timeout(9000)});
-    if(second.ok)places=mapPlacesFromPhoton(await second.json());
+    if(second.ok){
+     places=mapPlacesFromPhoton(await second.json());
+     matching=places.filter(place=>placeMatchesArea(place,searchArea));
+    }
    }
-   const matching=searchArea?places.filter(place=>placeMatchesArea(place,searchArea)):places;
    if(requestSerial.current!==token)return;
    setFound(matching);
    if(!matching.length)setError(searchArea
