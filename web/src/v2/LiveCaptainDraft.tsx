@@ -25,6 +25,7 @@ export default function LiveCaptainDraft(){
  const [placeChoice,setPlaceChoice]=useState<PlaceChoice|null>(null);
  const [stopPoint,setStopPoint]=useState<GeoPoint|null>(null);
  const [locatingStop,setLocatingStop]=useState(false);
+ const [showMapPreview,setShowMapPreview]=useState(false);
  const [stops,setStops]=useState<StopInput[]>([]);
  const [vehicleId,setVehicleId]=useState('');
  const [category,setCategory]=useState<Category|null>(null);
@@ -70,6 +71,12 @@ export default function LiveCaptainDraft(){
  },[]);
  const title=stops.length>=2?stops[0].name.slice(0,55)+' ← '+stops[stops.length-1].name.slice(0,55):'';
  const selectedArea=areas.find(area=>String(area.id)===areaId);
+ const mapPreviewPoint=stopPoint||(stops.length>0?stops[stops.length-1]:null);
+ const canPreviewMap=mapPreviewPoint?.latitude!=null&&mapPreviewPoint?.longitude!=null;
+ const previewLat=canPreviewMap?Number(mapPreviewPoint.latitude):0;
+ const previewLng=canPreviewMap?Number(mapPreviewPoint.longitude):0;
+ const mapBBox=canPreviewMap?[previewLng-0.008,previewLat-0.006,previewLng+0.008,previewLat+0.006]
+  .map(value=>value.toFixed(6)).join(','):'';
  const eligibleCategories=(vehicles.find(vehicle=>vehicle.id===vehicleId)?.enabled_categories||[])
   .filter((value):value is Category=>value in categorySeats);
  useEffect(()=>{
@@ -92,6 +99,7 @@ export default function LiveCaptainDraft(){
       'We could not locate an accurate Cairo/Giza stop. Retry or search for the place by name.'));return;
     }
     setStopPoint(point);
+    setShowMapPreview(false);
     setPlaceChoice(null);
     setPlaceLabel((en?'Pickup point — ':'نقطة ركوب — ')+(en?selectedArea?.name_en||'My location':selectedArea?.name_ar||'موقعي'));
    },
@@ -217,7 +225,7 @@ export default function LiveCaptainDraft(){
      'Search for the actual pickup street or landmark and select a map result.')}</p>
    <label className="sekka-route-field">{t('منطقة الخدمة','Service area')}
     <select aria-label={t('منطقة الخدمة','Service area')} value={areaId}
-     onChange={e=>{setAreaId(e.target.value);setPlaceChoice(null);setPlaceLabel('');setStopPoint(null);}}>
+     onChange={e=>{setAreaId(e.target.value);setPlaceChoice(null);setPlaceLabel('');setStopPoint(null);setShowMapPreview(false);}}>
      <option value="">{t('اختار منطقة','Select an area')}</option>
      {areas.map(area=><option key={area.id} value={area.id}>{en?area.name_en:area.name_ar}</option>)}
     </select>
@@ -228,21 +236,33 @@ export default function LiveCaptainDraft(){
      choice={placeChoice} areas={[]}
      onPick={(value,choice)=>{
       setPlaceLabel(value);setPlaceChoice(choice);
-      setStopPoint(choice?.kind==='map'?choice.place:null);setError('');
+      setStopPoint(choice?.kind==='map'?choice.place:null);setShowMapPreview(false);setError('');
      }}/>
    </div>
    <div className="sekka-route-stop-tools">
     <button type="button" className="sekka-route-secondary" disabled={locatingStop||!areaId} onClick={useMyStopPosition}>
      {locatingStop?t('جارٍ تحديد الموقع…','Locating…'):t('📍 أنا واقف عند النقطة','📍 I am at this stop')}
     </button>
-    {stopPoint&&<span className="sekka-route-map-confirm">
-     {t('تم تحديد الموقع','Location selected')} · <a target="_blank" rel="noopener noreferrer"
-      href={`https://www.openstreetmap.org/?mlat=${stopPoint.latitude}&mlon=${stopPoint.longitude}#map=16/${stopPoint.latitude}/${stopPoint.longitude}`}>
-      {t('معاينة الموقع على الخريطة','Preview on OpenStreetMap')}</a>
-    </span>}
+    {stopPoint&&<span className="sekka-route-map-confirm">✓ {t('تم تحديد مكان النقطة','Stop location confirmed')}</span>}
    </div>
+   {canPreviewMap&&<section className="sekka-route-map-card" aria-label={t('معاينة الموقع على OpenStreetMap','OpenStreetMap location preview')}>
+    <div className="sekka-route-map-card__heading">
+     <div><strong>{t('مكان نقطة الوقوف','Stop location')}</strong><small>{t('خريطة OpenStreetMap · عرض تفاعلي','OpenStreetMap · interactive preview')}</small></div>
+     <button type="button" className="sekka-route-secondary" aria-expanded={showMapPreview}
+      onClick={()=>setShowMapPreview(value=>!value)}>
+      {showMapPreview?t('إخفاء الخريطة','Hide map'):t('عرض الخريطة','Show map')}
+     </button>
+    </div>
+    {showMapPreview&&<>
+     <iframe title={t('خريطة تفاعلية لموقع الوقوف','Interactive map of the stop')}
+      loading="lazy" referrerPolicy="no-referrer" className="sekka-route-map-card__frame"
+      src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapBBox}&layer=mapnik&marker=${previewLat.toFixed(6)},${previewLng.toFixed(6)}`}/>
+     <p className="sekka-route-map-card__note">{t('الخريطة للمعاينة. تحديد النقطة الفعلية بيكون من نتيجة البحث أو GPS؛ فتح المعاينة بيشارك الموقع مع OpenStreetMap.',
+      'Preview only. Select stops through search or GPS. Opening the map shares this location with OpenStreetMap.')}</p>
+    </>}
+   </section>}
    <button type="button" className="sekka-route-add" disabled={!areaId||!stopPoint||!placeLabel.trim()||busy}
-    onClick={addStop}>{t('إضافة النقطة للخط','Add this stop')}</button>
+    onClick={addStop}>{t('تأكيد وإضافة نقطة الوقوف','Confirm and add stop')}</button>
    {stops.length>0&&<ol className="live-route-stops sekka-route-stop-list">{stops.map((stop,index)=><li key={index}>
     <div className="sekka-route-stop-copy">
      <span className="sekka-route-stop-order">{index+1}</span>
