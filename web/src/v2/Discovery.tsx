@@ -11,6 +11,9 @@ import type { Route, Booking } from "./api";
 import "./discovery.css";
 import LiveRouteSearch from "./LiveRouteSearch";
 import NearbyRides from "./NearbyRides";
+import GeoPlaceInput from "./GeoPlaceInput";
+import {geoRequestAvailable} from "./geoPlace";
+import type {PlaceChoice} from "./geoPlace";
 import type {LiveSelection} from "./LiveRouteSearch";
 
 export const discoveryScreens = [8, 9, 10, 11, 12, 14];
@@ -453,7 +456,7 @@ export type DiscoveryProps = {
 // (such as sign-in) temporarily unmounts the discovery screen. Session only.
 const riderDraftKey = "sekka.rider.discoveryDraft.v31";
 type RiderDraft = {
-  origin?: string; destination?: string; outbound?: string; returnTime?: string;
+  origin?: string; destination?: string; originPlace?:PlaceChoice|null; destinationPlace?:PlaceChoice|null; outbound?: string; returnTime?: string;
   period?: string; categories?: string[]; selectedId?: string; favoriteDetail?: Line | null;
   searched?: boolean; pickup?: string; dropoff?: string; filterDirection?: string;
   filterPrice?: string; onlyAvailable?: boolean; appliedFilters?: boolean;
@@ -508,6 +511,8 @@ export default function Discovery(p: DiscoveryProps) {
   }
   const [origin, setOrigin] = useState(restored.origin ?? (demo ? "المعادي" : "")),
     [destination, setDestination] = useState(restored.destination ?? (demo ? "التجمع" : ""));
+  const [originPlace,setOriginPlace]=useState<PlaceChoice|null>(restored.originPlace||null);
+  const [destinationPlace,setDestinationPlace]=useState<PlaceChoice|null>(restored.destinationPlace||null);
   const [outbound, setOutbound] = useState(restored.outbound ?? "07:30"),
     [returnTime, setReturnTime] = useState(restored.returnTime ?? "17:00"),
     [period, setPeriod] = useState(restored.period ?? "monthly");
@@ -582,12 +587,12 @@ export default function Discovery(p: DiscoveryProps) {
   const [onlyAvailable, setOnlyAvailable] = useState(restored.onlyAvailable ?? false);
   const [appliedFilters, setAppliedFilters] = useState(restored.appliedFilters ?? false);
   useEffect(() => {
-    const draft: RiderDraft = {origin,destination,outbound,returnTime,period,categories,selectedId,
+    const draft: RiderDraft = {origin,destination,originPlace,destinationPlace,outbound,returnTime,period,categories,selectedId,
       favoriteDetail:demo ? favoriteDetail : null,searched,pickup,dropoff,filterDirection,
       filterPrice,onlyAvailable,appliedFilters};
     try { sessionStorage.setItem(riderDraftKey, JSON.stringify(draft)); }
     catch { /* Keep the active screen usable when session storage is unavailable. */ }
-  }, [origin,destination,outbound,returnTime,period,categories,selectedId,favoriteDetail,
+  }, [origin,destination,originPlace,destinationPlace,outbound,returnTime,period,categories,selectedId,favoriteDetail,
       demo,searched,pickup,dropoff,filterDirection,filterPrice,onlyAvailable,appliedFilters]);
   const filtered = lines.filter(
     (l) =>
@@ -637,7 +642,14 @@ export default function Discovery(p: DiscoveryProps) {
       setMessage(tr("اختار منطقة الانطلاق والوصول عشان نكمل."));
       return;
     }
-    if (origin === destination) {
+    if(p.production){
+      const registered=(name:string)=>(p.serviceAreas||[]).some(a=>a.name_ar===name||a.name_en===name);
+      if((!originPlace&&!registered(origin))||(!destinationPlace&&!registered(destination))){
+        setMessage(language==='en'?'Select a location from the search results.':'اختار مكان الانطلاق والوصول من نتائج البحث.');
+        return;
+      }
+    }
+    if (origin === destination||(originPlace?.kind==='map'&&destinationPlace?.kind==='map'&&originPlace.place.id===destinationPlace.place.id)) {
       setMessage(tr("اختار منطقتين مختلفتين."));
       return;
     }
@@ -848,7 +860,9 @@ export default function Discovery(p: DiscoveryProps) {
               <div className="d-planner-places">
                 <label className="d-place">
                   <span className="sr-only">{tr("من أين؟")}</span>
-                  {areaSelect(origin, setOrigin, tr("من أين؟"))}
+                  {p.production?<GeoPlaceInput label={language==='en'?'From where?':'منين هتتحرك؟'} value={origin} choice={originPlace}
+                   areas={p.serviceAreas||[]} onPick={(name,selection)=>{setOrigin(name);setOriginPlace(selection);}}/>
+                  :areaSelect(origin, setOrigin, tr("من أين؟"))}
                   <span className="d-origin-dot" />
                 </label>
                 <button
@@ -858,13 +872,16 @@ export default function Discovery(p: DiscoveryProps) {
                   onClick={() => {
                     setOrigin(destination);
                     setDestination(origin);
+                    setOriginPlace(destinationPlace);setDestinationPlace(originPlace);
                   }}
                 >
                   <DiscoveryIcon name="swap" />
                 </button>
                 <label className="d-place">
                   <span className="sr-only">{tr("إلى أين؟")}</span>
-                  {areaSelect(destination, setDestination, tr("إلى أين؟"))}
+                  {p.production?<GeoPlaceInput label={language==='en'?'Where to?':'رايح فين؟'} value={destination} choice={destinationPlace}
+                   areas={p.serviceAreas||[]} onPick={(name,selection)=>{setDestination(name);setDestinationPlace(selection);}}/>
+                  :areaSelect(destination, setDestination, tr("إلى أين؟"))}
                   <DiscoveryIcon name="pin" />
                 </label>
               </div>
@@ -884,17 +901,17 @@ export default function Discovery(p: DiscoveryProps) {
                   </button>
                 </div>
                 {savedHome&&savedWork&&savedHome!==savedWork&&<div className="sekka-search-shortcuts__actions">
-                  <button type="button" onClick={()=>{setOrigin(savedHome);setDestination(savedWork);}}>
+                  <button type="button" onClick={()=>{setOrigin(savedHome);setDestination(savedWork);setOriginPlace(null);setDestinationPlace(null);}}>
                    {tr("البيت ← الشغل")}
                   </button>
-                  <button type="button" onClick={()=>{setOrigin(savedWork);setDestination(savedHome);}}>
+                  <button type="button" onClick={()=>{setOrigin(savedWork);setDestination(savedHome);setOriginPlace(null);setDestinationPlace(null);}}>
                    {tr("الشغل ← البيت")}
                   </button>
                 </div>}
                 {savedRecent.length>0&&<div className="sekka-search-shortcuts__recent">
                   <span>{tr("آخر عمليات البحث")}</span>
                   {savedRecent.map((item,index)=><button type="button" key={item.origin+':'+item.destination+':'+index}
-                   onClick={()=>{setOrigin(item.origin);setDestination(item.destination);}}
+                   onClick={()=>{setOrigin(item.origin);setDestination(item.destination);setOriginPlace(null);setDestinationPlace(null);}}
                    aria-label={tr("إعادة البحث عن ")+areaDisplay(item.origin)+' - '+areaDisplay(item.destination)}>
                     {areaDisplay(item.origin)} ← {areaDisplay(item.destination)}
                   </button>)}
@@ -1053,7 +1070,13 @@ export default function Discovery(p: DiscoveryProps) {
             </div>}
           </section>
         )}
-        {screen === 11 && !demo && <LiveRouteSearch origin={origin} destination={destination} outbound={outbound} returnTime={returnTime} period={appliedFilters?period:""} requestPeriod={period} direction={filterDirection} categories={categories} onSelect={p.production?p.onLiveSelect:undefined} onSignIn={()=>nav(4)} />}
+        {screen === 11 && !demo && <LiveRouteSearch origin={origin} destination={destination}
+         originPoint={originPlace?.kind==='map'?originPlace.place:null}
+         destinationPoint={destinationPlace?.kind==='map'?destinationPlace.place:null}
+         canCreateRequest={geoRequestAvailable(
+           originPlace||((p.serviceAreas||[]).find(a=>a.name_ar===origin||a.name_en===origin)?{kind:'service',area:(p.serviceAreas||[]).find(a=>a.name_ar===origin||a.name_en===origin)!}:null),
+           destinationPlace||((p.serviceAreas||[]).find(a=>a.name_ar===destination||a.name_en===destination)?{kind:'service',area:(p.serviceAreas||[]).find(a=>a.name_ar===destination||a.name_en===destination)!}:null)
+         )} outbound={outbound} returnTime={returnTime} period={appliedFilters?period:""} requestPeriod={period} direction={filterDirection} categories={categories} onSelect={p.production?p.onLiveSelect:undefined} onSignIn={()=>nav(4)} />}
         {screen === 11 && demo && (
           <>
             <p className="d-subtitle">{tr("اختر عرض الاشتراك المناسب لك")}</p>
