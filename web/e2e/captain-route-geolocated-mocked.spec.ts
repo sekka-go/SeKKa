@@ -84,6 +84,7 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  await page.goto('/?tab=routes&view=43');
  const entry=page.locator('.sekka-captain-route-wizard');
  await expect(entry.getByRole('button',{name:'Add this stop'})).toBeDisabled();
+ await entry.getByRole('combobox',{name:'Service area'}).selectOption('11');
  const place=entry.getByRole('combobox',{name:'Search street or landmark'});
  await place.fill('Maadi Market');
  await entry.getByRole('button',{name:'Find this street or place on the map'}).click();
