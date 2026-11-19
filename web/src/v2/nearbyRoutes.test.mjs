@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {straightLineKm,nearbyPublishedStops,validCoordinates} from './nearbyRoutes.ts';
 
 const stop=(route_id,id,position,latitude,longitude,pickup_allowed=true,dropoff_allowed=true)=>({
@@ -51,4 +52,10 @@ test('only actual published route input is eligible and nearest valid pickup is 
  assert.equal(ranked.length,1);
  assert.equal(ranked[0].pickupStopId,'near');
  assert.equal(ranked[0].dropoffStopId,'end');
+});
+
+test('Cloudflare production headers allow browser GPS prompt without opening camera/microphone',()=>{
+ const headers=readFileSync(new URL('../../public/_headers',import.meta.url),'utf8');
+ assert.match(headers,/Permissions-Policy: geolocation=\(self\), camera=\(\), microphone=\(\)/);
+ assert.doesNotMatch(headers,/geolocation=\(\)/);
 });
