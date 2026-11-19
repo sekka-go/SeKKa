@@ -57,7 +57,8 @@ export default function LiveCaptainDraft(){
     }
     const availableVehicles=(vehicleResult.data||[]) as Vehicle[];
     setAreas((areaResult.data||[]) as Area[]);
-    setAreaId(String(areaResult.data?.[0]?.id||''));
+    // Do not guess the Captain's operating area from the first database row.
+    setAreaId('');
     setVehicles(availableVehicles);
     setVehicleId(availableVehicles[0]?.id||'');
     const firstCategory=availableVehicles[0]?.enabled_categories?.[0];
