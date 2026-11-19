@@ -100,6 +100,12 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  await entry.getByRole('button',{name:'Add this stop'}).click();
  await expect(entry.locator('.sekka-route-stop-list>li')).toHaveCount(2);
  await expect(entry.getByText('Automatic route name:')).toContainText('Maadi Market ← Nasr City Square');
+ await entry.getByRole('button',{name:'Continue'}).click();
+ await expect(entry.getByRole('combobox',{name:'Approved vehicle'})).toBeVisible();
+ await entry.getByRole('button',{name:'Continue'}).click();
+ await expect(entry.getByRole('combobox',{name:'Journey direction'})).toBeVisible();
+ await entry.getByRole('button',{name:'Continue'}).click();
+ await expect(entry.getByRole('heading',{name:'Price and review'})).toBeVisible();
  const save=entry.getByRole('button',{name:'Save route draft'});
  const amount=entry.getByRole('spinbutton',{name:'Total vehicle price (EGP)'});
  await amount.fill('0');
