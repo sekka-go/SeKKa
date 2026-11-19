@@ -1809,3 +1809,13 @@ html[dir="ltr"] .booking-stage .b-canvas .b-timeline > div:not(:last-child)::bef
 .sekka-nearby__permission {display:grid;gap:9px;padding:12px;border:1px solid var(--d-line,#576474);border-radius:12px;min-width:0}
 .sekka-nearby__permission strong {font-size:1em}
 .sekka-nearby__permission button {justify-self:start;min-height:44px;max-width:100%;white-space:normal}
+
+/* Keep route origin/destination visible before the first phone scroll. */
+.sekka-nearby {gap:7px;margin-block:8px;padding:12px}
+.sekka-nearby__heading {display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.sekka-nearby__heading h2 {flex:1 1 132px;min-width:0}
+.sekka-nearby__heading .sekka-nearby__locate {flex:0 1 auto;min-height:44px;white-space:normal}
+.sekka-nearby__intro {font-size:.88em;opacity:.85;line-height:1.45}
+.sekka-nearby__filters summary {cursor:pointer;min-height:36px;padding:8px 0;font-size:.91em}
+.sekka-nearby__filters .sekka-nearby__controls {padding-top:8px}
+@media(max-width:360px){.sekka-nearby__heading h2 {font-size:17px}.sekka-nearby__heading .sekka-nearby__locate{padding:8px 10px}}
