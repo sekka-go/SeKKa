@@ -130,11 +130,13 @@ export default function LiveRouteSearch({origin,destination,outbound,returnTime,
   {!client&&<p role="status">{t('البحث الحقيقي محتاج ربط إعدادات Supabase العامة.','Live search requires public Supabase configuration.')}</p>}
   {loading&&<p role="status">{t('بنبحث عن خطوط مطابقة…','Searching published routes…')}</p>}
   {error&&<div role="alert"><p>{t('تعذر تحميل الخطوط.','Unable to load routes.')} {error}</p><button onClick={()=>setRetry(v=>v+1)}>{t('حاول تاني','Retry')}</button></div>}
-  {!loading&&!error&&items.length===0&&<div role="status"><p>{t('لسه مفيش خط مناسب.','No suitable route yet.')}</p><p>{t('لسه مفيش خطوط منشورة مطابقة لنقط الركوب والنزول ومواعيدك.','No published routes match your pickup, drop-off and schedule yet.')}</p></div>}
-  {!loading&&!error&&items.length===0&&origin&&destination&&<LiveTripRequests mode="rider" search={{
-   origin,destination,outbound,returnTime,period:requestPeriod,
-   direction:direction==='outbound'||direction==='return'||direction==='round_trip'?direction:(returnTime?'round_trip':'outbound')
-  }} onSignIn={onSignIn}/>}
+  {!loading&&!error&&items.length===0&&<div className="sekka-no-match" role="group" aria-label={t('نتيجة البحث','Search result')}>
+   <p role="status">{t('مفيش رحلة مناسبة لبحثك حاليًا.','No matching trip available right now.')}</p>
+   {origin&&destination&&<LiveTripRequests mode="rider" compact search={{
+    origin,destination,outbound,returnTime,period:requestPeriod,
+    direction:direction==='outbound'||direction==='return'||direction==='round_trip'?direction:'outbound'
+   }} onSignIn={onSignIn}/>}
+  </div>}
   {bookingError&&<p role="alert">{bookingError}</p>}
   {bookingSuccess&&<p role="status">{bookingSuccess}</p>}
   {!loading&&!error&&items.length>1&&<label className="sekka-live-sort">
