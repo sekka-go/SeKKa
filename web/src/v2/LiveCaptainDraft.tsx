@@ -95,8 +95,10 @@ export default function LiveCaptainDraft(){
    if(!areaId||stopName.trim().length<2)return;
    const hasLat=stopLat.trim()!=='' ,hasLng=stopLng.trim()!=='';
    const latitude=hasLat?Number(stopLat):null,longitude=hasLng?Number(stopLng):null;
-   if(hasLat!==hasLng||(hasLat&&(!Number.isFinite(latitude)||!Number.isFinite(longitude)||
-     latitude!>=-90||latitude!>90||longitude!>=-180||longitude!>180))){
+   const invalidPoint=hasLat&&(latitude===null||longitude===null||
+     !Number.isFinite(latitude)||!Number.isFinite(longitude)||
+     latitude< -90||latitude>90||longitude< -180||longitude>180);
+   if(hasLat!==hasLng||invalidPoint){
     setError(t('أدخل خط العرض وخط الطول الصحيحين معًا أو اتركهما فارغين.','Enter valid latitude and longitude together, or leave both blank.'));return;
    }
    const next:StopInput={areaId:Number(areaId),name:stopName.trim(),pickup:true,dropoff:true,latitude,longitude};
