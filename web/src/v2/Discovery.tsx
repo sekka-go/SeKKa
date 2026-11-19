@@ -1038,7 +1038,7 @@ export default function Discovery(p: DiscoveryProps) {
               {tr("عرض النتائج")}</Action>
           </>
         )}
-        {screen === 8 && (
+        {screen === 8 && !p.production && (
           <section className="d-box">
             <h2>{tr("أهلًا بيك في سِكّة")}</h2>
             <p>{tr("مشوارك المنتظم يبدأ من هنا.")}</p>
