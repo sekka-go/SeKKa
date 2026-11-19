@@ -3,9 +3,11 @@ import {reserveSeatsWithStops,MAX_SEATS_PER_RIDER} from './reservations';
 import {useEffect,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
+import {stopNearPoint} from './geoPlace';
+import type {GeoPoint} from './nearbyRoutes';
 
 export type Route={id:string;title:string;category:string;seat_capacity:number;period:string;direction:string;outbound_time:string|null;return_time:string|null;price_egp:number;return_supported:boolean};
-export type Stop={id:string;route_id:string;area_id:number;position:number;name:string;pickup_allowed:boolean;dropoff_allowed:boolean};
+export type Stop={id:string;route_id:string;area_id:number;position:number;name:string;pickup_allowed:boolean;dropoff_allowed:boolean;latitude?:number|string|null;longitude?:number|string|null};
 type Area={id:number;name_ar:string;name_en:string};
 export type LiveSelection={route:Route;from:Stop;to:Stop;reverse:boolean;stops:Stop[];remaining:number};
 type Match=Omit<LiveSelection,'remaining'>;
@@ -26,8 +28,8 @@ export async function fetchPublishedSelection(routeId:string,fromId:string,toId:
  if(typeof remaining!=='number'||remaining<0)throw Error('CAPACITY_UNAVAILABLE');
  return {route:route as Route,from,to,reverse,stops,remaining};
 }
-export default function LiveRouteSearch({origin,destination,outbound,returnTime,period,requestPeriod,direction,categories,onSelect,onSignIn}:{
- origin:string;destination:string;outbound:string;returnTime:string;period:string;requestPeriod:string;direction:string;categories:string[];onSelect?:(selection:LiveSelection)=>void;onSignIn?:()=>void;
+export default function LiveRouteSearch({origin,destination,originPoint=null,destinationPoint=null,canCreateRequest=true,outbound,returnTime,period,requestPeriod,direction,categories,onSelect,onSignIn}:{
+ origin:string;destination:string;originPoint?:GeoPoint|null;destinationPoint?:GeoPoint|null;canCreateRequest?:boolean;outbound:string;returnTime:string;period:string;requestPeriod:string;direction:string;categories:string[];onSelect?:(selection:LiveSelection)=>void;onSignIn?:()=>void;
 }){
  const {language}=usePreferences(),en=language==='en';
  const t=(ar:string,english:string)=>en?english:ar;
@@ -71,11 +73,11 @@ export default function LiveRouteSearch({origin,destination,outbound,returnTime,
     const areaRows=(areas||[]) as Area[],routeRows=(routes||[]) as Route[];
     const areaFor=(name:string)=>areaRows.find(a=>a.name_ar===name||a.name_en===name)?.id;
     const fromId=areaFor(origin),toId=areaFor(destination);
-    if(!fromId||!toId||fromId===toId){if(active)setItems([]);return;}
+    if((!fromId&&!originPoint)||(!toId&&!destinationPoint)||(fromId&&toId&&fromId===toId&&!originPoint&&!destinationPoint)){if(active)setItems([]);return;}
     const ids=routeRows.map(r=>r.id);
     if(!ids.length){if(active)setItems([]);return;}
     const {data:stops,error:stopsError}=await client!.from('v31_route_stops')
-      .select('id,route_id,area_id,position,name,pickup_allowed,dropoff_allowed')
+      .select('id,route_id,area_id,position,name,pickup_allowed,dropoff_allowed,latitude,longitude')
       .in('route_id',ids).order('position').limit(3000);
     if(stopsError)throw stopsError;
     const all=(stops||[]) as Stop[];
@@ -101,10 +103,13 @@ export default function LiveRouteSearch({origin,destination,outbound,returnTime,
      for(const candidate of directions){
       if(candidate.reverse? (returnTime&&candidate.time?.slice(0,5)!==returnTime) : (outbound&&candidate.time?.slice(0,5)!==outbound))continue;
       const ordered=candidate.reverse?[...sequence].reverse():sequence;
+      const matches=(stop:Stop,areaId:number|undefined,point:GeoPoint|null)=>
+       point?stopNearPoint({latitude:Number(stop.latitude),longitude:Number(stop.longitude)},point,3)
+        :stop.area_id===areaId;
       for(let i=0;i<ordered.length;i++){
        const s=ordered[i];
-       if(s.area_id!==fromId||(candidate.reverse?!s.dropoff_allowed:!s.pickup_allowed))continue;
-       const next=ordered.slice(i+1).find(d=>d.area_id===toId&&(candidate.reverse?d.pickup_allowed:d.dropoff_allowed));
+       if(!matches(s,fromId,originPoint)||(candidate.reverse?!s.dropoff_allowed:!s.pickup_allowed))continue;
+       const next=ordered.slice(i+1).find(d=>matches(d,toId,destinationPoint)&&(candidate.reverse?d.pickup_allowed:d.dropoff_allowed));
        if(next){matched.push({route,from:s,to:next,reverse:candidate.reverse,stops:sequence});break;}
       }
      }
@@ -124,7 +129,7 @@ export default function LiveRouteSearch({origin,destination,outbound,returnTime,
    finally{if(active)setLoading(false);}
   })();
   return ()=>{active=false;};
- },[origin,destination,outbound,returnTime,period,direction,categories.join(','),retry]);
+ },[origin,destination,originPoint?.latitude,originPoint?.longitude,destinationPoint?.latitude,destinationPoint?.longitude,outbound,returnTime,period,direction,categories.join(','),retry]);
  return <section className="d-live-search">
   <p>{t('نتائج فعلية من الخطوط المنشورة للكباتن المعتمدين فقط.','Live results from published routes only.')}</p>
   {!client&&<p role="status">{t('البحث الحقيقي محتاج ربط إعدادات Supabase العامة.','Live search requires public Supabase configuration.')}</p>}
@@ -132,7 +137,7 @@ export default function LiveRouteSearch({origin,destination,outbound,returnTime,
   {error&&<div role="alert"><p>{t('تعذر تحميل الخطوط.','Unable to load routes.')} {error}</p><button onClick={()=>setRetry(v=>v+1)}>{t('حاول تاني','Retry')}</button></div>}
   {!loading&&!error&&items.length===0&&<div className="sekka-no-match" role="group" aria-label={t('نتيجة البحث','Search result')}>
    <p role="status">{t('مفيش رحلة مناسبة لبحثك حاليًا.','No matching trip available right now.')}</p>
-   {origin&&destination&&<LiveTripRequests mode="rider" compact search={{
+   {origin&&destination&&canCreateRequest&&<LiveTripRequests mode="rider" compact search={{
     origin,destination,outbound,returnTime,period:requestPeriod,
     direction:direction==='outbound'||direction==='return'||direction==='round_trip'?direction:(returnTime?'round_trip':'outbound')
    }} onSignIn={onSignIn}/>}
