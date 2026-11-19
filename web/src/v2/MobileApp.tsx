@@ -52,6 +52,12 @@ export default function MobileApp(){
  });
  const [userId,setUserId]=useState<string|null>(null),[captain,setCaptain]=useState(false),[admin,setAdmin]=useState(false),[ready,setReady]=useState(false),[error,setError]=useState('');
  const [accountRole,setAccountRole]=useState<'rider'|'captain'|null>(null);
+ const [sessionSlow,setSessionSlow]=useState(false);
+ useEffect(()=>{
+  if(ready){setSessionSlow(false);return;}
+  const id=window.setTimeout(()=>setSessionSlow(true),8500);
+  return()=>window.clearTimeout(id);
+ },[ready]);
 
  const [adminLookupError,setAdminLookupError]=useState('');
  const [sessionLookupError,setSessionLookupError]=useState(false);
@@ -402,7 +408,15 @@ export default function MobileApp(){
      onClick={openAdmin}>{t('لوحة الإدارة','Admin dashboard')}</button>}
   </header>
   <main id="sekka-content" className={`sekka-mobile-content${tab==='admin'&&admin?' sekka-admin-workspace':''}`}>
-   {!ready&&<p role="status">{t('بنجهز حسابك…','Loading account…')}</p>}
+   {!ready&&<div className="sekka-account-loading" role="status">
+    <img src="/brand/sekka-wordmark-en-20261119.svg" alt="seKKa"/>
+    <span className="sekka-account-loading__spinner" aria-hidden="true"/>
+    <p>{t('بنجهّز حسابك…','Preparing your account…')}</p>
+    {sessionSlow&&<div className="sekka-account-loading__slow">
+     <p>{t('تسجيل الدخول بياخد وقت أطول من المعتاد. راجع اتصالك وحاول تاني.','Sign-in verification is taking longer than expected. Check your connection and retry.')}</p>
+     <button type="button" onClick={()=>{setSessionSlow(false);setAuthCheckRevision(v=>v+1)}}>{t('إعادة المحاولة','Retry')}</button>
+    </div>}
+   </div>}
    {ready&&userId&&adminLookupError&&<div role="alert" className="sekka-mobile-alert">
      <p>{adminLookupError}</p>
      <button type="button" onClick={()=>setAuthCheckRevision(v=>v+1)}>{t('إعادة فحص الصلاحيات','Retry authorization')}</button>
@@ -410,7 +424,7 @@ export default function MobileApp(){
    {error&&<div className="sekka-mobile-alert" role="alert">{error}
      {sessionLookupError&&<button type="button" onClick={()=>{setError('');setAuthCheckRevision(v=>v+1)}}>{t('إعادة التحقق من الجلسة','Retry session')}</button>}
      <button type="button" onClick={()=>{setError('');setSessionLookupError(false)}}>{t('إغلاق','Dismiss')}</button></div>}
-   {tab==='home'&&(!ready?<p role="status">{t('بنجهز حسابك…','Loading account…')}</p>:userId?approvedDiscovery(8):<Onboarding production screen={2} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={setSelectedRole}/>)}
+   {tab==='home'&&ready&&(userId?approvedDiscovery(8):<Onboarding production screen={2} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={setSelectedRole}/>)}
    {ready&&tab==='login'&&<Onboarding production screen={userId?6:!ready?4:onboardingScreen} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={selectRole}/>}
    {ready&&tab==='profile'&&(userId?<section className="sekka-mobile-card"><LiveProfile/>{ready&&admin&&<button type="button" className="sekka-action" onClick={openAdmin}>
      {t('فتح لوحة الإدارة','Open Admin dashboard')}</button>}
