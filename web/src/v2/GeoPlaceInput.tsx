@@ -104,7 +104,7 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
    <div className="cj-popular-types" role="group" aria-label={t('نوع المكان','Place type')}>
     <button type="button" aria-pressed={type==='all'} onClick={()=>{setType('all');setExpanded(false);}}>
      {t('الكل','All')}</button>
-    {popularPlaceTypes.map(key=><button key={key} type="button" aria-pressed={type===key}
+    {popularPlaceTypes.filter(key=>suggestions.some(place=>place.type===key)).map(key=><button key={key} type="button" aria-pressed={type===key}
       onClick={()=>{setType(key);setExpanded(true);}}>
       <span aria-hidden="true">{types[key].icon}</span> {en?types[key].en:types[key].ar}</button>)}
    </div>
