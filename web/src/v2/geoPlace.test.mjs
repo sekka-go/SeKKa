@@ -11,7 +11,7 @@ test('service-area text lookup handles English and Arabic spelling variations',(
  assert.equal(serviceMatches(areas,'nAsr')[0]?.id,3);
  assert.equal(serviceMatches(areas,'مدينة نصر')[0]?.id,3);
  assert.equal(serviceMatches(areas,'المعادِي')[0]?.id,1);
- assert.equal(serviceMatches(areas,'')->length,0);
+ assert.equal(serviceMatches(areas,'').length,0);
 });
 test('Photon place parsing accepts Cairo/Giza Egypt coordinates, rejects out-of-region',()=>{
  const geo={features:[
