@@ -111,6 +111,16 @@ test('MOCKED Android-width private document upload: denied, retry, verified pers
  await expect(picker.locator('input[type=file]')).toBeEnabled();
  await expect(page.getByText('0/4 required documents complete')).toBeVisible();
  await expect(page.getByTestId('captain-upload-stage')).toContainText('PICKER_READY');
+ // If Android reloads the browser while Files is open, a privacy-safe marker
+ // explains why zero files were uploaded instead of resetting to silence.
+ await page.evaluate(()=>sessionStorage.setItem('sekka.captain.pendingPicker','identity:'+Date.now()));
+ await page.reload();
+ await expect(page.getByTestId('captain-picker-interrupted')).toContainText(
+  'The phone reopened seKKa before file selection finished');
+ await expect(page.getByText('0/4 required documents complete')).toBeVisible();
+ await page.getByTestId('captain-picker-interrupted').getByRole('button',{name:'Got it'}).click();
+ await expect(page.getByTestId('captain-picker-interrupted')).toHaveCount(0);
+
  await expect(page.getByTestId('captain-upload-build')).toContainText('abcdef01');
  // Development builds have no embedded production SHA, so a mocked current
  // deployment must never trigger a false stale-installed-PWA warning.
