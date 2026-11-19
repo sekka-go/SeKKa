@@ -188,7 +188,7 @@ test(`pending Captain profile stays in Passenger journey until explicit entry at
  await expect(leftDrawer.getByRole('button',{name:'My bookings'})).toBeVisible();
  await expect(leftDrawer.getByRole('button',{name:'My routes'})).toHaveCount(0);
  await leftDrawer.getByRole('button',{name:'My profile'}).click();
- await page.getByRole('button',{name:'Enter Captain journey'}).click();
+ await page.getByRole('button',{name:'Continue Captain application'}).click();
  await expect(page).toHaveURL(/tab=captain-onboarding&view=35/);
  await expect(page.locator('.c-approval-live')).toBeVisible();
  await expect(page.getByRole('button',{name:'Start registration'})).toBeVisible();
@@ -235,4 +235,62 @@ test(`pending Captain profile stays in Passenger journey until explicit entry at
  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
  await page.screenshot({path:`test-results/mock-captain-document-upload-ar-${width}.png`,fullPage:true,animations:'disabled'});
 });
+}
+
+for(const language of ['ar','en'] as const){
+ test('authenticated Rider cannot enroll as Captain via menu, profile, or direct link '+language,async({page})=>{
+  await page.setViewportSize({width:390,height:844});
+  await page.addInitScript(({endpoint,user,language})=>{
+   const key='sb-'+new URL(endpoint).hostname.split('.')[0]+'-auth-token';
+   localStorage.setItem(key,JSON.stringify({
+    access_token:'fixture-header.fixture-payload.fixture-signature',
+    refresh_token:'local-fixture-refresh',token_type:'bearer',
+    expires_in:3600,expires_at:Math.floor(Date.now()/1000)+3600,user
+   }));
+   localStorage.setItem('language_preference',language);
+   localStorage.setItem('theme_preference','light');
+  },{endpoint,user,language});
+  let captainWrites=0;
+  await page.route(endpoint+'/**',async request=>{
+   const pathname=new URL(request.request().url()).pathname;
+   let result:unknown=[];
+   if(pathname==='/auth/v1/user')result=user;
+   else if(pathname==='/rest/v1/rpc/v31_is_admin')result=false;
+   else if(pathname.startsWith('/rest/v1/v31_captain_profiles')){
+    if(request.request().method()!=='GET')captainWrites++;
+    result=null;
+   }
+   else if(pathname.startsWith('/rest/v1/v31_profiles'))
+    result={user_id:userId,role_preference:'rider'};
+   await request.fulfill({contentType:'application/json',body:JSON.stringify(result)});
+  });
+  const t=(ar:string,en:string)=>language==='ar'?ar:en;
+  await page.goto('/?tab=profile');
+  await expect(page.getByRole('heading',{name:t('بيانات حسابي','My profile')})).toBeVisible();
+  await expect(page.getByRole('button',{name:/Enter Captain journey|Continue Captain application|ابدأ ككابتن|متابعة طلب الكابتن/})).toHaveCount(0);
+  await page.getByRole('button',{name:t('فتح القائمة','Open menu')}).click();
+  const drawer=page.getByRole('dialog',{name:t('القائمة الرئيسية','Main menu')});
+  await expect(drawer.getByRole('button',{name:t('تسجيل / متابعة طلب الكابتن','Captain registration / application')})).toHaveCount(0);
+  await page.goto('/?tab=captain-onboarding&view=35');
+  await expect(page.getByRole('heading',{name:t('غير مسموح','Access restricted')})).toBeVisible();
+  await expect(page.locator('.c-approval-live')).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByRole('heading',{name:t('غير مسموح','Access restricted')})).toBeVisible();
+  await page.goto('/?tab=routes&view=42');
+  await expect(page.getByText(t('خطوط الكابتن مخصصة لحسابات الكباتن فقط.','Captain routes are only available to Captain accounts.'))).toBeVisible();
+  await expect(page.getByRole('button',{name:t('بدء تسجيل الكابتن','Start Captain enrollment')})).toHaveCount(0);
+
+  // Even a forged/stale Captain OAuth intent cannot convert an existing Rider.
+  await page.evaluate(()=>{
+   sessionStorage.setItem('sekka.pendingRole','captain');
+   sessionStorage.setItem('sekka.postAuthPath','/?tab=captain-onboarding&view=35');
+  });
+  await page.reload();
+  await expect(page.getByRole('alert')).toContainText(t(
+   'حساب الراكب لا يمكن تحويله إلى كابتن.',
+   'A Rider account cannot be converted to Captain.'
+  ));
+  expect(await page.evaluate(()=>sessionStorage.getItem('sekka.pendingRole'))).toBeNull();
+  expect(captainWrites).toBe(0);
+ });
 }
