@@ -183,7 +183,7 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
     {!offers.some(o=>o.request_id===r.id)&&<button type="button" className="sekka-request-edit" aria-label={t('تعديل الطلب','Edit request')} disabled={busy}
      onClick={()=>startEdit(r)}>{t('تعديل','Edit')}</button>}
     <button type="button" className="sekka-request-cancel" aria-label={t('إلغاء الطلب','Cancel request')} disabled={busy} onClick={()=>void cancel(r.id)}>{t('إلغاء الطلب','Cancel request')}</button>
-   </div>
+   </div>}
    {mode==='rider'&&editing?.id===r.id&&<div className="d-box" aria-label={t('تعديل تفاصيل الطلب','Edit request details')}>
     <p>{t('عدّل المقاعد والمواعيد بدل إنشاء طلب مكرر.','Change seats and times instead of submitting a duplicate.')}</p>
     <label>{t('اتجاه الرحلة','Journey direction')}<select value={editing.direction}
