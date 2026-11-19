@@ -31,7 +31,7 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  ];
  await page.route('https://photon.komoot.io/api/**',async route=>{
   const q=new URL(route.request().url()).searchParams.get('q')||'';
-  const maadi=q.toLowerCase().includes('maadi');
+  const maadi=q.toLowerCase().includes('maadi')&&!q.toLowerCase().includes('outside');
   await route.fulfill({contentType:'application/json',body:JSON.stringify({features:[{
    geometry:{coordinates:maadi?[31.25,29.96]:[31.34,30.06]},
    properties:{osm_id:maadi?101:102,osm_type:'N',name:maadi?'Maadi Market':'Nasr City Square',
@@ -90,6 +90,10 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  await expect(entry.getByRole('button',{name:'Add this stop'})).toBeDisabled();
  await entry.getByRole('combobox',{name:'Service area'}).selectOption('11');
  const place=entry.getByRole('combobox',{name:'Search street or landmark'});
+ await place.fill('Outside street');
+ await entry.getByRole('button',{name:'Find this street or place on the map'}).click();
+ await expect(entry.getByText(/No verified place found inside Maadi/)).toBeVisible();
+ await expect(entry.getByRole('button',{name:'Add this stop'})).toBeDisabled();
  await place.fill('Maadi Market');
  await entry.getByRole('button',{name:'Find this street or place on the map'}).click();
  await entry.getByRole('button',{name:/Maadi Market/}).click();
