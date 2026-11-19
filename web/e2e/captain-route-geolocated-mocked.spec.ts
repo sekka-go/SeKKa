@@ -65,9 +65,11 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
    if(row){row.latitude=Number((body as {p_latitude:number}).p_latitude);
     row.longitude=Number((body as {p_longitude:number}).p_longitude);}
    result=(body as {p_stop:string}).p_stop;
-  }else if(path.startsWith('/rest/v1/v31_routes'))result={
-   id:routeId,status:'draft',vehicle_id:vehicle,category:'PRIME',seat_capacity:3,price_egp:1300
-  };
+  }else if(path.startsWith('/rest/v1/v31_routes')){
+   const row={id:routeId,title:'Maadi Market ← Nasr City Square',status:'draft',vehicle_id:vehicle,
+    category:'PRIME',seat_capacity:3,price_egp:1300};
+   result=(route.request().headers()['accept']||'').includes('object+json')?row:[row];
+  }
   else if(path.startsWith('/rest/v1/v31_route_stops'))result=savedStops;
   await route.fulfill({contentType:'application/json',body:JSON.stringify(result)});
  });
