@@ -141,7 +141,7 @@ test('MOCKED Android-width private document upload: denied, retry, verified pers
  const oversizedChooser=page.waitForEvent('filechooser');
  await tapVisibleButton();
  await (await oversizedChooser).setFiles(mockFile);
- await expect(page.locator('.c-document').first().getByRole('alert')).toContainText('up to 16 MB');
+ await expect(page.locator('.c-document').first().getByRole('alert')).toContainText('under 16 MB');
  await expect(page.getByTestId('captain-upload-stage')).toContainText('FILE_READ/NA/FILE_INVALID_SIZE');
  expect(storageRequests).toBe(0);
  expect(docs).toHaveLength(0);
