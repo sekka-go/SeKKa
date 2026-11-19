@@ -10,6 +10,15 @@ import {createClient} from '@supabase/supabase-js';
 export const PRODUCTION_REF='uorxfakceqnhxqnaawdy';
 export const STAGING_REF='zgcvumykzivsvnlflbyp';
 
+export const REQUIRED_PRODUCTION_TABLES=Object.freeze([
+ 'v31_profiles','v31_captain_profiles','v31_captain_applications',
+ 'v31_captain_documents','v31_captain_approval_audit',
+ 'v31_vehicle_makes','v31_vehicle_models','v31_vehicle_colors',
+ 'v31_vehicle_service_categories','v31_vehicles','v31_routes',
+ 'v31_route_stops','v31_bookings','v31_trip_requests',
+ 'v31_trip_offers','v31_notifications','v31_service_areas'
+]);
+
 export function releaseTarget(env){
  // The live Pages project uses its Production Supabase config for BOTH
  // preview and main builds. Probe those credentials read-only BEFORE merge
@@ -65,12 +74,9 @@ export async function runProductionPreflight(env=process.env){
  const client=createClient(url,publishableKey,{
   auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}
  });
- const required=[
-  'v31_profiles','v31_captain_profiles','v31_captain_applications',
-  'v31_captain_documents','v31_vehicles','v31_routes','v31_route_stops',
-  'v31_bookings','v31_trip_requests','v31_trip_offers',
-  'v31_notifications','v31_service_areas','v31_captain_approval_audit'
- ];
+ // All tables needed by launch-critical real Passenger/Captain workflows.
+ // The read-only probe is deliberately stricter than a simple build check.
+ const required=REQUIRED_PRODUCTION_TABLES;
  // IMPORTANT: never use HEAD here. Some PostgREST configurations return
  // an empty HEAD response for a table missing from the schema cache, hiding
  // PGRST205 and giving an incorrect PASS. GET with limit=0 returns zero
