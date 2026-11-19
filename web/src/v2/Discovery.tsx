@@ -858,13 +858,13 @@ export default function Discovery(p: DiscoveryProps) {
               }}
             >
               <div className="d-planner-places">
-                <label className="d-place">
+                <div className="d-place">
                   <span className="sr-only">{tr("من أين؟")}</span>
                   {p.production?<GeoPlaceInput label={language==='en'?'From where?':'منين هتتحرك؟'} value={origin} choice={originPlace}
                    areas={p.serviceAreas||[]} onPick={(name,selection)=>{setOrigin(name);setOriginPlace(selection);}}/>
                   :areaSelect(origin, setOrigin, tr("من أين؟"))}
                   <span className="d-origin-dot" />
-                </label>
+                </div>
                 <button
                   type="button"
                   className="d-swap"
@@ -877,13 +877,13 @@ export default function Discovery(p: DiscoveryProps) {
                 >
                   <DiscoveryIcon name="swap" />
                 </button>
-                <label className="d-place">
+                <div className="d-place">
                   <span className="sr-only">{tr("إلى أين؟")}</span>
                   {p.production?<GeoPlaceInput label={language==='en'?'Where to?':'رايح فين؟'} value={destination} choice={destinationPlace}
                    areas={p.serviceAreas||[]} onPick={(name,selection)=>{setDestination(name);setDestinationPlace(selection);}}/>
                   :areaSelect(destination, setDestination, tr("إلى أين؟"))}
                   <DiscoveryIcon name="pin" />
-                </label>
+                </div>
               </div>
               {p.production&&<details className="sekka-gps-inline">
                <summary>{tr("📍 اكتشف الرحلات القريبة من موقعي")}</summary>
