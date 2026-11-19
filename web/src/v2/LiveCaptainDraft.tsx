@@ -373,7 +373,7 @@ export default function LiveCaptainDraft({onSaved}:{onSaved?:(id:string)=>void}=
    <div className="sekka-route-step-buttons">
     {step>1&&<button type="button" className="sekka-route-secondary" disabled={busy}
      onClick={()=>{setError('');setStep((step-1) as 1|2|3|4)}}>{t('السابق','Back')}</button>}
-    {step>1&&step<4&&<button type="button" className="sekka-route-next" disabled={!canContinue||busy}
+    {((step===1&&canContinueRoute)||(step>1&&step<4))&&<button type="button" className="sekka-route-next" disabled={!canContinue||busy}
      onClick={nextStep}>{t('التالي','Continue')}</button>}
    </div>
   </nav>
