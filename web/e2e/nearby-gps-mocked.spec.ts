@@ -37,9 +37,10 @@ test('GPS opt-in finds nearby published pickup, shows straight-line km and opens
  });
  await page.goto('/?tab=home');
  const nearby=page.getByRole('region',{name:'Routes near me'});
- await expect(nearby.getByRole('button',{name:/Enable GPS and find nearby routes/})).toBeVisible();
- await expect(nearby.getByText('Pickup near me')).toHaveCount(0);
- await nearby.getByRole('button',{name:/Enable GPS and find nearby routes/}).click();
+ // Browser already granted GPS on an earlier visit: suggestions load
+ // automatically with no new permission prompt and no manual tap.
+ await expect(nearby.getByText('Pickup near me')).toBeVisible();
+ await nearby.getByRole('button',{name:'Update my location'}).click();
  await expect(nearby.getByText('Pickup near me')).toBeVisible();
  await expect(nearby.getByText(/km from your location/)).toContainText('0.1');
  expect(remoteCalls.some(url=>url.includes('30.04'))).toBe(false);
