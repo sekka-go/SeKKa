@@ -46,3 +46,10 @@
     opacity: 1;
   }
 }
+
+/* Keep the existing approved pulsing wordmark; show a readable load state. */
+.sekka-launch{flex-direction:column;gap:18px}
+.sekka-launch__loading{
+ display:block;color:#fff;font:600 14px/1.3 system-ui,-apple-system,Arial,sans-serif;
+ letter-spacing:.1em;text-align:center
+}
