@@ -91,7 +91,7 @@ test('map text search finds a real stop within 3km without inventing a service I
  await page.getByRole('combobox',{name:'From where?'}).fill('City Stars');
  await page.getByRole('button',{name:'Find this street or place on the map'}).click();
  await page.getByRole('button',{name:/City Stars/}).click();
- await expect(page.getByText('Map location selected')).toBeVisible();
+ await expect(page.getByText(/Map place selected/)).toBeVisible();
  await page.getByRole('combobox',{name:'Where to?'}).fill('Maadi');
  await page.getByRole('group',{name:'Place search suggestions'}).getByRole('button',{name:/Maadi/}).click();
  await page.locator('.d-planner button[type=submit]').click();
