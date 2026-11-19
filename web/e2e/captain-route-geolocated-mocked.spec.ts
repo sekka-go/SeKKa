@@ -81,6 +81,8 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  const drawer=page.getByRole('dialog',{name:'Main menu'});
  await expect(drawer.getByRole('button',{name:/Captain registration|Review Captain application/})).toHaveCount(0);
  await drawer.getByRole('button',{name:'My routes'}).click();
+ await page.goto('/?tab=captain-onboarding&view=35');
+ await expect(page).toHaveURL(/tab=routes&view=42/);
  await page.goto('/?tab=routes&view=43');
  const entry=page.locator('.sekka-captain-route-wizard');
  await expect(entry.getByRole('button',{name:'Add this stop'})).toBeDisabled();
