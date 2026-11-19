@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {URL} from 'node:url';
 import {straightLineKm,nearbyPublishedStops,validCoordinates} from './nearbyRoutes.ts';
 
 const stop=(route_id,id,position,latitude,longitude,pickup_allowed=true,dropoff_allowed=true)=>({
