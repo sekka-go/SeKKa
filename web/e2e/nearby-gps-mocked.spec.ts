@@ -38,6 +38,7 @@ test('GPS opt-in finds nearby published pickup, shows straight-line km and opens
  // Guests see Welcome on /; the actual Rider discovery is under Search.
  // Exercise GPS on the public Search screen, never the guest onboarding screen.
  await page.goto('/?tab=search&view=9');
+ await page.locator('.sekka-gps-inline > summary').click();
  const nearby=page.getByRole('region',{name:'Routes near me'});
  await expect(nearby).toBeVisible();
  // Browser already granted GPS on an earlier visit: suggestions load
@@ -59,6 +60,7 @@ test('denied GPS permission offers manual search and never lists fabricated rout
   }});
  });
  await page.goto('/?tab=search&view=9');
+ await page.locator('.sekka-gps-inline > summary').click();
  const nearby=page.getByRole('region',{name:'Routes near me'});
  await expect(nearby.locator('.sekka-nearby__locate')).toBeVisible();
  await nearby.locator('.sekka-nearby__locate').click();
@@ -67,4 +69,33 @@ test('denied GPS permission offers manual search and never lists fabricated rout
  await expect(nearby.getByRole('button',{name:'Retry location permission'})).toBeVisible();
  await expect(page.getByRole('combobox',{name:'From where?'})).toBeVisible();
  await expect(nearby.getByRole('button',{name:'View route details'})).toHaveCount(0);
+});
+
+test('map text search finds a real stop within 3km without inventing a service ID',async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('language_preference','en'));
+ await page.route('https://photon.komoot.io/api/**',async request=>{
+  await request.fulfill({contentType:'application/json',body:JSON.stringify({features:[{
+   geometry:{coordinates:[31.24,30.04]},
+   properties:{osm_id:123,osm_type:'N',countrycode:'EG',name:'City Stars',city:'Cairo'}
+  }]})});
+ });
+ await page.route(endpoint+'/**',async request=>{
+  const path=new URL(request.request().url()).pathname;
+  const data=path==='/rest/v1/v31_service_areas'?areas:
+   path==='/rest/v1/v31_routes'?[route]:
+   path==='/rest/v1/v31_route_stops'?stops:
+   path==='/rest/v1/rpc/v31_published_route_available_seats'?2:[];
+  await request.fulfill({contentType:'application/json',body:JSON.stringify(data)});
+ });
+ await page.goto('/?tab=search&view=9');
+ await page.getByRole('combobox',{name:'From where?'}).fill('City Stars');
+ await page.getByRole('button',{name:'Find this street or place on the map'}).click();
+ await page.getByRole('button',{name:/City Stars/}).click();
+ await expect(page.getByText('Map location selected')).toBeVisible();
+ await page.getByRole('combobox',{name:'Where to?'}).fill('Maadi');
+ await page.getByRole('group',{name:'Place search suggestions'}).getByRole('button',{name:/Maadi/}).click();
+ await page.locator('.d-planner button[type=submit]').click();
+ await expect(page).toHaveURL(/tab=search&view=11/);
+ await expect(page.locator('.d-live-search .d-result').first()).toContainText('Pickup near me');
+ await expect(page.locator('.d-live-search .d-result').first()).toContainText('Maadi dropoff');
 });
