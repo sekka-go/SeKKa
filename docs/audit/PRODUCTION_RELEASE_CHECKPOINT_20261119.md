@@ -26,7 +26,7 @@ Production read-only catalog and aggregate queries. They were derived from
 existing Staging-tested source migrations, reviewed for destructive DDL and
 applied through the Supabase migration action. The first is a deliberately
 narrow subset of the earlier Staging public-capacity migration. Exact source
-is recorded in this PR's `supabase/migrations/20261119*.sql` files.
+is archived without automatic re-application in this PR's `docs/audit/production-applied/20261119*.sql` files. The existing Staging migration files remain the only source scripts in `supabase/migrations`; Production's applied migration history is maintained by Supabase.
 
 ### Data preservation verification
 
