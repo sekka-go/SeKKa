@@ -31,7 +31,7 @@ test('guest app supports browser Back/Forward between real tabs',async({page})=>
  await expect(page).toHaveURL(/tab=bookings/);
  await page.goBack();
  await expect(page).toHaveURL(/tab=search/);
- await expect(page.locator('.sekka-discovery-logo-en')).toBeVisible();
+ await expect(page.locator('.sekka-discovery-logo-en')).toHaveCount(0);
  await expect(page.locator('.d-title')).toHaveCount(0);
  await page.goForward();
  await expect(page).toHaveURL(/tab=bookings/);
@@ -112,15 +112,12 @@ test('explicit Rider selection clears stale Captain intent before Google sign-in
  expect(selection).toEqual({role:'rider',returnPath:'/?tab=login&view=6'});
 });
 
-test('real mobile header centers official seKKa English logo, no per-page name',async({page})=>{
+test('real application shows no internal logos and no page titles',async({page})=>{
  await page.setViewportSize({width:360,height:800});
  await page.goto('/?tab=bookings');
  await expect(page.locator('.sekka-current-section')).toHaveCount(0);
- const brand=page.locator('.sekka-mobile-header .sekka-brand-button .sekka-wordmark-en');
- await expect(brand).toHaveAttribute('src','/brand/sekka-wordmark-en-20261119.svg');
- const logo=await brand.boundingBox();
- expect(logo).not.toBeNull();
- expect(Math.abs(logo!.x+logo!.width/2-180)).toBeLessThanOrEqual(2);
+ await expect(page.locator('.sekka-mobile-header .sekka-brand-button')).toHaveCount(0);
+ await expect(page.locator('.sekka-mobile img[src*="sekka-wordmark"]')).toHaveCount(0);
  await page.getByRole('button',{name:/Open menu|فتح القائمة/}).click();
  await expect(page.getByRole('dialog',{name:/Main menu|القائمة الرئيسية/})).toBeVisible();
 });
