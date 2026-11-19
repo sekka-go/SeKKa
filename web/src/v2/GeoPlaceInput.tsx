@@ -1,6 +1,6 @@
 import {useEffect,useState} from 'react';
 import {usePreferences} from './preferences';
-import {mapPlacesFromPhoton,normalizedPlace,serviceMatches,PHOTON_ATTRIBUTION} from './geoPlace';
+import {mapPlacesFromPhoton,serviceMatches,PHOTON_ATTRIBUTION} from './geoPlace';
 import type {PlaceChoice,MapPlace,ServiceArea} from './geoPlace';
 
 export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=false}:{
@@ -13,7 +13,7 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
  const [open,setOpen]=useState(false);
  const [busy,setBusy]=useState(false),[error,setError]=useState('');
  const [found,setFound]=useState<MapPlace[]>([]);
- useEffect(()=>{setQuery(value);},[value]);
+ useEffect(()=>{setQuery(choice?.kind==='service'?(en?choice.area.name_en:choice.area.name_ar):value);},[value,choice,en]);
  const local=serviceMatches(areas,query);
  const pick=(name:string,next:PlaceChoice)=>{
   setQuery(name);onPick(name,next);setFound([]);setOpen(false);setError('');
@@ -49,11 +49,11 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
     aria-expanded={open} autoComplete="off" disabled={disabled}
     placeholder={label} value={query} maxLength={120}
     onFocus={()=>setOpen(true)} onChange={e=>{const next=e.target.value;setQuery(next);
-      onPick('',null);setFound([]);setError('');setOpen(true);
+      onPick(next,null);setFound([]);setError('');setOpen(true);
     }}
     onKeyDown={e=>{if(e.key==='Escape'){setOpen(false);setError('');}
       if(e.key==='Enter'&&open&&local.length>0){e.preventDefault();
-       const area=local[0];pick(en?area.name_en:area.name_ar,{kind:'service',area});
+       const area=local[0];pick(area.name_ar,{kind:'service',area});
       }
     }}/>
   </label>
