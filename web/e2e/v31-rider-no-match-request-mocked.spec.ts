@@ -102,7 +102,7 @@ test('MOCKED Rider no-match journey saves the selected period and re-reads the o
  expect(insertCount).toBe(1);
  expect(saved).toMatchObject({
   rider_id:userId,origin_area_id:11,destination_area_id:22,
-  direction:'outbound',period:'weekly',outbound_time:'08:15',return_time:null,seats:1
+  direction:'round_trip',period:'weekly',outbound_time:'08:15',return_time:'18:45',seats:1
  });
  // The same submitted details persist through reload, with no second form.
  await page.reload();
