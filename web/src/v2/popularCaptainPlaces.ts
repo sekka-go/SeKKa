@@ -3,7 +3,7 @@
  * area assignment: every choice is geocoded and locality-checked with OSM.
  * Additional user-entered streets/places remain supported.
  */
-import {normalizedPlace} from './geoPlace';
+import {normalizedPlace} from './geoPlace.ts';
 
 export type PopularPlaceType='neighborhood'|'square'|'university'|'mall'|'mosque'|'gathering';
 export type PopularPlace={name_ar:string;name_en:string;type:PopularPlaceType};
