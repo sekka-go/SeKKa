@@ -5,7 +5,6 @@ import {inLaunchRegion,mapPlacesFromPhoton,placeMatchesArea} from './geoPlace';
 import type {MapPlace} from './geoPlace';
 import type {PlaceChoice} from './geoPlace';
 import {straightLineKm} from './nearbyRoutes';
-import type {GeoPoint} from './nearbyRoutes';
 import {usePreferences} from './preferences';
 import type {Category} from '../../../packages/domain/subscriptions';
 
@@ -374,7 +373,7 @@ export default function LiveCaptainDraft({onSaved}:{onSaved?:(id:string)=>void}=
    <div className="sekka-route-step-buttons">
     {step>1&&<button type="button" className="sekka-route-secondary" disabled={busy}
      onClick={()=>{setError('');setStep((step-1) as 1|2|3|4)}}>{t('السابق','Back')}</button>}
-    {step<4&&<button type="button" className="sekka-route-next" disabled={!canContinue||busy}
+    {step>1&&step<4&&<button type="button" className="sekka-route-next" disabled={!canContinue||busy}
      onClick={nextStep}>{t('التالي','Continue')}</button>}
    </div>
   </nav>
