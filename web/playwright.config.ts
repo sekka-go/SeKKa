@@ -12,7 +12,8 @@ export default defineConfig({
       '**/captain-onboarding-validation.spec.ts',
       '**/captain-document-upload-mocked.spec.ts',
       '**/captain-plate-segments.spec.ts',
-      '**/v31-rider-no-match-request-mocked.spec.ts'
+      '**/v31-rider-no-match-request-mocked.spec.ts',
+      '**/nearby-gps-mocked.spec.ts'
     ],
   use: {
     baseURL: "http://127.0.0.1:4173",
