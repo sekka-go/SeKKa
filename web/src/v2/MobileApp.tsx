@@ -163,7 +163,8 @@ export default function MobileApp(){
      client.from('v31_profiles').select('user_id,role_preference').eq('user_id',user.id).maybeSingle()
     ]);
     if(!active||readId!==sessionReadId.current)return;
-    if(captainError)setError(captainError.message);
+    // Failed Captain authorization lookup must not silently turn a Captain into a Rider.
+    if(captainError)throw captainError;
     if(profileError)throw profileError;
     if(adminError||typeof adminAccess!=='boolean'){
       // A network/RPC failure is NOT the same as a server denial of Admin rights.
@@ -173,7 +174,11 @@ export default function MobileApp(){
       setAdmin(adminAccess===true);
     }
     let enrolled=Boolean(captainRow);
-    let resolvedAccountRole:'rider'|'captain'=profile?.role_preference==='rider'?'rider':
+    // A server-approved Captain remains a Captain even if a legacy profile
+    // says rider; browser state alone never grants Captain permissions.
+    const approvedCaptain=captainRow?.approval_status==='approved';
+    let resolvedAccountRole:'rider'|'captain'=approvedCaptain?'captain':
+      profile?.role_preference==='rider'?'rider':
       profile?.role_preference==='captain'?'captain':enrolled?'captain':'rider';
     // Preserve existing Google identities; role preference is NOT Admin authorization.
     let pendingRole:string|null=null;
@@ -182,7 +187,18 @@ export default function MobileApp(){
       const callbackRole=new URL(location.href).searchParams.get('oauth_role');
       pendingRole=callbackRole==='rider'||callbackRole==='captain'?callbackRole:null;
     }
-    if(pendingRole==='rider'||pendingRole==='captain'){
+    if(approvedCaptain){
+      // An old Rider OAuth intent must never downgrade a real approved Captain.
+      try{
+       sessionStorage.removeItem('sekka.pendingRole');
+       sessionStorage.removeItem('sekka.postAuthPath');
+      }catch{/* Approval is read from the server, not storage. */}
+      const callbackUrl=new URL(location.href);
+      if(callbackUrl.searchParams.has('oauth_role')){
+       callbackUrl.searchParams.delete('oauth_role');
+       history.replaceState(history.state,'',callbackUrl.pathname+callbackUrl.search+callbackUrl.hash);
+      }
+    }else if(pendingRole==='rider'||pendingRole==='captain'){
       if(pendingRole==='captain'&&profile?.role_preference==='rider'){
         // A Rider's existing Google identity cannot be upgraded to Captain by
         // a stale OAuth callback or a manually edited pendingRole.
@@ -229,9 +245,19 @@ export default function MobileApp(){
     if(!active||readId!==sessionReadId.current)return;
     verifiedUserId.current=user.id;
     setUserId(user.id);setCaptain(enrolled);setAccountRole(resolvedAccountRole);
-    setCaptainApproved(captainRow?.approval_status==='approved');
+    setCaptainApproved(approvedCaptain);
     // Admin landing is a navigation preference, not permission assignment.
     // Respect explicit passenger/captain/deep-link destinations.
+    if(approvedCaptain&&adminAccess===false){
+     // A verified Captain lands in the Captain area on opening the app or
+     // finishing Google sign-in, never the Rider discovery screen.
+     const destinationFromUrl=readMobileRoute();
+     if(['home','search','booking','bookings','login'].includes(destinationFromUrl.tab)){
+      const captainDestination:MobileRoute={tab:'routes',view:42};
+      history.replaceState({route:captainDestination},'',mobileRouteHref(captainDestination));
+      setRoute(captainDestination);
+     }
+    }
     if(adminAccess===true&&!adminError&&!adminLandingHandled){
       adminLandingHandled=true;
       const u=new URL(location.href);
@@ -390,6 +416,12 @@ export default function MobileApp(){
 
  const menuLink=(label:string,next:MobileRoute)=><button type="button" onClick={()=>{if(next.tab==='bookings')setBookingsSection('bookings');navigate(next)}}
   aria-current={tab===next.tab?'page':undefined}>{label}</button>;
+ const isCaptainAccount=ready&&Boolean(userId)&&accountRole==='captain'&&captainApproved&&!admin;
+ const blockedRiderTab=isCaptainAccount&&['home','search','bookings','booking','login'].includes(tab);
+ useEffect(()=>{
+  if(!blockedRiderTab)return;
+  navigate({tab:'routes',view:42},{replace:true});
+ },[blockedRiderTab,tab]);
  const fullScreenSearchFilters=tab==='search'&&discoveryScreen===10;
  const fullScreenAuth=(tab==='login'&&(onboardingScreen===3||onboardingScreen===4))||(tab==='captain-onboarding'&&!userId);
  const fullScreenSearch=tab==='search'&&discoveryScreen===9;
@@ -419,14 +451,14 @@ export default function MobileApp(){
    {error&&<div className="sekka-mobile-alert" role="alert">{error}
      {sessionLookupError&&<button type="button" onClick={()=>{setError('');setAuthCheckRevision(v=>v+1)}}>{t('إعادة التحقق من الجلسة','Retry session')}</button>}
      <button type="button" onClick={()=>{setError('');setSessionLookupError(false)}}>{t('إغلاق','Dismiss')}</button></div>}
-   {tab==='home'&&ready&&(userId?approvedDiscovery(8):<Onboarding production screen={2} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={setSelectedRole}/>)}
-   {ready&&tab==='login'&&<Onboarding production screen={userId?6:!ready?4:onboardingScreen} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={selectRole}/>}
+   {tab==='home'&&ready&&!blockedRiderTab&&(userId?approvedDiscovery(8):<Onboarding production screen={2} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={setSelectedRole}/>)}
+   {ready&&tab==='login'&&!blockedRiderTab&&<Onboarding production screen={userId?6:!ready?4:onboardingScreen} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={selectRole}/>}
    {ready&&tab==='profile'&&(userId?<section className="sekka-mobile-card"><LiveProfile/>{ready&&admin&&<button type="button" className="sekka-action" onClick={openAdmin}>
      {t('فتح لوحة الإدارة','Open Admin dashboard')}</button>}
    {captain&&accountRole==='captain'&&<button type="button" onClick={startCaptainJourney}>{captainApproved?t('فتح حساب الكابتن','Open Captain journey'):t('متابعة طلب الكابتن','Continue Captain application')}</button>}<button type="button" onClick={()=>void signOut()}>{t('تسجيل الخروج','Sign out')}</button></section>:<section className="sekka-mobile-card"><h1>{t('حسابي','My profile')}</h1><p>{t('سجّل بجوجل علشان تكمل بياناتك.','Sign in with Google to complete your profile.')}</p><button className="sekka-action" onClick={()=>signInFor('/?tab=login&view=6')}>{t('تسجيل الدخول بجوجل','Sign in with Google')}</button></section>)}
    {selectionError&&['search','booking'].includes(tab)&&<div role="alert" className="sekka-mobile-alert">{selectionError}<button type="button" onClick={()=>setSelectionVersion(v=>v+1)}>{t('إعادة المحاولة','Retry')}</button></div>}
-   {tab==='search'&&approvedDiscovery(discoveryScreen)}
-   {ready&&tab==='booking'&&<Suspense fallback={<p role="status">{t('بنحمّل الحجز…','Loading booking…')}</p>}><V31BookingJourney offer={bookingOffer} routeId={liveSelection?.route.id||''}
+   {tab==='search'&&!blockedRiderTab&&approvedDiscovery(discoveryScreen)}
+   {ready&&tab==='booking'&&!blockedRiderTab&&<Suspense fallback={<p role="status">{t('بنحمّل الحجز…','Loading booking…')}</p>}><V31BookingJourney offer={bookingOffer} routeId={liveSelection?.route.id||''}
      pickupId={new URL(location.href).searchParams.get('pickup')||''} dropoffId={new URL(location.href).searchParams.get('dropoff')||''}
      reverse={new URL(location.href).searchParams.get('reverse')==='1'} bookingId={bookingId}
      onBack={()=>{if(bookingId)navigate({tab:'bookings'});else navigate({tab:'search',view:12});}}
@@ -442,7 +474,7 @@ export default function MobileApp(){
        {t('تسجيل الخروج واختيار حساب كابتن منفصل','Sign out and select a separate Captain account')}</button></section>
     :userId?approvedCaptainOnboarding(captainStep):<Onboarding production screen={4} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={selectRole}/>)}
    {ready&&tab==='routes'&&(captain&&accountRole==='captain'&&captainApproved?<Suspense fallback={<p role="status">{t('بنحمّل الخطوط…','Loading routes…')}</p>}><CaptainRoutes production screen={internalScreen(captainScreen)} theme={p.theme} onTheme={p.setThemePreference} go={captainGo}/></Suspense> :<section className="sekka-mobile-card"><h1>{t('خطوط الكابتن','Captain routes')}</h1><p>{userId&&accountRole!=='captain'?t('خطوط الكابتن مخصصة لحسابات الكباتن فقط.','Captain routes are only available to Captain accounts.'):captain?t('حساب الكابتن لم يُعتمد بعد.','Captain access is not approved yet.'):t('اختار حساب كابتن من البداية لتقديم طلب الاعتماد.','Select Captain before sign-in to apply for approval.')}</p>{captain&&accountRole==='captain'&&<button className="sekka-action" onClick={()=>captain?navigate({tab:'captain-onboarding',view:40}):startCaptainJourney()}>{captain?t('متابعة حالة الطلب','View application status'):t('بدء تسجيل الكابتن','Start Captain enrollment')}</button>}</section>)}
-   {ready&&tab==='bookings'&&(userId?<section className="sekka-bookings-workspace">
+   {ready&&tab==='bookings'&&!blockedRiderTab&&(userId?<section className="sekka-bookings-workspace">
     <nav className="sekka-bookings-section-tabs" aria-label={t('إدارة الحجوزات والطلبات','Bookings and requests')}>
      <button type="button" aria-pressed={bookingsSection==='bookings'} onClick={()=>setBookingsSection('bookings')}>{t('حجوزاتي المؤكدة وقيد الانتظار','My seat bookings')}</button>
      <button type="button" aria-pressed={bookingsSection==='requests'} onClick={()=>setBookingsSection('requests')}>{t('طلبات رحلاتي','My trip requests')}</button>
@@ -464,11 +496,13 @@ export default function MobileApp(){
       aria-label={t('إغلاق القائمة','Close menu')}>×</button></header>
     <nav aria-label={t('الأقسام','Sections')}>
      <h2>{t('التنقل','Navigation')}</h2>
-     {menuLink(t('الرئيسية','Home'),{tab:'home'})}
-     {menuLink(t('البحث عن خط','Find a route'),{tab:'search',view:9})}
-     {menuLink(t('حجوزاتي','My bookings'),{tab:'bookings'})}
-     {ready&&userId&&<button type="button" aria-current={tab==='bookings'&&bookingsSection==='requests'?'page':undefined}
-       onClick={()=>{navigate({tab:'bookings'});setBookingsSection('requests');}}>{t('طلبات رحلاتي','My trip requests')}</button>}
+     {!isCaptainAccount&&<>
+      {menuLink(t('الرئيسية','Home'),{tab:'home'})}
+      {menuLink(t('البحث عن خط','Find a route'),{tab:'search',view:9})}
+      {menuLink(t('حجوزاتي','My bookings'),{tab:'bookings'})}
+      {ready&&userId&&<button type="button" aria-current={tab==='bookings'&&bookingsSection==='requests'?'page':undefined}
+        onClick={()=>{navigate({tab:'bookings'});setBookingsSection('requests');}}>{t('طلبات رحلاتي','My trip requests')}</button>}
+     </>}
      {menuLink(t('الإشعارات','Notifications'),{tab:'notifications'})}
      {menuLink(t('حسابي','My profile'),{tab:'profile'})}
      {ready&&userId&&captain&&accountRole==='captain'&&<><h2>{t('الكابتن','Captain')}</h2>
