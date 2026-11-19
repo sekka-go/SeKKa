@@ -34,6 +34,7 @@ export default function LiveCaptainDraft(){
  const [arrival,setArrival]=useState('17:00');
  const [returnSupported,setReturnSupported]=useState(false);
  const [price,setPrice]=useState('');
+ const [step,setStep]=useState<1|2|3|4>(1);
  const [busy,setBusy]=useState(false);
  const [message,setMessage]=useState('');
  const [error,setError]=useState('');
@@ -186,6 +187,18 @@ export default function LiveCaptainDraft(){
  };
  if(!client)return <section className="d-box"><p>{t('ربط Supabase العام لم يكتمل بعد.','Public Supabase configuration is not ready yet.')}</p></section>;
  if(!uid)return <section className="d-box"><p>{t('سجّل دخولك بجوجل قبل حفظ خط حقيقي.','Sign in with Google to create a real route draft.')}</p><a href="?screen=4">{t('الدخول بجوجل','Google sign-in')}</a></section>;
+ const canContinueRoute=stops.length>=2&&stops.length<=30&&
+  stops[0].areaId!==stops[stops.length-1].areaId;
+ const canContinueVehicle=Boolean(vehicleId)&&Boolean(category)&&eligibleCategories.includes(category as Category);
+ const canContinueSchedule=(direction==='outbound'||direction==='return'||direction==='round_trip')&&
+  (direction==='return'||Boolean(departure))&&
+  (direction==='outbound'||Boolean(arrival))&&
+  (direction!=='round_trip'||returnSupported);
+ const canContinue=step===1?canContinueRoute:step===2?canContinueVehicle:canContinueSchedule;
+ const nextStep=()=>{
+  setError('');
+  if(canContinue&&step<4)setStep((step+1) as 1|2|3|4);
+ };
  const draftReady=stops.length>=2&&stops[0].areaId!==stops.at(-1)?.areaId&&
   title.length>=3&&title.length<=120&&Boolean(vehicleId)&&Boolean(category)&&
   eligibleCategories.includes(category as Category)&&/^\d{1,7}$/.test(price)&&Number(price)>0&&
@@ -198,7 +211,7 @@ export default function LiveCaptainDraft(){
     'Choose stops on the map, then set schedule and price. No route title or coordinates to type.')}</p>
   </header>
 
-  <fieldset className="sekka-route-step">
+  {step===1&&<fieldset className="sekka-route-step">
    <legend><span>1</span> {t('مسار الرحلة','Route stops')}</legend>
    <p>{t('ابحث عن الشارع أو المعلم عند نقطة الركوب الفعلية. اختار النتيجة من الخريطة، مش مجرد كتابة اسم.',
      'Search for the actual pickup street or landmark and select a map result.')}</p>
@@ -245,9 +258,9 @@ export default function LiveCaptainDraft(){
    {stops.length>=2&&<p className="sekka-route-generated-title">
     {t('اسم الخط تلقائيًا:','Automatic route name:')} <strong>{title}</strong>
    </p>}
-  </fieldset>
+  </fieldset>}
 
-  <fieldset className="sekka-route-step">
+  {step===2&&<fieldset className="sekka-route-step">
    <legend><span>2</span> {t('العربية والمقاعد','Vehicle and seats')}</legend>
    <label className="sekka-route-field">{t('المركبة المعتمدة','Approved vehicle')}
     <select value={vehicleId} onChange={e=>setVehicleId(e.target.value)}>
@@ -263,9 +276,9 @@ export default function LiveCaptainDraft(){
    </label>
    {category&&<p className="sekka-route-guidance">{t('المقاعد بتتحدد تلقائيًا من اعتماد المركبة:','Passenger seats are assigned from approved vehicle details:')} <strong>{categorySeats[category]}</strong></p>}
    {!vehicles.length&&<p role="alert">{t('مفيش عربية معتمدة مضافة لحسابك. راجع حالة الاعتماد مع الإدارة.','No approved vehicle was found. Check your approval with Admin.')}</p>}
-  </fieldset>
+  </fieldset>}
 
-  <fieldset className="sekka-route-step">
+  {step===3&&<fieldset className="sekka-route-step">
    <legend><span>3</span> {t('المواعيد والاشتراك','Schedule')}</legend>
    <div className="sekka-route-pair">
     <label className="sekka-route-field">{t('مدة الاشتراك','Subscription period')}
@@ -290,9 +303,9 @@ export default function LiveCaptainDraft(){
     <input type="checkbox" checked={returnSupported} onChange={e=>setReturnSupported(e.target.checked)}/>
     {t('نفس نقاط الوقوف في العودة بترتيب عكسي','Return uses the same stops in reverse order')}
    </label>}
-  </fieldset>
+  </fieldset>}
 
-  <fieldset className="sekka-route-step">
+  {step===4&&<fieldset className="sekka-route-step">
    <legend><span>4</span> {t('السعر والمراجعة','Price and review')}</legend>
    <label className="sekka-route-field">{t('سعر المركبة بالكامل بالجنيه','Total vehicle price (EGP)')}
     <input type="number" inputMode="numeric" min="1" max="9999999" step="1"
@@ -314,6 +327,19 @@ export default function LiveCaptainDraft(){
     {t('بعد تحديد نقطتي البداية والنهاية والعربية والمواعيد والسعر هتقدر تحفظ المسودة.',
       'Add origin and destination stops, an approved vehicle, valid schedule and a price to save.')}
    </p>}
-  </fieldset>
+  </fieldset>}
+
+  <nav className="sekka-route-step-navigation" aria-label={t('الخطوات','Steps')}>
+   <div className="sekka-route-step-progress" role="status">
+    <strong>{t('الخطوة','Step')} {step} {t('من','of')} 4</strong>
+    <div aria-hidden="true">{[1,2,3,4].map(n=><span key={n} className={n<=step?'is-current':''}/>)}</div>
+   </div>
+   <div className="sekka-route-step-buttons">
+    {step>1&&<button type="button" className="sekka-route-secondary" disabled={busy}
+     onClick={()=>{setError('');setStep((step-1) as 1|2|3|4)}}>{t('السابق','Back')}</button>}
+    {step<4&&<button type="button" className="sekka-route-next" disabled={!canContinue||busy}
+     onClick={nextStep}>{t('التالي','Continue')}</button>}
+   </div>
+  </nav>
  </section>;
 }
