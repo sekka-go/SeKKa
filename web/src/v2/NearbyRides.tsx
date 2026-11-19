@@ -143,7 +143,7 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
    <button type="button" disabled={permissionBusy} onClick={findMe}>{t('جرّب تفعيل الموقع تاني','Retry location permission')}</button>
   </div>}
   {deviceLocationUnavailable&&<p role="status">{t('شغّل الموقع (Location) من اختصارات الموبايل، وبعدها اضغط زر GPS تاني.',
-   'Enable Location in your phone’s Quick Settings, then try GPS again.')}</p>
+   'Enable Location in your phone’s Quick Settings, then try GPS again.')}</p>}
   {point&&<div className="sekka-nearby__controls">
    <label>{t('أقصى مسافة لنقطة الركوب','Maximum pickup distance')}
     <select value={radius} onChange={event=>setRadius(Number(event.target.value))}>
