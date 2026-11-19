@@ -73,8 +73,8 @@ export default function LiveCaptainDraft(){
  const selectedArea=areas.find(area=>String(area.id)===areaId);
  const mapPreviewPoint=stopPoint||(stops.length>0?stops[stops.length-1]:null);
  const canPreviewMap=mapPreviewPoint?.latitude!=null&&mapPreviewPoint?.longitude!=null;
- const previewLat=canPreviewMap?Number(mapPreviewPoint.latitude):0;
- const previewLng=canPreviewMap?Number(mapPreviewPoint.longitude):0;
+ const previewLat=mapPreviewPoint?.latitude??0;
+ const previewLng=mapPreviewPoint?.longitude??0;
  const mapBBox=canPreviewMap?[previewLng-0.008,previewLat-0.006,previewLng+0.008,previewLat+0.006]
   .map(value=>value.toFixed(6)).join(','):'';
  const eligibleCategories=(vehicles.find(vehicle=>vehicle.id===vehicleId)?.enabled_categories||[])
@@ -262,7 +262,7 @@ export default function LiveCaptainDraft(){
     </>}
    </section>}
    <button type="button" className="sekka-route-add" disabled={!areaId||!stopPoint||!placeLabel.trim()||busy}
-    onClick={addStop}>{t('تأكيد وإضافة نقطة الوقوف','Confirm and add stop')}</button>
+    onClick={addStop}>{t('تأكيد وإضافة نقطة الوقوف','Add this stop')}</button>
    {stops.length>0&&<ol className="live-route-stops sekka-route-stop-list">{stops.map((stop,index)=><li key={index}>
     <div className="sekka-route-stop-copy">
      <span className="sekka-route-stop-order">{index+1}</span>
