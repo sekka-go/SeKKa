@@ -109,6 +109,34 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
  const [uploadingFileName,setUploadingFileName]=useState('');
  const [uploadStage,setUploadStage]=useState<'idle'|'reading'|'uploading'|'registering'|'verifying'>('idle');
  const [uploadDiagnostic,setUploadDiagnostic]=useState('PICKER_READY');
+ const [pickerInterrupted,setPickerInterrupted]=useState(false);
+ // Android can reclaim the browser while its Files activity is open.
+ // Persist only the kind and start time, never user identity or file data.
+ useEffect(()=>{
+  try{
+   const pending=sessionStorage.getItem('sekka.captain.pendingPicker');
+   if(!pending)return;
+   sessionStorage.removeItem('sekka.captain.pendingPicker');
+   const timestamp=Number(pending.split(':')[1]);
+   if(Number.isFinite(timestamp)&&Date.now()-timestamp<300000){
+    setPickerInterrupted(true);setUploadDiagnostic('PICKER_INTERRUPTED');
+   }
+  }catch{/* Session storage might be disabled. */}
+ },[]);
+ const pickerOpened=(kind:string)=>{
+  setPickerInterrupted(false);setUploadError('');setUploadErrorKind(null);
+  setUploadDiagnostic('PICKER_TAPPED');
+  try{sessionStorage.setItem('sekka.captain.pendingPicker',kind+':'+Date.now());}catch{/* Optional diagnostic. */}
+ };
+ const pickerFinished=(hasFile:boolean,kind:string)=>{
+  try{sessionStorage.removeItem('sekka.captain.pendingPicker');}catch{/* Optional. */}
+  if(!hasFile){
+   setUploadErrorKind(kind);
+   setUploadError(t('مافيش ملف اتحدد. اختار الصورة واضغط «فتح» من تطبيق الملفات، أو جرّب معرض الصور.',
+    'No file was selected. Select a document and tap Open in Files, or try your Photos app.'));
+   setUploadDiagnostic('PICKER_NO_FILE');
+  }else setPickerInterrupted(false);
+ };
  const [deployedSha,setDeployedSha]=useState('');
  const runtimeSha=typeof __SEKKA_SOURCE_SHA__==='string'&&/^[a-f0-9]{40}$/i.test(__SEKKA_SOURCE_SHA__)
   ?__SEKKA_SOURCE_SHA__.slice(0,8):'';
@@ -616,8 +644,10 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
       <input id={'captain-document-'+kind} className="c-file-native" type="file"
        aria-label={t('اختيار ملف ','Choose file for ')+t(ar,label)}
        accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
-       disabled={!editable||busy} onClick={()=>setUploadDiagnostic('PICKER_TAPPED')} onChange={event=>{
+       disabled={!editable||busy} onClick={()=>pickerOpened(kind)}
+       onCancel={()=>pickerFinished(false,kind)} onChange={event=>{
         const file=event.currentTarget.files?.[0];
+        pickerFinished(Boolean(file),kind);
         if(file)upload(kind,file);
         event.currentTarget.value='';
        }}/>
@@ -638,6 +668,11 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
      </div>}
     </div>;
    })}
+   {pickerInterrupted&&<div role="alert" data-testid="captain-picker-interrupted" className="c-document-upload-error">
+    <p>{t('الموبايل رجّع سِكّة قبل ما اختيار الملف يكتمل. مفيش مستند اتحفظ. اختار ملف تاني واضغط فتح من تطبيق الملفات، وجرب فتح سِكّة من Chrome مباشرة.',
+     'The phone reopened seKKa before file selection finished. Nothing was saved. Choose a file again and tap Open in Files; try opening seKKa directly in Chrome.')}</p>
+    <button type="button" onClick={()=>setPickerInterrupted(false)}>{t('فهمت','Got it')}</button>
+   </div>}
    <p role="status">{documentProgress}/4 {t('مستندات مطلوبة مكتملة','required documents complete')}</p>
    <p data-testid="captain-upload-stage" className="c-form-hint" role="status">
     {t('حالة اختيار/رفع الملف: ','File selection/upload stage: ')}
