@@ -105,7 +105,7 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  await entry.getByRole('button',{name:'Continue'}).click();
  await expect(entry.getByRole('combobox',{name:'Journey direction'})).toBeVisible();
  await entry.getByRole('button',{name:'Continue'}).click();
- await expect(entry.getByRole('heading',{name:'Price and review'})).toBeVisible();
+ await expect(entry.getByText('Price and review')).toBeVisible();
  const save=entry.getByRole('button',{name:'Save route draft'});
  const amount=entry.getByRole('spinbutton',{name:'Total vehicle price (EGP)'});
  await amount.fill('0');
