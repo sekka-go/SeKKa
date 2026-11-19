@@ -1,37 +1,34 @@
 /* seKKa real Captain journey — scoped to authenticated mobile app.
    No logos, fake metrics, desktop-fixed geometry, or preview-only operations. */
 .sekka-mobile .captain-routes-canvas{
- --cj-accent:#086b57;--cj-accent-strong:#075443;--cj-soft:#e9f6f0;
+ --cj-accent:var(--yellow,#ffc400);--cj-accent-strong:var(--ink,var(--text));--cj-soft:var(--elevated,var(--bg));
  --cj-border:var(--line,#dde8e3);--cj-surface:var(--card,#fff);
  --cj-muted:var(--muted,#60716c);
  max-width:650px!important;padding:6px 2px 30px!important;
  background:transparent!important;color:var(--ink,#162825);
-}
-html[data-theme="dark"] .sekka-mobile .captain-routes-canvas{
- --cj-accent:#62d6ad;--cj-accent-strong:#3cbf91;--cj-soft:#183c34;
 }
 .sekka-mobile .captain-routes-canvas>h1{
  font-size:clamp(23px,6vw,30px);font-weight:900;letter-spacing:-.035em;
  line-height:1.3;margin:12px 4px 16px;text-align:start;
 }
 .sekka-mobile .captain-routes-canvas .cj-hero{
- background:linear-gradient(135deg,#064537,#087760);
- color:#fff;border-radius:24px;padding:23px 20px 22px;display:grid;
+ background:var(--cj-surface);border:1px solid var(--cj-border);
+ color:var(--ink);border-radius:24px;padding:23px 20px 22px;display:grid;
  gap:11px;margin:2px 0 15px;position:relative;overflow:hidden;
- box-shadow:0 12px 26px #06453722;isolation:isolate;
+ box-shadow:0 8px 24px #0000000c;isolation:isolate;
 }
 .sekka-mobile .captain-routes-canvas .cj-hero:after{
- content:"";position:absolute;width:170px;height:170px;border:1px solid #ffffff2c;
+ content:"";position:absolute;width:170px;height:170px;border:1px solid var(--cj-border);
  border-radius:50%;inset-inline-end:-67px;top:-70px;pointer-events:none;
 }
-.sekka-mobile .captain-routes-canvas .cj-hero small{color:#d7f7e8;font-weight:700;font-size:12px}
+.sekka-mobile .captain-routes-canvas .cj-hero small{color:var(--cj-muted);font-weight:700;font-size:12px}
 .sekka-mobile .captain-routes-canvas .cj-hero h2{
- color:#fff;font-size:clamp(23px,6vw,29px);line-height:1.3;margin:0;font-weight:900;
+ color:var(--ink);font-size:clamp(23px,6vw,29px);line-height:1.3;margin:0;font-weight:900;
 }
-.sekka-mobile .captain-routes-canvas .cj-hero p{color:#e6f7f0;font-size:14px;line-height:1.6;margin:0;max-width:38ch}
+.sekka-mobile .captain-routes-canvas .cj-hero p{color:var(--cj-muted);font-size:14px;line-height:1.6;margin:0;max-width:38ch}
 .sekka-mobile .captain-routes-canvas .cj-hero button{
  margin:7px 0 0;min-height:52px;width:100%;border-radius:15px;
- background:#fff;color:#075443;border:0;font-weight:900;font:inherit;
+ background:var(--cj-accent);color:var(--black,#0b0b0d);border:0;font-weight:900;font:inherit;
  font-size:16px;cursor:pointer;position:relative;z-index:1;
 }
 .sekka-mobile .captain-routes-canvas .cj-hero button:focus-visible{
@@ -65,9 +62,8 @@ html[data-theme="dark"] .sekka-mobile .captain-routes-canvas{
  font-weight:800;white-space:nowrap;color:inherit;margin:0;width:auto;
 }
 .sekka-mobile .captain-routes-canvas .cj-filter-tabs button[aria-pressed="true"]{
- background:var(--cj-accent);border-color:var(--cj-accent);color:#fff;
+ background:var(--cj-accent);border-color:var(--cj-accent);color:var(--black,#0b0b0d);
 }
-html[data-theme="dark"] .sekka-mobile .captain-routes-canvas .cj-filter-tabs button[aria-pressed="true"]{color:#082d22}
 .sekka-mobile .captain-routes-canvas .live-route-list ul{display:grid;gap:11px}
 .sekka-mobile .captain-routes-canvas .live-route-list li{
  border:1px solid var(--cj-border);border-radius:20px;
@@ -85,8 +81,8 @@ html[data-theme="dark"] .sekka-mobile .captain-routes-canvas .cj-filter-tabs but
  background:var(--cj-soft);color:var(--cj-accent-strong);white-space:nowrap;
  flex-shrink:0;max-width:46%;
 }
-.sekka-mobile .captain-routes-canvas .cj-status.is-draft{background:#fff3d5;color:#795200}
-.sekka-mobile .captain-routes-canvas .cj-status.is-paused{background:#f2e8e5;color:#975045}
+.sekka-mobile .captain-routes-canvas .cj-status.is-draft{background:var(--cj-soft);color:var(--cj-accent-strong);border:1px solid var(--cj-accent)}
+.sekka-mobile .captain-routes-canvas .cj-status.is-paused{background:var(--cj-soft);color:var(--cj-accent-strong)}
 .sekka-mobile .captain-routes-canvas .cj-route-meta{
  display:flex;flex-wrap:wrap;gap:7px;color:var(--cj-muted);font-size:12px;
 }
@@ -115,7 +111,7 @@ html[data-theme="dark"] .sekka-mobile .captain-routes-canvas .cj-filter-tabs but
 }
 .sekka-mobile .captain-routes-canvas .cj-card-actions .cj-primary,
 .sekka-mobile .captain-routes-canvas .cj-details-actions .cj-primary{
- background:var(--cj-accent);color:#fff;border-color:var(--cj-accent);
+ background:var(--cj-accent);color:var(--black,#0b0b0d);border-color:var(--cj-accent);
 }
 .sekka-mobile .captain-routes-canvas .cj-card-actions button:disabled,
 .sekka-mobile .captain-routes-canvas .cj-details-actions button:disabled{opacity:.55}
@@ -141,7 +137,7 @@ html[data-theme="dark"] .sekka-mobile .captain-routes-canvas .cj-filter-tabs but
  margin:0;border-radius:12px;padding:12px 13px;
  background:var(--cj-soft);color:var(--cj-accent-strong);font-size:13px;
 }
-.sekka-mobile .captain-routes-canvas .cj-feedback[role="alert"]{background:#fff0ed;color:#9c3326}
+.sekka-mobile .captain-routes-canvas .cj-feedback[role="alert"]{background:var(--cj-surface);color:var(--error,#dc3545);border:1px solid var(--error,#dc3545)}
 .sekka-mobile .captain-routes-canvas .cj-empty{
  border:1px dashed var(--cj-border);border-radius:18px;padding:25px 16px;
  text-align:center;font-size:14px;line-height:1.75;background:var(--cj-surface);
@@ -152,16 +148,16 @@ html[data-theme="dark"] .sekka-mobile .captain-routes-canvas .cj-filter-tabs but
  padding:0!important;margin:0 auto 12px!important;gap:17px;
 }
 .sekka-mobile .captain-routes-canvas .sekka-route-intro{
- background:linear-gradient(140deg,#064537,#08745e);border-radius:22px;
- padding:22px 18px;color:#fff;gap:9px;
+ background:var(--cj-surface);border:1px solid var(--cj-border);border-radius:22px;
+ padding:22px 18px;color:var(--ink);gap:9px;
 }
 .sekka-mobile .captain-routes-canvas .sekka-route-intro>.sekka-route-eyebrow{
- background:#ffffff26;color:#edfff4;width:fit-content;border-radius:99px;
+ background:var(--cj-soft);color:var(--ink);width:fit-content;border-radius:99px;
 }
 .sekka-mobile .captain-routes-canvas .sekka-route-intro>h2{
- color:#fff;font-size:clamp(22px,6vw,28px)
+ color:var(--ink);font-size:clamp(22px,6vw,28px)
 }
-.sekka-mobile .captain-routes-canvas .sekka-route-intro>p{color:#e4f7ef}
+.sekka-mobile .captain-routes-canvas .sekka-route-intro>p{color:var(--cj-muted)}
 .sekka-mobile .captain-routes-canvas .sekka-captain-route-wizard>.sekka-route-step{
  border:1px solid var(--cj-border)!important;background:var(--cj-surface)!important;
  border-radius:22px!important;padding:20px 15px 19px!important;
@@ -171,7 +167,7 @@ html[data-theme="dark"] .sekka-mobile .captain-routes-canvas .cj-filter-tabs but
  font-size:16px;color:inherit;padding-inline:6px;
 }
 .sekka-mobile .captain-routes-canvas .sekka-route-step>legend span{
- background:var(--cj-accent);color:#fff;
+ background:var(--cj-accent);color:var(--black,#0b0b0d);
 }
 .sekka-mobile .captain-routes-canvas .sekka-route-step .sekka-route-field{
  display:grid;gap:8px;font-weight:800;font-size:14px;min-width:0;
@@ -189,7 +185,7 @@ html[data-theme="dark"] .sekka-mobile .captain-routes-canvas .cj-filter-tabs but
 .sekka-mobile .captain-routes-canvas .sekka-route-step .sekka-route-add,
 .sekka-mobile .captain-routes-canvas .sekka-route-step .sekka-route-save,
 .sekka-mobile .captain-routes-canvas .sekka-route-step-navigation .sekka-route-next{
- background:var(--cj-accent);color:#fff;border:1px solid var(--cj-accent);
+ background:var(--cj-accent);color:var(--black,#0b0b0d);border:1px solid var(--cj-accent);
  border-radius:14px;min-height:51px;
 }
 .sekka-mobile .captain-routes-canvas .sekka-route-step .sekka-route-guidance{
