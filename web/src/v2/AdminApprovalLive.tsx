@@ -26,6 +26,8 @@ export default function AdminApprovalLive({screen,onGo}: {screen:number;onGo:(sc
  const [audit,setAudit]=useState<AuditRow[]>([]),[reason,setReason]=useState('');
  const [reviewed,setReviewed]=useState(false),[hiaceCategories,setHiaceCategories]=useState<string[]>([]);
  const [vehicleLabels,setVehicleLabels]=useState({make:'',model:'',color:''});
+ const [loginEmail,setLoginEmail]=useState<string|null>(null);
+ const [emailLoading,setEmailLoading]=useState(false),[emailError,setEmailError]=useState(false);
  const [busy,setBusy]=useState(false),[loading,setLoading]=useState(true);
  const [error,setError]=useState(''),[notice,setNotice]=useState(''),[revision,setRevision]=useState(0);
  const active=apps.find(application=>application.user_id===selected)||null;
@@ -84,6 +86,26 @@ export default function AdminApprovalLive({screen,onGo}: {screen:number;onGo:(sc
   })();
   return()=>{live=false;};
  },[selected,authorized,revision,apps,language]);
+
+ // Email is private Auth account data. Load it only for the selected
+ // Captain, after the server-confirmed Admin check. The SQL RPC enforces
+ // the same authorization independently, so hiding this UI is not security.
+ useEffect(()=>{
+  let live=true;
+  setLoginEmail(null);setEmailError(false);setEmailLoading(false);
+  if(!selected||authorized!==true||!client)return;
+  setEmailLoading(true);
+  void(async()=>{
+   try{
+    if(!client)throw Error('BACKEND_NOT_CONFIGURED');
+    const {data,error:lookupError}=await client.rpc('v31_admin_captain_login_email',{p_captain:selected});
+    if(lookupError)throw lookupError;
+    if(live)setLoginEmail(typeof data==='string'&&data.trim()?data.trim():null);
+   }catch{if(live)setEmailError(true);}
+   finally{if(live)setEmailLoading(false);}
+  })();
+  return()=>{live=false;};
+ },[selected,authorized,revision]);
 
  const requiredDocumentsComplete=requiredDocumentKinds.every(kind=>docs.some(doc=>doc.kind===kind));
  const applicationComplete=!!active?.full_name&&active.full_name.trim().split(/\s+/).length>=2&&
@@ -160,6 +182,11 @@ export default function AdminApprovalLive({screen,onGo}: {screen:number;onGo:(sc
     <h3>{t('تفاصيل طلب الكابتن','Captain application details')}</h3>
     <p>{t('الحالة:','Status:')} {active.status}</p>
     <p>{t('الاسم بالكامل:','Full name:')} {active.full_name||'—'}</p>
+    <p data-testid="captain-admin-login-email">{t('البريد الإلكتروني لحساب Google:','Google sign-in email:')}{' '}
+     {emailLoading?t('جارٍ التحميل…','Loading…'):emailError
+      ?t('تعذر تحميل البريد الإلكتروني. استخدم تحديث للمحاولة مجددًا.','Could not load the email. Use Refresh to retry.')
+      :loginEmail?<bdi dir="ltr" style={{overflowWrap:'anywhere',wordBreak:'break-word'}}>{loginEmail}</bdi>:'—'}
+    </p>
     <p>{t('الهاتف (غير مؤكد):','Phone (unverified):')} {active.phone_number||'—'}</p>
     <p>{t('سنوات الخبرة:','Years of experience:')} {active.experience_years??'—'}</p>
     <p>{t('الخلفية المهنية:','Professional background:')} {active.professional_notes||'—'}</p>
