@@ -278,7 +278,7 @@ export default function Onboarding({
     <div className={`phase-one-stage ${theme}`}>
       <main className={`phase-canvas phase-screen-${id}`}>
         <div className="phase-top-wave" aria-hidden="true" />
-        <div className="phase-logo"><Wordmark /></div>
+        {!production&&<div className="phase-logo"><Wordmark /></div>}
         <button className="phase-back" onClick={() => go(id === 4 ? 3 : 2)} aria-label={t("رجوع")}>‹</button>
         {id === 4 ? <div className="phase-google-auth">
           <h1 className="phase-title">{language === "en" ? "Sign in to seKKa" : "سجّل دخولك لسِكّة"}</h1>
@@ -362,9 +362,7 @@ export default function Onboarding({
         {id !== 1 && (
           <>
             <div className="phase-top-wave" aria-hidden="true" />
-            <div className="phase-logo">
-              <Wordmark />
-            </div>
+            {!production&&<div className="phase-logo"><Wordmark /></div>}
             {id !== 2 && (
               <button className="phase-back" onClick={back} aria-label={t("رجوع")}>
                 <svg viewBox="0 0 20 30" aria-hidden="true">
@@ -388,7 +386,7 @@ export default function Onboarding({
               onClick={() => go(2)}
               aria-label={t("ابدأ مع سِكّة")}
             >
-              <Wordmark />
+              {!production&&<Wordmark />}
               <h1>{heading}</h1>
             </button>
             <ReferenceArt
