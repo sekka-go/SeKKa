@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {releaseTarget,validateProductionConfig,assertTableProbe,PRODUCTION_REF,STAGING_REF} from './production-release-preflight.mjs';
+import {releaseTarget,validateProductionConfig,assertTableProbe,REQUIRED_PRODUCTION_TABLES,PRODUCTION_REF,STAGING_REF} from './production-release-preflight.mjs';
 
 const production={
  CF_PAGES_BRANCH:'main',
@@ -63,4 +63,15 @@ test('private-table permissions can be explicitly denied but ambiguous failures 
  assert.throws(()=>assertTableProbe('v31_captain_documents',{
   code:'',message:'unexpected response'
  },401),/PRODUCTION_GATE_TABLE_PROBE_FAILED/);
+});
+
+test('release gate includes every critical Captain document and vehicle catalog table',()=>{
+ assert.equal(REQUIRED_PRODUCTION_TABLES.length,17);
+ const expected=[
+  'v31_captain_applications','v31_captain_documents','v31_captain_approval_audit',
+  'v31_vehicle_makes','v31_vehicle_models','v31_vehicle_colors',
+  'v31_vehicle_service_categories','v31_routes','v31_bookings'
+ ];
+ for(const name of expected)assert.ok(REQUIRED_PRODUCTION_TABLES.includes(name),name);
+ assert.equal(new Set(REQUIRED_PRODUCTION_TABLES).size,REQUIRED_PRODUCTION_TABLES.length);
 });
