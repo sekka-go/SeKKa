@@ -5,7 +5,7 @@ import {usePreferences} from './preferences';
 import type {Category} from '../../../packages/domain/subscriptions';
 
 type Area={id:number;name_ar:string;name_en:string};
-type StopInput={areaId:number;name:string;pickup:boolean;dropoff:boolean};
+type StopInput={areaId:number;name:string;pickup:boolean;dropoff:boolean;latitude:number|null;longitude:number|null};
 type Vehicle={id:string;model:string;plate_number:string;enabled_categories:string[]};
 const categorySeats:Record<Category,number>={PRIME:3,SAVER:4,SPACE:9,MAX:13};
 
@@ -19,6 +19,8 @@ export default function LiveCaptainDraft(){
  const [title,setTitle]=useState('');
  const [areaId,setAreaId]=useState('');
  const [stopName,setStopName]=useState('');
+ const [stopLat,setStopLat]=useState(''),[stopLng,setStopLng]=useState('');
+ const [locatingStop,setLocatingStop]=useState(false);
  const [stops,setStops]=useState<StopInput[]>([]);
  const [vehicleId,setVehicleId]=useState('');
  const [category,setCategory]=useState<Category|null>(null);
@@ -67,13 +69,41 @@ export default function LiveCaptainDraft(){
    setCategory(eligibleCategories[0]);
   else if(eligibleCategories.length===0)setCategory(null);
  },[vehicleId,eligibleCategories.join(':')]);
+ const useMyStopPosition=()=>{
+   setError('');
+   if(!window.isSecureContext||!navigator.geolocation){
+    setError(t('تحديد الموقع يحتاج HTTPS ومتصفح يدعم GPS.','Finding your location requires HTTPS and GPS support.'));
+    return;
+   }
+   setLocatingStop(true);
+   navigator.geolocation.getCurrentPosition(
+    position=>{
+     setLocatingStop(false);
+     if(position.coords.accuracy>250){
+      setError(t('دقة GPS أضعف من 250 متر. حاول من مكان مفتوح، أو اكتب إحداثيات النقطة بدقة.',
+       'GPS accuracy is worse than 250 metres. Try outdoors or enter precise stop coordinates.'));
+      return;
+     }
+     setStopLat(position.coords.latitude.toFixed(6));
+     setStopLng(position.coords.longitude.toFixed(6));
+    },
+    ()=>{setLocatingStop(false);setError(t('تعذر تحديد المكان. اكتب الإحداثيات أو أكمل بدونها.','Unable to locate. Enter coordinates or continue without them.'));},
+    {enableHighAccuracy:true,timeout:12000,maximumAge:0}
+   );
+ };
  const addStop=()=>{
    if(!areaId||stopName.trim().length<2)return;
-   const next={areaId:Number(areaId),name:stopName.trim(),pickup:true,dropoff:true};
+   const hasLat=stopLat.trim()!=='' ,hasLng=stopLng.trim()!=='';
+   const latitude=hasLat?Number(stopLat):null,longitude=hasLng?Number(stopLng):null;
+   if(hasLat!==hasLng||(hasLat&&(!Number.isFinite(latitude)||!Number.isFinite(longitude)||
+     latitude!>=-90||latitude!>90||longitude!>=-180||longitude!>180))){
+    setError(t('أدخل خط العرض وخط الطول الصحيحين معًا أو اتركهما فارغين.','Enter valid latitude and longitude together, or leave both blank.'));return;
+   }
+   const next:StopInput={areaId:Number(areaId),name:stopName.trim(),pickup:true,dropoff:true,latitude,longitude};
    if(stops.some(s=>s.areaId===next.areaId&&s.name.toLocaleLowerCase()===next.name.toLocaleLowerCase())){
      setError(t('النقطة موجودة بالفعل في نفس المنطقة.','That stop already exists in this area.'));return;
    }
-   setError('');setStops(v=>[...v,next]);setStopName('');
+   setError('');setStops(v=>[...v,next]);setStopName('');setStopLat('');setStopLng('');
  };
  const save=async()=>{
    if(!client||!uid)return;
@@ -101,7 +131,7 @@ export default function LiveCaptainDraft(){
      if(typeof routeId!=='string')throw Error('DRAFT_NOT_CONFIRMED');
      const [{data:saved,error:savedError},{data:savedStops,error:stopsError}]=await Promise.all([
        client.from('v31_routes').select('id,status,vehicle_id,category,seat_capacity,price_egp').eq('id',routeId).eq('captain_id',uid).maybeSingle(),
-       client.from('v31_route_stops').select('id,area_id,name,position').eq('route_id',routeId).order('position')
+       client.from('v31_route_stops').select('id,area_id,name,position,latitude,longitude').eq('route_id',routeId).order('position')
      ]);
      if(savedError||stopsError)throw Error(savedError?.message||stopsError?.message||'DRAFT_READ_FAILED');
      if(!saved||saved.status!=='draft'||saved.vehicle_id!==vehicleId||saved.category!==category||
@@ -109,7 +139,29 @@ export default function LiveCaptainDraft(){
         !savedStops||savedStops.length!==stops.length||savedStops.some((s,i)=>s.area_id!==stops[i].areaId||s.position!==i||s.name!==stops[i].name)){
        throw Error('DRAFT_PERSISTENCE_NOT_VERIFIED');
      }
-     setMessage(t('اتحفظت مسودة الخط الحقيقية بنجاح. النشر متوقف لحين اعتماد الكابتن وتفعيل التحقق من المسار.','Your real route draft was saved. Publishing is disabled pending captain approval and server route validation.'));
+     // Coordinates are optional for saving a route, but only geolocated
+     // pickup stops can appear in Rider's GPS nearby list.
+     for(const [i,stop] of stops.entries()){
+      if(stop.latitude===null||stop.longitude===null)continue;
+      const savedStop=savedStops[i];
+      const {data:confirmed,error:locationError}=await client.rpc('v31_set_draft_stop_coordinates',{
+       p_stop:savedStop.id,p_latitude:stop.latitude,p_longitude:stop.longitude
+      });
+      if(locationError||confirmed!==savedStop.id)throw Error('STOP_COORDINATE_SAVE_FAILED');
+     }
+     const {data:located,error:readbackError}=await client.from('v31_route_stops')
+      .select('id,position,latitude,longitude').eq('route_id',routeId).order('position');
+     if(readbackError||!located||located.length!==stops.length||
+       located.some((entry,i)=>stops[i].latitude===null
+         ?entry.latitude!==null||entry.longitude!==null
+         :Math.abs(Number(entry.latitude)-stops[i].latitude!)>0.000001||
+          Math.abs(Number(entry.longitude)-stops[i].longitude!)>0.000001))
+      throw Error('STOP_COORDINATE_READBACK_FAILED');
+     setMessage(stops.some(stop=>stop.latitude!==null)
+      ?t('تم حفظ المسودة وإحداثيات نقاط الوقوف. لما الخط يُنشر، الركاب القريبين هيقدروا يلاقوه بالـGPS.',
+       'Draft and stop coordinates verified. When published, nearby Riders can find these pickup points by GPS.')
+      :t('المسودة اتحفظت، لكن من غير إحداثيات، الخط مش هيظهر في نتائج GPS القريبة.',
+       'Draft saved without GPS coordinates. It will not appear in nearby GPS results.'));
      setStops([]);setTitle('');setPrice('');
    }catch(e){setError(e instanceof Error?e.message:String(e));}
    finally{setBusy(false);}
@@ -122,9 +174,17 @@ export default function LiveCaptainDraft(){
   <label>{t('اسم الخط','Route title')}<input value={title} maxLength={120} onChange={e=>setTitle(e.target.value)}/></label>
   <label>{t('المنطقة','Area')}<select value={areaId} onChange={e=>setAreaId(e.target.value)}>{areas.map(a=><option key={a.id} value={a.id}>{en?a.name_en:a.name_ar}</option>)}</select></label>
   <label>{t('اسم نقطة الوقوف','Stop name')}<input value={stopName} maxLength={100} onChange={e=>setStopName(e.target.value)}/></label>
+  <p>{t('حدد مكان نقطة الوقوف الفعلية لو عايز الركاب القريبين يلاقوا الخط عبر GPS. لو بتستخدم موقعي لازم تكون واقف عند النقطة نفسها.',
+   'Provide the real stop location for nearby GPS discovery. Only use My location while standing at the actual pickup stop.')}</p>
+  <div className="sekka-captain-coordinates">
+   <label>{t('خط العرض (اختياري)','Latitude (optional)')}<input type="number" step="0.000001" min="-90" max="90" value={stopLat} onChange={e=>setStopLat(e.target.value)}/></label>
+   <label>{t('خط الطول (اختياري)','Longitude (optional)')}<input type="number" step="0.000001" min="-180" max="180" value={stopLng} onChange={e=>setStopLng(e.target.value)}/></label>
+   <button type="button" disabled={locatingStop} onClick={useMyStopPosition}>{locatingStop?t('بنحدد موقع النقطة…','Locating stop…'):t('📍 استخدم موقعي للنقطة','📍 Use GPS for this stop')}</button>
+  </div>
   <button type="button" disabled={!areaId||stopName.trim().length<2} onClick={addStop}>{t('أضف نقطة','Add stop')}</button>
   <ol className="live-route-stops">{stops.map((s,i)=><li key={i}>
     <strong>{i+1}. {s.name} — {en?areas.find(a=>a.id===s.areaId)?.name_en:areas.find(a=>a.id===s.areaId)?.name_ar}</strong>
+    <span>{s.latitude===null?t('بدون إحداثيات GPS','No GPS coordinates'):t('موقع GPS محدد','GPS stop marked')}</span>
     <div className="live-route-controls">
       <button type="button" disabled={i===0} onClick={()=>setStops(v=>{const n=[...v];[n[i-1],n[i]]=[n[i],n[i-1]];return n;})}>{t('لأعلى','Up')}</button>
       <button type="button" disabled={i===stops.length-1} onClick={()=>setStops(v=>{const n=[...v];[n[i+1],n[i]]=[n[i],n[i+1]];return n;})}>{t('لأسفل','Down')}</button>
