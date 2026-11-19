@@ -83,6 +83,6 @@ test('MOCKED Rider no-match journey saves the selected period and re-reads the o
  });
  await page.reload();
  await expect(page).toHaveURL(/tab=search&view=11/);
- await expect(page.locator('.live-trip-requests').getByText('Weekly',{exact:false}).first()).toBeVisible();
+ await expect(page.locator('.live-trip-requests ul li').first()).toContainText('Weekly');
  expect(insertCount).toBe(1);
 });
