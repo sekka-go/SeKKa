@@ -91,6 +91,11 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  await place.fill('Maadi Market');
  await entry.getByRole('button',{name:'Find this street or place on the map'}).click();
  await entry.getByRole('button',{name:/Maadi Market/}).click();
+ // Map tiles are requested only after the Captain opts into OpenStreetMap preview.
+ await expect(entry.locator('iframe.sekka-route-map-card__frame')).toHaveCount(0);
+ await entry.getByRole('button',{name:'Show map'}).click();
+ await expect(entry.locator('iframe.sekka-route-map-card__frame')).toHaveAttribute('src',/openstreetmap\\.org\\/export\\/embed\\.html/);
+ await entry.getByRole('button',{name:'Hide map'}).click();
  await entry.getByRole('button',{name:'Add this stop'}).click();
  await expect(entry.locator('.sekka-route-stop-list>li')).toHaveCount(1);
  await entry.getByRole('combobox',{name:'Service area'}).selectOption('22');
