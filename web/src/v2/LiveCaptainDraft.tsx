@@ -2,6 +2,7 @@ import {useEffect,useRef,useState} from 'react';
 import {client} from './api';
 import GeoPlaceInput from './GeoPlaceInput';
 import {inLaunchRegion,mapPlacesFromPhoton,placeMatchesArea} from './geoPlace';
+import type {MapPlace} from './geoPlace';
 import type {PlaceChoice} from './geoPlace';
 import {straightLineKm} from './nearbyRoutes';
 import type {GeoPoint} from './nearbyRoutes';
@@ -21,13 +22,10 @@ export default function LiveCaptainDraft({onSaved}:{onSaved?:(id:string)=>void}=
  const [areas,setAreas]=useState<Area[]>([]);
  const [vehicles,setVehicles]=useState<Vehicle[]>([]);
  const [areaId,setAreaId]=useState('');
- const [showAllAreas,setShowAllAreas]=useState(false);
  const activeAreaId=useRef('');
  const [placeLabel,setPlaceLabel]=useState('');
  const [placeChoice,setPlaceChoice]=useState<PlaceChoice|null>(null);
- const [stopPoint,setStopPoint]=useState<GeoPoint|null>(null);
  const [locatingStop,setLocatingStop]=useState(false);
- const [showMapPreview,setShowMapPreview]=useState(false);
  const [stops,setStops]=useState<StopInput[]>([]);
  const [vehicleId,setVehicleId]=useState('');
  const [category,setCategory]=useState<Category|null>(null);
@@ -80,14 +78,8 @@ export default function LiveCaptainDraft({onSaved}:{onSaved?:(id:string)=>void}=
  });
  const chooseArea=(id:string)=>{
   activeAreaId.current=id;setAreaId(id);setPlaceChoice(null);setPlaceLabel('');
-  setStopPoint(null);setShowMapPreview(false);setError('');
+  setError('');
  };
- const mapPreviewPoint=stopPoint||(stops.length>0?stops[stops.length-1]:null);
- const canPreviewMap=mapPreviewPoint?.latitude!=null&&mapPreviewPoint?.longitude!=null;
- const previewLat=mapPreviewPoint?.latitude??0;
- const previewLng=mapPreviewPoint?.longitude??0;
- const mapBBox=canPreviewMap?[previewLng-0.008,previewLat-0.006,previewLng+0.008,previewLat+0.006]
-  .map(value=>value.toFixed(6)).join(','):'';
  const eligibleCategories=(vehicles.find(vehicle=>vehicle.id===vehicleId)?.enabled_categories||[])
   .filter((value):value is Category=>value in categorySeats);
  useEffect(()=>{
@@ -122,8 +114,7 @@ export default function LiveCaptainDraft({onSaved}:{onSaved?:(id:string)=>void}=
      if(!match){setError(t('GPS حدد مكانك لكن بيانات الخريطة ما أكدتش إنه في '+checkedArea.name_ar+'. اختار شارع أو معلم من بحث المنطقة.',
        'GPS located you but the map could not verify '+checkedArea.name_en+'. Pick a street or landmark in that area.'));return;}
      const verified={...match,latitude:point.latitude,longitude:point.longitude};
-     setStopPoint(point);setPlaceChoice({kind:'map',place:verified});
-     setPlaceLabel(t('موقعي — ','My location — ')+match.name);setShowMapPreview(false);
+     addVerifiedStop(verified);
     }catch{if(activeAreaId.current===String(checkedArea.id))setError(t('تعذّر تأكيد المنطقة من الخريطة. جرّب البحث عن شارع أو معلم قريب.',
       'The map could not verify your area. Search for a nearby street or landmark.'));}
     finally{setLocatingStop(false);}
@@ -133,27 +124,25 @@ export default function LiveCaptainDraft({onSaved}:{onSaved?:(id:string)=>void}=
    {enableHighAccuracy:true,timeout:12000,maximumAge:0}
   );
  };
- const addStop=()=>{
+ const addVerifiedStop=(place:MapPlace)=>{
   setError('');setMessage('');
-  const name=placeChoice?.kind==='map'?placeChoice.place.name.trim():placeLabel.trim();
-  const point=placeChoice?.kind==='map'?placeChoice.place:stopPoint;
-  if(!areaId||!selectedArea){setError(t('اختار منطقة الخدمة أولًا.','Choose the service area first.'));return;}
-  if(placeChoice?.kind==='map'&&!placeMatchesArea(placeChoice.place,selectedArea)){
-   setError(t('المكان ده مش متحقق داخل المنطقة المختارة؛ اختار نتيجة من بحث المنطقة.','This location is not verified inside your selected area.'));return;
+  if(!selectedArea){setError(t('اختار المنطقة الأول.','Choose an area first.'));return;}
+  if(!inLaunchRegion(place)||!placeMatchesArea(place,selectedArea)){
+   setError(t('المكان ده مش متأكد إنه في المنطقة دي.','Place is not verified inside this area.'));return;
   }
-  if(!point||!inLaunchRegion(point)||name.length<3||name.length>100){
-   setError(t('حدد نقطة الوقوف من نتائج بحث الخريطة أو GPS. الكتابة وحدها مش كفاية.',
-    'Choose a stop from map results or GPS. Typing alone is not enough.'));return;
-  }
-  if(stops.length>=30){setError(t('الحد الأقصى 30 نقطة للخط.','A route supports up to 30 stops.'));return;}
-  if(stops.some(s=>s.areaId===Number(areaId)&&
+  const name=place.name.trim();
+  if(name.length<3||name.length>100){setError(t('اختار مكان باسم واضح.','Choose a named place.'));return;}
+  if(stops.length>=30){setError(t('وصلت لأقصى عدد نقاط.','Maximum stops reached.'));return;}
+  if(stops.some(s=>s.areaId===selectedArea.id&&
     (s.name.toLocaleLowerCase()===name.toLocaleLowerCase()||
-     s.latitude!==null&&s.longitude!==null&&straightLineKm({latitude:s.latitude,longitude:s.longitude},point)<0.03))){
-   setError(t('نقطة الوقوف دي مضافة بالفعل.','This stop is already on the route.'));return;
+     s.latitude!==null&&s.longitude!==null&&straightLineKm({latitude:s.latitude,longitude:s.longitude},place)<0.03))){
+   setError(t('المكان ده اتضاف بالفعل.','Stop is already added.'));return;
   }
-  setStops(current=>[...current,{areaId:Number(areaId),name,pickup:true,dropoff:true,
-   latitude:Number(point.latitude.toFixed(6)),longitude:Number(point.longitude.toFixed(6))}]);
-  setPlaceLabel('');setPlaceChoice(null);setStopPoint(null);
+  const next=[...stops,{areaId:selectedArea.id,name,pickup:true,dropoff:true,
+   latitude:Number(place.latitude.toFixed(6)),longitude:Number(place.longitude.toFixed(6))}];
+  setStops(next);setAreaId('');activeAreaId.current='';
+  setPlaceLabel('');setPlaceChoice(null);
+  if(next.length===2&&next[0].areaId!==next[1].areaId)setStep(2);
  };
  const save=async()=>{
    if(!client||!uid)return;
@@ -218,7 +207,7 @@ export default function LiveCaptainDraft({onSaved}:{onSaved?:(id:string)=>void}=
        'Draft and stop coordinates verified. When published, nearby Riders can find these pickup points by GPS.')
       :t('المسودة اتحفظت، لكن من غير إحداثيات، الخط مش هيظهر في نتائج GPS القريبة.',
        'Draft saved without GPS coordinates. It will not appear in nearby GPS results.'));
-     setStops([]);setPlaceLabel('');setPlaceChoice(null);setStopPoint(null);setPrice('');
+     setStops([]);setPlaceLabel('');setPlaceChoice(null);setPrice('');
      setStep(1);
      onSaved?.(routeId);
    }catch(e){setError(e instanceof Error?e.message:String(e));}
