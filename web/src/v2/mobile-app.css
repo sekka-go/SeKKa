@@ -608,3 +608,67 @@ html[data-theme="dark"] .sekka-mobile{
  border-radius:10px;mix-blend-mode:normal
 }
 .sekka-mobile .phase-wordmark>.reference-art{visibility:hidden}
+
+
+/* Owner decision: the only seKKa logo is on the pulsing launch splash.
+ * Never show logos in real navigation, auth, ride search, Captain or Admin.
+ * Developer reference gallery stays unchanged. */
+.sekka-mobile .phase-wordmark,
+.sekka-mobile .phase-logo,
+.sekka-mobile .sekka-approved-logo,
+.sekka-mobile .sekka-brand-button,
+.sekka-mobile .sekka-discovery-logo-en,
+.sekka-mobile .d-header > .phase-wordmark {display:none!important}
+.sekka-mobile-header:not(.sekka-mobile-header-admin){justify-content:flex-start;padding-inline:12px}
+.sekka-mobile .sekka-account-loading{
+ min-height:calc(100dvh - 140px);display:flex;flex-direction:column;
+ align-items:center;justify-content:center;gap:16px;
+ text-align:center;padding:32px 18px;color:var(--ink)
+}
+.sekka-account-loading p{margin:0;line-height:1.6;max-width:310px}
+.sekka-account-loading__spinner{
+ display:block;width:32px;height:32px;border:3px solid var(--line);
+ border-top-color:#ffc400;border-radius:50%;animation:sekka-load-spin .8s linear infinite
+}
+@keyframes sekka-load-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.sekka-account-loading__spinner{animation:none;border-top-width:6px}}
+.sekka-account-loading__slow{display:grid;gap:12px;max-width:320px}
+.sekka-account-loading__slow button{min-height:44px;padding:10px 16px;background:#ffc400;color:#141414;border:0;border-radius:12px;font:inherit;font-weight:800}
+
+/* Drawer is compact, touch-safe and scrollable. */
+.sekka-side-drawer{width:min(82vw,310px);padding-inline:14px}
+.sekka-side-drawer nav{gap:4px}
+.sekka-side-drawer nav h2{margin:9px 0 2px;font-size:12px}
+.sekka-side-drawer nav button{min-height:44px;padding:8px 12px;border-radius:10px;font-size:15px;line-height:1.35}
+.sekka-side-drawer__header{min-height:48px}
+.sekka-side-drawer__header strong{font-size:19px}
+
+/* Each request is a self-contained card with a predictable action row. */
+.sekka-mobile .sekka-request-list{
+ display:grid;gap:12px;list-style:none;margin:0;padding:0;
+}
+.sekka-mobile .sekka-request-card{
+ display:flex;flex-direction:column;gap:7px;min-width:0;
+ padding:14px;border:1px solid var(--line);border-radius:14px;
+ background:var(--card);overflow-wrap:anywhere;line-height:1.55
+}
+.sekka-mobile .sekka-request-card__route{font-size:16px;line-height:1.5}
+.sekka-mobile .sekka-request-card__actions{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;
+ margin-block:8px 0
+}
+.sekka-mobile .sekka-request-card__actions button{
+ position:static;transform:none;float:none;
+ display:flex;justify-content:center;align-items:center;
+ width:100%;max-width:100%;min-width:0;min-height:44px;
+ margin:0;padding:8px 10px;border-radius:10px;
+ font:inherit;font-size:14px;font-weight:800;line-height:1.3;
+ white-space:normal;overflow-wrap:anywhere;
+}
+.sekka-mobile .sekka-request-card__actions .sekka-request-edit{
+ background:#ffc400;border:1px solid #ffc400;color:#171b22
+}
+.sekka-mobile .sekka-request-card__actions .sekka-request-cancel{
+ background:transparent;border:1px solid var(--line);color:var(--ink)
+}
+.sekka-mobile .sekka-request-card__actions button:only-child{grid-column:1/-1}
