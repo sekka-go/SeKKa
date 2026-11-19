@@ -35,8 +35,11 @@ test('GPS opt-in finds nearby published pickup, shows straight-line km and opens
   else if(url.pathname.startsWith('/rest/v1/v31_captain_profiles'))data=null;
   await req.fulfill({contentType:'application/json',body:JSON.stringify(data)});
  });
- await page.goto('/?tab=home');
+ // Guests see Welcome on /; the actual Rider discovery is under Search.
+ // Exercise GPS on the public Search screen, never the guest onboarding screen.
+ await page.goto('/?tab=search&view=9');
  const nearby=page.getByRole('region',{name:'Routes near me'});
+ await expect(nearby).toBeVisible();
  // Browser already granted GPS on an earlier visit: suggestions load
  // automatically with no new permission prompt and no manual tap.
  await expect(nearby.getByText('Pickup near me')).toBeVisible();
@@ -57,7 +60,8 @@ test('denied GPS permission offers manual search and never lists fabricated rout
  });
  await page.goto('/?tab=search&view=9');
  const nearby=page.getByRole('region',{name:'Routes near me'});
- await nearby.getByRole('button',{name:/Enable GPS/}).click();
+ await expect(nearby.locator('.sekka-nearby__locate')).toBeVisible();
+ await nearby.locator('.sekka-nearby__locate').click();
  await expect(nearby.getByRole('alert')).toContainText('Location permission was denied');
  await expect(nearby.getByText('Location is blocked in your browser')).toBeVisible();
  await expect(nearby.getByRole('button',{name:'Retry location permission'})).toBeVisible();
