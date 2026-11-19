@@ -83,7 +83,7 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
     // Availability remains a server-owned aggregate, never inferred from
     // hidden bookings. Only show actual capacity-confirmed route offers.
     const results=await Promise.all(matched.map(async candidate=>{
-     const {data:available,error:capacityError}=await client.rpc('v31_published_route_available_seats',{p_route:candidate.routeId});
+     const {data:available,error:capacityError}=await client!.rpc('v31_published_route_available_seats',{p_route:candidate.routeId});
      if(capacityError||typeof available!=='number')throw capacityError||Error('CAPACITY_UNAVAILABLE');
      const route=rows.find(row=>row.id===candidate.routeId);
      return route&&available>0?{...candidate,route,remaining:available}:null;
