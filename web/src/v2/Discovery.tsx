@@ -10,6 +10,7 @@ import type { Appearance } from "./Onboarding";
 import type { Route, Booking } from "./api";
 import "./discovery.css";
 import LiveRouteSearch from "./LiveRouteSearch";
+import NearbyRides from "./NearbyRides";
 import type {LiveSelection} from "./LiveRouteSearch";
 
 export const discoveryScreens = [8, 9, 10, 11, 12, 14];
@@ -1036,6 +1037,7 @@ export default function Discovery(p: DiscoveryProps) {
               {tr("عرض النتائج")}</Action>
           </>
         )}
+        {p.production&&[8,9].includes(screen)&&<NearbyRides onSelect={p.onLiveSelect}/>}
         {screen === 8 && (
           <section className="d-box">
             <h2>{tr("أهلًا بيك في سِكّة")}</h2>
