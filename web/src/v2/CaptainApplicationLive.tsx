@@ -645,7 +645,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
        aria-label={t('اختيار ملف ','Choose file for ')+t(ar,label)}
        accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
        disabled={!editable||busy} onClick={()=>pickerOpened(kind)}
-       onCancel={()=>pickerFinished(false,kind)} onChange={event=>{
+       onChange={event=>{
         const file=event.currentTarget.files?.[0];
         pickerFinished(Boolean(file),kind);
         if(file)upload(kind,file);
