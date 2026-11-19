@@ -92,3 +92,21 @@ test('production light mode uses legible location icons while preserving seKKa b
  await expect(page.locator('.sekka-bottom-nav')).toHaveCount(0);
  await expect(page.locator('.sekka-mobile-header .sekka-approved-logo')).toHaveCount(0);
 });
+
+test('explicit Rider selection clears stale Captain intent before Google sign-in',async({page})=>{
+ await page.addInitScript(()=>{
+  localStorage.setItem('language_preference','en');
+  sessionStorage.setItem('sekka.pendingRole','captain');
+  sessionStorage.setItem('sekka.postAuthPath','/?tab=captain-onboarding&view=35');
+ });
+ await page.goto('/?tab=login&view=3');
+ await page.getByRole('radio',{name:/Rider/}).click();
+ await expect(page.getByRole('radio',{name:/Rider/})).toHaveAttribute('aria-checked','true');
+ await page.getByRole('button',{name:/Continue/}).click();
+ await expect(page).toHaveURL(/tab=login&view=4/);
+ const selection=await page.evaluate(()=>({
+  role:sessionStorage.getItem('sekka.pendingRole'),
+  returnPath:sessionStorage.getItem('sekka.postAuthPath')
+ }));
+ expect(selection).toEqual({role:'rider',returnPath:'/?tab=login&view=6'});
+});
