@@ -318,3 +318,54 @@ test('Guest drawer has no Captain signup shortcut; role selection remains on ini
  await page.goto('/?tab=login&view=3');
  await expect(page.getByRole('radio',{name:/Captain/})).toBeVisible();
 });
+
+
+for(const language of ['ar','en'] as const){
+ test('MOCKED server-approved Captain with legacy Rider preference opens Captain routes and never downgrades '+language,async({page})=>{
+  await page.setViewportSize({width:390,height:844});
+  await page.addInitScript(({endpoint,user,language})=>{
+   const key='sb-'+new URL(endpoint).hostname.split('.')[0]+'-auth-token';
+   localStorage.setItem(key,JSON.stringify({
+    access_token:'fixture-header.fixture-payload.fixture-signature',
+    refresh_token:'local-fixture-refresh',token_type:'bearer',
+    expires_in:3600,expires_at:Math.floor(Date.now()/1000)+3600,user
+   }));
+   localStorage.setItem('language_preference',language);
+   localStorage.setItem('theme_preference','light');
+   // Simulate an old OAuth callback trying to turn an approved Captain
+   // back into Rider on their next sign-in.
+   sessionStorage.setItem('sekka.pendingRole','rider');
+   sessionStorage.setItem('sekka.postAuthPath','/?tab=search&view=9');
+  },{endpoint,user,language});
+  let profileRoleWrites=0;
+  await page.route(endpoint+'/**',async route=>{
+   const url=new URL(route.request().url()),path=url.pathname;
+   let data:unknown=[];
+   if(path==='/auth/v1/user')data=user;
+   else if(path==='/rest/v1/rpc/v31_is_admin')data=false;
+   else if(path.startsWith('/rest/v1/v31_captain_profiles'))
+    data={user_id:userId,approval_status:'approved'};
+   else if(path.startsWith('/rest/v1/v31_profiles')){
+    if(route.request().method()!=='GET')profileRoleWrites++;
+    data={user_id:userId,role_preference:'rider'};
+   }
+   await route.fulfill({contentType:'application/json',body:JSON.stringify(data)});
+  });
+  await page.goto('/');
+  await expect(page).toHaveURL(/tab=routes&view=42/);
+  await expect(page.locator('.sekka-tab-routes')).toBeVisible();
+  await expect(page.locator('.d-screen-8')).toHaveCount(0);
+  expect(profileRoleWrites,'An approved Captain must not be written as a Rider').toBe(0);
+  expect(await page.evaluate(()=>sessionStorage.getItem('sekka.pendingRole'))).toBeNull();
+  await page.getByRole('button',{name:language==='ar'?'فتح القائمة':'Open menu'}).click();
+  const menu=page.getByRole('dialog',{name:language==='ar'?'القائمة الرئيسية':'Main menu'});
+  await expect(menu.getByRole('button',{name:language==='ar'?'خطوطي':'My routes'})).toBeVisible();
+  await expect(menu.getByRole('button',{name:language==='ar'?'البحث عن خط':'Find a route'})).toHaveCount(0);
+  await page.goto('/?tab=search&view=9');
+  await expect(page).toHaveURL(/tab=routes&view=42/);
+  await expect(page.locator('.d-screen-9')).toHaveCount(0);
+  await page.reload();
+  await expect(page).toHaveURL(/tab=routes&view=42/);
+  expect(profileRoleWrites).toBe(0);
+ });
+}
