@@ -18,9 +18,11 @@ test('GPS distances are real straight-line kilometres and reject invalid coordin
 test('nearby search honours actual pickup permission, directions, and stop order',()=>{
  const point={latitude:30,longitude:31};
  const stops=[
-  stop('a','first',0,30.001,31,false,true),
+  // The first stop is outside the 5 km GPS radius but remains a valid
+  // reverse drop-off; the two nearby points support each journey direction.
+  stop('a','first',0,30.08,31,true,true),
   stop('a','second',1,30.01,31,true,true),
-  stop('a','last',2,30.02,31,true,false)
+  stop('a','last',2,30.02,31,false,true)
  ];
  const ranked=nearbyPublishedStops(point,[route],stops,5);
  assert.equal(ranked.length,2);
