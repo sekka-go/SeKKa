@@ -565,3 +565,30 @@ html[data-theme="dark"] .captain-onboarding-canvas .c-vehicle-save-feedback{
 .sekka-mobile .captain-routes-canvas .sekka-route-step select:focus-visible{
  outline:3px solid #d39c00;outline-offset:2px
 }
+
+
+/* Progressive Captain flow: show a single focused step at a time. */
+.sekka-mobile .sekka-route-step-navigation{display:grid;gap:14px;margin:0;min-width:0}
+.sekka-mobile .sekka-route-step-progress{display:grid;gap:10px;min-width:0;font-size:13px}
+.sekka-mobile .sekka-route-step-progress>div{
+ display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;
+}
+.sekka-mobile .sekka-route-step-progress>div>span{
+ height:5px;border-radius:999px;background:var(--d-line,#a9adb3);
+}
+.sekka-mobile .sekka-route-step-progress>div>span.is-current{background:#ffc400}
+.sekka-mobile .sekka-route-step-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.sekka-mobile .sekka-route-step-buttons button{
+ display:flex;align-items:center;justify-content:center;
+ width:100%;min-width:0;min-height:48px;padding:10px 12px;
+ border-radius:12px;font:inherit;font-weight:900;font-size:15px;line-height:1.35;
+ margin:0;white-space:normal;overflow-wrap:anywhere
+}
+.sekka-mobile .sekka-route-step-buttons button:only-child{grid-column:1/-1}
+.sekka-mobile .sekka-route-step-buttons .sekka-route-next{
+ border:1px solid #ffc400;background:#ffc400;color:#171b22
+}
+.sekka-mobile .sekka-route-step-buttons .sekka-route-secondary{
+ border:1px solid var(--d-line);background:transparent;color:var(--phase-text)
+}
+.sekka-mobile .sekka-route-step-buttons button:disabled{opacity:.5}
