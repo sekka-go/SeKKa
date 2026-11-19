@@ -65,6 +65,6 @@ test('denied GPS permission offers manual search and never lists fabricated rout
  await expect(nearby.getByRole('alert')).toContainText('Location permission was denied');
  await expect(nearby.getByText('Location is blocked in your browser')).toBeVisible();
  await expect(nearby.getByRole('button',{name:'Retry location permission'})).toBeVisible();
- await expect(page.locator('.d-planner-places select').first()).toBeVisible();
+ await expect(page.getByRole('combobox',{name:'From where?'})).toBeVisible();
  await expect(nearby.getByRole('button',{name:'View route details'})).toHaveCount(0);
 });
