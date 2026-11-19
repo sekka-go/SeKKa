@@ -63,7 +63,7 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
   {open&&query.trim().length>0&&<div className="sekka-place-lookup__suggestions" role="group"
     aria-label={t('نتائج البحث عن المكان','Place search suggestions')}>
    {local.map(area=><button type="button" key={area.id} disabled={disabled}
-    onClick={()=>pick(en?area.name_en:area.name_ar,{kind:'service',area})}>
+    onClick={()=>pick(area.name_ar,{kind:'service',area})}>
     <span>{en?area.name_en:area.name_ar}</span>
     <small>{t('منطقة خدمة','Service area')}</small>
    </button>)}
