@@ -488,7 +488,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
      'We’ve added your Google account details. Check the name against your ID, then complete your contact and experience details.')}</p>
    </div>
    {googleEmail&&<div className="c-google-identity" aria-label={t('حساب Google المتصل','Connected Google account')}>
-    <span className="c-google-identity__icon" aria-hidden="true">G</span>
+    <span className="c-google-identity__icon" aria-hidden="true">✓</span>
     <div className="c-google-identity__details">
      <strong>{googleName||t('حساب Google','Google account')}</strong>
      <span dir="ltr">{googleEmail}</span>
