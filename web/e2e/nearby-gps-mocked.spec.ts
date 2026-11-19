@@ -40,7 +40,7 @@ test('GPS opt-in finds nearby published pickup, shows straight-line km and opens
  // Browser already granted GPS on an earlier visit: suggestions load
  // automatically with no new permission prompt and no manual tap.
  await expect(nearby.getByText('Pickup near me')).toBeVisible();
- await nearby.getByRole('button',{name:'Update my location'}).click();
+ await nearby.getByRole('button',{name:'Update GPS'}).click();
  await expect(nearby.getByText('Pickup near me')).toBeVisible();
  await expect(nearby.getByText(/km from your location/)).toContainText('0.1');
  expect(remoteCalls.some(url=>url.includes('30.04'))).toBe(false);
@@ -57,7 +57,7 @@ test('denied GPS permission offers manual search and never lists fabricated rout
  });
  await page.goto('/?tab=search&view=9');
  const nearby=page.getByRole('region',{name:'Routes near me'});
- await nearby.getByRole('button',{name:/Enable GPS and find nearby routes/}).click();
+ await nearby.getByRole('button',{name:/Enable GPS/}).click();
  await expect(nearby.getByRole('alert')).toContainText('Location permission was denied');
  await expect(nearby.getByText('Location is blocked in your browser')).toBeVisible();
  await expect(nearby.getByRole('button',{name:'Retry location permission'})).toBeVisible();
