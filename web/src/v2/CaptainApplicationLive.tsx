@@ -95,6 +95,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
  const [makes,setMakes]=useState<CatalogItem[]>([]),[models,setModels]=useState<CatalogItem[]>([]);
  const [colors,setColors]=useState<ColorItem[]>([]);
  const [fullName,setFullName]=useState(''),[phone,setPhone]=useState('');
+ const [googleEmail,setGoogleEmail]=useState(''),[googleName,setGoogleName]=useState('');
  const [notes,setNotes]=useState(''),[years,setYears]=useState('');
  const [vehicleType,setVehicleType]=useState<'private_car'|'hiace'|''>('');
  const [makeId,setMakeId]=useState(''),[modelId,setModelId]=useState('');
@@ -178,6 +179,8 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
     if(!client)throw Error('BACKEND_NOT_CONFIGURED');
     const {data:{user},error:authError}=await client.auth.getUser();
     if(authError||!user)throw Error('AUTH_REQUIRED');
+    const verifiedGoogleName=String(user.user_metadata?.full_name||user.user_metadata?.name||'').trim();
+    const verifiedGoogleEmail=user.email||'';
     const [appResult,docsResult,profileResult,makesResult,colorsResult]=await Promise.all([
      client.from('v31_captain_applications').select(
       'user_id,status,full_name,phone_number,professional_notes,experience_years,rejection_reason,vehicle_type,vehicle_make_id,vehicle_model_id,manufacture_year,vehicle_color_code,vehicle_color_other,intended_plate,approved_vehicle_id,submitted_at,reviewed_at'
@@ -196,11 +199,15 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
     if(!active)return;
     const app=appResult.data as Application|null;
     setUid(user.id);setApplication(app);setDocs((docsResult.data||[]) as DocumentRow[]);
+    setGoogleEmail(verifiedGoogleEmail);setGoogleName(verifiedGoogleName);
+    // Google identity is a default, not a claim that its display name matches the legal ID.
+    // Keep a saved Captain name authoritative, and allow correction before Admin review.
+    setFullName(app?.full_name?.trim()||verifiedGoogleName);
     setApproval(profileResult.data?.approval_status||'not_enrolled');
     setMakes((makesResult.data||[]) as CatalogItem[]);
     setColors(((colorsResult.data||[]) as ColorItem[]).sort((a,b)=>Number(a.code==='other')-Number(b.code==='other')));
     if(app){
-     setFullName(app.full_name||'');setPhone(app.phone_number||'');
+     setPhone(app.phone_number||'');
      setNotes(app.professional_notes||'');setYears(app.experience_years===null?'':String(app.experience_years));
      setVehicleType(app.vehicle_type||'');setMakeId(app.vehicle_make_id===null?'':String(app.vehicle_make_id));
      setModelId(app.vehicle_model_id===null?'':String(app.vehicle_model_id));
@@ -474,12 +481,27 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
    <button type="button" className="d-primary" onClick={()=>onNext(35)}>{t('الذهاب لبداية التسجيل','Go to registration start')}</button>
   </div>}
   {!loading&&!loadError&&application&&screen===36&&<div className="d-box c-registration-form">
-   <h2>{t('البيانات الشخصية والخبرة','Personal details and experience')}</h2>
+   <div className="c-enrollment-heading">
+    <span className="c-enrollment-eyebrow">{t('ملف الكابتن · ١ من ٤','Captain profile · 1 of 4')}</span>
+    <h2>{t('خلّينا نراجع بياناتك','Let’s confirm your details')}</h2>
+    <p>{t('سحبنا بيانات حساب Google تلقائيًا. راجع الاسم كما هو في البطاقة، وكمّل بيانات التواصل والخبرة.',
+     'We’ve added your Google account details. Check the name against your ID, then complete your contact and experience details.')}</p>
+   </div>
+   {googleEmail&&<div className="c-google-identity" aria-label={t('حساب Google المتصل','Connected Google account')}>
+    <span className="c-google-identity__icon" aria-hidden="true">G</span>
+    <div className="c-google-identity__details">
+     <strong>{googleName||t('حساب Google','Google account')}</strong>
+     <span dir="ltr">{googleEmail}</span>
+     <small>{t('متصل بحسابك الحالي','Connected to this account')}</small>
+    </div>
+    <span className="c-google-identity__check" aria-label={t('تم التحقق من تسجيل الدخول','Sign-in verified')}>✓</span>
+   </div>}
    <label htmlFor="captain-fullName">{t('الاسم الثلاثي على الأقل — مطابق للبطاقة','Full name (at least 3 names, matching ID)')}
     <input id="captain-fullName" autoComplete="name" maxLength={100} value={fullName} disabled={!editable}
      aria-invalid={Boolean(visiblePersonalErrors.fullName)}
      aria-describedby={visiblePersonalErrors.fullName?'captain-fullName-error':undefined}
      onChange={event=>setFullName(event.target.value)} onBlur={()=>setShowPersonalErrors(true)}/>
+    <small className="c-inline-guidance">{t('الاسم مقترح من Google. لو مختلف عن البطاقة، صحّحه هنا.','Suggested from Google. Edit it if it differs from your legal ID.')}</small>
     {visiblePersonalErrors.fullName&&<span id="captain-fullName-error" className="c-field-error" role="alert">
      {personalErrorText('fullName',visiblePersonalErrors.fullName)}</span>}
    </label>
@@ -521,7 +543,12 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
     <button type="button" className="d-primary" onClick={()=>onNext(36)}>{t('العودة للبيانات الشخصية','Back to personal details')}</button>
    </div>}
   {!loading&&!loadError&&application&&screen===37&&personalComplete&&<div className="d-box c-registration-form">
-   <h2>{t('المركبة والخدمات المتاحة','Vehicle and eligible services')}</h2>
+   <div className="c-enrollment-heading">
+    <span className="c-enrollment-eyebrow">{t('المركبة · ٢ من ٤','Vehicle · 2 of 4')}</span>
+    <h2>{t('عرّفنا على عربيتك','Tell us about your vehicle')}</h2>
+    <p>{t('اختار نوع المركبة أولًا؛ هنظهر لك الموديلات والخدمات المناسبة تلقائيًا.',
+     'Choose the physical vehicle first. We’ll show the matching models and eligible services automatically.')}</p>
+   </div>
    <label htmlFor="captain-vehicleType">{t('نوع المركبة الفعلي','Physical vehicle type')}
     <select id="captain-vehicleType" value={vehicleType} disabled={!editable}
      aria-invalid={Boolean(visibleVehicleErrors.vehicleType)}
@@ -627,7 +654,12 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
     <button type="button" className="d-primary" onClick={()=>onNext(37)}>{t('العودة لبيانات المركبة','Back to vehicle details')}</button>
    </div>}
   {!loading&&!loadError&&application&&screen===38&&personalComplete&&vehicleComplete&&<div className="d-box c-registration-form">
-   <h2>{t('المستندات المطلوبة','Required documents')}</h2>
+   <div className="c-enrollment-heading">
+    <span className="c-enrollment-eyebrow">{t('المستندات · ٣ من ٤','Documents · 3 of 4')}</span>
+    <h2>{t('ارفع المستندات المطلوبة','Upload your documents')}</h2>
+    <p>{t('كل ملف بيظهر بحالة واضحة بعد التأكد من حفظه. ملفاتك مش متاحة للركاب.',
+     'Each document shows its status after its upload is verified. Your files are not visible to riders.')}</p>
+   </div>
    {!editable&&<div role="alert" className="c-document-upload-error">
     <p>{t('حالة الطلب: ','Application status: ')}{statusLabel(application.status)}. {t('مش ممكن ترفع مستندات في الحالة دي.','Uploads are disabled in this status.')}</p>
     <button type="button" onClick={()=>onNext(40)}>{t('متابعة حالة الطلب','View application status')}</button>
@@ -692,7 +724,12 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
     onClick={()=>onNext(39)}>{t('مراجعة الطلب','Review application')}</button>}
   </div>}
   {!loading&&!loadError&&application&&screen===39&&<div className="d-box c-registration-form">
-   <h2>{t('مراجعة طلب التسجيل','Review your registration')}</h2>
+   <div className="c-enrollment-heading">
+    <span className="c-enrollment-eyebrow">{t('المراجعة · ٤ من ٤','Review · 4 of 4')}</span>
+    <h2>{t('راجع طلبك قبل الإرسال','Review before submitting')}</h2>
+    <p>{t('التقديم مش معناه الموافقة. الإدارة هتراجع بياناتك ومستنداتك قبل تفعيل الكابتن.',
+     'Submitting does not mean approval. Admin will verify your information and documents before activating your Captain account.')}</p>
+   </div>
    <h3>{t('البيانات الشخصية','Personal details')}</h3>
    <p>{t('الاسم بالكامل:','Full name:')} {fullName||'—'}</p>
    <p>{t('الهاتف (غير مؤكد):','Phone (unverified):')} {phone||'—'}</p>
