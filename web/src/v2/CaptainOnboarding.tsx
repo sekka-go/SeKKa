@@ -169,7 +169,7 @@ export default function CaptainOnboarding(p: {
             onClick={()=>{if(n===35){if(p.onJourneyBack)p.onJourneyBack();else p.go(internalScreen(3));}else next(n-1);}}>
             <DiscoveryIcon name="back"/>
           </button>
-          <Wordmark/>
+          {!p.production&&<Wordmark/>}
         </header>
         <h1>{n===35
           ?language==='en'?'Complete your captain profile':'كمّل تسجيلك ككابتن'
@@ -263,7 +263,7 @@ export default function CaptainOnboarding(p: {
           >
             <DiscoveryIcon name="back" />
           </button>
-          <Wordmark />
+          {!p.production&&<Wordmark />}
         </header>
         <div className="b-stage-label">
           {tr("انضم لسِكّة")}<span dir="ltr">{publicScreen(p.screen) - 35} / 7</span>
