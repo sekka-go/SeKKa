@@ -141,6 +141,9 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
     origin,destination,outbound,returnTime,period:requestPeriod,
     direction:direction==='outbound'||direction==='return'||direction==='round_trip'?direction:(returnTime?'round_trip':'outbound')
    }} onSignIn={onSignIn}/>}
+   {!canCreateRequest&&<p className="sekka-geo-request-hint" role="status">{t(
+    'بحث الخريطة بيطابق نقاط وقوف الكباتن الحقيقية القريبة. طلب رحلة جديدة متاح حاليًا باختيار منطقة خدمة مسجلة فقط.',
+    'Map search matches real nearby Captain stops. New trip requests currently require registered service areas.')}</p>}
   </div>}
   {bookingError&&<p role="alert">{bookingError}</p>}
   {bookingSuccess&&<p role="status">{bookingSuccess}</p>}
