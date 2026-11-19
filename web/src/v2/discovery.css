@@ -1900,3 +1900,44 @@ html[dir="ltr"] .booking-stage .b-canvas .b-timeline > div:not(:last-child)::bef
  .sekka-mobile .discovery-stage .d-planner-places{margin-inline:10px;gap:7px}
  .sekka-mobile .discovery-stage .d-time-picker{margin-inline:10px;gap:6px;padding:9px}
 }
+
+
+/* Type-first place discovery. Map matches use actual GPS stops, not names of
+ * guessed service areas. Buttons wrap naturally on a 320px viewport. */
+.sekka-mobile .discovery-stage .sekka-place-lookup{
+ position:relative;min-width:0;width:100%;display:grid;gap:5px
+}
+.sekka-mobile .discovery-stage .sekka-place-lookup__label{display:block;min-width:0}
+.sekka-mobile .discovery-stage .sekka-place-lookup__label>input{
+ box-sizing:border-box;width:100%;min-width:0;max-width:100%;
+ min-height:50px;padding:10px 12px;border-radius:13px;font-size:16px;
+ line-height:1.4;text-align:start;direction:inherit;
+ background:var(--bg,#0d151e);color:var(--ink,#fff)
+}
+.sekka-place-lookup__selected{font-size:11px;opacity:.88;font-weight:700}
+.sekka-mobile .discovery-stage .sekka-place-lookup__suggestions{
+ display:grid;gap:3px;margin:4px 0 0;padding:7px;min-width:0;
+ max-height:260px;overflow:auto;border-radius:12px;
+ border:1px solid var(--d-line,#67707b);
+ background:var(--bg,#111821);box-shadow:0 5px 12px #0002
+}
+.sekka-mobile .discovery-stage .sekka-place-lookup__suggestions>button{
+ display:flex;flex-direction:column;align-items:start;justify-content:center;
+ gap:3px;min-height:44px;width:100%;max-width:100%;padding:8px 10px;
+ border:1px solid transparent;border-radius:9px;
+ color:var(--ink,#fff);background:var(--card,#172331);
+ text-align:start;font-size:14px;line-height:1.4;
+ overflow-wrap:anywhere;white-space:normal
+}
+.sekka-mobile .discovery-stage .sekka-place-lookup__suggestions>button:focus-visible{
+ border-color:#ffc400;outline:2px solid #ffc400;outline-offset:1px
+}
+.sekka-place-lookup__suggestions>button small{font-size:11px;opacity:.8}
+.sekka-mobile .discovery-stage .sekka-place-lookup__suggestions>.sekka-place-lookup__map-search{
+ color:#171b22;background:#ffc400;border-color:#ffc400;font-weight:800
+}
+.sekka-place-lookup__hint,.sekka-place-lookup__attribution,
+.sekka-place-lookup__suggestions>p{font-size:11px;line-height:1.4;max-width:100%;overflow-wrap:anywhere}
+.sekka-mobile .discovery-stage .d-planner-places>.d-place{display:block;min-width:0}
+.sekka-mobile .sekka-geo-request-hint{font-size:13px;line-height:1.55}
+@media(max-width:359px){.sekka-mobile .discovery-stage .sekka-place-lookup__label>input{font-size:15px;padding-inline:9px}}
