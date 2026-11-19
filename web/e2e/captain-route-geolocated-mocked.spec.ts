@@ -26,15 +26,16 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  let payload:Record<string,unknown>|undefined;
  const routeId='00000000-0000-4000-8000-0000000000f1';
  const savedStops=[
-  {id:'00000000-0000-4000-8000-0000000000f2',area_id:11,name:'Maadi Market',position:0,latitude:null as number|null,longitude:null as number|null},
+  {id:'00000000-0000-4000-8000-0000000000f2',area_id:11,name:'Maadi Grand Mall',position:0,latitude:null as number|null,longitude:null as number|null},
   {id:'00000000-0000-4000-8000-0000000000f3',area_id:22,name:'Nasr City Square',position:1,latitude:null as number|null,longitude:null as number|null}
  ];
  await page.route('https://photon.komoot.io/api/**',async route=>{
   const q=new URL(route.request().url()).searchParams.get('q')||'';
   const maadi=q.toLowerCase().includes('maadi')&&!q.toLowerCase().includes('outside');
+  const mall=q.toLowerCase().includes('maadi grand mall');
   await route.fulfill({contentType:'application/json',body:JSON.stringify({features:[{
    geometry:{coordinates:maadi?[31.25,29.96]:[31.34,30.06]},
-   properties:{osm_id:maadi?101:102,osm_type:'N',name:maadi?'Maadi Market':'Nasr City Square',
+   properties:{osm_id:maadi?101:102,osm_type:'N',name:maadi?(mall?'Maadi Grand Mall':'Maadi Market'):'Nasr City Square',
     district:maadi?'Maadi':'Nasr City',city:'Cairo',countrycode:'EG'}
   }]})});
  });
@@ -66,7 +67,7 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
     row.longitude=Number((body as {p_longitude:number}).p_longitude);}
    result=(body as {p_stop:string}).p_stop;
   }else if(path.startsWith('/rest/v1/v31_routes')){
-   const row={id:routeId,title:'Maadi Market ← Nasr City Square',status:'draft',vehicle_id:vehicle,
+   const row={id:routeId,title:'Maadi Grand Mall ← Nasr City Square',status:'draft',vehicle_id:vehicle,
     category:'PRIME',seat_capacity:3,price_egp:1300};
    result=(route.request().headers()['accept']||'').includes('object+json')?row:[row];
   }
@@ -87,36 +88,28 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  await expect(page).toHaveURL(/tab=routes&view=42/);
  await page.goto('/?tab=routes&view=43');
  const entry=page.locator('.sekka-captain-route-wizard');
- await expect(entry.getByRole('button',{name:'Add this stop'})).toBeDisabled();
- await entry.getByRole('combobox',{name:'Service area'}).selectOption('11');
- await expect(entry.getByRole('button',{name:'Find Maadi Grand Mall'})).toBeVisible();
- await entry.getByRole('button',{name:/Malls/}).click();
- await expect(entry.getByRole('button',{name:'Find Maadi Grand Mall'})).toBeVisible();
- await entry.getByRole('button',{name:'Find Maadi Grand Mall'}).click();
- await expect(entry.getByRole('button',{name:/Maadi Market/})).toBeVisible();
+ await expect(entry.getByRole('group',{name:'Main areas'})).toBeVisible();
+ await entry.getByRole('button',{name:'Maadi'}).click();
  const place=entry.getByRole('combobox',{name:'Search street or landmark'});
+ // Invalid lookup remains blocked even when its returned map point is nearby in Cairo.
  await place.fill('Outside street');
- await entry.getByRole('button',{name:'Find this street or place on the map'}).click();
- await expect(entry.getByText(/No verified location in Maadi/)).toBeVisible();
- await expect(entry.getByRole('button',{name:'Add this stop'})).toBeDisabled();
- await place.fill('Maadi Market');
- await entry.getByRole('button',{name:'Find this street or place on the map'}).click();
- await entry.getByRole('button',{name:/Maadi Market/}).click();
- // Map tiles are requested only after the Captain opts into OpenStreetMap preview.
+ await entry.getByRole('button',{name:'Find'}).click();
+ await expect(entry.getByText(/We could not locate that place in this area/)).toBeVisible();
+ await expect(entry.locator('.cj-easy-selected-stops>li')).toHaveCount(0);
+ // The popular-place suggestion automatically selects an exact verified map result
+ // without manually opening the map or confirming a second button.
+ await entry.getByRole('button',{name:'Choose Maadi Grand Mall'}).click();
+ await expect(entry.locator('.cj-easy-selected-stops>li')).toHaveCount(1);
+ await expect(entry.getByRole('group',{name:'Main areas'})).toBeVisible();
+ await entry.getByRole('button',{name:'Nasr City'}).click();
+ const destination=entry.getByRole('combobox',{name:'Search street or landmark'});
+ await destination.fill('Nasr City Square');
+ await entry.getByRole('button',{name:'Find'}).click();
+ await entry.locator('.cj-easy-results').getByRole('button',{name:/Nasr City Square/}).click();
+ // Second verified stop advances straight to the real vehicle step.
+ await expect(entry.getByRole('combobox',{name:'Approved vehicle'})).toBeVisible();
+ await expect(entry.getByRole('button',{name:'Add this stop'})).toHaveCount(0);
  await expect(entry.locator('iframe.sekka-route-map-card__frame')).toHaveCount(0);
- await entry.getByRole('button',{name:'Show map'}).click();
- await expect(entry.locator('iframe.sekka-route-map-card__frame')).toHaveAttribute('src',/openstreetmap/);
- await entry.getByRole('button',{name:'Hide map'}).click();
- await entry.getByRole('button',{name:'Add this stop'}).click();
- await expect(entry.locator('.sekka-route-stop-list>li')).toHaveCount(1);
- await entry.getByRole('combobox',{name:'Service area'}).selectOption('22');
- await place.fill('Nasr City Square');
- await entry.getByRole('button',{name:'Find this street or place on the map'}).click();
- await entry.getByRole('button',{name:/Nasr City Square/}).click();
- await entry.getByRole('button',{name:'Add this stop'}).click();
- await expect(entry.locator('.sekka-route-stop-list>li')).toHaveCount(2);
- await expect(entry.getByText('Automatic route name:')).toContainText('Maadi Market ← Nasr City Square');
- await entry.getByRole('button',{name:'Continue'}).click();
  await expect(entry.getByRole('combobox',{name:'Approved vehicle'})).toBeVisible();
  await expect(entry.getByRole('button',{name:/PRIME/})).toBeEnabled();
  await expect(entry.getByRole('button',{name:/SAVER/})).toBeDisabled();
@@ -135,11 +128,11 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  await expect(page.getByRole('heading',{name:'Captain route management'})).toBeVisible();
  expect(created).toBe(1);
  expect(payload).toMatchObject({
-  p_title:'Maadi Market ← Nasr City Square',
+  p_title:'Maadi Grand Mall ← Nasr City Square',
   p_vehicle:vehicle,p_category:'PRIME',p_price:1300
  });
  expect((payload?.p_stops as Array<{name:string;area_id:number}>).map(x=>x.name))
-  .toEqual(['Maadi Market','Nasr City Square']);
+  .toEqual(['Maadi Grand Mall','Nasr City Square']);
  expect(savedStops.every(x=>x.latitude!==null&&x.longitude!==null)).toBe(true);
  expect(enrolledAgain).toBe(0);
 });
