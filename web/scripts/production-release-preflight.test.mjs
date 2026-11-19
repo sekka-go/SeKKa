@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {releaseTarget,validateProductionConfig,PRODUCTION_REF,STAGING_REF} from './production-release-preflight.mjs';
+import {releaseTarget,validateProductionConfig,assertTableProbe,PRODUCTION_REF,STAGING_REF} from './production-release-preflight.mjs';
 
 const production={
  CF_PAGES_BRANCH:'main',
@@ -39,4 +39,28 @@ test('live release rejects incorrect Supabase target or missing publishable key'
  assert.throws(()=>validateProductionConfig({...production,VITE_SUPABASE_PUBLISHABLE_KEY:''}),/PRODUCTION_GATE_MISSING_SUPABASE_CONFIG/);
  assert.throws(()=>releaseTarget({...production,CF_PAGES_URL:'https://other-project.pages.dev'}),/PRODUCTION_GATE_UNKNOWN_MAIN_SITE/);
  assert.throws(()=>releaseTarget({...production,CF_PAGES_URL:''}),/PRODUCTION_GATE_CANNOT_VERIFY_PAGES_URL/);
+});
+
+test('missing Production tables are not mistaken for RLS or harmless empty rows',()=>{
+ assert.doesNotThrow(()=>assertTableProbe('v31_captain_applications',null,200));
+ assert.throws(()=>assertTableProbe('v31_captain_applications',{
+  code:'PGRST205',message:"Could not find the table 'public.v31_captain_applications' in the schema cache"
+ },404),/PRODUCTION_GATE_MISSING_TABLE: v31_captain_applications/);
+ assert.throws(()=>assertTableProbe('v31_captain_documents',{
+  code:'42P01',message:'relation does not exist'
+ },404),/PRODUCTION_GATE_MISSING_TABLE: v31_captain_documents/);
+});
+
+test('private-table permissions can be explicitly denied but ambiguous failures fail closed',()=>{
+ assert.doesNotThrow(()=>assertTableProbe('v31_captain_documents',{
+  code:'42501',message:'permission denied for table v31_captain_documents'
+ },403));
+ for(const code of ['PGRST301','PGRST202','UNKNOWN']){
+  assert.throws(()=>assertTableProbe('v31_captain_documents',{
+   code,message:'unavailable'
+  },403),/PRODUCTION_GATE_TABLE_PROBE_FAILED/);
+ }
+ assert.throws(()=>assertTableProbe('v31_captain_documents',{
+  code:'',message:'unexpected response'
+ },401),/PRODUCTION_GATE_TABLE_PROBE_FAILED/);
 });
