@@ -66,7 +66,7 @@ export default function LiveCaptainDraft(){
    const {data:listener}=client.auth.onAuthStateChange((_event,session)=>setUid(session?.user.id??null));
    return ()=>{live=false;listener.subscription.unsubscribe();};
  },[]);
- const title=stops.length>=2?stops[0].name+' ← '+stops[stops.length-1].name:'';
+ const title=stops.length>=2?stops[0].name.slice(0,55)+' ← '+stops[stops.length-1].name.slice(0,55):'';
  const selectedArea=areas.find(area=>String(area.id)===areaId);
  const eligibleCategories=(vehicles.find(vehicle=>vehicle.id===vehicleId)?.enabled_categories||[])
   .filter((value):value is Category=>value in categorySeats);
@@ -123,10 +123,10 @@ export default function LiveCaptainDraft(){
       stops.some(stop=>stop.latitude===null||stop.longitude===null||
        !inLaunchRegion({latitude:stop.latitude,longitude:stop.longitude}))||
       !vehicleId||!category||!eligibleCategories.includes(category)||
-      !/^\\d{1,7}$/.test(price)||!Number.isSafeInteger(Number(price))||Number(price)<=0||
+      !/^\d{1,7}$/.test(price)||!Number.isSafeInteger(Number(price))||Number(price)<=0||
       !['weekly','monthly'].includes(period)||!['outbound','return','round_trip'].includes(direction)||
-      (direction!=='return'&&!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(departure))||
-      (direction!=='outbound'&&!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(arrival))||
+      (direction!=='return'&&!/^([01]\d|2[0-3]):[0-5]\d$/.test(departure))||
+      (direction!=='outbound'&&!/^([01]\d|2[0-3]):[0-5]\d$/.test(arrival))||
       (direction==='round_trip'&&!returnSupported)){
      setError(t('راجع المركبة والفئة والعنوان والسعر؛ يلزم نقطتان في منطقتين مختلفتين.','Check vehicle, category, title, price and at least two stops in distinct areas.'));return;
    }
@@ -187,7 +187,7 @@ export default function LiveCaptainDraft(){
  if(!uid)return <section className="d-box"><p>{t('سجّل دخولك بجوجل قبل حفظ خط حقيقي.','Sign in with Google to create a real route draft.')}</p><a href="?screen=4">{t('الدخول بجوجل','Google sign-in')}</a></section>;
  const draftReady=stops.length>=2&&stops[0].areaId!==stops.at(-1)?.areaId&&
   title.length>=3&&title.length<=120&&Boolean(vehicleId)&&Boolean(category)&&
-  eligibleCategories.includes(category as Category)&&/^\\d{1,7}$/.test(price)&&Number(price)>0&&
+  eligibleCategories.includes(category as Category)&&/^\d{1,7}$/.test(price)&&Number(price)>0&&
   (direction!=='round_trip'||returnSupported);
  return <section className="d-box live-route-form sekka-captain-route-wizard">
   <header className="sekka-route-intro">
