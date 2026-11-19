@@ -74,7 +74,7 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  await page.goto('/?tab=routes&view=43');
  const form=page.locator('.sekka-captain-route-wizard');
  await expect(form).toBeVisible();
- await expect(form.getByRole('heading',{name:'Create a route'})).toBeVisible();
+ await expect(form.getByRole('heading',{name:'Create a new trip'})).toBeVisible();
  await expect(form.getByRole('textbox',{name:'Route title'})).toHaveCount(0);
  await expect(form.getByText(/Latitude|Longitude|خط العرض|خط الطول/)).toHaveCount(0);
  await page.getByRole('button',{name:'Open menu'}).click();
@@ -107,11 +107,13 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  await expect(entry.getByText('Automatic route name:')).toContainText('Maadi Market ← Nasr City Square');
  await entry.getByRole('button',{name:'Continue'}).click();
  await expect(entry.getByRole('combobox',{name:'Approved vehicle'})).toBeVisible();
+ await expect(entry.getByRole('button',{name:/PRIME/})).toBeEnabled();
+ await expect(entry.getByRole('button',{name:/SAVER/})).toBeDisabled();
  await entry.getByRole('button',{name:'Continue'}).click();
  await expect(entry.getByRole('combobox',{name:'Journey direction'})).toBeVisible();
  await entry.getByRole('button',{name:'Continue'}).click();
- await expect(entry.getByText('Price and review')).toBeVisible();
- const save=entry.getByRole('button',{name:'Save route draft'});
+ await expect(entry.getByText('Trip review and price')).toBeVisible();
+ const save=entry.getByRole('button',{name:'Save draft for publishing'});
  const amount=entry.getByRole('spinbutton',{name:'Total vehicle price (EGP)'});
  await amount.fill('0');
  await expect(save).toBeDisabled();
