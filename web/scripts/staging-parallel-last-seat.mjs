@@ -21,6 +21,7 @@
 import {randomUUID} from 'node:crypto';
 import assert from 'node:assert/strict';
 import {createClient} from '@supabase/supabase-js';
+import {cleanupQaSeatAttempts} from './staging-parallel-cleanup.mjs';
 
 const env=process.env;
 assert.equal(env.SEKKA_TEST_DATABASE,'true','DISPOSABLE_STAGING_OPT_IN_REQUIRED');
@@ -106,31 +107,8 @@ try{
   'capacity after race'),0,'QA_ROUTE_MUST_BE_FULL_AFTER_ONE_WINNER');
  console.log('PASS: two different Google Rider sessions, simultaneous last-seat reservation, one exact-priced winner and one capacity rejection.');
 }finally{
- // Cleanup must run even if assertions fail, both RPCs erroneously succeed,
- // or a response was lost after its booking was committed. Never rely only on
- // the winning HTTP response to discover what needs cancellation.
- const cleanupFailures=[];
- for(let i=0;i<2;i++){
-  try{
-   const rows=check(await riders[i].from('v31_bookings')
-    .select('id,status')
-    .eq('route_id',routeId).eq('rider_id',ids[i+1])
-    .eq('idempotency_key',attemptKeys[i]),'lookup own QA bookings for cleanup');
-   for(const booking of rows){
-    if(booking.status==='pending'){
-     check(await riders[i].rpc('v31_cancel_pending_booking',{p_booking:booking.id}),
-      'cancel own QA booking');
-    }else if(booking.status==='confirmed'){
-     cleanupFailures.push('QA_BOOKING_CONFIRMED_REQUIRES_MANUAL_REVIEW');
-    }
-   }
-  }catch(e){
-   cleanupFailures.push(`RIDER_${i+1}_CLEANUP_FAILED: ${e instanceof Error?e.message:'unknown'}`);
-  }
- }
- const restored=check(await riders[0].rpc('v31_published_route_available_seats',{p_route:routeId}),
-  'post-test restored seat availability');
- if(restored!==1)cleanupFailures.push('QA_CAPACITY_NOT_RESTORED');
- if(cleanupFailures.length)throw Error(cleanupFailures.join('; '));
- console.log('CLEANUP: both QA idempotency keys checked; no active test seats remain; cancelled booking/audit rows retained on Staging.');
+ const {cancelled}=await cleanupQaSeatAttempts({
+  riders,riderIds:ids.slice(1),routeId,attemptKeys,check
+ });
+ console.log(`CLEANUP: checked both QA keys and cancelled ${cancelled} pending test bookings. Audit rows retained on Staging.`);
 }
