@@ -78,10 +78,21 @@ const protectedRpcs=[
  ['v31_admin_decide_captain',{p_captain:'00000000-0000-4000-8000-000000000001',p_decision:'approved',p_reason:null}],
  ['v31_admin_decide_captain',{p_captain:'00000000-0000-4000-8000-000000000001',p_decision:'approved',p_reason:null,p_hiace_categories:null}]
 ];
+const intentionallyHiddenOwnerRpcs=new Set([
+ 'v31_captain_private_prices',
+ 'v31_captain_route_capacity_summary',
+ 'v31_rider_booking_fare_status',
+ 'v31_allocate_booking_seat_prices',
+ 'v31_create_geolocated_route_draft'
+]);
 for(const [name,args] of protectedRpcs){
  const {data,error}=await client.rpc(name,args);
  assert.ok(error,`ANON_RPC_ALLOWED ${name}: ${JSON.stringify(data)}`);
- assert.ok(!/does not exist|PGRST202/i.test(error.message+' '+error.code),`MISSING_RPC ${name}: ${error.message}`);
+ // Revoked SECURITY DEFINER RPCs may be deliberately absent from an anon
+ // PostgREST schema cache. For those calls 42501 OR PGRST202 means denial.
+ // The signed-in/owner API shape is separately exercised in SQL/Google QA.
+ if(!intentionallyHiddenOwnerRpcs.has(name))
+  assert.ok(!/does not exist|PGRST202/i.test(error.message+' '+error.code),`MISSING_RPC ${name}: ${error.message}`);
 }
 const {data:emptyCapacity,error:capacityError}=await client.rpc('v31_published_route_available_seats',{p_route:'00000000-0000-4000-8000-000000000001'});
 assert.ifError(capacityError);
