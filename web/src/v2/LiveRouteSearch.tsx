@@ -6,14 +6,14 @@ import {usePreferences} from './preferences';
 import {stopNearPoint} from './geoPlace';
 import type {GeoPoint} from './nearbyRoutes';
 
-export type Route={id:string;title:string;category:string;seat_capacity:number;period:string;direction:string;outbound_time:string|null;return_time:string|null;price_egp:number;return_supported:boolean};
+export type Route={id:string;title:string;category:string;seat_capacity:number;period:string;direction:string;outbound_time:string|null;return_time:string|null;seat_price_egp:number;return_supported:boolean};
 export type Stop={id:string;route_id:string;area_id:number;position:number;name:string;pickup_allowed:boolean;dropoff_allowed:boolean;latitude?:number|string|null;longitude?:number|string|null};
 type Area={id:number;name_ar:string;name_en:string};
 export type LiveSelection={route:Route;from:Stop;to:Stop;reverse:boolean;stops:Stop[];remaining:number};
 type Match=Omit<LiveSelection,'remaining'>;
 export async function fetchPublishedSelection(routeId:string,fromId:string,toId:string,reverse:boolean):Promise<LiveSelection>{
  if(!client)throw Error('BACKEND_NOT_CONFIGURED');
- const {data:route,error:routeError}=await client.from('v31_routes').select('id,title,category,seat_capacity,period,direction,outbound_time,return_time,price_egp,return_supported').eq('id',routeId).eq('status','published').maybeSingle();
+ const {data:route,error:routeError}=await client.from('v31_public_route_offers').select('id,title,category,seat_capacity,period,direction,outbound_time,return_time,seat_price_egp,return_supported').eq('id',routeId).eq('status','published').maybeSingle();
  if(routeError)throw routeError;
  if(!route)throw Error('ROUTE_NOT_AVAILABLE');
  const {data:rows,error:stopsError}=await client.from('v31_route_stops').select('id,route_id,area_id,position,name,pickup_allowed,dropoff_allowed').eq('route_id',routeId).order('position');
@@ -43,7 +43,7 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
  const [seatCounts,setSeatCounts]=useState<Record<string,number>>({});
  const [sortBy,setSortBy]=useState<'time'|'price'|'seats'>('time');
  const visibleItems=[...items].sort((a,b)=>{
-  if(sortBy==='price')return a.route.price_egp-b.route.price_egp;
+  if(sortBy==='price')return a.route.seat_price_egp-b.route.seat_price_egp;
   if(sortBy==='seats')return b.remaining-a.remaining;
   const aTime=a.reverse?a.route.return_time:a.route.outbound_time;
   const bTime=b.reverse?b.route.return_time:b.route.outbound_time;
@@ -67,7 +67,7 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
    try{
     const [{data:areas,error:areaError},{data:routes,error:routeError}]=await Promise.all([
      client!.from('v31_service_areas').select('id,name_ar,name_en').eq('active',true),
-     client!.from('v31_routes').select('id,title,category,seat_capacity,period,direction,outbound_time,return_time,price_egp,return_supported').eq('status','published').limit(100)
+     client!.from('v31_public_route_offers').select('id,title,category,seat_capacity,period,direction,outbound_time,return_time,seat_price_egp,return_supported').eq('status','published').limit(100)
     ]);
     if(areaError||routeError)throw new Error(areaError?.message||routeError?.message);
     const areaRows=(areas||[]) as Area[],routeRows=(routes||[]) as Route[];
@@ -151,7 +151,7 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
    {t('رتّب الخطوط حسب','Sort routes by')}
    <select value={sortBy} onChange={e=>setSortBy(e.target.value as 'time'|'price'|'seats')}>
     <option value="time">{t('أقرب ميعاد','Earliest departure')}</option>
-    <option value="price">{t('السعر الأقل','Lowest listed price')}</option>
+    <option value="price">{t('سعر المقعد الأقل','Lowest seat price')}</option>
     <option value="seats">{t('المقاعد الأكثر','Most available seats')}</option>
    </select>
   </label>}
@@ -167,7 +167,7 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
       {' · '}{t('ذهاب وعودة','Round trip supported')}</span>}
    </p>
    <p className="sekka-live-meta">{route.category} · {selection.remaining} {t('مقاعد متاحة من','available of')} {route.seat_capacity}</p>
-   <p className="sekka-live-price">{t('السعر المعلن','Listed price')}: <strong>{route.price_egp.toLocaleString('en-US')} {t('جنيه','EGP')}</strong></p>
+   <p className="sekka-live-price">{t('سعر المقعد الاسترشادي','Indicative seat price')}: <strong>{route.seat_price_egp.toLocaleString('en-US')} {t('جنيه','EGP')}</strong></p>
    {onSelect&&<button type="button" className="d-offer-select" onClick={()=>onSelect(selection)}>{t('عرض تفاصيل الخط','View route details')}</button>}
    {!onSelect&&<>
    <p>{reverse?t('العودة','Return'):t('الذهاب','Outbound')} · {(reverse?route.return_time:route.outbound_time)?.slice(0,5)} · {period==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')}</p>
