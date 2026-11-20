@@ -429,6 +429,17 @@ test('MOCKED published search delegates round-trip filters and sorts projected p
  expect(searchInputs).toContainEqual(expect.objectContaining({
   p_direction:'round_trip',p_outbound:'07:30',p_return:'17:00'
  }));
+ await page.getByRole('button',{name:'Edit filters'}).click();
+ await page.getByLabel('Maximum price per seat (EGP)').fill('800');
+ await page.getByRole('button',{name:'Show results'}).click();
+ await expect(list).toHaveCount(0);
+ await expect(page.getByText('Routes serve your selected places.',{exact:false})).toBeVisible();
+ await expect(page.getByRole('button',{name:/Request a trip using this search|Sign in to request this trip/})).toHaveCount(0);
+ await page.getByRole('button',{name:'Edit filters'}).click();
+ await page.getByLabel('Maximum price per seat (EGP)').fill('950');
+ await page.getByRole('button',{name:'Show results'}).click();
+ await expect(list).toHaveCount(1);
+ await expect(list.getByRole('heading',{name:'Round C'})).toBeVisible();
 });
 
 test('MOCKED genuine round-trip offer reaches transparent one-or-two person booking review',async({page})=>{
@@ -481,8 +492,8 @@ test('MOCKED genuine round-trip offer reaches transparent one-or-two person book
  await page.getByRole('button',{name:'View route details'}).click();
  await expect(page.getByText('Verified Round Trip',{exact:true})).toHaveCount(0);
  await expect(page.locator('.d-screen-12')).toBeVisible();
- await page.getByRole('combobox',{name:'Pickup stop'}).selectOption(fromStop);
- await page.getByRole('combobox',{name:'Drop-off stop'}).selectOption(toStop);
+ await expect(page.getByRole('combobox',{name:'Pickup stop'})).toHaveValue(fromStop);
+ await expect(page.getByRole('combobox',{name:'Drop-off stop'})).toHaveValue(toStop);
  await page.getByRole('button',{name:'Book subscription'}).click();
  await expect(page).toHaveURL(/tab=booking/);
  await expect(page.locator('.booking-stage')).toBeVisible();

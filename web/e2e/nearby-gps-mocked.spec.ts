@@ -39,7 +39,9 @@ test('GPS opt-in finds nearby published pickup, shows straight-line km and opens
  await page.goto('/?tab=search&view=9');
  await expect(page.getByRole('region',{name:'Routes near me'})).toHaveCount(0);
  expect(remoteCalls.some(url=>url.includes('/v31_public_route_offers'))).toBe(false);
- await page.getByText('Find rides near my location',{exact:true}).click();
+ const nearbyToggle=page.locator('.sekka-gps-inline > summary');
+ await expect(nearbyToggle).toContainText('Find rides near my location');
+ await nearbyToggle.click();
  const nearby=page.getByRole('region',{name:'Routes near me'});
  await expect(nearby).toBeVisible();
  // Browser already granted GPS on an earlier visit: suggestions load

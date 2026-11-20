@@ -1946,3 +1946,47 @@ html[dir="ltr"] .booking-stage .b-canvas .b-timeline > div:not(:last-child)::bef
 .sekka-mobile .discovery-stage .d-planner-places>.d-place{display:block;min-width:0}
 .sekka-mobile .sekka-geo-request-hint{font-size:13px;line-height:1.55}
 @media(max-width:359px){.sekka-mobile .discovery-stage .sekka-place-lookup__label>input{font-size:15px;padding-inline:9px}}
+
+.sekka-mobile .d-live-search .sekka-live-result {
+ display:grid;gap:12px;padding:14px 16px;min-width:0;
+}
+.sekka-live-result-head {
+ display:grid;grid-template-columns:minmax(0,1fr) minmax(0,auto);
+ align-items:start;gap:10px;
+}
+.sekka-live-result-head h2,.sekka-live-result p,.sekka-live-results-toolbar p {
+ margin:0;overflow-wrap:anywhere;
+}
+.sekka-live-result-head h2 {font-size:clamp(1rem,4.2vw,1.25rem);line-height:1.35}
+.sekka-live-price {display:grid;gap:2px;text-align:end;max-inline-size:9rem}
+.sekka-live-price strong {font-variant-numeric:tabular-nums;font-size:clamp(1rem,4.2vw,1.25rem)}
+.sekka-live-price span,.sekka-live-meta {font-size:.875rem;color:var(--phase-muted)}
+.sekka-live-stops {list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.sekka-live-stops li {
+ position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;
+ column-gap:8px;padding-inline-start:18px;overflow-wrap:anywhere;
+}
+.sekka-live-stops li::before {
+ content:"";position:absolute;inset-inline-start:1px;inset-block-start:.5rem;
+ width:8px;height:8px;border:2px solid #d29700;border-radius:50%;
+}
+.sekka-live-stops li+li::before {background:#ffc400}
+.sekka-live-stops li>span {grid-column:1/-1;font-size:.8rem;color:var(--phase-muted)}
+.sekka-live-stops li>small {align-self:center;color:var(--phase-muted);white-space:nowrap}
+.sekka-live-result-facts,.sekka-live-results-toolbar {
+ display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px 12px;
+}
+.sekka-live-results-toolbar {margin-block:4px 12px}
+.sekka-live-results-toolbar>div {display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.sekka-live-results-toolbar button,.sekka-live-sort select,.sekka-live-result .d-offer-select {min-block-size:44px}
+.sekka-live-sort {display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px}
+.sekka-live-filter-empty {margin-block:12px}
+.sekka-live-stop-picker {display:grid;gap:12px}
+.sekka-live-stop-picker h2,.sekka-live-stop-picker p {margin:0}
+.sekka-live-stop-picker label {display:grid;gap:6px}
+.sekka-live-stop-picker select {
+ min-block-size:48px;max-inline-size:100%;width:100%;padding:.5rem;
+ border:1px solid var(--phase-line,var(--line));border-radius:10px;
+ background:var(--phase-card,var(--card));color:inherit;font:inherit;
+}
+.sekka-live-stop-picker summary {min-block-size:44px;padding-block:10px;cursor:pointer}

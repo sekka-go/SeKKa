@@ -544,6 +544,19 @@ export default function Discovery(p: DiscoveryProps) {
     [modal, setModal] = useState("");
   const lines = demo ? [...examples, ...readPublishedPreviews()].filter(l => l.available > 0) : p.routes.flatMap(toLines);
   const live=p.liveSelection;
+  const liveStopKey=p.production&&live?`${live.route.id}:${live.reverse}:${live.from.id}:${live.to.id}`:'';
+  const [editedLiveStops,setEditedLiveStops]=useState<{key:string;pickup:string;dropoff:string}|null>(null);
+  const liveStopOverrides=editedLiveStops?.key===liveStopKey?editedLiveStops:null;
+  const chosenPickup=liveStopKey?(liveStopOverrides?.pickup??live?.from.id??''):pickup;
+  const chosenDropoff=liveStopKey?(liveStopOverrides?.dropoff??live?.to.id??''):dropoff;
+  const changePickup=(id:string)=>{
+    if(liveStopKey)setEditedLiveStops({key:liveStopKey,pickup:id,dropoff:''});
+    else {setPickup(id);setDropoff('');}
+  };
+  const changeDropoff=(id:string)=>{
+    if(liveStopKey)setEditedLiveStops({key:liveStopKey,pickup:chosenPickup,dropoff:id});
+    else setDropoff(id);
+  };
   const liveRouteLine:Line|null=p.production&&live?{
     id:live.route.id+':'+(live.reverse?'return':'outbound'),routeId:live.route.id,
     origin:p.serviceAreas?.find(a=>a.id===live.from.area_id)?.name_ar||live.from.name,
@@ -576,6 +589,9 @@ export default function Discovery(p: DiscoveryProps) {
     outbound,
     returnTime,
   };
+  const detailStops=current.stops||[];
+  const pickupPosition=detailStops.findIndex(stop=>stop.id===chosenPickup);
+  const validDropoff=pickupPosition>=0&&detailStops.some((stop,index)=>stop.id===chosenDropoff&&stop.dropoff&&index>pickupPosition);
   const queryLine = {
     ...current,
     origin: origin || tr("منطقة الانطلاق"),
@@ -1001,7 +1017,7 @@ export default function Discovery(p: DiscoveryProps) {
                 </select>
               </label>
               <label className="w-field">
-                <span>{tr("أقصى سعر للاشتراك")}</span>
+                <span>{p.production?(language==='en'?'Maximum price per seat (EGP)':'أقصى سعر للمقعد (جنيه)'):tr("أقصى سعر للاشتراك")}</span>
                 <input
                   type="number"
                   min="0"
@@ -1078,7 +1094,10 @@ export default function Discovery(p: DiscoveryProps) {
          canCreateRequest={geoRequestAvailable(
            originPlace||((p.serviceAreas||[]).find(a=>a.name_ar===origin||a.name_en===origin)?{kind:'service',area:(p.serviceAreas||[]).find(a=>a.name_ar===origin||a.name_en===origin)!}:null),
            destinationPlace||((p.serviceAreas||[]).find(a=>a.name_ar===destination||a.name_en===destination)?{kind:'service',area:(p.serviceAreas||[]).find(a=>a.name_ar===destination||a.name_en===destination)!}:null)
-         )} outbound={outbound} returnTime={returnTime} period={appliedFilters?period:""} requestPeriod={period} direction={filterDirection} categories={categories} onSelect={p.production?p.onLiveSelect:undefined} onSignIn={()=>nav(4)} />}
+         )} outbound={outbound} returnTime={returnTime} period={appliedFilters?period:""} requestPeriod={period} direction={filterDirection} categories={categories}
+         maxSeatPrice={p.production&&appliedFilters&&filterPrice!==''&&Number.isFinite(Number(filterPrice))&&Number(filterPrice)>=0?Number(filterPrice):null}
+         onlyAvailable={Boolean(p.production&&appliedFilters&&onlyAvailable)}
+         onEditFilters={p.production?()=>nav(10):undefined} onSelect={p.production?p.onLiveSelect:undefined} onSignIn={()=>nav(4)} />}
         {screen === 11 && demo && (
           <>
             <p className="d-subtitle">{tr("اختر عرض الاشتراك المناسب لك")}</p>
@@ -1176,7 +1195,7 @@ export default function Discovery(p: DiscoveryProps) {
               <div className="d-box d-fixed-price">
                 <span>
                   <DiscoveryIcon name="clipboard" />
-                  {tr("سعر الاشتراك")}</span>
+                  {p.production?(language==='en'?'Indicative seat price':'سعر المقعد الاسترشادي'):tr("سعر الاشتراك")}</span>
                 <strong dir="auto">{money(current.amount,language)}</strong>
               </div>
               <div className="d-box d-information">
@@ -1184,16 +1203,40 @@ export default function Discovery(p: DiscoveryProps) {
                   {tr("الاشتراك من الأحد للخميس، باستثناء الإجازات الرسمية المصرية، وفق مواعيد العرض طوال مدة الاشتراك.")}</p>
                 <DiscoveryIcon name="info" />
               </div>
-              <section className="d-box"><h2>{tr("نقاط المسار")}</h2>
-                <ol>{(current.stops || []).map(s => <li key={s.id}>{tr(s.name)}</li>)}</ol>
-                <label>{tr("نقطة الركوب")}<select aria-label={tr("نقطة الركوب")} value={pickup} onChange={e => {setPickup(e.target.value); setDropoff("");}}><option value="">{tr("اختر نقطة الركوب")}</option>{(current.stops || []).filter(s => s.pickup).map(s => <option key={s.id} value={s.id}>{tr(s.name)}</option>)}</select></label>
-                <label>{tr("نقطة النزول")}<select aria-label={tr("نقطة النزول")} value={dropoff} onChange={e => setDropoff(e.target.value)}><option value="">{tr("اختر نقطة النزول")}</option>{(current.stops || []).filter((s,i) => s.dropoff && i > (current.stops || []).findIndex(p => p.id === pickup)).map(s => <option key={s.id} value={s.id}>{tr(s.name)}</option>)}</select></label>
-                {current.direction === "round_trip" && pickup && dropoff && <p>{tr("العودة تلقائيًا:")}{current.stops?.find(s => s.id === dropoff)?.name} ← {current.stops?.find(s => s.id === pickup)?.name}</p>}
-                {!current.stops?.length && <p>{tr("نقاط العرض غير متاحة؛ الحجز غير متاح حتى نشر النقاط.")}</p>}
+              <section className={p.production?"d-box sekka-live-stop-picker":"d-box"}><h2>{tr("نقاط المسار")}</h2>
+                {p.production?<>
+                  <p>{language==='en'?'Review the matched stops or choose another pair along this route.':'راجع المحطتين اللي طابقناهم مع بحثك، أو اختار محطتين تانيين على نفس الخط.'}</p>
+                  {detailStops.length>0&&<details>
+                    <summary>{language==='en'?'See all route stops':'اعرض كل محطات الخط'} · {detailStops.length}</summary>
+                    <ol>{detailStops.map(stop=><li key={stop.id}><bdi>{stop.name}</bdi></li>)}</ol>
+                  </details>}
+                </>:<ol>{detailStops.map(stop=><li key={stop.id}>{tr(stop.name)}</li>)}</ol>}
+                <label>{tr("نقطة الركوب")}
+                  <select aria-label={tr("نقطة الركوب")} value={chosenPickup} onChange={event=>changePickup(event.target.value)}>
+                    <option value="">{tr("اختر نقطة الركوب")}</option>
+                    {detailStops.filter(stop=>stop.pickup).map(stop=><option key={stop.id} value={stop.id}>{tr(stop.name)}</option>)}
+                  </select>
+                </label>
+                <label>{tr("نقطة النزول")}
+                  <select aria-label={tr("نقطة النزول")} value={chosenDropoff} disabled={Boolean(p.production&&pickupPosition<0)} onChange={event=>changeDropoff(event.target.value)}>
+                    <option value="">{tr("اختر نقطة النزول")}</option>
+                    {detailStops.filter((stop,index)=>stop.dropoff&&index>pickupPosition).map(stop=><option key={stop.id} value={stop.id}>{tr(stop.name)}</option>)}
+                  </select>
+                </label>
+                {current.direction==="round_trip"&&validDropoff&&<p>{tr("العودة تلقائيًا:")} <bdi>{detailStops.find(stop=>stop.id===chosenDropoff)?.name}</bdi> · <bdi>{detailStops[pickupPosition]?.name}</bdi></p>}
+                {!detailStops.length&&<p>{tr("نقاط العرض غير متاحة؛ الحجز غير متاح حتى نشر النقاط.")}</p>}
               </section>
+              {p.production&&current.available<1&&<p role="status">
+                {language==='en'?'No seats are available right now. Go back to see other routes.':'المقاعد خلصت حاليًا. ارجع للنتائج عشان تشوف الخطوط التانية.'}
+              </p>}
               <Action
-                onClick={() => {try {const selectedStops = selectStops(current.stops || [], pickup, dropoff, current.direction === "round_trip" ? current.returnStops || [] : undefined); p.onBook({...current, selectedStops});} catch {setMessage(tr("اختار نقطتين صالحين؛ يجب أن يدعم مسار العودة عكس النقطتين."));}}}
-                disabled={current.amount === null || current.available<1 || !pickup || !dropoff}
+                onClick={()=>{
+                  try{
+                    const selectedStops=selectStops(detailStops,chosenPickup,chosenDropoff,current.direction==="round_trip"?current.returnStops||[]:undefined);
+                    p.onBook({...current,selectedStops});
+                  }catch{setMessage(tr("اختار نقطتين صالحين؛ يجب أن يدعم مسار العودة عكس النقطتين."));}
+                }}
+                disabled={current.amount===null||current.available<1||!chosenPickup||!validDropoff}
               >
                 {tr("حجز الاشتراك")}</Action>
               {!p.production && <button

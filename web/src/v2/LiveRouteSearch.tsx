@@ -27,8 +27,8 @@ export async function fetchPublishedSelection(routeId:string,fromId:string,toId:
  if(typeof remaining!=='number'||remaining<0)throw Error('CAPACITY_UNAVAILABLE');
  return {route:route as Route,from,to,reverse,stops,remaining};
 }
-export default function LiveRouteSearch({origin,destination,originPoint=null,destinationPoint=null,canCreateRequest=true,outbound,returnTime,period,requestPeriod,direction,categories,onSelect,onSignIn}:{
- origin:string;destination:string;originPoint?:GeoPoint|null;destinationPoint?:GeoPoint|null;canCreateRequest?:boolean;outbound:string;returnTime:string;period:string;requestPeriod:string;direction:string;categories:string[];onSelect?:(selection:LiveSelection)=>void;onSignIn?:()=>void;
+export default function LiveRouteSearch({origin,destination,originPoint=null,destinationPoint=null,canCreateRequest=true,outbound,returnTime,period,requestPeriod,direction,categories,maxSeatPrice=null,onlyAvailable=false,onEditFilters,onSelect,onSignIn}:{
+ origin:string;destination:string;originPoint?:GeoPoint|null;destinationPoint?:GeoPoint|null;canCreateRequest?:boolean;outbound:string;returnTime:string;period:string;requestPeriod:string;direction:string;categories:string[];maxSeatPrice?:number|null;onlyAvailable?:boolean;onEditFilters?:()=>void;onSelect?:(selection:LiveSelection)=>void;onSignIn?:()=>void;
 }){
  const {language}=usePreferences(),en=language==='en';
  const t=(ar:string,english:string)=>en?english:ar;
@@ -49,7 +49,9 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
  const [bookingSuccess,setBookingSuccess]=useState('');
  const [seatCounts,setSeatCounts]=useState<Record<string,number>>({});
  const [sortBy,setSortBy]=useState<'recommended'|'time'|'price'|'seats'>('recommended');
- const visibleItems=[...items].sort((a,b)=>{
+ const visibleItems=items.filter(({route,remaining})=>
+  (!onlyAvailable||remaining>0)&&(maxSeatPrice===null||route.seat_price_egp<=maxSeatPrice)
+ ).sort((a,b)=>{
   if(sortBy==='price')return a.route.seat_price_egp-b.route.seat_price_egp;
   if(sortBy==='seats')return b.remaining-a.remaining;
   if(sortBy==='recommended'&&hasMapPoint){
@@ -102,12 +104,10 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
   return ()=>controller.abort();
  },[queryKey,origin,destination,originLat,originLon,destinationLat,destinationLon,
   outbound,returnTime,period,direction,categoryKey]);
- const distanceText=(distance:number)=>new Intl.NumberFormat(en?'en-EG':'ar-EG',{
-  maximumFractionDigits:1
- }).format(distance);
+ const numberFormat=new Intl.NumberFormat(en?'en-EG':'ar-EG',{maximumFractionDigits:1});
+ const distanceText=(distance:number)=>numberFormat.format(distance);
  return <section className="d-live-search">
-  <p>{t('نتائج فعلية من الخطوط المنشورة للكباتن المعتمدين فقط.','Live results from published routes only.')}</p>
-  {!client&&<p role="status">{t('البحث الحقيقي محتاج ربط إعدادات Supabase العامة.','Live search requires public Supabase configuration.')}</p>}
+   {!client&&<p role="status">{t('البحث الحقيقي محتاج ربط إعدادات Supabase العامة.','Live search requires public Supabase configuration.')}</p>}
   {loading&&<p role="status">{t('بنبحث عن خطوط مطابقة…','Searching published routes…')}</p>}
   {error&&<div role="alert"><p>{t('تعذر تحميل الخطوط.','Unable to load routes.')}</p><button onClick={()=>setRetry(v=>v+1)}>{t('حاول تاني','Retry')}</button></div>}
   {current&&!error&&items.length===0&&<div className="sekka-no-match" role="group" aria-label={t('نتيجة البحث','Search result')}>
@@ -122,43 +122,65 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
   </div>}
   {bookingError&&<p role="alert">{bookingError}</p>}
   {bookingSuccess&&<p role="status">{bookingSuccess}</p>}
-  {!loading&&!error&&items.length>1&&<label className="sekka-live-sort">
-   {t('رتّب الخطوط حسب','Sort routes by')}
-   <select value={sortBy} onChange={e=>setSortBy(e.target.value as 'recommended'|'time'|'price'|'seats')}>
-    <option value="recommended">{t('أنسب اختيار','Recommended')}</option>
-    <option value="time">{t('أقرب ميعاد','Earliest departure')}</option>
-    <option value="price">{t('سعر المقعد الأقل','Lowest seat price')}</option>
-    <option value="seats">{t('المقاعد الأكثر','Most available seats')}</option>
-   </select>
-  </label>}
-  {visibleItems.map((selection)=><article className="d-box d-result" key={selection.route.id+String(selection.reverse)+selection.from.id+selection.to.id}>{(()=>{const {route,from,to,reverse}=selection;return <>
-   <h2>{route.title}</h2>
-   <p className="sekka-live-stops">{from.name} ← {to.name}</p>
-   {hasMapPoint&&<p className="sekka-live-meta">
-    {selection.pickupDistanceKm!==null&&<span>
-     {t('نقطة الركوب','Pickup')} {distanceText(selection.pickupDistanceKm)} {t('كم','km')}{' · '}
-    </span>}
-    {selection.dropoffDistanceKm!==null&&<span>
-     {t('نقطة النزول','Drop-off')} {distanceText(selection.dropoffDistanceKm)} {t('كم','km')}{' · '}
-    </span>}
-    {t('مسافة بخط مستقيم','Straight-line distance')}
-   </p>}
-   <p className="sekka-live-schedule">
-    <strong>{reverse?t('العودة','Return'):t('الذهاب','Outbound')}</strong>
-    {' · '}{(reverse?route.return_time:route.outbound_time)?.slice(0,5)||t('الوقت غير محدد','Time unavailable')}
-    {' · '}{route.period==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')}
-    {route.direction==='round_trip'&&route.return_supported&&
-     <span>{' · '}{t('العودة','Return')} {(route.return_time||'').slice(0,5)}
-      {' · '}{t('ذهاب وعودة','Round trip supported')}</span>}
-   </p>
-   <p className="sekka-live-meta">{route.category} · {selection.remaining} {t('مقاعد متاحة من','available of')} {route.seat_capacity}</p>
-   <p className="sekka-live-price">{t('سعر المقعد الاسترشادي','Indicative seat price')}: <strong>{route.seat_price_egp.toLocaleString('en-US')} {t('جنيه','EGP')}</strong></p>
+  {current&&!error&&items.length>0&&<div className="sekka-live-results-toolbar">
+   <p role="status">{t('عدد الخطوط المطابقة','Matching routes')} · {numberFormat.format(visibleItems.length)}</p>
+   <div>
+    {visibleItems.length>1&&<label className="sekka-live-sort">
+     {t('رتّب الخطوط حسب','Sort routes by')}
+     <select value={sortBy} onChange={e=>setSortBy(e.target.value as 'recommended'|'time'|'price'|'seats')}>
+      <option value="recommended">{t('أنسب اختيار','Recommended')}</option>
+      <option value="time">{t('أقرب ميعاد','Earliest departure')}</option>
+      <option value="price">{t('سعر المقعد الأقل','Lowest seat price')}</option>
+      <option value="seats">{t('المقاعد الأكثر','Most available seats')}</option>
+     </select>
+    </label>}
+    {onEditFilters&&<button type="button" className="d-outline" onClick={onEditFilters}>{t('تعديل الفلاتر','Edit filters')}</button>}
+   </div>
+  </div>}
+  {current&&!error&&items.length>0&&visibleItems.length===0&&<p role="status" className="sekka-live-filter-empty">
+   {t('فيه خطوط بتخدم الأماكن اللي اخترتها. عدّل فلاتر السعر أو المقاعد عشان تشوفها.',
+      'Routes serve your selected places. Adjust the price or seat filters to see them.')}
+  </p>}
+  {visibleItems.map(selection=>{
+   const {route,from,to,reverse}=selection;
+   const primaryTime=reverse?route.return_time:route.outbound_time;
+   const otherTime=reverse?route.outbound_time:route.return_time;
+   return <article className="d-box d-result sekka-live-result" key={route.id+String(reverse)+from.id+to.id}>
+   <header className="sekka-live-result-head">
+    <div>
+     <h2 dir="auto">{route.title}</h2>
+     <p className="sekka-live-meta">{route.category} · {route.period==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')}</p>
+    </div>
+    <p className="sekka-live-price">
+     <strong><bdi>{numberFormat.format(route.seat_price_egp)} {t('جنيه','EGP')}</bdi></strong>
+     <span>{t('سعر المقعد الاسترشادي','Indicative seat price')}</span>
+    </p>
+   </header>
+   <ol className="sekka-live-stops" aria-label={t('محطات الركوب والنزول','Pickup and drop-off')}>
+    <li><span>{t('نقطة الركوب','Pickup')}</span><strong dir="auto">{from.name}</strong>
+     {selection.pickupDistanceKm!==null&&<small>{distanceText(selection.pickupDistanceKm)} {t('كم','km')}</small>}</li>
+    <li><span>{t('نقطة النزول','Drop-off')}</span><strong dir="auto">{to.name}</strong>
+     {selection.dropoffDistanceKm!==null&&<small>{distanceText(selection.dropoffDistanceKm)} {t('كم','km')}</small>}</li>
+   </ol>
+   {hasMapPoint&&<p className="sekka-live-meta">{t('المسافات بخط مستقيم','Straight-line distance')}</p>}
+   <div className="sekka-live-result-facts">
+    <p className="sekka-live-schedule">
+     {reverse?t('العودة','Return'):t('الذهاب','Outbound')}{' '}
+     <strong><bdi>{primaryTime?.slice(0,5)||t('الوقت غير محدد','Time unavailable')}</bdi></strong>
+     {route.direction==='round_trip'&&route.return_supported&&otherTime&&<span>
+      {' · '}{reverse?t('الذهاب','Outbound'):t('العودة','Return')} <bdi>{otherTime.slice(0,5)}</bdi>
+      {' · '}{t('ذهاب وعودة','Round trip supported')}
+     </span>}
+    </p>
+    <p className="sekka-live-meta">{selection.remaining>0
+     ?t('المتاح','Available')+' '+numberFormat.format(selection.remaining)+' / '+numberFormat.format(route.seat_capacity)
+     :t('المقاعد خلصت','Sold out')}</p>
+   </div>
    {onSelect&&<button type="button" className="d-offer-select" onClick={()=>onSelect(selection)}>{t('عرض تفاصيل الخط','View route details')}</button>}
    {!onSelect&&<>
-   <p>{reverse?t('العودة','Return'):t('الذهاب','Outbound')} · {(reverse?route.return_time:route.outbound_time)?.slice(0,5)} · {period==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')}</p>
    <label>{t('المقاعد المطلوبة','Seats to reserve')} <input type="number" min={1} max={Math.min(MAX_SEATS_PER_RIDER,selection.remaining)} value={seatCounts[route.id]||1} onChange={e=>setSeatCounts(v=>({...v,[route.id]:Number(e.target.value)}))}/></label>
    <button type="button" disabled={bookingBusy!==null||!Number.isInteger(seatCounts[route.id]||1)||(seatCounts[route.id]||1)<1||(seatCounts[route.id]||1)>MAX_SEATS_PER_RIDER||(seatCounts[route.id]||1)>selection.remaining} onClick={()=>void book(route.id,from.id,to.id,reverse)}>{bookingBusy===route.id?t('جارٍ حجز المقاعد…','Reserving seats…'):t('احجز مقاعد حقيقية','Reserve seats')}</button>
    <p>{t('الحجز يسجل قيد الانتظار، من غير OTP أو دفع.','Reservation is saved as pending, without OTP or payment.')}</p></>}
-  </>})()}</article>)}
+  </article>})}
  </section>;
 }
