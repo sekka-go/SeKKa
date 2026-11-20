@@ -56,7 +56,7 @@ export default function LiveCaptainRouteList(){
      if(active)setBookings(seatError||!Array.isArray(seatRows)?null:seatRows as BookingSeat[]);
     }else setBookings([]);
     setError('');
-   }catch(e){if(active)setError(e instanceof Error?e.message:String(e));}
+   }catch(e){if(active){setCanRetry(true);setError(captainRouteError(e,en?'en':'ar'));}}
    finally{if(active)setLoading(false);}
   })();
   return ()=>{active=false;};
@@ -66,7 +66,7 @@ export default function LiveCaptainRouteList(){
   let active=true;setStopsBusy(true);setStopsError('');
   void client.from('v31_route_stops').select('id,name,position').eq('route_id',expanded).order('position').then(({data,error})=>{
    if(!active)return;
-   if(error){setStopsError(error.message);setRouteStops([]);}
+   if(error){setStopsError(captainRouteError(error,en?'en':'ar'));setRouteStops([]);}
    else if(!Array.isArray(data)){setStopsError('ROUTE_STOPS_RESPONSE_INVALID');setRouteStops([]);}
    else setRouteStops(data as RouteStop[]);
    setStopsBusy(false);
@@ -84,7 +84,7 @@ export default function LiveCaptainRouteList(){
    if(verifyError||!saved||saved.status!=='published')throw Error(verifyError?.message||'ROUTE_PUBLICATION_NOT_VERIFIED');
    setNotice(t('تم نشر الخط بنجاح. هيظهر للركاب المؤهلين.','Route published and available to eligible riders.'));
    setRevision(x=>x+1);
-  }catch(e){setError(e instanceof Error?e.message:String(e));}
+  }catch(e){setCanRetry(false);setError(captainRouteError(e,en?'en':'ar'));}
   finally{setBusy(null);}
  };
  const changeStatus=async(id:string,status:'paused'|'published'|'archived')=>{
@@ -98,7 +98,7 @@ export default function LiveCaptainRouteList(){
    if(verifyError||saved?.status!==status)throw Error(verifyError?.message||'STATUS_UPDATE_NOT_VERIFIED');
    setNotice(t('تم تحديث حالة الخط.','Route status updated.'));
    setRevision(x=>x+1);
-  }catch(e){setError(e instanceof Error?e.message:String(e));}
+  }catch(e){setCanRetry(false);setError(captainRouteError(e,en?'en':'ar'));}
   finally{setBusy(null);}
  };
  const statusName=(status:string)=>{
