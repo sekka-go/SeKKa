@@ -116,7 +116,7 @@ export default function MobileApp(){
       id:s.route.id,routeId:s.route.id,origin:areas.find(a=>a.id===s.from.area_id)?.name_ar||s.from.name,
       destination:areas.find(a=>a.id===s.to.area_id)?.name_ar||s.to.name,category:s.route.category,
       available:s.remaining,outbound:s.route.outbound_time?.slice(0,5)||'',returnTime:s.route.return_time?.slice(0,5)||'',
-      period:s.route.period,direction:s.reverse?'return':s.route.direction==='round_trip'?'round_trip':'outbound',amount:s.route.price_egp,
+      period:s.route.period,direction:s.reverse?'return':s.route.direction==='round_trip'?'round_trip':'outbound',amount:s.route.seat_price_egp,
       selectedStops:{pickup:{id:s.from.id,name:s.from.name,area:'',pickup:true,dropoff:false},
         dropoff:{id:s.to.id,name:s.to.name,area:'',pickup:false,dropoff:true},
         returnPickup:!s.reverse&&s.route.direction==='round_trip'&&s.route.return_supported
