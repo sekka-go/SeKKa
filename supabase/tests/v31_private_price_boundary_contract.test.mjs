@@ -26,6 +26,6 @@ test('captains alone can retrieve their private total and riders cannot query ol
  assert.match(captain,/rpc\('v31_captain_private_prices'\)/);
  assert.match(migration,/revoke select on public\.v31_bookings from public,anon,authenticated/);
  assert.match(migration,/v31_rider_booking_estimate/);
- assert.match(booking,/rpc\('v31_rider_booking_estimate'/);
+ assert.match(booking,/rpc\('v31_rider_booking_fare_status'/);
  assert.doesNotMatch(booking,/\.select\('[^']*price_snapshot_egp/);
 });
