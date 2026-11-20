@@ -14,7 +14,9 @@ export default defineConfig({
       '**/captain-plate-segments.spec.ts',
       '**/v31-rider-no-match-request-mocked.spec.ts',
       '**/nearby-gps-mocked.spec.ts',
-      '**/captain-route-geolocated-mocked.spec.ts'
+      '**/captain-route-geolocated-mocked.spec.ts',
+      '**/captain-home-mocked.spec.ts',
+      '**/captain-publish-conflict-mocked.spec.ts'
     ],
   use: {
     baseURL: "http://127.0.0.1:4173",
