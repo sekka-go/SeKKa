@@ -1058,20 +1058,22 @@ export function V31BookingJourney({offer,routeId,pickupId,dropoffId,reverse,book
  const {language,theme}=usePreferences(),en=language==='en';
  const t=(ar:string,english:string)=>en?english:ar;
  const [seats,setSeats]=useState(1),[busy,setBusy]=useState(false),[error,setError]=useState('');
- const [stored,setStored]=useState<{id:string;status:string;seats:number;price_snapshot_egp:number|null;period_snapshot:string|null;booked_direction:string|null;pickup_stop_id:string|null;dropoff_stop_id:string|null}|null>(null);
+ const [stored,setStored]=useState<{id:string;status:string;seats:number;period_snapshot:string|null;booked_direction:string|null;pickup_stop_id:string|null;dropoff_stop_id:string|null}|null>(null);
  const [loading,setLoading]=useState(Boolean(bookingId)),[refresh,setRefresh]=useState(0);
+ const [estimatedBookingFare,setEstimatedBookingFare]=useState<number|null>(null);
  useEffect(()=>{let active=true;
-   if(!bookingId){setStored(null);setLoading(false);return;}
-   setStored(null);setLoading(true);setError('');
+   if(!bookingId){setStored(null);setEstimatedBookingFare(null);setLoading(false);return;}
+   setStored(null);setEstimatedBookingFare(null);setLoading(true);setError('');
    void (async()=>{try{
      if(!client)throw Error('BACKEND_NOT_CONFIGURED');
      const {data:{user},error:authError}=await client.auth.getUser();
      if(authError||!user)throw Error('AUTH_REQUIRED');
      const {data,error:e}=await client.from('v31_bookings')
-       .select('id,status,seats,price_snapshot_egp,period_snapshot,booked_direction,pickup_stop_id,dropoff_stop_id')
+       .select('id,status,seats,period_snapshot,booked_direction,pickup_stop_id,dropoff_stop_id')
        .eq('id',bookingId).eq('rider_id',user.id).maybeSingle();
      if(e)throw e;if(!data)throw Error('BOOKING_NOT_FOUND');
-     if(active)setStored(data);
+     const {data:fare,error:fareError}=await client.rpc('v31_rider_booking_estimate',{p_booking:bookingId});
+      if(active){setStored(data);setEstimatedBookingFare(fareError||typeof fare!=='number'?null:fare);}
    }catch(e){if(active)setError(e instanceof Error?e.message:String(e));}
    finally{if(active)setLoading(false);}
    })();return()=>{active=false;};
@@ -1117,7 +1119,7 @@ export function V31BookingJourney({offer,routeId,pickupId,dropoffId,reverse,book
      {!bookingId&&offer&&<><p className="b-subtitle">{t('راجع الخط والنقط والسعر قبل ما تحجز.','Review your route, stops and price before booking.')}</p>
        <Offer offer={offer}/>
        <Box className="b-summary">
-         <Row label={t('سعر العرض المنشور','Published offer price')}>{offer.amount?.toLocaleString('en-US')} {t('ج.م','EGP')}</Row>
+         <Row label={t('سعر المقعد الاسترشادي','Indicative price per seat')}>{offer.amount?.toLocaleString('en-US')} {t('ج.م','EGP')}</Row>
          <Row label={t('نوع الاشتراك','Subscription type')}>{t(periodText(offer.period),offer.period==='weekly'?'Weekly':'Monthly')} · {t(directionText(offer.direction),offer.direction==='outbound'?'Outbound':offer.direction==='return'?'Return':'Round trip')}</Row>
          <Row label={t('المقاعد المتاحة الآن','Currently available seats')}>{offer.available}</Row>
          <Row label={t('الحالة بعد تقديم الطلب','Status after request')}>{t('قيد الانتظار','Pending')}</Row>
@@ -1133,8 +1135,8 @@ export function V31BookingJourney({offer,routeId,pickupId,dropoffId,reverse,book
        <Box className="b-payment-explainer">
         <h2>{t('طريقة الدفع وتأمين جدية الحجز','Payment and booking security')}</h2>
         <p>{t('ثمن الاشتراك يُدفع للكابتن مباشرة في أول يوم تشغيل، وليس داخل التطبيق.','The subscription is paid directly to the Captain on the first operating day, not inside the app.')}</p>
-        <p>{t('تأمين جدية الحجز: 100 ج.م قابل للاسترداد حسب القواعد المعتمدة. الحجز الحالي لا يخصم أو يحجز هذا المبلغ من محفظتك.','Booking security: 100 EGP, refundable under the approved rules. This current booking flow does not debit or hold this amount from your wallet.')}</p>
-        <p>{t('القيمة المعروضة هي سعر العرض المنشور، وليست فاتورة نهائية محسوبة لعدد الأشخاص أو لأيام الاشتراك المتبقية.','The listed amount is the Captain’s published offer price, not a final invoice adjusted for passenger count or remaining operating days.')}</p>
+        <p>{t('مافيش دفع أو تأمين بيتحصّل داخل التطبيق حاليًا؛ الحجز مش إثبات دفع.','No payment or deposit is collected in the app at present; booking does not prove payment.')}</p>
+        <p>{t('المبلغ المعروض استرشادي لكل مقعد، ومش فاتورة نهائية. قيمة الحجز النهائية تحتاج قواعد توزيع المقاعد المعتمدة.','The displayed amount is indicative per seat, not a final invoice. Final booking pricing requires approved seat allocation rules.')}</p>
        </Box>
        <p className="b-hint">{t('الحد الأقصى لكل حساب شخصين فقط على نفس الخط. المقاعد بيتأكد منها الخادم عند الحجز.','At most two people per account on the same route. The server validates seats during booking.')}</p>
        <Primary disabled={busy||!Number.isInteger(seats)||seats<1||seats>MAX_SEATS_PER_RIDER||seats>offer.available} onClick={()=>void reserve()}>{busy?t('جارٍ إرسال الطلب…','Submitting…'):t('تقديم طلب الحجز','Submit booking request')}</Primary>
@@ -1145,7 +1147,7 @@ export function V31BookingJourney({offer,routeId,pickupId,dropoffId,reverse,book
        <Row label={t('حالة الحجز من الخادم','Server booking status')}>{stored.status==='pending'?t('قيد الانتظار','Pending'):stored.status==='cancelled'?t('ملغي','Cancelled'):stored.status==='confirmed'?t('مؤكد من الخادم','Confirmed by server'):stored.status}</Row>
        <Row label={t('عدد المقاعد','Seats')}>{stored.seats}</Row>
        <Row label={t('اتجاه الاشتراك المسجل','Recorded subscription direction')}>{stored.booked_direction==='round_trip'?t('ذهاب وعودة','Round trip'):stored.booked_direction==='return'?t('عودة فقط','Return only'):stored.booked_direction==='outbound'?t('ذهاب فقط','Outbound only'):t('غير متاح','Unavailable')}</Row>
-       <Row label={t('السعر المسجل','Recorded price')}>{stored.price_snapshot_egp===null?t('غير متاح','Unavailable'):`${stored.price_snapshot_egp} ${t('ج.م','EGP')}`}</Row>
+       <Row label={t('تقدير سعر المقاعد','Estimated seat fare')}>{estimatedBookingFare===null?t('غير متاح','Unavailable'):`${estimatedBookingFare} ${t('ج.م','EGP')}`}</Row>
        <Row label={t('نقطة الركوب','Pickup')}>{offer?.selectedStops?.pickup.name||stored.pickup_stop_id||'—'}</Row>
        <Row label={t('نقطة النزول','Drop-off')}>{offer?.selectedStops?.dropoff.name||stored.dropoff_stop_id||'—'}</Row>
      </Box>
