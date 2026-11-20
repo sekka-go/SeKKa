@@ -2,6 +2,7 @@ import {useEffect,useRef,useState} from 'react';
 import {usePreferences} from './preferences';
 import {mapPlacesFromPhoton,placeMatchesArea,normalizedPlace,PHOTON_ATTRIBUTION} from './geoPlace';
 import {popularPlacesForArea} from './popularCaptainPlaces';
+import {placeMatchesSearch} from './captainSearchMatch';
 import type {PlaceChoice,MapPlace,ServiceArea} from './geoPlace';
 import type {PopularPlace} from './popularCaptainPlaces';
 
@@ -62,7 +63,7 @@ export default function CaptainPlacePicker({label,value,choice,onPick,onVerified
     const response=await fetch(target.toString(),{headers:{Accept:'application/json'},
      signal:AbortSignal.timeout(9000)});
     if(!response.ok)throw Error('MAP_SEARCH_UNAVAILABLE');
-    return mapPlacesFromPhoton(await response.json()).filter(p=>placeMatchesArea(p,searchArea));
+    return mapPlacesFromPhoton(await response.json()).filter(p=>placeMatchesArea(p,searchArea)&&placeMatchesSearch(p,q));
    };
    let matching=await getPlaces(url);
    if(token!==requestSerial.current)return;
