@@ -39,12 +39,15 @@ export default function CaptainPlacePicker({label,value,choice,onPick,onVerified
   return priority[a.type]-priority[b.type];
  }):[];
  const visible=showAll?suggestions:suggestions.slice(0,5);
- const choose=(place:MapPlace)=>{
+ const choose=(place:MapPlace,displayName?:string)=>{
   requestSerial.current++;
   setFound([]);setError('');setBusy(false);
-  setQuery(place.name);
-  if(onVerified)onVerified(place);
-  else onPick(place.name+(place.detail?' — '+place.detail:''),{kind:'map',place});
+  // A verified *suggestion* retains the owner's Arabic landmark label. Never
+  // change map coordinates, OSM identifier, or locality data.
+  const chosen=displayName?{...place,name:displayName}:place;
+  setQuery(chosen.name);
+  if(onVerified)onVerified(chosen);
+  else onPick(chosen.name+(chosen.detail?' — '+chosen.detail:''),{kind:'map',place:chosen});
  };
  const searchMap=async(explicitQuery?:string,suggested?:PopularPlace)=>{
   const q=(explicitQuery??query).trim();
@@ -74,7 +77,7 @@ export default function CaptainPlacePicker({label,value,choice,onPick,onVerified
    if(token!==requestSerial.current)return;
    if(suggested){
     const exact=matching.filter(place=>sameNamedPlace(suggested,place));
-    if(exact.length===1){choose(exact[0]);return;}
+    if(exact.length===1){choose(exact[0],en?suggested.name_en:suggested.name_ar);return;}
    }
    setFound(matching);
    if(!matching.length)setError(t('ملقيناش المكان ده في المنطقة. جرّب مكان قريب أو اكتب اسم تاني.',
