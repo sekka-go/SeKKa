@@ -3,7 +3,7 @@ import {client} from './api';
 import {captainRouteError} from './captainRouteErrors';
 import {usePreferences} from './preferences';
 
-type RouteRow={id:string;title:string;category:string;status:string;price_egp:number;seat_capacity:number};
+type RouteRow={id:string;title:string;category:string;status:string;price_egp:number|null;seat_capacity:number};
 type BookingSeat={route_id:string;seats:number;status:string};
 type RouteStop={id:string;name:string;position:number};
 type Tab='all'|'published'|'draft';
@@ -40,14 +40,16 @@ export default function LiveCaptainRouteList(){
     const userId=identity.user.id;
     if(!active)return;
     setUid(userId);
-    const [{data:captain,error:approvalError},{data:rows,error:listError}]=await Promise.all([
+    const [{data:captain,error:approvalError},{data:rows,error:listError},{data:priceRows,error:priceError}]=await Promise.all([
      client.from('v31_captain_profiles').select('approval_status').eq('user_id',userId).maybeSingle(),
-     client.from('v31_routes').select('id,title,category,status,price_egp,seat_capacity').eq('captain_id',userId).order('created_at',{ascending:false}).limit(50)
+     client.from('v31_routes').select('id,title,category,status,seat_capacity').eq('captain_id',userId).order('created_at',{ascending:false}).limit(50),
+     client.rpc('v31_captain_private_prices')
     ]);
-    if(approvalError||listError)throw Error(approvalError?.message||listError?.message||'ROUTE_LOAD_FAILED');
+    if(approvalError||listError||priceError)throw Error(approvalError?.message||listError?.message||priceError?.message||'ROUTE_LOAD_FAILED');
     if(!active)return;
     if(!Array.isArray(rows))throw Error('ROUTES_RESPONSE_INVALID');
-    const next=rows as RouteRow[];
+    const priceLookup=new Map((Array.isArray(priceRows)?priceRows:[]).map((p:{route_id:string;price_egp:number})=>[p.route_id,p.price_egp]));
+    const next=(rows as Omit<RouteRow,'price_egp'>[]).map(row=>({...row,price_egp:priceLookup.get(row.id)??null}));
     setApproval(captain?.approval_status||'pending');
     setRoutes(next);
     if(next.length){
@@ -135,7 +137,7 @@ export default function LiveCaptainRouteList(){
     <div className="cj-route-meta">
      <span>{route.category}</span>
      <span>{route.seat_capacity} {t('مقاعد','seats')}</span>
-     <span>{t('مركبة كاملة','Full vehicle')}: {Number(route.price_egp).toLocaleString(en?'en-GB':'ar-EG')} {t('جنيه','EGP')}</span>
+     <span>{t('مركبة كاملة','Full vehicle')}: {route.price_egp===null?t('غير متاح','Unavailable'):route.price_egp.toLocaleString(en?'en-GB':'ar-EG')+' '+t('جنيه','EGP')}</span>
     </div>
     <div className="cj-capacity-line"><span>{t('المقاعد المحجوزة','Booked seats')}</span>
      <span>{used===null?t('غير متاح','Unavailable'):fill+' / '+route.seat_capacity}</span></div>
