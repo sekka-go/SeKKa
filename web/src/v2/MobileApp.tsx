@@ -2,7 +2,7 @@ import type {Session} from '@supabase/supabase-js';
 import {lazy,Suspense,useEffect,useRef,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
-import Onboarding from './Onboarding';
+import Onboarding,{Wordmark} from './Onboarding';
 import Discovery from './Discovery';
 import type {Line} from './Discovery';
 import {fetchPublishedSelection} from './LiveRouteSearch';
@@ -418,6 +418,7 @@ export default function MobileApp(){
   aria-current={tab===next.tab?'page':undefined}>{label}</button>;
  const isCaptainAccount=ready&&Boolean(userId)&&accountRole==='captain'&&captainApproved&&!admin;
  const blockedRiderTab=isCaptainAccount&&['home','search','bookings','booking','login','captain-onboarding'].includes(tab);
+ const captainLanding=isCaptainAccount&&tab==='routes'&&captainScreen===42;
  useEffect(()=>{
   if(!blockedRiderTab)return;
   navigate({tab:'routes',view:42},{replace:true});
@@ -425,13 +426,28 @@ export default function MobileApp(){
  const fullScreenSearchFilters=tab==='search'&&discoveryScreen===10;
  const fullScreenAuth=(tab==='login'&&(onboardingScreen===3||onboardingScreen===4))||(tab==='captain-onboarding'&&!userId);
  const fullScreenSearch=tab==='search'&&discoveryScreen===9;
- return <div className={`sekka-mobile sekka-tab-${tab}${fullScreenSearchFilters?' sekka-search-filters':''}${fullScreenAuth?' sekka-fullscreen-auth':''}${fullScreenSearch?' sekka-fullscreen-search':''}${userId&&tab==='captain-onboarding'?' sekka-captain-logged-in':''}${!userId&&tab==='home'?' sekka-guest-welcome':''}`} dir={en?'ltr':'rtl'}>
+ return <div className={`sekka-mobile sekka-tab-${tab}${fullScreenSearchFilters?' sekka-search-filters':''}${fullScreenAuth?' sekka-fullscreen-auth':''}${fullScreenSearch?' sekka-fullscreen-search':''}${userId&&tab==='captain-onboarding'?' sekka-captain-logged-in':''}${!userId&&tab==='home'?' sekka-guest-welcome':''}${captainLanding?' sekka-captain-home-shell':''}`} dir={en?'ltr':'rtl'}>
   <a className="sekka-skip" href="#sekka-content">{t('تخطي للمحتوى','Skip to content')}</a>
   <header className={`sekka-mobile-header${ready&&admin?' sekka-mobile-header-admin':''}`}>
-   <button type="button" ref={menuTrigger} className="sekka-shell-menu" aria-label={t('فتح القائمة','Open menu')}
+   {captainLanding?<div className="sekka-captain-header">
+    <button type="button" className="sekka-captain-head-action" onClick={()=>navigate({tab:'profile'})}
+     aria-label={t('حسابي','My profile')}>
+     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2Z"/>
+     </svg>
+    </button>
+    <div className="sekka-captain-head-logo"><Wordmark/></div>
+    <button type="button" className="sekka-captain-head-action" onClick={()=>navigate({tab:'notifications'})}
+     aria-label={t('الإشعارات','Notifications')}>
+     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+      strokeLinejoin="round" aria-hidden="true">
+      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 9h18c0-1-3-2-3-9M10 21h4"/>
+     </svg>
+    </button>
+   </div>:<button type="button" ref={menuTrigger} className="sekka-shell-menu" aria-label={t('فتح القائمة','Open menu')}
     aria-expanded={menuOpen} aria-controls="sekka-side-menu" onClick={()=>setMenuOpen(true)}>
     <span aria-hidden="true">☰</span>
-   </button>
+   </button>}
    {ready&&admin&&<button type="button" className="sekka-admin-entry" aria-current={tab==='admin'?'page':undefined}
      onClick={openAdmin}>{t('لوحة الإدارة','Admin dashboard')}</button>}
   </header>
