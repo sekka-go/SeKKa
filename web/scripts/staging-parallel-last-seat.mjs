@@ -71,20 +71,28 @@ for(let i=0;i<2;i++){
  `Rider ${i+1} active QA bookings`);
  assert.equal(rows.length,0,'QA_RIDERS_MUST_HAVE_NO_ACTIVE_BOOKING');
 }
+// Keep the keys independently of RPC responses: a network failure can occur
+// after Postgres commits a booking but before the HTTP response arrives.
+const attemptKeys=[randomUUID(),randomUUID()];
 let winner=null;
 let outcome=[];
 try{
- outcome=await Promise.all(riders.map(r=>r.rpc('v31_reserve_seats_with_stops',{
-  p_route:routeId,p_seats:1,p_idempotency:randomUUID(),
+ outcome=await Promise.allSettled(riders.map((r,i)=>r.rpc('v31_reserve_seats_with_stops',{
+  p_route:routeId,p_seats:1,p_idempotency:attemptKeys[i],
   p_pickup:origin.id,p_dropoff:destination.id,p_reverse:false
  })));
- const winners=outcome.map((r,i)=>({r,i})).filter(x=>!x.r.error);
- const rejected=outcome.filter(x=>x.error);
+ // A rejected network request is not proof that PostgreSQL rejected the
+ // booking; the finally block below checks each idempotency key.
+ const winners=outcome.map((result,i)=>({result,i}))
+  .filter(x=>x.result.status==='fulfilled'&&!x.result.value.error);
+ const rejected=outcome.filter(x=>x.status==='fulfilled'&&x.value.error);
+ const transportFailures=outcome.filter(x=>x.status==='rejected');
+ assert.equal(transportFailures.length,0,'CONCURRENT_RPC_TRANSPORT_FAILED_CHECK_CLEANUP');
  assert.equal(winners.length,1,'CONCURRENT_LAST_SEAT_EXPECTED_EXACTLY_ONE_WINNER');
  assert.equal(rejected.length,1,'CONCURRENT_LAST_SEAT_EXPECTED_ONE_REJECTION');
- assert.match(rejected[0].error.message,/INSUFFICIENT_SEATS|VEHICLE_SEAT_CAPACITY_EXCEEDED/,
+ assert.match(rejected[0].value.error.message,/INSUFFICIENT_SEATS|VEHICLE_SEAT_CAPACITY_EXCEEDED/,
   'REJECTION_MUST_BE_CAPACITY_GUARD');
- winner={id:winners[0].r.data,actor:winners[0].i};
+ winner={id:winners[0].result.value.data,actor:winners[0].i};
  const booked=check(await riders[winner.actor].from('v31_bookings')
   .select('id,status,seats').eq('id',winner.id).single(),'winning seat');
  assert.equal(booked.seats,1);
@@ -98,11 +106,31 @@ try{
   'capacity after race'),0,'QA_ROUTE_MUST_BE_FULL_AFTER_ONE_WINNER');
  console.log('PASS: two different Google Rider sessions, simultaneous last-seat reservation, one exact-priced winner and one capacity rejection.');
 }finally{
- if(winner?.id){
-  check(await riders[winner.actor].rpc('v31_cancel_pending_booking',{p_booking:winner.id}),
-   'cancel QA winning booking');
-  assert.equal(check(await riders[0].rpc('v31_published_route_available_seats',{p_route:routeId}),
-   'restored capacity'),1,'QA_CAPACITY_NOT_RESTORED');
-  console.log('CLEANUP: winning QA booking cancelled, no active QA seats left; audit rows retained on Staging.');
+ // Cleanup must run even if assertions fail, both RPCs erroneously succeed,
+ // or a response was lost after its booking was committed. Never rely only on
+ // the winning HTTP response to discover what needs cancellation.
+ const cleanupFailures=[];
+ for(let i=0;i<2;i++){
+  try{
+   const rows=check(await riders[i].from('v31_bookings')
+    .select('id,status')
+    .eq('route_id',routeId).eq('rider_id',ids[i+1])
+    .eq('idempotency_key',attemptKeys[i]),'lookup own QA bookings for cleanup');
+   for(const booking of rows){
+    if(booking.status==='pending'){
+     check(await riders[i].rpc('v31_cancel_pending_booking',{p_booking:booking.id}),
+      'cancel own QA booking');
+    }else if(booking.status==='confirmed'){
+     cleanupFailures.push('QA_BOOKING_CONFIRMED_REQUIRES_MANUAL_REVIEW');
+    }
+   }
+  }catch(e){
+   cleanupFailures.push(`RIDER_${i+1}_CLEANUP_FAILED: ${e instanceof Error?e.message:'unknown'}`);
+  }
  }
+ const restored=check(await riders[0].rpc('v31_published_route_available_seats',{p_route:routeId}),
+  'post-test restored seat availability');
+ if(restored!==1)cleanupFailures.push('QA_CAPACITY_NOT_RESTORED');
+ if(cleanupFailures.length)throw Error(cleanupFailures.join('; '));
+ console.log('CLEANUP: both QA idempotency keys checked; no active test seats remain; cancelled booking/audit rows retained on Staging.');
 }
