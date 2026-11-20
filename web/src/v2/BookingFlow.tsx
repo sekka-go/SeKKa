@@ -12,6 +12,7 @@ import type { Booking, Quote, Route } from "./api";
 import {client} from "./api";
 import {reserveSeatsWithStops,cancelPendingBooking,MAX_SEATS_PER_RIDER} from "./reservations";
 import {clearReservationAttempt,reservationIdempotencyKey} from "./reservationAttempt";
+import {v31BookingError} from './v31BookingErrors';
 import {
   quote as calculateQuote,
   addDays,
@@ -1076,13 +1077,13 @@ export function V31BookingJourney({offer,routeId,pickupId,dropoffId,reverse,book
       const fare=Array.isArray(fareRows)?fareRows[0]:null;
       if(active){setStored(data);setBookingFare(fareError||!fare||typeof fare.amount_egp!=='number'||
         typeof fare.is_exact!=='boolean'?null:{amount:fare.amount_egp,isExact:fare.is_exact});}
-   }catch(e){if(active)setError(e instanceof Error?e.message:String(e));}
+   }catch(e){if(active)setError(v31BookingError(e,en?'en':'ar'));}
    finally{if(active)setLoading(false);}
    })();return()=>{active=false;};
  },[bookingId,refresh]);
  const reserve=async()=>{
    if(busy||!routeId||!pickupId||!dropoffId||!Number.isInteger(seats)||seats<1||seats>MAX_SEATS_PER_RIDER||seats>(offer?.available||13))return;
-   if(!client){setError('BACKEND_NOT_CONFIGURED');return;}
+   if(!client){setError(v31BookingError('BACKEND_NOT_CONFIGURED',en?'en':'ar'));return;}
    setBusy(true);setError('');
    try{
      const {data:{user},error:authError}=await client.auth.getUser();
@@ -1098,18 +1099,14 @@ export function V31BookingJourney({offer,routeId,pickupId,dropoffId,reverse,book
      if(!row||row.route_id!==routeId||row.seats!==seats||row.pickup_stop_id!==pickupId||row.dropoff_stop_id!==dropoffId||row.booked_direction!==(offer?.direction==='round_trip'?'round_trip':reverse?'return':'outbound')||!['pending','confirmed'].includes(row.status))throw Error('BOOKING_NOT_VERIFIED');
      clearReservationAttempt(sessionStorage,signature);
      onBooked(id);
-   }catch(e){const message=e instanceof Error?e.message:String(e);
-     setError(message.includes('RIDER_MAX_TWO_SEATS')||message.includes('MAX_TWO_SEATS_PER_RIDER')
-       ?t('الحد الأقصى لكل حساب شخصين فقط على نفس الخط.','Each account can reserve at most two seats on the same route.')
-       :message);
-   }
+   }catch(e){setError(v31BookingError(e,en?'en':'ar'));}
    finally{setBusy(false);}
  };
  const cancel=async()=>{
    if(!bookingId||stored?.status!=='pending')return;
    setBusy(true);setError('');
    try{await cancelPendingBooking(bookingId);setRefresh(v=>v+1);}
-   catch(e){setError(e instanceof Error?e.message:String(e));}
+   catch(e){setError(v31BookingError(e,en?'en':'ar'));}
    finally{setBusy(false);}
  };
  return <div className={`phase-one-stage discovery-stage booking-stage ${theme}`}>
