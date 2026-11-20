@@ -14,7 +14,7 @@ const namedAliases:Record<string,string[]>={
 };
 const digits=(s:string)=>s.replace(/[٠-٩]/g,x=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(x)))
  .replace(/[۰-۹]/g,x=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(x)));
-const clean=(s:string)=>digits(normalizedPlace(s)).replace(/[.,،;:()\-]/g,' ').replace(/\s+/g,' ').trim();
+const clean=(s:string)=>digits(normalizedPlace(s)).replace(/[.,،;:()-]/g,' ').replace(/\s+/g,' ').trim();
 const isPhrase=(text:string,query:string):boolean=>{
  return Boolean(text&&query&&(text===query||
   text.startsWith(query+' ')||text.endsWith(' '+query)||text.includes(' '+query+' ')));
