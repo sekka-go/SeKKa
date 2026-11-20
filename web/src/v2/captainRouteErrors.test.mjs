@@ -10,7 +10,7 @@ test('known vehicle conflict returns actionable Arabic and English, no raw DB co
  assert.doesNotMatch(ar,/VEHICLE_HAS_ACTIVE_SERVICE/);
 });
 test('unknown SQL and network errors stay private',()=>{
- assert.doesNotMatch(captainRouteError({message:'secret internal stack trace'}),'secret');
+ assert.doesNotMatch(captainRouteError({message:'secret internal stack trace'}),/secret/);
  assert.match(captainRouteError('AUTH_REQUIRED','ar'),/جوجل/);
  assert.match(captainRouteError('STOP_COORDINATES_REQUIRED','en'),/location/);
 });
