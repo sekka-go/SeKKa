@@ -590,3 +590,20 @@
  border:0;border-radius:11px;background:var(--yellow,#ffc400);
  color:var(--black,#111);font:inherit;font-weight:800;
 }
+
+/* Captain price guidance is an estimate, not the private final price policy. */
+.sekka-mobile .captain-routes-canvas .cj-price-guidance{
+ display:grid;gap:8px;padding:12px 13px;
+ border:1px solid var(--cj-border);border-radius:13px;
+ background:var(--cj-soft);color:var(--ink);
+ font:inherit;font-size:13px;line-height:1.65;
+}
+.sekka-mobile .captain-routes-canvas .cj-price-guidance strong{font-weight:900}
+.sekka-mobile .captain-routes-canvas .cj-price-guidance p{margin:0}
+.sekka-mobile .captain-routes-canvas .cj-price-guidance small{
+ color:var(--cj-muted);font-size:12px;line-height:1.7;
+}
+.sekka-mobile .captain-routes-canvas .cj-price-guidance-warning{
+ padding:10px;border-inline-start:4px solid var(--yellow,#ffc400);
+ background:var(--cj-surface);border-radius:8px;font-weight:800;
+}
