@@ -22,6 +22,12 @@ export default function LiveNotifications(){
   {error&&<p role="alert">{error} <button type="button" onClick={()=>{setError('');setRevision(v=>v+1);}}>{t('إعادة المحاولة','Retry')}</button></p>}
   {!items.length&&!error&&<p>{t('مفيش إشعارات حاليًا.','No notifications yet.')}</p>}
   <ul>{items.map(n=><li key={n.id}><p>{en?n.message_en:n.message_ar}</p><small>{new Date(n.created_at).toLocaleString(en?'en-GB':'ar-EG')}</small>
+   {(n.kind==='route_capacity_full'||n.kind==='route_seat_reopened')&&
+    <a className="d-outline" href="/?tab=routes&view=44">
+     {n.kind==='route_capacity_full'
+      ?t('راجع الرحلة المكتملة في رحلاتي','Review the full trip in My trips')
+      :t('راجع المقاعد المتاحة في رحلاتي','Review available seats in My trips')}
+    </a>}
    {!n.read_at&&<button type="button" disabled={busy!==''} onClick={()=>void mark(n.id)}>{t('تمت القراءة','Mark as read')}</button>}
   </li>)}</ul>
   <button type="button" onClick={()=>setRevision(v=>v+1)}>{t('تحديث الإشعارات','Refresh notifications')}</button>
