@@ -672,3 +672,56 @@ html[data-theme="dark"] .sekka-mobile{
  background:transparent;border:1px solid var(--line);color:var(--ink)
 }
 .sekka-mobile .sekka-request-card__actions button:only-child{grid-column:1/-1}
+
+
+/* Approved Captain landing header only: logo centered, account and notifications.
+ * No global header or Rider navigation changes. */
+.sekka-mobile.sekka-captain-home-shell{
+ padding-bottom:0;
+}
+.sekka-captain-home-shell > .sekka-mobile-header{
+ position:relative;top:auto;z-index:10;border-bottom:0;
+ height:79px;min-height:79px;background:var(--card,#fff);
+ padding:6px 13px;
+}
+.sekka-captain-home-shell .sekka-captain-header{
+ display:grid;grid-template-columns:52px minmax(0,1fr) 52px;
+ align-items:center;justify-items:center;gap:10px;width:100%;min-width:0;
+}
+.sekka-captain-home-shell .sekka-captain-head-action{
+ display:grid;place-items:center;
+ width:48px;height:48px;min-width:48px;min-height:48px;
+ border-radius:15px;border:1px solid var(--line,#eee);
+ background:var(--card,#fff);color:var(--ink,#121212);
+ padding:10px;
+}
+.sekka-captain-home-shell .sekka-captain-head-action svg{
+ width:24px;height:24px;
+}
+.sekka-captain-home-shell .sekka-captain-head-logo{
+ display:flex;align-items:center;justify-content:center;
+ width:min(100%,115px);height:65px;min-width:0;overflow:hidden;
+}
+.sekka-captain-home-shell .sekka-captain-head-logo .phase-wordmark{
+ display:block;width:108px;max-width:100%;height:55px;
+ position:relative;
+}
+.sekka-captain-home-shell .sekka-captain-head-logo .phase-wordmark .reference-art{
+ max-width:100%;
+}
+.sekka-captain-home-shell .sekka-mobile-content{
+ max-width:680px;padding:0 0 20px;min-height:0;
+}
+.sekka-captain-home-shell .sekka-mobile-content > .phase-one-stage.discovery-stage{
+ margin:0;width:100%;padding:0;min-height:0;
+}
+.sekka-captain-home-shell .sekka-bottom-nav{display:none!important}
+.sekka-captain-home-shell .sekka-mobile-content > .phase-one-stage > .captain-routes-canvas{
+ max-width:680px!important;padding:0!important;
+}
+@media(max-width:370px){
+ .sekka-captain-home-shell > .sekka-mobile-header{height:69px;min-height:69px}
+ .sekka-captain-home-shell .sekka-captain-header{grid-template-columns:44px minmax(0,1fr) 44px;gap:6px}
+ .sekka-captain-home-shell .sekka-captain-head-action{width:43px;height:43px;min-width:43px;min-height:43px}
+ .sekka-captain-home-shell .sekka-captain-head-logo{height:57px}
+}
