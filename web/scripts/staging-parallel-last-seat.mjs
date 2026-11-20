@@ -48,10 +48,13 @@ const actors=await Promise.all([
  riders[1].auth.getUser(env.SEKKA_RIDER_TWO_ACCESS_TOKEN)
 ]);
 const ids=actors.map((x,i)=>check(x,'Google user '+i)?.user?.id);
-assert.equal(new Set(ids).size,3,'THREE_DISTINCT_GOOGLE_USERS_REQUIRED');
+assert.ok(ids.every(Boolean)&&new Set(ids).size===3,'THREE_DISTINCT_GOOGLE_USERS_REQUIRED');
 for(const [i,a] of actors.entries())
  assert.ok(a.data?.user?.app_metadata?.providers?.includes('google')||
   a.data?.user?.app_metadata?.provider==='google',`GOOGLE_SESSION_REQUIRED_${i}`);
+const captainProfile=check(await captain.from('v31_captain_profiles').select('approval_status')
+ .eq('user_id',ids[0]).single(),'QA Captain approval');
+assert.equal(captainProfile.approval_status,'approved','QA_CAPTAIN_MUST_BE_APPROVED');
 const routeId=env.SEKKA_QA_ROUTE_ID;
 const route=check(await captain.from('v31_routes').select('id,title,status,seat_capacity,captain_id,direction')
  .eq('id',routeId).eq('captain_id',ids[0]).single(),'Captain-owned QA route');
@@ -75,10 +78,9 @@ for(let i=0;i<2;i++){
 // Keep the keys independently of RPC responses: a network failure can occur
 // after Postgres commits a booking but before the HTTP response arrives.
 const attemptKeys=[randomUUID(),randomUUID()];
-let winner=null;
-let outcome=[];
+let raceError;
 try{
- outcome=await Promise.allSettled(riders.map((r,i)=>r.rpc('v31_reserve_seats_with_stops',{
+ const outcome=await Promise.allSettled(riders.map((r,i)=>r.rpc('v31_reserve_seats_with_stops',{
   p_route:routeId,p_seats:1,p_idempotency:attemptKeys[i],
   p_pickup:origin.id,p_dropoff:destination.id,p_reverse:false
  })));
@@ -93,9 +95,14 @@ try{
  assert.equal(rejected.length,1,'CONCURRENT_LAST_SEAT_EXPECTED_ONE_REJECTION');
  assert.match(rejected[0].value.error.message,/INSUFFICIENT_SEATS|VEHICLE_SEAT_CAPACITY_EXCEEDED/,
   'REJECTION_MUST_BE_CAPACITY_GUARD');
- winner={id:winners[0].result.value.data,actor:winners[0].i};
+ const winner={id:winners[0].result.value.data,actor:winners[0].i};
+ const otherRider=riders[1-winner.actor];
  const booked=check(await riders[winner.actor].from('v31_bookings')
-  .select('id,status,seats').eq('id',winner.id).single(),'winning seat');
+  .select('id,status,seats,rider_id').eq('id',winner.id).single(),'winning seat');
+ assert.equal(booked.rider_id,ids[winner.actor+1],'QA_WINNER_BOOKING_MUST_BELONG_TO_WINNING_RIDER');
+ const otherRiderBooking=check(await otherRider.from('v31_bookings').select('id')
+  .eq('id',winner.id).maybeSingle(),'other Rider booking visibility');
+ assert.equal(otherRiderBooking,null,'OTHER_RIDER_MUST_NOT_SEE_WINNING_BOOKING');
  assert.equal(booked.seats,1);
  assert.equal(booked.status,'pending');
  const fare=check(await riders[winner.actor].rpc('v31_rider_booking_fare_status',{p_booking:winner.id}),
@@ -105,10 +112,17 @@ try{
  assert.ok(fare[0].amount_egp>0);
  assert.equal(check(await riders[0].rpc('v31_published_route_available_seats',{p_route:routeId}),
   'capacity after race'),0,'QA_ROUTE_MUST_BE_FULL_AFTER_ONE_WINNER');
- console.log('PASS: two different Google Rider sessions, simultaneous last-seat reservation, one exact-priced winner and one capacity rejection.');
-}finally{
+}catch(error){
+ raceError=error;
+}
+try{
  const {cancelled}=await cleanupQaSeatAttempts({
   riders,riderIds:ids.slice(1),routeId,attemptKeys,check
  });
  console.log(`CLEANUP: checked both QA keys and cancelled ${cancelled} pending test bookings. Audit rows retained on Staging.`);
+}catch(cleanupError){
+ if(raceError)throw new AggregateError([raceError,cleanupError],'QA race and cleanup both failed');
+ throw cleanupError;
 }
+if(raceError)throw raceError;
+console.log('PASS: two distinct Google-linked Rider accounts authenticated via supplied sessions, concurrent last-seat reservation, one exact-priced winner, one capacity rejection, booking visibility restricted to its Rider, and seat availability restored.');
