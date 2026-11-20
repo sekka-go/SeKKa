@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const migration=readFileSync(new URL('../migrations/20261119121000_v31_published_pickup_stop_coordinates.sql',import.meta.url),'utf8');
 const gps=readFileSync(new URL('../../web/src/v2/NearbyRides.tsx',import.meta.url),'utf8');
+const atomic=readFileSync(new URL('../migrations/20261120160500_v31_atomic_geolocated_route_draft.sql',import.meta.url),'utf8');
 const captain=readFileSync(new URL('../../web/src/v2/LiveCaptainDraft.tsx',import.meta.url),'utf8');
 test('nullable coordinates preserve historic routes, draft owner can set coordinates',()=>{
  assert.match(migration,/add column if not exists latitude numeric/);
@@ -23,8 +24,12 @@ test('Rider GPS is requested on click and never persisted or transmitted',()=>{
  assert.doesNotMatch(gps,/localStorage\.setItem|sessionStorage\.setItem/);
  assert.doesNotMatch(gps,/\.insert\(|\.upsert\(|\.update\(/);
 });
-test('Captain stop coordinate entry is saved only after draft and read back',()=>{
+test('Captain draft and coordinates share one atomic RPC and are read back',()=>{
  assert.match(captain,/navigator\.geolocation\.getCurrentPosition/);
- assert.match(captain,/v31_set_draft_stop_coordinates/);
+ assert.match(atomic,/v31_create_vehicle_route_draft/);
+ assert.match(atomic,/v31_set_draft_stop_coordinates/);
+ assert.match(atomic,/revoke all on function public\.v31_create_geolocated_route_draft/);
+ assert.match(captain,/v31_create_geolocated_route_draft/);
+ assert.doesNotMatch(captain,/client\.rpc\('v31_set_draft_stop_coordinates'/);
  assert.match(captain,/STOP_COORDINATE_READBACK_FAILED/);
 });
