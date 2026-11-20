@@ -46,6 +46,7 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
   let result:unknown=[];
   if(path==='/auth/v1/user')result=user;
   else if(path==='/rest/v1/rpc/v31_is_admin')result=false;
+  else if(path==='/rest/v1/rpc/v31_captain_private_prices')result=[{route_id:routeId,price_egp:1300}];
   else if(path.startsWith('/rest/v1/v31_captain_profiles')){
    if(method!=='GET')enrolledAgain++;
    result={user_id:actor,approval_status:'approved'};
