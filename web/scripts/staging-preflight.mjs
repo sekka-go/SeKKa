@@ -29,8 +29,36 @@ for(const table of expected){
  else if(error&&status!==401&&status!==403&&!/permission denied|42501/i.test(error.message+' '+error.code))throw Error(`UNEXPECTED_DATA_API_ERROR ${table}: HTTP ${status} ${error.code||''} ${error.message}`);
 }
 assert.deepEqual(unavailable,[],'STAGING_SCHEMA_MISSING: '+unavailable.join(', '));
+
+ // The public client may show a seat price, but never a private total or
+ // historical raw booking amount. Denial must occur even for empty tables.
+for(const [table,column] of [
+ ['v31_routes','price_egp'],
+ ['v31_bookings','price_snapshot_egp'],
+ ['v31_booking_seat_claims','seat_price_egp']
+]){
+ const {data,error}=await client.from(table).select(column).limit(1);
+ assert.ok(error,`ANON_PRIVATE_COLUMN_READ_ALLOWED ${table}.${column}: ${JSON.stringify(data)}`);
+}
+const publicOffer=await client.from('v31_public_route_offers')
+ .select('id,seat_price_egp,status').limit(1);
+assert.ifError(publicOffer.error);
+assert.ok((publicOffer.data||[]).every(o=>o.status==='published'&&o.seat_price_egp>0),
+ 'PUBLIC_OFFERS_MUST_BE_PUBLISHED_WITH_SEAT_ONLY_PRICES');
+
 const protectedRpcs=[
  ['v31_admin_overview',{}],
+ ['v31_captain_private_prices',{}],
+ ['v31_captain_route_capacity_summary',{}],
+ ['v31_rider_booking_fare_status',{p_booking:'00000000-0000-4000-8000-000000000001'}],
+ ['v31_allocate_booking_seat_prices',{p_booking:'00000000-0000-4000-8000-000000000001'}],
+ ['v31_create_geolocated_route_draft',{
+  p_title:'unauthorized',p_vehicle:'00000000-0000-4000-8000-000000000001',
+  p_category:'PRIME',p_direction:'outbound',p_period:'monthly',
+  p_outbound:'07:30',p_return:null,p_return_supported:false,p_price:800,
+  p_stops:[]
+ }],
+
  ['v31_reserve_seats',{p_route:'00000000-0000-4000-8000-000000000001',p_seats:1,p_idempotency:'00000000-0000-4000-8000-000000000002'}],
  ['v31_accept_trip_offer',{p_offer:'00000000-0000-4000-8000-000000000001'}],
  ['v31_cancel_pending_booking',{p_booking:'00000000-0000-4000-8000-000000000001'}],
