@@ -20,7 +20,7 @@ test('round-trip booking persists exact published two-leg terms as one capacity 
 test('booking still validates owned row and does not claim payment success',()=>{
  assert.match(booking,/row\.booked_direction!==\(offer\?\.direction==='round_trip'/);
  assert.match(booking,/select\('id,status,seats,period_snapshot,booked_direction/);
- assert.match(booking,/v31_rider_booking_estimate/);
+ assert.match(booking,/v31_rider_booking_fare_status/);
  assert.doesNotMatch(booking,/\.select\('[^']*price_snapshot_egp/);
  assert.match(booking,/stored\.booked_direction==='round_trip'/);
  assert.match(booking,/MAX_SEATS_PER_RIDER/);
