@@ -25,6 +25,7 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  let enrolledAgain=0,created=0,legacyGpsCalls=0;
  let payload:Record<string,unknown>|undefined;
  let firstAttempt:unknown;
+ let status='draft',publishCalls=0,reviewReads=0;
  const routeId='00000000-0000-4000-8000-0000000000f1';
  const savedStops=[
   {id:'00000000-0000-4000-8000-0000000000f2',area_id:11,name:'Maadi Grand Mall',position:0,pickup_allowed:true,dropoff_allowed:true,latitude:null as number|null,longitude:null as number|null},
@@ -71,15 +72,27 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
     return;
    }
    result=routeId;
+  }else if(path==='/rest/v1/rpc/v31_set_route_status'){
+   expect(body).toEqual({p_route:routeId,p_status:'published'});
+   publishCalls++;
+   status='published';
+   result=status;
   }else if(path==='/rest/v1/rpc/v31_set_draft_stop_coordinates'){
    legacyGpsCalls++;
    result=null;
   }else if(path.startsWith('/rest/v1/v31_routes')){
-   const row={id:routeId,title:'Maadi Grand Mall ← Nasr City Square',status:'draft',vehicle_id:vehicle,
-    category:'PRIME',seat_capacity:3,price_egp:1300};
+   const row={id:routeId,title:'Maadi Grand Mall ← Nasr City Square',status,vehicle_id:vehicle,
+    category:'PRIME',seat_capacity:3,price_egp:1300,direction:'return',period:'monthly',
+    outbound_time:null,return_time:'17:00:00'};
    result=(route.request().headers()['accept']||'').includes('object+json')?row:[row];
   }
-  else if(path.startsWith('/rest/v1/v31_route_stops'))result=savedStops;
+  else if(path.startsWith('/rest/v1/v31_route_stops')){
+   if(new URL(route.request().url()).searchParams.get('select')==='id,name,position'&&++reviewReads===1){
+    await route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({message:'Fixture review unavailable'})});
+    return;
+   }
+   result=savedStops;
+  }
   await route.fulfill({contentType:'application/json',body:JSON.stringify(result)});
  });
  await page.goto('/?tab=routes&view=43');
@@ -149,6 +162,21 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  await save.click();
  await expect(page.getByRole('status').filter({hasText:'Draft saved.'})).toBeVisible();
  await expect(page.getByRole('heading',{name:'Captain route management'})).toBeVisible();
+ const review=page.getByRole('region',{name:'Route details'});
+ const confirm=review.getByRole('button',{name:'Confirm and publish'});
+ await expect(review.getByRole('heading',{name:'Review your route before publishing'})).toBeFocused();
+ await expect(review.getByRole('alert')).toContainText('Could not load the stops');
+ await expect(confirm).toBeDisabled();
+ expect(publishCalls).toBe(0);
+ await review.getByRole('button',{name:'Retry loading stops'}).click();
+ await expect(review.getByText('Return time')).toBeVisible();
+ await expect(review.getByText('17:00')).toBeVisible();
+ await expect(review.getByRole('list',{name:'Stop order'}).getByRole('listitem').first()).toContainText('Nasr City Square');
+ await expect(confirm).toBeEnabled();
+ expect(publishCalls).toBe(0);
+ await confirm.click();
+ await expect(page.getByRole('status').filter({hasText:'Route published and available to riders.'})).toBeVisible();
+ expect(publishCalls).toBe(1);
  expect(created).toBe(2);
  expect(firstAttempt).toMatch(/^[0-9a-f-]{36}$/);
  expect(payload?.p_attempt).toBe(firstAttempt);

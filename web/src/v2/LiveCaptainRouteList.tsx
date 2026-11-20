@@ -1,16 +1,16 @@
-import {useEffect,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import {client} from './api';
 import {captainRouteError} from './captainRouteErrors';
 import {usePreferences} from './preferences';
 
-type RouteRow={id:string;title:string;category:string;status:string;price_egp:number|null;seat_capacity:number};
+type RouteRow={id:string;title:string;category:string;status:string;price_egp:number|null;seat_capacity:number;direction:string;period:string;outbound_time:string|null;return_time:string|null};
 type CapacityRow={route_id:string;capacity:number;booked:number;remaining:number;is_full:boolean};
 type RouteStop={id:string;name:string;position:number};
 type Tab='all'|'published'|'draft';
 
 /** Real Captain routes: data is read from Supabase with server-enforced Captain RLS.
  * No preview records, invented booking numbers, or client-side approval grants. */
-export default function LiveCaptainRouteList(){
+export default function LiveCaptainRouteList({initialReviewId=null}:{initialReviewId?:string|null}={}){
  const {language}=usePreferences(),en=language==='en';
  const t=(ar:string,english:string)=>en?english:ar;
  const [uid,setUid]=useState<string|null>(null);
@@ -24,10 +24,19 @@ export default function LiveCaptainRouteList(){
  const [canRetry,setCanRetry]=useState(true);
  const [revision,setRevision]=useState(0);
  const [tab,setTab]=useState<Tab>('all');
- const [expanded,setExpanded]=useState<string|null>(null);
- const [routeStops,setRouteStops]=useState<RouteStop[]>([]);
- const [stopsBusy,setStopsBusy]=useState(false);
- const [stopsError,setStopsError]=useState('');
+ const [expanded,setExpanded]=useState<string|null>(initialReviewId);
+ const [loadedStops,setLoadedStops]=useState<{id:string;revision:number;rows:RouteStop[];failed:boolean}|null>(null);
+ const currentStops=loadedStops&&loadedStops.id===expanded&&loadedStops.revision===revision?loadedStops:null;
+ const stopsBusy=Boolean(expanded&&!currentStops);
+ const routeStops=currentStops?.rows??[];
+ const reviewRef=useRef<HTMLHeadingElement>(null);
+ const focusedInitialReview=useRef(false);
+ useEffect(()=>{
+  if(!loading&&expanded&&expanded===initialReviewId&&!focusedInitialReview.current&&reviewRef.current){
+   focusedInitialReview.current=true;
+   reviewRef.current.focus();
+  }
+ },[loading,expanded,initialReviewId]);
  useEffect(()=>{
   if(!client){setLoading(false);setError(t('خدمة الرحلات غير متاحة حاليًا.','Routes service is not configured.'));return;}
   let active=true;
@@ -41,7 +50,7 @@ export default function LiveCaptainRouteList(){
     setUid(userId);
     const [{data:captain,error:approvalError},{data:rows,error:listError},{data:priceRows,error:priceError}]=await Promise.all([
      client.from('v31_captain_profiles').select('approval_status').eq('user_id',userId).maybeSingle(),
-     client.from('v31_routes').select('id,title,category,status,seat_capacity').eq('captain_id',userId).order('created_at',{ascending:false}).limit(50),
+     client.from('v31_routes').select('id,title,category,status,seat_capacity,direction,period,outbound_time,return_time').eq('captain_id',userId).order('created_at',{ascending:false}).limit(50),
      client.rpc('v31_captain_private_prices')
     ]);
     if(approvalError||listError||priceError)throw Error(approvalError?.message||listError?.message||priceError?.message||'ROUTE_LOAD_FAILED');
@@ -62,31 +71,22 @@ export default function LiveCaptainRouteList(){
   return ()=>{active=false;};
  },[revision,language]);
  useEffect(()=>{
-  if(!client||!expanded){setRouteStops([]);setStopsError('');return;}
-  let active=true;setStopsBusy(true);setStopsError('');
-  void client.from('v31_route_stops').select('id,name,position').eq('route_id',expanded).order('position').then(({data,error})=>{
-   if(!active)return;
-   if(error){setStopsError(captainRouteError(error,en?'en':'ar'));setRouteStops([]);}
-   else if(!Array.isArray(data)){setStopsError('ROUTE_STOPS_RESPONSE_INVALID');setRouteStops([]);}
-   else setRouteStops(data as RouteStop[]);
-   setStopsBusy(false);
-  });
-  return ()=>{active=false;};
+  const api=client;
+  if(!api||!expanded)return;
+  const controller=new AbortController();
+  const id=expanded;
+  void (async()=>{
+   try{
+    const {data,error:readError}=await api.from('v31_route_stops').select('id,name,position')
+     .eq('route_id',id).order('position').abortSignal(controller.signal);
+    if(readError||!Array.isArray(data))throw Error('ROUTE_STOPS_READ_FAILED');
+    if(!controller.signal.aborted)setLoadedStops({id,revision,rows:data as RouteStop[],failed:false});
+   }catch{
+    if(!controller.signal.aborted)setLoadedStops({id,revision,rows:[],failed:true});
+   }
+  })();
+  return ()=>controller.abort();
  },[expanded,revision]);
- const publish=async(id:string)=>{
-  if(!client||!uid||approval!=='approved')return;
-  setBusy(id);setError('');setNotice('');
-  try{
-   const {data,error:publishError}=await client.rpc('v31_set_route_status',{p_route:id,p_status:'published'});
-   if(publishError||data!=='published')throw Error(publishError?.message||'ROUTE_PUBLICATION_NOT_CONFIRMED');
-   const {data:saved,error:verifyError}=await client.from('v31_routes')
-    .select('id,status').eq('id',id).eq('captain_id',uid).maybeSingle();
-   if(verifyError||!saved||saved.status!=='published')throw Error(verifyError?.message||'ROUTE_PUBLICATION_NOT_VERIFIED');
-   setNotice(t('تم نشر الخط بنجاح. هيظهر للركاب المؤهلين.','Route published and available to eligible riders.'));
-   setRevision(x=>x+1);
-  }catch(e){setCanRetry(false);setError(captainRouteError(e,en?'en':'ar'));}
-  finally{setBusy(null);}
- };
  const changeStatus=async(id:string,status:'paused'|'published'|'archived')=>{
   if(!client||!uid||approval!=='approved')return;
   setBusy(id);setError('');setNotice('');
@@ -96,7 +96,9 @@ export default function LiveCaptainRouteList(){
    const {data:saved,error:verifyError}=await client.from('v31_routes')
     .select('status').eq('id',id).eq('captain_id',uid).maybeSingle();
    if(verifyError||saved?.status!==status)throw Error(verifyError?.message||'STATUS_UPDATE_NOT_VERIFIED');
-   setNotice(t('تم تحديث حالة الخط.','Route status updated.'));
+   setNotice(status==='published'
+    ?t('الخط منشور ومتاح للركاب.','Route published and available to riders.')
+    :t('تم تحديث حالة الخط.','Route status updated.'));
    setRevision(x=>x+1);
   }catch(e){setCanRetry(false);setError(captainRouteError(e,en?'en':'ar'));}
   finally{setBusy(null);}
@@ -110,6 +112,7 @@ export default function LiveCaptainRouteList(){
  };
  const visible=routes.filter(route=>tab==='all'||(tab==='draft'?route.status==='draft':route.status==='published'||route.status==='paused'));
  const capacityFor=(route:RouteRow)=>capacities?.find(row=>row.route_id===route.id)||null;
+ const clock=(value:string|null)=>value?.slice(0,5)||t('غير متاح','Unavailable');
  return <section className="d-box live-route-list" aria-label={t('الرحلات المحفوظة','Saved Captain routes')}>
   <h2>{t('رحلاتي','My trips')}</h2>
   <p className="cj-subtitle">{t('كل خطوطك ومسوداتك في مكان واحد. السعر الإجمالي ظاهر ليك أنت بس.','Your routes and drafts in one place. Whole-vehicle price is private to you.')}</p>
@@ -129,6 +132,8 @@ export default function LiveCaptainRouteList(){
    const used=counts?.booked??null;
    const fill=used===null?0:Math.min(route.seat_capacity,used);
    const full=counts?.is_full===true;
+   const isDraft=route.status==='draft';
+   const stopsInTravelOrder=route.direction==='return'?[...routeStops].reverse():routeStops;
    return <li key={route.id}>
     <div className="cj-card-head"><strong>{route.title}</strong>
      <span className={'cj-status'+(route.status==='draft'?' is-draft':route.status==='paused'?' is-paused':'')}>{statusName(route.status)}</span></div>
@@ -148,16 +153,25 @@ export default function LiveCaptainRouteList(){
       onClick={()=>setExpanded(route.id)}>{t('مراجعة للنشر','Review to publish')}</button>}
     </div>
     {expanded===route.id&&<section className="cj-route-details" aria-label={t('تفاصيل المسار','Route details')}>
-     <h3>{t('محطات الرحلة','Route stops')}</h3>
+     <h3 tabIndex={-1} ref={reviewRef}>{isDraft?t('راجع خطك قبل النشر','Review your route before publishing'):t('محطات الرحلة','Route stops')}</h3>
+     {isDraft&&<dl className="cj-publish-facts">
+      <div><dt>{t('الاشتراك','Subscription')}</dt><dd>{route.period==='weekly'?t('أسبوعي','Weekly'):route.period==='monthly'?t('شهري','Monthly'):t('غير متاح','Unavailable')}</dd></div>
+      {route.direction!=='return'&&<div><dt>{t('موعد الذهاب','Outbound time')}</dt><dd><bdi>{clock(route.outbound_time)}</bdi></dd></div>}
+      {route.direction!=='outbound'&&<div><dt>{t('موعد العودة','Return time')}</dt><dd><bdi>{clock(route.return_time)}</bdi></dd></div>}
+     </dl>}
      {stopsBusy&&<p role="status">{t('بنحمّل المحطات...','Loading stops...')}</p>}
-     {stopsError&&<p role="alert">{stopsError}</p>}
-     {!stopsBusy&&!stopsError&&routeStops.length===0&&<p>{t('مفيش نقاط متاحة للعرض.','No stops available.')}</p>}
-     {!stopsBusy&&!stopsError&&routeStops.length>0&&<ol>{routeStops.map(stop=><li key={stop.id}>{stop.name}</li>)}</ol>}
+     {currentStops?.failed&&<div role="alert" className="cj-feedback">
+      <p>{t('المحطات ما اتحمّلتش. حاول تاني قبل النشر.','Could not load the stops. Try again before publishing.')}</p>
+      <button type="button" onClick={()=>setRevision(value=>value+1)}>{t('إعادة المحاولة','Retry loading stops')}</button>
+     </div>}
+     {currentStops&&!currentStops.failed&&routeStops.length===0&&<p>{t('مفيش نقاط متاحة للعرض.','No stops available.')}</p>}
+     {stopsInTravelOrder.length>0&&<ol aria-label={t('ترتيب المحطات','Stop order')}>{stopsInTravelOrder.map(stop=><li key={stop.id}><bdi>{stop.name}</bdi></li>)}</ol>}
+     {route.direction==='round_trip'&&stopsInTravelOrder.length>0&&<p>{t('العودة بنفس المحطات بالترتيب العكسي.','Return uses the same stops in reverse order.')}</p>}
      <p className="cj-private-price">{t('السعر الإجمالي للمركبة لا يظهر للركاب. سعر المقعد بيحسبه السيرفر.','The full-vehicle total is hidden from riders. Seat pricing is server-calculated.')}</p>
      <div className="cj-details-actions">
       {route.status==='draft'&&<button type="button" className="cj-primary"
-       disabled={busy!==null||approval!=='approved'||stopsBusy||routeStops.length<2||Boolean(stopsError)}
-       onClick={()=>void publish(route.id)}>{busy===route.id?t('جارٍ النشر...','Publishing...'):t('تأكيد ونشر الخط','Confirm and publish')}</button>}
+       disabled={busy!==null||approval!=='approved'||!currentStops||currentStops.failed||routeStops.length<2}
+       onClick={()=>void changeStatus(route.id,'published')}>{busy===route.id?t('جارٍ النشر...','Publishing...'):t('تأكيد ونشر الخط','Confirm and publish')}</button>}
       {route.status==='published'&&<button type="button" disabled={busy!==null} onClick={()=>void changeStatus(route.id,'paused')}>{t('إيقاف مؤقت','Pause route')}</button>}
       {route.status==='paused'&&<button type="button" disabled={busy!==null||approval!=='approved'} onClick={()=>void changeStatus(route.id,'published')}>{t('استئناف النشر','Resume route')}</button>}
       {(route.status==='published'||route.status==='paused')&&<button type="button"

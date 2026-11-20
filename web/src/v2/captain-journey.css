@@ -664,3 +664,12 @@
 .cj-easy-selected-stops .sekka-route-stop-actions{
  grid-column:2/-1;
 }
+
+.sekka-mobile .captain-routes-canvas .cj-publish-facts {
+ display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:8px;margin:0;
+}
+.sekka-mobile .captain-routes-canvas .cj-publish-facts>div {
+ border:1px solid var(--cj-border);border-radius:10px;padding:9px;min-width:0;
+}
+.sekka-mobile .captain-routes-canvas .cj-publish-facts dt {font-size:12px;color:var(--cj-muted)}
+.sekka-mobile .captain-routes-canvas .cj-publish-facts dd {margin:3px 0 0;font-weight:800;overflow-wrap:anywhere}

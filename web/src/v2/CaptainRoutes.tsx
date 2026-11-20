@@ -37,7 +37,7 @@ export default function CaptainRoutes(p:{screen:number;theme:Appearance;onTheme:
  const [draft,setDraft]=useState(()=>demo ? readDraft() : blankDraft);
  const {title,stops,stopName,area,outbound,returnTime,direction,period,category,capacity,price,returnSupported}=draft;
  const [approved,setApproved]=useState(false),[message,setMessage]=useState('');
- const [savedNotice,setSavedNotice]=useState(false);
+ const [savedRouteId,setSavedRouteId]=useState<string|null>(null);
  function change<K extends keyof typeof draft>(key:K,value:(typeof draft)[K]){
    setDraft(previous=>({...previous,[key]:value}));
  }
@@ -46,7 +46,7 @@ export default function CaptainRoutes(p:{screen:number;theme:Appearance;onTheme:
    try{sessionStorage.setItem(draftKey,JSON.stringify(draft));}
    catch{setMessage(language==='en'?'Draft can only be kept while this page is open.':'المسودة هتفضل محفوظة طول ما الصفحة مفتوحة بس.');}
  },[draft,demo,language]);
- const go=(id:number)=>{setMessage('');p.go(internalScreen(id));};
+ const go=(id:number)=>{setSavedRouteId(null);setMessage('');p.go(internalScreen(id));};
  const valid=title.trim().length>=3&&stops.length>=2&&stops[0].area!==stops[stops.length-1].area&&Number.isInteger(+capacity)&&+capacity>0&&+capacity<=categories[category]&&Number.isInteger(+price)&&+price>0&&(direction==='return'||!!outbound)&&(direction==='outbound'||!!returnTime)&&(direction!=='round_trip'||returnSupported);
  const save=(next:Line[])=>{
    try{
@@ -65,12 +65,11 @@ export default function CaptainRoutes(p:{screen:number;theme:Appearance;onTheme:
  <main className="phase-canvas d-canvas captain-routes-canvas">{!p.production&&<Wordmark/>}{!p.production&&<h1>{screenTitle(p.screen,language)}</h1>}{!p.production&&<p>{t('معاينة محلية فقط — لا يتم نشر عروض حقيقية.','Local preview only — no real offers are published.')}</p>}{message&&<p role="status">{message}</p>}
  {!demo?(p.production?<>
  {n===42&&<CaptainHome onCreate={()=>go(43)} onRoutes={()=>go(44)} onBookings={()=>go(49)}/>}
- {n===43&&<><LiveCaptainDraft onSaved={()=>{setSavedNotice(true);go(44)}} onViewRoutes={()=>go(44)}/><button type="button" className="cj-back" onClick={()=>go(42)}>{t('رجوع إلى رحلاتي','Back to my routes')}</button></>}
+ {n===43&&<><LiveCaptainDraft onSaved={id=>{go(44);setSavedRouteId(id);}} onViewRoutes={()=>go(44)}/><button type="button" className="cj-back" onClick={()=>go(42)}>{t('رجوع إلى رحلاتي','Back to my routes')}</button></>}
  {n===49&&<><h1>{t('الحجوزات والرحلات','Bookings & routes')}</h1><LiveBookings mode="captain"/><LiveCaptainRouteList/></>}
  {[44,45,46,47,48].includes(n)&&<><h1>{t('إدارة خطوط الكابتن','Captain route management')}</h1>
-   {savedNotice&&<p role="status" className="cj-feedback">{t('تم حفظ مسودة الرحلة. افتح تفاصيلها وراجع المحطات قبل تأكيد النشر.','Draft saved. Open its details and review stops before confirming publication.')}</p>}
-   <p className="cj-subtitle">{t('اختر خطًا لمراجعة تفاصيله ومقاعده أو نشر مسودته بعد اعتمادها.','Select a route to review its details, seating or publish an approved draft.')}</p>
-   <LiveCaptainRouteList/>
+   {savedRouteId&&<p role="status" className="cj-feedback">{t('تم حفظ المسودة. راجع المحطات والميعاد قبل النشر.','Draft saved. Review the stops and schedule before publishing.')}</p>}
+   <LiveCaptainRouteList initialReviewId={savedRouteId}/>
    {(n===47||n===48)&&<LiveBookings mode="captain"/>}
    <button className="cj-back" type="button" onClick={()=>go(43)}>{t('إنشاء خط جديد','Create another route')}</button>
   </>}
