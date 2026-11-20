@@ -208,12 +208,15 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
      if(routeError)throw routeError;
      if(typeof routeId!=='string')throw Error('DRAFT_NOT_CONFIRMED');
      const [{data:saved,error:savedError},{data:savedStops,error:stopsError}]=await Promise.all([
-       client.from('v31_routes').select('id,status,vehicle_id,category,seat_capacity,price_egp').eq('id',routeId).eq('captain_id',uid).maybeSingle(),
+       client.from('v31_routes').select('id,status,vehicle_id,category,seat_capacity').eq('id',routeId).eq('captain_id',uid).maybeSingle(),
        client.from('v31_route_stops').select('id,area_id,name,position,latitude,longitude').eq('route_id',routeId).order('position')
      ]);
      if(savedError||stopsError)throw Error(savedError?.message||stopsError?.message||'DRAFT_READ_FAILED');
+     const {data:privatePrices,error:privatePriceError}=await client.rpc('v31_captain_private_prices',{p_route:routeId});
+     if(privatePriceError||!Array.isArray(privatePrices))throw Error('DRAFT_PERSISTENCE_NOT_VERIFIED');
+     const ownPrice=privatePrices.find(row=>row.route_id===routeId)?.price_egp;
      if(!saved||saved.status!=='draft'||saved.vehicle_id!==vehicleId||saved.category!==category||
-        saved.seat_capacity!==categorySeats[category]||saved.price_egp!==Number(price)||
+        saved.seat_capacity!==categorySeats[category]||ownPrice!==Number(price)||
         !savedStops||savedStops.length!==stops.length||savedStops.some((s,i)=>s.area_id!==stops[i].areaId||s.position!==i||s.name!==stops[i].name)){
        throw Error('DRAFT_PERSISTENCE_NOT_VERIFIED');
      }
