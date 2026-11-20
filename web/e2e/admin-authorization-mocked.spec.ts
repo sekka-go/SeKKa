@@ -396,7 +396,7 @@ test('MOCKED published search delegates round-trip filters and sorts projected p
    result=matches.map(offer=>{
     const ordered=stops.filter(stop=>stop.route_id===offer.id);
     return {route_id:offer.id,selection:{
-     route:offer,from:ordered[0],to:ordered[1],reverse:false,stops:ordered,remaining:3,
+     route:offer,from:ordered[0],to:ordered[1],reverse:false,stops:ordered,remaining:offer.id==='route-c'?0:3,
      pickupDistanceKm:null,dropoffDistanceKm:null
     }};
    });
@@ -440,6 +440,12 @@ test('MOCKED published search delegates round-trip filters and sorts projected p
  await page.getByRole('button',{name:'Show results'}).click();
  await expect(list).toHaveCount(1);
  await expect(list.getByRole('heading',{name:'Round C'})).toBeVisible();
+ await expect(list.getByText('Sold out')).toBeVisible();
+ await page.getByRole('button',{name:'Edit filters'}).click();
+ await page.getByRole('button',{name:'Available seats only'}).click();
+ await page.getByRole('button',{name:'Show results'}).click();
+ await expect(list).toHaveCount(0);
+ await expect(page.getByText('Routes serve your selected places.',{exact:false})).toBeVisible();
 });
 
 test('MOCKED genuine round-trip offer reaches transparent one-or-two person booking review',async({page})=>{

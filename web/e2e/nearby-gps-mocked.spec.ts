@@ -53,7 +53,8 @@ test('GPS opt-in finds nearby published pickup, shows straight-line km and opens
  expect(remoteCalls.some(url=>url.includes('30.04'))).toBe(false);
  await nearby.getByRole('button',{name:'View route details'}).click();
  await expect(page).toHaveURL(/tab=search&view=12/);
- await expect(page.getByText('Pickup near me')).toBeVisible();
+ await expect(page.getByRole('combobox',{name:'Pickup stop'})).toHaveValue(stops[0].id);
+ await expect(page.getByRole('combobox',{name:'Drop-off stop'})).toHaveValue(stops[1].id);
 });
 test('denied GPS permission offers manual search and never lists fabricated routes',async({page})=>{
  await page.addInitScript(()=>{
