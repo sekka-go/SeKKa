@@ -492,8 +492,11 @@ test('MOCKED genuine round-trip offer reaches transparent one-or-two person book
  await page.getByRole('button',{name:'View route details'}).click();
  await expect(page.getByText('Verified Round Trip',{exact:true})).toHaveCount(0);
  await expect(page.locator('.d-screen-12')).toBeVisible();
- await expect(page.getByRole('combobox',{name:'Pickup stop'})).toHaveValue(fromStop);
+ const pickup=page.getByRole('combobox',{name:'Pickup stop'});
+ await expect(pickup).toHaveValue(fromStop);
  await expect(page.getByRole('combobox',{name:'Drop-off stop'})).toHaveValue(toStop);
+ await expect(page.getByText('Available seats now',{exact:true})).toBeVisible();
+ await expect(pickup.locator('option[value="'+toStop+'"]')).toHaveCount(0);
  await page.getByRole('button',{name:'Book subscription'}).click();
  await expect(page).toHaveURL(/tab=booking/);
  await expect(page.locator('.booking-stage')).toBeVisible();

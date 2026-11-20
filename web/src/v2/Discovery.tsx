@@ -358,7 +358,7 @@ function Action({
     </button>
   );
 }
-function Journey({ line, compact = false }: { line: Line; compact?: boolean }) {
+function Journey({ line, compact = false, activeLegsOnly=false }: { line: Line; compact?: boolean; activeLegsOnly?: boolean }) {
   const {language} = usePreferences();
   const tr=(text:string)=>translate(text,language);
   return (
@@ -375,18 +375,18 @@ function Journey({ line, compact = false }: { line: Line; compact?: boolean }) {
         </span>
       </div>
       <div className="d-times">
-        <span>
+        {(!activeLegsOnly||line.direction!=="return")&&<span>
           <DiscoveryIcon name="sun" />
           <span>
             {tr("الذهاب")}{compact ? ":" : ""} <b dir="auto">{time(line.outbound,language)}</b>
           </span>
-        </span>
-        <span>
+        </span>}
+        {(!activeLegsOnly||line.direction!=="outbound")&&<span>
           <DiscoveryIcon name="moon" />
           <span>
             {tr("العودة")}{compact ? ":" : ""} <b dir="auto">{time(line.returnTime,language)}</b>
           </span>
-        </span>
+        </span>}
       </div>
     </div>
   );
@@ -590,7 +590,8 @@ export default function Discovery(p: DiscoveryProps) {
     returnTime,
   };
   const detailStops=current.stops||[];
-  const pickupPosition=detailStops.findIndex(stop=>stop.id===chosenPickup);
+  const pickupPosition=detailStops.findIndex(stop=>stop.id===chosenPickup&&stop.pickup);
+  const lastDropoffPosition=detailStops.reduce((last,stop,index)=>stop.dropoff?index:last,-1);
   const validDropoff=pickupPosition>=0&&detailStops.some((stop,index)=>stop.id===chosenDropoff&&stop.dropoff&&index>pickupPosition);
   const queryLine = {
     ...current,
@@ -1177,7 +1178,7 @@ export default function Discovery(p: DiscoveryProps) {
           (selected ? (
             <>
               <section className="d-box d-detail-journey">
-                <Journey line={current} compact />
+                <Journey line={current} compact activeLegsOnly={p.production} />
               </section>
               <section className="d-box d-offer-facts">
                 <Meta label={tr("اتجاه الاشتراك")} icon="swap">
@@ -1189,8 +1190,9 @@ export default function Discovery(p: DiscoveryProps) {
                 <Meta label={tr("الفئة")} icon="seat">
                   {current.category}
                 </Meta>
-                <Meta label={tr(p.production?"المقاعد المتاحة الآن":"المقاعد المتاحة")} icon="user">
-                  {current.available} {tr("مقاعد")}</Meta>
+                <Meta label={p.production?(language==='en'?'Available seats now':'المقاعد المتاحة الآن'):tr("المقاعد المتاحة")} icon="user">
+                  {p.production?current.available.toLocaleString(language==='en'?'en-EG':'ar-EG'):`${current.available} ${tr("مقاعد")}`}
+                </Meta>
               </section>
               <div className="d-box d-fixed-price">
                 <span>
@@ -1214,7 +1216,7 @@ export default function Discovery(p: DiscoveryProps) {
                 <label>{tr("نقطة الركوب")}
                   <select aria-label={tr("نقطة الركوب")} value={chosenPickup} onChange={event=>changePickup(event.target.value)}>
                     <option value="">{tr("اختر نقطة الركوب")}</option>
-                    {detailStops.filter(stop=>stop.pickup).map(stop=><option key={stop.id} value={stop.id}>{tr(stop.name)}</option>)}
+                    {detailStops.filter((stop,index)=>stop.pickup&&(!p.production||index<lastDropoffPosition)).map(stop=><option key={stop.id} value={stop.id}>{tr(stop.name)}</option>)}
                   </select>
                 </label>
                 <label>{tr("نقطة النزول")}
