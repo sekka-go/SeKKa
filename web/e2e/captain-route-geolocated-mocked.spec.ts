@@ -133,7 +133,8 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  await expect(entry.getByRole('button',{name:/PRIME/})).toBeEnabled();
  await expect(entry.getByRole('button',{name:/SAVER/})).toBeDisabled();
  await entry.getByRole('button',{name:'Continue'}).click();
- await expect(entry.getByRole('combobox',{name:'Journey direction'})).toBeVisible();
+ await entry.getByRole('combobox',{name:'Journey direction'}).selectOption('return');
+ await expect(entry.getByText('For return only, the first stop served is the last stop in your list.')).toBeVisible();
  await entry.getByRole('button',{name:'Continue'}).click();
  await expect(entry.getByText('Trip review and price')).toBeVisible();
  const save=entry.getByRole('button',{name:'Save draft for publishing'});
@@ -153,7 +154,8 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  expect(payload?.p_attempt).toBe(firstAttempt);
  expect(payload).toMatchObject({
   p_title:'Maadi Grand Mall ← Nasr City Square',
-  p_vehicle:vehicle,p_category:'PRIME',p_price:1300
+  p_vehicle:vehicle,p_category:'PRIME',p_price:1300,
+  p_direction:'return',p_outbound:null,p_return:'17:00',p_return_supported:true
  });
  expect((payload?.p_stops as Array<{name:string;area_id:number}>).map(x=>x.name))
   .toEqual(['Maadi Grand Mall','Nasr City Square']);

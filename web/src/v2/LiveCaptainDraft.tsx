@@ -203,7 +203,7 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
        p_direction:direction,p_period:period,
        p_outbound:direction==='return'?null:departure,
        p_return:direction==='outbound'?null:arrival,
-       p_return_supported:direction==='round_trip'?returnSupported:false,
+       p_return_supported:direction==='return'||(direction==='round_trip'&&returnSupported),
        p_price:Number(price),p_stops:stops.map(s=>({
          area_id:s.areaId,name:s.name,pickup:s.pickup,dropoff:s.dropoff,
          latitude:s.latitude,longitude:s.longitude
@@ -399,6 +399,10 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
     {direction!=='outbound'&&<label className="sekka-route-field">{t('وقت عودة مفضل','Preferred return time')}
      <input type="time" value={arrival} onChange={e=>setArrival(e.target.value)}/></label>}
    </div>
+   {direction==='return'&&<p className="cj-route-hint">{t(
+    'في العودة فقط، ترتيب الوقوف بيبدأ من آخر محطة في القائمة وينتهي عند أول محطة.',
+    'For return only, the first stop served is the last stop in your list.'
+   )}</p>}
    {direction==='round_trip'&&<label className="sekka-route-check">
     <input type="checkbox" checked={returnSupported} onChange={e=>setReturnSupported(e.target.checked)}/>
     {t('نفس نقاط الوقوف في العودة بترتيب عكسي','Return uses the same stops in reverse order')}
