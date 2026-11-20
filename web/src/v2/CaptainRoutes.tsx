@@ -65,8 +65,8 @@ export default function CaptainRoutes(p:{screen:number;theme:Appearance;onTheme:
  {!demo?(p.production?<>
  {n===42&&<>
    <section className="cj-hero"><small>{t('لوحة قيادة الكابتن','Captain workspace')}</small>
-    <h2>{t('رحلتك الجاية تبدأ من هنا','Your next journey starts here')}</h2>
-    <p>{t('أنشئ خطك، راجع حجوزاتك، وتابع حالة النشر من مكان واحد.','Create your route, review reservations and manage publication in one place.')}</p>
+    <h2>{t('مرحبًا يا كابتن','Welcome, Captain')}</h2>
+    <p>{t('أنشئ رحلتك وحقق دخل ثابت طول الشهر','Create your trip and earn a steady income throughout the month')}</p>
     <button type="button" onClick={()=>go(43)}>{t('＋ إنشاء رحلة جديدة','＋ Create a new route')}</button>
    </section>
    <div className="cj-dashboard-actions"><button type="button" onClick={()=>go(49)}>{t('♧ عرض الحجوزات','♧ View bookings')}</button><button type="button" onClick={()=>go(44)}>{t('◷ إدارة الرحلات','◷ Manage routes')}</button></div>
