@@ -1831,6 +1831,11 @@ html[dir="ltr"] .booking-stage .b-canvas .b-timeline > div:not(:last-child)::bef
  color:#121c27;background:#ffc400;white-space:normal;line-height:1.4}
 .d-live-search .sekka-no-match-action>button:disabled {opacity:.6;cursor:wait}
 .d-live-search .sekka-no-match-action p {margin:0;line-height:1.55;overflow-wrap:anywhere}
+.d-live-search .sekka-request-summary {
+ display:grid;gap:4px;padding:12px;border:1px solid var(--line);
+ border-radius:12px;background:var(--card);color:var(--ink);
+}
+.d-live-search .sekka-no-match-action .d-outline {min-height:44px;margin-block-start:8px}
 
 
 /* Mobile production: remove reference-screen fixed height and giant empty

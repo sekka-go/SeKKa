@@ -9,6 +9,9 @@ type RouteRow={id:string;title:string};
 type Area={id:number;name_ar:string;name_en:string};
 type Search={origin:string;destination:string;outbound:string;returnTime:string;period:string;direction?:RequestDirection};
 type RequestEdit={id:string;direction:RequestDirection;outbound:string;returnTime:string;period:'weekly'|'monthly';seats:number};
+const validClock=(value:string)=>/^([01]\d|2[0-3]):[0-5]\d$/.test(value);
+const validSeats=(count:number)=>Number.isInteger(count)&&count>=1&&count<=MAX_SEATS_PER_RIDER;
+
 export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{mode:'rider'|'captain';search?:Search;onSignIn?:()=>void;compact?:boolean}){
  const {language}=usePreferences(),en=language==='en',t=(ar:string,english:string)=>en?english:ar;
  const [uid,setUid]=useState(''),[requests,setRequests]=useState<RequestRow[]>([]),[offers,setOffers]=useState<OfferRow[]>([]),[areas,setAreas]=useState<Area[]>([]),[routes,setRoutes]=useState<RouteRow[]>([]);
@@ -26,7 +29,9 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
   setRequestPeriod(search.period==='weekly'?'weekly':'monthly');
  },[search?.origin,search?.destination,search?.direction,search?.outbound,search?.returnTime,search?.period]);
  const [key,setKey]=useState(()=>crypto.randomUUID()),[busy,setBusy]=useState(false),[loading,setLoading]=useState(true),[error,setError]=useState(''),[notice,setNotice]=useState(''),[revision,setRevision]=useState(0);
- const refresh=()=>{setLoading(true);setRevision(v=>v+1);};
+ const [loadFailed,setLoadFailed]=useState(false);
+ const retryLoad=()=>{setError('');refresh();};
+ function refresh(){setLoading(true);setLoadFailed(false);setRevision(v=>v+1);}
  useEffect(()=>{let active=true;void(async()=>{
   try{
    if(!client)throw Error('BACKEND_NOT_CONFIGURED');
@@ -46,7 +51,7 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
    if(offersResult.error)throw Error(offersResult.error.message);
    if(!active)return;
    setUid(user.id);setAreas((areasResult.data||[]) as Area[]);setRequests((requestResult.data||[]) as RequestRow[]);setRoutes((routesResult.data||[]) as RouteRow[]);setOffers((offersResult.data||[]) as OfferRow[]);
-  }catch(e){if(active)setError(e instanceof Error?e.message:String(e));}
+  }catch{if(active)setLoadFailed(true);}
   finally{if(active)setLoading(false);}
  })();return()=>{active=false;};},[mode,revision]);
  const action=async(task:()=>Promise<void>)=>{
@@ -65,14 +70,13 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
   const from=areas.find(a=>a.name_ar===search.origin||a.name_en===search.origin);
   const to=areas.find(a=>a.name_ar===search.destination||a.name_en===search.destination);
   if(!uid){onSignIn?.();return;}
-  if(!Number.isInteger(seats)||seats<1||seats>MAX_SEATS_PER_RIDER){
+  if(!validSeats(seats)){
    setError(t('الحد الأقصى لطلب الرحلة شخصين فقط.','You can request a trip for at most two people.'));return;
   }
-  const clockValid=(value:string)=>/^([01]\d|2[0-3]):[0-5]\d$/.test(value);
   const outbound=requestDirection==='return'?null:requestTime;
   const inbound=requestDirection==='outbound'?null:requestReturnTime;
-  if(!from||!to||from.id===to.id||(outbound!==null&&!clockValid(outbound))||
-    (inbound!==null&&!clockValid(inbound))||
+  if(!from||!to||from.id===to.id||(outbound!==null&&!validClock(outbound))||
+    (inbound!==null&&!validClock(inbound))||
     !['weekly','monthly'].includes(requestPeriod)||
     !['outbound','return','round_trip'].includes(requestDirection)){
    setError(t('راجع المناطق واتجاه الرحلة ومواعيد الذهاب والعودة.','Check areas, journey direction and departure/return times.'));return;
@@ -127,14 +131,15 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
   returnTime:request.return_time?.slice(0,5)||'17:00',
   period:request.period==='weekly'?'weekly':'monthly',seats:request.seats
  });
+ const canSaveEdit=Boolean(editing&&validSeats(editing.seats)&&
+  (editing.direction==='return'||validClock(editing.outbound))&&
+  (editing.direction==='outbound'||validClock(editing.returnTime)));
  const saveEdit=async()=>{
   if(!client||!editing||!uid)return;
   const draft=editing;
-  const clockValid=(value:string)=>/^([01]\d|2[0-3]):[0-5]\d$/.test(value);
   const outbound=draft.direction==='return'?null:draft.outbound;
   const inbound=draft.direction==='outbound'?null:draft.returnTime;
-  if(!Number.isInteger(draft.seats)||draft.seats<1||draft.seats>MAX_SEATS_PER_RIDER||
-    (outbound!==null&&!clockValid(outbound))||(inbound!==null&&!clockValid(inbound))){
+  if(!canSaveEdit){
    setError(t('راجع عدد المقاعد ومواعيد الذهاب والعودة.','Check seats and departure/return times.'));return;
   }
   await action(async()=>{
@@ -203,7 +208,7 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
     <label>{t('عدد المقاعد المطلوبة','Seats needed')}
      <input type="number" min={1} max={MAX_SEATS_PER_RIDER} value={editing.seats}
       onChange={e=>setEditing(v=>v?{...v,seats:Number(e.target.value)}:v)}/></label>
-    <button type="button" disabled={busy} onClick={()=>void saveEdit()}>{busy?t('جارٍ الحفظ…','Saving…'):t('حفظ التعديل','Save changes')}</button>
+    <button type="button" disabled={busy||!canSaveEdit} onClick={()=>void saveEdit()}>{busy?t('جارٍ الحفظ…','Saving…'):t('حفظ التعديل','Save changes')}</button>
     <button type="button" disabled={busy} onClick={()=>setEditing(null)}>{t('رجوع','Back')}</button>
    </div>}
    {mode==='captain'&&routes.length>0&&<div>
@@ -226,30 +231,48 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
   :notice==='REQUEST_SAVED'
   ?compact?t('طلبك اتحفظ بنفس بيانات البحث. تابعه من حجوزاتي ← طلبات رحلاتي.','Your request was saved using your search details. Follow it in My bookings → My trip requests.'):t('اتحفظ طلبك بكامل تفاصيل الذهاب والعودة. تقدر تتابعه هنا.','Your request and journey schedule are saved. Follow it here.')
   :notice==='REQUEST_UPDATED'?t('تم تعديل الطلب والتحقق من حفظه.','Request updated and verified.'):notice;
+ const loadError=loadFailed&&<div role="alert" className="d-feedback">
+  <p>{t('مش قادرين نراجع حسابك أو الطلبات دلوقتي.','We couldn’t verify your account or load requests.')}</p>
+  <button type="button" className="d-outline" onClick={retryLoad}>{t('حاول تاني','Try again')}</button>
+ </div>;
+ const areaLabel=(name:string)=>{
+  const area=areas.find(item=>item.name_ar===name||item.name_en===name);
+  return (en?area?.name_en:area?.name_ar)||name;
+ };
  // No-match results reuse the passenger's original search. A single click
  // creates a one-seat request; account ownership, idempotency, and duplicate
  // prevention remain enforced by Supabase and verified after insertion.
  if(compact&&mode==='rider'&&search){
   return <div className="sekka-no-match-action" aria-label={t('طلب رحلة بالبحث الحالي','Trip request from current search')}>
-   {loading&&<p role="status">{t('بنراجع طلباتك…','Checking your requests…')}</p>}
-   {error&&<p role="alert">{error}</p>}
+   {loading&&<p role="status">{t('بنجهّز طلبك…','Getting your request ready…')}</p>}
+   {loadError}
+   {error&&!loadFailed&&<p role="alert">{error}</p>}
    {notice&&<p role="status">{noticeText}</p>}
-   {!loading&&!notice&&<button type="button" className="d-primary"
+   {!loading&&!loadFailed&&!notice&&uid&&<div className="sekka-request-summary">
+    <p><strong><bdi>{areaLabel(search.origin)}</bdi> <span aria-hidden="true">·</span> <bdi>{areaLabel(search.destination)}</bdi></strong></p>
+    <p>
+     {requestDirection!=='return'&&<span>{t('ذهاب','Outbound')} <bdi>{requestTime}</bdi> · </span>}
+     {requestDirection!=='outbound'&&<span>{t('عودة','Return')} <bdi>{requestReturnTime}</bdi> · </span>}
+     {requestPeriod==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')}
+    </p>
+   </div>}
+   {!loading&&!loadFailed&&!notice&&<button type="button" className="d-primary"
     disabled={busy||!search.origin||!search.destination}
     onClick={()=>void create()}>{busy?t('بنحفظ طلب رحلتك…','Saving your trip request…'):
      uid?t('اطلب رحلة بنفس بيانات البحث','Request a trip using this search'):
      t('سجّل دخولك لطلب الرحلة','Sign in to request this trip')}</button>}
-   {!loading&&!notice&&!uid&&<p>{t('الدخول بجوجل مطلوب لحفظ الطلب، وبيانات البحث هتفضل موجودة.','Google sign-in is required to save a request. Your search is retained.')}</p>}
+   {!loading&&!loadFailed&&!notice&&!uid&&<p>{t('الدخول بجوجل مطلوب لحفظ الطلب، وبيانات البحث هتفضل موجودة.','Google sign-in is required to save a request. Your search is retained.')}</p>}
   </div>;
  }
  return <section className="d-box live-trip-requests">
   <h2>{mode==='captain'?t('طلبات الركاب المفتوحة','Open passenger requests'):t('طلبات رحلاتي','My trip requests')}</h2>
   {loading&&<p role="status">{t('جارٍ التحميل…','Loading…')}</p>}
-  {error&&<div role="alert"><p>{error}</p><button type="button" onClick={()=>{setError('');refresh();}}>{t('إعادة المحاولة','Retry')}</button></div>}
+  {loadError}
+  {error&&!loadFailed&&<div role="alert"><p>{error}</p><button type="button" onClick={retryLoad}>{t('إعادة المحاولة','Retry')}</button></div>}
   {notice&&<p role="status">{noticeText}</p>}
-  {!loading&&visible.length===0&&mode==='captain'&&<p>{t('مفيش طلبات مفتوحة حاليًا.','No open requests right now.')}</p>}
-  {mode==='rider'&&search&&!loading&&!uid&&<div className="d-feedback"><p>{t('سجّل بجوجل علشان تحفظ طلب رحلتك. البحث متاح من غير حساب.','Sign in with Google to save your trip request. Searching does not require an account.')}</p><button type="button" onClick={onSignIn}>{t('تسجيل الدخول والمتابعة','Sign in and continue')}</button></div>}
-  {mode==='rider'&&search&&!loading&&Boolean(uid)&&<div>
+  {!loading&&!loadFailed&&visible.length===0&&mode==='captain'&&<p>{t('مفيش طلبات مفتوحة حاليًا.','No open requests right now.')}</p>}
+  {mode==='rider'&&search&&!loading&&!loadFailed&&!uid&&<div className="d-feedback"><p>{t('سجّل بجوجل علشان تحفظ طلب رحلتك. البحث متاح من غير حساب.','Sign in with Google to save your trip request. Searching does not require an account.')}</p><button type="button" onClick={onSignIn}>{t('تسجيل الدخول والمتابعة','Sign in and continue')}</button></div>}
+  {mode==='rider'&&search&&!loading&&!loadFailed&&Boolean(uid)&&<div>
    <h3>{t('لم تجد خطًا؟ راجع بيانات طلبك','No match? Review your request')}</h3>
    <p>{search.origin} ← {search.destination}</p>
    <label>{t('اتجاه الرحلة','Journey direction')}<select value={requestDirection}
@@ -268,7 +291,7 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
    <p>{t('الطلب مش حجز ومفيش أي دفع.','Requesting does not reserve seats or charge money.')}</p>
   </div>}
   {mode==='rider'&&<h3>{t('الطلبات النشطة','Active requests')} ({active.length})</h3>}
-  {!loading&&active.length===0&&mode==='rider'&&<p>{t('مفيش طلبات نشطة حاليًا.','No active requests right now.')}</p>}
+  {!loading&&!loadFailed&&active.length===0&&mode==='rider'&&<p>{t('مفيش طلبات نشطة حاليًا.','No active requests right now.')}</p>}
   {requestList(active)}
   {mode==='rider'&&history.length>0&&<details className="d-request-history">
    <summary>{t('الطلبات السابقة والملغية','Previous and cancelled requests')} ({history.length})</summary>

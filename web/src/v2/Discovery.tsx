@@ -496,6 +496,7 @@ export default function Discovery(p: DiscoveryProps) {
   const tr=(text:string)=>translate(text,language);
   const demo = !p.production && new URLSearchParams(location.search).get("preview") === "phase2";
   const restored = useMemo(readRiderDraft, []);
+  const [nearbyOpen,setNearbyOpen]=useState(false);
   const [savedAreas,setSavedAreas]=useState<RiderSavedAreas>(()=>readRiderSavedAreas(p.riderId));
   useEffect(()=>{setSavedAreas(readRiderSavedAreas(p.riderId));},[p.riderId]);
   const storedAreaNames=new Set(p.serviceAreas?.map(area=>area.name_ar)||[]);
@@ -885,9 +886,10 @@ export default function Discovery(p: DiscoveryProps) {
                   <DiscoveryIcon name="pin" />
                 </div>
               </div>
-              {p.production&&<details className="sekka-gps-inline">
-               <summary>{tr("📍 اكتشف الرحلات القريبة من موقعي")}</summary>
-               <NearbyRides onSelect={p.onLiveSelect}/>
+              {p.production&&<details className="sekka-gps-inline" open={nearbyOpen}
+               onToggle={event=>setNearbyOpen(event.currentTarget.open)}>
+               <summary><span aria-hidden="true">📍 </span>{language==='en'?'Find rides near my location':'اكتشف الرحلات القريبة من موقعي'}</summary>
+               {nearbyOpen&&<NearbyRides onSelect={p.onLiveSelect}/>}
               </details>}
               {p.production&&p.signedIn&&p.riderId&&<div className="sekka-search-shortcuts" aria-label={tr("اختصارات المناطق المحفوظة")}>
                 <div className="sekka-search-shortcuts__actions">

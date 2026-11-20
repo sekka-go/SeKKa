@@ -27,8 +27,7 @@ test('GPS opt-in finds nearby published pickup, shows straight-line km and opens
   remoteCalls.push(url.toString());
   let data:unknown=[];
   if(url.pathname==='/rest/v1/v31_service_areas')data=areas;
-  else if(url.pathname==='/rest/v1/v31_public_route_offers')
-   data=url.searchParams.has('id')?route:[route];
+  else if(url.pathname==='/rest/v1/v31_public_route_offers')data=[route];
   else if(url.pathname==='/rest/v1/v31_route_stops')data=stops;
   else if(url.pathname==='/rest/v1/rpc/v31_published_route_available_seats')data=2;
   else if(url.pathname==='/rest/v1/rpc/v31_is_admin')data=false;
@@ -38,7 +37,9 @@ test('GPS opt-in finds nearby published pickup, shows straight-line km and opens
  // Guests see Welcome on /; the actual Rider discovery is under Search.
  // Exercise GPS on the public Search screen, never the guest onboarding screen.
  await page.goto('/?tab=search&view=9');
- await page.locator('.sekka-gps-inline > summary').click();
+ await expect(page.getByRole('region',{name:'Routes near me'})).toHaveCount(0);
+ expect(remoteCalls.some(url=>url.includes('/v31_public_route_offers'))).toBe(false);
+ await page.getByText('Find rides near my location',{exact:true}).click();
  const nearby=page.getByRole('region',{name:'Routes near me'});
  await expect(nearby).toBeVisible();
  // Browser already granted GPS on an earlier visit: suggestions load
@@ -81,6 +82,16 @@ test('map text search finds a real stop within 3km without inventing a service I
  });
  await page.route(endpoint+'/**',async request=>{
   const path=new URL(request.request().url()).pathname;
+  if(path==='/rest/v1/rpc/v31_search_published_routes'){
+   expect(request.request().postDataJSON()).toMatchObject({
+    p_origin_lat:30.04,p_origin_lon:31.24,p_destination_area:'المعادي'
+   });
+   await request.fulfill({contentType:'application/json',body:JSON.stringify([{
+    route_id:route.id,selection:{route,from:stops[0],to:stops[1],reverse:false,stops,remaining:2,
+     pickupDistanceKm:0.11,dropoffDistanceKm:null}
+   }])});
+   return;
+  }
   const data=path==='/rest/v1/v31_service_areas'?areas:
    path==='/rest/v1/v31_public_route_offers'?[route]:
    path==='/rest/v1/v31_route_stops'?stops:
@@ -91,7 +102,7 @@ test('map text search finds a real stop within 3km without inventing a service I
  await page.getByRole('combobox',{name:'From where?'}).fill('City Stars');
  await page.getByRole('button',{name:'Find this street or place on the map'}).click();
  await page.getByRole('button',{name:/City Stars/}).click();
- await expect(page.getByText(/Map place selected/)).toBeVisible();
+ await expect(page.getByText(/Verified location selected/)).toBeVisible();
  await page.getByRole('combobox',{name:'Where to?'}).fill('Maadi');
  await page.getByRole('group',{name:'Place search suggestions'}).getByRole('button',{name:/Maadi/}).click();
  await page.locator('.d-planner button[type=submit]').click();

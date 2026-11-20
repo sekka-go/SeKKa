@@ -91,6 +91,8 @@ for(const width of [320,360,390,412]){
    expect(actionBounds).not.toBeNull();
    expect(actionBounds!.y).toBeGreaterThanOrEqual(0);
    expect(actionBounds!.y+actionBounds!.height).toBeLessThanOrEqual(height+1);
+   const fullName=page.getByLabel(language==='en'?'Full name (at least 3 names, matching ID)':'الاسم الثلاثي على الأقل — مطابق للبطاقة');
+   await fullName.fill('');
    await continueButton.click();
    await expect(page.getByText(
     language==='en'?'Enter your full name.':'اكتب اسمك بالكامل.'
@@ -98,7 +100,7 @@ for(const width of [320,360,390,412]){
    await expect(page.getByRole('alert')).toHaveCount(4);
    expect(personalSaveCount).toBe(0);
 
-   await page.getByLabel(language==='en'?'Full name (at least 3 names, matching ID)':'الاسم الثلاثي على الأقل — مطابق للبطاقة').fill('Mona Hassan Ali');
+   await fullName.fill('Mona Hassan Ali');
    await page.getByLabel(language==='en'?'Egyptian mobile number':'رقم الموبايل المصري')
     .fill('01012345678');
    await page.getByLabel(language==='en'?'Professional background':'الخلفية المهنية')

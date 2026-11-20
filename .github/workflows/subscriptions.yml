@@ -46,17 +46,6 @@ jobs:
           retention-days: 90
       - name: Full Playwright E2E suite (fail fast on three actionable failures)
         run: npm run test:e2e -- --max-failures=3 --timeout=20000
-      # Browser-only auth-routing regression. Uses a non-staging fake Supabase
-      # endpoint intercepted by Playwright. Never use these as real acceptance.
-      - name: Build isolated fake-auth UI fixture (no staging credentials)
-        env:
-          VITE_SUPABASE_URL: https://sekka-auth-e2e.supabase.co
-          VITE_SUPABASE_PUBLISHABLE_KEY: e2e-synthetic-public-key
-        run: npm run build
-      - name: Verify Admin and role-separated navigation (MOCKED)
-        env:
-          SEKKA_AUTH_UI_MOCKS: "true"
-        run: npx playwright test e2e/admin-authorization-mocked.spec.ts e2e/mobile-navigation-role.spec.ts e2e/captain-onboarding-validation.spec.ts e2e/captain-document-upload-mocked.spec.ts e2e/captain-plate-segments.spec.ts e2e/v31-rider-no-match-request-mocked.spec.ts e2e/nearby-gps-mocked.spec.ts e2e/captain-route-geolocated-mocked.spec.ts e2e/captain-home-mocked.spec.ts e2e/captain-publish-conflict-mocked.spec.ts
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -65,11 +54,32 @@ jobs:
             docs/audit/*.png
             web/test-results/
 
-  # Fast, independent acceptance for owner-reported Android plate-entry bug.
-  # Entirely synthetic fake Google/Auth/PostgREST -- NEVER staging credentials.
-  captain-plate-mock:
-    name: Captain plate form (isolated mocked browser)
+  # These fixtures intercept the fake endpoint in each browser context.
+  mocked-browser:
+    name: Mocked browser / ${{ matrix.group }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - group: Admin and profile
+            artifact: admin-profile
+            specs: e2e/admin-authorization-mocked.spec.ts
+          - group: Role navigation
+            artifact: role-navigation
+            specs: e2e/mobile-navigation-role.spec.ts
+          - group: Captain
+            artifact: captain
+            specs: >-
+              e2e/captain-onboarding-validation.spec.ts
+              e2e/captain-plate-segments.spec.ts
+              e2e/captain-document-upload-mocked.spec.ts
+              e2e/captain-route-geolocated-mocked.spec.ts
+              e2e/captain-home-mocked.spec.ts
+              e2e/captain-publish-conflict-mocked.spec.ts
+          - group: Rider search
+            artifact: rider-search
+            specs: e2e/v31-rider-no-match-request-mocked.spec.ts e2e/nearby-gps-mocked.spec.ts
     defaults:
       run:
         working-directory: web
@@ -87,14 +97,17 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npx playwright install --with-deps chromium
-      - name: Android Captain plate and document-picker touch regression (MOCKED)
-        run: npx playwright test e2e/captain-plate-segments.spec.ts e2e/captain-document-upload-mocked.spec.ts --timeout=20000
-      - name: Approved Captain route UX and OSM stop picker (MOCKED)
-        run: npx playwright test e2e/captain-route-geolocated-mocked.spec.ts e2e/captain-home-mocked.spec.ts e2e/captain-publish-conflict-mocked.spec.ts --timeout=20000
-      - name: Upload Captain form failure evidence
-        if: failure()
-        uses: actions/upload-artifact@v4
+      - name: Run mocked browser group
+        env:
+          PLAYWRIGHT_SPECS: ${{ matrix.specs }}
+        run: |
+          read -r -a specs <<< "$PLAYWRIGHT_SPECS"
+          npx playwright test "${specs[@]}"
+      - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: captain-plate-mocked-failures
-          path: web/test-results/
+          name: mocked-browser-${{ matrix.artifact }}
+          path: |
+            docs/audit/layout-after-*-mocked.png
+            web/test-results/
           if-no-files-found: ignore

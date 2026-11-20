@@ -32,9 +32,11 @@ test('MOCKED Rider no-match journey saves the selected period and re-reads the o
   localStorage.setItem('language_preference','en');
   localStorage.setItem('theme_preference','light');
   // The Rider had already chosen the weekly schedule before looking at results.
-  sessionStorage.setItem('sekka.rider.discoveryDraft.v31',JSON.stringify({
-   period:'weekly',outbound:'08:15',returnTime:'18:45'
-  }));
+  if(!sessionStorage.getItem('sekka.rider.discoveryDraft.v31')){
+   sessionStorage.setItem('sekka.rider.discoveryDraft.v31',JSON.stringify({
+    period:'weekly',outbound:'08:15',returnTime:'18:45'
+   }));
+  }
  },{endpoint,user});
  let saved:RequestRecord|null=null;
  let insertCount=0,editCount=0,cancelCount=0;
@@ -76,7 +78,7 @@ test('MOCKED Rider no-match journey saves the selected period and re-reads the o
     status=201;
    }else if(url.searchParams.has('request_key')){
     const key=url.searchParams.get('request_key')?.replace(/^eq\./,'');
-    data=saved?.request_key===key?saved:null;
+    data=saved?.request_key===key?[saved]:[];
    }else if(url.searchParams.has('origin_area_id')&&url.searchParams.has('status')){
     data=saved?.status==='open'?[{id:saved.id}]:[];
    }else data=saved?[saved]:[];
@@ -99,6 +101,10 @@ test('MOCKED Rider no-match journey saves the selected period and re-reads the o
  const request=result.locator('.sekka-no-match-action');
  await expect(request.getByRole('button',{name:'Request a trip using this search'})).toBeVisible();
  await expect(request.locator('input,select,textarea')).toHaveCount(0);
+ await expect(request.locator('.sekka-request-summary')).toContainText('Maadi');
+ await expect(request.locator('.sekka-request-summary')).toContainText('08:15');
+ await expect(request.locator('.sekka-request-summary')).toContainText('18:45');
+ await expect(request.locator('.sekka-request-summary')).toContainText('Weekly');
  await expect(result.locator('.live-trip-requests')).toHaveCount(0);
  await request.getByRole('button',{name:'Request a trip using this search'}).click();
  await expect(request.getByText('Your request was saved using your search details. Follow it in My bookings → My trip requests.')).toBeVisible();
@@ -117,13 +123,18 @@ test('MOCKED Rider no-match journey saves the selected period and re-reads the o
  expect(insertCount).toBe(1);
  // Existing requests are managed from My bookings, not duplicated under no-match.
  await page.goto('/?tab=bookings');
- await page.getByRole('button',{name:'My trip requests'}).click();
+ await page.getByRole('navigation',{name:'Bookings and requests'}).getByRole('button',{name:'My trip requests'}).click();
  const full=page.locator('.sekka-bookings-workspace .live-trip-requests');
  await expect(full.getByRole('heading',{name:'Active requests (1)'})).toBeVisible();
  await expect(full.locator('ul li').first()).toContainText('Weekly');
  await full.getByRole('button',{name:'Edit request'}).click();
  const editPanel=full.getByLabel('Edit request details');
- await editPanel.getByRole('spinbutton',{name:'Seats needed'}).fill('2');
+ const seats=editPanel.getByRole('spinbutton',{name:'Seats needed'});
+ await expect(seats).toHaveAttribute('max','2');
+ await seats.fill('3');
+ await expect(editPanel.getByRole('button',{name:'Save changes'})).toBeDisabled();
+ expect(editCount).toBe(0);
+ await seats.fill('2');
  await editPanel.getByRole('button',{name:'Save changes'}).click();
  await expect(full.getByText('Request updated and verified.')).toBeVisible();
  expect(editCount).toBe(1);

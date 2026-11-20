@@ -200,9 +200,7 @@ test(`pending Captain profile stays in Passenger journey until explicit entry at
  await expect(page).toHaveURL(/tab=captain-onboarding&view=35/);
  await expect(page.locator('.c-approval-live')).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
- const logo=await page.locator('.captain-onboarding-header .phase-wordmark').boundingBox();
- expect(logo).not.toBeNull();
- expect(logo!.width).toBeLessThanOrEqual(width*.32+1);
+ await expect(page.locator('.captain-onboarding-header .phase-wordmark:visible')).toHaveCount(0);
 
  await page.goto('/?tab=captain-onboarding&view=38');
  await expect(page.getByText('Start your registration before opening this step.')).toBeVisible();

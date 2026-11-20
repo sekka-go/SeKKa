@@ -11,7 +11,7 @@ const user={
  // Prove a user-editable role claim does not grant Admin privileges.
  user_metadata:{role:'admin',full_name:'QA Fixture'}
 };
-type Fixture={isAdmin:boolean;adminUnavailable?:boolean;userUnavailable?:boolean;delayUserMs?:number};
+type Fixture={isAdmin:boolean;adminUnavailable?:boolean;userUnavailable?:boolean;userResponseGate?:Promise<void>};
 async function setup(page:Page,fixture:Fixture,language:'ar'|'en',theme:'light'|'dark'){
  await page.addInitScript(({endpoint,user,language,theme})=>{
   const storage='sb-'+new URL(endpoint).hostname.split('.')[0]+'-auth-token';
@@ -29,7 +29,7 @@ async function setup(page:Page,fixture:Fixture,language:'ar'|'en',theme:'light'|
   let result:unknown=[];
   let status=200;
   if(path==='/auth/v1/user'){
-   if(fixture.delayUserMs)await new Promise(resolve=>setTimeout(resolve,fixture.delayUserMs));
+   if(fixture.userResponseGate)await fixture.userResponseGate;
    if(fixture.userUnavailable){status=503;result={code:'TEST_UNAVAILABLE',message:'Fixture identity endpoint offline'};}
    else result=user;
   }
@@ -191,10 +191,15 @@ test('MOCKED verified Admin explicit destination is never replaced by Admin home
 });
 
 test('MOCKED profile gate waits for verified session without showing guest Google CTA',async({page})=>{
- await setup(page,{isAdmin:false,delayUserMs:750},'en','light');
- await page.goto('/?tab=profile');
- await expect(page.getByText('Loading account…')).toBeVisible();
- await expect(page.getByRole('button',{name:'Sign in with Google'})).toHaveCount(0);
+ let releaseUser!:()=>void;
+ const userResponseGate=new Promise<void>(resolve=>{releaseUser=resolve;});
+ await setup(page,{isAdmin:false,userResponseGate},'en','light');
+ try{
+  await page.goto('/?tab=profile');
+  await expect(page.locator('.sekka-launch')).toHaveCount(0);
+  await expect(page.getByRole('status').filter({hasText:'Preparing your account…'})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Sign in with Google'})).toHaveCount(0);
+ }finally{releaseUser();}
  await expect(page.getByRole('button',{name:'Sign out'})).toBeVisible();
 });
 
@@ -209,72 +214,6 @@ test('MOCKED failed identity verification blocks profile and offers retry',async
  await page.getByRole('button',{name:'Retry session'}).click();
  await expect(page.getByRole('button',{name:'Sign out'})).toBeVisible();
  await expect(page.locator('.live-profile')).toBeVisible();
-});
-
-// Mocked, not real Supabase: regression for the rider's observed no-match
-// flow where a blank subscription period prevented the request from saving.
-test('MOCKED rider no-match flow saves selected weekly request and reads it back',async({page})=>{
- await page.setViewportSize({width:390,height:844});
- await setup(page,{isAdmin:false},'en','light');
- await page.addInitScript(()=>{
-  sessionStorage.setItem('sekka.rider.discoveryDraft.v31',JSON.stringify({
-   origin:'التجمع',destination:'الزمالك',outbound:'07:30',returnTime:'17:00',
-   period:'monthly',searched:true
-  }));
- });
- const areas=[
-  {id:21,name_ar:'التجمع',name_en:'New Cairo'},
-  {id:22,name_ar:'الزمالك',name_en:'Zamalek'}
- ];
- let saved:null|{id:string;rider_id:string;origin_area_id:number;destination_area_id:number;outbound_time:string|null;return_time:string|null;direction:string;period:string;seats:number;request_key:string;status:string}=null;
- let inserts=0;
- await page.route(endpoint+'/rest/v1/v31_service_areas*',async route=>{
-  await route.fulfill({contentType:'application/json',body:JSON.stringify(areas)});
- });
- await page.route(endpoint+'/rest/v1/v31_routes*',async route=>{
-  await route.fulfill({contentType:'application/json',body:'[]'});
- });
- await page.route(endpoint+'/rest/v1/v31_trip_requests*',async route=>{
-  const req=route.request(),url=new URL(req.url());
-  if(req.method()==='POST'){
-   inserts++;
-   const v=req.postDataJSON() as NonNullable<typeof saved>;
-   saved={...v,id:'33333333-3333-4333-8333-333333333333',status:'open'};
-   await route.fulfill({status:201,contentType:'application/json',body:'[]'});
-   return;
-  }
-  const matched=saved&&!url.searchParams.has('request_key')?[saved]:
-   saved&&url.searchParams.get('request_key')?.includes(saved.request_key)?[saved]:[];
-  const singular=req.headers()['accept']?.includes('vnd.pgrst.object');
-  await route.fulfill({contentType:'application/json',body:JSON.stringify(singular?matched[0]||null:matched)});
- });
- await page.goto('/?tab=search&view=11');
- const panel=page.locator('.live-trip-requests');
- await expect(panel.getByRole('heading',{name:'No match? Review your request'})).toBeVisible();
- await expect(panel.getByLabel('Journey direction')).toHaveValue('round_trip');
- await expect(panel.getByLabel('Departure time')).toHaveValue('07:30');
- await expect(panel.getByLabel('Return time')).toHaveValue('17:00');
- await panel.getByLabel('Subscription period').selectOption('weekly');
- const count=panel.getByLabel('Seats needed');
- await expect(count).toHaveAttribute('max','2');
- await count.fill('3');
- await expect(panel.getByRole('button',{name:'Confirm and save trip request'})).toBeDisabled();
- expect(inserts).toBe(0);
- await count.fill('2');
- await expect(panel.getByRole('button',{name:'Confirm and save trip request'})).toBeEnabled();
- await panel.getByRole('button',{name:'Confirm and save trip request'}).click();
- await expect(panel.getByRole('status').filter({hasText:'Your request and journey schedule are saved'})).toBeVisible();
- expect(inserts).toBe(1);
- expect(saved).not.toBeNull();
- expect(saved?.period).toBe('weekly');
- expect(saved?.seats).toBe(2);
- expect(saved?.outbound_time).toBe('07:30');
- expect(saved?.return_time).toBe('17:00');
- expect(saved?.direction).toBe('round_trip');
- await panel.getByRole('button',{name:'Confirm and save trip request'}).click();
- await expect(panel.getByRole('status').filter({hasText:'already open'})).toBeVisible();
- expect(inserts).toBe(1);
- await expect(panel.locator('ul li').first()).toContainText('Weekly');
 });
 
 // Simulated PostgREST persistence, not a Staging user-session test.
@@ -352,10 +291,7 @@ for(const [width,height] of [[320,700],[360,800],[390,844],[412,915]] as const){
      const dy=Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.y,b.y));
      expect(dx*dy,'Distinct S006 buttons cannot overlap').toBe(0);
     }
-    const logo=await screen.locator('.phase-logo > .phase-wordmark').boundingBox();
-    expect(logo).not.toBeNull();
-    expect(logo!.width).toBeLessThanOrEqual(width*.3+1);
-    expect(logo!.height).toBeLessThanOrEqual(logo!.width*.56);
+    await expect(screen.locator('.phase-wordmark:visible')).toHaveCount(0);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
     await continueButton.scrollIntoViewIfNeeded();
     const last=await continueButton.boundingBox();
@@ -606,7 +542,7 @@ test('MOCKED non-Admin never requests Captain Auth email even on Admin deep link
   await route.fulfill({status:403,contentType:'application/json',body:JSON.stringify({message:'ADMIN_REQUIRED'})});
  });
  await page.goto('/?tab=admin&view=64');
- await expect(page.getByRole('button',{name:'Sign out'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Access restricted'})).toBeVisible();
  await expect(page.locator('.ad-integrated-review')).toHaveCount(0);
  expect(privateEmailReads).toBe(0);
 });

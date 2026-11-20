@@ -1,4 +1,4 @@
-import {useEffect,useState} from 'react';
+import {useEffect,useId,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
 import {fetchPublishedSelection} from './LiveRouteSearch';
@@ -14,10 +14,11 @@ type StopRow=Omit<NearbyStop,'latitude'|'longitude'>&{latitude:number|string|nul
 type Pick=NearbyCandidate&{route:RouteRow;remaining:number};
 const RADIUS_OPTIONS=[1,3,5,10] as const;
 
-/** Location is only read on a real user click. No GPS coordinates are
- * persisted, sent to Supabase, appended to URLs or logged. */
+/** Discovery mounts this panel when the Rider opens nearby search. GPS stays
+ * in memory and is used only for local matching against published stops. */
 export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelection)=>void}){
  const {language}=usePreferences(),en=language==='en',t=(ar:string,english:string)=>en?english:ar;
+ const headingId=useId();
  const [point,setPoint]=useState<GeoPoint|null>(null);
  const [accuracy,setAccuracy]=useState<number|null>(null);
  const [permissionBusy,setPermissionBusy]=useState(false);
@@ -138,9 +139,9 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
     'The route changed or seats sold out. Refresh nearby routes and retry.'));
   }finally{setOpening(null);}
  };
- return <section className="d-box sekka-nearby" aria-label={t('الرحلات القريبة مني','Nearby routes')}>
+ return <section className="d-box sekka-nearby" aria-labelledby={headingId}>
   <div className="sekka-nearby__heading">
-   <h2>{t('رحلات قريبة مني','Routes near me')}</h2>
+   <h2 id={headingId}>{t('رحلات قريبة مني','Routes near me')}</h2>
    <button type="button" className="sekka-nearby__locate" disabled={permissionBusy}
     onClick={findMe}>{permissionBusy?t('بنحدد موقعك…','Locating…'):point?t('تحديث GPS','Update GPS'):t('📍 تفعيل الموقع','📍 Enable GPS')}</button>
   </div>
