@@ -88,7 +88,8 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
   }
   else if(path.startsWith('/rest/v1/v31_route_stops')){
    if(new URL(route.request().url()).searchParams.get('select')==='id,name,position'&&++reviewReads===1){
-    await route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({message:'Fixture review unavailable'})});
+    // Use a non-retryable response so this exercises the app's retry button.
+    await route.fulfill({status:400,contentType:'application/json',body:JSON.stringify({message:'Fixture review unavailable'})});
     return;
    }
    result=savedStops;
