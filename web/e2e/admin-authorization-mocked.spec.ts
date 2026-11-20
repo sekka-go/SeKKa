@@ -47,6 +47,11 @@ async function setup(page:Page,fixture:Fixture,language:'ar'|'en',theme:'light'|
   await route.fulfill({status,contentType:'application/json',body:JSON.stringify(result)});
  });
 }
+async function pickSearchArea(page:Page,field:'From where?'|'Where to?',name:string){
+ await page.getByRole('combobox',{name:field}).fill(name);
+ await page.getByRole('group',{name:'Place search suggestions'})
+  .getByRole('button',{name:name+' Service area',exact:true}).click();
+}
 for(const width of [360,390]){
  for(const language of ['ar','en'] as const){
   for(const theme of ['light','dark'] as const){
@@ -398,11 +403,10 @@ test('MOCKED signed-in rider saves validated Home/Work shortcuts and recent sear
  await page.goto('/?tab=search&view=9');
  const shortcuts=page.locator('.sekka-search-shortcuts');
  await expect(shortcuts).toBeVisible();
- const from=page.locator('.d-planner-places .d-place select').first();
- const to=page.locator('.d-planner-places .d-place select').last();
- await expect(from.locator('option[value="المعادي"]')).toHaveText('Maadi');
- await from.selectOption('المعادي');
- await to.selectOption('التجمع');
+ const from=page.getByRole('combobox',{name:'From where?'});
+ const to=page.getByRole('combobox',{name:'Where to?'});
+ await pickSearchArea(page,'From where?','Maadi');
+ await pickSearchArea(page,'Where to?','New Cairo');
  await shortcuts.getByRole('button',{name:'Save origin as Home'}).click();
  await shortcuts.getByRole('button',{name:'Save destination as Work'}).click();
  await expect(shortcuts.getByRole('button',{name:'Home to Work'})).toBeVisible();
@@ -410,7 +414,7 @@ test('MOCKED signed-in rider saves validated Home/Work shortcuts and recent sear
  await shortcuts.getByRole('button',{name:'Work to Home'}).click();
  await expect(from).toHaveValue('التجمع');
  await expect(to).toHaveValue('المعادي');
- await page.locator('.d-screen-9 .d-planner > .d-primary').click();
+ await page.getByRole('button',{name:'Search for routes'}).click();
  await page.goto('/?tab=search&view=9');
  await expect(shortcuts.getByText('Recent searches')).toBeVisible();
  await expect(shortcuts.getByRole('button',{name:'Reuse route New Cairo - Maadi'})).toBeVisible();
@@ -467,12 +471,9 @@ test('MOCKED published search delegates round-trip filters and sorts projected p
   await route.fulfill({contentType:'application/json',body:JSON.stringify(result)});
  });
  await page.goto('/?tab=search&view=9');
- const origin=page.locator('.d-planner-places .d-place select').first();
- const dest=page.locator('.d-planner-places .d-place select').last();
- await expect(origin.locator('option[value="المعادي"]')).toBeAttached();
- await origin.selectOption('المعادي');
- await dest.selectOption('التجمع');
- await page.locator('.d-screen-9 .d-planner > .d-primary').click();
+ await pickSearchArea(page,'From where?','Maadi');
+ await pickSearchArea(page,'Where to?','New Cairo');
+ await page.getByRole('button',{name:'Search for routes'}).click();
  const list=page.locator('.d-live-search article.d-result');
  await expect(list).toHaveCount(4);
  await page.getByRole('combobox',{name:'Sort routes by'}).selectOption('price');
@@ -537,9 +538,9 @@ test('MOCKED genuine round-trip offer reaches transparent one-or-two person book
   await request.fulfill({contentType:'application/json',body:JSON.stringify(result)});
  });
  await page.goto('/?tab=search&view=9');
- await page.locator('.d-planner-places .d-place select').first().selectOption('المعادي');
- await page.locator('.d-planner-places .d-place select').last().selectOption('التجمع');
- await page.locator('.d-screen-9 .d-planner > .d-primary').click();
+ await pickSearchArea(page,'From where?','Maadi');
+ await pickSearchArea(page,'Where to?','New Cairo');
+ await page.getByRole('button',{name:'Search for routes'}).click();
  await expect(page.getByRole('heading',{name:'Verified Round Trip'})).toBeVisible();
  await page.getByRole('button',{name:'View route details'}).click();
  await expect(page.getByText('Verified Round Trip',{exact:true})).toHaveCount(0);
@@ -557,8 +558,8 @@ test('MOCKED genuine round-trip offer reaches transparent one-or-two person book
  await expect(controls.getByRole('button',{name:'Add one person'})).toBeDisabled();
  await controls.getByRole('button',{name:'Remove one person'}).click();
  await expect(controls).toContainText('1');
- await expect(page.getByText(/does not debit or hold this amount from your wallet/i)).toBeVisible();
- await expect(page.getByText(/not a final invoice adjusted for passenger count/i)).toBeVisible();
+ await expect(page.getByText(/No payment or deposit is collected in the app at present/i)).toBeVisible();
+ await expect(page.getByText(/indicative per seat, not a final invoice/i)).toBeVisible();
  expect(reserveRequests).toBe(0);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });

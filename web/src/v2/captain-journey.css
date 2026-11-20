@@ -607,3 +607,60 @@
  padding:10px;border-inline-start:4px solid var(--yellow,#ffc400);
  background:var(--cj-surface);border-radius:8px;font-weight:800;
 }
+
+.sekka-route-map-card{
+ display:grid;
+ gap:.625rem;
+ min-inline-size:0;
+ margin-block-end:1rem;
+}
+.sekka-route-map-card__frame{
+ display:block;
+ inline-size:100%;
+ block-size:clamp(13rem,34vh,20rem);
+ border:1px solid var(--cj-stroke,currentColor);
+ border-radius:1rem;
+ background:var(--cj-surface,#fff);
+}
+.sekka-route-map-card a{
+ color:inherit;
+ text-underline-offset:.2em;
+}
+.sekka-route-map-card__credit{
+ justify-self:end;
+ font-size:.8125rem;
+}
+.sekka-route-map-card__stops,.sekka-route-stop-actions{
+ display:flex;
+ flex-wrap:wrap;
+ gap:.375rem;
+}
+.sekka-route-map-card__stops button,.cj-easy-selected-stops .sekka-route-stop-actions button{
+ min-block-size:44px;
+ min-inline-size:44px;
+ padding:.375rem .625rem;
+ border:1px solid var(--cj-stroke,currentColor);
+ border-radius:.625rem;
+ color:inherit;
+ background:transparent;
+}
+.sekka-route-map-card__stops button[aria-pressed="true"]{
+ border-color:#ffc400;
+ box-shadow:inset 0 0 0 1px #ffc400;
+}
+.sekka-route-map-card summary,.sekka-route-map-card li a{
+ display:revert;
+ min-block-size:44px;
+ line-height:1.5;
+}
+.sekka-route-map-card summary{
+ padding-block:.55rem;
+ cursor:pointer;
+}
+.sekka-route-map-card li a{
+ display:inline-flex;
+ align-items:center;
+}
+.cj-easy-selected-stops .sekka-route-stop-actions{
+ grid-column:2/-1;
+}

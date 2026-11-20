@@ -30,6 +30,7 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
   {id:'00000000-0000-4000-8000-0000000000f2',area_id:11,name:'Maadi Grand Mall',position:0,pickup_allowed:true,dropoff_allowed:true,latitude:null as number|null,longitude:null as number|null},
   {id:'00000000-0000-4000-8000-0000000000f3',area_id:22,name:'Nasr City Square',position:1,pickup_allowed:true,dropoff_allowed:true,latitude:null as number|null,longitude:null as number|null}
  ];
+ await page.route('https://www.openstreetmap.org/export/embed.html?*',route=>route.fulfill({body:'Map frame fixture'}));
  await page.route('https://photon.komoot.io/api/**',async route=>{
   const q=new URL(route.request().url()).searchParams.get('q')||'';
   const maadi=q.toLowerCase().includes('maadi')&&!q.toLowerCase().includes('outside');
@@ -113,7 +114,14 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  await destination.fill('Nasr City Square');
  await entry.getByRole('button',{name:'Find'}).click();
  await entry.locator('.cj-easy-results').getByRole('button',{name:/Nasr City Square/}).click();
- // Second verified stop advances straight to the real vehicle step.
+ await expect(entry.locator('.cj-easy-selected-stops>li')).toHaveCount(2);
+ await expect(entry.getByTitle('OpenStreetMap route stop map')).toBeVisible();
+ await entry.getByRole('button',{name:'Move earlier: Nasr City Square'}).click();
+ await expect(entry.locator('.cj-easy-selected-stops>li').first()).toContainText('Nasr City Square');
+ await entry.getByRole('button',{name:'Move later: Nasr City Square'}).click();
+ await entry.getByText('Check driving directions on OpenStreetMap',{exact:true}).click();
+ await expect(entry.getByRole('link',{name:'From Maadi Grand Mall to Nasr City Square'})).toHaveAttribute('href',/openstreetmap\.org\/directions\?engine=fossgis_osrm_car&route=/);
+ await entry.getByRole('button',{name:'Continue'}).click();
  await expect(entry.getByRole('combobox',{name:'Approved vehicle'})).toBeVisible();
  await entry.getByRole('button',{name:'Back'}).click();
  await expect(entry.locator('.cj-easy-selected-stops>li')).toHaveCount(2);

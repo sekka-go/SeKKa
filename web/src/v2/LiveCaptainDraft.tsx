@@ -1,6 +1,7 @@
 import {useEffect,useRef,useState} from 'react';
 import {client} from './api';
 import CaptainPlacePicker from './CaptainPlacePicker';
+import CaptainRouteMap from './CaptainRouteMap';
 import {captainRouteError} from './captainRouteErrors';
 import {draftPriceGuidance,outsideDraftPriceGuidance} from './draftPriceGuidance';
 import {inLaunchRegion,mapPlacesFromPhoton,placeMatchesArea} from './geoPlace';
@@ -144,7 +145,8 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
      url.searchParams.set('limit','10');
      const response=await fetch(url.toString(),{headers:{Accept:'application/json'},signal:AbortSignal.timeout(9000)});
      if(!response.ok)throw Error('REVERSE_UNAVAILABLE');
-     const match=mapPlacesFromPhoton(await response.json()).find(place=>placeMatchesArea(place,checkedArea));
+     const match=mapPlacesFromPhoton(await response.json()).find(place=>
+      placeMatchesArea(place,checkedArea)&&straightLineKm(place,point)*1000<=position.coords.accuracy);
      if(activeAreaId.current!==String(checkedArea.id))return;
      if(!match){setError(t('GPS حدد مكانك لكن بيانات الخريطة ما أكدتش إنه في '+checkedArea.name_ar+'. اختار شارع أو معلم من بحث المنطقة.',
        'GPS located you but the map could not verify '+checkedArea.name_en+'. Pick a street or landmark in that area.'));return;}
@@ -177,7 +179,7 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
    latitude:Number(place.latitude.toFixed(6)),longitude:Number(place.longitude.toFixed(6))}];
   setStops(next);setAreaId('');activeAreaId.current='';
   setPlaceLabel('');setPlaceChoice(null);
-  if(next.length===2&&next[0].areaId!==next[1].areaId)setStep(2);
+
  };
  const save=async()=>{
    if(!client||!uid||saving.current)return;
@@ -252,6 +254,13 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
  };
  if(!client)return <section className="d-box"><p>{t('ربط Supabase العام لم يكتمل بعد.','Public Supabase configuration is not ready yet.')}</p></section>;
  if(!uid)return <section className="d-box"><p>{t('سجّل دخولك بجوجل قبل حفظ خط حقيقي.','Sign in with Google to create a real route draft.')}</p><a href="?screen=4">{t('الدخول بجوجل','Google sign-in')}</a></section>;
+ const moveStop=(index:number,offset:-1|1)=>{
+  setStops(current=>{
+   const next=[...current],target=index+offset;
+   [next[index],next[target]]=[next[target],next[index]];
+   return next;
+  });
+ };
  const canContinueRoute=stops.length>=2&&stops.length<=30&&
   stops[0].areaId!==stops[stops.length-1].areaId;
  const canContinueVehicle=Boolean(vehicleId)&&Boolean(category)&&eligibleCategories.includes(category as Category)&&vehicleCheck==='clear';
@@ -272,15 +281,16 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
   <header className="sekka-route-intro">
    <p className="sekka-route-eyebrow">{t('حساب كابتن معتمد','Approved Captain')}</p>
    <h2>{t('إنشاء رحلة جديدة','Create a new trip')}</h2>
-   <p>{t('منين؟ لفين؟ اختار المنطقة والمكان، والباقي بسيط.','Where from and where to? Choose an area and a place.')}</p>
+   <p>{t('حدّد محطاتك على الخريطة وراجع ترتيبها.','Find your stops on the map and review their order.')}</p>
   </header>
   {error&&<p role="alert" className="cj-feedback">{error}</p>}
   {message&&<p role="status" className="cj-feedback">{message}</p>}
 
   {step===1&&<fieldset className="sekka-route-step">
    <legend><span>1</span> {t('مسار الرحلة','Route stops')}</legend>
-   <p className="cj-route-hint">{t('اختار منطقة وبعدها مكان. الموقع بيتحدد تلقائيًا لما يتأكد من الخريطة.',
-    'Choose an area, then a landmark. The location is verified automatically.')}</p>
+   <CaptainRouteMap stops={stops}/>
+   <p className="cj-route-hint">{t('اختار منطقة، وبعدها ابحث عن شارع أو معلم لإضافته على الخريطة.',
+    'Choose an area, then find a street or landmark to add it to the map.')}</p>
    <div className="cj-easy-route-top">
     <strong>{stops.length===0?t('منين هتبدأ؟','Where from?'):stops.length===1?t('رايح فين؟','Where to?'):
       t('محطة إضافية','Additional stop')}</strong>
@@ -289,11 +299,17 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
       t('تقدر تضيف محطة تانية','Add another stop')}</small>
    </div>
    {stops.length>0&&<ol className="cj-easy-selected-stops" aria-label={t('نقط الرحلة','Trip stops')}>
-    {stops.map((stop,index)=><li key={index}>
+    {stops.map((stop,index)=><li key={stop.latitude+':'+stop.longitude}>
      <span className="cj-easy-stop-number">{index+1}</span>
      <div><strong>{stop.name}</strong><small>{en?areas.find(a=>a.id===stop.areaId)?.name_en:areas.find(a=>a.id===stop.areaId)?.name_ar}</small></div>
-     <button type="button" onClick={()=>{setStops(old=>old.filter((_,i)=>i!==index));chooseArea('');}}
-      aria-label={t('احذف ','Remove ')+stop.name}>{t('حذف','Remove')}</button>
+     <div className="sekka-route-stop-actions">
+      <button type="button" disabled={index===0} onClick={()=>moveStop(index,-1)}
+       aria-label={t('قدّم ','Move earlier: ')+stop.name}>{t('فوق','Up')}</button>
+      <button type="button" disabled={index===stops.length-1} onClick={()=>moveStop(index,1)}
+       aria-label={t('أخّر ','Move later: ')+stop.name}>{t('تحت','Down')}</button>
+      <button type="button" onClick={()=>{setStops(old=>old.filter((_,i)=>i!==index));chooseArea('');}}
+       aria-label={t('احذف ','Remove ')+stop.name}>{t('حذف','Remove')}</button>
+     </div>
     </li>)}
    </ol>}
    {!selectedArea?<>

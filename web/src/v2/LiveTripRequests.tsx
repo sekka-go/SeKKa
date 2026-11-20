@@ -31,8 +31,8 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
   try{
    if(!client)throw Error('BACKEND_NOT_CONFIGURED');
    const {data:{user},error:authError}=await client.auth.getUser();
-   if(authError)throw authError;
-   if(!user&&mode==='rider'){if(active){setUid('');setRequests([]);}return;}
+   if(authError&&!(mode==='rider'&&!user&&authError.name==='AuthSessionMissingError'))throw authError;
+   if(!user&&mode==='rider'){if(active){setUid('');setRequests([]);setError('');}return;}
    if(!user)throw Error('AUTH_REQUIRED');
    const [areasResult,requestResult,routesResult]=await Promise.all([
     client.from('v31_service_areas').select('id,name_ar,name_en').eq('active',true),

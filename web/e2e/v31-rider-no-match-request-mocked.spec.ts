@@ -139,3 +139,25 @@ test('MOCKED Rider no-match journey saves the selected period and re-reads the o
  await expect(archived.locator('li')).toContainText('Cancelled');
  expect(cancelCount).toBe(1);
 });
+
+test('MOCKED guest can review empty search and return with the same areas',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.addInitScript(()=>localStorage.setItem('language_preference','en'));
+ await page.route(endpoint+'/**',route=>{
+  const path=new URL(route.request().url()).pathname;
+  return route.fulfill({contentType:'application/json',body:JSON.stringify(path.endsWith('/v31_service_areas')?areas:[])});
+ });
+ await page.goto('/?tab=search&view=9');
+ const from=page.getByRole('combobox',{name:'From where?'});
+ const to=page.getByRole('combobox',{name:'Where to?'});
+ await from.fill('Maadi');
+ await page.getByRole('button',{name:'Maadi Service area'}).click();
+ await to.fill('Nasr City');
+ await page.getByRole('button',{name:'Nasr City Service area'}).click();
+ await page.getByRole('button',{name:'Search for routes'}).click();
+ await expect(page.getByRole('button',{name:'Sign in to request this trip'})).toBeVisible();
+ await expect(page.getByText('Auth session missing!')).toHaveCount(0);
+ await page.getByRole('button',{name:'Back',exact:true}).click();
+ await expect(from).toHaveValue('Maadi');
+ await expect(to).toHaveValue('Nasr City');
+});

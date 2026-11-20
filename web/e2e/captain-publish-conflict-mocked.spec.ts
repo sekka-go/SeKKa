@@ -58,6 +58,7 @@ test('MOCKED: already-published vehicle is blocked before price, existing route 
   }
   await route.fulfill({contentType:'application/json',body:JSON.stringify(result)});
  });
+ await page.route('https://www.openstreetmap.org/export/embed.html?*',route=>route.fulfill({body:'Map frame fixture'}));
  await page.goto('/?tab=routes&view=43');
  const form=page.locator('.sekka-captain-route-wizard');
  await expect(form).toBeVisible();
@@ -68,6 +69,7 @@ test('MOCKED: already-published vehicle is blocked before price, existing route 
  await form.getByRole('combobox',{name:'Search street or landmark'}).fill('Nasr City Square');
  await form.getByRole('button',{name:'Find'}).click();
  await form.locator('.cj-easy-results').getByRole('button',{name:/Nasr City Square/}).click();
+ await form.getByRole('button',{name:'Continue'}).click();
  await expect(form.getByRole('combobox',{name:'Approved vehicle'})).toBeVisible();
  await expect(form.getByText(/already has a published or paused route/)).toBeVisible();
  await expect(form.getByRole('button',{name:'Continue'})).toBeDisabled();
