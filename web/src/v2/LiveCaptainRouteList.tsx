@@ -1,5 +1,6 @@
 import {useEffect,useState} from 'react';
 import {client} from './api';
+import {captainRouteError} from './captainRouteErrors';
 import {usePreferences} from './preferences';
 
 type RouteRow={id:string;title:string;category:string;status:string;price_egp:number;seat_capacity:number};
@@ -21,6 +22,7 @@ export default function LiveCaptainRouteList(){
  const [loading,setLoading]=useState(true);
  const [notice,setNotice]=useState('');
  const [error,setError]=useState('');
+ const [canRetry,setCanRetry]=useState(true);
  const [revision,setRevision]=useState(0);
  const [tab,setTab]=useState<Tab>('all');
  const [expanded,setExpanded]=useState<string|null>(null);
@@ -113,7 +115,7 @@ export default function LiveCaptainRouteList(){
   <h2>{t('رحلاتي','My trips')}</h2>
   <p className="cj-subtitle">{t('كل خطوطك ومسوداتك في مكان واحد. السعر الإجمالي ظاهر ليك أنت بس.','Your routes and drafts in one place. Whole-vehicle price is private to you.')}</p>
   {approval!=='approved'&&!loading&&<p role="status" className="cj-feedback">{t('حسابك لسه مش معتمد. ممكن تراجع مسوداتك لكن النشر مش متاح.','Your Captain account is not approved. You can view drafts, but cannot publish.')}</p>}
-  {error&&<div role="alert" className="cj-feedback"><p>{error}</p><button type="button" onClick={()=>{setError('');setRevision(v=>v+1)}}>{t('إعادة المحاولة','Retry')}</button></div>}
+  {error&&<div role="alert" className="cj-feedback"><p>{error}</p>{canRetry&&<button type="button" onClick={()=>{setError('');setRevision(v=>v+1)}}>{t('إعادة المحاولة','Retry')}</button>}</div>}
   {notice&&<p role="status" className="cj-feedback">{notice}</p>}
   <div className="cj-filter-tabs" role="group" aria-label={t('فلتر الرحلات','Filter routes')}>
    {([['all',t('الكل','All')],['published',t('المنشورة','Published')],['draft',t('المسودات','Drafts')]] as [Tab,string][]).map(([key,label])=>
