@@ -549,6 +549,8 @@ test("canonical map has exactly 73 unique destinations and public results hide i
 test("phase seven captain operations isolate previews and confirm receipt once", async ({
   page,
 }) => {
+  // All 24 screen/theme visits and the operation checks share this test budget.
+  test.setTimeout(60_000);
   const writes: string[] = [];
   page.on("request", (r) => {
     if (r.method() === "POST") writes.push(r.url());
