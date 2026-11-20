@@ -12,6 +12,7 @@ import './captain.css';
 import './captain-journey.css';
 import LiveCaptainDraft from './LiveCaptainDraft';
 import LiveCaptainRouteList from './LiveCaptainRouteList';
+import CaptainHome from './CaptainHome';
 export const captainRouteScreens = Array.from({length:8},(_,i)=>internalScreen(i+42));
 const areaNames: Record<string,string> = {'المعادي':'Maadi','التجمع':'New Cairo','مدينة نصر':'Nasr City','الدقي':'Dokki','المهندسين':'Mohandessin','الزمالك':'Zamalek','الشيخ زايد':'Sheikh Zayed','6 أكتوبر':'6th of October','مصر الجديدة':'Heliopolis'};
 const areas=['المعادي','التجمع','مدينة نصر','الدقي','المهندسين','الزمالك','الشيخ زايد','6 أكتوبر','مصر الجديدة'];
@@ -63,14 +64,7 @@ export default function CaptainRoutes(p:{screen:number;theme:Appearance;onTheme:
  {!p.production&&<nav className="phase-review-bar"><select aria-label={t('شاشة خطوط الكابتن','Captain routes screen')} value={n} onChange={e=>go(+e.target.value)}>{captainRouteScreens.map(s=><option key={s} value={publicScreen(s)}>{publicScreen(s)} · {screenTitle(s,language)}</option>)}</select><button onClick={()=>p.onTheme(p.theme==='dark'?'light':'dark')}>{t('تبديل المظهر','Switch theme')}</button></nav>}
  <main className="phase-canvas d-canvas captain-routes-canvas">{!p.production&&<Wordmark/>}{!p.production&&<h1>{screenTitle(p.screen,language)}</h1>}{!p.production&&<p>{t('معاينة محلية فقط — لا يتم نشر عروض حقيقية.','Local preview only — no real offers are published.')}</p>}{message&&<p role="status">{message}</p>}
  {!demo?(p.production?<>
- {n===42&&<>
-   <section className="cj-hero"><small>{t('لوحة قيادة الكابتن','Captain workspace')}</small>
-    <h2>{t('مرحبًا يا كابتن','Welcome, Captain')}</h2>
-    <p>{t('أنشئ رحلتك وحقق دخل ثابت طول الشهر','Create your trip and earn a steady income throughout the month')}</p>
-    <button type="button" onClick={()=>go(43)}>{t('＋ إنشاء رحلة جديدة','＋ Create a new route')}</button>
-   </section>
-   <div className="cj-dashboard-actions"><button type="button" onClick={()=>go(49)}>{t('♧ عرض الحجوزات','♧ View bookings')}</button><button type="button" onClick={()=>go(44)}>{t('◷ إدارة الرحلات','◷ Manage routes')}</button></div>
-   <LiveCaptainRouteList/></>}
+ {n===42&&<CaptainHome onCreate={()=>go(43)} onRoutes={()=>go(44)} onBookings={()=>go(49)}/>}
  {n===43&&<><LiveCaptainDraft onSaved={()=>{setSavedNotice(true);go(44)}}/><button type="button" className="cj-back" onClick={()=>go(42)}>{t('رجوع إلى رحلاتي','Back to my routes')}</button></>}
  {n===49&&<><h1>{t('الحجوزات والرحلات','Bookings & routes')}</h1><LiveBookings mode="captain"/><LiveCaptainRouteList/></>}
  {[44,45,46,47,48].includes(n)&&<><h1>{t('إدارة خطوط الكابتن','Captain route management')}</h1>
