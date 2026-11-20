@@ -46,6 +46,7 @@ test('MOCKED Rider no-match journey saves the selected period and re-reads the o
   else if(path==='/rest/v1/rpc/v31_is_admin')data=false;
   else if(path.startsWith('/rest/v1/v31_captain_profiles'))data=null;
   else if(path.startsWith('/rest/v1/v31_service_areas'))data=areas;
+  else if(path.endsWith('/rpc/v31_search_published_routes'))data=[];
   else if(path.startsWith('/rest/v1/v31_public_route_offers'))data=[];
   else if(path.startsWith('/rest/v1/v31_trip_offers'))data=[];
   else if(path==='/rest/v1/rpc/v31_edit_open_trip_request'){

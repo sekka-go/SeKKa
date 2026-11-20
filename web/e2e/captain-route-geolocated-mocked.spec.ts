@@ -135,7 +135,7 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  await amount.fill('1300');
  await expect(save).toBeEnabled();
  await save.click();
- await expect(entry.getByRole('alert')).toContainText('The action could not be completed');
+ await expect(entry.getByRole('alert').filter({hasText:'The action could not be completed'})).toBeVisible();
  await expect(save).toBeEnabled();
  await save.click();
  await expect(page.getByRole('status').filter({hasText:'Draft saved.'})).toBeVisible();

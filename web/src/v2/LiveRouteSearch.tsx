@@ -3,14 +3,13 @@ import {reserveSeatsWithStops,MAX_SEATS_PER_RIDER} from './reservations';
 import {useEffect,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
-import {stopNearPoint} from './geoPlace';
 import type {GeoPoint} from './nearbyRoutes';
 
 export type Route={id:string;title:string;category:string;seat_capacity:number;period:string;direction:string;outbound_time:string|null;return_time:string|null;seat_price_egp:number;return_supported:boolean};
 export type Stop={id:string;route_id:string;area_id:number;position:number;name:string;pickup_allowed:boolean;dropoff_allowed:boolean;latitude?:number|string|null;longitude?:number|string|null};
-type Area={id:number;name_ar:string;name_en:string};
 export type LiveSelection={route:Route;from:Stop;to:Stop;reverse:boolean;stops:Stop[];remaining:number};
-type Match=Omit<LiveSelection,'remaining'>;
+type SearchMatch=LiveSelection&{pickupDistanceKm:number|null;dropoffDistanceKm:number|null};
+type SearchRow={route_id:string;selection:SearchMatch};
 export async function fetchPublishedSelection(routeId:string,fromId:string,toId:string,reverse:boolean):Promise<LiveSelection>{
  if(!client)throw Error('BACKEND_NOT_CONFIGURED');
  const {data:route,error:routeError}=await client.from('v31_public_route_offers').select('id,title,category,seat_capacity,period,direction,outbound_time,return_time,seat_price_egp,return_supported').eq('id',routeId).eq('status','published').maybeSingle();
@@ -33,18 +32,31 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
 }){
  const {language}=usePreferences(),en=language==='en';
  const t=(ar:string,english:string)=>en?english:ar;
- const [items,setItems]=useState<LiveSelection[]>([]);
- const [loading,setLoading]=useState(Boolean(client));
- const [error,setError]=useState('');
  const [retry,setRetry]=useState(0);
+ const originLat=originPoint?.latitude??null,originLon=originPoint?.longitude??null;
+ const destinationLat=destinationPoint?.latitude??null,destinationLon=destinationPoint?.longitude??null;
+ const categoryKey=categories.join(',');
+ const queryKey=JSON.stringify([origin,destination,originLat,originLon,destinationLat,destinationLon,
+  outbound,returnTime,period,direction,categoryKey,retry]);
+ const [result,setResult]=useState<{key:string;items:SearchMatch[];failed:boolean}|null>(null);
+ const current=result?.key===queryKey?result:null;
+ const loading=Boolean(client&&!current);
+ const items=current?.items??[];
+ const error=current?.failed??false;
+ const hasMapPoint=originLat!==null||destinationLat!==null;
  const [bookingBusy,setBookingBusy]=useState<string|null>(null);
  const [bookingError,setBookingError]=useState('');
  const [bookingSuccess,setBookingSuccess]=useState('');
  const [seatCounts,setSeatCounts]=useState<Record<string,number>>({});
- const [sortBy,setSortBy]=useState<'time'|'price'|'seats'>('time');
+ const [sortBy,setSortBy]=useState<'recommended'|'time'|'price'|'seats'>('recommended');
  const visibleItems=[...items].sort((a,b)=>{
   if(sortBy==='price')return a.route.seat_price_egp-b.route.seat_price_egp;
   if(sortBy==='seats')return b.remaining-a.remaining;
+  if(sortBy==='recommended'&&hasMapPoint){
+   const distance=(item:SearchMatch)=>(item.pickupDistanceKm??0)+(item.dropoffDistanceKm??0);
+   const difference=distance(a)-distance(b);
+   if(difference)return difference;
+  }
   const aTime=a.reverse?a.route.return_time:a.route.outbound_time;
   const bTime=b.reverse?b.route.return_time:b.route.outbound_time;
   return (aTime||'99:99').localeCompare(bTime||'99:99');
@@ -60,82 +72,45 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
   finally{setBookingBusy(null);}
  };
  useEffect(()=>{
-  if(!client){setLoading(false);return;}
-  let active=true;
-  setLoading(true);setError('');
+  const api=client;
+  if(!api)return;
+  const controller=new AbortController();
   void (async()=>{
    try{
-    const [{data:areas,error:areaError},{data:routes,error:routeError}]=await Promise.all([
-     client!.from('v31_service_areas').select('id,name_ar,name_en').eq('active',true),
-     client!.from('v31_public_route_offers').select('id,title,category,seat_capacity,period,direction,outbound_time,return_time,seat_price_egp,return_supported').eq('status','published').limit(100)
-    ]);
-    if(areaError||routeError)throw new Error(areaError?.message||routeError?.message);
-    const areaRows=(areas||[]) as Area[],routeRows=(routes||[]) as Route[];
-    const areaFor=(name:string)=>areaRows.find(a=>a.name_ar===name||a.name_en===name)?.id;
-    const fromId=areaFor(origin),toId=areaFor(destination);
-    if((!fromId&&!originPoint)||(!toId&&!destinationPoint)||(fromId&&toId&&fromId===toId&&!originPoint&&!destinationPoint)){if(active)setItems([]);return;}
-    const ids=routeRows.map(r=>r.id);
-    if(!ids.length){if(active)setItems([]);return;}
-    const {data:stops,error:stopsError}=await client!.from('v31_route_stops')
-      .select('id,route_id,area_id,position,name,pickup_allowed,dropoff_allowed,latitude,longitude')
-      .in('route_id',ids).order('position').limit(3000);
-    if(stopsError)throw stopsError;
-    const all=(stops||[]) as Stop[];
-    const matched:Match[]=[];
-    for(const route of routeRows){
-     if(period&&route.period!==period)continue;
-     if(categories.length&&!categories.includes(route.category))continue;
-     const sequence=all.filter(s=>s.route_id===route.id).sort((a,b)=>a.position-b.position);
-     // A round-trip search must match both schedules on one published
-     // round-trip offer. Never claim that two unrelated one-ways form a subscription.
-     const directions: {reverse:boolean;time:string|null}[]=[];
-     if(direction==='round_trip'){
-      if(route.direction!=='round_trip'||!route.return_supported||
-       (outbound&&route.outbound_time?.slice(0,5)!==outbound)||
-       (returnTime&&route.return_time?.slice(0,5)!==returnTime))continue;
-      directions.push({reverse:false,time:route.outbound_time});
-     }else if(direction==='return'){
-      if(route.direction!=='outbound'&&route.return_supported)
-       directions.push({reverse:true,time:route.return_time});
-     }else if(route.direction!=='return'){
-      directions.push({reverse:false,time:route.outbound_time});
-     }
-     for(const candidate of directions){
-      if(candidate.reverse? (returnTime&&candidate.time?.slice(0,5)!==returnTime) : (outbound&&candidate.time?.slice(0,5)!==outbound))continue;
-      const ordered=candidate.reverse?[...sequence].reverse():sequence;
-      const matches=(stop:Stop,areaId:number|undefined,point:GeoPoint|null)=>
-       point?stopNearPoint({latitude:Number(stop.latitude),longitude:Number(stop.longitude)},point,3)
-        :stop.area_id===areaId;
-      for(let i=0;i<ordered.length;i++){
-       const s=ordered[i];
-       if(!matches(s,fromId,originPoint)||(candidate.reverse?!s.dropoff_allowed:!s.pickup_allowed))continue;
-       const next=ordered.slice(i+1).find(d=>matches(d,toId,destinationPoint)&&(candidate.reverse?d.pickup_allowed:d.dropoff_allowed));
-       if(next){matched.push({route,from:s,to:next,reverse:candidate.reverse,stops:sequence});break;}
-      }
-     }
+    const matches:SearchMatch[]=[];
+    let after:string|null=null;
+    while(!controller.signal.aborted){
+     const response=await api.rpc('v31_search_published_routes',{
+      p_origin_area:origin,p_destination_area:destination,
+      p_origin_lat:originLat,p_origin_lon:originLon,p_destination_lat:destinationLat,p_destination_lon:destinationLon,
+      p_outbound:outbound||null,p_return:returnTime||null,p_period:period,p_direction:direction,
+      p_categories:categoryKey?categoryKey.split(','):[],p_after:after
+     }).abortSignal(controller.signal);
+     if(response.error||!Array.isArray(response.data))throw Error('ROUTE_SEARCH_UNAVAILABLE');
+     const rows=response.data as SearchRow[];
+     matches.push(...rows.map(row=>row.selection));
+     if(rows.length<100)break;
+     const lastId=rows.at(-1)?.route_id;
+     if(!lastId||lastId===after)throw Error('ROUTE_SEARCH_PAGE_INVALID');
+     after=lastId;
     }
-    // Passenger RLS intentionally hides other riders' bookings.
-    // Fetch a server-owned aggregate, never derive availability from seat_capacity.
-    const uniqueIds=[...new Set(matched.map(m=>m.route.id))];
-    const capacities=await Promise.all(uniqueIds.map(async id=>{
-      const {data,error:capError}=await client!.rpc('v31_published_route_available_seats',{p_route:id});
-      if(capError)throw capError;
-      if(typeof data!=='number'||data<0)throw Error('CAPACITY_UNAVAILABLE');
-      return [id,data] as const;
-    }));
-    const availableByRoute=new Map(capacities);
-    if(active)setItems(matched.map(m=>({...m,remaining:availableByRoute.get(m.route.id)??0})));
-   }catch(e){if(active)setError(e instanceof Error?e.message:String(e));}
-   finally{if(active)setLoading(false);}
+    if(!controller.signal.aborted)setResult({key:queryKey,items:matches,failed:false});
+   }catch{
+    if(!controller.signal.aborted)setResult({key:queryKey,items:[],failed:true});
+   }
   })();
-  return ()=>{active=false;};
- },[origin,destination,originPoint?.latitude,originPoint?.longitude,destinationPoint?.latitude,destinationPoint?.longitude,outbound,returnTime,period,direction,categories.join(','),retry]);
+  return ()=>controller.abort();
+ },[queryKey,origin,destination,originLat,originLon,destinationLat,destinationLon,
+  outbound,returnTime,period,direction,categoryKey]);
+ const distanceText=(distance:number)=>new Intl.NumberFormat(en?'en-EG':'ar-EG',{
+  maximumFractionDigits:1
+ }).format(distance);
  return <section className="d-live-search">
   <p>{t('نتائج فعلية من الخطوط المنشورة للكباتن المعتمدين فقط.','Live results from published routes only.')}</p>
   {!client&&<p role="status">{t('البحث الحقيقي محتاج ربط إعدادات Supabase العامة.','Live search requires public Supabase configuration.')}</p>}
   {loading&&<p role="status">{t('بنبحث عن خطوط مطابقة…','Searching published routes…')}</p>}
-  {error&&<div role="alert"><p>{t('تعذر تحميل الخطوط.','Unable to load routes.')} {error}</p><button onClick={()=>setRetry(v=>v+1)}>{t('حاول تاني','Retry')}</button></div>}
-  {!loading&&!error&&items.length===0&&<div className="sekka-no-match" role="group" aria-label={t('نتيجة البحث','Search result')}>
+  {error&&<div role="alert"><p>{t('تعذر تحميل الخطوط.','Unable to load routes.')}</p><button onClick={()=>setRetry(v=>v+1)}>{t('حاول تاني','Retry')}</button></div>}
+  {current&&!error&&items.length===0&&<div className="sekka-no-match" role="group" aria-label={t('نتيجة البحث','Search result')}>
    <p role="status">{t('مفيش رحلة مناسبة لبحثك حاليًا.','No matching trip available right now.')}</p>
    {origin&&destination&&canCreateRequest&&<LiveTripRequests mode="rider" compact search={{
     origin,destination,outbound,returnTime,period:requestPeriod,
@@ -149,7 +124,8 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
   {bookingSuccess&&<p role="status">{bookingSuccess}</p>}
   {!loading&&!error&&items.length>1&&<label className="sekka-live-sort">
    {t('رتّب الخطوط حسب','Sort routes by')}
-   <select value={sortBy} onChange={e=>setSortBy(e.target.value as 'time'|'price'|'seats')}>
+   <select value={sortBy} onChange={e=>setSortBy(e.target.value as 'recommended'|'time'|'price'|'seats')}>
+    <option value="recommended">{t('أنسب اختيار','Recommended')}</option>
     <option value="time">{t('أقرب ميعاد','Earliest departure')}</option>
     <option value="price">{t('سعر المقعد الأقل','Lowest seat price')}</option>
     <option value="seats">{t('المقاعد الأكثر','Most available seats')}</option>
@@ -158,6 +134,15 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
   {visibleItems.map((selection)=><article className="d-box d-result" key={selection.route.id+String(selection.reverse)+selection.from.id+selection.to.id}>{(()=>{const {route,from,to,reverse}=selection;return <>
    <h2>{route.title}</h2>
    <p className="sekka-live-stops">{from.name} ← {to.name}</p>
+   {hasMapPoint&&<p className="sekka-live-meta">
+    {selection.pickupDistanceKm!==null&&<span>
+     {t('نقطة الركوب','Pickup')} {distanceText(selection.pickupDistanceKm)} {t('كم','km')}{' · '}
+    </span>}
+    {selection.dropoffDistanceKm!==null&&<span>
+     {t('نقطة النزول','Drop-off')} {distanceText(selection.dropoffDistanceKm)} {t('كم','km')}{' · '}
+    </span>}
+    {t('مسافة بخط مستقيم','Straight-line distance')}
+   </p>}
    <p className="sekka-live-schedule">
     <strong>{reverse?t('العودة','Return'):t('الذهاب','Outbound')}</strong>
     {' · '}{(reverse?route.return_time:route.outbound_time)?.slice(0,5)||t('الوقت غير محدد','Time unavailable')}

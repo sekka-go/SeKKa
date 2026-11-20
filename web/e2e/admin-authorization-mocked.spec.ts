@@ -427,7 +427,7 @@ test('MOCKED signed-in rider saves validated Home/Work shortcuts and recent sear
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
 
-test('MOCKED published search sorts genuine route data and enforces both round-trip times',async({page})=>{
+test('MOCKED published search delegates round-trip filters and sorts projected prices',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await setup(page,{isAdmin:false},'en','light');
  const areaRows=[
@@ -435,20 +435,32 @@ test('MOCKED published search sorts genuine route data and enforces both round-t
   {id:2,name_ar:'التجمع',name_en:'New Cairo'}
  ];
  const routes=[
-  {id:'route-a',title:'Round A',category:'SAVER',seat_capacity:4,period:'monthly',direction:'round_trip',outbound_time:'07:30:00',return_time:'17:00:00',price_egp:1200,return_supported:true},
-  {id:'route-b',title:'Outbound only',category:'SAVER',seat_capacity:4,period:'monthly',direction:'outbound',outbound_time:'07:30:00',return_time:null,price_egp:700,return_supported:false},
-  {id:'route-c',title:'Round C',category:'SPACE',seat_capacity:9,period:'monthly',direction:'round_trip',outbound_time:'07:30:00',return_time:'17:00:00',price_egp:900,return_supported:true},
-  {id:'route-d',title:'Wrong return time',category:'SAVER',seat_capacity:4,period:'monthly',direction:'round_trip',outbound_time:'07:30:00',return_time:'18:00:00',price_egp:500,return_supported:true}
+  {id:'route-a',title:'Round A',category:'SAVER',seat_capacity:4,period:'monthly',direction:'round_trip',outbound_time:'07:30:00',return_time:'17:00:00',seat_price_egp:1200,return_supported:true},
+  {id:'route-b',title:'Outbound only',category:'SAVER',seat_capacity:4,period:'monthly',direction:'outbound',outbound_time:'07:30:00',return_time:null,seat_price_egp:700,return_supported:false},
+  {id:'route-c',title:'Round C',category:'SPACE',seat_capacity:9,period:'monthly',direction:'round_trip',outbound_time:'07:30:00',return_time:'17:00:00',seat_price_egp:900,return_supported:true},
+  {id:'route-d',title:'Wrong return time',category:'SAVER',seat_capacity:4,period:'monthly',direction:'round_trip',outbound_time:'07:30:00',return_time:'18:00:00',seat_price_egp:500,return_supported:true}
  ];
  const stops=routes.flatMap(route=>[
   {id:route.id+'-1',route_id:route.id,area_id:1,position:1,name:'Maadi',pickup_allowed:true,dropoff_allowed:true},
   {id:route.id+'-2',route_id:route.id,area_id:2,position:2,name:'New Cairo',pickup_allowed:true,dropoff_allowed:true}
  ]);
+ const searchInputs:Array<{p_direction:string;p_outbound:string;p_return:string}>=[];
  await page.route(endpoint+'/rest/v1/**',async route=>{
   const path=new URL(route.request().url()).pathname;
   let result:unknown;
   if(path.endsWith('/v31_service_areas'))result=areaRows;
-  else if(path.endsWith('/v31_routes'))result=routes;
+  else if(path.endsWith('/rpc/v31_search_published_routes')){
+   const input=route.request().postDataJSON();
+   searchInputs.push(input);
+   const matches=input.p_direction==='round_trip'?[routes[0],routes[2]]:routes;
+   result=matches.map(offer=>{
+    const ordered=stops.filter(stop=>stop.route_id===offer.id);
+    return {route_id:offer.id,selection:{
+     route:offer,from:ordered[0],to:ordered[1],reverse:false,stops:ordered,remaining:3,
+     pickupDistanceKm:null,dropoffDistanceKm:null
+    }};
+   });
+  }
   else if(path.endsWith('/v31_route_stops'))result=stops;
   else if(path.endsWith('/rpc/v31_published_route_available_seats'))result=3;
   else{return route.fallback();}
@@ -476,7 +488,10 @@ test('MOCKED published search sorts genuine route data and enforces both round-t
  const cards=await list.allTextContents();
  expect(cards.every(card=>card.includes('07:30'))).toBe(true);
  expect(cards.every(card=>card.includes('Round trip supported'))).toBe(true);
- expect(cards.every(card=>card.includes('Listed price'))).toBe(true);
+ expect(cards.every(card=>card.includes('Indicative seat price'))).toBe(true);
+ expect(searchInputs).toContainEqual(expect.objectContaining({
+  p_direction:'round_trip',p_outbound:'07:30',p_return:'17:00'
+ }));
 });
 
 test('MOCKED genuine round-trip offer reaches transparent one-or-two person booking review',async({page})=>{
@@ -488,7 +503,7 @@ test('MOCKED genuine round-trip offer reaches transparent one-or-two person book
  const published={
   id:routeId,title:'Verified Round Trip',category:'SAVER',seat_capacity:4,
   period:'monthly',direction:'round_trip',outbound_time:'07:30:00',
-  return_time:'17:00:00',price_egp:1200,return_supported:true
+  return_time:'17:00:00',seat_price_egp:1200,return_supported:true
  };
  const stops=[
   {id:fromStop,route_id:routeId,area_id:1,position:1,name:'Maadi pickup',pickup_allowed:true,dropoff_allowed:true},
@@ -503,7 +518,13 @@ test('MOCKED genuine round-trip offer reaches transparent one-or-two person book
    {id:1,name_ar:'المعادي',name_en:'Maadi'},
    {id:2,name_ar:'التجمع',name_en:'New Cairo'}
   ];
-  else if(path.endsWith('/v31_routes')){
+  else if(path.endsWith('/rpc/v31_search_published_routes'))result=[{
+   route_id:routeId,selection:{
+    route:published,from:stops[0],to:stops[1],reverse:false,stops,remaining:3,
+    pickupDistanceKm:null,dropoffDistanceKm:null
+   }
+  }];
+  else if(path.endsWith('/v31_public_route_offers')){
    const matched=url.searchParams.has('id');
    result=matched?[published]:[published];
    if(matched&&request.request().headers()['accept']?.includes('vnd.pgrst.object+json'))
