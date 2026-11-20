@@ -8,7 +8,7 @@ import type {GeoPoint,NearbyStop,NearbyRoute,NearbyCandidate} from './nearbyRout
 
 type RouteRow=NearbyRoute&{
  title:string;category:string;period:string;outbound_time:string|null;
- return_time:string|null;price_egp:number;
+ return_time:string|null;seat_price_egp:number;
 };
 type StopRow=Omit<NearbyStop,'latitude'|'longitude'>&{latitude:number|string|null;longitude:number|string|null};
 type Pick=NearbyCandidate&{route:RouteRow;remaining:number};
@@ -95,8 +95,8 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
   setLoading(true);setError('');setCandidates([]);
   void (async()=>{
    try{
-    const {data:routes,error:routeError}=await client.from('v31_routes')
-     .select('id,title,category,period,direction,outbound_time,return_time,price_egp,return_supported')
+    const {data:routes,error:routeError}=await client.from('v31_public_route_offers')
+     .select('id,title,category,period,direction,outbound_time,return_time,seat_price_egp,return_supported')
      .eq('status','published').limit(100);
     if(routeError)throw routeError;
     const rows=(routes||[]) as RouteRow[];
