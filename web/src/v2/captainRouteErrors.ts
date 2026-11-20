@@ -67,6 +67,14 @@ const messages:Record<string,{ar:string;en:string}>={
   ar:'مش قادرين نأكد حفظ المسودة. راجع «رحلاتي» قبل ما تحاول الحفظ مرة تانية.',
   en:'Could not verify the saved draft. Check My routes before retrying.'
  },
+ STOP_COORDINATE_READBACK_FAILED:{
+  ar:'مش قادرين نأكد إحداثيات المسودة. جرّب الحفظ تاني بنفس التفاصيل.',
+  en:'Could not verify the draft coordinates. Retry with the same details.'
+ },
+ DRAFT_ATTEMPT_MISMATCH:{
+  ar:'محاولة الحفظ مرتبطة بتفاصيل مختلفة. افتح «رحلاتي» وراجع المسودة.',
+  en:'This save attempt used different details. Open My routes to review the draft.'
+ },
  DRAFT_STOP_NOT_CREATED:{
   ar:'تعذر حفظ محطة من محطات المسار. البيانات ما اتحفظتش جزئيًا.',
   en:'A route stop could not be saved. No partial draft was kept.'

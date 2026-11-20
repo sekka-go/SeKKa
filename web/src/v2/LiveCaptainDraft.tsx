@@ -7,6 +7,7 @@ import {inLaunchRegion,mapPlacesFromPhoton,placeMatchesArea} from './geoPlace';
 import type {MapPlace} from './geoPlace';
 import type {PlaceChoice} from './geoPlace';
 import {straightLineKm} from './nearbyRoutes';
+import {clearReservationAttempt,reservationIdempotencyKey} from './reservationAttempt';
 import {usePreferences} from './preferences';
 import type {Category} from '../../../packages/domain/subscriptions';
 
@@ -41,6 +42,8 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
  const [vehicleConflict,setVehicleConflict]=useState<{id:string;title:string;status:string}|null>(null);
  const [vehicleCheckVersion,setVehicleCheckVersion]=useState(0);
  const [busy,setBusy]=useState(false);
+ const saving=useRef(false);
+ const draftAttempts=useRef(new Map<string,string>());
  const [message,setMessage]=useState('');
  const [error,setError]=useState('');
  useEffect(()=>{
@@ -177,7 +180,7 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
   if(next.length===2&&next[0].areaId!==next[1].areaId)setStep(2);
  };
  const save=async()=>{
-   if(!client||!uid)return;
+   if(!client||!uid||saving.current)return;
    setMessage('');setError('');
    if(title.length<3||title.length>120||stops.length<2||stops[0].areaId===stops.at(-1)?.areaId||
       stops.some(stop=>stop.latitude===null||stop.longitude===null||
@@ -190,11 +193,10 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
       (direction==='round_trip'&&!returnSupported)){
      setError(t('راجع المركبة والفئة والعنوان والسعر؛ يلزم نقطتان في منطقتين مختلفتين.','Check vehicle, category, title, price and at least two stops in distinct areas.'));return;
    }
+   saving.current=true;
    setBusy(true);
    try{
-     // This is an approved Captain's route workflow, never enrollment.
-     // The server RPC verifies approval again before inserting any draft.
-     const {data:routeId,error:routeError}=await client.rpc('v31_create_geolocated_route_draft',{
+     const draft={
        p_title:title.trim(),p_vehicle:vehicleId,p_category:category,
        p_direction:direction,p_period:period,
        p_outbound:direction==='return'?null:departure,
@@ -204,12 +206,24 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
          area_id:s.areaId,name:s.name,pickup:s.pickup,dropoff:s.dropoff,
          latitude:s.latitude,longitude:s.longitude
        }))
+     };
+     // Store a payload digest and attempt ID so a reload can retry the same details.
+     const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(draft)));
+     const signature='captain-draft:'+uid+':'+Array.from(new Uint8Array(hash),b=>b.toString(16).padStart(2,'0')).join('');
+     let attempt=draftAttempts.current.get(signature);
+     if(!attempt){
+       try{attempt=reservationIdempotencyKey(sessionStorage,signature);}
+       catch{attempt=crypto.randomUUID();}
+       draftAttempts.current.set(signature,attempt);
+     }
+     const {data:routeId,error:routeError}=await client.rpc('v31_create_geolocated_route_draft',{
+       ...draft,p_attempt:attempt
      });
      if(routeError)throw routeError;
      if(typeof routeId!=='string')throw Error('DRAFT_NOT_CONFIRMED');
      const [{data:saved,error:savedError},{data:savedStops,error:stopsError}]=await Promise.all([
        client.from('v31_routes').select('id,status,vehicle_id,category,seat_capacity').eq('id',routeId).eq('captain_id',uid).maybeSingle(),
-       client.from('v31_route_stops').select('id,area_id,name,position,latitude,longitude').eq('route_id',routeId).order('position')
+       client.from('v31_route_stops').select('id,area_id,name,position,latitude,longitude,pickup_allowed,dropoff_allowed').eq('route_id',routeId).order('position')
      ]);
      if(savedError||stopsError)throw Error(savedError?.message||stopsError?.message||'DRAFT_READ_FAILED');
      const {data:privatePrices,error:privatePriceError}=await client.rpc('v31_captain_private_prices',{p_route:routeId});
@@ -217,29 +231,24 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
      const ownPrice=privatePrices.find(row=>row.route_id===routeId)?.price_egp;
      if(!saved||saved.status!=='draft'||saved.vehicle_id!==vehicleId||saved.category!==category||
         saved.seat_capacity!==categorySeats[category]||ownPrice!==Number(price)||
-        !savedStops||savedStops.length!==stops.length||savedStops.some((s,i)=>s.area_id!==stops[i].areaId||s.position!==i||s.name!==stops[i].name)){
+        !savedStops||savedStops.length!==stops.length||savedStops.some((s,i)=>s.area_id!==stops[i].areaId||s.position!==i||s.name!==stops[i].name||
+          s.pickup_allowed!==stops[i].pickup||s.dropoff_allowed!==stops[i].dropoff)){
        throw Error('DRAFT_PERSISTENCE_NOT_VERIFIED');
      }
-     // The new RPC commits the draft, stops and coordinates in one Postgres
-     // transaction. Failure rolls back everything; no per-stop writes here.
-     const {data:located,error:readbackError}=await client.from('v31_route_stops')
-      .select('id,position,latitude,longitude').eq('route_id',routeId).order('position');
-     if(readbackError||!located||located.length!==stops.length||
-       located.some((entry,i)=>stops[i].latitude===null
-         ?entry.latitude!==null||entry.longitude!==null
-         :Math.abs(Number(entry.latitude)-stops[i].latitude!)>0.000001||
-          Math.abs(Number(entry.longitude)-stops[i].longitude!)>0.000001))
-      throw Error('STOP_COORDINATE_READBACK_FAILED');
-     setMessage(stops.some(stop=>stop.latitude!==null)
-      ?t('تم حفظ المسودة وإحداثيات نقاط الوقوف. لما الخط يُنشر، الركاب القريبين هيقدروا يلاقوه بالـGPS.',
-       'Draft and stop coordinates verified. When published, nearby Riders can find these pickup points by GPS.')
-      :t('المسودة اتحفظت، لكن من غير إحداثيات، الخط مش هيظهر في نتائج GPS القريبة.',
-       'Draft saved without GPS coordinates. It will not appear in nearby GPS results.'));
+     if(savedStops.some((entry,i)=>entry.latitude==null||entry.longitude==null||
+       !Number.isFinite(Number(entry.latitude))||!Number.isFinite(Number(entry.longitude))||
+       Math.abs(Number(entry.latitude)-stops[i].latitude!)>0.000001||
+       Math.abs(Number(entry.longitude)-stops[i].longitude!)>0.000001)){
+       throw Error('STOP_COORDINATE_READBACK_FAILED');
+     }
+     try{clearReservationAttempt(sessionStorage,signature);}catch{/* Storage can be unavailable in private mode. */}
+     draftAttempts.current.delete(signature);
+     setMessage(t('تم حفظ المسودة وإحداثيات نقاط الوقوف.','Draft and stop coordinates verified.'));
      setStops([]);setPlaceLabel('');setPlaceChoice(null);setPrice('');
      setStep(1);
      onSaved?.(routeId);
    }catch(e){setError(captainRouteError(e,en?'en':'ar'));}
-   finally{setBusy(false);}
+   finally{saving.current=false;setBusy(false);}
  };
  if(!client)return <section className="d-box"><p>{t('ربط Supabase العام لم يكتمل بعد.','Public Supabase configuration is not ready yet.')}</p></section>;
  if(!uid)return <section className="d-box"><p>{t('سجّل دخولك بجوجل قبل حفظ خط حقيقي.','Sign in with Google to create a real route draft.')}</p><a href="?screen=4">{t('الدخول بجوجل','Google sign-in')}</a></section>;

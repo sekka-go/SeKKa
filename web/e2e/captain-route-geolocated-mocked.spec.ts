@@ -24,10 +24,11 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  },{endpoint,user});
  let enrolledAgain=0,created=0,legacyGpsCalls=0;
  let payload:Record<string,unknown>|undefined;
+ let firstAttempt:unknown;
  const routeId='00000000-0000-4000-8000-0000000000f1';
  const savedStops=[
-  {id:'00000000-0000-4000-8000-0000000000f2',area_id:11,name:'Maadi Grand Mall',position:0,latitude:null as number|null,longitude:null as number|null},
-  {id:'00000000-0000-4000-8000-0000000000f3',area_id:22,name:'Nasr City Square',position:1,latitude:null as number|null,longitude:null as number|null}
+  {id:'00000000-0000-4000-8000-0000000000f2',area_id:11,name:'Maadi Grand Mall',position:0,pickup_allowed:true,dropoff_allowed:true,latitude:null as number|null,longitude:null as number|null},
+  {id:'00000000-0000-4000-8000-0000000000f3',area_id:22,name:'Nasr City Square',position:1,pickup_allowed:true,dropoff_allowed:true,latitude:null as number|null,longitude:null as number|null}
  ];
  await page.route('https://photon.komoot.io/api/**',async route=>{
   const q=new URL(route.request().url()).searchParams.get('q')||'';
@@ -63,6 +64,11 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
    created++;payload=body;
    const input=(body as {p_stops:Array<{latitude:number;longitude:number}>}).p_stops;
    input.forEach((stop,i)=>{savedStops[i].latitude=stop.latitude;savedStops[i].longitude=stop.longitude;});
+   if(created===1){
+    firstAttempt=body.p_attempt;
+    await route.abort('failed');
+    return;
+   }
    result=routeId;
   }else if(path==='/rest/v1/rpc/v31_set_draft_stop_coordinates'){
    legacyGpsCalls++;
@@ -129,9 +135,14 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  await amount.fill('1300');
  await expect(save).toBeEnabled();
  await save.click();
+ await expect(entry.getByRole('alert')).toContainText('The action could not be completed');
+ await expect(save).toBeEnabled();
+ await save.click();
  await expect(page.getByRole('status').filter({hasText:'Draft saved.'})).toBeVisible();
  await expect(page.getByRole('heading',{name:'Captain route management'})).toBeVisible();
- expect(created).toBe(1);
+ expect(created).toBe(2);
+ expect(firstAttempt).toMatch(/^[0-9a-f-]{36}$/);
+ expect(payload?.p_attempt).toBe(firstAttempt);
  expect(payload).toMatchObject({
   p_title:'Maadi Grand Mall ← Nasr City Square',
   p_vehicle:vehicle,p_category:'PRIME',p_price:1300
