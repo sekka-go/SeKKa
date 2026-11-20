@@ -16,6 +16,7 @@
     "test:staging:preflight": "node scripts/staging-preflight.mjs",
     "test:staging:captain-review": "node scripts/staging-captain-review.mjs",
     "test:staging:journey": "node scripts/real-journey.mjs",
+    "test:staging:parallel-seats": "node scripts/staging-parallel-last-seat.mjs",
     "test:structure": "node --check scripts/real-journey.mjs && node --check scripts/staging-captain-review.mjs && node --check scripts/staging-preflight.mjs && node scripts/check-active-frontend.cjs"
   },
   "dependencies": {
