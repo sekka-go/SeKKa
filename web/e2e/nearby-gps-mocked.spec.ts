@@ -5,7 +5,7 @@ import {test,expect} from '@playwright/test';
 const endpoint='https://sekka-auth-e2e.supabase.co';
 const route={id:'11111111-1111-4111-8111-111111111111',title:'Nasr City to Maadi',
  category:'SAVER',seat_capacity:4,period:'monthly',direction:'outbound',
- outbound_time:'07:30:00',return_time:null,price_egp:750,return_supported:false,status:'published'};
+ outbound_time:'07:30:00',return_time:null,seat_price_egp:188,return_supported:false,status:'published'};
 const stops=[
  {id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',route_id:route.id,area_id:1,position:0,
  name:'Pickup near me',pickup_allowed:true,dropoff_allowed:false,latitude:30.041,longitude:31.24},
@@ -27,7 +27,7 @@ test('GPS opt-in finds nearby published pickup, shows straight-line km and opens
   remoteCalls.push(url.toString());
   let data:unknown=[];
   if(url.pathname==='/rest/v1/v31_service_areas')data=areas;
-  else if(url.pathname==='/rest/v1/v31_routes')
+  else if(url.pathname==='/rest/v1/v31_public_route_offers')
    data=url.searchParams.has('id')?route:[route];
   else if(url.pathname==='/rest/v1/v31_route_stops')data=stops;
   else if(url.pathname==='/rest/v1/rpc/v31_published_route_available_seats')data=2;
@@ -82,7 +82,7 @@ test('map text search finds a real stop within 3km without inventing a service I
  await page.route(endpoint+'/**',async request=>{
   const path=new URL(request.request().url()).pathname;
   const data=path==='/rest/v1/v31_service_areas'?areas:
-   path==='/rest/v1/v31_routes'?[route]:
+   path==='/rest/v1/v31_public_route_offers'?[route]:
    path==='/rest/v1/v31_route_stops'?stops:
    path==='/rest/v1/rpc/v31_published_route_available_seats'?2:[];
   await request.fulfill({contentType:'application/json',body:JSON.stringify(data)});
