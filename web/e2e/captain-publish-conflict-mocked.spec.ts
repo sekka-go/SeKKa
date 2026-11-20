@@ -10,6 +10,7 @@ const user={id:actor,aud:'authenticated',role:'authenticated',
  created_at:'2026-01-01T00:00:00Z',
  email_confirmed_at:'2026-01-01T00:00:00Z'};
 test('MOCKED: already-published vehicle is blocked before price, existing route remains available',async({page})=>{
+ let booked=2;
  await page.setViewportSize({width:360,height:800});
  await page.addInitScript(({endpoint,user})=>{
   const key='sb-'+new URL(endpoint).hostname.split('.')[0]+'-auth-token';
@@ -35,6 +36,11 @@ test('MOCKED: already-published vehicle is blocked before price, existing route 
   let result:unknown=[];
   if(path==='/auth/v1/user')result=user;
   else if(path==='/rest/v1/rpc/v31_is_admin')result=false;
+  else if(path==='/rest/v1/rpc/v31_captain_private_prices')
+   result=[{route_id:'00000000-0000-4000-8000-0000000000d5',price_egp:1300}];
+  else if(path==='/rest/v1/rpc/v31_captain_route_capacity_summary')
+   result=[{route_id:'00000000-0000-4000-8000-0000000000d5',
+    capacity:3,booked,remaining:3-booked,is_full:booked===3}];
   else if(path.startsWith('/rest/v1/v31_captain_profiles'))
    result={user_id:actor,approval_status:'approved'};
   else if(path.startsWith('/rest/v1/v31_profiles'))
@@ -68,4 +74,11 @@ test('MOCKED: already-published vehicle is blocked before price, existing route 
  await form.getByRole('button',{name:'Open My routes'}).click();
  await expect(page).toHaveURL(/tab=routes&view=44/);
  await expect(page.getByText('Current published service').first()).toBeVisible();
+ await expect(page.locator('.cj-progress-note')).toContainText('Seats remaining');
+ await expect(page.locator('.cj-progress-note')).toContainText('1');
+ booked=3;
+ await page.reload();
+ await expect(page.getByText('Current published service').first()).toBeVisible();
+ await expect(page.getByText(/Capacity reached/)).toBeVisible();
+ await expect(page.locator('.cj-progress-note')).toHaveCount(0);
 });
