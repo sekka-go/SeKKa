@@ -570,3 +570,23 @@
  .sekka-mobile .captain-routes-canvas .cj-easy-areas,
  .sekka-mobile .captain-routes-canvas .cj-easy-places{grid-template-columns:1fr}
 }
+
+/* P0 vehicle preflight; reuse the approved seKKa yellow/black tokens. */
+.sekka-mobile .captain-routes-canvas .cj-vehicle-preflight{
+ display:grid;gap:8px;min-width:0;
+ padding:12px 13px;margin:6px 0 14px;
+ border:1px solid var(--cj-border);border-radius:13px;
+ background:var(--cj-soft);color:var(--ink);
+ font-size:13px;line-height:1.6;
+}
+.sekka-mobile .captain-routes-canvas .cj-vehicle-preflight p{
+ margin:0;overflow-wrap:anywhere;
+}
+.sekka-mobile .captain-routes-canvas .cj-vehicle-preflight strong{
+ display:block;font-size:13px;overflow-wrap:anywhere;
+}
+.sekka-mobile .captain-routes-canvas .cj-vehicle-preflight button{
+ min-height:44px;max-width:100%;margin-top:9px;padding:9px 14px;
+ border:0;border-radius:11px;background:var(--yellow,#ffc400);
+ color:var(--black,#111);font:inherit;font-weight:800;
+}
