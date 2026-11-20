@@ -65,7 +65,7 @@ export default function CaptainRoutes(p:{screen:number;theme:Appearance;onTheme:
  <main className="phase-canvas d-canvas captain-routes-canvas">{!p.production&&<Wordmark/>}{!p.production&&<h1>{screenTitle(p.screen,language)}</h1>}{!p.production&&<p>{t('معاينة محلية فقط — لا يتم نشر عروض حقيقية.','Local preview only — no real offers are published.')}</p>}{message&&<p role="status">{message}</p>}
  {!demo?(p.production?<>
  {n===42&&<CaptainHome onCreate={()=>go(43)} onRoutes={()=>go(44)} onBookings={()=>go(49)}/>}
- {n===43&&<><LiveCaptainDraft onSaved={()=>{setSavedNotice(true);go(44)}}/><button type="button" className="cj-back" onClick={()=>go(42)}>{t('رجوع إلى رحلاتي','Back to my routes')}</button></>}
+ {n===43&&<><LiveCaptainDraft onSaved={()=>{setSavedNotice(true);go(44)}} onViewRoutes={()=>go(44)}/><button type="button" className="cj-back" onClick={()=>go(42)}>{t('رجوع إلى رحلاتي','Back to my routes')}</button></>}
  {n===49&&<><h1>{t('الحجوزات والرحلات','Bookings & routes')}</h1><LiveBookings mode="captain"/><LiveCaptainRouteList/></>}
  {[44,45,46,47,48].includes(n)&&<><h1>{t('إدارة خطوط الكابتن','Captain route management')}</h1>
    {savedNotice&&<p role="status" className="cj-feedback">{t('تم حفظ مسودة الرحلة. افتح تفاصيلها وراجع المحطات قبل تأكيد النشر.','Draft saved. Open its details and review stops before confirming publication.')}</p>}
