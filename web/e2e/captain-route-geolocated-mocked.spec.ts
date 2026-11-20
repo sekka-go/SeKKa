@@ -22,7 +22,7 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
   localStorage.setItem('language_preference','en');
   localStorage.setItem('theme_preference','light');
  },{endpoint,user});
- let enrolledAgain=0,created=0;
+ let enrolledAgain=0,created=0,legacyGpsCalls=0;
  let payload:Record<string,unknown>|undefined;
  const routeId='00000000-0000-4000-8000-0000000000f1';
  const savedStops=[
@@ -58,14 +58,14 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
   else if(path.startsWith('/rest/v1/v31_vehicles'))result=[
    {id:vehicle,model:'Tipo',plate_number:'TEST-123',enabled_categories:['PRIME']}
   ];
-  else if(path==='/rest/v1/rpc/v31_create_vehicle_route_draft'){
+  else if(path==='/rest/v1/rpc/v31_create_geolocated_route_draft'){
    created++;payload=body;
+   const input=(body as {p_stops:Array<{latitude:number;longitude:number}>}).p_stops;
+   input.forEach((stop,i)=>{savedStops[i].latitude=stop.latitude;savedStops[i].longitude=stop.longitude;});
    result=routeId;
   }else if(path==='/rest/v1/rpc/v31_set_draft_stop_coordinates'){
-   const row=savedStops.find(x=>x.id===(body as {p_stop:string}).p_stop);
-   if(row){row.latitude=Number((body as {p_latitude:number}).p_latitude);
-    row.longitude=Number((body as {p_longitude:number}).p_longitude);}
-   result=(body as {p_stop:string}).p_stop;
+   legacyGpsCalls++;
+   result=null;
   }else if(path.startsWith('/rest/v1/v31_routes')){
    const row={id:routeId,title:'Maadi Grand Mall ← Nasr City Square',status:'draft',vehicle_id:vehicle,
     category:'PRIME',seat_capacity:3,price_egp:1300};
@@ -138,5 +138,6 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  expect((payload?.p_stops as Array<{name:string;area_id:number}>).map(x=>x.name))
   .toEqual(['Maadi Grand Mall','Nasr City Square']);
  expect(savedStops.every(x=>x.latitude!==null&&x.longitude!==null)).toBe(true);
+ expect(legacyGpsCalls).toBe(0);
  expect(enrolledAgain).toBe(0);
 });
