@@ -1,6 +1,7 @@
 import {useEffect,useRef,useState} from 'react';
 import {client} from './api';
 import CaptainPlacePicker from './CaptainPlacePicker';
+import {captainRouteError} from './captainRouteErrors';
 import {inLaunchRegion,mapPlacesFromPhoton,placeMatchesArea} from './geoPlace';
 import type {MapPlace} from './geoPlace';
 import type {PlaceChoice} from './geoPlace';
@@ -14,7 +15,7 @@ type Vehicle={id:string;model:string;plate_number:string;enabled_categories:stri
 const categorySeats:Record<Category,number>={PRIME:3,SAVER:4,SPACE:9,MAX:13};
 
 /** Authenticated draft creation only. Publishing requires a separate audited server operation. */
-export default function LiveCaptainDraft({onSaved}:{onSaved?:(id:string)=>void}={}){
+export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:string)=>void;onViewRoutes?:()=>void}={}){
  const {language}=usePreferences(),en=language==='en';
  const t=(ar:string,english:string)=>en?english:ar;
  const [uid,setUid]=useState<string|null>(null);
@@ -35,6 +36,9 @@ export default function LiveCaptainDraft({onSaved}:{onSaved?:(id:string)=>void}=
  const [returnSupported,setReturnSupported]=useState(false);
  const [price,setPrice]=useState('');
  const [step,setStep]=useState<1|2|3|4>(1);
+ const [vehicleCheck,setVehicleCheck]=useState<'checking'|'clear'|'conflict'|'unavailable'>('checking');
+ const [vehicleConflict,setVehicleConflict]=useState<{id:string;title:string;status:string}|null>(null);
+ const [vehicleCheckVersion,setVehicleCheckVersion]=useState(0);
  const [busy,setBusy]=useState(false);
  const [message,setMessage]=useState('');
  const [error,setError]=useState('');
@@ -86,6 +90,31 @@ export default function LiveCaptainDraft({onSaved}:{onSaved?:(id:string)=>void}=
    setCategory(eligibleCategories[0]);
   else if(eligibleCategories.length===0)setCategory(null);
  },[vehicleId,eligibleCategories.join(':')]);
+ // A helpful early warning, never a substitute for the server-side publish guard.
+ // Every lookup is scoped to this signed-in Captain's vehicle and uses normal RLS.
+ useEffect(()=>{
+  if(!client||!uid||!vehicleId){
+   setVehicleConflict(null);setVehicleCheck('unavailable');return;
+  }
+  let live=true;setVehicleCheck('checking');setVehicleConflict(null);
+  void(async()=>{
+   try{
+    const {data,error:lookupError}=await client.from('v31_routes')
+     .select('id,title,status,vehicle_id').eq('captain_id',uid)
+     .eq('vehicle_id',vehicleId).in('status',['published','paused']).limit(1);
+    if(!live)return;
+    if(lookupError||!Array.isArray(data)){
+     setVehicleCheck('unavailable');return;
+    }
+    // Status + vehicle checks also protect against incomplete mocked fixtures.
+    const conflict=data.find(row=>row.vehicle_id===vehicleId&&
+     (row.status==='published'||row.status==='paused'));
+    setVehicleConflict(conflict?{id:conflict.id,title:conflict.title,status:conflict.status}:null);
+    setVehicleCheck(conflict?'conflict':'clear');
+   }catch{if(live)setVehicleCheck('unavailable');}
+  })();
+  return ()=>{live=false;};
+ },[uid,vehicleId,vehicleCheckVersion]);
  const useMyStopPosition=()=>{
   setError('');
   if(!selectedArea){setError(t('اختار المنطقة الأول علشان نتحقق من مكانك.','Choose an area before locating your stop.'));return;}
@@ -149,7 +178,7 @@ export default function LiveCaptainDraft({onSaved}:{onSaved?:(id:string)=>void}=
    if(title.length<3||title.length>120||stops.length<2||stops[0].areaId===stops.at(-1)?.areaId||
       stops.some(stop=>stop.latitude===null||stop.longitude===null||
        !inLaunchRegion({latitude:stop.latitude,longitude:stop.longitude}))||
-      !vehicleId||!category||!eligibleCategories.includes(category)||
+      !vehicleId||!category||!eligibleCategories.includes(category)||vehicleCheck!=='clear'||
       !/^\d{1,7}$/.test(price)||!Number.isSafeInteger(Number(price))||Number(price)<=0||
       !['weekly','monthly'].includes(period)||!['outbound','return','round_trip'].includes(direction)||
       (direction!=='return'&&!/^([01]\d|2[0-3]):[0-5]\d$/.test(departure))||
@@ -161,14 +190,15 @@ export default function LiveCaptainDraft({onSaved}:{onSaved?:(id:string)=>void}=
    try{
      // This is an approved Captain's route workflow, never enrollment.
      // The server RPC verifies approval again before inserting any draft.
-     const {data:routeId,error:routeError}=await client.rpc('v31_create_vehicle_route_draft',{
+     const {data:routeId,error:routeError}=await client.rpc('v31_create_geolocated_route_draft',{
        p_title:title.trim(),p_vehicle:vehicleId,p_category:category,
        p_direction:direction,p_period:period,
        p_outbound:direction==='return'?null:departure,
        p_return:direction==='outbound'?null:arrival,
        p_return_supported:direction==='round_trip'?returnSupported:false,
        p_price:Number(price),p_stops:stops.map(s=>({
-         area_id:s.areaId,name:s.name,pickup:s.pickup,dropoff:s.dropoff
+         area_id:s.areaId,name:s.name,pickup:s.pickup,dropoff:s.dropoff,
+         latitude:s.latitude,longitude:s.longitude
        }))
      });
      if(routeError)throw routeError;
@@ -183,16 +213,8 @@ export default function LiveCaptainDraft({onSaved}:{onSaved?:(id:string)=>void}=
         !savedStops||savedStops.length!==stops.length||savedStops.some((s,i)=>s.area_id!==stops[i].areaId||s.position!==i||s.name!==stops[i].name)){
        throw Error('DRAFT_PERSISTENCE_NOT_VERIFIED');
      }
-     // Coordinates are optional for saving a route, but only geolocated
-     // pickup stops can appear in Rider's GPS nearby list.
-     for(const [i,stop] of stops.entries()){
-      if(stop.latitude===null||stop.longitude===null)continue;
-      const savedStop=savedStops[i];
-      const {data:confirmed,error:locationError}=await client.rpc('v31_set_draft_stop_coordinates',{
-       p_stop:savedStop.id,p_latitude:stop.latitude,p_longitude:stop.longitude
-      });
-      if(locationError||confirmed!==savedStop.id)throw Error('STOP_COORDINATE_SAVE_FAILED');
-     }
+     // The new RPC commits the draft, stops and coordinates in one Postgres
+     // transaction. Failure rolls back everything; no per-stop writes here.
      const {data:located,error:readbackError}=await client.from('v31_route_stops')
       .select('id,position,latitude,longitude').eq('route_id',routeId).order('position');
      if(readbackError||!located||located.length!==stops.length||
@@ -209,14 +231,14 @@ export default function LiveCaptainDraft({onSaved}:{onSaved?:(id:string)=>void}=
      setStops([]);setPlaceLabel('');setPlaceChoice(null);setPrice('');
      setStep(1);
      onSaved?.(routeId);
-   }catch(e){setError(e instanceof Error?e.message:String(e));}
+   }catch(e){setError(captainRouteError(e,en?'en':'ar'));}
    finally{setBusy(false);}
  };
  if(!client)return <section className="d-box"><p>{t('ربط Supabase العام لم يكتمل بعد.','Public Supabase configuration is not ready yet.')}</p></section>;
  if(!uid)return <section className="d-box"><p>{t('سجّل دخولك بجوجل قبل حفظ خط حقيقي.','Sign in with Google to create a real route draft.')}</p><a href="?screen=4">{t('الدخول بجوجل','Google sign-in')}</a></section>;
  const canContinueRoute=stops.length>=2&&stops.length<=30&&
   stops[0].areaId!==stops[stops.length-1].areaId;
- const canContinueVehicle=Boolean(vehicleId)&&Boolean(category)&&eligibleCategories.includes(category as Category);
+ const canContinueVehicle=Boolean(vehicleId)&&Boolean(category)&&eligibleCategories.includes(category as Category)&&vehicleCheck==='clear';
  const canContinueSchedule=(direction==='outbound'||direction==='return'||direction==='round_trip')&&
   (direction==='return'||Boolean(departure))&&
   (direction==='outbound'||Boolean(arrival))&&
@@ -228,7 +250,7 @@ export default function LiveCaptainDraft({onSaved}:{onSaved?:(id:string)=>void}=
  };
  const draftReady=stops.length>=2&&stops[0].areaId!==stops.at(-1)?.areaId&&
   title.length>=3&&title.length<=120&&Boolean(vehicleId)&&Boolean(category)&&
-  eligibleCategories.includes(category as Category)&&/^\d{1,7}$/.test(price)&&Number(price)>0&&
+  eligibleCategories.includes(category as Category)&&vehicleCheck==='clear'&&/^\d{1,7}$/.test(price)&&Number(price)>0&&
   (direction!=='round_trip'||returnSupported);
  return <section className="d-box live-route-form sekka-captain-route-wizard">
   <header className="sekka-route-intro">
@@ -294,6 +316,19 @@ export default function LiveCaptainDraft({onSaved}:{onSaved?:(id:string)=>void}=
      {vehicles.map(vehicle=><option key={vehicle.id} value={vehicle.id}>{vehicle.model} — {vehicle.plate_number}</option>)}
     </select>
    </label>
+   {vehicleId&&<div className="cj-vehicle-preflight" role="status">
+    {vehicleCheck==='checking'&&<p>{t('بنراجع إذا كانت العربية متاحة للنشر…','Checking whether the vehicle is available…')}</p>}
+    {vehicleCheck==='clear'&&<p>{t('✓ العربية متاحة لإنشاء خط جديد حسب البيانات الحالية. النشر بيتراجع تاني على السيرفر.','✓ No active route conflict found. Publication is verified again by the server.')}</p>}
+    {vehicleCheck==='conflict'&&<div>
+     <p role="alert">{captainRouteError('VEHICLE_HAS_ACTIVE_SERVICE',en?'en':'ar')}</p>
+     {vehicleConflict&&<strong>{vehicleConflict.title}</strong>}
+     {onViewRoutes&&<button type="button" onClick={onViewRoutes}>{t('افتح رحلاتي','Open My routes')}</button>}
+    </div>}
+    {vehicleCheck==='unavailable'&&<div>
+     <p role="alert">{t('مش قادرين نتحقق من حالة العربية حاليًا. جرّب التحقق تاني قبل المتابعة.','Could not verify the vehicle state. Retry before continuing.')}</p>
+     <button type="button" onClick={()=>setVehicleCheckVersion(v=>v+1)}>{t('تحقق مرة تانية','Check again')}</button>
+    </div>}
+   </div>}
    <div className="sekka-route-field">
     <strong>{t('فئة المركبة وعدد المقاعد','Vehicle category and seats')}</strong>
     <div className="cj-category-options" role="group" aria-label={t('فئة الخدمة','Service category')}>
