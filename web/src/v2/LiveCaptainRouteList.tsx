@@ -4,10 +4,9 @@ import {captainRouteError} from './captainRouteErrors';
 import {usePreferences} from './preferences';
 
 type RouteRow={id:string;title:string;category:string;status:string;price_egp:number|null;seat_capacity:number};
-type BookingSeat={route_id:string;seats:number;status:string};
+type CapacityRow={route_id:string;capacity:number;booked:number;remaining:number;is_full:boolean};
 type RouteStop={id:string;name:string;position:number};
 type Tab='all'|'published'|'draft';
-const activeBooking=(status:string)=>status==='pending'||status==='confirmed';
 
 /** Real Captain routes: data is read from Supabase with server-enforced Captain RLS.
  * No preview records, invented booking numbers, or client-side approval grants. */
@@ -17,7 +16,7 @@ export default function LiveCaptainRouteList(){
  const [uid,setUid]=useState<string|null>(null);
  const [approval,setApproval]=useState('pending');
  const [routes,setRoutes]=useState<RouteRow[]>([]);
- const [bookings,setBookings]=useState<BookingSeat[]|null>(null);
+ const [capacities,setCapacities]=useState<CapacityRow[]|null>(null);
  const [busy,setBusy]=useState<string|null>(null);
  const [loading,setLoading]=useState(true);
  const [notice,setNotice]=useState('');
@@ -32,7 +31,7 @@ export default function LiveCaptainRouteList(){
  useEffect(()=>{
   if(!client){setLoading(false);setError(t('خدمة الرحلات غير متاحة حاليًا.','Routes service is not configured.'));return;}
   let active=true;
-  setLoading(true);
+  setLoading(true);setCapacities(null);
   void (async()=>{
    try{
     const {data:identity,error:authError}=await client.auth.getUser();
@@ -53,10 +52,9 @@ export default function LiveCaptainRouteList(){
     setApproval(captain?.approval_status||'pending');
     setRoutes(next);
     if(next.length){
-     const {data:seatRows,error:seatError}=await client.from('v31_bookings')
-      .select('route_id,seats,status').in('route_id',next.map(route=>route.id)).limit(500);
-     if(active)setBookings(seatError||!Array.isArray(seatRows)?null:seatRows as BookingSeat[]);
-    }else setBookings([]);
+     const {data:seatRows,error:seatError}=await client.rpc('v31_captain_route_capacity_summary');
+     if(active)setCapacities(seatError||!Array.isArray(seatRows)?null:seatRows as CapacityRow[]);
+    }else setCapacities([]);
     setError('');
    }catch(e){if(active){setCanRetry(true);setError(captainRouteError(e,en?'en':'ar'));}}
    finally{if(active)setLoading(false);}
@@ -111,8 +109,7 @@ export default function LiveCaptainRouteList(){
   return t('بانتظار المراجعة','Under review');
  };
  const visible=routes.filter(route=>tab==='all'||(tab==='draft'?route.status==='draft':route.status==='published'||route.status==='paused'));
- const seatsFor=(route:RouteRow)=>bookings===null?null:bookings.filter(booking=>booking.route_id===route.id&&activeBooking(booking.status))
-  .reduce((total,booking)=>total+Math.max(0,booking.seats),0);
+ const capacityFor=(route:RouteRow)=>capacities?.find(row=>row.route_id===route.id)||null;
  return <section className="d-box live-route-list" aria-label={t('الرحلات المحفوظة','Saved Captain routes')}>
   <h2>{t('رحلاتي','My trips')}</h2>
   <p className="cj-subtitle">{t('كل خطوطك ومسوداتك في مكان واحد. السعر الإجمالي ظاهر ليك أنت بس.','Your routes and drafts in one place. Whole-vehicle price is private to you.')}</p>
@@ -128,9 +125,10 @@ export default function LiveCaptainRouteList(){
    ?t('لسه مفيش خطوط محفوظة. ابدأ بإنشاء أول رحلة من الزر اللي فوق.','No routes saved yet. Create your first trip above.')
    :t('مفيش رحلات في القسم ده حاليًا.','No trips in this section yet.')}</div>}
   <ul>{!loading&&visible.map(route=>{
-   const used=seatsFor(route);
+   const counts=capacityFor(route);
+   const used=counts?.booked??null;
    const fill=used===null?0:Math.min(route.seat_capacity,used);
-   const full=used!==null&&route.seat_capacity>0&&fill>=route.seat_capacity;
+   const full=counts?.is_full===true;
    return <li key={route.id}>
     <div className="cj-card-head"><strong>{route.title}</strong>
      <span className={'cj-status'+(route.status==='draft'?' is-draft':route.status==='paused'?' is-paused':'')}>{statusName(route.status)}</span></div>
@@ -142,6 +140,7 @@ export default function LiveCaptainRouteList(){
     <div className="cj-capacity-line"><span>{t('المقاعد المحجوزة','Booked seats')}</span>
      <span>{used===null?t('غير متاح','Unavailable'):fill+' / '+route.seat_capacity}</span></div>
     <div className="cj-capacity-track" aria-hidden="true"><span className="cj-capacity-fill" style={{width:(used===null?0:route.seat_capacity?fill/route.seat_capacity*100:0)+'%'}}/></div>
+    {used!==null&&!full&&route.status==='published'&&<p className="cj-progress-note">{t('متبقي','Seats remaining')}: {counts?.remaining??0} {t('مقاعد قبل اكتمال الخط','until full capacity')}</p>}
     {full&&<p className="cj-feedback">{t('اكتملت المقاعد. تحديد موعد الانطلاق يحتاج إجراءً مؤكدًا من النظام، وليس من شاشة المسودة.','Capacity reached. Actual departure scheduling requires a server-confirmed action.')}</p>}
     <div className="cj-card-actions">
      <button type="button" aria-expanded={expanded===route.id} onClick={()=>setExpanded(current=>current===route.id?null:route.id)}>{expanded===route.id?t('إخفاء التفاصيل','Hide details'):t('عرض التفاصيل','View details')}</button>
