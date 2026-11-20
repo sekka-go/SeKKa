@@ -2,6 +2,7 @@ import {useEffect,useRef,useState} from 'react';
 import {client} from './api';
 import CaptainPlacePicker from './CaptainPlacePicker';
 import {captainRouteError} from './captainRouteErrors';
+import {draftPriceGuidance,outsideDraftPriceGuidance} from './draftPriceGuidance';
 import {inLaunchRegion,mapPlacesFromPhoton,placeMatchesArea} from './geoPlace';
 import type {MapPlace} from './geoPlace';
 import type {PlaceChoice} from './geoPlace';
@@ -72,6 +73,9 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
    const {data:listener}=client.auth.onAuthStateChange((_event,session)=>setUid(session?.user.id??null));
    return ()=>{live=false;listener.subscription.unsubscribe();};
  },[]);
+ const pricing=stops.every(s=>s.latitude!==null&&s.longitude!==null)?
+  draftPriceGuidance(stops.map(s=>({latitude:s.latitude!,longitude:s.longitude!}))):null;
+ const priceOutOfBand=outsideDraftPriceGuidance(Number(price),pricing);
  const title=stops.length>=2?stops[0].name.slice(0,55)+' ← '+stops[stops.length-1].name.slice(0,55):'';
  const selectedArea=areas.find(area=>String(area.id)===areaId);
  const areaOrder=['6th of october','new cairo','dokki','maadi','nasr city','heliopolis','sheikh zayed','mohandessin','zamalek'];
@@ -382,6 +386,17 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
    </label>
    <p className="sekka-route-guidance">{t('السعر الإجمالي يخص المركبة بالكامل، وسعر المقعد بيحسبه النظام تلقائيًا. مش هيظهر للركاب كسعر مركبة.',
     'Enter the full vehicle price. The system calculates seat prices; passengers do not see the private vehicle total.')}</p>
+   {pricing&&<div className="cj-price-guidance" role="status">
+    <strong>{t('تقدير مبدئي للسعر فقط','Indicative price estimate only')}</strong>
+    <p>{t('المسافة التقريبية','Estimated distance')}: {pricing.distanceKm.toLocaleString(en?'en':'ar-EG')} {t('كم','km')}
+    {' · '}{t('نطاق استرشادي','Suggested range')}: {pricing.minimumEgp.toLocaleString(en?'en':'ar-EG')} – {pricing.maximumEgp.toLocaleString(en?'en':'ar-EG')} {t('جنيه','EGP')}</p>
+    <small>{t('محسوب بخط مستقيم × ١٫٣٥، وليس مسافة الطريق المؤكدة. السعر النهائي يحتاج تحقق المسافة وقواعد السيرفر قبل النشر.',
+     'Straight-line distance × 1.35, not verified driving distance. Final publication requires server distance and price validation.')}</small>
+    {priceOutOfBand&&<p className="cj-price-guidance-warning" role="alert">
+     {t('السعر بعيد عن النطاق الاسترشادي. راجعه قبل الحفظ؛ المسودة لا تعني الموافقة على السعر أو النشر.',
+      'This price is outside the indicative range. Review it before saving; a draft is not approval to publish.')}
+    </p>}
+   </div>}
    {stops.length>=2&&category&&price&&<div className="sekka-route-review" aria-label={t('ملخص المسودة','Draft summary')}>
     <strong>{title}</strong>
     <span>{t('نقاط الرحلة','Trip stops')}: {stops.map(stop=>stop.name).join(' ← ')}</span>
