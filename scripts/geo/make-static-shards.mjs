@@ -59,6 +59,20 @@ for(const line of lines('aliases.tsv')){
  if(!copy){copy={...item,v:[]};shard.set(id,copy);}
  if(!copy.v.includes(q)){copy.v.push(q);aliasCount++;}
 }
+// Coverage counts are searchable OSM entities, never claims of exhaustive
+// real-world business/school listings. This also exposes data gaps early.
+const categories={};
+for(const item of places.values())categories[item.k]=(categories[item.k]||0)+1;
+const prioritySources=[
+ ['Cairo Festival City Mall','osm:way:253593226'],
+ ['Cairo Mall','osm:way:771784390'],
+ ['Talaat Harb Mall','osm:way:39700935'],
+ ['Mall of Arabia','osm:relation:13478008'],
+ ['Mall of Egypt','osm:way:83811548'],
+ ['Smart Village business park','osm:way:545580264']
+];
+const priorityCoverage=Object.fromEntries(prioritySources.map(([name,id])=>
+ [name,{osm_id:id,present:places.has(id)}]));
 let stored=0,maxBucket=0,maximumBytes=0;
 for(let bucket=0;bucket<512;bucket++){
  const items=[...buckets[bucket].values()];
@@ -70,7 +84,8 @@ for(let bucket=0;bucket<512;bucket++){
 const summary={data_license:'ODbL 1.0',source:input.source_url,snapshot:input.snapshot,
  source_records:input.records,source_aliases:input.aliases,
  records_inside_discovery_envelope:approvedCount,
- indexed_unique_records:places.size,road_segment_duplicates_collapsed:roadDuplicateCount,
+ indexed_unique_records:places.size,category_counts:categories,priority_osm_coverage:priorityCoverage,
+ road_segment_duplicates_collapsed:roadDuplicateCount,
  indexed_alias_entries:aliasCount,shards:512,shard_record_references:stored,
  max_records_in_one_shard:maxBucket,max_uncompressed_shard_bytes:maximumBytes,
  generated_at:new Date().toISOString(),
