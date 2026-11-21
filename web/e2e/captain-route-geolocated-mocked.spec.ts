@@ -36,10 +36,11 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
   const q=new URL(route.request().url()).searchParams.get('q')||'';
   const maadi=q.toLowerCase().includes('maadi')&&!q.toLowerCase().includes('outside');
   const mall=q.toLowerCase().includes('maadi grand mall');
+  const newCairo=q.toLowerCase().includes('cairo festival city');
   await route.fulfill({contentType:'application/json',body:JSON.stringify({features:[{
-   geometry:{coordinates:maadi?[31.25,29.96]:[31.34,30.06]},
-   properties:{osm_id:maadi?101:102,osm_type:'N',name:maadi?(mall?'Maadi Grand Mall':'Maadi Market'):'Nasr City Square',
-    district:maadi?'Maadi':'Nasr City',city:'Cairo',countrycode:'EG'}
+   geometry:{coordinates:newCairo?[31.4082,30.0279]:maadi?[31.25,29.96]:[31.34,30.06]},
+   properties:{osm_id:newCairo?103:maadi?101:102,osm_type:'N',name:newCairo?'Cairo Festival City Mall':maadi?(mall?'Maadi Grand Mall':'Maadi Market'):'Nasr City Square',
+    district:newCairo?'New Cairo':maadi?'Maadi':'Nasr City',city:'Cairo',countrycode:'EG'}
   }]})});
  });
  await page.route(endpoint+'/**',async route=>{
@@ -57,7 +58,8 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
    result={user_id:actor,role_preference:'captain'};
   else if(path.startsWith('/rest/v1/v31_service_areas'))result=[
    {id:11,name_ar:'المعادي',name_en:'Maadi'},
-   {id:22,name_ar:'مدينة نصر',name_en:'Nasr City'}
+   {id:22,name_ar:'مدينة نصر',name_en:'Nasr City'},
+   {id:33,name_ar:'التجمع',name_en:'New Cairo'}
   ];
   else if(path.startsWith('/rest/v1/v31_vehicles'))result=[
    {id:vehicle,model:'Tipo',plate_number:'TEST-123',enabled_categories:['PRIME']}
@@ -129,6 +131,15 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  await destination.fill('Nasr City Square');
  await expect(entry.locator('.cj-easy-results').getByRole('option',{name:/Nasr City Square/})).toBeVisible();
  await entry.locator('.cj-easy-results').getByRole('option',{name:/Nasr City Square/}).click();
+ await expect(entry.locator('.cj-easy-selected-stops>li')).toHaveCount(2);
+ // A third waypoint is inserted by name only; its removal must not
+ // change the already selected first two stops or force the map.
+ await destination.fill('Cairo Festival City Mall');
+ await expect(entry.locator('.cj-easy-results').getByRole('option',{name:/Cairo Festival City Mall/})).toBeVisible();
+ await entry.locator('.cj-easy-results').getByRole('option',{name:/Cairo Festival City Mall/}).click();
+ await expect(entry.locator('.cj-easy-selected-stops>li')).toHaveCount(3);
+ await expect(page.getByRole('dialog',{name:'Choose point on map'})).toHaveCount(0);
+ await entry.getByRole('button',{name:'Remove Cairo Festival City Mall'}).click();
  await expect(entry.locator('.cj-easy-selected-stops>li')).toHaveCount(2);
  await expect(entry.getByTitle('OpenStreetMap route stop map')).toBeVisible();
  await entry.getByRole('button',{name:'Move earlier: Nasr City Square'}).click();
