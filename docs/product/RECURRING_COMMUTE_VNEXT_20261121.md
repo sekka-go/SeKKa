@@ -33,12 +33,12 @@ Scope: Passenger and Captain experience, map/distance/matching, visual identity.
 - Distances displayed <1000 m as nearest 10 metres ("320 م"), >=1000 m in one decimal kilometres ("1.4 كم"). Walking time estimated as distance×1.3÷80 m/min, clearly labeled approximate. Pickup-to-destination *straight-line* distance explicitly labeled تقريبًا. Encapsulate walking estimate behind an interface for later real route engines.
 - Do NOT use the public OSRM demo server in production. No paid map APIs or hard-coded API keys. .env.example for supported settings.
 
-## 4. New visual system / icon preservation
-- The **existing Arabic سِكّة icon drawing, size, silhouette, geometry and typographic mark are immutable**. Only its palette may be recolored; keep original bitmaps in repository and create new named variants.
+## 4. New visual system / approved app icon
+- **Owner override 2026-11-21:** installed app icon is now the owner-uploaded square **purple seKKa white wordmark with yellow road swoosh**, in `web/public/brand/sekka-go-road-192.png` and `sekka-go-road-512.png`. This supersedes the earlier instruction to recolor the Arabic icon only. Keep original Arabic and orange icon assets in the repository for reference. In-app terminology/brand name remains «سِكّة».
 - New palette: background #FFF9F5, ink #35134F, primary purple #6412B1, hot coral #FF663D, magenta #F73587, sunny yellow #FFCD38, teal highlight #00BEAD. Strong legible dark mode required.
 - Youthful, energetic but functional: meaningful hierarchy; smooth navigation; no needlessly long onboarding; accessible contrast, 44px minimum actions, focus-visible, RTL, prefers-reduced-motion.
 - React/Vite/TypeScript implementation should use existing Tajawal brand font unless an approved bundled alternative is explicitly adopted. Existing repo brand asset wins on shape; new palette overrides legacy black/yellow.
-- Splash image may be recolored but must not alter existing logo letterforms or introduce a different icon.
+- Splash and PWA favicons use the selected purple road icon. Do not introduce any alternative logo without owner approval.
 - Bilingual strings centrally located in translation resources; no hardcoded Arabic inside new React components.
 
 ## 5. Superseded or unresolved legacy policy
