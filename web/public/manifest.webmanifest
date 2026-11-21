@@ -5,17 +5,17 @@
   "display": "standalone",
   "dir": "rtl",
   "lang": "ar",
-  "background_color": "#FFF9F5",
-  "theme_color": "#6412B1",
+  "background_color": "#3F056F",
+  "theme_color": "#3F056F",
   "icons": [
     {
-      "src": "/brand/sekka-go-192.png",
+      "src": "/brand/sekka-go-road-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/brand/sekka-go-512.png",
+      "src": "/brand/sekka-go-road-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
