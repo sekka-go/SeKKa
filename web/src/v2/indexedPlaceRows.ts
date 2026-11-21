@@ -1,4 +1,4 @@
-import {isInsideOperationalRegion} from './greaterCairoBoundary.ts';
+import {isInsideCairoDiscovery} from './discoveryCairo.ts';
 import {placeMatchesArea} from './geoPlace.ts';
 import type {MapPlace,ServiceArea} from './geoPlace.ts';
 
@@ -13,7 +13,7 @@ export function indexedRowsToPlaces(rows:IndexedRow[],en:boolean,area?:ServiceAr
     !/^osm:(node|way|relation):[0-9]+$/.test(row.place_id))continue;
   const point={latitude:Number(row.latitude),longitude:Number(row.longitude)};
   if(!Number.isFinite(point.latitude)||!Number.isFinite(point.longitude)||
-    !isInsideOperationalRegion(point))continue;
+    !isInsideCairoDiscovery(point))continue;
   const context=typeof row.context_label==='string'?row.context_label:'';
   const kind:MapPlace['kind']=row.is_exact_point&&row.osm_kind==='node'?'point':
    ['neighbourhood','neighborhood','suburb','city','town','quarter','district','borough','village'].includes(row.place_type)?'area':
@@ -23,7 +23,7 @@ export function indexedRowsToPlaces(rows:IndexedRow[],en:boolean,area?:ServiceAr
   const id=row.osm_kind[0].toUpperCase()+':'+row.place_id.split(':')[2];
   const place:MapPlace={id,source:'map',name,detail:context,
    locality:context?context.split(' · ').map(value=>value.trim()).filter(Boolean):[],
-   kind,...point};
+   kind,osmValue:row.place_type,...point};
   if(!area||placeMatchesArea(place,area))items.push(place);
  }
  return items;
