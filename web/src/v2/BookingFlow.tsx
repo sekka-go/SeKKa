@@ -20,6 +20,7 @@ import {
 import type { Period } from "../../../packages/domain/subscriptions";
 import { copy, errorCopy } from "./copy";
 import "./booking.css";
+import "./rider-booking-v3.css";
 
 export const bookingScreens = [16, 17, 18, 19, 20, 21, 22];
 export const bookingTitles = [
@@ -1059,6 +1060,7 @@ export function V31BookingJourney({offer,routeId,pickupId,dropoffId,reverse,book
  const {language,theme}=usePreferences(),en=language==='en';
  const t=(ar:string,english:string)=>en?english:ar;
  const [seats,setSeats]=useState(1),[busy,setBusy]=useState(false),[error,setError]=useState('');
+ const [cancelConfirm,setCancelConfirm]=useState(false);
  const [stored,setStored]=useState<{id:string;status:string;seats:number;period_snapshot:string|null;booked_direction:string|null;pickup_stop_id:string|null;dropoff_stop_id:string|null}|null>(null);
  const [loading,setLoading]=useState(Boolean(bookingId)),[refresh,setRefresh]=useState(0);
  const [bookingFare,setBookingFare]=useState<{amount:number;isExact:boolean}|null>(null);
@@ -1109,10 +1111,14 @@ export function V31BookingJourney({offer,routeId,pickupId,dropoffId,reverse,book
    catch(e){setError(v31BookingError(e,en?'en':'ar'));}
    finally{setBusy(false);}
  };
- return <div className={`phase-one-stage discovery-stage booking-stage ${theme}`}>
+ return <div className={`phase-one-stage discovery-stage booking-stage sekka-rider-booking-v3 ${theme}`}>
    <main className={`phase-canvas d-canvas b-canvas b-screen-${stored?'18':'16'}`}>
      <header className="d-header"><button type="button" className="phase-back" aria-label={t('رجوع','Back')} onClick={onBack}><DiscoveryIcon name="back"/></button><Wordmark/></header>
-     <h1 className="b-title"><DiscoveryIcon name="calendar"/>{stored?t('تفاصيل الحجز','Booking details'):t('مراجعة الحجز','Booking review')}</h1>
+     <div className="rbk3-hero">
+      <span className="rbk3-step">{stored?t('حجزك من الخادم','SERVER BOOKING'):t('آخر خطوة قبل الحجز','FINAL STEP')}</span>
+      <h1 className="b-title"><DiscoveryIcon name="calendar"/>{stored?t('تفاصيل الحجز','Booking details'):t('راجع حجزك','Review your booking')}</h1>
+      <p>{stored?t('دي حالة الحجز الحالية من النظام، مش إثبات دفع.','This is the current booking status, not proof of payment.'):t('حدد عدد الأشخاص وراجع البيانات قبل التأكيد.','Choose your seats and confirm the ride details.')}</p>
+     </div>
      {error&&<div className="d-feedback" role="alert"><p>{error}</p><button type="button" onClick={()=>setRefresh(v=>v+1)}>{t('إعادة المحاولة','Retry')}</button></div>}
      {loading&&<p role="status" className="b-loading">{t('بنراجع الحجز من الخدمة…','Loading booking from server…')}</p>}
      {!bookingId&&offer&&<><p className="b-subtitle">{t('راجع الخط والنقط والسعر قبل ما تحجز.','Review your route, stops and price before booking.')}</p>
@@ -1152,7 +1158,20 @@ export function V31BookingJourney({offer,routeId,pickupId,dropoffId,reverse,book
        <Row label={t('نقطة النزول','Drop-off')}>{offer?.selectedStops?.dropoff.name||stored.dropoff_stop_id||'—'}</Row>
      </Box>
      <button type="button" className="d-outline" onClick={()=>{setLoading(true);setRefresh(v=>v+1);}}>{t('تحديث حالة الحجز','Refresh status')}</button>
-     {stored.status==='pending'&&<button type="button" className="d-outline" disabled={busy} onClick={()=>void cancel()}>{busy?t('جارٍ الإلغاء…','Cancelling…'):t('إلغاء الحجز واستعادة السعة','Cancel pending booking')}</button>}
+     {stored.status==='pending'&&<section className="rbk3-cancel">
+       {!cancelConfirm?<button type="button" className="d-outline" disabled={busy}
+         onClick={()=>setCancelConfirm(true)}>{t('إلغاء الحجز','Cancel booking')}</button>:
+        <div className="rbk3-cancel-confirm" role="group" aria-label={t('تأكيد الإلغاء','Confirm cancellation')}>
+         <p>{t('متأكد من إلغاء الحجز؟ المقاعد هترجع للإتاحة وفق قواعد النظام.','Cancel this booking? Seats will be released according to the rules.')}</p>
+         <div>
+          <button type="button" disabled={busy} onClick={()=>void cancel()}>
+           {busy?t('جارٍ الإلغاء…','Cancelling…'):t('تأكيد الإلغاء','Confirm cancellation')}
+          </button>
+          <button type="button" disabled={busy} onClick={()=>setCancelConfirm(false)}>
+           {t('تراجع','Keep booking')}</button>
+         </div>
+        </div>}
+      </section>}
      </>}
    </main>
  </div>;
