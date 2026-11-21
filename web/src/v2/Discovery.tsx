@@ -12,6 +12,7 @@ import "./discovery.css";
 import LiveRouteSearch from "./LiveRouteSearch";
 import NearbyRides from "./NearbyRides";
 import RiderSearchV3 from "./RiderSearchV3";
+import RiderFiltersV3 from "./RiderFiltersV3";
 import RiderResultsHero from "./RiderResultsHero";
 import RiderTripDetailsV3 from "./RiderTripDetailsV3";
 import GeoPlaceInput from "./GeoPlaceInput";
@@ -464,7 +465,7 @@ type RiderDraft = {
   origin?: string; destination?: string; originPlace?:PlaceChoice|null; destinationPlace?:PlaceChoice|null; outbound?: string; returnTime?: string;
   period?: string; categories?: string[]; selectedId?: string; favoriteDetail?: Line | null;
   searched?: boolean; pickup?: string; dropoff?: string; filterDirection?: string;
-  filterPrice?: string; onlyAvailable?: boolean; appliedFilters?: boolean;
+  filterPrice?: string; filterPeriod?: ""|"weekly"|"monthly"; onlyAvailable?: boolean; appliedFilters?: boolean;
   weekdays?:number[];
 };
 
@@ -608,17 +609,20 @@ export default function Discovery(p: DiscoveryProps) {
   };
   const [filterDirection, setFilterDirection] = useState(restored.filterDirection ?? "");
   const [filterPrice, setFilterPrice] = useState(restored.filterPrice ?? "");
+  // Separate the request/commute period from the optional published-results filter.
+  const [filterPeriod,setFilterPeriod]=useState<''|'weekly'|'monthly'>(()=>
+    restored.filterPeriod==='weekly'||restored.filterPeriod==='monthly'?restored.filterPeriod:'');
   const [preferredWeekdays,setPreferredWeekdays]=useState<number[]>(()=>isWeekdays(restored.weekdays)?restored.weekdays:[]);
   const [onlyAvailable, setOnlyAvailable] = useState(restored.onlyAvailable ?? false);
   const [appliedFilters, setAppliedFilters] = useState(restored.appliedFilters ?? false);
   useEffect(() => {
     const draft: RiderDraft = {origin,destination,originPlace,destinationPlace,outbound,returnTime,period,categories,selectedId,
       favoriteDetail:demo ? favoriteDetail : null,searched,pickup,dropoff,filterDirection,
-      filterPrice,onlyAvailable,appliedFilters,weekdays:preferredWeekdays};
+      filterPrice,filterPeriod,onlyAvailable,appliedFilters,weekdays:preferredWeekdays};
     try { sessionStorage.setItem(riderDraftKey, JSON.stringify(draft)); }
     catch { /* Keep the active screen usable when session storage is unavailable. */ }
   }, [origin,destination,originPlace,destinationPlace,outbound,returnTime,period,categories,selectedId,favoriteDetail,
-      demo,searched,pickup,dropoff,filterDirection,filterPrice,onlyAvailable,appliedFilters,preferredWeekdays]);
+      demo,searched,pickup,dropoff,filterDirection,filterPrice,filterPeriod,onlyAvailable,appliedFilters,preferredWeekdays]);
   const filtered = lines.filter(
     (l) =>
       (!searched || (matchesStops(l.stops || [], origin, destination) && (!outbound || l.outbound === outbound) && (!returnTime || l.returnTime === returnTime))) &&
@@ -997,7 +1001,20 @@ export default function Discovery(p: DiscoveryProps) {
           onWeekdays={setPreferredWeekdays} onSearch={search}
           onLiveSelect={p.onLiveSelect}
         />}
-        {screen === 10 && (
+        {screen===10&&p.production&&<RiderFiltersV3
+          available={categoryList} categories={categories}
+          period={appliedFilters?filterPeriod:''} direction={filterDirection}
+          maxPrice={filterPrice} onlyAvailable={onlyAvailable}
+          onCategories={setCategories}
+          onPeriod={value=>{setFilterPeriod(value);if(value)setPeriod(value);}}
+          onDirection={setFilterDirection}
+          onMaxPrice={setFilterPrice}
+          onOnlyAvailable={setOnlyAvailable}
+          onReset={()=>{setCategories([]);setFilterDirection('');setFilterPrice('');
+           setFilterPeriod('');setOnlyAvailable(false);setAppliedFilters(false);}}
+          onApply={()=>{setAppliedFilters(true);nav(11);}}
+        />}
+        {screen === 10 && !p.production && (
           <>
             <p className="d-subtitle">
               {tr("خصص بحثك للعثور على الاشتراك المناسب لك")}</p>
@@ -1134,7 +1151,7 @@ export default function Discovery(p: DiscoveryProps) {
          canCreateRequest={geoRequestAvailable(
            originPlace||((p.serviceAreas||[]).find(a=>a.name_ar===origin||a.name_en===origin)?{kind:'service',area:(p.serviceAreas||[]).find(a=>a.name_ar===origin||a.name_en===origin)!}:null),
            destinationPlace||((p.serviceAreas||[]).find(a=>a.name_ar===destination||a.name_en===destination)?{kind:'service',area:(p.serviceAreas||[]).find(a=>a.name_ar===destination||a.name_en===destination)!}:null)
-         )} outbound={outbound} returnTime={returnTime} period={appliedFilters?period:""} requestPeriod={period} direction={filterDirection} categories={categories}
+         )} outbound={outbound} returnTime={returnTime} period={appliedFilters?(p.production?filterPeriod:period):""} requestPeriod={period} direction={filterDirection} categories={categories}
          maxSeatPrice={p.production&&appliedFilters&&filterPrice!==''&&Number.isFinite(Number(filterPrice))&&Number(filterPrice)>=0?Number(filterPrice):null}
          onlyAvailable={Boolean(p.production&&appliedFilters&&onlyAvailable)}
          onEditFilters={p.production?()=>nav(10):undefined} onSelect={p.production?p.onLiveSelect:undefined} onSignIn={()=>nav(4)} />}
