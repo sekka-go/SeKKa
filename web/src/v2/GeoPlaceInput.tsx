@@ -1,4 +1,4 @@
-import {useEffect,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import {usePreferences} from './preferences';
 import {catalogMatches,exactCatalogMatches,locationContext,locationContextIcon,outsideCatalogMatch,noMatchingLocation,outsideCoverageMessage,selectOperationalMapPlace,serviceMatches} from './geoPlace';
 import {useLocationOptions,useLocationSearch} from './locationSearch';
@@ -18,6 +18,7 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
  const [mapOpen,setMapOpen]=useState(false);
  const [mapFocus,setMapFocus]=useState<{latitude:number;longitude:number}|null>(null);
  const options=useLocationOptions();
+ const inputRef=useRef<HTMLInputElement|null>(null);
  useEffect(()=>{setQuery(choice?.kind==='service'?t(choice.area.name_ar,choice.area.name_en):value);},[value,choice,en]);
  const menu=open&&!disabled&&!choice&&Boolean(query.trim());
  const result=useLocationSearch(query.trim(),menu,searchArea,en,immediate);
@@ -50,6 +51,7 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
  const selectContext=(place:typeof broad[number])=>{
   // Choosing a street/venue should take the user to that place, not silently
   // pretend its representative map coordinate is a verified pickup point.
+  inputRef.current?.blur();
   setQuery(place.name);onPick(place.name,null);setMapFocus(place);
   setMapOpen(true);setOpen(false);setImmediate(0);options.reset();
  };
@@ -66,7 +68,7 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
  }}>
   <label className="sekka-place-lookup__label">
    <span className="sr-only">{label}</span>
-   <input type="search" role="combobox" aria-label={label} aria-autocomplete="list"
+   <input ref={inputRef} type="search" role="combobox" aria-label={label} aria-autocomplete="list"
     aria-expanded={menu&&picks.length>0} aria-controls={menu&&picks.length?options.id:undefined}
     aria-activedescendant={menu&&options.highlight>=0&&options.highlight<picks.length?options.optionId(options.highlight):undefined}
     autoComplete="off" disabled={disabled}
@@ -111,7 +113,7 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
    {msg&&<p role="status" className="cj-place-error">{msg}</p>}
   </div>}
   <button type="button" className="sekka-place-lookup__map-search"
-   disabled={disabled} onClick={()=>{setMapFocus(broad[0]??result.places[0]??null);setMapOpen(true);setOpen(false);}}>
+   disabled={disabled} onClick={()=>{inputRef.current?.blur();setMapFocus(broad[0]??result.places[0]??null);setMapOpen(true);setOpen(false);}}>
    <span aria-hidden="true">⌖</span>{t('حدد نقطة على الخريطة','Choose point on map')}
   </button>
   {mapOpen&&<GeoMapPicker area={searchArea} focus={mapFocus} focusLabel={query}
