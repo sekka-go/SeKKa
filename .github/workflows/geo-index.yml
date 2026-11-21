@@ -7,7 +7,7 @@ on:
       - 'scripts/geo/**'
       - '.github/workflows/geo-index.yml'
 permissions:
-  contents: read
+  contents: write
 concurrency:
   group: cairo-gazetteer-staging
   cancel-in-progress: true
@@ -53,6 +53,27 @@ jobs:
             --out geo-index --snapshot "$SNAPSHOT"
           cat geo-index/manifest.json
           test "$(wc -l < geo-index/places.tsv)" -gt 100
+      - name: Build active-region CDN search shards
+        run: |
+          set -euo pipefail
+          node --experimental-strip-types scripts/geo/make-static-shards.mjs \
+            geo-index web/public/geo-index
+          cat web/public/geo-index/manifest.json
+      - name: Commit licensed static index to existing PR branch only
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = "feat/real-app-google-auth-foundation-20261115"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add web/public/geo-index/
+          if git diff --cached --quiet; then
+            echo "Static Cairo index has not changed."
+          else
+            git commit -m "data(geo): publish licensed OSM search shards on PR 185"
+            git fetch origin "$GITHUB_REF_NAME"
+            git rebase "origin/$GITHUB_REF_NAME"
+            git push origin "HEAD:$GITHUB_REF_NAME"
+          fi
       - name: Staging-only guarded import when authorized DSN is configured
         if: env.STAGING_DATABASE_URL != ''
         run: |
