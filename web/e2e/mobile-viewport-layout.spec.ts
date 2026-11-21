@@ -57,7 +57,7 @@ for(const width of widths){
     await expect(screen).toBeVisible();
     const primary=scene.id==='passenger-welcome'?page.locator('.phase-start'):
      scene.id==='passenger-account-type'?page.locator('.phase-role-next'):
-     scene.id==='passenger-search'?page.locator('.d-screen-9 .d-planner > .d-primary'):
+     scene.id==='passenger-search'?page.locator('.d-screen-9 .rs3__submit'):
      scene.id==='passenger-filters'?page.locator('.d-screen-10 > .d-primary'):
      scene.id==='captain-sign-in-gate'?page.locator('.phase-google-auth .phase-primary'):null;
     if(primary){
