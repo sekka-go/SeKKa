@@ -49,21 +49,29 @@ for(const line of lines('places.tsv')){
  places.set(id,{i:id,n:name,a:ar||null,e:en||null,c:context||'',k:kind,
   p:[latitude,longitude],x:exact==='true',os:osmKind});
 }
-const buckets=Array.from({length:256},()=>new Map());
+const generic=new Set(['شارع','حاره','عطفه','طريق','ميدان','محطه','مسجد','جامع',
+ 'جامعه','موقف','مول','street','st','road','rd','square','station','mosque','avenue']);
+function lookupKey(q){
+ const terms=q.split(' ');
+ while(terms.length&&generic.has(terms[0]))terms.shift();
+ return terms.join(' ');
+}
+const buckets=Array.from({length:512},()=>new Map());
 let aliasCount=0;
 for(const line of lines('aliases.tsv')){
  const [id,alias]=line.split('\t').map(parse),item=places.get(id);
  if(!item)continue;
  const q=normalize(alias);
- if(q.length<3)continue;
- const index=hash([...q].slice(0,3).join(''))%256;
+ const effective=lookupKey(q);
+ if(effective.length<4)continue;
+ const index=hash([...effective].slice(0,4).join(''))%512;
  const shard=buckets[index];
  let copy=shard.get(id);
  if(!copy){copy={...item,v:[]};shard.set(id,copy);}
  if(!copy.v.includes(q)){copy.v.push(q);aliasCount++;}
 }
 let stored=0,maxBucket=0,maximumBytes=0;
-for(let bucket=0;bucket<256;bucket++){
+for(let bucket=0;bucket<512;bucket++){
  const items=[...buckets[bucket].values()];
  stored+=items.length;maxBucket=Math.max(maxBucket,items.length);
  const json=JSON.stringify({version:input.snapshot,results:items});
@@ -74,7 +82,7 @@ const summary={data_license:'ODbL 1.0',source:input.source_url,snapshot:input.sn
  source_records:input.records,source_aliases:input.aliases,
  records_inside_active_polygon:approvedCount,
  indexed_unique_records:places.size,road_segment_duplicates_collapsed:roadDuplicateCount,
- indexed_alias_entries:aliasCount,shards:256,shard_record_references:stored,
+ indexed_alias_entries:aliasCount,shards:512,shard_record_references:stored,
  max_records_in_one_shard:maxBucket,max_uncompressed_shard_bytes:maximumBytes,
  generated_at:new Date().toISOString(),
  note:'All imported features have approved polygon representative points. Area and road coordinates are context only, not pickup pins.'};
