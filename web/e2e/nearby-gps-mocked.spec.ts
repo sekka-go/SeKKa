@@ -50,7 +50,7 @@ test('pickup explorer uses opt-in GPS, published stops, map and verified route d
  await expect(explorer.locator('.np4__hero')).toContainText('Where will you board?');
  const card=explorer.locator('.np4__card').first();
  await expect(card.getByText('Pickup near me')).toBeVisible();
- await expect(card.locator('.np4__metrics')).toContainText('0.1');
+ await expect(card.locator('.np4__metrics')).toContainText('110 m');
  await expect(card).toContainText('188');
  await expect(card).toContainText('2');
  expect(calls.some(url=>url.includes('30.040'))).toBe(false);
