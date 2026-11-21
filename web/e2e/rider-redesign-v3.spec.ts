@@ -52,10 +52,14 @@ async function setup(page:import('@playwright/test').Page,language:'ar'|'en',the
    expect(search.p_outbound).toBe('08:15');
    data=[{route_id:routeId,selection:item}];
   }
-  else if(path.startsWith('/rest/v1/v31_bookings'))data=[{
-   id:bookingId,route_id:routeId,rider_id:riderId,seats:1,status:'pending',
-   created_at:'2026-11-21T12:00:00Z'}];
-  else if(path.startsWith('/rest/v1/v31_public_route_offers'))data=[route];
+  else if(path.startsWith('/rest/v1/v31_bookings')){
+   const row={id:bookingId,route_id:routeId,rider_id:riderId,seats:1,status:'pending',
+    created_at:'2026-11-21T12:00:00Z',period_snapshot:'weekly',booked_direction:'outbound',
+    pickup_stop_id:fromId,dropoff_stop_id:toId};
+   data=new URL(req.request().url()).searchParams.has('id')?row:[row];
+  }
+  else if(path.startsWith('/rest/v1/v31_public_route_offers'))
+   data=new URL(req.request().url()).searchParams.get('id')?.startsWith('eq.')?route:[route];
   else if(path.startsWith('/rest/v1/v31_route_stops'))data=stops;
   else if(path==='/rest/v1/rpc/v31_published_route_available_seats')data=2;
   await req.fulfill({contentType:'application/json',body:JSON.stringify(data)});
@@ -139,6 +143,14 @@ for(const variant of [
   await expect(bookings).toBeVisible();
   await expect(bookings.locator('.rb3__card')).toHaveCount(1);
   await expect(bookings.locator('.rb3__status--pending')).toBeVisible();
+  await page.evaluate(()=>{(window as Window&{__sekkaNavProbe?:string}).__sekkaNavProbe='same-document';});
+  await bookings.locator('.rb3__details').click();
+  await expect(page).toHaveURL(/tab=booking&booking=33333333-3333-4333-8333-333333333333/);
+  await expect(page.locator('.b-summary')).toBeVisible();
+  expect(await page.evaluate(()=>(window as Window&{__sekkaNavProbe?:string}).__sekkaNavProbe)).toBe('same-document');
+  await page.locator('.sekka-rider-booking-v3 .phase-back').click();
+  await expect(page).toHaveURL(/tab=bookings$/);
+  await expect(bookings.locator('.rb3__card')).toHaveCount(1);
   await bookings.locator('.rb3__cancel-trigger').click();
   await expect(bookings.locator('.rb3__confirm')).toBeVisible();
   await expect(bookings.getByRole('button',{name:variant.language==='en'?'Keep booking':'تراجع'})).toBeVisible();
