@@ -58,7 +58,7 @@ for(const width of widths){
     const primary=scene.id==='passenger-welcome'?page.locator('.phase-start'):
      scene.id==='passenger-account-type'?page.locator('.phase-role-next'):
      scene.id==='passenger-search'?page.locator('.d-screen-9 .rs3__submit'):
-     scene.id==='passenger-filters'?page.locator('.d-screen-10 > .d-primary'):
+     scene.id==='passenger-filters'?page.locator('.d-screen-10 .rf3__apply'):
      scene.id==='captain-sign-in-gate'?page.locator('.phase-google-auth .phase-primary'):null;
     if(primary){
      await expect(primary).toBeVisible();
@@ -110,7 +110,7 @@ for(const width of widths){
     expect(collisions,'Interactive buttons must never occupy the same touch area').toEqual([]);
     if(scene.id==='passenger-filters'){
      await expect(page.locator('.sekka-bottom-nav')).toBeHidden();
-     const last=await page.locator('.d-screen-10 > .d-primary').boundingBox();
+     const last=await page.locator('.d-screen-10 .rf3__apply').boundingBox();
      expect(last).not.toBeNull();
      expect(last!.y+last!.height).toBeLessThanOrEqual(height-1);
     }
