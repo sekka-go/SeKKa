@@ -1,4 +1,4 @@
-/* Owner-approved 2026-11-21 warm color refresh: preserve original Arabic icon geometry. */
+/* 2026-11-21 owner-selected seKKa road mark. Same purple background as the artwork. */
 .sekka-launch {
   position: fixed;
   inset: 0;
@@ -7,7 +7,7 @@
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
-  background: #1e0b32;
+  background: #3F056F;
   display: flex;
   align-items: center;
   justify-content: center;
