@@ -8,8 +8,8 @@ import {usePreferences} from './preferences';
 import './rider-home.css';
 
 type Area={id:number;name_ar:string;name_en:string};
-export default function RiderJourneyHome({riderId,serviceAreas,onNavigate,onSelect}:{
- riderId:string;serviceAreas:Area[];onNavigate:(screen:number)=>void;
+export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areasFailed,onNavigate,onSelect}:{
+ riderId:string;serviceAreas:Area[];areasLoaded:boolean;areasFailed:boolean;onNavigate:(screen:number)=>void;
  onSelect:(selection:LiveSelection)=>void;
 }){
  const {language}=usePreferences(),tr=language==='en'?riderHomeCopy.en:riderHomeCopy.ar;
@@ -38,7 +38,8 @@ export default function RiderJourneyHome({riderId,serviceAreas,onNavigate,onSele
     <circle cx="211" cy="58" r="10" fill="#FF663D" stroke="#fff" strokeWidth="4"/>
    </svg>
   </div>
-  {saved&&valid?<section className="sekka-rider-home__card" aria-label={tr.savedLabel}>
+  {saved&&!areasLoaded&&!areasFailed?<section className="sekka-rider-home__card" role="status">{tr.loadingAreas}</section>:
+  saved&&valid?<section className="sekka-rider-home__card" aria-label={tr.savedLabel}>
    <div className="sekka-rider-home__card-title"><span className="sekka-rider-home__symbol" aria-hidden="true">↗</span><h2>{tr.savedLabel}</h2></div>
    <div className="sekka-rider-home__journey">
     <div className="sekka-rider-home__endpoint"><span className="sekka-rider-home__pin sekka-rider-home__pin--from"/><div><small>{tr.pickup}</small><strong dir="auto">{display(saved.origin)}</strong></div></div>
