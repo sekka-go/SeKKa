@@ -75,3 +75,12 @@ html[data-theme="dark"] .sekka-mobile .d-screen-11 .sekka-live-result .d-offer-s
 }
 html[data-theme="dark"] .sekka-mobile .d-screen-9 .d-planner-places>.d-swap{background:#452960;color:#FFDE83}
 @media(prefers-reduced-motion:reduce){.sekka-mobile :is(.d-screen-9,.d-screen-11,.d-screen-12) *{transition:none!important;animation:none!important}}
+
+.sekka-mobile .sekka-weekdays-disclaimer{
+ margin:8px 16px 13px!important;padding:11px 13px;
+ border:1px solid #EACD8E;background:#FFF5DC;color:#583B15;
+ border-radius:14px;font:700 13px/1.6 Tajawal,Tahoma,sans-serif;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-weekdays-disclaimer{
+ background:#463C33;color:#FFE2A7;border-color:#907044;
+}
