@@ -14,7 +14,7 @@ function TabIcon({name}:{name:RiderTab}){
  </svg>;
 }
 const tabs:RiderTab[]=['home','search','bookings','profile'];
-export default function RiderTabBar({active,onNavigate}:{active:RiderTab;onNavigate:(tab:RiderTab)=>void}){
+export default function RiderTabBar({active,onNavigate}:{active:RiderTab|null;onNavigate:(tab:RiderTab)=>void}){
  const {language}=usePreferences(),en=language==='en';
  const names=en?
   {home:'Home',search:'Search',bookings:'Bookings',profile:'Account'}:
