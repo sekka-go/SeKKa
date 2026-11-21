@@ -484,13 +484,14 @@ export default function MobileApp(){
  const fullScreenSearchFilters=tab==='search'&&discoveryScreen===10;
  const fullScreenAuth=(tab==='login'&&(onboardingScreen===3||onboardingScreen===4))||(tab==='captain-onboarding'&&!userId);
  const fullScreenSearch=tab==='search'&&discoveryScreen===9;
- const menuButton=<button type="button" ref={menuTrigger}
-  className={captainLanding?'sekka-captain-head-action':'sekka-shell-menu'} aria-label={t('فتح القائمة','Open menu')}
-  aria-expanded={menuOpen} aria-controls="sekka-side-menu" onClick={()=>setMenuOpen(true)}>
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1"
-    strokeLinecap="round" aria-hidden="true" focusable="false">
-    <path d="M4.5 6h15M4.5 12h15M4.5 18h15"/>
-   </svg>
+ const showFloatingActions=ready&&Boolean(userId)&&tab!=='login'&&tab!=='captain-onboarding';
+ const menuButton=<button type="button" ref={menuTrigger} className="sekka-fab-menu"
+  aria-label={t('فتح القائمة','Open menu')} aria-expanded={menuOpen}
+  aria-controls="sekka-side-menu" onClick={()=>setMenuOpen(true)}>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+   strokeLinecap="round" aria-hidden="true" focusable="false">
+   <path d="M5 6h14M5 12h14M5 18h14"/>
+  </svg>
  </button>;
  return <div className={`sekka-mobile sekka-tab-${tab}${fullScreenSearchFilters?' sekka-search-filters':''}${fullScreenAuth?' sekka-fullscreen-auth':''}${fullScreenSearch?' sekka-fullscreen-search':''}${userId&&tab==='captain-onboarding'?' sekka-captain-logged-in':''}${!userId&&tab==='home'?' sekka-guest-welcome':''}${captainLanding?' sekka-captain-home-shell':''}${showRiderTabs?' sekka-rider-navigation':''}${motionStep?(motionStep%2?' sk-motion-odd':' sk-motion-even'):''}`} dir={en?'ltr':'rtl'}>
   <a className="sekka-skip" href="#sekka-content">{t('تخطي للمحتوى','Skip to content')}</a>
@@ -524,7 +525,16 @@ export default function MobileApp(){
    </>}
    {ready&&admin&&<button type="button" className="sekka-admin-entry" aria-current={tab==='admin'?'page':undefined}
      onClick={openAdmin}>{t('لوحة الإدارة','Admin dashboard')}</button>}
-  </header>
+  </header>  {showFloatingActions&&<nav className="sekka-floating-actions" aria-label={t('اختصارات سِكَّة','seKKa shortcuts')}>
+   {menuButton}
+   <button type="button" className="sekka-fab-bell" onClick={()=>navigate({tab:'notifications'})}
+    aria-label={t('الإشعارات','Notifications')} aria-current={tab==='notifications'?'page':undefined}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+     strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+     <path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 9h18c0-1-3-2-3-9M10 21h4"/>
+    </svg>
+   </button>
+  </nav>}
   <main id="sekka-content" className={`sekka-mobile-content${tab==='admin'&&admin?' sekka-admin-workspace':''}`}>
    {!ready&&<SessionLoader slow={sessionSlow}
     onRetry={()=>{setSessionSlow(false);setAuthCheckRevision(v=>v+1)}}/>}
