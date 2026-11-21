@@ -57,3 +57,52 @@ html[data-theme="dark"] .sekka-rider-navigation.sekka-tab-home>.sekka-mobile-hea
 @media(min-width:481px){
  .rh-tabs{left:50%;right:auto;transform:translateX(-50%);width:480px;border-radius:24px 24px 0 0}
 }
+
+/* Owner-approved Rider first-screen: violet brand masthead with cream hero below.
+   Installed PWA icon remains the previously approved purple seKKa road icon. */
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header{
+ background:#66108F!important;border:0!important;
+ height:83px!important;min-height:83px!important;
+ padding:10px 68px 18px!important;
+ overflow:hidden;
+}
+.sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header:after{
+ content:"";position:absolute;z-index:0;top:-38px;inset-inline-start:-54px;
+ width:150px;height:106px;transform:rotate(-18deg);
+ border-radius:50%;background:linear-gradient(125deg,#FF7342,#FFAC64);
+ pointer-events:none;
+}
+.sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header>.rh-shell-title{
+ top:11px!important;left:70px!important;right:70px!important;
+ color:#FFF!important;z-index:2;font-size:34px!important;
+ font-style:italic;line-height:1.25!important;
+ text-shadow:0 2px 5px #46105E50;
+}
+.sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header>.rh-shell-title:after{
+ content:"";display:block;position:absolute;
+ width:60px;height:7px;bottom:-2px;left:50%;transform:translateX(-50%) rotate(-6deg);
+ background:#FFCB29;border-radius:60% 8% 70% 12%;
+}
+.sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header>
+:is(.sekka-shell-menu,.rh-shell-notifications){
+ z-index:2;top:14px!important;width:45px;height:45px;
+ background:#FFFFFF16!important;border:1px solid #FFFFFF36!important;
+ color:#FFF!important;backdrop-filter:blur(5px);
+ border-radius:14px!important;
+}
+.sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header>.rh-shell-notifications{
+ top:14px!important;
+}
+.sekka-rider-navigation.sekka-tab-home>.sekka-mobile-content{
+ padding-inline:0!important;padding-top:0!important;
+ background:#FFF9F7;
+}
+html[data-theme="dark"] .sekka-rider-navigation.sekka-tab-home>.sekka-mobile-content{
+ background:#1E0B32;
+}
+html[data-theme="dark"] .sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header{
+ background:#420C67!important;
+}
+@media(max-width:340px){
+ .sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header>.rh-shell-title{font-size:29px!important;top:15px!important}
+}
