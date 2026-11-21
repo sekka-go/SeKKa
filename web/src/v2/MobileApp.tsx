@@ -28,6 +28,7 @@ import type {MobileRoute,RouteSelection} from './mobileNavigation';
 import './mobile-app.css';
 import './flow-navigation.css';
 import './brand-black-cream.css';
+import './brand-sky-flow.css';
 
 export default function MobileApp(){
  const p=usePreferences(),en=p.language==='en',t=(ar:string,english:string)=>en?english:ar;
@@ -505,7 +506,7 @@ export default function MobileApp(){
     </button>
    </div>:<>{menuButton}
     {showRiderTabs&&tab==='home'&&<>
-     <span className="rh-shell-title">{t('سِكّة','seKKa')}</span>
+     <span className="rh-shell-title">{t('سِكَّة','seKKa')}</span>
      <button type="button" className="rh-shell-notifications" onClick={()=>navigate({tab:'notifications'})}
       aria-label={t('الإشعارات','Notifications')}>
       <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none"
