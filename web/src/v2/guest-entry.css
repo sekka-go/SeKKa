@@ -173,3 +173,37 @@ html[data-theme="dark"] .sekka-entry button.sekka-entry__role.is-selected{
 }
 html[data-theme="dark"] .sekka-entry__check{border-color:#FFCD38}
 html[data-theme="dark"] .is-selected .sekka-entry__check{background:#FFCD38;color:#35134F}
+
+/* Authenticated profile step keeps the existing verified Supabase form and
+   never invents upload/notifications support to imitate the reference. */
+.sekka-entry-login .phase-flow-content.sekka-entry-login__profile{
+ display:flex!important;flex-direction:column!important;gap:14px!important;
+ position:static!important;inset:auto!important;
+ width:100%!important;height:auto!important;min-height:0!important;
+ padding:0 0 12px!important;margin:auto 0!important
+}
+.sekka-entry-login .sekka-entry-login__profile .phase-title{
+ position:static!important;width:100%!important;height:auto!important;margin:0!important;
+ color:var(--se-ink)!important;font:900 clamp(25px,7vw,34px)/1.4 Tajawal,sans-serif!important;
+ text-align:start!important;white-space:normal!important
+}
+.sekka-entry-login .sekka-entry-login__profile .phase-subtitle{
+ position:static!important;width:100%!important;height:auto!important;margin:0!important;
+ color:var(--se-muted)!important;font:600 15px/1.6 Tajawal,sans-serif!important;
+ text-align:start!important;white-space:normal!important
+}
+.sekka-entry-login__profile .live-profile{width:100%;max-width:100%!important;padding:16px!important;
+ margin:0!important;border:1px solid var(--se-line)!important;border-radius:16px!important;
+ background:var(--se-card)!important}
+.sekka-entry-login__profile .live-profile input{min-height:48px!important}
+.sekka-entry-login__profile .live-profile button{min-height:48px!important}
+.sekka-entry-login .sekka-entry-login__profile>.phase-primary{
+ position:static!important;inset:auto!important;width:100%!important;height:auto!important;
+ min-height:54px!important;padding:12px 16px!important;display:flex!important;
+ justify-content:center!important;align-items:center!important;gap:12px!important;
+ border-radius:15px!important;background:var(--se-primary)!important;
+ color:#FFFFFF!important;font:900 16px/1.5 Tajawal,sans-serif!important
+}
+html[data-theme="dark"] .sekka-entry-login .sekka-entry-login__profile>.phase-primary{
+ background:#FFCD38!important;color:#35134F!important
+}
