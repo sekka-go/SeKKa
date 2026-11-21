@@ -17,8 +17,13 @@ test('server sets the first read timestamp and never rewrites it',()=>{
  assert.match(sql,/before update of read_at on public\.v31_notifications/);
  assert.match(ui,/update\(\{read_at:new Date\(\)\.toISOString\(\)\}\)/);
 });
-test('full and reopened capacity notices link to the real Captain trips screen',()=>{
+test('capacity notices navigate in-app to the correct role-owned trips, not a forced Captain link',()=>{
+ const shell=readFileSync(new URL('../../web/src/v2/MobileApp.tsx',import.meta.url),'utf8');
  assert.match(ui,/n\.kind==='route_capacity_full'/);
  assert.match(ui,/n\.kind==='route_seat_reopened'/);
- assert.match(ui,/href="\/\?tab=routes&view=44"/);
+ assert.match(ui,/onClick=\{onOpenRides\}/);
+ assert.match(shell,/mode=\{isCaptainAccount\?'captain':'rider'\}/);
+ assert.match(shell,/if\(isCaptainAccount\)navigate\(\{tab:'routes',view:44\}\)/);
+ assert.match(shell,/setBookingsSection\('bookings'\);navigate\(\{tab:'bookings'\}\)/);
+ assert.doesNotMatch(ui,/href="\/\?tab=routes&view=44"/);
 });
