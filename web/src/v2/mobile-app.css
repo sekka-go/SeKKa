@@ -604,7 +604,7 @@ html[data-theme="dark"] .sekka-mobile{
 /* Real app only: Onboarding and Captain screens share the official English
  * launch mark while the 73-screen reference gallery keeps its original assets. */
 .sekka-mobile .phase-wordmark{
- background:transparent url("/brand/sekka-go-192.png") center/contain no-repeat;
+ background:transparent url("/brand/sekka-go-road-192.png") center/contain no-repeat;
  border-radius:10px;mix-blend-mode:normal
 }
 .sekka-mobile .phase-wordmark>.reference-art{visibility:hidden}
