@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {searchStaticCairo} from './staticCairoSearch.ts';
-import {indexedRowsToPlaces} from './locationSearch.ts';
+import {indexedRowsToPlaces} from './indexedPlaceRows.ts';
 test('cached OSM index shows sourced areas without pretending centroids are boarding pins',async()=>{
  const original=globalThis.fetch;
  let requests=0;
