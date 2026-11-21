@@ -125,16 +125,28 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
  return <div className="rh-home sekka-rider-home" dir={en?'ltr':'rtl'}>
   <section className="rh-hero" aria-labelledby="rh-home-title">
    <div className="rh-hero__map-lines" aria-hidden="true"/>
-   <img className="rh-hero__artwork" src="/brand/sekka-rider-hero-scene.svg" alt=""
-    width="520" height="374"/>
+   <div className="rh-hero__orb rh-hero__orb--a" aria-hidden="true"/>
+   <div className="rh-hero__orb rh-hero__orb--b" aria-hidden="true"/>
    <div className="rh-hero__copy">
+    <span className="rh-hero__eyebrow">{t('سِكَّة · معاك في السِكَّة','seKKa · Along your way')}</span>
     <h1 id="rh-home-title">{tr.title}</h1>
     <span className="rh-hero__underline" aria-hidden="true"/>
     <p>{tr.subtitle}</p>
    </div>
+   <div className="rh-hero__route" aria-hidden="true">
+    <span><i/>{draft.origin?display(draft.origin):t('مكانك','Your start')}</span>
+    <b className="rh-hero__route-track"><i/></b>
+    <span><i/>{draft.destination?display(draft.destination):t('وجهتك','Your stop')}</span>
+   </div>
+   <svg className="rh-hero__wave" viewBox="0 0 440 105" preserveAspectRatio="none" aria-hidden="true">
+    <path fill="#83EDF6" d="M0 33C105-2 166 2 260 41S375 68 440 14V105H0Z"/>
+    <path fill="#ECFBFF" d="M0 65C128 16 227 99 340 66S410 57 440 43V105H0Z"/>
+   </svg>
   </section>
   <section className="rh-journey" aria-label={tr.savedLabel}>
-   <div className="rh-journey__ribbon"><RiderIcon name="star" size={18}/>{tr.savedLabel}</div>
+   <div className="rh-journey__ribbon"><RiderIcon name="star" size={18}/>{draft.origin&&draft.destination?tr.savedLabel:t('ظبّط مشوارك','Plan your ride')}</div>
+   <div className="rh-journey__heading"><strong>{t('مشوارك… على مزاجك','Your route, your choice')}</strong>
+    <small>{t('اضغط على أي خانة علشان تختار','Tap any field to change it')}</small></div>
    {!areasLoaded&&!areasFailed&&draft.origin&&<p className="rh-journey__area-loading" role="status">{tr.loadingAreas}</p>}
    {areasFailed&&<p className="rh-journey__notice" role="status">{tr.noBackend}</p>}
    <div className="rh-journey__fields">
@@ -150,16 +162,23 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
     </button>)}
    </div>
    <button type="button" className="rh-button rh-button--primary" onClick={search}>
-    {tr.searchButton}<RiderIcon name="arrow" size={24}/>
+    {tr.searchButton}<span className="rh-button__orbit" aria-hidden="true"><RiderIcon name="arrow" size={22}/></span>
+   </button>
+   <button type="button" className="rh-journey__advanced" onClick={()=>onNavigate(9)}>
+    {t('بحث بمزيد من التفاصيل','More search options')} <span aria-hidden="true">↗</span>
    </button>
   </section>
+  <div className="rh-home__steps" aria-label={t('مراحل الرحلة','How it works')}>
+   <span><b>١</b>{t('حدّد','Choose')}</span><i aria-hidden="true"/><span><b>٢</b>{t('قارن','Compare')}</span><i aria-hidden="true"/><span><b>٣</b>{t('احجز','Reserve')}</span>
+  </div>
   {error&&<p className="rh-home__alert" role="alert">{error}</p>}
+  <div className="rh-home__actions-title"><h2>{t('استكشف سِكّتك','Explore more')}</h2><span>{t('حاجات تانية تهمك','More ways to go')}</span></div>
   <section className="rh-pickup-actions" aria-label={tr.quickActions}>
    <button type="button" className="rh-pickup-actions__explore" onClick={()=>setNearbyOpen(true)}
     aria-haspopup="dialog" aria-expanded={nearbyOpen}>
     <span className="rh-pickup-actions__symbol" aria-hidden="true"><RiderIcon name="nearby" size={26}/></span>
     <span className="rh-pickup-actions__copy">
-     <strong>{t('نقطة ركوب على سِكّتك','Find your pickup spot')}</strong>
+     <strong>{t('نقط الركوب على الخريطة','Pickup spots on the map')}</strong>
      <small>{t('شوف أقرب نقطة منشورة على الخريطة','Explore real published stops nearby')}</small>
     </span>
     <span className="rh-pickup-actions__arrow" aria-hidden="true"><RiderIcon name="chevron" size={19}/></span>
