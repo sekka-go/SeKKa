@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 374" role="img" aria-label="">
+<defs>
+ <linearGradient id="road" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#66319A"/><stop offset="1" stop-color="#B89CD0"/></linearGradient>
+ <linearGradient id="paint" x1="0" y1="0" x2=".9" y2="1"><stop stop-color="#9631C4"/><stop offset=".48" stop-color="#7526B4"/><stop offset="1" stop-color="#4F117E"/></linearGradient>
+ <linearGradient id="glass" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#F9DAF3"/><stop offset="1" stop-color="#C5A4E0"/></linearGradient>
+ <linearGradient id="peach" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFE6E8"/><stop offset="1" stop-color="#FFC8D9"/></linearGradient>
+ <filter id="shadow"><feGaussianBlur stdDeviation="8"/></filter>
+</defs>
+<path d="M8 95C128 17 293 25 486 91L498 298 8 326Z" fill="#FFE8EA" opacity=".6"/>
+<g fill="none" stroke="#E2BBD8" opacity=".55" stroke-width="3"><path d="M6 70 498 138M13 116 486 187M24 159 486 241M42 59 81 230M116 30 153 249M192 32 212 274M277 46 287 265M375 61 337 287M468 82 419 282"/></g>
+<g fill="#BC92CD" opacity=".75">
+<path d="M0 189h36v-59h30v-27h16v86h17v-66h37v66h24v-92h22v92h20v-61h26v61h25v-74h32v74h31v-60h31v60h24v-82h34v82h20v-56h19v56h21v-90h33v100H0Z"/>
+<path d="M319 189h12l7-122 7 122h12l-7-128h-5l-3-17-5 17h-5Z"/>
+</g>
+<g stroke="#AE73BB" stroke-width="3" opacity=".55"><path d="M342 69h9M340 92h13M339 113h15M337 138h17M336 162h20M335 180h22"/></g>
+<path d="M-25 323Q75 253 198 316T523 277" fill="none" stroke="url(#road)" stroke-width="81"/>
+<path d="M-25 323Q75 253 198 316T523 277" fill="none" stroke="#F8D568" stroke-width="5" stroke-dasharray="28 18" opacity=".85"/>
+<g fill="#FA6949" stroke="#FFF5EB" stroke-width="3"><path d="M112 73c0-23 34-23 34 0 0 12-17 30-17 30s-17-18-17-30Z"/><path d="M329 122c0-23 34-23 34 0 0 12-17 30-17 30s-17-18-17-30Z"/></g>
+<circle cx="129" cy="71" r="5" fill="#FFF8F0"/><circle cx="346" cy="120" r="5" fill="#FFF8F0"/>
+<path d="M149 90c63 35 87-31 163 41" fill="none" stroke="#FF765E" stroke-width="4" stroke-linecap="round" stroke-dasharray="12 6"/>
+<ellipse cx="250" cy="312" rx="182" ry="27" fill="#321054" opacity=".25" filter="url(#shadow)"/>
+<!-- purple car cabin -->
+<g transform="translate(31 133)">
+ <path d="M34 129 65 73Q77 51 102 46h187q22 0 42 25l34 52 15 51-20 26H39L16 179Z" fill="url(#paint)" stroke="#52107C" stroke-width="6"/>
+ <path d="M82 112 111 61h170l41 53Z" fill="url(#glass)" stroke="#612387" stroke-width="5"/>
+ <path d="M182 60v54M286 61l16 53" stroke="#66248A" stroke-width="6"/>
+ <!-- behind-window riders -->
+ <g transform="translate(110 25)">
+  <path d="M-12 87q0-39 34-42Q58 44 68 86" fill="#FC9829"/>
+  <ellipse cx="28" cy="28" rx="21" ry="27" fill="#D98759"/>
+  <path d="M7 19Q10-13 40 2q19 8 6 22-2-12-9-10-15 9-30 5Z" fill="#332043"/>
+  <circle cx="20" cy="29" r="2.5" fill="#342041"/><circle cx="37" cy="29" r="2.5" fill="#342041"/>
+  <path d="M20 40q9 10 18 0" stroke="#FFF" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M-3 58-17 6" stroke="#D98759" stroke-width="13" stroke-linecap="round"/>
+  <path d="M-17 8-26-7M-17 8-8-12" stroke="#D98759" stroke-width="7" stroke-linecap="round"/>
+ </g>
+ <g transform="translate(201 31)">
+  <path d="M-7 88q1-37 33-41 33 0 39 41" fill="#6540A5"/>
+  <ellipse cx="26" cy="27" rx="21" ry="24" fill="#E0A177"/>
+  <path d="M2 14Q8-5 28 1Q47-8 47 18l-13-6L14 17Z" fill="#3B2447"/>
+  <circle cx="17" cy="30" r="8" stroke="#3F1E4A" stroke-width="3" fill="none"/>
+  <circle cx="34" cy="30" r="8" stroke="#3F1E4A" stroke-width="3" fill="none"/>
+  <path d="M24 29h4M18 43q9 7 16 0" stroke="#3F1E4A" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+  <path d="M-5 51q11-16 20 2M45 53q14-18 25 0" fill="none" stroke="#2B2140" stroke-width="8"/>
+ </g>
+ <g transform="translate(283 33)">
+  <path d="M-1 89q4-41 35-42 35-2 39 42" fill="#EB64AF"/>
+  <ellipse cx="36" cy="23" rx="22" ry="25" fill="#E7A27C"/>
+  <path d="M16 13q-5-25 27-21 21 4 16 23-15-7-23-4-10 7-20 2" fill="#3D203B"/>
+  <circle cx="28" cy="27" r="2.5" fill="#332041"/><circle cx="46" cy="27" r="2.5" fill="#332041"/>
+  <path d="M28 38q9 10 19 0" stroke="#FFF" stroke-width="3" stroke-linecap="round" fill="none"/>
+ </g>
+ <!-- car foreground -->
+ <path d="M23 123h339q14 0 18 14l8 42q1 15-19 16H35q-14 0-19-15l-9-36q-3-21 16-21Z" fill="url(#paint)" stroke="#5B1688" stroke-width="5"/>
+ <path d="m40 149 75 9-17 20-55-6Z" fill="#FFF1A1" stroke="#FFCC54" stroke-width="4"/>
+ <path d="m287 158 72-12 1 22-58 11Z" fill="#FFF1A1" stroke="#FFCC54" stroke-width="4"/>
+ <path d="M165 160h89l-9 28h-75Z" fill="#40105E" opacity=".7"/>
+ <path d="M171 173h73" stroke="#FDD548" stroke-width="4" stroke-linecap="round"/>
+ <ellipse cx="94" cy="200" rx="29" ry="25" fill="#33113E"/><ellipse cx="94" cy="200" rx="15" ry="14" fill="#E9DDEC"/>
+ <ellipse cx="310" cy="200" rx="29" ry="25" fill="#33113E"/><ellipse cx="310" cy="200" rx="15" ry="14" fill="#E9DDEC"/>
+</g>
+<g fill="none" stroke="#FFC841" stroke-width="7" stroke-linecap="round"><path d="M466 266l26-18M477 284l30 1M460 251l13-26"/></g>
+</svg>
