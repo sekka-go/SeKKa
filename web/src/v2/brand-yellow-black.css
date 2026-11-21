@@ -1,0 +1,192 @@
+/* سِكَّة — owner-approved contrast and accent rules.
+   Rule 1: no mauve or purple in the live UI; previous purple controls are yellow.
+   Rule 2: all copy on genuine white / near-white surfaces is black.
+   The cyan-blue brand, warning/error states and dark-mode contrast stay legible.
+   Applied last to the actual PWA shell, not the developer 73-screen gallery. */
+:root {
+ --sekka-sun:#FFCC24;
+ --sekka-sun-ink:#111111;
+ --flow-sun:#FFCC24;
+ --flow-ink:#111111;
+ --sekka-navy:#111111;
+ --sekka-mauve:#FFCC24;
+ --sekka-mauve-dark:#F3BA00;
+ --sekka-mauve-soft:#FFF4C7;
+}
+.sekka-mobile {
+ --yellow:#FFCC24;
+ --brand-purple:#FFCC24;
+ --phase-purple:#FFCC24;
+ --rs-purple:#FFCC24;
+ --rh-purple:#FFCC24;
+ --bk-purple:#FFCC24;
+ --cj-accent:#FFCC24;
+ --sekka-mauve:#FFCC24;
+ --sekka-mauve-dark:#F3BA00;
+ --sekka-mauve-soft:#FFF4C7;
+ --flow-sun:#FFCC24;
+ --sekka-sun:#FFCC24;
+ --sekka-sun-ink:#111111;
+}
+html:not([data-theme="dark"]) .sekka-mobile {
+ --flow-ink:#111111;
+ --sekka-navy:#111111;
+ --ink:#111111;
+ --text:#111111;
+ --rh-ink:#111111;
+ --rs-ink:#111111;
+ --bk-ink:#111111;
+ --se-ink:#111111;
+ --cj-home-ink:#111111;
+ --muted:#494949;
+ --flow-muted:#494949;
+}
+/* Black-on-white surfaces across the rider, captain and account journeys. */
+html:not([data-theme="dark"]) .sekka-mobile :is(
+ .sekka-mobile-card,.rh-journey,.rs3__form,.rd3__route,
+ .rd3__facts>div,.rd3__stops,.rb3__card,.rb3__empty,
+ .rf3__panel,.live-profile,.live-trip-requests,
+ .sekka-rider-booking-v3 .b-box,.sekka-side-drawer,
+ .sekka-entry__details li,.sekka-entry__role,.d-screen-11 .sekka-live-result,
+ .d-screen-11 .sekka-no-match,.rh-picker,.sekka-request-card
+){
+ color:#111111!important;
+}
+/* Text in white cards and panels; exclude children of buttons/links so
+   blue CTA buttons retain white labels and yellow pills retain dark labels. */
+html:not([data-theme="dark"]) .sekka-mobile :is(
+ .sekka-mobile-card,.rh-journey,.rs3__form,.rd3__route,
+ .rd3__facts>div,.rd3__stops,.rb3__card,.rb3__empty,
+ .rf3__panel,.live-profile,.live-trip-requests,
+ .sekka-rider-booking-v3 .b-box,.sekka-side-drawer,
+ .sekka-entry__details li,.sekka-entry__role,
+ .d-screen-11 .sekka-live-result,.d-screen-11 .sekka-no-match,
+ .rh-picker,.sekka-request-card
+) :is(h1,h2,h3,h4,h5,h6,p,small,strong,b,label,li,span,bdi,summary):not(button *):not(a *):not([class*="status"] *):not([class*="badge"] *){
+ color:#111111!important;
+}
+/* Other white form fields and content backgrounds must have strong contrast. */
+html:not([data-theme="dark"]) .sekka-mobile :is(
+ input,textarea,select
+):not(:disabled){color:#111111!important;}
+html:not([data-theme="dark"]) .sekka-mobile :is(
+ .rh-journey__field,.rs3__days-toggle,.rs3__place,
+ .rs3__time,.rs3__time input,.rs3__days button:not([aria-pressed="true"]),
+ .rd3__stops select,.rf3__price input,.live-profile input,
+ .sekka-place-lookup__label input,.sekka-entry__role-text
+){
+ color:#111111!important;
+}
+html:not([data-theme="dark"]) .sekka-mobile :is(
+ .rh-journey__field-copy>strong,.rh-journey__field-copy>span,
+ .rh-journey__heading>strong,.rh-journey__heading>small,
+ .rs3__section-label h3,.rs3__label,.rs3__days-toggle,
+ .rd3__route-stops strong,.rd3__route-stops small,
+ .rd3__facts strong,.rd3__facts span,
+ .rd3__section-title h3,.rd3__section-title p,
+ .rb3__card h2,.rb3__meta,.rb3__empty h2,.rb3__empty p,
+ .rf3__panel h3,.rf3__categories strong,.rf3__categories span,
+ .sekka-live-result-head h2,.sekka-live-stops li strong,
+ .sekka-live-result-facts,.sekka-live-price strong,
+ .live-profile h2,.live-profile label,
+ .sekka-entry__title,.sekka-entry__description,
+ .sekka-entry__role-text strong,.sekka-entry__role-text small,
+ .live-trip-requests h2,.live-trip-requests h3
+){
+ color:#111111!important;
+}
+/* Subtle gray helper text is acceptable but remains near-black on white. */
+html:not([data-theme="dark"]) .sekka-mobile :is(
+ .rh-journey__field-copy>strong.is-placeholder,
+ .rs3__place .sekka-place-lookup__selected,
+ .rd3__notice,.rd3__notice p,.rb3__meta,
+ .rs3__days-panel p
+){color:#343434!important;}
+/* Yellow is an accent, not a text color on a white field. */
+.sekka-mobile :is(
+ .rh-journey__ribbon,.rh-journey__ribbon *,
+ .rs3__swap,.rs3__swap *,
+ .rs3__days button[aria-pressed="true"],
+ .rh-picker__week button[aria-pressed="true"],
+ .rh-picker__period button[aria-pressed="true"],
+ .rf3__choices button[aria-pressed="true"],
+ .rf3__categories button[aria-pressed="true"],
+ .rb3__filters button[aria-pressed="true"],
+ .sekka-request-yellow-cta,.sekka-request-yellow-cta *,
+ .sekka-entry__details li>span,.sekka-entry__check,
+ .d-screen-11 .sekka-rider-recommended
+){color:#111111!important;}
+.sekka-mobile .sekka-request-yellow-cta{
+ background:#FFCC24!important;border-color:#FFCC24!important;
+ color:#111111!important;
+}
+.sekka-mobile .rh-journey__ribbon,
+.sekka-mobile .rb3__filters button[aria-pressed="true"],
+.sekka-mobile .rf3__choices button[aria-pressed="true"],
+.sekka-mobile .rf3__categories button[aria-pressed="true"],
+.sekka-mobile .rs3__days button[aria-pressed="true"]{
+ background:#FFCC24!important;color:#111111!important;
+ border-color:#FFCC24!important;
+}
+/* White secondary button surfaces. Disabled CTAs still visibly disabled. */
+html:not([data-theme="dark"]) .sekka-mobile :is(
+ .rr3-hero__bottom>button,.rh-journey__advanced,
+ .rd3__back,.rb3__refresh,.rf3__reset,
+ .sekka-screen-back button,.sekka-side-drawer nav button,
+ .rh-picker__close,.rider-tabbar button:not([aria-current="page"])
+){color:#111111!important;}
+/* Keep primary blue surfaces and their typography white. */
+.sekka-mobile :is(
+ .rh-hero,.rs3__head,.rr3-hero,.rd3__hero,
+ .rb3__hero,.rbk3-hero,.sekka-mobile-header,
+ .sekka-entry__header,.captain-routes-canvas .cj-hero,
+ .captain-routes-canvas .cj-home-welcome
+) :is(h1,h2,h3,p,strong,small,span):not(.is-current){
+ color:#FFFFFF!important;
+}
+.sekka-mobile :is(
+ .rh-button--primary,.rs3__submit,.rd3__primary,
+ .d-screen-11 .sekka-live-result .d-offer-select,
+ .sekka-rider-booking-v3 .b-primary,.rf3__apply,
+ .sekka-entry__primary,.sekka-entry-login .phase-primary
+){color:#FFFFFF!important;}
+.sekka-mobile :is(
+ .rh-button--primary,.rs3__submit,.rd3__primary,
+ .d-screen-11 .sekka-live-result .d-offer-select,
+ .sekka-rider-booking-v3 .b-primary,.rf3__apply,
+ .sekka-entry__primary,.sekka-entry-login .phase-primary
+) *{color:#FFFFFF!important;}
+/* Active stage markers have yellow fills and black numbers. */
+.sekka-mobile :is(
+ .rs3__progress .is-current b,
+ .rr3-hero__progress .is-current,
+ .rd3__hero-progress .is-current
+){background:#FFCC24!important;border-color:#FFCC24!important;
+ color:#111111!important;}
+/* Dark mode is NOT a white surface: keep text white against dark slate,
+   avoid returning to old purple/dark-magenta values. */
+html[data-theme="dark"] .sekka-mobile{
+ --flow-ink:#F5FBFF;--ink:#F5FBFF;--text:#F5FBFF;--sekka-navy:#F5FBFF;
+ --rh-ink:#F5FBFF;--rs-ink:#F5FBFF;--bk-ink:#F5FBFF;
+ --flow-soft:#102A3C;--flow-paper:#18394F;--flow-line:#355F71;
+ --flow-muted:#BDDAE6;
+}
+html[data-theme="dark"] .sekka-mobile :is(
+ .rh-journey,.rs3__form,.rd3__route,.rd3__facts>div,
+ .rd3__stops,.rb3__card,.rb3__empty,.rf3__panel,
+ .live-profile,.live-trip-requests,.sekka-rider-booking-v3 .b-box,
+ .d-screen-11 .sekka-live-result
+){background:#18394F!important;color:#F5FBFF!important;
+ border-color:#355F71!important;}
+html[data-theme="dark"] .sekka-mobile :is(
+ .rh-journey__heading strong,.rh-journey__field-copy strong,
+ .rs3__section-label h3,.rd3__facts strong,.rb3__card h2,
+ .live-profile h2,.sekka-live-result-head h2
+){color:#F5FBFF!important;}
+html[data-theme="dark"] .sekka-mobile :is(
+ .rs3__place,.rs3__time,.rs3__days-toggle,.rd3__stops select,
+ .live-profile input,.rf3__price input
+){background:#20465C!important;color:#F5FBFF!important;border-color:#486C80!important;}
+@media(prefers-reduced-motion:reduce){
+ .sekka-mobile *{scroll-behavior:auto!important}
+}
