@@ -2,7 +2,7 @@ export const riderHomeCopy={
  ar:{
   kicker:'سِكّة.. مشاوير أذكى',title:'جاهز لمشوارك؟',
   subtitle:'دور على رحلة في طريقك، واختار نقطة الركوب اللي تناسبك.',
-  savedLabel:'مشوارك المعتاد',pickup:'من',dropoff:'إلى',departure:'الذهاب',arrival:'العودة',
+  savedLabel:'مشوارك المعتاد',timeLabel:'الساعة',daysLabel:'الأيام',timePrompt:'حدد ميعادك',daysPrompt:'بتظهر مع الرحلة',editInitial:'حدّد أو غيّر مشوارك',quickActions:'اختصارات الراكب',nearbyShortTitle:'نقط قريبة منك',bookingsShortTitle:'رحلاتي',pickup:'من',dropoff:'إلى',departure:'الذهاب',arrival:'العودة',
   weekly:'أسبوعي',monthly:'شهري',outbound:'ذهاب',return:'عودة',round_trip:'ذهاب وعودة',
   searchSaved:'شوف الرحلات على خطّي',change:'غيّر المكان أو الميعاد',find:'دور على رحلة',
   firstTitle:'أول مرة تستخدم سِكّة؟',firstDesc:'حدّد نقطة البداية والوجهة والميعاد مرة واحدة. بعدها مشوارك هيبقى جاهز لإعادة البحث.',
@@ -23,7 +23,7 @@ export const riderHomeCopy={
  en:{
   kicker:'seKKa · Smarter shared rides',title:'Ready for your ride?',
   subtitle:'Find published trips going your way and choose a convenient pickup.',
-  savedLabel:'Your usual commute',pickup:'From',dropoff:'To',departure:'Outbound',arrival:'Return',
+  savedLabel:'Your usual commute',timeLabel:'Time',daysLabel:'Days',timePrompt:'Choose your departure time',daysPrompt:'Shown on available rides',editInitial:'Set or edit your commute',quickActions:'Quick actions',nearbyShortTitle:'Nearby pickup stops',bookingsShortTitle:'My rides',pickup:'From',dropoff:'To',departure:'Outbound',arrival:'Return',
   weekly:'Weekly',monthly:'Monthly',outbound:'Outbound',return:'Return',round_trip:'Round trip',
   searchSaved:'Find rides on my route',change:'Change route or time',find:'Find a ride',
   firstTitle:'New to seKKa?',firstDesc:'Choose your pickup area, destination and time once. Your commute is then ready to search again.',
