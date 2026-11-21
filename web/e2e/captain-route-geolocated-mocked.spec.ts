@@ -115,7 +115,8 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  const place=entry.getByRole('combobox',{name:'Search street or landmark'});
  // Invalid lookup remains blocked even when its returned map point is nearby in Cairo.
  await place.fill('Outside street');
- await entry.getByRole('button',{name:'Find',exact:true}).click();
+ // The geocoder is queried automatically after typing, without an explicit search control.
+ await expect(entry.getByRole('button',{name:'Find',exact:true})).toHaveCount(0);
  await expect(entry.getByText(/No matching location was found within Greater Cairo/)).toBeVisible();
  await expect(entry.locator('.cj-easy-selected-stops>li')).toHaveCount(0);
  // A popular-place search prompt leaves the stop unselected until confirmation.
@@ -127,7 +128,7 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  await entry.getByRole('button',{name:'Nasr City'}).click();
  const destination=entry.getByRole('combobox',{name:'Search street or landmark'});
  await destination.fill('Nasr City Square');
- await entry.getByRole('button',{name:'Find',exact:true}).click();
+ await expect(entry.locator('.cj-easy-results').getByRole('option',{name:/Nasr City Square/})).toBeVisible();
  await entry.locator('.cj-easy-results').getByRole('option',{name:/Nasr City Square/}).click();
  await expect(entry.locator('.cj-easy-selected-stops>li')).toHaveCount(2);
  await expect(entry.getByTitle('OpenStreetMap route stop map')).toBeVisible();
