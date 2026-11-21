@@ -1,4 +1,4 @@
-import {selectOperationalMapPlace} from './geoPlace.ts';
+import {selectOperationalMapPlace,isSearchableMapPlace} from './geoPlace.ts';
 import type {MapPlace,PlaceChoice} from './geoPlace.ts';
 
 export const RIDER_DRAFT_KEY='sekka.rider.discoveryDraft.v31';
@@ -26,11 +26,11 @@ const pointChoice=(raw:unknown):raw is PlaceChoice|null=>{
  if(v.kind==='service')return Boolean(v.area&&typeof v.area==='object'&&
    typeof (v.area as Record<string,unknown>).id==='number'&&
    starts((v.area as Record<string,unknown>).name_ar));
- if(v.kind==='map'){
+ if(v.kind==='map'||v.kind==='search'){
   if(!v.place||typeof v.place!=='object')return false;
   const p=v.place as Record<string,unknown>;
   return starts(p.id)&&starts(p.name)&&typeof p.latitude==='number'&&typeof p.longitude==='number'
-    &&selectOperationalMapPlace(p as MapPlace);
+    &&(v.kind==='search'?isSearchableMapPlace(p as MapPlace):selectOperationalMapPlace(p as MapPlace));
  }
  return false;
 };
