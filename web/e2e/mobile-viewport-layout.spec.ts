@@ -49,9 +49,10 @@ for(const width of widths){
     },{language,theme});
     await page.goto(scene.url);
     if(scene.start){
-     const start=page.getByRole('button',{name:language==='ar'?/ابدأ الآن/:/Get started/});
-     await expect(start).toBeVisible();
-     await start.click();
+     const skip=page.getByRole('button',{name:language==='ar'?'تخطي التعريف':'Skip intro'});
+     await expect(skip).toBeVisible();
+     await skip.click();
+     await expect(page).toHaveURL(/tab=login&view=3/);
     }
     const screen=page.locator(scene.selector);
     await expect(screen).toBeVisible();

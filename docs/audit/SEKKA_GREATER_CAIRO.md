@@ -28,3 +28,52 @@ Photon contributes discovery results and can be unavailable or omit some local f
 ## Staging verification
 
 Stage SQL checks cover valid source geometry, exact boundary points, existing stop compatibility, outside writes, outside search, and preservation of active registered areas. Unit and browser tests cover the client. Browser tests with intercepted Photon or Supabase requests are regression fixtures. Live Photon observations and authenticated acceptance should be reported independently.
+
+
+## P0 recovery coverage audit
+
+The samples below use representative points for mapped places in WGS84. A point result describes the active discovery geometry. Service-area IDs still come from Staging and do not imply that a representative point establishes a service polygon. The versioned machine-readable samples are in [sekka-cairo-coverage-samples.json](./sekka-cairo-coverage-samples.json). The active geometry has two disconnected exterior rings and no interior rings. The coverage result remains unchanged pending explicit approval for geographic expansion.
+
+| Area | OSM reference (latitude, longitude) | Active coverage | Operational classification |
+| --- | --- | --- | --- |
+| Downtown Cairo / Tahrir | [30.0443934, 31.2357457](https://www.openstreetmap.org/way/30925727) | Inside | discovery |
+| Nasr City | [30.0521177, 31.3422045](https://www.openstreetmap.org/node/768552342) | Inside | registered #3 |
+| Heliopolis | [30.1005985, 31.3329136](https://www.openstreetmap.org/node/768591736) | Inside | registered #9 |
+| Maadi / Metro building | [29.9601415, 31.2581197](https://www.openstreetmap.org/way/210595249) | Inside | registered #1 |
+| New Cairo | [30.0277688, 31.4756825](https://www.openstreetmap.org/way/498580491) | Inside | registered #2 |
+| First Settlement | [30.0635786, 31.4471897](https://www.openstreetmap.org/way/252475573) | Inside | inside registered New Cairo context |
+| Third Settlement | [29.9808967, 31.4345610](https://www.openstreetmap.org/way/257176943) | Inside | inside registered New Cairo context |
+| Shorouk | [30.1491507, 31.6291954](https://www.openstreetmap.org/way/772922707) | Outside | owner approval required for expansion |
+| Dokki / Old Dokki | [30.0358515, 31.2098227](https://www.openstreetmap.org/way/1554827288) | Inside | registered #4 |
+| Mohandessin / Mostafa Mahmoud Square | [30.0532630, 31.2018612](https://www.openstreetmap.org/way/29222857) | Inside | registered #5 |
+| Zamalek | [30.0629925, 31.2196336](https://www.openstreetmap.org/node/13800621826) | Inside | registered #6 |
+| Talbia / Haram | [30.0017733, 31.1809495](https://www.openstreetmap.org/node/14124357536) | Inside | discovery |
+| King Faisal Street / Bein El Sarayat | [30.0143452, 31.2011267](https://www.openstreetmap.org/way/1133475345) | Inside | discovery |
+| 6th of October | [29.9723458, 30.9409205](https://www.openstreetmap.org/node/299523927) | Inside | registered #8 |
+| Sheikh Zayed | [30.0483470, 30.9832235](https://www.openstreetmap.org/node/330194927) | Inside | registered #7 |
+| Hadayek October | [29.9315563, 31.0617043](https://www.openstreetmap.org/way/1524454794) | Outside | owner approval required for expansion |
+| Shubra El Kheima | [30.1285988, 31.2422180](https://www.openstreetmap.org/node/768591737) | Inside | discovery |
+| Obour / first police station | [30.2361412, 31.4733717](https://www.openstreetmap.org/way/1531391127) | Inside | point inside only |
+| Obour / city tunnel | [30.1636478, 31.4784069](https://www.openstreetmap.org/way/155519945) | Outside | owner approval required for expansion |
+| Ferdous City compound | [29.9487671, 31.0512651](https://www.openstreetmap.org/way/691681930) | Outside | outside the named October BEO layer |
+| Mall of Arabia | [30.0067645, 30.9761146](https://www.openstreetmap.org/relation/13478008) | Outside | inside BEO October layer, pending discovery approval |
+| Mall of Egypt | [29.9721325, 31.0170639](https://www.openstreetmap.org/way/83811548) | Outside | inside BEO October layer, pending discovery approval |
+| American University in Cairo | [30.0191701, 31.5037433](https://www.openstreetmap.org/way/155881184) | Inside | inside registered New Cairo context |
+| Arkan Plaza | [30.0198973, 31.0053298](https://www.openstreetmap.org/way/1456049142) | Inside | inside registered Sheikh Zayed context |
+| Fifth Settlement | [30.0038046, 31.4249357](https://www.openstreetmap.org/way/774635278) | Inside | inside registered New Cairo context |
+| Hosary Square | [29.9724456, 30.9448074](https://www.openstreetmap.org/way/1393055714) | Inside | inside registered October context |
+| Obour centre | [30.1914000, 31.4505480](https://www.openstreetmap.org/node/311994035) | Inside | discovery, partial city coverage |
+| Shorouk centre | [30.1488541, 31.6295623](https://www.openstreetmap.org/node/298439914) | Outside | owner approval required for expansion |
+
+The BEO archive has named municipal layers for October (`Oct_BOU`, named record `6th_oct`), New Cairo (`New_Cairo_City`) and Sheikh Zayed (`Zayed`). Those layers are suitable for owner review. The database labels themselves do not establish that these municipal extents are the approved exact seKKa service boundaries. The archive does not contain equivalent service polygons for Maadi, Nasr City, Dokki, Mohandessin, Zamalek and Heliopolis. The required decision is to identify one approved geometry/version per registered ID before enforcing all nine as exact service polygons.
+
+Approval needed for discovery expansion within existing IDs 2 and 8 includes coverage of the source polygons for New Cairo and 6th of October. Mall of Arabia and Mall of Egypt fall within the BEO October layer and outside the current service footprint. Hadayek October and Shorouk have separate geography and require their own explicit decision. The Obour centre and first police station are inside, while the tunnel sample is outside. No new registered IDs follow from any of these audit results.
+
+### Search and CI recovery
+
+- Playwright reproduced the Passenger toolbar title intercepting menu clicks after the splash had cleared. The decorative title now leaves menu and notification controls clickable. The pending Captain role flow covers all four phone widths.
+- The launch artwork, manifest and Welcome action expectations now follow the approved road mark and three-step introduction. Portrait installed viewports above 480 CSS pixels retain a full-width canvas.
+- Live Photon responses reached CI tests whose subject was registered-area booking. Those tests now exercise deterministic registered-area fixtures. Separate browser checks retain a populated Photon response and exercise the actual clickable option on each requested viewport, language and theme.
+- Synthetic session suites execute in the explicitly configured mocked CI job. The public suite keeps the guest authorization gates. CI retains traces for failed tests.
+- The catalog uses individually reviewed OSM references for streets, schools, hospitals, transit and landmarks. Its representative coordinates provide context. The two verified October malls are recognized as outside the active footprint while the approval decision is pending.
+- A landmark with one verified in-region registered parent can offer a deliberate whole-area search. Its centroid is excluded from the request. The real Staging public API returned one published match for registered October to New Cairo. Booking persistence and Captain publication require two distinct authorized Google test sessions.

@@ -1,7 +1,7 @@
 import {useEffect,useState} from 'react';
 import {greaterCairoAttribution} from './greaterCairoBoundary';
 import {usePreferences} from './preferences';
-import {catalogMatches,locationContext,noMatchingLocation,outsideCoverageMessage,PHOTON_ATTRIBUTION,selectOperationalMapPlace,serviceMatches} from './geoPlace';
+import {catalogMatches,exactCatalogMatches,locationContext,locationContextIcon,outsideCatalogMatch,noMatchingLocation,outsideCoverageMessage,PHOTON_ATTRIBUTION,selectOperationalMapPlace,serviceMatches} from './geoPlace';
 import {useLocationOptions,useLocationSearch} from './locationSearch';
 import type {PlaceChoice,ServiceArea} from './geoPlace';
 import './location-search.css';
@@ -23,9 +23,11 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
  const hints=menu?catalogMatches(query,searchArea).filter(hint=>!hint.reference&&areas.some(area=>area.name_en.toLowerCase()===hint.area)):[];
  const points=result.places.filter(selectOperationalMapPlace);
  const broad=menu?locationContext(query,result.places,en,searchArea):[];
- const broadArea=broad.some(place=>place.kind==='area')?
-  catalogMatches(query,searchArea).find(item=>item.kind==='area')?.area:undefined;
- const parent=areas.find(area=>area.name_en.toLowerCase()===broadArea);
+ // An exact landmark can offer its one registered parent as an explicit
+ // whole-area search. It never carries the landmark's representative GPS.
+ const parentKeys=new Set(exactCatalogMatches(query,searchArea)
+  .filter(item=>broad.some(place=>place.catalogKey===item.key)).map(item=>item.area));
+ const parent=parentKeys.size===1?areas.find(area=>parentKeys.has(area.name_en.toLowerCase())):undefined;
  const areasToPick=parent&&!local.some(area=>area.id===parent.id)?[...local,parent]:local;
  const picks:PlaceChoice[]=[...areasToPick.map(area=>({kind:'service' as const,area})),
   ...points.map(place=>({kind:'map' as const,place}))];
@@ -36,7 +38,9 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
   setQuery(name);onPick(name,next);setOpen(false);setImmediate(0);options.reset();
  };
  const search=()=>{setOpen(true);setImmediate(i=>i+1);};
- const msg=result.status==='error'
+ const msg=menu&&outsideCatalogMatch(query,searchArea)&&!picks.length&&!broad.length
+  ?t(outsideCoverageMessage.ar,outsideCoverageMessage.en)
+  :result.status==='error'
   ?t('البحث على الخريطة مش متاح دلوقتي. جرّب تاني.','Map search is temporarily unavailable. Try again.')
   :result.status==='done'&&!picks.length&&!broad.length
     ?result.outside?t(outsideCoverageMessage.ar,outsideCoverageMessage.en):t(noMatchingLocation.ar,noMatchingLocation.en):'';
@@ -78,7 +82,7 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
     }}>{t('ابحث عن ','Search for ')}{t(item.ar,item.en)}</button>)}
    </div>}
    {broad.length>0&&<ul className="sekka-location-context">
-    {broad.map(place=><li key={place.id}><strong dir="auto">{place.name}</strong><small dir="auto">{place.detail}</small></li>)}
+    {broad.map(place=><li key={place.id}><strong dir="auto"><span aria-hidden="true">{locationContextIcon(place)} </span>{place.name}</strong><small dir="auto">{place.detail}</small></li>)}
     <li>{t('اكتب اسم معلم محدد قريب لاختيار نقطة على الخريطة.','Enter a nearby landmark to choose a precise map point.')}</li>
    </ul>}
    {result.busy&&<p role="status">{t('بنجيب الأماكن من OpenStreetMap…','Looking up places on OpenStreetMap…')}</p>}

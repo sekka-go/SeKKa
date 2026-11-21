@@ -14,6 +14,9 @@ export default defineConfig({
       '**/captain-plate-segments.spec.ts',
       '**/v31-rider-no-match-request-mocked.spec.ts',
       '**/nearby-gps-mocked.spec.ts',
+      '**/notification-flow-mocked.spec.ts',
+      '**/rider-journey-vnext.spec.ts',
+      '**/rider-redesign-v3.spec.ts',
       '**/captain-route-geolocated-mocked.spec.ts',
       '**/captain-home-mocked.spec.ts',
       '**/captain-publish-conflict-mocked.spec.ts'
@@ -21,6 +24,7 @@ export default defineConfig({
   use: {
     baseURL: "http://127.0.0.1:4173",
     headless: true,
+    trace: process.env.CI ? "retain-on-failure" : "off",
     launchOptions: {
       executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,
     },

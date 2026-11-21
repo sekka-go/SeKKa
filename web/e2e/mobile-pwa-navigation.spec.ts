@@ -76,7 +76,7 @@ for(const language of ['ar','en'] as const){
  });
 }
 
-test('production light mode uses current coral/magenta brand palette',async({page})=>{
+test('production light mode uses the approved search marker and brand palette',async({page})=>{
  await page.addInitScript(()=>{
   localStorage.setItem('language_preference','ar');
   localStorage.setItem('theme_preference','light');
@@ -84,12 +84,10 @@ test('production light mode uses current coral/magenta brand palette',async({pag
  await page.goto('/?tab=search&view=9');
  const stage=page.locator('.sekka-mobile .discovery-stage.light');
  await expect(stage).toBeVisible();
- const icon=stage.locator('.d-place > .discovery-icon').first();
- await expect(icon).toHaveCSS('color','rgb(247, 53, 135)');
- const origin=stage.locator('.d-origin-dot').first();
- await expect(origin).toHaveCSS('border-top-color','rgb(247, 53, 135)');
+ await expect(stage.locator('.rs3__marker--start')).toHaveCSS('background-color','rgb(255, 117, 78)');
+ await expect(stage.locator('.rs3__marker--end')).toHaveCSS('background-color','rgb(100, 20, 174)');
  const brand=await page.locator('.sekka-mobile').evaluate(node=>getComputedStyle(node).getPropertyValue('--sekka-brand').trim());
- expect(brand).toBe('#FF663D');
+ expect(brand.toUpperCase()).toBe('#FF663D');
  await expect(page.locator('.sekka-bottom-nav')).toHaveCount(0);
  await expect(page.locator('.sekka-mobile-header .sekka-approved-logo')).toHaveCount(0);
 });

@@ -79,7 +79,7 @@ jobs:
               e2e/captain-publish-conflict-mocked.spec.ts
           - group: Rider search
             artifact: rider-search
-            specs: e2e/v31-rider-no-match-request-mocked.spec.ts e2e/nearby-gps-mocked.spec.ts e2e/rider-redesign-v3.spec.ts e2e/notification-flow-mocked.spec.ts
+            specs: e2e/v31-rider-no-match-request-mocked.spec.ts e2e/nearby-gps-mocked.spec.ts e2e/rider-redesign-v3.spec.ts e2e/rider-journey-vnext.spec.ts e2e/notification-flow-mocked.spec.ts
     defaults:
       run:
         working-directory: web

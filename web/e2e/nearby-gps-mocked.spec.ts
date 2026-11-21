@@ -166,7 +166,8 @@ test('verified Hosary context remains available during a Photon outage without a
  await page.addInitScript(()=>localStorage.setItem('language_preference','en'));
  await page.route('https://photon.komoot.io/api/**',request=>request.fulfill({status:503,json:{}}));
  await page.route(endpoint+'/**',request=>request.fulfill({json:
-  new URL(request.request().url()).pathname==='/rest/v1/v31_service_areas'?areas:[]}));
+  new URL(request.request().url()).pathname==='/rest/v1/v31_service_areas'?
+   [...areas,{id:8,name_ar:'6 أكتوبر',name_en:'6th of October'}]:[]}));
  await page.goto('/?tab=search&view=9');
  const input=page.getByRole('combobox',{name:'Starting point'});
  await input.fill('الحصرى');
@@ -177,6 +178,9 @@ test('verified Hosary context remains available during a Photon outage without a
  await expect(page.getByRole('option',{name:/Hosary/})).toHaveCount(0);
  await input.press('Enter');
  await expect(input).toHaveValue('الحصرى');
+ await page.getByRole('option',{name:'6th of October Search the whole service area',exact:true}).click();
+ await expect(input).toHaveValue('6th of October');
+ await expect(page.getByText(/Registered service area/)).toBeVisible();
 });
 
 for(const [width,height] of [[320,700],[360,800],[390,844],[412,915]] as const){

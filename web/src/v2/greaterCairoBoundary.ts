@@ -27,7 +27,12 @@ export function isInsideOperationalRegion(point: GeoPoint): boolean {
   holes.every(ring=>ringPosition(longitude,latitude,ring)!=='inside'));
 }
 
-export function isPersistableOperationalPoint(point:GeoPoint):boolean {
- return isInsideOperationalRegion({latitude:Number(point.latitude.toFixed(6)),
-  longitude:Number(point.longitude.toFixed(6))});
+export function persistableOperationalPoint(point:GeoPoint|null|undefined):GeoPoint|null {
+ if(!validCoordinates(point)||!isInsideOperationalRegion(point))return null;
+ const rounded={latitude:Number(point.latitude.toFixed(6)),longitude:Number(point.longitude.toFixed(6))};
+ return isInsideOperationalRegion(rounded)?rounded:null;
+}
+
+export function isPersistableOperationalPoint(point:GeoPoint|null|undefined):boolean {
+ return persistableOperationalPoint(point)!==null;
 }

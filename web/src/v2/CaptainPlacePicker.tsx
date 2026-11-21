@@ -1,7 +1,7 @@
 import {useEffect,useState} from 'react';
 import {greaterCairoAttribution} from './greaterCairoBoundary';
 import {usePreferences} from './preferences';
-import {catalogMatches,locationContext,noMatchingLocation,outsideCoverageMessage,PHOTON_ATTRIBUTION,placeMatchesArea,selectOperationalMapPlace} from './geoPlace';
+import {catalogMatches,locationContext,locationContextIcon,outsideCatalogMatch,noMatchingLocation,outsideCoverageMessage,PHOTON_ATTRIBUTION,placeMatchesArea,selectOperationalMapPlace} from './geoPlace';
 import {popularPlacesForArea} from './popularCaptainPlaces';
 import {useLocationOptions,useLocationSearch} from './locationSearch';
 import type {PlaceChoice,MapPlace,ServiceArea} from './geoPlace';
@@ -42,7 +42,9 @@ export default function CaptainPlacePicker({label,value,choice,onPick,onVerified
   if(name){setQuery(name);onPick(name,null);}
   setOpen(true);setImmediate(i=>i+1);options.reset();
  };
- const error=result.status==='error'
+ const error=menu&&outsideCatalogMatch(query,searchArea)&&!points.length&&!broad.length
+  ?t(outsideCoverageMessage.ar,outsideCoverageMessage.en)
+  :result.status==='error'
   ?t('البحث مش متاح دلوقتي. جرّب تاني.','Location search is unavailable. Try again.')
   :result.status==='done'&&!result.places.length&&!broad.length
     ?result.outside?t(outsideCoverageMessage.ar,outsideCoverageMessage.en):t(noMatchingLocation.ar,noMatchingLocation.en)
@@ -91,7 +93,7 @@ export default function CaptainPlacePicker({label,value,choice,onPick,onVerified
    </button>)}
   </div>}
   {broad.length>0&&<ul className="sekka-location-context">
-   {broad.map(place=><li key={place.id}><strong dir="auto">{place.name}</strong><small dir="auto">{place.detail}</small></li>)}
+   {broad.map(place=><li key={place.id}><strong dir="auto"><span aria-hidden="true">{locationContextIcon(place)} </span>{place.name}</strong><small dir="auto">{place.detail}</small></li>)}
    <li>{t('اختار معلم محدد قريب عشان تضيف نقطة وقوف.','Choose a nearby landmark to add an exact stop.')}</li>
   </ul>}
   <small className="cj-easy-attribution">{PHOTON_ATTRIBUTION} · {greaterCairoAttribution}</small>

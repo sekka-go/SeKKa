@@ -76,8 +76,8 @@ for(const width of [320,390]){
   await expect(daysDialog.locator('.rh-picker__count')).toBeVisible();
   await daysDialog.getByRole('button',{name:variant.language==='en'?'Done':'تم'}).click();
   await expect(page.locator('.rh-journey__field').nth(3)).toContainText(variant.language==='en'?'3 days':'أيام');
-  await expect(page.locator('.rh-shortcut--nearby')).toBeVisible();
-  await expect(page.locator('.rh-shortcut--bookings')).toBeVisible();
+  await expect(page.locator('.rh-pickup-actions__explore')).toBeVisible();
+  await expect(page.locator('.rh-pickup-actions__bookings')).toBeVisible();
   await expect(page.locator('.rh-hero h1')).toBeVisible();
   const tabs=page.getByRole('navigation',{name:variant.language==='en'?'Passenger navigation':'التنقل للراكب'});
   await expect(tabs).toBeVisible();

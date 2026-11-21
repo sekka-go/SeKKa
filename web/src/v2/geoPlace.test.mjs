@@ -1,9 +1,10 @@
 import {URL} from 'node:url';
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {persistableOperationalPoint} from './greaterCairoBoundary.ts';
 import {greaterCairoGeometry} from './greaterCairoGeometry.ts';
 import {readFileSync,readdirSync} from 'node:fs';
-import {mapPlacesFromPhoton,serviceMatches,placeMatchesArea,stopNearPoint,geoRequestAvailable,inLaunchRegion,normalizedPlace,catalogMatches,locationContext,rankMapPlaces,selectOperationalMapPlace,inspectPhoton} from './geoPlace.ts';
+import {mapPlacesFromPhoton,serviceMatches,placeMatchesArea,stopNearPoint,geoRequestAvailable,inLaunchRegion,normalizedPlace,catalogMatches,outsideCatalogMatch,locationContext,rankMapPlaces,selectOperationalMapPlace,inspectPhoton} from './geoPlace.ts';
 
 const areas=[
  {id:1,name_ar:'المعادي',name_en:'Maadi'},
@@ -63,7 +64,7 @@ test('Egyptian spelling, numerals, aliases and curated Hosary order are determin
  assert.equal(normalizedPlace('  ألتّجمُّعُ ـ ۵،٦  '),'التجمع 5 6');
  assert.equal(normalizedPlace('الحصرى'),'الحصري');
  for(const query of ['الحصري','الحصرى','El Hosary']){
-  assert.deepEqual(catalogMatches(query).map(x=>x.key),['hosary-square','hosary-mosque']);
+  assert.deepEqual(catalogMatches(query).slice(0,2).map(x=>x.key),['hosary-square','hosary-mosque']);
  }
  for(const query of ['التجمع 5','Fifth Settlement','التجمع الخامس']){
   assert.equal(catalogMatches(query)[0]?.key,'fifth-settlement');
@@ -125,4 +126,47 @@ test('browser polygon and PostGIS use the same source geometry and cover outer e
  assert.match(sql,/st_covers\(b.geometry/);
  assert.match(sql,/before insert or update of latitude,longitude/);
  assert.match(sql,/endpoint.covered/);
+});
+
+test('verified Cairo catalog handles bilingual prefixes, aliases and road directions',()=>{
+ assert.equal(locationContext('عباس العق',[],false)[0]?.name,'شارع عباس العقاد');
+ assert.equal(locationContext('AUC',[],true)[0]?.detail,'Lotus · New Cairo');
+ assert.equal(locationContext('التسعين الشمالى',[],false)[0]?.name,'شارع التسعين الشمالي');
+ assert.equal(locationContext('South 90',[],true)[0]?.name,'South 90th Street');
+ assert.equal(locationContext('Cairo Festival City',[],true)[0]?.id,'W:253593226');
+ assert.equal(locationContext('مستشفى كوبري القبة',[],false)[0]?.catalogKind,'hospital');
+ assert.equal(outsideCatalogMatch('مول العرب'),true);
+ assert.deepEqual(locationContext('مول العرب',[],false),[]);
+});
+
+test('station nodes and malls give context while actual mapped bus stops remain selectable',()=>{
+ const features=[
+  feature([31.2460533,30.0629785],{name:'محطة رمسيس',osm_type:'N',osm_id:271864421,osm_key:'railway',osm_value:'station'}),
+  feature([31.1929831,30.0597273],{name:'ميدان لبنان',osm_type:'N',osm_id:6799875366,osm_key:'place',osm_value:'square'}),
+  feature([31.1929831,30.0597273],{name:'Bus stop fixture',osm_type:'N',osm_id:123,osm_key:'highway',osm_value:'bus_stop'})
+ ];
+ const parsed=mapPlacesFromPhoton({features});
+ assert.deepEqual(parsed.map(selectOperationalMapPlace),[false,false,true]);
+ assert.equal(rankMapPlaces([parsed[0],parsed[0]],'محطة مصر').length,1);
+});
+
+test('Captain serialization fails closed for malformed coordinates and retains six decimal places',()=>{
+ assert.equal(persistableOperationalPoint(null),null);
+ assert.equal(persistableOperationalPoint({latitude:NaN,longitude:31.2357}),null);
+ assert.equal(persistableOperationalPoint({latitude:31.2357,longitude:30.0444}),null);
+ assert.deepEqual(persistableOperationalPoint({latitude:30.0038046,longitude:31.4249357}),
+  {latitude:30.003805,longitude:31.424936});
+});
+
+test('audited Cairo points agree with the pinned operational version',()=>{
+ const audit=JSON.parse(readFileSync(new URL('../../../docs/audit/sekka-cairo-coverage-samples.json',import.meta.url),'utf8'));
+ assert.equal(audit.version,'cairo-ucdb-beo-2026-11-v1');
+ for(const point of audit.samples)assert.equal(inLaunchRegion(point),point.covered,point.en);
+ for(const [outer] of greaterCairoGeometry.coordinates){
+  for(const [longitude,latitude] of outer)assert.equal(inLaunchRegion({latitude,longitude}),true);
+ }
+ const [longitude,latitude]=greaterCairoGeometry.coordinates.flatMap(([outer])=>outer)
+  .reduce((west,vertex)=>vertex[0]<west[0]?vertex:west);
+ assert.equal(inLaunchRegion({latitude,longitude:longitude-0.000001}),false);
+ assert.equal(persistableOperationalPoint({latitude,longitude}),null);
 });

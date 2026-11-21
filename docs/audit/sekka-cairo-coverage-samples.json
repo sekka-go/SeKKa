@@ -1,0 +1,257 @@
+{
+  "version": "cairo-ucdb-beo-2026-11-v1",
+  "samples": [
+    {
+      "ar": "وسط البلد، ميدان التحرير",
+      "en": "Downtown Cairo / Tahrir",
+      "source": "https://www.openstreetmap.org/way/30925727",
+      "latitude": 30.0443934,
+      "longitude": 31.2357457,
+      "covered": true,
+      "classification": "discovery"
+    },
+    {
+      "ar": "مدينة نصر",
+      "en": "Nasr City",
+      "source": "https://www.openstreetmap.org/node/768552342",
+      "latitude": 30.0521177,
+      "longitude": 31.3422045,
+      "covered": true,
+      "classification": "registered #3"
+    },
+    {
+      "ar": "مصر الجديدة",
+      "en": "Heliopolis",
+      "source": "https://www.openstreetmap.org/node/768591736",
+      "latitude": 30.1005985,
+      "longitude": 31.3329136,
+      "covered": true,
+      "classification": "registered #9"
+    },
+    {
+      "ar": "المعادي، مبنى محطة المترو",
+      "en": "Maadi / Metro building",
+      "source": "https://www.openstreetmap.org/way/210595249",
+      "latitude": 29.9601415,
+      "longitude": 31.2581197,
+      "covered": true,
+      "classification": "registered #1"
+    },
+    {
+      "ar": "القاهرة الجديدة",
+      "en": "New Cairo",
+      "source": "https://www.openstreetmap.org/way/498580491",
+      "latitude": 30.0277688,
+      "longitude": 31.4756825,
+      "covered": true,
+      "classification": "registered #2"
+    },
+    {
+      "ar": "التجمع الأول",
+      "en": "First Settlement",
+      "source": "https://www.openstreetmap.org/way/252475573",
+      "latitude": 30.0635786,
+      "longitude": 31.4471897,
+      "covered": true,
+      "classification": "inside registered New Cairo context"
+    },
+    {
+      "ar": "التجمع الثالث",
+      "en": "Third Settlement",
+      "source": "https://www.openstreetmap.org/way/257176943",
+      "latitude": 29.9808967,
+      "longitude": 31.434561,
+      "covered": true,
+      "classification": "inside registered New Cairo context"
+    },
+    {
+      "ar": "الشروق",
+      "en": "Shorouk",
+      "source": "https://www.openstreetmap.org/way/772922707",
+      "latitude": 30.1491507,
+      "longitude": 31.6291954,
+      "covered": false,
+      "classification": "owner approval required for expansion"
+    },
+    {
+      "ar": "الدقي القديمة",
+      "en": "Dokki / Old Dokki",
+      "source": "https://www.openstreetmap.org/way/1554827288",
+      "latitude": 30.0358515,
+      "longitude": 31.2098227,
+      "covered": true,
+      "classification": "registered #4"
+    },
+    {
+      "ar": "المهندسين، ميدان مصطفى محمود",
+      "en": "Mohandessin / Mostafa Mahmoud Square",
+      "source": "https://www.openstreetmap.org/way/29222857",
+      "latitude": 30.053263,
+      "longitude": 31.2018612,
+      "covered": true,
+      "classification": "registered #5"
+    },
+    {
+      "ar": "الزمالك",
+      "en": "Zamalek",
+      "source": "https://www.openstreetmap.org/node/13800621826",
+      "latitude": 30.0629925,
+      "longitude": 31.2196336,
+      "covered": true,
+      "classification": "registered #6"
+    },
+    {
+      "ar": "الطالبية، الهرم",
+      "en": "Talbia / Haram",
+      "source": "https://www.openstreetmap.org/node/14124357536",
+      "latitude": 30.0017733,
+      "longitude": 31.1809495,
+      "covered": true,
+      "classification": "discovery"
+    },
+    {
+      "ar": "شارع الملك فيصل، بين السرايات",
+      "en": "King Faisal Street / Bein El Sarayat",
+      "source": "https://www.openstreetmap.org/way/1133475345",
+      "latitude": 30.0143452,
+      "longitude": 31.2011267,
+      "covered": true,
+      "classification": "discovery"
+    },
+    {
+      "ar": "6 أكتوبر",
+      "en": "6th of October",
+      "source": "https://www.openstreetmap.org/node/299523927",
+      "latitude": 29.9723458,
+      "longitude": 30.9409205,
+      "covered": true,
+      "classification": "registered #8"
+    },
+    {
+      "ar": "الشيخ زايد",
+      "en": "Sheikh Zayed",
+      "source": "https://www.openstreetmap.org/node/330194927",
+      "latitude": 30.048347,
+      "longitude": 30.9832235,
+      "covered": true,
+      "classification": "registered #7"
+    },
+    {
+      "ar": "حدائق أكتوبر",
+      "en": "Hadayek October",
+      "source": "https://www.openstreetmap.org/way/1524454794",
+      "latitude": 29.9315563,
+      "longitude": 31.0617043,
+      "covered": false,
+      "classification": "owner approval required for expansion"
+    },
+    {
+      "ar": "شبرا الخيمة",
+      "en": "Shubra El Kheima",
+      "source": "https://www.openstreetmap.org/node/768591737",
+      "latitude": 30.1285988,
+      "longitude": 31.242218,
+      "covered": true,
+      "classification": "discovery"
+    },
+    {
+      "ar": "قسم شرطة أول العبور",
+      "en": "Obour / first police station",
+      "source": "https://www.openstreetmap.org/way/1531391127",
+      "latitude": 30.2361412,
+      "longitude": 31.4733717,
+      "covered": true,
+      "classification": "point inside only"
+    },
+    {
+      "ar": "نفق مدينة العبور",
+      "en": "Obour / city tunnel",
+      "source": "https://www.openstreetmap.org/way/155519945",
+      "latitude": 30.1636478,
+      "longitude": 31.4784069,
+      "covered": false,
+      "classification": "owner approval required for expansion"
+    },
+    {
+      "ar": "مدينة الفردوس",
+      "en": "Ferdous City compound",
+      "source": "https://www.openstreetmap.org/way/691681930",
+      "latitude": 29.9487671,
+      "longitude": 31.0512651,
+      "covered": false,
+      "classification": "outside the named October BEO layer"
+    },
+    {
+      "ar": "مول العرب",
+      "en": "Mall of Arabia",
+      "source": "https://www.openstreetmap.org/relation/13478008",
+      "latitude": 30.0067645,
+      "longitude": 30.9761146,
+      "covered": false,
+      "classification": "inside BEO October layer, pending discovery approval"
+    },
+    {
+      "ar": "مول مصر",
+      "en": "Mall of Egypt",
+      "source": "https://www.openstreetmap.org/way/83811548",
+      "latitude": 29.9721325,
+      "longitude": 31.0170639,
+      "covered": false,
+      "classification": "inside BEO October layer, pending discovery approval"
+    },
+    {
+      "ar": "الجامعة الأمريكية",
+      "en": "American University in Cairo",
+      "source": "https://www.openstreetmap.org/way/155881184",
+      "latitude": 30.0191701,
+      "longitude": 31.5037433,
+      "covered": true,
+      "classification": "inside registered New Cairo context"
+    },
+    {
+      "ar": "أركان بلازا",
+      "en": "Arkan Plaza",
+      "source": "https://www.openstreetmap.org/way/1456049142",
+      "latitude": 30.0198973,
+      "longitude": 31.0053298,
+      "covered": true,
+      "classification": "inside registered Sheikh Zayed context"
+    },
+    {
+      "ar": "التجمع الخامس",
+      "en": "Fifth Settlement",
+      "source": "https://www.openstreetmap.org/way/774635278",
+      "latitude": 30.0038046,
+      "longitude": 31.4249357,
+      "covered": true,
+      "classification": "inside registered New Cairo context"
+    },
+    {
+      "ar": "ميدان الحصري",
+      "en": "Hosary Square",
+      "source": "https://www.openstreetmap.org/way/1393055714",
+      "latitude": 29.9724456,
+      "longitude": 30.9448074,
+      "covered": true,
+      "classification": "inside registered October context"
+    },
+    {
+      "ar": "العبور",
+      "en": "Obour centre",
+      "source": "https://www.openstreetmap.org/node/311994035",
+      "latitude": 30.1914,
+      "longitude": 31.450548,
+      "covered": true,
+      "classification": "discovery, partial city coverage"
+    },
+    {
+      "ar": "مركز مدينة الشروق",
+      "en": "Shorouk centre",
+      "source": "https://www.openstreetmap.org/node/298439914",
+      "latitude": 30.1488541,
+      "longitude": 31.6295623,
+      "covered": false,
+      "classification": "owner approval required for expansion"
+    }
+  ]
+}

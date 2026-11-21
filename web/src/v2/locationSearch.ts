@@ -1,7 +1,7 @@
 import {useEffect,useId,useState} from 'react';
 import type {KeyboardEvent} from 'react';
 import {greaterCairoEnvelope} from './greaterCairoBoundary';
-import {catalogMatches,inspectPhoton,normalizedPlace,rankMapPlaces} from './geoPlace';
+import {exactCatalogMatches,inspectPhoton,normalizedPlace,rankMapPlaces} from './geoPlace';
 import type {MapPlace,ServiceArea} from './geoPlace';
 
 export const photonEndpoint='https://photon.komoot.io';
@@ -13,7 +13,7 @@ export async function lookupLocations(query:string,area:ServiceArea|undefined,en
  const key=JSON.stringify([query,area?.name_en,en]);
  const cached=cache.get(key);
  if(cached&&cached.expires>Date.now())return cached.data;
- const catalog=catalogMatches(query,area);
+ const catalog=exactCatalogMatches(query,area);
  const probes=catalog.length?catalog.map(entry=>
   (en?entry.en:entry.ar)+', '+(area?.name_en??entry.area)):
   [area?query+', '+area.name_en:query];

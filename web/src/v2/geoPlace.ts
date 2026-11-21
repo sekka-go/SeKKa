@@ -6,7 +6,7 @@ import type {CatalogPlace} from './locationCatalog.ts';
 
 export type MapPlace=GeoPoint&{
  id:string;name:string;detail:string;source:'map';locality?:string[];
- kind?:'point'|'area'|'road'|'feature'; osmKey?:string;osmValue?:string;catalogKey?:string;
+ kind?:'point'|'area'|'road'|'feature'; osmKey?:string;osmValue?:string;catalogKey?:string;catalogKind?:CatalogPlace['kind'];
 };
 export type ServiceArea={id:number;name_ar:string;name_en:string};
 export type PlaceChoice={kind:'service';area:ServiceArea}|{kind:'map';place:MapPlace};
@@ -71,12 +71,23 @@ export function serviceMatches(areas:ServiceArea[],query:string):ServiceArea[]{
   .map(item=>item.area);
 }
 
-export function catalogMatches(query:string,area?:ServiceArea):CatalogPlace[] {
+function catalogMatchScore(item:CatalogPlace,query:string):number {
+ return Math.max(nameRelevance(item.ar,query),nameRelevance(item.en,query),
+  aliasScore(item.aliases,query),...item.aliases.map(alias=>Math.min(300,nameRelevance(alias,query))));
+}
+export function catalogMatches(query:string,area?:ServiceArea,minimum=100):CatalogPlace[] {
  const q=normalizedPlace(query);
- return localPlaceCatalog.filter(item=>(!area||item.area===normalizedPlace(area.name_en))&&
-  ([item.ar,item.en,...item.aliases].some(name=>normalizedPlace(name)===q)||
-   Math.max(nameRelevance(item.ar,q),nameRelevance(item.en,q))===100))
-  .sort((a,b)=>(b.popularity??0)-(a.popularity??0));
+ return localPlaceCatalog.filter(item=>!area||item.area===normalizedPlace(area.name_en))
+  .map(item=>({item,score:catalogMatchScore(item,q)})).filter(row=>row.score>=minimum)
+  .sort((a,b)=>b.score-a.score||(b.item.popularity??0)-(a.item.popularity??0)||a.item.key.localeCompare(b.item.key))
+  .slice(0,7).map(row=>row.item);
+}
+export function exactCatalogMatches(query:string,area?:ServiceArea):CatalogPlace[]{
+ return catalogMatches(query,area,400);
+}
+export function outsideCatalogMatch(query:string,area?:ServiceArea):boolean {
+ const matches=exactCatalogMatches(query,area);
+ return matches.length>0&&matches.every(item=>item.reference&&!inLaunchRegion(item.reference));
 }
 
 export function placeMatchesArea(place:MapPlace,area:ServiceArea):boolean{
@@ -88,7 +99,10 @@ export function placeMatchesArea(place:MapPlace,area:ServiceArea):boolean{
 type PhotonFeature={geometry?:{type?:unknown;coordinates?:unknown};properties?:Record<string,unknown>};
 const areaKeys=new Set(['city','town','village','suburb','quarter','neighbourhood','neighborhood','district','borough','municipality','hamlet']);
 function photonKind(osmType:string,key:string,tag:string):MapPlace['kind']{
- if((key==='place'&&areaKeys.has(tag))||key==='boundary')return 'area';
+ if((key==='place'&&(areaKeys.has(tag)||tag==='locality'))||key==='boundary')return 'area';
+ if((key==='place'&&tag==='square')||(key==='railway'&&['station','stop','halt'].includes(tag))||
+    (key==='amenity'&&['bus_station','hospital','university'].includes(tag))||
+    (key==='shop'&&tag==='mall'))return 'feature';
  if(key==='highway'&&osmType!=='N')return 'road';
  return osmType==='N'?'point':'feature';
 }
@@ -123,48 +137,69 @@ export function inspectPhoton(raw:unknown):{places:MapPlace[];outside:boolean}{
 export const mapPlacesFromPhoton=(raw:unknown)=>inspectPhoton(raw).places;
 
 export function selectOperationalMapPlace(place:MapPlace):boolean{
- return place.source==='map'&&place.kind==='point'&&inLaunchRegion(place)&&/^N:\d{1,16}$/.test(place.id);
+ return place.source==='map'&&!place.catalogKind&&place.kind==='point'&&inLaunchRegion(place)&&/^N:\d{1,16}$/.test(place.id);
 }
 
 function catalogCandidate(place:MapPlace,item:CatalogPlace):boolean {
+ if(place.id===item.reference?.osmId)return true;
  if(!place.locality?.some(label=>
   [item.area,...(serviceAreaAliases[item.area]??[]),...(localityAliases[item.area]??[])].map(normalizedPlace)
    .includes(normalizedPlace(label))))return false;
- if(item.kind==='area'&&place.kind!=='area')return false;
- if(item.kind==='road'&&place.kind!=='road')return false;
- if(item.kind==='square'&&place.osmKey&&!(place.osmKey==='place'&&place.osmValue==='square'))return false;
- if(item.kind==='mosque'&&place.osmKey&&!(place.osmValue==='place_of_worship'||place.osmValue==='mosque'))return false;
+ const matchingType={
+  area:place.kind==='area',
+  road:place.kind==='road',
+  square:place.osmKey==='place'&&place.osmValue==='square',
+  mosque:place.osmValue==='place_of_worship'||place.osmValue==='mosque',
+  university:place.osmValue==='university',
+  hospital:place.osmValue==='hospital',
+  mall:place.osmValue==='mall',
+  station:place.osmKey==='railway'&&['station','stop','halt'].includes(place.osmValue??''),
+  terminal:place.osmKey==='amenity'&&place.osmValue==='bus_station'
+ };
+ if(!matchingType[item.kind])return false;
  const sharedAliases=['الحصري','Hosary','El Hosary','Al Hosary','التجمع'];
  return [item.ar,item.en,...item.aliases.filter(alias=>!sharedAliases.includes(alias))]
   .some(label=>nameRelevance(place.name,label)>=300);
 }
 
 export function rankMapPlaces(places:MapPlace[],query:string,area?:ServiceArea):MapPlace[]{
- const catalog=catalogMatches(query,area);
- return places.filter(place=>inLaunchRegion(place)&&(!area||placeMatchesArea(place,area)))
+ const catalog=exactCatalogMatches(query,area);
+ const ranked=places.filter(place=>inLaunchRegion(place)&&(!area||placeMatchesArea(place,area)))
   .map(place=>{
    const entry=catalog.find(item=>catalogCandidate(place,item));
    const match=catalog.length?(entry?Math.max(nameRelevance(place.name,query),400):0):nameRelevance(place.name,query);
    return {place,entry,match};
   }).filter(row=>row.match>0)
   .sort((a,b)=>b.match-a.match||(b.entry?.popularity??0)-(a.entry?.popularity??0)||
-   (a.place.id<b.place.id?-1:1))
-  .slice(0,7).map(row=>row.entry?{...row.place,catalogKey:row.entry.key}:row.place);
+   a.place.id.localeCompare(b.place.id));
+ const seen=new Set<string>();
+ return ranked.flatMap(({place,entry})=>{
+  if(seen.has(place.id))return [];
+  seen.add(place.id);
+  return [entry?{...place,catalogKey:entry.key,catalogKind:entry.kind}:place];
+ }).slice(0,7);
 }
 
 /** Verified non-point references give context while the network is unavailable.
  * A representative geometry coordinate is only used to check the footprint.
  */
+export function locationContextIcon(place:MapPlace):string {
+ const icons:Record<CatalogPlace['kind'],string>={area:'▧',square:'◇',road:'↔',mosque:'◈',
+  mall:'▤',hospital:'✚',station:'▣',terminal:'▣',university:'▥'};
+ return place.catalogKind?icons[place.catalogKind]:'⌖';
+}
+
 export function locationContext(query:string,places:MapPlace[],en:boolean,area?:ServiceArea):MapPlace[]{
- const known=catalogMatches(query,area).flatMap(item=>{
+ const exact=exactCatalogMatches(query,area);
+ const known=(exact.length?exact:catalogMatches(query,area)).flatMap(item=>{
   const ref=item.reference;
   if(!ref||!inLaunchRegion(ref)||places.some(place=>place.catalogKey===item.key&&selectOperationalMapPlace(place)))return [];
-  const context=item.area==='new cairo'
+  const context=item.context?.[en?1:0]??(item.area==='new cairo'
    ?en?'New Cairo · Cairo':'القاهرة الجديدة · القاهرة'
-   :en?'6th of October · Giza':'مدينة 6 أكتوبر · الجيزة';
+   :en?'6th of October · Giza':'مدينة 6 أكتوبر · الجيزة');
   return [{id:ref.osmId,source:'map' as const,name:en?item.en:item.ar,detail:context,
    latitude:ref.latitude,longitude:ref.longitude,kind:item.kind==='area'?'area' as const:'feature' as const,
-   catalogKey:item.key}];
+   catalogKey:item.key,catalogKind:item.kind}];
  });
  return [...known,...places.filter(place=>!selectOperationalMapPlace(place)&&
   !known.some(item=>item.id===place.id||(place.catalogKey&&item.catalogKey===place.catalogKey)))].slice(0,7);

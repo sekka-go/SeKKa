@@ -15,6 +15,12 @@
  border-radius:0!important;box-shadow:none!important;overflow:visible!important;
  font-family:Tajawal,'Noto Sans Arabic',Tahoma,Arial,sans-serif;
 }
+/* Installed portrait windows can report tablet-width CSS viewports. */
+@media (max-width:900px) and (orientation:portrait), (display-mode:standalone) and (orientation:portrait) {
+ .phase-one-stage.sekka-entry-stage>.phase-canvas.sekka-entry{
+  width:100%!important;max-width:none!important;
+ }
+}
 .sekka-entry::before,.sekka-entry::after{display:none!important}
 .sekka-entry button{font-family:inherit;cursor:pointer}
 .sekka-entry__header{

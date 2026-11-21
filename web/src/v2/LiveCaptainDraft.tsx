@@ -1,7 +1,7 @@
 import {useEffect,useRef,useState} from 'react';
 import {client} from './api';
 import CaptainPlacePicker from './CaptainPlacePicker';
-import {isPersistableOperationalPoint} from './greaterCairoBoundary';
+import {isPersistableOperationalPoint,persistableOperationalPoint} from './greaterCairoBoundary';
 import {photonEndpoint} from './locationSearch';
 import CaptainRouteMap from './CaptainRouteMap';
 import {captainRouteError} from './captainRouteErrors';
@@ -169,7 +169,8 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
  const addVerifiedStop=(place:MapPlace)=>{
   setError('');setMessage('');
   if(!selectedArea){setError(t('اختار المنطقة الأول.','Choose an area first.'));return;}
-  if(!inLaunchRegion(place)||!isPersistableOperationalPoint(place)){
+  const verifiedPoint=persistableOperationalPoint(place);
+  if(!verifiedPoint){
    setError(t(outsideCoverageMessage.ar,outsideCoverageMessage.en));return;
   }
   if(!placeMatchesArea(place,selectedArea)){
@@ -184,7 +185,7 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
    setError(t('المكان ده اتضاف بالفعل.','Stop is already added.'));return;
   }
   const next=[...stops,{areaId:selectedArea.id,name,pickup:true,dropoff:true,
-   latitude:Number(place.latitude.toFixed(6)),longitude:Number(place.longitude.toFixed(6))}];
+   ...verifiedPoint}];
   setStops(next);setAreaId('');activeAreaId.current='';
   setPlaceLabel('');setPlaceChoice(null);
 
