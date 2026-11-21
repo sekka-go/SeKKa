@@ -1,9 +1,9 @@
 import { useEffect, useState, type ReactNode } from "react";
 import "./launch-splash.css";
 
-/** The opening animation is deliberately unhurried. Other application screens
+/** The opening animation is 5.15 seconds total, 1.5 seconds longer than the previous 3.65s motion. Other application screens
  * are mounted beneath it and remain completely unchanged. */
-export const LAUNCH_SEQUENCE_MS = 6500;
+export const LAUNCH_SEQUENCE_MS = 5150;
 
 export function shouldPlayLaunchSplash() {
   const current = new URL(window.location.href);
