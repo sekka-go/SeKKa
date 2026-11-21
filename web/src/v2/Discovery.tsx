@@ -854,15 +854,6 @@ export default function Discovery(p: DiscoveryProps) {
           <DiscoveryIcon name={titleIcon} />
           {heading}
         </h1>
-        {p.production&&screen===12&&(()=>{
-          const copy=language==='en'?riderHomeCopy.en:riderHomeCopy.ar;
-          const step=screen===9?copy.searchStep:screen===11?copy.resultsStep:copy.detailsStep;
-          const title=screen===9?copy.searchTitle:screen===11?copy.resultsTitle:copy.detailsTitle;
-          return <section className="sekka-rider-journey-heading">
-           <span>{step}</span><h2>{title}</h2>
-           {screen===9&&<p>{copy.searchHelp}</p>}
-          </section>;
-        })()}
         {p.busy && !demo && (
           <p className="d-feedback" role="status">
             {tr("بنحمّل البيانات…")}</p>
