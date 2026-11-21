@@ -12,6 +12,7 @@ import "./discovery.css";
 import LiveRouteSearch from "./LiveRouteSearch";
 import NearbyRides from "./NearbyRides";
 import RiderSearchV3 from "./RiderSearchV3";
+import RiderResultsHero from "./RiderResultsHero";
 import GeoPlaceInput from "./GeoPlaceInput";
 import {geoRequestAvailable} from "./geoPlace";
 import type {PlaceChoice} from "./geoPlace";
@@ -852,7 +853,7 @@ export default function Discovery(p: DiscoveryProps) {
           <DiscoveryIcon name={titleIcon} />
           {heading}
         </h1>
-        {p.production&&[11,12].includes(screen)&&(()=>{
+        {p.production&&screen===12&&(()=>{
           const copy=language==='en'?riderHomeCopy.en:riderHomeCopy.ar;
           const step=screen===9?copy.searchStep:screen===11?copy.resultsStep:copy.detailsStep;
           const title=screen===9?copy.searchTitle:screen===11?copy.resultsTitle:copy.detailsTitle;
@@ -1128,6 +1129,10 @@ export default function Discovery(p: DiscoveryProps) {
             </div>}
           </section>
         )}
+        {screen===11&&p.production&&<RiderResultsHero
+          origin={language==='en'?areaDisplay(origin):origin}
+          destination={language==='en'?areaDisplay(destination):destination}
+          outbound={outbound} returnTime={returnTime} onEdit={()=>nav(9)}/>}
         {screen === 11 && p.production && preferredWeekdays.length>0 && <p className="sekka-weekdays-disclaimer" role="note">
          {language==='en'
           ?'Your '+preferredWeekdays.length+' preferred days are saved. Current search matches routes by place and time, not by weekdays yet; check the trip schedule before booking.'
