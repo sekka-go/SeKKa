@@ -1,4 +1,5 @@
 import {useEffect,useRef} from 'react';
+import {createPortal} from 'react-dom';
 import NearbyRides from './NearbyRides';
 import type {LiveSelection} from './LiveRouteSearch';
 import {usePreferences} from './preferences';
@@ -10,12 +11,23 @@ export default function PickupExplorerSheet({onClose,onSelect,onManualSearch}:{
 }){
  const {language}=usePreferences(),en=language==='en',t=(ar:string,english:string)=>en?english:ar;
  const closeRef=useRef<HTMLButtonElement>(null);
+ const sheetRef=useRef<HTMLElement>(null);
  useEffect(()=>{
   const previous=document.activeElement instanceof HTMLElement?document.activeElement:null;
   const priorOverflow=document.body.style.overflow;
   document.body.style.overflow='hidden';
   closeRef.current?.focus();
-  const onKey=(event:KeyboardEvent)=>{if(event.key==='Escape')onClose();};
+  const onKey=(event:KeyboardEvent)=>{
+   if(event.key==='Escape'){event.preventDefault();onClose();return;}
+   if(event.key!=='Tab'||!sheetRef.current)return;
+   const all=[...sheetRef.current.querySelectorAll<HTMLElement>(
+    'button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled),textarea:not(:disabled)'
+   )].filter(element=>element.getClientRects().length>0);
+   if(!all.length)return;
+   const first=all[0],last=all[all.length-1];
+   if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+   else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+  };
   document.addEventListener('keydown',onKey);
   return()=>{
    document.removeEventListener('keydown',onKey);
@@ -23,10 +35,10 @@ export default function PickupExplorerSheet({onClose,onSelect,onManualSearch}:{
    previous?.focus();
   };
  },[onClose]);
- return <div className="np4-overlay">
+ const overlay=<div className="np4-overlay">
   <button type="button" className="np4-overlay__scrim"
    aria-label={t('إغلاق مستكشف نقاط الركوب','Close pickup explorer')} onClick={onClose}/>
-  <section className="np4-overlay__sheet" role="dialog" aria-modal="true"
+  <section ref={sheetRef} className="np4-overlay__sheet" role="dialog" aria-modal="true"
    aria-label={t('اكتشف نقطة ركوب مناسبة','Explore pickup stops')} dir={en?'ltr':'rtl'}>
    <div className="np4-overlay__handle" aria-hidden="true"/>
    <div className="np4-overlay__top">
@@ -45,4 +57,6 @@ export default function PickupExplorerSheet({onClose,onSelect,onManualSearch}:{
    </button>
   </section>
  </div>;
+ const host=typeof document!=='undefined'?document.querySelector<HTMLElement>('.sekka-mobile'):null;
+ return host?createPortal(overlay,host):overlay;
 }
