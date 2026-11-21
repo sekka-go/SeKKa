@@ -59,6 +59,22 @@ const messages:Record<string,{ar:string;en:string}>={
   ar:'حالة الرحلة اتغيّرت. حدّث الصفحة وراجع حالتها قبل الإجراء.',
   en:'The route status has changed. Refresh and review it before continuing.'
  },
+ ROUTE_HAS_HISTORY:{
+  ar:'المسودة دي مرتبطة بسجل حجوزات أو عروض، ومينفعش تتحذف نهائيًا. تواصل مع الدعم.',
+  en:'This draft has booking or offer history and cannot be permanently deleted. Contact support.'
+ },
+ ROUTE_REMOVAL_NOT_CONFIRMED:{
+  ar:'التطبيق ما قدرش يتأكد من إزالة الرحلة. افتح «رحلاتي» وراجع حالتها قبل إعادة المحاولة.',
+  en:'Could not confirm the route removal. Check My routes before retrying.'
+ },
+ ROUTE_REMOVAL_NOT_VERIFIED:{
+  ar:'ما قدرناش نتحقق من حالة الرحلة بعد الإجراء. راجع «رحلاتي».',
+  en:'Could not verify the route after the action. Check My routes.'
+ },
+ INVALID_ROUTE:{
+  ar:'الرحلة المحددة مش صالحة. حدّث الصفحة وحاول تاني.',
+  en:'This route selection is invalid. Refresh and retry.'
+ },
  ACTIVE_BOOKINGS_PREVENT_ARCHIVE:{
   ar:'في حجوزات نشطة على الخط. لازم تتعامل معاها قبل الأرشفة.',
   en:'This route has active bookings. Resolve them before archiving.'
