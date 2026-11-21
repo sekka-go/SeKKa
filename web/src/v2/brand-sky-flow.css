@@ -221,3 +221,66 @@
 .sekka-mobile .sekka-entry__role.is-selected{
  background:#E4F8FF!important;border-color:var(--sekka-teal)!important;
 }
+
+/* Normalize legacy token aliases too: older routes must never surface mauve/cream. */
+:root{
+ --sekka-mauve:#00B9CA;--sekka-mauve-dark:#0789E8;
+ --sekka-mauve-soft:#DDF8FE;
+ --sekka-cream:#F4FBFF;--sekka-cream-card:#FFFFFF;
+ --sekka-black:#12344A;--sekka-black-card:#124461;
+ --sekka-cream-border:#D7EFF6;
+}
+.sekka-mobile .sekka-entry__content{
+ animation:sekka-onboard-appear 430ms cubic-bezier(.2,.78,.18,1) both;
+}
+@keyframes sekka-onboard-appear{
+ from{opacity:0;transform:translate3d(15px,10px,0) scale(.985)}
+ to{opacity:1;transform:translate3d(0,0,0) scale(1)}
+}
+.sekka-mobile .sekka-entry__progress>span{
+ transition:background-color 270ms ease,transform 320ms cubic-bezier(.2,.85,.24,1);
+}
+.sekka-mobile .sekka-entry__progress>span.is-active{
+ background:var(--sekka-sun)!important;transform:scaleX(1.07);
+}
+.sekka-mobile .sekka-entry__role{
+ transition:transform 220ms ease,border-color 220ms ease,box-shadow 220ms ease;
+}
+.sekka-mobile .sekka-entry__role.is-selected{
+ transform:scale(1.012);border-color:var(--sekka-sun)!important;
+ box-shadow:0 8px 26px #078CF41C!important;
+}
+.sekka-mobile .sekka-entry__art svg [fill="#6412B1"],
+.sekka-mobile .sekka-entry__art svg [fill="#7526B4"]{fill:#079FE8}
+.sekka-mobile .sekka-entry__art svg [fill="#F73587"],
+.sekka-mobile .sekka-entry__art svg [fill="#FFCD38"]{fill:#FFCC24}
+.sekka-mobile .sekka-entry__art svg [stroke="#6412B1"]{stroke:#069CE5}
+.sekka-mobile .sekka-entry__art svg [fill="#35134F"]{fill:#11374D}
+.sekka-mobile .sekka-live-result{
+ animation:sekka-results-enter 480ms cubic-bezier(.2,.8,.2,1) both;
+}
+.sekka-mobile .sekka-live-result:nth-of-type(2){animation-delay:55ms}
+.sekka-mobile .sekka-live-result:nth-of-type(3){animation-delay:100ms}
+.sekka-mobile .sekka-live-result:nth-of-type(n+4){animation-delay:135ms}
+@keyframes sekka-results-enter{
+ from{opacity:0;transform:translate3d(0,14px,0)}
+ to{opacity:1;transform:translate3d(0,0,0)}
+}
+.sekka-mobile .sekka-no-match-action .sekka-request-yellow-cta{
+ animation:sekka-cta-arrive 390ms cubic-bezier(.16,.84,.27,1) both;
+}
+@keyframes sekka-cta-arrive{
+ from{opacity:0;transform:translate3d(0,9px,0) scale(.94)}
+ to{opacity:1;transform:translate3d(0,0,0) scale(1)}
+}
+.sekka-mobile .rh-tabs__icon{
+ transition:background-color 280ms ease,color 280ms ease,transform 250ms ease;
+}
+.sekka-mobile .rh-tabs button[aria-current="page"] .rh-tabs__icon{
+ transform:translateY(-2px);
+}
+@media(prefers-reduced-motion:reduce){
+ .sekka-mobile .sekka-entry__content,
+ .sekka-mobile .sekka-live-result,
+ .sekka-mobile .sekka-request-yellow-cta{animation:none!important}
+}
