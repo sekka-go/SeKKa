@@ -39,6 +39,16 @@ Scope: Mobile-first Arabic passenger experience, then Captain. No changes to bus
 - Files: `RiderJourneyHome.tsx`, `rider-home.css`, `RiderTabBar.tsx`, `rider-tabbar.css`, `riderHomeCopy.ts`, `MobileApp.tsx`.
 - Test: `e2e/rider-journey-vnext.spec.ts` includes Rider tab routing, real search RPC, 320/390px screenshots and no simulated booking confirmation. Manual Google OAuth and actual Android walkthrough still required.
 
+## User-approved image implementation — Rider Home (2026-11-21)
+
+The owner supplied a visual reference showing: a deep-purple in-app Arabic brand masthead, smiling carpool passengers with a Cairo-flavored route background, a cream/pink hero and bold Arabic CTA; a white elevated card marked «مشوارك المعتاد» with four rows (from, to, time, days), a violet main button and edit action; two side-by-side peach/yellow tiles for nearby stops and bookings; and four bottom navigation items.
+
+Implemented as **actual React components** in `RiderJourneyHome.tsx`, `rider-home.css`, `rider-tabbar.css`, translated labels in `riderHomeCopy.ts`, plus a lightweight custom SVG scene `web/public/brand/sekka-rider-hero-scene.svg`. It is not a flattened screenshot; labels, states, buttons and route details are accessible, localized and responsive. The **installed icon remains the previously approved purple seKKa white-letter/yellow-road icon** and was not replaced.
+
+**Data integrity deviations from the mock**: «المعادي → التجمع» and 7:30 AM are only displayed when that is the returning Rider's own stored search. For fresh users, fields prompt for information rather than fabricating a ride. The SavedCommute record holds weekly/monthly period but no specific weekday list, so the Days row explains availability is learned from published trip details and does not claim Sunday–Thursday as a confirmed itinerary. Nearby-point results remain actual Supabase-backed data and location requires permission.
+
+Main CTA goes to existing real search/results, Edit opens origin/destination/time, Nearby toggles real nearby discovery, My Rides goes to authenticated bookings; bottom tabs remain real route navigation. Browser validation needs screenshot comparison at 320px and 390px, Arabic and English, light/dark, first-visit empty state, returning saved state, all four actions, back navigation and full keyboard focus. **No production merge.**
+
 ## Release rules
 
 A screen is **not approved** solely because a component renders or TypeScript compiles. Pass CI and actual staging, inspect screenshots on a small Android viewport and verify the intended step end to end before marking complete. Avoid claiming that all subsequent screens have been redesigned.
