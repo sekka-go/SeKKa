@@ -433,6 +433,27 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
     {direction!=='outbound'&&<label className="sekka-route-field">{t('وقت عودة مفضل','Preferred return time')}
      <input type="time" value={arrival} onChange={e=>setArrival(e.target.value)}/></label>}
    </div>
+   {stops.length>0&&<section className="cj-captain-stop-times" aria-label={t('مواعيد مرور المحطات','Stop passing times')}>
+    <strong>{t('مواعيد المرور عند كل محطة (اختياري)','Passing time at each stop (optional)')}</strong>
+    <p>{t('توقيتات متوقعة فقط، ويمكن ترك أي خانة فاضية. مش مواعيد انطلاق نهائية قبل اكتمال المقاعد.',
+     'Estimated times only. Leave any time blank; departure is not confirmed until seats fill.')}</p>
+    <ol>{stops.map((stop,index)=><li key={stop.latitude+':'+stop.longitude}>
+     <bdi>{index+1}. {stop.name}</bdi>
+     <div className="cj-captain-stop-time-fields">
+      {direction!=='return'&&<label>{t('وقت الذهاب','Outbound passing time')}
+       <input type="time" value={stop.outboundStopTime}
+        aria-label={t('وقت الذهاب عند ','Outbound time at ')+stop.name}
+        onChange={event=>setStops(items=>items.map((s,i)=>i===index?{...s,outboundStopTime:event.target.value}:s))}/>
+      </label>}
+      {direction!=='outbound'&&<label>{t('وقت العودة','Return passing time')}
+       <input type="time" value={stop.returnStopTime}
+        aria-label={t('وقت العودة عند ','Return time at ')+stop.name}
+        onChange={event=>setStops(items=>items.map((s,i)=>i===index?{...s,returnStopTime:event.target.value}:s))}/>
+      </label>}
+     </div>
+    </li>)}</ol>
+    {!validStopSchedule(stops)&&<p role="alert">{t('راجع ترتيب مواعيد المرور بين المحطات.','Review the chronological passing times between stops.')}</p>}
+   </section>}
    {direction==='return'&&<p className="cj-route-hint">{t(
     'في العودة فقط، ترتيب الوقوف بيبدأ من آخر محطة في القائمة وينتهي عند أول محطة.',
     'For return only, the first stop served is the last stop in your list.'
@@ -466,6 +487,7 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
    {stops.length>=2&&category&&price&&<div className="sekka-route-review" aria-label={t('ملخص المسودة','Draft summary')}>
     <strong>{title}</strong>
     <span>{t('نقاط الرحلة','Trip stops')}: {stops.map(stop=>stop.name).join(' ← ')}</span>
+    {stops.some(s=>s.outboundStopTime||s.returnStopTime)&&<span>{t('مواعيد المرور المقترحة','Proposed stop times')}: {stops.map(s=>s.name+' ('+[s.outboundStopTime,s.returnStopTime].filter(Boolean).join(' / ')+')').join(' · ')}</span>}
     <span>{t('المركبة','Vehicle')}: {vehicles.find(v=>v.id===vehicleId)?.model||'—'}</span>
     <span>{t('الفئة','Category')}: {category} · {categorySeats[category]} {t('مقاعد','seats')}</span>
     <span>{t('تفضيلات الخط','Route preferences')}: {period==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')}</span>
