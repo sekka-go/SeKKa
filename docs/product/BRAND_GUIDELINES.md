@@ -1,13 +1,24 @@
-# سِكّة / seKKa
+# سِكّة / Sekka Go — Owner approved refresh (2026-11-21)
 
-Tagline: **معاك في السِكّة**. Reuse `web/public/brand/sekka-mark.png` unchanged; do not redraw official assets.
+**App Store / installed title:** Sekka Go. **In-app title:** سِكّة.
 
-Brand tokens: yellow #FFC400, black #0B0B0D, charcoal #15191F, white #FFFFFF, gray #8D929B.
-Dark: background #0B0B0D, secondary #101923, cards #1B2027, elevated #252B33, border #343B45.
-Light: background #FAFAF8, secondary #F2F3F4, cards #FFFFFF, border #DDE0E4.
-All active CSS colors in `web/src/v2/theme.css`. Mobile RTL, semantic labels, visible focus, 46px targets, no GPS attendance.
-Fonts use installed Arabic font fallbacks; bundled Tajawal font licensing/asset delivery still needs review. No external Google Fonts dependency.
+The **original Arabic logo silhouette is retained unchanged**. Recolor palette ONLY. Original legacy source files remain at `web/public/brand/sekka-icon-192.png` and `sekka-icon-512.png`. New exact-palette variants: `web/public/brand/sekka-go-192.png` and `sekka-go-512.png`. Every raster pixel index and mark contour is preserved; the indexed PNG PLTE is recolored, no geometric redrawing.
 
-Voice: respectful concise Egyptian Arabic, practical warm man in his forties, supportive with captains. All primary new copy/errors in `web/src/v2/copy.ts`, screen labels in `screens.ts`; some field labels still colocated with forms and tracked as incomplete localization.
-Examples: «حجزك اتسجل.» «ادفع للكابتن أول يوم.» «مستنيين تأكيد الكابتن.» «تأمينك متاح دلوقتي.»
-Dark is the primary reference; light uses tokens, not separate screens. No fake payment success, fabricated supply or financial urgency.
+## Current palette
+| Token | Color | Use |
+|---|---|---|
+| Primary purple | `#6412B1` | Focus, anchors, brand |
+| Hot coral | `#FF663D` | Main actions, app icon background |
+| Magenta | `#F73587` | Supporting icon and marketing accents |
+| Sunny yellow | `#FFCD38` | Highlights and selection indicators |
+| Teal | `#00BEAD` | Minor highlights only |
+| Soft white | `#FFF9F5` | Light background |
+| Dark purple | `#1E0B32` | Dark background / splash |
+| Light ink | `#35134F` | Text on light surfaces |
+
+Treat contrast, focus visibility, and semantic success/error as non-negotiable. Do not use saturated gradient text for long paragraphs. No false urgency or fake metrics. **Tajawal** remains the bundled Arabic UI font; use RTL and mobile safe areas.
+
+## Design direction
+Energetic, friendly, youthful and practical. Every content block answers what the rider/captain can do now; avoid filler slogans. Map interactions, real supply/demand, specific prices/distances only when sourced from authorized data. Preserve prefers-reduced-motion and real keyboard and screen-reader affordances.
+
+Historical brand rules (yellow/black, protected old launch wordmark) were superseded explicitly by the owner's 2026-11-21 palette-only icon change. The new product/UX authority is [the vNext amendment](RECURRING_COMMUTE_VNEXT_20261121.md). Production merge still requires owner approval.
