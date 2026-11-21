@@ -1,4 +1,5 @@
 import {inLaunchRegion,outsideCoverageMessage} from './geoPlace';
+import {isInsideCairoDiscovery} from './discoveryCairo';
 import LiveTripRequests from './LiveTripRequests';
 import {reserveSeatsWithStops,MAX_SEATS_PER_RIDER} from './reservations';
 import {useEffect,useState} from 'react';
@@ -38,7 +39,9 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
  const {language}=usePreferences(),en=language==='en';
  const t=(ar:string,english:string)=>en?english:ar;
  const [retry,setRetry]=useState(0);
- const outside=[originPoint,destinationPoint].some(point=>point&&!inLaunchRegion(point));
+ // Named locations are search anchors (not pickup pins). Only the Captain's
+ // published stops must satisfy the operational geofence on the server.
+ const outside=[originPoint,destinationPoint].some(point=>point&&!isInsideCairoDiscovery(point));
  const originLat=originPoint?.latitude??null,originLon=originPoint?.longitude??null;
  const destinationLat=destinationPoint?.latitude??null,destinationLon=destinationPoint?.longitude??null;
  const categoryKey=categories.join(',');
