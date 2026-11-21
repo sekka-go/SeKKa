@@ -1,57 +1,88 @@
-/* 2026-11-21 owner-selected seKKa road mark. Same purple background as the artwork. */
+/* seKKa GO cinematic launch. Cream -> Hiace -> black curved wipe -> real app.
+ * The real app is already mounted beneath the overlay, with its original route
+ * and Google session intact. No remote asset, player, autoplay audio or flicker. */
 .sekka-launch {
-  position: fixed;
-  inset: 0;
-  z-index: 100000;
-  width: 100%;
-  height: 100vh;
-  height: 100dvh;
-  overflow: hidden;
-  background: #3F056F;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  direction: ltr;
+ position:fixed;inset:0;z-index:100000;width:100%;height:100vh;height:100dvh;
+ overflow:hidden;direction:ltr;pointer-events:auto;isolation:isolate;
+ background:transparent;
 }
-
-.sekka-launch__artwork {
-  display: block;
-  width: min(64vw, 300px);
-  height: auto;
-  max-width: calc(100% - 64px);
-  object-fit: contain;
-  object-position: center;
-  flex-shrink: 0;
-  pointer-events: none;
-  user-select: none;
-  transform-origin: center;
-  animation: sekka-launch-pulse 1.15s ease-in-out infinite;
+.sekka-launch__stage {
+ position:absolute;inset:0;background:#F7F0E5;
+ display:flex;align-items:center;justify-content:center;
+ animation:sekka-stage-out 3.65s linear both;
 }
-
-@keyframes sekka-launch-pulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: .96;
-  }
-  50% {
-    transform: scale(1.06);
-    opacity: 1;
-  }
+.sekka-launch__stage:before{
+ content:"";position:absolute;left:50%;top:50%;
+ width:min(90vw,430px);aspect-ratio:1;transform:translate(-50%,-55%);
+ border:1.5px solid #D9C8E5;border-radius:50%;opacity:.75;
+ box-shadow:0 0 0 32px #9B75BA09,0 0 0 68px #9B75BA09;
+ pointer-events:none;
 }
-
-@media (prefers-reduced-motion: reduce) {
-  .sekka-launch__artwork {
-    animation: none !important;
-    transform: none;
-    opacity: 1;
-  }
+.sekka-launch__road{
+ position:absolute;left:0;right:0;top:calc(50% + min(17vw,86px));
+ height:4px;opacity:.35;
+ background:repeating-linear-gradient(to right,#9E85AA 0 34px,transparent 34px 60px);
 }
-
-/* Keep the existing approved pulsing wordmark; show a readable load state. */
-.sekka-launch{flex-direction:row;gap:0}
-.sekka-launch__loading{
- position:absolute;left:50%;top:calc(50% + min(34vw,165px));
- transform:translateX(-50%);
- display:block;color:#fff;font:600 14px/1.3 system-ui,-apple-system,Arial,sans-serif;
- letter-spacing:.1em;text-align:center
+.sekka-launch__vehicle{
+ width:min(88vw,400px);max-width:400px;min-width:0;
+ position:absolute;left:50%;top:49%;margin-left:max(-44vw,-200px);
+ transform-origin:center;will-change:transform,opacity;
+ animation:sekka-hiace-drive 3.65s cubic-bezier(.36,.04,.4,1) both;
+}
+.sekka-launch__hiace{width:100%;height:auto;display:block;overflow:visible;
+ filter:drop-shadow(0 14px 12px #1B182421)}
+.sekka-launch__wheel{transform-box:view-box;
+ animation:sekka-wheel-turn .25s linear infinite}
+.sekka-launch__copy{
+ position:absolute;top:calc(50% + min(20vw,112px));left:50%;
+ display:flex;flex-direction:column;align-items:center;gap:0;
+ transform:translateX(-50%);white-space:nowrap;text-align:center;direction:rtl;
+ animation:sekka-copy-arrive 3.65s both;
+}
+.sekka-launch__wordmark{
+ font:900 clamp(30px,9vw,49px)/1.25 Tajawal,'Noto Sans Arabic',Tahoma,sans-serif;
+ letter-spacing:-.04em;color:#1A171C;
+}
+.sekka-launch__subline{
+ font:800 10px/1.5 system-ui,Arial,sans-serif;letter-spacing:.42em;
+ padding-inline-start:.42em;color:#8054AA;
+}
+.sekka-launch__black-wipe{
+ position:absolute;inset:0;z-index:3;
+ background:#121013;
+ clip-path:circle(0% at 108% 46%);
+ will-change:clip-path;
+ animation:sekka-black-reveal 3.65s cubic-bezier(.55,.02,.3,1) both;
+}
+@keyframes sekka-hiace-drive{
+ 0%{transform:translate3d(-120vw,14px,0) scale(.86);opacity:0}
+ 7%{opacity:1}
+ 28%{transform:translate3d(0,0,0) scale(1);opacity:1}
+ 49%{transform:translate3d(0,0,0) scale(1);opacity:1}
+ 66%{transform:translate3d(158vw,-9px,0) scale(1.04);opacity:1}
+ 67%,100%{transform:translate3d(158vw,-9px,0) scale(1.04);opacity:0}
+}
+@keyframes sekka-copy-arrive{
+ 0%,24%{opacity:0;transform:translate(-50%,12px)}
+ 36%,54%{opacity:1;transform:translate(-50%,0)}
+ 68%,100%{opacity:0;transform:translate(-50%,0)}
+}
+@keyframes sekka-wheel-turn{to{transform:rotate(360deg)}}
+@keyframes sekka-stage-out{
+ 0%,69%{opacity:1}
+ 83%,100%{opacity:0}
+}
+@keyframes sekka-black-reveal{
+ 0%,62%{clip-path:circle(0% at 108% 46%)}
+ 79%,87%{clip-path:circle(175% at 108% 46%)}
+ 100%{clip-path:circle(0% at 100% 0%)}
+}
+@media (max-width:380px) {
+ .sekka-launch__vehicle{width:92vw;margin-left:-46vw}
+ .sekka-launch__copy{top:calc(50% + 22vw)}
+}
+@media(prefers-reduced-motion:reduce){
+ .sekka-launch__stage{animation:none;opacity:1}
+ .sekka-launch__stage:before,.sekka-launch__road,.sekka-launch__vehicle,
+ .sekka-launch__copy,.sekka-launch__black-wipe{display:none}
 }
