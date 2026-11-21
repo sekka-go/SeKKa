@@ -484,7 +484,7 @@ export default function MobileApp(){
  const fullScreenSearchFilters=tab==='search'&&discoveryScreen===10;
  const fullScreenAuth=(tab==='login'&&(onboardingScreen===3||onboardingScreen===4))||(tab==='captain-onboarding'&&!userId);
  const fullScreenSearch=tab==='search'&&discoveryScreen===9;
- const showFloatingActions=ready&&Boolean(userId)&&tab!=='login'&&tab!=='captain-onboarding';
+ const showFloatingActions=ready&&!(tab==='home'&&!userId)&&tab!=='login'&&tab!=='captain-onboarding';
  const menuButton=<button type="button" ref={menuTrigger} className="sekka-fab-menu"
   aria-label={t('فتح القائمة','Open menu')} aria-expanded={menuOpen}
   aria-controls="sekka-side-menu" onClick={()=>setMenuOpen(true)}>
