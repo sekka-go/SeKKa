@@ -91,7 +91,7 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
    result=(route.request().headers()['accept']||'').includes('object+json')?row:[row];
   }
   else if(path.startsWith('/rest/v1/v31_route_stops')){
-   if(new URL(route.request().url()).searchParams.get('select')==='id,name,position'&&++reviewReads===1){
+   if(new URL(route.request().url()).searchParams.get('select')==='id,name,position,outbound_stop_time,return_stop_time'&&++reviewReads===1){
     // Use a non-retryable response so this exercises the app's retry button.
     await route.fulfill({status:400,contentType:'application/json',body:JSON.stringify({message:'Fixture review unavailable'})});
     return;
@@ -115,8 +115,9 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  await page.goto('/?tab=routes&view=43');
  const entry=page.locator('.sekka-captain-route-wizard');
  // Name-first search with no area prerequisite, same as the Rider.
- await expect(entry.getByRole('group',{name:'Main areas'})).toHaveCount(1);
- const place=entry.getByRole('combobox',{name:'Search street or landmark'});
+ await expect(entry.getByRole('group',{name:'Main areas'})).toHaveCount(0);
+ await expect(entry.getByText('Choose stop service area')).toHaveCount(0);
+ const place=entry.getByRole('combobox',{name:'Search for a stop'});
  await expect(place).toBeVisible();
  await place.fill('Outside street');
  await expect(entry.getByRole('button',{name:'Find',exact:true})).toHaveCount(0);
@@ -127,7 +128,7 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  await entry.locator('.cj-easy-results').getByRole('option',{name:/Maadi Grand Mall/}).click();
  await expect(entry.locator('.cj-easy-selected-stops>li')).toHaveCount(1);
  await expect(page.getByRole('dialog',{name:'Choose point on map'})).toHaveCount(0);
- const destination=entry.getByRole('combobox',{name:'Search street or landmark'});
+ const destination=entry.getByRole('combobox',{name:'Search for a stop'});
  await destination.fill('Nasr City Square');
  await expect(entry.locator('.cj-easy-results').getByRole('option',{name:/Nasr City Square/})).toBeVisible();
  await entry.locator('.cj-easy-results').getByRole('option',{name:/Nasr City Square/}).click();
@@ -141,6 +142,7 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  await expect(page.getByRole('dialog',{name:'Choose point on map'})).toHaveCount(0);
  await entry.getByRole('button',{name:'Remove Cairo Festival City Mall'}).click();
  await expect(entry.locator('.cj-easy-selected-stops>li')).toHaveCount(2);
+ await entry.getByText('Preview route on map (optional)').click();
  await expect(entry.getByTitle('OpenStreetMap route stop map')).toBeVisible();
  await entry.getByRole('button',{name:'Move earlier: Nasr City Square'}).click();
  await expect(entry.locator('.cj-easy-selected-stops>li').first()).toContainText('Nasr City Square');
