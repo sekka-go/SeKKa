@@ -110,7 +110,7 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
    disabled={disabled} onClick={()=>{setMapOpen(true);setOpen(false);}}>
    <span aria-hidden="true">⌖</span>{t('حدد نقطة على الخريطة','Choose point on map')}
   </button>
-  {mapOpen&&<GeoMapPicker area={searchArea}
+  {mapOpen&&<GeoMapPicker area={searchArea} focus={broad[0]??result.places[0]??null}
    initial={choice?.kind==='map'?choice.place:null} onCancel={()=>setMapOpen(false)}
    onConfirm={place=>{const selected={kind:'map' as const,place};
     setQuery(place.name);onPick(place.name,selected);setMapOpen(false);setOpen(false);return true;}}/>}
