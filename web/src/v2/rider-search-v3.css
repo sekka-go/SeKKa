@@ -131,3 +131,17 @@ html[data-theme="dark"] .sekka-mobile .rs3__pickup-copy small{color:#F0D6E5}
 .sekka-mobile .rs3__saved .sekka-search-shortcuts__actions,.sekka-mobile .rs3__saved .sekka-search-shortcuts__recent{display:flex;flex-wrap:wrap;gap:7px;}
 .sekka-mobile .rs3__saved .sekka-search-shortcuts button{ min-height:44px;height:auto;padding:8px 10px;white-space:normal;overflow-wrap:anywhere;border-radius:11px;}
 .sekka-mobile .rs3__saved summary:focus-visible{outline:3px solid var(--rs-yellow);outline-offset:2px;}
+
+/* A deliberate, separate manual-map mode. Never position a map trigger below
+   autocomplete options where a touch can retarget after results disappear. */
+.sekka-mobile .rs3__optional-map{display:grid;gap:8px;margin:12px 2px 4px}
+.sekka-mobile .rs3__optional-map-toggle{display:flex;align-items:center;justify-content:center;
+ gap:9px;min-height:44px;width:100%;padding:9px 10px;border:1px dashed var(--rs-line);
+ border-radius:12px;background:transparent;color:var(--rs-muted);font:700 12px/1.5 Tajawal,Tahoma,sans-serif;
+ text-align:center;cursor:pointer}
+.sekka-mobile .rs3__optional-map-toggle:focus-visible,
+.sekka-mobile .rs3__optional-map-actions button:focus-visible{outline:3px solid #f9bb40;outline-offset:2px}
+.sekka-mobile .rs3__optional-map-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.sekka-mobile .rs3__optional-map-actions button{min-height:48px;min-width:0;padding:9px 7px;
+ background:var(--rs-paper);color:var(--rs-ink);border:1px solid var(--rs-line);
+ border-radius:12px;font:800 12px/1.4 Tajawal,Tahoma,sans-serif;overflow-wrap:anywhere}
