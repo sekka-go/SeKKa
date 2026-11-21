@@ -26,6 +26,12 @@ export function formatDistanceMeters(metres:number):string {
  if(metres<1000) return `${Math.round(metres/10)*10} م`;
  return `${(metres/1000).toFixed(1)} كم`;
 }
+/** Use Arabic units in Arabic UI and Latin units in English UI. */
+export function formatDistanceForLocale(metres:number,english:boolean):string {
+ const arabic=formatDistanceMeters(metres);
+ if(!english)return arabic;
+ return metres<1000?`${Math.round(metres/10)*10} m`:`${(metres/1000).toFixed(1)} km`;
+}
 export function approximateWalkMinutes(straightLineMetres:number):number {
  if(!Number.isFinite(straightLineMetres)||straightLineMetres<0) throw new RangeError('Invalid distance');
  return Math.ceil(straightLineMetres*1.3/80);
