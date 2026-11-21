@@ -10,6 +10,17 @@ Status: **PARTIAL; NOT ACCEPTED FOR PRODUCTION.** Never merge to `main` as a sub
 - Began light/dark energetic brand tokens in `web/src/v2/theme.css` and mobile shell overrides. Not all legacy screens and embedded screenshot assets are recolored yet.
 - Added pure client-side helper `web/src/v2/recurringGeo.ts` and tests for metres/kilometres, approximate walking time, deterministic stop order, 50m dedupe, coverage and optional routing adapter. **These are not server-side PostGIS replacements**.
 
+## Entry UX implementation — video reference 1000645126.mp4 (2026-11-21)
+- Inspected the supplied 118-second Poparide reference video. Its useful interaction sequence is: welcoming illustration and one CTA -> carpool-not-taxi explanation -> simple onboarding principles -> progressively collected profile information -> rider/driver role -> permissions -> completion -> ride search.
+- Reproduced the core **interaction pattern** without copying Poparide branding or silently imposing unapproved age, gender, mandatory selfie, bio, SMS/OTP, marketing permissions, or payment fields.
+- New public guest flow is **Welcome -> share-ride explanation -> practical pickup/time/price details -> select Passenger or Captain -> real Google OAuth -> existing verified profile form / Captain enrollment**. 3 introductory slides run inside production S002; role selection is production S003; Google retains S004 and its existing trusted callback; profile remains S006.
+- Files: `web/src/v2/GuestEntry.tsx`, `guest-entry.css`, `guestEntryCopy.ts`; `Onboarding.tsx` links production entry and retains untouched `/dev/screens` legacy gallery. SVG artwork is decorative, all real trip data remains backend sourced.
+- UX: RTL/LTR, light/dark, back/skip, per-step progress, semantic radio options, accessible focus/touch targets, reduced-motion support and screen-safe vertical scrolling. The PWA's user-selected purple/yellow road icon is reused without redrawing.
+- Auth: no new auth providers, no fake login and no role authorization by client state. Captain roles remain server-verified. The existing Supabase `LiveProfile` handles persistent name/optional phone and read-back verification.
+- Tests: `web/e2e/guest-entry-vnext.spec.ts` covers 320/360/390/412px in Arabic/English light/dark, Captain role persistence and Google prerequisite; `mobile-navigation-role.spec.ts` follows all new slides. `production-shell-geometry.spec.ts` continues to compare Search/Filter geometry to original gallery, while entry has its own regression gate because the owner explicitly changed the design. `mobile-pwa-navigation.spec.ts` assertions now follow the approved brand palette.
+- Manual check: open logged-out root -> press primary three times -> pick Captain -> Google screen -> browser Back restores chosen role; repeat Passenger -> authenticated Google callback -> profile -> real search. Check Skip intro and "Sign in with Google" on first screen, 320px and 390px both themes, portrait with screen reader, reduced motion, and browser back/forward.
+- Limit: this is a new **entry** flow, not an implementation of still-deferred payments, upload/avatar review, age verification, push notifications, or backend commute/map matching. Full authenticated Google and device visual acceptance remain mandatory before production.
+
 ## Not implemented / blocked
 - Staging project `zgcvumykzivsvnlflbyp` was inspected **read-only**: PostGIS is NOT currently installed. There have been NO staging schema writes or migrations in this iteration; Production was not accessed.
 - No new `places`, recurring templates, saved-search or demand data model has been deployed yet. No nearby_rides/demand_by_* RPC exists from this change.
@@ -33,4 +44,4 @@ Status: **PARTIAL; NOT ACCEPTED FOR PRODUCTION.** Never merge to `main` as a sub
 - **Accessibility:** keyboard-focus map markers, 44px controls, proper focus order, screen reader labels, reduced motion, safe-area and no overlap at 320px.
 - **Privacy:** no exact rider location in demand aggregates; no captain identity exposed before approved policy; no overselling/concurrent booking failures.
 
-**Current validation:** GitHub Actions were triggered by branch changes; final check status must be read from latest head. Do not report local typecheck/lint/build as executed (no local Git checkout/Node installation was available in this environment).
+**Current validation:** GitHub Actions were triggered by branch changes; final check status must be read from latest head. GitHub Actions are the verification authority in this environment; no local repository checkout or real authenticated device test has been executed.
