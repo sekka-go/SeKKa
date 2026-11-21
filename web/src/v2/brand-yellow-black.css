@@ -310,7 +310,7 @@ html[data-theme="dark"] .sekka-mobile .sekka-side-drawer .sekka-preference-contr
 .sekka-mobile{position:relative!important}
 .sekka-mobile > .sekka-floating-actions{
  position:fixed!important;
- z-index:120!important;
+ z-index:80!important;
  top:0!important;left:50%!important;right:auto!important;
  width:min(100%,680px)!important;height:0!important;
  transform:translateX(-50%)!important;
@@ -392,4 +392,17 @@ html[data-theme="dark"] .sekka-mobile > .sekka-floating-actions > :is(.sekka-fab
 }
 @media(prefers-reduced-motion:reduce){
  .sekka-mobile > .sekka-floating-actions button{transition:none!important}
+}
+
+/* Drawer opens on the same physical side as the chosen menu icon. */
+.sekka-mobile > .sekka-menu-layer{z-index:160!important;}
+.sekka-mobile[dir="rtl"] .sekka-side-drawer{
+ right:0!important;left:auto!important;
+ border-right:0!important;border-left:1px solid var(--flow-line,#DCEEF7)!important;
+ box-shadow:-10px 0 27px rgba(4,28,44,.23)!important;
+}
+.sekka-mobile[dir="ltr"] .sekka-side-drawer{
+ left:0!important;right:auto!important;
+ border-left:0!important;border-right:1px solid var(--flow-line,#DCEEF7)!important;
+ box-shadow:10px 0 27px rgba(4,28,44,.23)!important;
 }
