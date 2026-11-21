@@ -34,8 +34,8 @@ export const outsideCoverageMessage={
  en:"This location is outside seKKa's current service area. We currently serve Greater Cairo only."
 };
 export const noMatchingLocation={
- ar:'ملقيناش مكان مطابق داخل القاهرة الكبرى. جرّب اسم المنطقة أو معلم مشهور قريب.',
- en:'No matching location was found within Greater Cairo. Try a neighborhood or nearby landmark.'
+ ar:'الاسم مش موجود في بيانات الأماكن الحالية. جرّب اسم المنطقة أو شارع أو معلم قريب.',
+ en:'This name is not in our current place data. Try the area, street, or a nearby landmark.'
 };
 
 export function normalizedPlace(value:string):string {
