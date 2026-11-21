@@ -4,7 +4,7 @@ import type {SavedCommute} from './riderCommute';
 import type {PlaceChoice} from './geoPlace';
 import {riderHomeCopy} from './riderHomeCopy';
 import GeoPlaceInput from './GeoPlaceInput';
-import NearbyRides from './NearbyRides';
+import PickupExplorerSheet from './PickupExplorerSheet';
 import type {LiveSelection} from './LiveRouteSearch';
 import {usePreferences} from './preferences';
 import './rider-home.css';
@@ -51,6 +51,7 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
  onSelect:(selection:LiveSelection)=>void;
 }){
  const {language}=usePreferences(),en=language==='en',tr=en?riderHomeCopy.en:riderHomeCopy.ar;
+ const t=(ar:string,english:string)=>en?english:ar;
  const [stored,setStored]=useState<{owner:string;values:Draft}>(()=>({
   owner:riderId,values:readHomeDraft(riderId)??initialDraft(readSavedCommute(riderId))
  }));
@@ -152,26 +153,25 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
    </button>
   </section>
   {error&&<p className="rh-home__alert" role="alert">{error}</p>}
-  <section className="rh-shortcuts" aria-label={tr.quickActions}>
-   <button type="button" className="rh-shortcut rh-shortcut--nearby"
-    onClick={()=>setNearbyOpen(v=>!v)} aria-expanded={nearbyOpen}
-    aria-controls="rh-nearby-results">
-    <span className="rh-shortcut__icon"><RiderIcon name="nearby" size={36}/></span>
-    <span>{tr.nearbyShortTitle}</span>
-    <RiderIcon name="chevron" size={20}/>
+  <section className="rh-pickup-actions" aria-label={tr.quickActions}>
+   <button type="button" className="rh-pickup-actions__explore" onClick={()=>setNearbyOpen(true)}
+    aria-haspopup="dialog" aria-expanded={nearbyOpen}>
+    <span className="rh-pickup-actions__symbol" aria-hidden="true"><RiderIcon name="nearby" size={26}/></span>
+    <span className="rh-pickup-actions__copy">
+     <strong>{t('نقطة ركوب على سِكّتك','Find your pickup spot')}</strong>
+     <small>{t('شوف أقرب نقطة منشورة على الخريطة','Explore real published stops nearby')}</small>
+    </span>
+    <span className="rh-pickup-actions__arrow" aria-hidden="true"><RiderIcon name="chevron" size={19}/></span>
    </button>
-   <button type="button" className="rh-shortcut rh-shortcut--bookings" onClick={()=>onNavigate(29)}>
-    <span className="rh-shortcut__icon"><RiderIcon name="ticket" size={36}/></span>
+   <button type="button" className="rh-pickup-actions__bookings" onClick={()=>onNavigate(29)}>
+    <span className="rh-pickup-actions__ticket" aria-hidden="true"><RiderIcon name="ticket" size={25}/></span>
     <span>{tr.bookingsShortTitle}</span>
-    <RiderIcon name="chevron" size={20}/>
    </button>
   </section>
-  {nearbyOpen&&<section className="rh-nearby" id="rh-nearby-results" aria-label={tr.nearbyTitle}>
-   <h2>{tr.nearbyTitle}</h2>
-   <p>{tr.nearbyDesc}</p>
-   <NearbyRides onSelect={onSelect}/>
-  </section>}
-  {editor&&<div className="rh-picker-backdrop" onClick={()=>setEditor(null)}>
+  {nearbyOpen&&<PickupExplorerSheet onClose={()=>setNearbyOpen(false)}
+   onManualSearch={()=>{setNearbyOpen(false);onNavigate(9);}}
+   onSelect={selection=>{setNearbyOpen(false);onSelect(selection);}}/>}
+   {editor&&<div className="rh-picker-backdrop" onClick={()=>setEditor(null)}>
    <section className="rh-picker" role="dialog" aria-modal="true" aria-labelledby="rh-picker-title"
     onClick={event=>event.stopPropagation()}>
     <div className="rh-picker__head">
