@@ -15,7 +15,9 @@ export const riderHomeCopy={
   unavailable:'المشوار المحفوظ مش متاح في مناطق الخدمة الحالية. عدّل وجهتك.',
   localFailure:'مش قادرين نفتح البحث المحفوظ. افتح البحث وعدّل التفاصيل.',
   mapHint:'البحث القريب اختياري ويستخدم الموقع بعد موافقتك.',
-  progress:'1. اختر الطريق   2. قارن الرحلات   3. راجع واحجز'
+  progress:'1. اختر الطريق   2. قارن الرحلات   3. راجع واحجز',
+  searchStep:'الخطوة 1 من 3',searchTitle:'ظبّط مشوارك',searchHelp:'حدد نقطة البداية والوجهة والميعاد. البحث هيعرض الخطوط المنشورة فعلًا.',
+  resultsStep:'الخطوة 2 من 3',resultsTitle:'اختار الرحلة الأنسب',detailsStep:'الخطوة 3 من 3',detailsTitle:'راجع التفاصيل قبل الحجز'
  },
  en:{
   kicker:'For recurring commutes',title:'Where are you going today?',
@@ -33,6 +35,8 @@ export const riderHomeCopy={
   unavailable:'Your saved commute is outside the current service areas. Edit your destination.',
   localFailure:"Couldn't restore your saved search. Open search to edit the details.",
   mapHint:'Nearby discovery is optional and uses location only with your permission.',
-  progress:'1. Choose a route   2. Compare rides   3. Review and book'
+  progress:'1. Choose a route   2. Compare rides   3. Review and book',
+  searchStep:'Step 1 of 3',searchTitle:'Set your commute',searchHelp:'Choose your pickup, destination and time. Only genuinely published routes are shown.',
+  resultsStep:'Step 2 of 3',resultsTitle:'Pick a suitable ride',detailsStep:'Step 3 of 3',detailsTitle:'Review before booking'
  }
 } as const;
