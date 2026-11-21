@@ -43,12 +43,12 @@ function RideIllustration({variant}:{variant:0|1|2}){
    <circle cx="185" cy="151" r="10" fill="#E9A37E"/>
    <path d="M170 165q15-16 30 0" fill="#078BEA"/>
    <circle cx="126" cy="151" r="10" fill="#AD715A"/>
-   <path d="M111 165q15-16 30 0" fill="#5E25A4"/>
+   <path d="M111 165q15-16 30 0" fill="#FFCC24"/>
   </g>
   {variant===0&&<>
    <g transform="translate(22 42)"><rect width="110" height="39" rx="19.5" fill="#fff"/>
     <circle cx="23" cy="19" r="10" fill="#00BEAD"/><path d="M20 19l3 3 6-8" stroke="#fff" fill="none" strokeWidth="3" strokeLinecap="round"/>
-    <path d="M46 15h52M46 24h40" stroke="#B6A2BE" strokeWidth="5" strokeLinecap="round"/>
+    <path d="M46 15h52M46 24h40" stroke="#E1C768" strokeWidth="5" strokeLinecap="round"/>
    </g>
    <g transform="translate(242 25)"><rect width="80" height="41" rx="18" fill="#fff"/>
     <path d="M18 20h43" stroke="#FF663D" strokeWidth="6" strokeLinecap="round"/>
@@ -57,7 +57,7 @@ function RideIllustration({variant}:{variant:0|1|2}){
   {variant===1&&<>
    <g transform="translate(22 32)"><rect width="120" height="44" rx="19" fill="#fff"/>
     <circle cx="24" cy="22" r="11" fill="#078BEA"/><path d="M24 14v16m-8-8h16" stroke="#fff" strokeWidth="3"/>
-    <path d="M49 16h55M49 27h44" stroke="#AE9CB8" strokeLinecap="round" strokeWidth="5"/>
+    <path d="M49 16h55M49 27h44" stroke="#E1C768" strokeLinecap="round" strokeWidth="5"/>
    </g>
    <path d="M282 123c9-21 23-21 31 0 4 16-17 27-17 27s-19-11-14-27Z" fill="#078BEA"/>
    <circle cx="296" cy="120" r="7" fill="#FFCD38"/>
