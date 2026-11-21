@@ -85,6 +85,8 @@ function category(p){
   (p.highway?'road':'')||text(p.amenity)||text(p.shop)||text(p.tourism)||
   text(p.healthcare)||text(p.leisure)||text(p.office)||
   (['commercial','retail','education','industrial'].includes(text(p.landuse))?text(p.landuse):'')||
+  (['school','kindergarten','college','university'].includes(text(p.building))?text(p.building):'')||
+  (['childcare','kindergarten','preschool'].includes(text(p.social_facility))?'childcare':'')||
   'landmark';
 }
 const escapeCopy=value=>value===null||value===undefined||value===''?empty:String(value)
@@ -120,7 +122,8 @@ for await(const feature of features()){
  await write(places,[sourceId,osmKind,osmId,name,text(p['name:ar'])||null,
   text(p['name:en'])||null,hierarchy.join(' · ').slice(0,200),kind,
   point.lat,point.lon,exact?'true':'false',snapshot]);
- const names=[name,text(p['name:ar']),text(p['name:en']),text(p.alt_name),
+ const names=[name,text(p['name:ar']),text(p['name:en']),text(p['name:ar-EG']),
+  text(p.alt_name),text(p.loc_name),text(p.int_name),
   text(p.short_name),text(p.official_name),text(p.old_name)].filter(Boolean);
  const found=new Set(names);
  for(const title of names.slice(0,3)){
