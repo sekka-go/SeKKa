@@ -5,6 +5,8 @@ import type { CSSProperties, ReactNode } from "react";
 import "./onboarding.css";
 import { client } from "./api";
 import LiveProfile from "./LiveProfile";
+import GuestEntry from "./GuestEntry";
+import {entryCopy} from "./guestEntryCopy";
 export type Appearance = "dark" | "light";
 type Crop = [number, number, number, number];
 // Original paired references are preserved. CSS windows show ONLY illustration/logo regions.
@@ -274,37 +276,47 @@ export default function Onboarding({
     6: t("استكمال الملف الشخصي"),
     7: t("الأذونات"),
   }[id];
-  if (production && (id === 4 || id === 6)) return (
-    <div className={`phase-one-stage ${theme}`}>
-      <main className={`phase-canvas phase-screen-${id}`}>
-        <div className="phase-top-wave" aria-hidden="true" />
-        {!production&&<div className="phase-logo"><Wordmark /></div>}
-        <button className="phase-back" onClick={() => go(id === 4 ? 3 : 2)} aria-label={t("رجوع")}>‹</button>
-        {id === 4 ? <div className="phase-google-auth">
-          <h1 className="phase-title">{language === "en" ? "Sign in to seKKa" : "سجّل دخولك لسِكّة"}</h1>
-          <p className="phase-subtitle">{language === "en" ? "Continue securely with your existing Google account." : "كمّل بحساب جوجل الحالي بتاعك."}</p>
-          <button type="button" className="phase-primary" disabled={!client||googleBusy}
-            aria-busy={googleBusy} onClick={()=>void startGoogleSignIn()}>
-            {googleBusy
-              ?language==='en'?'Opening Google…':'بنفتح جوجل…'
-              :language === "en" ? "Continue with Google" : "المتابعة باستخدام جوجل"}
-            {!googleBusy&&<Arrow/>}
-          </button>
-          {googleBusy&&<p role="status">{language==='en'?'Waiting for Google sign-in…':'مستنيين تأكيد تسجيل الدخول من جوجل…'}</p>}
-          {googleError&&<div className="phase-google-error" role="alert">
-            <p>{googleError}</p>
-            <button type="button" className="phase-google-retry" disabled={googleBusy}
-              onClick={()=>void startGoogleSignIn()}>{language==='en'?'Try again':'حاول تاني'}</button>
+  if (production && (id === 2 || id === 3)) {
+    return <GuestEntry screen={id} language={language} role={role}
+      onRole={onRole} go={go} />;
+  }
+  if (production && (id === 4 || id === 6)) {
+    const copy=language==="en"?entryCopy.en:entryCopy.ar;
+    return <div className="phase-one-stage sekka-entry-stage">
+      <main className={"phase-canvas phase-screen-"+id+" sekka-entry-login"} dir={language==="en"?"ltr":"rtl"}>
+        <button type="button" className="phase-back" onClick={()=>go(id===4?3:8)}
+          aria-label={copy.back}>{language==="en"?"‹":"›"}</button>
+        <img src="/brand/sekka-go-road-192.png" className="sekka-entry-login__brand"
+          width="96" height="96" alt={copy.brand}/>
+        {id===4
+          ? <div className="phase-google-auth sekka-entry-login__form">
+            <h1 className="phase-title">{copy.signInTitle}</h1>
+            <p className="phase-subtitle">{copy.signInDescription}</p>
+            <div className="sekka-entry-login__secure"><span aria-hidden="true">✓</span>{copy.signInSecure}</div>
+            <button type="button" className="phase-primary" disabled={!client||googleBusy}
+              aria-busy={googleBusy} onClick={()=>void startGoogleSignIn()}>
+              {googleBusy?copy.signInLoading:copy.signInGoogle}
+              {!googleBusy&&<Arrow/>}
+            </button>
+            {googleBusy&&<p role="status">{copy.signInWaiting}</p>}
+            {googleError&&<div className="phase-google-error" role="alert">
+              <p>{googleError}</p>
+              <button className="phase-google-retry" type="button" disabled={googleBusy}
+                onClick={()=>void startGoogleSignIn()}>{copy.signInRetry}</button>
+            </div>}
+            {!client&&<p role="alert">{copy.signInUnavailable}</p>}
+          </div>
+          : <div className="phase-flow-content phase-live-profile-flow sekka-entry-login__profile">
+            <h1 className="phase-title">{copy.setupTitle}</h1>
+            <p className="phase-subtitle">{copy.setupDescription}</p>
+            <LiveProfile/>
+            <button type="button" className="phase-primary" onClick={()=>go(8)}>
+              {copy.setupSkip}<Arrow/>
+            </button>
           </div>}
-          {!client && <p role="alert">{language === "en" ? "Sign-in is not configured." : "إعداد تسجيل الدخول غير متاح."}</p>}
-        </div> : <div className="phase-flow-content phase-live-profile-flow">
-          <h1 className="phase-title">{language === "en" ? "Complete your profile" : "استكمال الملف الشخصي"}</h1>
-          <LiveProfile />
-          <button className="phase-primary" onClick={() => go(8)}>{language === "en" ? "Continue to home" : "الذهاب للرئيسية"} <Arrow /></button>
-        </div>}
       </main>
-    </div>
-  );
+    </div>;
+  }
   return (
     <div className={`phase-one-stage ${theme}`}>
       {!production && <nav className="phase-review-bar" aria-label={t("معاينة المرحلة الأولى")}>
