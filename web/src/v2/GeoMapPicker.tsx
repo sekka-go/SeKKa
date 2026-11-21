@@ -32,6 +32,7 @@ export default function GeoMapPicker({initial,area,onCancel,onConfirm}:MapPicker
  const mapRef=useRef<HTMLDivElement|null>(null);
  const centerRef=useRef(center);
  const active=useRef(new Map<number,{x:number;y:number;startX:number;startY:number;travel:number}>());
+ const lastPinch=useRef<number|null>(null);
   useEffect(()=>{centerRef.current=center;},[center]);
  useEffect(()=>{
   const element=mapRef.current;
@@ -53,9 +54,13 @@ export default function GeoMapPicker({initial,area,onCancel,onConfirm}:MapPicker
   return result;
  });
  const onDown=(event:PointerEvent<HTMLDivElement>)=>{
-  if(event.button!==0)return;
+  if(event.button!==0||(event.target instanceof Element&&event.target.closest('button,a')))return;
   event.currentTarget.setPointerCapture(event.pointerId);
   active.current.set(event.pointerId,{x:event.clientX,y:event.clientY,startX:event.clientX,startY:event.clientY,travel:0});
+  if(active.current.size===2){
+   const pair=[...active.current.values()];
+   lastPinch.current=Math.hypot(pair[0].x-pair[1].x,pair[0].y-pair[1].y);
+  }
  };
  const onMoving=(event:PointerEvent<HTMLDivElement>)=>{
   const current=active.current.get(event.pointerId);
@@ -63,11 +68,21 @@ export default function GeoMapPicker({initial,area,onCancel,onConfirm}:MapPicker
   const dx=event.clientX-current.x,dy=event.clientY-current.y;
   current.x=event.clientX;current.y=event.clientY;current.travel+=Math.abs(dx)+Math.abs(dy);
   if(active.current.size===1)move(dx,dy);
+  else if(active.current.size===2){
+   const pair=[...active.current.values()];
+   const distance=Math.hypot(pair[0].x-pair[1].x,pair[0].y-pair[1].y);
+   if(lastPinch.current!==null&&distance>lastPinch.current*1.35){
+    setZoom(z=>mapZoom(z+1));lastPinch.current=distance;
+   }else if(lastPinch.current!==null&&distance<lastPinch.current*.7){
+    setZoom(z=>mapZoom(z-1));lastPinch.current=distance;
+   }
+  }
  };
  const onUp=(event:PointerEvent<HTMLDivElement>)=>{
   const current=active.current.get(event.pointerId);
   if(!current)return;
   active.current.delete(event.pointerId);
+  if(active.current.size<2)lastPinch.current=null;
   if(current.travel>12||active.current.size>0)return;
   const box=event.currentTarget.getBoundingClientRect();
   const target=mapProject(centerRef.current,zoom);
