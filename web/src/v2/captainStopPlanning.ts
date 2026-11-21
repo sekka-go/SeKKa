@@ -34,9 +34,9 @@ const routingAnchors:Record<string,{latitude:number;longitude:number}>={
  'heliopolis':{latitude:30.0940,longitude:31.3200}
 };
 export function resolveCaptainRoutingArea<T extends ServiceArea>(place:MapPlace,areas:readonly T[]):T|null {
+ if(!Number.isFinite(place.latitude)||!Number.isFinite(place.longitude))return null;
  const named=inferCaptainArea(place,areas);
  if(named)return named;
- if(!Number.isFinite(place.latitude)||!Number.isFinite(place.longitude))return null;
  const mapped=areas.flatMap(area=>{
   const anchor=routingAnchors[area.name_en.trim().toLowerCase()];
   if(!anchor)return [];
