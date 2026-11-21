@@ -2,6 +2,7 @@ import {useEffect,useId,useState} from 'react';
 import type {KeyboardEvent} from 'react';
 import {greaterCairoEnvelope,isInsideOperationalRegion} from './greaterCairoBoundary';
 import {client} from './api';
+import {searchStaticCairo} from './staticCairoSearch';
 import {exactCatalogMatches,inspectPhoton,normalizedPlace,rankMapPlaces,placeMatchesArea} from './geoPlace';
 import type {MapPlace,ServiceArea} from './geoPlace';
 
@@ -49,8 +50,15 @@ export async function lookupLocations(query:string,area:ServiceArea|undefined,en
  const key=JSON.stringify([query,area?.name_en,en]);
  const cached=cache.get(key);
  if(cached&&cached.expires>Date.now())return cached.data;
- const indexed=await indexedLookup(query,area,en,signal);
- // Search the licensed server index first; Photon is a bounded fallback, not the primary corpus.
+ const staticResults=await searchStaticCairo(query,en,area,signal);
+ if(staticResults.length>=5){
+  const data={places:staticResults.slice(0,8),outside:false};
+  cache.set(key,{expires:Date.now()+300_000,data});
+  return data;
+ }
+ const serverResults=await indexedLookup(query,area,en,signal);
+ const seenIndex=new Set(staticResults.map(place=>place.id));
+ const indexed=[...staticResults,...serverResults.filter(place=>!seenIndex.has(place.id))];
  if(indexed.length>=5){
   const data={places:indexed.slice(0,8),outside:false};
   cache.set(key,{expires:Date.now()+300_000,data});
