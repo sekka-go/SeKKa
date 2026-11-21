@@ -166,3 +166,90 @@ html[data-theme="dark"] .rh-button.rh-button--primary{background:#FFCD38;color:#
 html[data-theme="dark"] .rh-button.rh-button--primary svg{color:#5B1584}
 @media(prefers-reduced-motion:reduce){.rh-home *, .rh-home *:before, .rh-home *:after{
  animation:none!important;transition:none!important}}
+
+
+/* All four home fields are working 44px+ controls; the popover is a real
+   place/time/weekdays editor, not explanatory image annotations. */
+.rh-home button.rh-journey__field{
+ appearance:none;display:flex;align-items:center;gap:10px;
+ width:100%;min-height:61px;height:auto;
+ border:0;border-bottom:1px solid #EFE5EE;border-radius:0;
+ background:transparent;color:var(--rh-ink);cursor:pointer;
+ text-align:start;padding:8px 2px;box-shadow:none;
+}
+.rh-home button.rh-journey__field:last-child{border-bottom:0}
+.rh-home button.rh-journey__field:active{background:#F8EDFB}
+.rh-journey__field-copy{flex:1;display:flex;min-width:0;align-items:baseline;gap:6px;flex-wrap:wrap}
+.rh-journey__field-affordance{display:flex;align-items:center;justify-content:center;
+ color:#A681B4;flex:none;transform:scaleX(-1)}
+.rh-home[dir="ltr"] .rh-journey__field-affordance{transform:none}
+.rh-journey__area-loading{margin:8px 0!important;color:var(--rh-muted);
+ font-size:12px;line-height:1.5;font-weight:700}
+.rh-picker-backdrop{position:fixed;inset:0;z-index:100;display:flex;align-items:flex-end;
+ justify-content:center;background:#210A3788;overscroll-behavior:contain}
+.rh-picker{--picker-paper:#FFFCFA;--picker-ink:#35134F;--picker-line:#ECDCEA;
+ box-sizing:border-box;width:min(100%,480px);max-height:min(87dvh,720px);
+ background:var(--picker-paper);border-radius:28px 28px 0 0;
+ padding:0 18px calc(20px + env(safe-area-inset-bottom));
+ box-shadow:0 -14px 50px #23093440;color:var(--picker-ink);
+ overflow-y:auto;overscroll-behavior:contain;
+}
+.rh-picker__head{display:flex;justify-content:space-between;align-items:center;gap:12px;
+ position:sticky;top:0;background:var(--picker-paper);z-index:2;
+ padding:20px 0 15px;border-bottom:1px solid var(--picker-line)}
+.rh-picker__head h2{font-size:23px;font-weight:900;line-height:1.35;outline:none}
+.rh-picker__close{min-width:44px;height:44px;display:grid;place-items:center;
+ border-radius:14px;border:1px solid var(--picker-line);background:#F7ECFA;
+ color:#5B1898}
+.rh-picker__places,.rh-picker__times,.rh-picker__days{padding-top:15px}
+.rh-picker__places>p,.rh-picker__times>p,.rh-picker__days>p{font-size:13px;
+ line-height:1.6;color:#725B7B;margin:0 0 14px}
+.rh-picker .sekka-place-lookup{position:relative;width:100%;min-width:0}
+.rh-picker .sekka-place-lookup input{width:100%!important;min-height:54px!important;
+ height:auto!important;border:1px solid #DAC5E8!important;
+ border-radius:14px!important;background:#FFF!important;color:#35134F!important;
+ padding:12px 14px!important;font:700 16px/1.5 Tajawal,Tahoma,sans-serif!important}
+.rh-picker .sekka-place-lookup__suggestions{max-height:42dvh!important;overflow-y:auto!important;
+ position:relative!important;inset:auto!important;z-index:1!important;
+ width:100%!important;box-shadow:none!important}
+.rh-picker .sekka-place-lookup__suggestions button{min-height:48px!important}
+.rh-picker__times{display:flex;flex-direction:column;gap:12px}
+.rh-picker__times label{display:flex;justify-content:space-between;align-items:center;gap:12px;
+ border:1px solid var(--picker-line);border-radius:15px;padding:11px 13px;
+ font-size:15px;font-weight:900;min-height:64px}
+.rh-picker__times input{color:#35134F;min-height:44px;min-width:116px;
+ border:1px solid #D7C4E3;border-radius:11px;background:#FFF;padding:8px 10px;
+ font-size:16px;direction:ltr}
+.rh-picker__week{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.rh-picker__week button{background:#F7EAFB;color:#5C287E;border:2px solid transparent;
+ border-radius:13px;padding:8px 3px;min-height:49px;font-size:13px;font-weight:800}
+.rh-picker__week button[aria-pressed="true"]{background:#66108F;color:#FFF;border-color:#F6CA41}
+.rh-picker__count{font-weight:900!important;color:#631495!important}
+.rh-picker__period{display:flex;gap:9px;margin:10px 0 14px}
+.rh-picker__period button{flex:1;background:#F4E9F7;border:1px solid #D8BDE3;
+ border-radius:12px;min-height:46px;font-weight:800;color:#5C287E}
+.rh-picker__period button[aria-pressed="true"]{background:#FFDE7E;border-color:#FFCB37;color:#4C126D}
+.rh-picker__hint{font-size:12px!important;line-height:1.6!important;
+ color:#755B81!important;background:#F7F0FA;border-radius:12px;padding:11px}
+.rh-picker__confirm{width:100%;min-height:53px!important;border-radius:15px;
+ border:0;background:#66108F;color:#FFF;font-weight:900;font-size:17px;margin-top:8px}
+html[data-theme="dark"] .rh-home button.rh-journey__field{border-bottom-color:#594267}
+html[data-theme="dark"] .rh-home button.rh-journey__field:active{background:#4A2759}
+html[data-theme="dark"] .rh-picker{
+ --picker-paper:#321B4B;--picker-ink:#FFF7FD;--picker-line:#644578}
+html[data-theme="dark"] .rh-picker__close{background:#4E3264;color:#FFDD83}
+html[data-theme="dark"] .rh-picker__places>p,
+html[data-theme="dark"] .rh-picker__times>p,
+html[data-theme="dark"] .rh-picker__days>p{color:#E0CDE6}
+html[data-theme="dark"] .rh-picker__week button{background:#513267;color:#F6EAFB}
+html[data-theme="dark"] .rh-picker__week button[aria-pressed="true"]{background:#FFCD38;color:#32104E}
+html[data-theme="dark"] .rh-picker__count{color:#FFDC86!important}
+html[data-theme="dark"] .rh-picker__period button{background:#503368;color:#F6EAFB}
+html[data-theme="dark"] .rh-picker__period button[aria-pressed="true"]{background:#FFCD38;color:#32104E}
+html[data-theme="dark"] .rh-picker__hint{background:#4D315F;color:#EEDFF3!important}
+@media(max-width:350px){
+ .rh-home button.rh-journey__field{min-height:58px;gap:7px}
+ .rh-picker{padding-inline:12px}
+ .rh-picker__week{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .rh-journey__field-copy>strong{font-size:15px}
+}
