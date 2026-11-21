@@ -1,3 +1,4 @@
+/* global Response, AbortController */
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {searchStaticCairo} from './staticCairoSearch.ts';
