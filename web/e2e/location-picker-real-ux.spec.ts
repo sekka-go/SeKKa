@@ -1,4 +1,6 @@
 import {test,expect} from '@playwright/test';
+// Exercise touch rather than mouse-only click on narrow Android-like viewport.
+test.use({hasTouch:true});
 const street='شارع عبد السلام أمين';
 const streetRow={
  i:'osm:way:500600700',n:street,a:street,e:'Abdelsalam Amin Street',
