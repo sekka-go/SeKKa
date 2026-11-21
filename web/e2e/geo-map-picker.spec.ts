@@ -5,7 +5,7 @@ test('Passenger can open the real map with empty search and confirm a Cairo pin 
  await page.goto('/?tab=search&view=9');
  const form=page.locator('.rs3');
  await expect(form).toBeVisible();
- const button=form.getByRole('button',{name:/حدد نقطة على الخريطة/}).first();
+ const button=form.getByRole('button',{name:/اختيار من الخريطة/}).first();
  await expect(button).toBeEnabled();
  await button.click();
  const dialog=page.getByRole('dialog',{name:'حدد نقطة على الخريطة'});
@@ -27,7 +27,9 @@ test('A guest may close the map without replacing the current text',async({page}
  await expect(form).toBeVisible();
  const from=form.getByRole('combobox',{name:'نقطة الانطلاق'});
  await from.fill('الحي الأول');
- await form.getByRole('button',{name:/حدد نقطة على الخريطة/}).first().click();
+ // Dismiss typed suggestions before explicitly opting in to map mode.
+ await form.getByRole('combobox',{name:'نقطة الانطلاق'}).press('Tab');
+ await form.getByRole('button',{name:/اختيار من الخريطة/}).first().click();
  const dialog=page.getByRole('dialog',{name:'حدد نقطة على الخريطة'});
  await expect(dialog).toBeVisible();
  await dialog.getByRole('button',{name:'إغلاق الخريطة'}).click();
