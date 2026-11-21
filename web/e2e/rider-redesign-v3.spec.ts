@@ -89,7 +89,7 @@ for(const variant of [
   await expect(page).toHaveURL(/tab=search&view=11/);
   await expect(page.locator('.rr3-hero')).toBeVisible();
   await expect(page.locator('.sekka-live-result')).toHaveCount(1);
-  await expect(page.locator('.sekka-live-price')).toContainText('130');
+  await expect(page.locator('.sekka-live-price')).toContainText(variant.language==='ar'?'١٣٠':'130');
   await expect(page.locator('.sekka-weekdays-disclaimer')).toBeVisible();
   await page.screenshot({path:'test-results/rider-v3-results-'+variant.language+'.png',fullPage:true,animations:'disabled'});
   expect(count()).toBeGreaterThan(0);
