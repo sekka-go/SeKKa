@@ -51,6 +51,10 @@ export default function MobileApp(){
  const [liveSelection,setLiveSelection]=useState<LiveSelection|null>(null),[bookingOffer,setBookingOffer]=useState<Line|null>(null),[selectionError,setSelectionError]=useState('');
  const [bookingId,setBookingId]=useState<string|null>(()=>new URL(location.href).searchParams.get('booking'));
  const [selectionVersion,setSelectionVersion]=useState(0);
+ const selectionParams=new URLSearchParams(location.search);
+ const selectedRouteId=selectionParams.get('route')||'',selectedPickupId=selectionParams.get('pickup')||'',selectedDropoffId=selectionParams.get('dropoff')||'',selectedReverse=selectionParams.get('reverse')==='1';
+ const matchingSelection=liveSelection?.route.id===selectedRouteId&&liveSelection.from.id===selectedPickupId&&liveSelection.to.id===selectedDropoffId&&liveSelection.reverse===selectedReverse?liveSelection:null;
+ const selectionLoading=Boolean(selectedRouteId&&selectedPickupId&&selectedDropoffId&&!matchingSelection&&!selectionError);
  const onboardingScreen=route.tab==='login'?route.view:2;
  const [selectedRole,setSelectedRole]=useState(()=>{
   try{if(sessionStorage.getItem('sekka.pendingRole')==='captain')return 'captain';}catch{/* URL fallback below. */}
@@ -123,7 +127,7 @@ export default function MobileApp(){
  useEffect(()=>{let active=true;const u=new URL(location.href);
   const route=u.searchParams.get('route'),pickup=u.searchParams.get('pickup'),dropoff=u.searchParams.get('dropoff');
   if(!['search','booking'].includes(tab))return;
-  if(!route||!pickup||!dropoff){setLiveSelection(null);setBookingOffer(null);return;}
+  if(!route||!pickup||!dropoff){setLiveSelection(null);setBookingOffer(null);setSelectionError('');return;}
   setLiveSelection(null);setBookingOffer(null);setSelectionError('');
   void fetchPublishedSelection(route,pickup,dropoff,u.searchParams.get('reverse')==='1').then(s=>{
     if(!active)return;setLiveSelection(s);
@@ -141,7 +145,7 @@ export default function MobileApp(){
     });
   }).catch(e=>{if(active){setLiveSelection(null);setSelectionError(e instanceof Error?e.message:String(e));}});
   return()=>{active=false;};
- },[tab,selectionVersion,areas]);
+ },[tab,selectedRouteId,selectedPickupId,selectedDropoffId,selectedReverse,selectionVersion,areas]);
 
  useEffect(()=>{let active=true;
   let adminLandingHandled=false;
@@ -365,7 +369,7 @@ export default function MobileApp(){
    setBookingId(id);const u=new URL(location.href);u.searchParams.set('tab','booking');u.searchParams.set('booking',id);
    history.replaceState({route:{tab:'booking'}},'',u.pathname+u.search);
  };
- const approvedDiscovery=(screen:number)=><Discovery production riderId={userId} screen={screen} serviceAreas={areas} liveSelection={liveSelection} onLiveSelect={chooseRoute} theme={p.theme}
+ const approvedDiscovery=(screen:number)=><Discovery production riderId={userId} screen={screen} serviceAreas={areas} liveSelection={matchingSelection} selectionLoading={selectionLoading} onLiveSelect={chooseRoute} theme={p.theme}
      onTheme={p.setThemePreference} go={discoveryGo} onDetailBack={backFromRideDetails}
      routes={[]} route={null} bookings={[]} signedIn={Boolean(userId)} busy={false} error={areasError}
      onSearch={()=>{}} onSelect={()=>{}}
@@ -538,7 +542,7 @@ export default function MobileApp(){
     :<button type="button" onClick={startCaptainJourney}>{t('متابعة طلب الكابتن','Continue Captain application')}</button>)}<button type="button" onClick={()=>void signOut()}>{t('تسجيل الخروج','Sign out')}</button></section>:<section className="sekka-mobile-card"><h1>{t('حسابي','My profile')}</h1><p>{t('سجّل بجوجل علشان تكمل بياناتك.','Sign in with Google to complete your profile.')}</p><button className="sekka-action" onClick={()=>signInFor('/?tab=login&view=6')}>{t('تسجيل الدخول بجوجل','Sign in with Google')}</button></section>)}
    {selectionError&&['search','booking'].includes(tab)&&<div role="alert" className="sekka-mobile-alert">{selectionError}<button type="button" onClick={()=>setSelectionVersion(v=>v+1)}>{t('إعادة المحاولة','Retry')}</button></div>}
    {ready&&tab==='search'&&!blockedRiderTab&&approvedDiscovery(discoveryScreen)}
-   {ready&&tab==='booking'&&!blockedRiderTab&&<Suspense fallback={<p role="status">{t('بنحمّل الحجز…','Loading booking…')}</p>}><V31BookingJourney offer={bookingOffer} routeId={liveSelection?.route.id||''}
+   {ready&&tab==='booking'&&!blockedRiderTab&&<Suspense fallback={<p role="status">{t('بنحمّل الحجز…','Loading booking…')}</p>}><V31BookingJourney offer={matchingSelection?bookingOffer:null} routeId={matchingSelection?.route.id||''} selectionLoading={selectionLoading||Boolean(!bookingId&&matchingSelection&&!bookingOffer&&!selectionError)}
      pickupId={new URL(location.href).searchParams.get('pickup')||''} dropoffId={new URL(location.href).searchParams.get('dropoff')||''}
      reverse={new URL(location.href).searchParams.get('reverse')==='1'} bookingId={bookingId}
      onBack={()=>{if(bookingId){setBookingsSection('bookings');navigate({tab:'bookings'},{replace:true});}else{const state=history.state as {sekkaNavigation?:boolean;from?:MobileRoute}|null;if(state?.sekkaNavigation&&state.from?.tab==='search'&&state.from.view===12){history.back();}else navigate({tab:'search',view:12},{replace:true});}}}
