@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {persistableOperationalPoint} from './greaterCairoBoundary.ts';
 import {greaterCairoGeometry} from './greaterCairoGeometry.ts';
 import {readFileSync,readdirSync} from 'node:fs';
-import {mapPlacesFromPhoton,serviceMatches,placeMatchesArea,stopNearPoint,geoRequestAvailable,inLaunchRegion,normalizedPlace,catalogMatches,outsideCatalogMatch,locationContext,rankMapPlaces,selectOperationalMapPlace,inspectPhoton} from './geoPlace.ts';
+import {mapPlacesFromPhoton,serviceMatches,placeMatchesArea,stopNearPoint,geoRequestAvailable,inLaunchRegion,normalizedPlace,catalogMatches,outsideCatalogMatch,locationContext,rankMapPlaces,selectOperationalMapPlace,inspectPhoton,isSearchableMapPlace} from './geoPlace.ts';
 
 const areas=[
  {id:1,name_ar:'المعادي',name_en:'Maadi'},
@@ -84,12 +84,12 @@ const feature=(coordinates,properties)=>({
 test('out-of-scope points, foreign providers and missing OSM references cannot be selected',()=>{
  const check=inspectPhoton({features:[
   feature([30.8428,29.3084],{name:'Fayoum',osm_type:'N',osm_id:210}),
-  feature([31.6295623,30.1488541],{name:'Unverified Shorouk fringe',osm_type:'N',osm_id:211}),
+  feature([31.6295623,30.1488541],{name:'Shorouk fringe search point',osm_type:'N',osm_id:211}),
   feature([31.2357,30.0444],{name:'Missing OSM reference'}),
   feature([31.2357,30.0444],{name:'Foreign feature',countrycode:'AE',osm_type:'N',osm_id:212}),
  ]});
  assert.equal(check.outside,true);
- assert.deepEqual(check.places,[]);
+ assert.deepEqual(check.places.map(x=>x.name),['Shorouk fringe search point']);
 });
 
 test('Fifth Settlement ranks as a neighborhood and its namesake shop in October is discarded',()=>{
@@ -135,8 +135,8 @@ test('verified Cairo catalog handles bilingual prefixes, aliases and road direct
  assert.equal(locationContext('South 90',[],true)[0]?.name,'South 90th Street');
  assert.equal(locationContext('Cairo Festival City',[],true)[0]?.id,'W:253593226');
  assert.equal(locationContext('مستشفى كوبري القبة',[],false)[0]?.catalogKind,'hospital');
- assert.equal(outsideCatalogMatch('مول العرب'),true);
- assert.deepEqual(locationContext('مول العرب',[],false),[]);
+ assert.equal(outsideCatalogMatch('مول العرب'),false);
+ assert.equal(locationContext('مول العرب',[],false)[0]?.id,'R:13478008');
 });
 
 test('station nodes and malls give context while actual mapped bus stops remain selectable',()=>{
@@ -169,4 +169,46 @@ test('audited Cairo points agree with the pinned operational version',()=>{
   .reduce((west,vertex)=>vertex[0]<west[0]?vertex:west);
  assert.equal(inLaunchRegion({latitude,longitude:longitude-0.000001}),false);
  assert.equal(persistableOperationalPoint({latitude,longitude}),null);
+});
+
+test('Greater Cairo discovery includes named Hadayek October, Hadayek Ahram, and New October',()=>{
+ const cases=[
+  ['حدايق اكتوبر','W:1524454794',29.9315692,31.0616704923],
+  ['حدائق الأهرام','N:13346917627',29.9693117,31.1011113],
+  ['اكتوبر الجديدة','R:17266240',29.89130569,30.92042061],
+  ['الهرم','W:1151533187',30.0055001875,31.1911786875],
+ ];
+ for(const [query,osmId,latitude,longitude] of cases){
+  const results=locationContext(query,[],false);
+  assert.equal(results[0]?.id,osmId,query);
+  assert.equal(results[0]?.latitude,latitude,query);
+  assert.equal(results[0]?.longitude,longitude,query);
+  assert.equal(isSearchableMapPlace(results[0]),true,query);
+ }
+});
+test('800 Feddan historical name resolves to a sourced approximate area, never a boarding pin',()=>{
+ const cases=['800 فدان','٨٠٠ فدان','زهراء أكتوبر الجديدة','زهراء اكتوبر الجديده'];
+ for(const name of cases){
+  const place=locationContext(name,[],false)[0];
+  assert.equal(place?.id,'verifiedarea:zahraa-new-october',name);
+  assert.equal(place?.source,'curated_area',name);
+  assert.match(place?.detail??'',/استرشادي/);
+  assert.equal(isSearchableMapPlace(place),true);
+  assert.equal(selectOperationalMapPlace(place),false);
+ }
+ const area=locationContext('800 فدان',[],false)[0];
+ assert.equal(isSearchableMapPlace({...area,latitude:30.12}),false);
+ assert.equal(isSearchableMapPlace({...area,id:'verifiedarea:fake'}),false);
+});
+test('Photon results in southern October and western Giza are discoverable without stop authorization',()=>{
+ const features=[
+  feature([31.0616704923,29.9315692],{name:'حدائق أكتوبر',osm_type:'W',osm_id:1524454794,osm_key:'place',osm_value:'suburb'}),
+  feature([31.1011113,29.9693117],{name:'حدائق الأهرام',osm_type:'N',osm_id:13346917627,osm_key:'place',osm_value:'neighbourhood'}),
+  feature([30.92042061,29.89130569],{name:'أكتوبر الجديدة',osm_type:'R',osm_id:17266240,osm_key:'place',osm_value:'suburb'}),
+ ];
+ const places=mapPlacesFromPhoton({features});
+ assert.equal(places.length,3);
+ assert.equal(rankMapPlaces(places,'حدائق أكتوبر')[0]?.name,'حدائق أكتوبر');
+ assert.equal(places.every(isSearchableMapPlace),true);
+ assert.equal(places.every(place=>place.source==='map'),true);
 });
