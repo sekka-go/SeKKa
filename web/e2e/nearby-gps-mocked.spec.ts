@@ -232,7 +232,7 @@ test('GPS in Hadayek October remains inside Greater Cairo discovery, even withou
  await page.goto('/?tab=search&view=9');
  await page.locator('.rs3__pickup-link>button').click();
  const explorer=page.getByRole('dialog',{name:'اكتشف نقطة ركوب مناسبة'});
- await explorer.getByRole('button',{name:'استخدم موقعي الحالي'}).click();
+ await explorer.locator('.np4__locate').click();
  await expect(explorer.getByText(/موقعك جاهز/)).toBeVisible();
  await expect(explorer.getByText(/خارج نطاق تشغيل سِكّة/)).toHaveCount(0);
  await expect(explorer.getByText(/لسه مفيش ركوبة قريبة هنا/)).toBeVisible();
