@@ -11,14 +11,14 @@ const names={
  en:['Sat','Sun','Mon','Tue','Wed','Thu','Fri']
 };
 export default function RiderSearchV3({origin,destination,originPlace,destinationPlace,
- areas,outbound,returnTime,period,weekdays,onOrigin,onDestination,onSwap,onOutbound,onReturn,
- onPeriod,onWeekdays,onSearch,onLiveSelect}:{
+ areas,outbound,returnTime,weekdays,onOrigin,onDestination,onSwap,onOutbound,onReturn,
+ onWeekdays,onSearch,onLiveSelect}:{
  origin:string;destination:string;originPlace:PlaceChoice|null;destinationPlace:PlaceChoice|null;
- areas:ServiceArea[];outbound:string;returnTime:string;period:string;weekdays:number[];
+ areas:ServiceArea[];outbound:string;returnTime:string;weekdays:number[];
  onOrigin:(name:string,choice:PlaceChoice|null)=>void;
  onDestination:(name:string,choice:PlaceChoice|null)=>void;onSwap:()=>void;
  onOutbound:(time:string)=>void;onReturn:(time:string)=>void;
- onPeriod:(value:'weekly'|'monthly')=>void;onWeekdays:(value:number[])=>void;
+ onWeekdays:(value:number[])=>void;
  onSearch:()=>void;onLiveSelect?:(selection:LiveSelection)=>void;
 }){
  const {language}=usePreferences(),en=language==='en',t=(ar:string,english:string)=>en?english:ar;
@@ -92,10 +92,6 @@ export default function RiderSearchV3({origin,destination,originPlace,destinatio
     <div className="rs3__days" role="group" aria-label={t('أيام الأسبوع','Weekdays')}>
      {names[language].map((name,index)=><button type="button" key={index}
       aria-pressed={weekdays.includes(index)} onClick={()=>toggleDay(index)}>{name}</button>)}
-    </div>
-    <div className="rs3__period" role="group" aria-label={t('نوع المشوار','Commute period')}>
-     <button type="button" aria-pressed={period==='weekly'} onClick={()=>onPeriod('weekly')}>{t('أسبوعي','Weekly')}</button>
-     <button type="button" aria-pressed={period==='monthly'} onClick={()=>onPeriod('monthly')}>{t('شهري','Monthly')}</button>
     </div>
     <p>{t('الأيام اللي تختارها هتتحفظ عندك، لكن نتائج البحث لسه مش بتتفلتر بالأيام تلقائيًا.',
      'Your selected days are saved, but search cannot filter by weekday yet.')}</p>
