@@ -137,7 +137,8 @@ export function inspectPhoton(raw:unknown):{places:MapPlace[];outside:boolean}{
 }
 export const mapPlacesFromPhoton=(raw:unknown)=>inspectPhoton(raw).places;
 
-// School, nursery, university, mall and business-park OSM points are
+export function selectOperationalMapPlace(place:MapPlace):boolean {
+ // School, nursery, university, mall and business-park OSM points are
  // institution positions, not verified gates/pickup entrances.
  // Explicit user-picked manual_map_pin coordinates are separate.
  const needsGate=new Set(['school','kindergarten','childcare','university','college',
