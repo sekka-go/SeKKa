@@ -84,6 +84,7 @@ export function mobileRouteHref(
   route: MobileRoute,
   currentHref: string | URL = window.location.href,
   selection?: RouteSelection,
+  bookingId?: string,
 ): string {
   const url = new URL(currentHref);
   url.searchParams.delete("screen");
@@ -106,7 +107,16 @@ export function mobileRouteHref(
     url.searchParams.delete("booking");
   }
 
-  if (selection) {
+  // A booking reference belongs only to booking details, not route review.
+  if (route.tab !== "booking") url.searchParams.delete("booking");
+
+  if (route.tab === "booking" && bookingId) {
+    // Opening an owned booking is independent of any previously selected ride.
+    for (const key of ["route", "pickup", "dropoff", "reverse"]) url.searchParams.delete(key);
+    url.searchParams.set("booking", bookingId);
+  }
+
+  if (selection && !bookingId) {
     url.searchParams.set("route", selection.routeId);
     url.searchParams.set("pickup", selection.pickupId);
     url.searchParams.set("dropoff", selection.dropoffId);
