@@ -45,18 +45,19 @@ for(const size of [192,512]){
   assert.notDeepEqual(data,readFileSync(new URL(`../../public/brand/sekka-go-${size}.png`,import.meta.url)));
  });
 }
-test('manifest and favicon retain owner-selected icon while splash uses the new Hiace animation',()=>{
+test('PWA prefers new sky icon while legacy PNG icons remain compatibility fallbacks',()=>{
  const manifest=JSON.parse(readFileSync(new URL('../../public/manifest.webmanifest',import.meta.url),'utf8'));
  const index=readFileSync(new URL('../../index.html',import.meta.url),'utf8');
  const splash=readFileSync(new URL('./LaunchSplash.tsx',import.meta.url),'utf8');
  assert.equal(manifest.name,'Sekka Go');
  assert.deepEqual(manifest.icons.map(x=>x.src),[
-  '/brand/sekka-go-road-192.png','/brand/sekka-go-road-512.png'
+  '/brand/sekka-sky-mark.svg','/brand/sekka-go-road-192.png','/brand/sekka-go-road-512.png'
  ]);
+ assert.match(index,/sekka-sky-mark\.svg/);
  assert.match(index,/sekka-go-road-192\.png/);
- assert.match(index,/sekka-go-road-512\.png/);
- assert.match(splash,/HiaceArtwork/);
- assert.match(splash,/sekka-launch__black-wipe/);
- assert.match(splash,/sekka-launch__hiace/);
+ assert.match(splash,/function SUV\(/);
+ assert.match(splash,/sekka-launch__road-markings/);
+ assert.match(splash,/سِكَّة/);
+ assert.doesNotMatch(splash,/HiaceArtwork|sekka-launch__black-wipe|sekka-launch__hiace/);
  assert.equal(splash.includes('sekka-go-road-512.png'),false);
 });
