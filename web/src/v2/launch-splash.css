@@ -1,4 +1,4 @@
-/* Owner-approved English seKKa logo, centered on a black full-screen launch. */
+/* Owner-approved 2026-11-21 warm color refresh: preserve original Arabic icon geometry. */
 .sekka-launch {
   position: fixed;
   inset: 0;
@@ -7,7 +7,7 @@
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
-  background: #000;
+  background: #1e0b32;
   display: flex;
   align-items: center;
   justify-content: center;
