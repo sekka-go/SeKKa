@@ -123,3 +123,11 @@ html[data-theme="dark"] .sekka-mobile .rs3__pickup-copy small{color:#F0D6E5}
 @media(max-width:345px){.sekka-mobile .rs3__pickup-link>button{padding-inline:9px}
  .sekka-mobile .rs3__pickup-copy strong{font-size:13px}
  .sekka-mobile .rs3__pickup-copy small{font-size:11px}}
+
+/* Saved places are secondary and stay collapsed until needed. */
+.sekka-mobile .rs3__saved{margin-top:13px;border:1px solid var(--rs-line);border-radius:14px;background:var(--rs-paper);padding:0 10px;}
+.sekka-mobile .rs3__saved>summary{min-height:44px;cursor:pointer;padding:12px 5px;font-size:13px;font-weight:900;color:var(--rs-ink);}
+.sekka-mobile .rs3__saved .sekka-search-shortcuts{padding:0 0 10px;margin:0;background:transparent;box-shadow:none;border:0;}
+.sekka-mobile .rs3__saved .sekka-search-shortcuts__actions,.sekka-mobile .rs3__saved .sekka-search-shortcuts__recent{display:flex;flex-wrap:wrap;gap:7px;}
+.sekka-mobile .rs3__saved .sekka-search-shortcuts button{ min-height:44px;height:auto;padding:8px 10px;white-space:normal;overflow-wrap:anywhere;border-radius:11px;}
+.sekka-mobile .rs3__saved summary:focus-visible{outline:3px solid var(--rs-yellow);outline-offset:2px;}
