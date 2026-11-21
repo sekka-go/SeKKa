@@ -2,7 +2,7 @@
 
 **Authoritative product specification:** [PRD v3.1](../docs/PRD.md) (73 screens, eight stages). If a historical Stitch or old design file conflicts with the PRD, follow the PRD.
 
-**Current brand and tokens:** [Brand Guidelines](../docs/product/BRAND_GUIDELINES.md). Current warm palette: purple `#6412B1`, coral `#FF663D`, magenta `#F73587`, yellow `#FFCD38`, soft white `#FFF9F5`; current live variables are in `src/v2/theme.css`. Preserve the legacy Arabic icon shape, use the recolored `public/brand/sekka-go-192.png` and `sekka-go-512.png` variants, and continue using Tajawal for Arabic.
+**Current brand and tokens:** [Brand Guidelines](../docs/product/BRAND_GUIDELINES.md). Current warm palette: purple `#6412B1`, coral `#FF663D`, magenta `#F73587`, yellow `#FFCD38`, soft white `#FFF9F5`; current live variables are in `src/v2/theme.css`. Use the owner-selected purple road PWA icon in `public/brand/sekka-go-road-192.png` and `sekka-go-road-512.png`; legacy Arabic/orange assets remain archived. Continue using Tajawal for Arabic.
 
 **Active architecture:** `src/main.tsx` renders `src/v2/App.tsx`. Arabic is RTL, English LTR; theme and language each default to the device but support independent manual overrides. Never build from retired `src/App.tsx` or `src/screens/`.
 
