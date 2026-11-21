@@ -83,7 +83,9 @@ function parentNames(point,osmId){
 function category(p){
  return text(p.place)||text(p.public_transport)||text(p.railway)||
   (p.highway?'road':'')||text(p.amenity)||text(p.shop)||text(p.tourism)||
-  text(p.healthcare)||text(p.leisure)||text(p.office)||'landmark';
+  text(p.healthcare)||text(p.leisure)||text(p.office)||
+  (['commercial','retail','education','industrial'].includes(text(p.landuse))?text(p.landuse):'')||
+  'landmark';
 }
 const escapeCopy=value=>value===null||value===undefined||value===''?empty:String(value)
  .replaceAll(String.fromCharCode(92),String.fromCharCode(92,92))
