@@ -98,7 +98,7 @@ export default function GuestEntry({screen,language,role,onRole,go}:Props){
  return <div className="phase-one-stage sekka-entry-stage">
   <main className={"phase-canvas phase-screen-"+screen+" sekka-entry"} dir={language==='en'?'ltr':'rtl'}>
    <div className="sekka-entry__header">
-    <img className="sekka-entry__brand" src="/brand/sekka-go-road-192.png" width="72" height="72" alt={tr.brand}/>
+    <strong className="sekka-entry__brand sekka-entry__brand--text" role="img" aria-label={tr.brand} dir="rtl">{tr.brand}</strong>
     <div className="sekka-entry__header-actions">
      {(roleScreen||step>0)&&<button type="button" className="sekka-entry__back" onClick={back}
        aria-label={tr.back}>‹ <span>{tr.back}</span></button>}
