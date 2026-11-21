@@ -306,7 +306,7 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
   <header className="sekka-route-intro">
    <p className="sekka-route-eyebrow">{t('حساب كابتن معتمد','Approved Captain')}</p>
    <h2>{t('إنشاء رحلة جديدة','Create a new trip')}</h2>
-   <p>{t('حدّد محطاتك على الخريطة وراجع ترتيبها.','Find your stops on the map and review their order.')}</p>
+   <p>{t('ابحث عن الأماكن بالاسم وأضف محطات خطك بالترتيب؛ الخريطة اختيارية.','Search by place name and add stops in route order. The map is optional.')}</p>
   </header>
   {error&&<p role="alert" className="cj-feedback">{error}</p>}
   {message&&<p role="status" className="cj-feedback">{message}</p>}
@@ -314,13 +314,13 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
   {step===1&&<fieldset className="sekka-route-step">
    <legend><span>1</span> {t('مسار الرحلة','Route stops')}</legend>
    <CaptainRouteMap stops={stops}/>
-   <p className="cj-route-hint">{t('اختار منطقة، وبعدها ابحث عن شارع أو معلم لإضافته على الخريطة.',
-    'Choose an area, then find a street or landmark to add it to the map.')}</p>
+   <p className="cj-route-hint">{t('ابحث عن أي منطقة أو شارع أو مول أو مدرسة، واضغط على الاسم لإضافة محطة.',
+    'Search any area, street, mall or school and tap the name to add a stop.')}</p>
    <div className="cj-easy-route-top">
     <strong>{stops.length===0?t('منين هتبدأ؟','Where from?'):stops.length===1?t('رايح فين؟','Where to?'):
       t('محطة إضافية','Additional stop')}</strong>
-    <small>{stops.length===0?t('اختار منطقة البداية','Choose the pickup area'):
-      stops.length===1?t('اختار منطقة الوصول','Choose the destination'):
+    <small>{stops.length===0?t('ابحث عن محطة البداية','Search for an origin stop'):
+      stops.length===1?t('ابحث عن محطة الوصول','Search for a destination stop'):
       t('تقدر تضيف محطة تانية','Add another stop')}</small>
    </div>
    {stops.length>0&&<ol className="cj-easy-selected-stops" aria-label={t('نقط الرحلة','Trip stops')}>
@@ -337,28 +337,37 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
      </div>
     </li>)}
    </ol>}
-   {!selectedArea?<>
+   <CaptainPlacePicker label={t('ابحث عن محطة','Search for a stop')}
+    value={placeLabel} choice={placeChoice} searchArea={selectedArea}
+    onPick={(value,choice)=>{setPlaceLabel(value);setPlaceChoice(choice);setError('');}}
+    onVerified={place=>addVerifiedStop(place)}/>
+   {pendingPlace&&<div className="cj-captain-pending-area" role="group"
+     aria-label={t('اختار منطقة المحطة','Choose stop service area')}>
+    <strong>{t('اختر منطقة المحطة: ','Choose the stop area: ')}{pendingPlace.name}</strong>
+    <p>{t('المكان اتحدد، بس مش قادرين نطابق منطقته تلقائيًا. اختار المنطقة التابعة له.',
+      'Place found, but we cannot identify its service area uniquely. Choose its area.')}</p>
+    <div className="cj-easy-areas">{orderedAreas.map(area=><button key={area.id} type="button"
+     onClick={()=>addVerifiedStop(pendingPlace,area)}>{en?area.name_en:area.name_ar}</button>)}</div>
+    <button type="button" onClick={()=>{setPendingPlace(null);setPlaceLabel('');setPlaceChoice(null);setError('');}}>
+     {t('إلغاء اختيار المكان','Cancel place')}</button>
+   </div>}
+   <details className="cj-captain-area-fallback">
+    <summary>{selectedArea
+     ?t('منطقة المحطة: ','Stop area: ')+(en?selectedArea.name_en:selectedArea.name_ar)
+     :t('اختيار منطقة يدويًا عند الحاجة (اختياري)','Choose area manually if needed (optional)')}</summary>
     <div className="cj-easy-areas" role="group" aria-label={t('المناطق الرئيسية','Main areas')}>
-     {orderedAreas.filter(area=>stops.length!==1||area.id!==stops[0].areaId).map(area=><button type="button"
-      key={area.id} onClick={()=>chooseArea(String(area.id))}>
-      <strong>{en?area.name_en:area.name_ar}</strong><span aria-hidden="true">‹</span>
-     </button>)}
+     {orderedAreas.map(area=><button type="button" key={area.id}
+      aria-pressed={selectedArea?.id===area.id}
+      onClick={()=>chooseArea(String(area.id))}>{en?area.name_en:area.name_ar}</button>)}
+     {selectedArea&&<button type="button" onClick={()=>chooseArea('')}>
+      {t('بحث في كل القاهرة الكبرى','Search all Greater Cairo')}</button>}
     </div>
-   </>:<>
-    <button type="button" className="cj-easy-change" onClick={()=>chooseArea('')}>
-     <span>{t('المنطقة: ','Area: ')}<strong>{en?selectedArea.name_en:selectedArea.name_ar}</strong></span>
-     <span>{t('تغيير','Change')}</span>
-    </button>
-    <CaptainPlacePicker label={t('ابحث عن شارع أو مكان','Search street or landmark')}
-     value={placeLabel} choice={placeChoice} searchArea={selectedArea}
-     onPick={(value,choice)=>{setPlaceLabel(value);setPlaceChoice(choice);setError('');}}
-     onVerified={addVerifiedStop}/>
-    <button type="button" className="cj-easy-gps" disabled={locatingStop}
-     onClick={useMyStopPosition}>{locatingStop?t('بنحدد موقعك…','Locating…'):
-      t('⌖ استخدم موقعي الحالي','⌖ Use my current location')}</button>
-   </>}
+   </details>
+   <button type="button" className="cj-easy-gps" disabled={locatingStop||!selectedArea}
+    onClick={useMyStopPosition}>{locatingStop?t('بنحدد موقعك…','Locating…'):
+     t('⌖ استخدم موقعي الحالي (اختياري)','⌖ Use my current location (optional)')}</button>
    {stops.length<2&&<p className="cj-easy-help" role="status">{stops.length===0?
-    t('اختار منطقة ثم مكان، وهتتضاف النقطة تلقائيًا.','Select an area and a place; the stop is added automatically.'):
+    t('ابحث عن مكان واضغط على اسمه لإضافة أول محطة.','Search for a place and tap its name to add the first stop.'):
     t('✓ نقطة البداية اتضافت. اختار الوجهة.','✓ Pickup added. Choose destination.')}</p>}
    {stops.length>=2&&<p className="sekka-route-generated-title">
     {t('اسم الخط تلقائيًا:','Automatic route name:')} <strong>{title}</strong>
