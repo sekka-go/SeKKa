@@ -5,8 +5,8 @@
   "display": "standalone",
   "dir": "rtl",
   "lang": "ar",
-  "background_color": "#3F056F",
-  "theme_color": "#3F056F",
+  "background_color": "#171318",
+  "theme_color": "#171318",
   "icons": [
     {
       "src": "/brand/sekka-go-road-192.png",
