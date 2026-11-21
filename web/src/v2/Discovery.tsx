@@ -589,12 +589,12 @@ export default function Discovery(p: DiscoveryProps) {
     stops:(live.reverse?[...live.stops].reverse():live.stops).map(s=>({
       id:s.id,name:s.name,area:p.serviceAreas?.find(a=>a.id===s.area_id)?.name_ar||s.name,
       pickup:live.reverse?s.dropoff_allowed:s.pickup_allowed,
-      dropoff:live.reverse?s.pickup_allowed:s.dropoff_allowed
+      dropoff:live.reverse?s.pickup_allowed:s.dropoff_allowed,passingTime:live.reverse?s.return_stop_time:s.outbound_stop_time
     })),
     returnStops:live.route.direction==='round_trip'&&live.route.return_supported
      ?[...live.stops].reverse().map(s=>({
        id:s.id,name:s.name,area:p.serviceAreas?.find(a=>a.id===s.area_id)?.name_ar||s.name,
-       pickup:s.dropoff_allowed,dropoff:s.pickup_allowed
+       pickup:s.dropoff_allowed,dropoff:s.pickup_allowed,passingTime:s.return_stop_time
      })):undefined
   }:null;
   const selected = p.production ? liveRouteLine : demo
@@ -1313,7 +1313,9 @@ export default function Discovery(p: DiscoveryProps) {
                   <p>{language==='en'?'Review the matched stops or choose another pair along this route.':'راجع المحطتين اللي طابقناهم مع بحثك، أو اختار محطتين تانيين على نفس الخط.'}</p>
                   {detailStops.length>0&&<details>
                     <summary>{language==='en'?'See all route stops':'اعرض كل محطات الخط'} · {detailStops.length}</summary>
-                    <ol>{detailStops.map(stop=><li key={stop.id}><bdi>{stop.name}</bdi></li>)}</ol>
+                    <ol>{detailStops.map(stop=><li key={stop.id}><bdi>{stop.name}</bdi>
+                       {stop.passingTime&&<small> · {language==='en'?'Expected passing time':'وقت مرور متوقع'} <bdi dir="ltr">{stop.passingTime.slice(0,5)}</bdi></small>}
+                     </li>)}</ol>
                   </details>}
                 </>:<ol>{detailStops.map(stop=><li key={stop.id}>{tr(stop.name)}</li>)}</ol>}
                 <label>{tr("نقطة الركوب")}
