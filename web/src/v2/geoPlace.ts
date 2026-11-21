@@ -6,7 +6,7 @@ import {localPlaceCatalog,serviceAreaAliases} from './locationCatalog.ts';
 import type {CatalogPlace} from './locationCatalog.ts';
 
 export type MapPlace=GeoPoint&{
- id:string;name:string;detail:string;source:'map'|'manual_map_pin';locality?:string[];
+ id:string;name:string;detail:string;source:'map'|'manual_map_pin'|'curated_area';locality?:string[];
  kind?:'point'|'area'|'road'|'feature'; osmKey?:string;osmValue?:string;catalogKey?:string;catalogKind?:CatalogPlace['kind'];
 };
 export type ServiceArea={id:number;name_ar:string;name_en:string};
@@ -15,9 +15,17 @@ export type PlaceChoice={kind:'service';area:ServiceArea}|{kind:'search';place:M
 export const inLaunchRegion=isInsideOperationalRegion;
 /** Named OSM locations can anchor nearby Captain-stop search without map pin confirmation. */
 export function isSearchableMapPlace(place:MapPlace|null|undefined):boolean {
- return !!place&&place.source==='map'&&/^[NWR]:\d{1,16}$/.test(place.id)&&
-  typeof place.name==='string'&&place.name.trim().length>=2&&place.name.length<=200&&
-  isInsideCairoDiscovery(place);
+ if(!place||typeof place.name!=='string'||place.name.trim().length<2||place.name.length>200||
+  !isInsideCairoDiscovery(place))return false;
+ if(place.source==='map')return /^[NWR]:\d{1,16}$/.test(place.id);
+ // Source-backed broad-area anchor; no user-controlled arbitrary coordinates
+ // and NEVER a confirmed Captain stop. See the specific catalog provenance.
+ if(place.source!=='curated_area'||!/^verifiedarea:[a-z-]+$/.test(place.id))return false;
+ return localPlaceCatalog.some(item=>item.key===place.catalogKey&&
+  item.reference?.osmId===place.id&&item.reference?.approximate===true&&
+  Math.abs(item.reference.latitude-place.latitude)<0.000001&&
+  Math.abs(item.reference.longitude-place.longitude)<0.000001);
+
 }
 
 export const PHOTON_ATTRIBUTION='© OpenStreetMap contributors · Photon';
@@ -217,7 +225,8 @@ export function locationContext(query:string,places:MapPlace[],en:boolean,area?:
   const context=item.context?.[en?1:0]??(item.area==='new cairo'
    ?en?'New Cairo · Cairo':'القاهرة الجديدة · القاهرة'
    :en?'6th of October · Giza':'مدينة 6 أكتوبر · الجيزة');
-  return [{id:ref.osmId,source:'map' as const,name:en?item.en:item.ar,detail:context,
+  return [{id:ref.osmId,source:(ref.approximate?'curated_area':'map') as MapPlace['source'],
+    name:en?item.en:item.ar,detail:context,
    latitude:ref.latitude,longitude:ref.longitude,kind:item.kind==='area'?'area' as const:'feature' as const,
    catalogKey:item.key,catalogKind:item.kind}];
  });
