@@ -1,23 +1,24 @@
 :root {
   color-scheme: light;
-  --brand-purple: #6412B1;
-  --brand-coral: #FF663D;
-  --brand-magenta: #F73587;
-  --brand-sun: #FFCD38;
-  --brand-teal: #00BEAD;
+  /* New seKKa GO identity: ink-black, warm cream, accessible mauve CTA. */
+  --brand-purple: #8050AF;
+  --brand-coral: #8050AF;
+  --brand-magenta: #9869BC;
+  --brand-sun: #B48CCC;
+  --brand-teal: #8050AF;
   --yellow: var(--brand-sun);
-  --accent: var(--brand-coral);
-  --black: #241038;
-  --charcoal: #35134F;
-  --white: #ffffff;
-  --gray: #745C7B;
-  --bg: #FFF9F5;
-  --secondary: #FFF0EA;
-  --card: #ffffff;
-  --elevated: #FFE9E3;
-  --border: #E9D6E5;
-  --text: #35134F;
-  --muted: #674F72;
+  --accent: var(--brand-purple);
+  --black: #171318;
+  --charcoal: #201B23;
+  --white: #F7F0E5;
+  --gray: #786B7C;
+  --bg: #F7F0E5;
+  --secondary: #EEE4D7;
+  --card: #FFFAF2;
+  --elevated: #E9DDCD;
+  --border: #DED0C4;
+  --text: #171318;
+  --muted: #5F5760;
   --radius: 22px;
   --error: #C52A49;
   --success: #097E72;
@@ -28,30 +29,30 @@
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #1E0B32;
-  --secondary: #29143F;
-  --card: #301A4B;
-  --elevated: #42275E;
-  --border: #60436F;
-  --text: #FFF7FC;
-  --muted: #DBC9E5;
+  --bg: #171318;
+  --secondary: #211D22;
+  --card: #29242C;
+  --elevated: #372D3C;
+  --border: #524853;
+  --text: #F7F0E5;
+  --muted: #D0C3CE;
   --error: #FF91A4;
-  --success: #5BE0CD;
-  --warning: #FFCD38;
+  --success: #66D7B4;
+  --warning: #F4CD8E;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --bg: #1E0B32;
-    --secondary: #29143F;
-    --card: #301A4B;
-    --elevated: #42275E;
-    --border: #60436F;
-    --text: #FFF7FC;
-    --muted: #DBC9E5;
+    --bg: #171318;
+    --secondary: #211D22;
+    --card: #29242C;
+    --elevated: #372D3C;
+    --border: #524853;
+    --text: #F7F0E5;
+    --muted: #D0C3CE;
     --error: #FF91A4;
-    --success: #5BE0CD;
-    --warning: #FFCD38;
+    --success: #66D7B4;
+    --warning: #F4CD8E;
   }
 }
 * {
@@ -80,7 +81,7 @@ button {
   padding: 12px 20px;
   min-height: 46px;
   background: var(--accent);
-  color: var(--black);
+  color: #FFFAF2;
   font-weight: 700;
   cursor: pointer;
 }
