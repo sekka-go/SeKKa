@@ -67,6 +67,7 @@ export default function MobileApp(){
  const verifiedUserId=useRef<string|null>(null);
  const [areasError,setAreasError]=useState('');
  const [areas,setAreas]=useState<{id:number;name_ar:string;name_en:string}[]>([]);
+ const [areasLoaded,setAreasLoaded]=useState(false);
  useEffect(()=>{const back=()=>{setRoute(readMobileRoute());setBookingId(new URL(location.href).searchParams.get('booking'));setSelectionVersion(v=>v+1);};addEventListener('popstate',back);return()=>removeEventListener('popstate',back);},[]);
  useEffect(()=>{
   const canonical=mobileRouteHref(route);
@@ -288,7 +289,7 @@ export default function MobileApp(){
   });
   return()=>{active=false;sessionReadId.current++;sub?.data.subscription.unsubscribe();};
  },[authCheckRevision]);
- useEffect(()=>{if(!client)return;void client.from('v31_service_areas').select('id,name_ar,name_en').eq('active',true).order('id').then(({data,error:e})=>{if(e)setAreasError(e.message);else if(data){setAreas(data);setAreasError('');}});},[]);
+ useEffect(()=>{if(!client){setAreasLoaded(true);return;}void client.from('v31_service_areas').select('id,name_ar,name_en').eq('active',true).order('id').then(({data,error:e})=>{if(e)setAreasError(e.message);else if(data){setAreas(data);setAreasError('');}}).finally(()=>setAreasLoaded(true));},[]);
  useEffect(()=>{
   if(tab!=='captain-onboarding'||!ready||userId)return;
   setSelectedRole('captain');
@@ -470,7 +471,7 @@ export default function MobileApp(){
    {error&&<div className="sekka-mobile-alert" role="alert">{error}
      {sessionLookupError&&<button type="button" onClick={()=>{setError('');setAuthCheckRevision(v=>v+1)}}>{t('إعادة التحقق من الجلسة','Retry session')}</button>}
      <button type="button" onClick={()=>{setError('');setSessionLookupError(false)}}>{t('إغلاق','Dismiss')}</button></div>}
-   {tab==='home'&&ready&&!blockedRiderTab&&(userId?<RiderJourneyHome riderId={userId} serviceAreas={areas} onNavigate={discoveryGo} onSelect={chooseRoute}/>:<Onboarding production screen={2} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={setSelectedRole}/>)}
+   {tab==='home'&&ready&&!blockedRiderTab&&(userId?<RiderJourneyHome riderId={userId} serviceAreas={areas} areasLoaded={areasLoaded} areasFailed={Boolean(areasError)} onNavigate={discoveryGo} onSelect={chooseRoute}/>:<Onboarding production screen={2} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={setSelectedRole}/>)}
    {ready&&tab==='login'&&!blockedRiderTab&&<Onboarding production screen={userId?6:!ready?4:onboardingScreen} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={selectRole}/>}
    {ready&&tab==='profile'&&(userId?<section className="sekka-mobile-card"><LiveProfile/>{ready&&admin&&<button type="button" className="sekka-action" onClick={openAdmin}>
      {t('فتح لوحة الإدارة','Open Admin dashboard')}</button>}
