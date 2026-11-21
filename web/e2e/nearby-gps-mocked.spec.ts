@@ -221,3 +221,19 @@ for(const [width,height] of [[320,700],[360,800],[390,844],[412,915]] as const){
   }
  }
 }
+
+test('GPS in Hadayek October remains inside Greater Cairo discovery, even without nearby Captain stops',async({page,context})=>{
+ await page.setViewportSize({width:360,height:800});
+ await page.addInitScript(()=>localStorage.setItem('language_preference','ar'));
+ await context.grantPermissions(['geolocation']);
+ // Source-backed OSM point in Hadayek October; outside the former GHSL polygon.
+ await context.setGeolocation({latitude:29.9315692,longitude:31.0616704923,accuracy:25});
+ await intercept(page,[]);
+ await page.goto('/?tab=search&view=9');
+ await page.locator('.rs3__pickup-link>button').click();
+ const explorer=page.getByRole('dialog',{name:'اكتشف نقطة ركوب مناسبة'});
+ await explorer.getByRole('button',{name:'استخدم موقعي الحالي'}).click();
+ await expect(explorer.getByText(/موقعك جاهز/)).toBeVisible();
+ await expect(explorer.getByText(/خارج نطاق تشغيل سِكّة/)).toHaveCount(0);
+ await expect(explorer.getByText(/لسه مفيش ركوبة قريبة هنا/)).toBeVisible();
+});
