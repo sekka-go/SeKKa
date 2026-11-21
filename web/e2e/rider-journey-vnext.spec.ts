@@ -42,6 +42,15 @@ for(const width of [320,390]){
   });
   await page.goto('/');
   await expect(page.locator('.sekka-rider-home.rh-home')).toBeVisible();
+  // Approved first screen: hero illustration + four truthful commute rows + quick actions.
+  await expect(page.locator('.rh-hero__artwork')).toHaveAttribute('src','/brand/sekka-rider-hero-scene.svg');
+  await expect(page.locator('.rh-journey__field')).toHaveCount(4);
+  await expect(page.locator('.rh-journey__ribbon')).toBeVisible();
+  await expect(page.locator('.rh-journey__fields')).toContainText(variant.language==='en'?'Maadi':'المعادي');
+  await expect(page.locator('.rh-journey__fields')).toContainText(variant.language==='en'?'New Cairo':'التجمع');
+  await expect(page.locator('.rh-shortcut--nearby')).toBeVisible();
+  await expect(page.locator('.rh-shortcut--bookings')).toBeVisible();
+  await expect(page.locator('.rh-hero h1')).toBeVisible();
   const tabs=page.getByRole('navigation',{name:variant.language==='en'?'Passenger navigation':'التنقل للراكب'});
   await expect(tabs).toBeVisible();
   await expect(tabs.getByRole('button',{name:variant.language==='en'?'Home':'الرئيسية'})).toHaveAttribute('aria-current','page');
