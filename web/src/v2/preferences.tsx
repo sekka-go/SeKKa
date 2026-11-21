@@ -14,17 +14,21 @@ const Context = createContext<null | {theme:'dark'|'light';language:'ar'|'en';th
 export function PreferencesProvider({children}: {children:ReactNode}) {
   const [themePreference,setThemePreference] = useState<ThemePreference>(()=>read('theme_preference',['system','light','dark'],'system'));
   const [languagePreference,setLanguagePreference] = useState<LanguagePreference>(()=>read('language_preference',['system','ar','en'],'system'));
-  const [deviceDark,setDeviceDark] = useState(()=>matchMedia('(prefers-color-scheme: dark)').matches);
-  const [deviceLanguage,setDeviceLanguage] = useState(()=>navigator.language);
+  const [deviceDark,setDeviceDark] = useState(()=>window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const [deviceLanguage,setDeviceLanguage] = useState(()=>navigator.languages?.[0] || navigator.language || 'ar');
   const theme=resolveTheme(themePreference,deviceDark),language=resolveLanguage(languagePreference,deviceLanguage);
   useEffect(()=>{
-    const media=matchMedia('(prefers-color-scheme: dark)');
-    const onTheme=()=>setDeviceDark(media.matches),onLanguage=()=>setDeviceLanguage(navigator.language);
+    const media=window.matchMedia('(prefers-color-scheme: dark)');
+    const onTheme=()=>setDeviceDark(media.matches),onLanguage=()=>setDeviceLanguage(navigator.languages?.[0] || navigator.language || 'ar');
     media.addEventListener('change',onTheme);window.addEventListener('languagechange',onLanguage);
     return ()=>{media.removeEventListener('change',onTheme);window.removeEventListener('languagechange',onLanguage);};
   },[]);
   useEffect(()=>{
-    document.documentElement.dataset.theme=theme;document.documentElement.lang=language;document.documentElement.dir=language==='ar'?'rtl':'ltr';
+    document.documentElement.dataset.theme=theme;
+    document.documentElement.lang=language;
+    document.documentElement.dir=language==='ar'?'rtl':'ltr';
+    document.documentElement.style.colorScheme=theme;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content',theme==='dark'?'#102A3C':'#078CF4');
     try{localStorage.setItem('theme_preference',themePreference);localStorage.setItem('language_preference',languagePreference);}catch{/* Memory-only when storage unavailable. */}
     // OAuth callback parameters are one-time transport, not permanent preference overrides.
     // Remove them after preferences have been adopted so a later manual change survives reload.

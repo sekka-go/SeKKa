@@ -6,7 +6,33 @@
     <meta name="theme-color" content="#078CF4" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <style>html,body{margin:0;background:#F4FBFF}</style>
+    <style>html,body{margin:0;background:#F4FBFF}html[data-theme="dark"],html[data-theme="dark"] body{background:#102A3C}</style>
+    <script>
+      // Apply the phone preference or a previously saved manual choice before React paints.
+      (() => {
+        const params = new URLSearchParams(window.location.search);
+        const valid = (value, allowed) => allowed.includes(value) ? value : 'system';
+        let appearance = 'system', languageChoice = 'system';
+        try {
+          appearance = valid(params.get('oauth_theme') || localStorage.getItem('theme_preference'),
+            ['system','light','dark']);
+          languageChoice = valid(params.get('oauth_language') || localStorage.getItem('language_preference'),
+            ['system','ar','en']);
+        } catch { /* Private mode: use the phone settings. */ }
+        const phoneLanguage = ((navigator.languages && navigator.languages[0]) || navigator.language || 'ar').toLowerCase();
+        const selectedLanguage = languageChoice === 'system'
+          ? (phoneLanguage.split('-')[0] === 'en' ? 'en' : 'ar') : languageChoice;
+        const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const selectedTheme = appearance === 'system' ? (dark ? 'dark' : 'light') : appearance;
+        const root = document.documentElement;
+        root.dataset.theme = selectedTheme;
+        root.lang = selectedLanguage;
+        root.dir = selectedLanguage === 'ar' ? 'rtl' : 'ltr';
+        root.style.colorScheme = selectedTheme;
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content',selectedTheme === 'dark' ? '#102A3C' : '#078CF4');
+      })();
+    </script>
     <meta name="description" content="سِكَّة — شارك طريقك وابحث عن رحلتك المعتادة." />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" type="image/svg+xml" href="/brand/sekka-sky-mark.svg" />
