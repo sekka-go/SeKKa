@@ -117,7 +117,9 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  await place.fill('Outside street');
  // The geocoder is queried automatically after typing, without an explicit search control.
  await expect(entry.getByRole('button',{name:'Find',exact:true})).toHaveCount(0);
- await expect(entry.getByText(/No matching location was found within Greater Cairo/)).toBeVisible();
+ // The broader discovery envelope and updated copy must not suggest
+ // this arbitrary street is a valid published Captain stop.
+ await expect(entry.getByText(/This name is not in our current place data/)).toBeVisible();
  await expect(entry.locator('.cj-easy-selected-stops>li')).toHaveCount(0);
  // A popular-place search prompt leaves the stop unselected until confirmation.
  await entry.getByRole('button',{name:'Find Maadi Grand Mall'}).click();
