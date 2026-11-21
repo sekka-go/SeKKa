@@ -1,6 +1,8 @@
 // Curated lookup vocabulary. Aliases and popularity are editorial search hints.
 export type CatalogReference = {
+ /** For OSM entries: N:/W:/R: id. For an externally verified approximate area: verifiedarea: id. */
  osmId:string; longitude:number; latitude:number; source:string; checkedOn:string;
+ approximate?:boolean;
 };
 export type CatalogPlace = {
  key:string; ar:string; en:string; area:string; aliases:string[];
@@ -161,4 +163,16 @@ export const localPlaceCatalog:CatalogPlace[]=[
   context:["الهرم · العمرانية · الجيزة","Al Haram · Giza"],
   reference:{osmId:"W:1151533187",longitude:31.1911786875,latitude:30.0055001875,
    source:"https://www.openstreetmap.org/way/1151533187",checkedOn:"2026-11-21"}},
+ {key:"zahraa-new-october",ar:"زهراء أكتوبر الجديدة (800 فدان)",en:"Zahraa New October (800 Feddan)",
+  area:"6th of october",kind:"area",popularity:2,
+  aliases:["800 فدان","ال800 فدان","الـ 800 فدان","٨٠٠ فدان","الـ٨٠٠ فدان",
+   "منطقة 800 فدان","عمارات 800 فدان","زهراء اكتوبر الجديدة","زهراء اكتوبر الجديده",
+   "800 feddan","800 feddans","800 acres","Zahraa October"],
+  // Approximate, sourced neighborhood anchor, NOT a building, entrance or
+  // actual Captain stop. The business listing's VVVW+479 short Plus Code
+  // resolves in October to 7GXGVVVW+479. Official name verified separately.
+  context:["موقع استرشادي · زهراء أكتوبر الجديدة · الجيزة","Approximate area · Zahraa New October · Giza"],
+  reference:{osmId:"verifiedarea:zahraa-new-october",longitude:30.895734,latitude:29.892788,
+   approximate:true,source:"https://www.bizmideast.com/EG/%D9%81%D8%AF%D8%A7%D9%86-%D8%B2%D9%87%D8%B1%D8%A7%D8%A1-%D8%A7%D9%83%D8%AA%D9%88%D8%A8%D8%B1-%D8%A7%D9%84%D8%AC%D8%AF%D9%8A%D8%AF",
+   checkedOn:"2026-11-21"}},
 ];
