@@ -2,7 +2,7 @@ import {useEffect,useId,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
 import RiderStopMap from './RiderStopMap';
-import {formatDistanceMeters,approximateWalkMinutes} from './recurringGeo';
+import {formatDistanceForLocale,approximateWalkMinutes} from './recurringGeo';
 import {fetchPublishedSelection} from './LiveRouteSearch';
 import type {LiveSelection} from './LiveRouteSearch';
 import {nearbyPublishedStops,validCoordinates} from './nearbyRoutes';
@@ -191,7 +191,7 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
     {index===0&&<span className="sekka-rider-recommended">{t('الأقرب لنقطة ركوبك','Nearest pickup option')}</span>}
     <strong>{pick.route.title}</strong>
     <span>{pick.pickupName} ← {pick.dropoffName}</span>
-    <span>{formatDistanceMeters(pick.distanceKm*1000)} {t('بخط مستقيم من موقعك','straight-line from your location')}
+    <span>{formatDistanceForLocale(pick.distanceKm*1000,en)} {t('بخط مستقيم من موقعك','straight-line from your location')}
      {' · '}{t('مشي حوالي','Walking about')} {approximateWalkMinutes(pick.distanceKm*1000)} {t('دقيقة تقريبًا','minutes approx.')}
      {' · '}{pick.route.category}</span>
     <span>{(pick.reverse?pick.route.return_time:pick.route.outbound_time)?.slice(0,5)||'—'}
