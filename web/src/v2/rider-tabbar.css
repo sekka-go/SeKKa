@@ -1,0 +1,23 @@
+/* One stable passenger wayfinding system; never shown in Google or Captain flows. */
+.sekka-mobile.sekka-rider-navigation{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
+.rh-tabs{position:fixed;bottom:0;inset-inline:0;z-index:36;
+ background:#FFF;box-shadow:0 -8px 26px rgba(47,12,78,.10);
+ border-top:1px solid #EDDFEE;
+ padding:8px max(10px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));
+ color:#766579}
+.rh-tabs__inner{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;
+ max-width:480px;margin:0 auto}
+.rh-tabs button{appearance:none;min-width:0;min-height:60px;
+ border:0;background:transparent;border-radius:15px;
+ display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+ color:inherit;font:800 12px/1.2 Tajawal,Tahoma,sans-serif;cursor:pointer}
+.rh-tabs button[aria-current="page"]{color:#6412B1}
+.rh-tabs button[aria-current="page"] .rh-tabs__icon{background:#F1E2FF;color:#6412B1}
+.rh-tabs__icon{display:grid;place-items:center;width:45px;height:34px;border-radius:13px}
+.rh-tabs__name{white-space:nowrap;font-size:12px;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.rh-tabs button:focus-visible{outline:3px solid #FFBC36;outline-offset:-1px}
+html[data-theme="dark"] .rh-tabs{background:#2B1644;border-top-color:#654576;box-shadow:0 -8px 26px rgba(0,0,0,.25);color:#DDCFEA}
+html[data-theme="dark"] .rh-tabs button[aria-current="page"]{color:#FFD875}
+html[data-theme="dark"] .rh-tabs button[aria-current="page"] .rh-tabs__icon{background:#53316D;color:#FFD875}
+@media(max-width:349px){.rh-tabs__name{font-size:11px}.rh-tabs button{min-height:57px}}
+@media(prefers-reduced-motion:reduce){.rh-tabs *{animation:none!important;transition:none!important}}
