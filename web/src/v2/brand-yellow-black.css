@@ -303,3 +303,93 @@ html[data-theme="dark"] .sekka-mobile .sekka-side-drawer .sekka-preference-contr
  .sekka-mobile[dir="ltr"] > .sekka-mobile-header > .sekka-shell-menu{left:8px!important}
  .sekka-mobile[dir="ltr"] > .sekka-mobile-header > .rh-shell-notifications{right:8px!important}
 }
+
+
+/* Floating app shortcuts: the old full-width masthead and standalone
+   wordmark are removed from MobileApp. Blue/white surfaces remain uninterrupted. */
+.sekka-mobile{position:relative!important}
+.sekka-mobile > .sekka-floating-actions{
+ position:fixed!important;
+ z-index:120!important;
+ top:0!important;left:50%!important;right:auto!important;
+ width:min(100%,680px)!important;height:0!important;
+ transform:translateX(-50%)!important;
+ margin:0!important;padding:0!important;
+ background:transparent!important;border:0!important;
+ box-shadow:none!important;
+ pointer-events:none!important;
+}
+.sekka-mobile > .sekka-floating-actions > :is(.sekka-fab-menu,.sekka-fab-bell){
+ position:absolute!important;top:calc(10px + env(safe-area-inset-top,0px))!important;
+ display:grid!important;place-items:center!important;
+ box-sizing:border-box!important;width:46px!important;height:46px!important;
+ min-width:46px!important;min-height:46px!important;max-width:46px!important;
+ padding:0!important;margin:0!important;line-height:1!important;
+ border:1px solid #8AD4E1!important;border-radius:15px!important;
+ background:rgba(17,58,81,.94)!important;
+ box-shadow:0 7px 18px rgba(8,65,105,.2)!important;
+ color:#FFCC24!important;
+ cursor:pointer!important;pointer-events:auto!important;
+ transition:transform .22s cubic-bezier(.22,1,.36,1),background .22s ease!important;
+}
+.sekka-mobile > .sekka-floating-actions > :is(.sekka-fab-menu,.sekka-fab-bell) svg{
+ width:20px!important;height:20px!important;min-width:20px!important;
+ max-width:20px!important;max-height:20px!important;min-height:20px!important;
+ padding:0!important;margin:0!important;display:block!important;
+ fill:none!important;stroke:#FFCC24!important;color:#FFCC24!important;
+ transform:none!important;
+}
+.sekka-mobile[dir="rtl"] > .sekka-floating-actions > .sekka-fab-menu{
+ right:max(12px,env(safe-area-inset-right,0px))!important;left:auto!important;
+}
+.sekka-mobile[dir="rtl"] > .sekka-floating-actions > .sekka-fab-bell{
+ left:max(12px,env(safe-area-inset-left,0px))!important;right:auto!important;
+}
+.sekka-mobile[dir="ltr"] > .sekka-floating-actions > .sekka-fab-menu{
+ left:max(12px,env(safe-area-inset-left,0px))!important;right:auto!important;
+}
+.sekka-mobile[dir="ltr"] > .sekka-floating-actions > .sekka-fab-bell{
+ right:max(12px,env(safe-area-inset-right,0px))!important;left:auto!important;
+}
+.sekka-mobile > .sekka-floating-actions > :is(.sekka-fab-menu,.sekka-fab-bell):active{
+ transform:scale(.94)!important;
+}
+.sekka-mobile > .sekka-floating-actions > :is(.sekka-fab-menu,.sekka-fab-bell)[aria-current="page"]{
+ border-color:#FFCC24!important;
+}
+html[data-theme="light"] .sekka-mobile > .sekka-floating-actions > :is(.sekka-fab-menu,.sekka-fab-bell){
+ background:rgba(15,66,93,.96)!important;border-color:#87CFE1!important;
+}
+html[data-theme="dark"] .sekka-mobile > .sekka-floating-actions > :is(.sekka-fab-menu,.sekka-fab-bell){
+ background:#173A50!important;border-color:#527487!important;
+}
+.sekka-mobile > .sekka-mobile-content{
+ padding-top:calc(72px + env(safe-area-inset-top,0px))!important;
+}
+/* On home the floating controls are OVER the wave hero rather than a new bar. */
+.sekka-mobile.sekka-tab-home.sekka-rider-navigation > .sekka-mobile-content{
+ padding-top:0!important;
+}
+.sekka-mobile.sekka-tab-home.sekka-rider-navigation .rh-hero{
+ min-height:370px!important;
+}
+.sekka-mobile.sekka-tab-home.sekka-rider-navigation .rh-hero__copy{
+ padding-top:calc(86px + env(safe-area-inset-top,0px))!important;
+}
+.sekka-mobile:is(.sekka-guest-welcome,.sekka-tab-login,.sekka-tab-captain-onboarding) > .sekka-mobile-content{
+ padding-top:0!important;
+}
+.sekka-mobile .sekka-floating-actions button:focus-visible{
+ outline:3px solid #FFCC24!important;outline-offset:3px!important;
+}
+@media(max-width:359px){
+ .sekka-mobile[dir="rtl"] > .sekka-floating-actions > .sekka-fab-menu{right:8px!important}
+ .sekka-mobile[dir="rtl"] > .sekka-floating-actions > .sekka-fab-bell{left:8px!important}
+ .sekka-mobile[dir="ltr"] > .sekka-floating-actions > .sekka-fab-menu{left:8px!important}
+ .sekka-mobile[dir="ltr"] > .sekka-floating-actions > .sekka-fab-bell{right:8px!important}
+ .sekka-mobile.sekka-tab-home.sekka-rider-navigation .rh-hero__copy{
+ padding-top:calc(80px + env(safe-area-inset-top,0px))!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .sekka-mobile > .sekka-floating-actions button{transition:none!important}
+}
