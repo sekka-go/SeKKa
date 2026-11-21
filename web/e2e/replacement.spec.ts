@@ -131,17 +131,14 @@ test("phase one: all seven paired designs render and auth stays disconnected", a
   expect(authRequests).toEqual([]);
 });
 
-test("phase two: v3.1 paired views, fixed offers, navigation and preview isolation", async ({
-  page,
-}) => {
-  const mutations: string[] = [];
-  page.on("request", (r) => {
-    if (r.method() !== "GET" && /supabase|auth\/v1|rest\/v1/.test(r.url()))
-      mutations.push(r.url());
-  });
-  for (const theme of ["dark", "light"]) {
+for(const theme of ["dark", "light"]) {
+  test(`phase two: 7 preview layouts fit without backend mutations (${theme})`, async ({page})=>{
+    const mutations: string[] = [];
+    page.on("request", r=>{
+      if (r.method() !== "GET" && /supabase|auth\/v1|rest\/v1/.test(r.url())) mutations.push(r.url());
+    });
+    await page.setViewportSize({ width: 390, height: 844 });
     for (const screen of [8, 9, 10, 11, 12, 14, 15]) {
-      await page.setViewportSize({ width: 390, height: 844 });
       await page.goto(
         `/dev/screens?screen=${publicScreen(screen)}&theme=${theme}&preview=phase2`,
       );
@@ -152,19 +149,25 @@ test("phase two: v3.1 paired views, fixed offers, navigation and preview isolati
           [...document.images].map((i) => i.decode().catch(() => {})),
         );
       });
-      expect(
-        await page.evaluate(
-          () => document.documentElement.scrollWidth <= innerWidth,
-        ),
-      ).toBe(true);
-      const clipped = await page
-        .locator(".d-canvas")
-        .evaluate((e) => e.scrollWidth > e.clientWidth + 1);
-      expect(clipped).toBe(false);
-      await page
-        .locator(".d-canvas")
-        .screenshot({ path: `../docs/audit/phase2-${screen}-${theme}.png` });
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      const canvas = page.locator(".d-canvas");
+      expect(await canvas.evaluate((e) => e.scrollWidth > e.clientWidth + 1)).toBe(false);
+      await canvas.screenshot({ path: `../docs/audit/phase2-${screen}-${theme}.png` });
     }
+    expect(mutations).toEqual([]);
+  });
+}
+
+test("phase two: v3.1 paired views, fixed offers, navigation and preview isolation", async ({
+  page,
+}) => {
+  const mutations: string[] = [];
+  page.on("request", (r) => {
+    if (r.method() !== "GET" && /supabase|auth\/v1|rest\/v1/.test(r.url()))
+      mutations.push(r.url());
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const theme of ["dark", "light"]) {
     // Explicitly clear the previous theme iteration\u0027s filters: preferences must not erase rider input.
     await page.goto(`/dev/screens?screen=10&theme=${theme}&preview=phase2`);
     await page.getByRole("button", {name:"مسح الفلاتر",exact:true}).click();
