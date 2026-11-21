@@ -8,17 +8,18 @@ const commute={origin:'المعادي',destination:'التجمع',originPlace:nu
  outbound:'07:30',returnTime:'17:00',period:'monthly',direction:'outbound',
  savedAt:'2026-11-21T00:00:00.000Z'};
 for(const width of [320,390]){
- test('returning verified Rider can repeat a real saved commute with one tap at '+width+'px',async({page})=>{
+ for(const variant of [{language:'en',theme:'light'},{language:'ar',theme:'dark'}] as const){
+ test('returning verified Rider one-tap commute '+width+'px '+variant.language+' '+variant.theme,async({page})=>{
   await page.setViewportSize({width,height:width===320?700:844});
-  await page.addInitScript(({endpoint,user,commute})=>{
+  await page.addInitScript(({endpoint,user,commute,variant})=>{
    const id=new URL(endpoint).hostname.split('.')[0];
    localStorage.setItem('sb-'+id+'-auth-token',JSON.stringify({
     access_token:'fixture-header.fixture-payload.fixture-signature',refresh_token:'local-fixture',
     token_type:'bearer',expires_in:3600,expires_at:Math.floor(Date.now()/1000)+3600,user}));
    localStorage.setItem('sekka.rider.recurringCommute.v1.'+user.id,JSON.stringify(commute));
-   localStorage.setItem('language_preference','en');
-   localStorage.setItem('theme_preference','light');
-  },{endpoint,user,commute});
+   localStorage.setItem('language_preference',variant.language);
+   localStorage.setItem('theme_preference',variant.theme);
+  },{endpoint,user,commute,variant});
   let searchCount=0;
   await page.route(endpoint+'/**',async req=>{
    const path=new URL(req.request().url()).pathname;
@@ -41,25 +42,26 @@ for(const width of [320,390]){
   });
   await page.goto('/');
   await expect(page.locator('.sekka-rider-home.rh-home')).toBeVisible();
-  const tabs=page.getByRole('navigation',{name:'Passenger navigation'});
+  const tabs=page.getByRole('navigation',{name:variant.language==='en'?'Passenger navigation':'التنقل للراكب'});
   await expect(tabs).toBeVisible();
-  await expect(tabs.getByRole('button',{name:'Home'})).toHaveAttribute('aria-current','page');
-  await expect(tabs.getByRole('button',{name:'Search'})).toBeVisible();
-  await expect(tabs.getByRole('button',{name:'Bookings'})).toBeVisible();
-  await expect(tabs.getByRole('button',{name:'Account'})).toBeVisible();
-  await page.screenshot({path:'test-results/rider-home-v3-'+width+'.png',animations:'disabled',fullPage:true});
-  await tabs.getByRole('button',{name:'Search'}).click();
+  await expect(tabs.getByRole('button',{name:variant.language==='en'?'Home':'الرئيسية'})).toHaveAttribute('aria-current','page');
+  await expect(tabs.getByRole('button',{name:variant.language==='en'?'Search':'ابحث'})).toBeVisible();
+  await expect(tabs.getByRole('button',{name:variant.language==='en'?'Bookings':'رحلاتي'})).toBeVisible();
+  await expect(tabs.getByRole('button',{name:variant.language==='en'?'Account':'حسابي'})).toBeVisible();
+  await page.screenshot({path:'test-results/rider-home-v3-'+width+'-'+variant.language+'-'+variant.theme+'.png',animations:'disabled',fullPage:true});
+  await tabs.getByRole('button',{name:variant.language==='en'?'Search':'ابحث'}).click();
   await expect(page).toHaveURL(/tab=search&view=9/);
-  await expect(page.getByRole('navigation',{name:'Passenger navigation'}).getByRole('button',{name:'Search'}))
+  await expect(page.getByRole('navigation',{name:variant.language==='en'?'Passenger navigation':'التنقل للراكب'}).getByRole('button',{name:variant.language==='en'?'Search':'ابحث'}))
    .toHaveAttribute('aria-current','page');
-  await page.getByRole('navigation',{name:'Passenger navigation'}).getByRole('button',{name:'Home'}).click();
+  await page.getByRole('navigation',{name:variant.language==='en'?'Passenger navigation':'التنقل للراكب'}).getByRole('button',{name:variant.language==='en'?'Home':'الرئيسية'}).click();
   await expect(page.locator('.rh-home')).toBeVisible();
-  await expect(page.getByRole('button',{name:/Find rides on my route/})).toBeVisible();
-  await page.getByRole('button',{name:/Find rides on my route/}).click();
+  await expect(page.getByRole('button',{name:variant.language==='en'?'Find rides on my route':'شوف الرحلات على خطّي'})).toBeVisible();
+  await page.getByRole('button',{name:variant.language==='en'?'Find rides on my route':'شوف الرحلات على خطّي'}).click();
   await expect(page).toHaveURL(/tab=search&view=11/);
   await expect(page.locator('.sekka-no-match')).toBeVisible();
   expect(searchCount).toBeGreaterThan(0);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
   await expect(page.getByText(/Booking confirmed|تم الحجز بنجاح/)).toHaveCount(0);
  });
+ }
 }
