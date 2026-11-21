@@ -87,13 +87,13 @@ test('MOCKED Rider no-match journey saves the selected period and re-reads the o
   await route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
  });
  await page.goto('/?tab=search&view=9');
- const origin=page.getByRole('combobox',{name:'From where?'});
+ const origin=page.getByRole('combobox',{name:'Starting point'});
  await origin.fill('Maadi');
  await page.getByRole('group',{name:'Place search suggestions'}).getByRole('button',{name:/Maadi/}).click();
- const destination=page.getByRole('combobox',{name:'Where to?'});
+ const destination=page.getByRole('combobox',{name:'Destination'});
  await destination.fill('Nasr');
  await page.getByRole('group',{name:'Place search suggestions'}).getByRole('button',{name:/Nasr City/}).click();
- await page.locator('.d-planner button[type=submit]').click();
+ await page.locator('.rs3__submit').click();
  await expect(page).toHaveURL(/tab=search&view=11/);
 
  const result=page.getByRole('group',{name:'Search result'});
@@ -159,13 +159,13 @@ test('MOCKED guest can review empty search and return with the same areas',async
   return route.fulfill({contentType:'application/json',body:JSON.stringify(path.endsWith('/v31_service_areas')?areas:[])});
  });
  await page.goto('/?tab=search&view=9');
- const from=page.getByRole('combobox',{name:'From where?'});
- const to=page.getByRole('combobox',{name:'Where to?'});
+ const from=page.getByRole('combobox',{name:'Starting point'});
+ const to=page.getByRole('combobox',{name:'Destination'});
  await from.fill('Maadi');
  await page.getByRole('button',{name:'Maadi Service area'}).click();
  await to.fill('Nasr City');
  await page.getByRole('button',{name:'Nasr City Service area'}).click();
- await page.getByRole('button',{name:'Search for routes'}).click();
+ await page.getByRole('button',{name:'See available rides'}).click();
  await expect(page.getByRole('button',{name:'Sign in to request this trip'})).toBeVisible();
  await expect(page.getByText('Auth session missing!')).toHaveCount(0);
  await page.getByRole('button',{name:'Back',exact:true}).click();
