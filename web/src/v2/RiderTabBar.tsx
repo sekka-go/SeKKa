@@ -18,7 +18,7 @@ export default function RiderTabBar({active,onNavigate}:{active:RiderTab|null;on
  const {language}=usePreferences(),en=language==='en';
  const names=en?
   {home:'Home',search:'Search',bookings:'Bookings',profile:'Account'}:
-  {home:'الرئيسية',search:'ابحث',bookings:'رحلاتي',profile:'حسابي'};
+  {home:'الرئيسية',search:'بحث',bookings:'حجوزاتي',profile:'حسابي'};
  return <nav className="rh-tabs" aria-label={en?'Passenger navigation':'التنقل للراكب'}>
   <div className="rh-tabs__inner">
    {tabs.map(tab=><button type="button" key={tab}
