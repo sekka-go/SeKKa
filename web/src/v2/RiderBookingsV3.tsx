@@ -7,8 +7,8 @@ import './rider-bookings-v3.css';
 type RiderBooking={id:string;route_id:string;seats:number;status:string;created_at:string};
 type Filter='active'|'past'|'all';
 const pastStatuses=new Set(['completed','cancelled']);
-export default function RiderBookingsV3({onFindRide}:{
- onFindRide:()=>void;
+export default function RiderBookingsV3({onFindRide,onOpenBooking}:{
+ onFindRide:()=>void;onOpenBooking:(id:string)=>void;
 }){
  const {language}=usePreferences(),en=language==='en',t=(ar:string,english:string)=>en?english:ar;
  const [items,setItems]=useState<RiderBooking[]>([]);
@@ -102,9 +102,9 @@ export default function RiderBookingsV3({onFindRide}:{
      <span>{t('المقاعد','Seats')} <strong>{new Intl.NumberFormat(en?'en-EG':'ar-EG').format(b.seats)}</strong></span>
      <span>{t('مرجع الحجز','Reference')} <bdi>{b.id.slice(0,8)}</bdi></span>
     </div>
-    <a className="rb3__details" href={'/?tab=booking&booking='+encodeURIComponent(b.id)}>
+    <button type="button" className="rb3__details" onClick={()=>onOpenBooking(b.id)}>
      {t('عرض تفاصيل الحجز','View booking details')}
-    </a>
+    </button>
     {b.status==='pending'&&<div className="rb3__cancel">
      {cancelIntent===b.id?<div className="rb3__confirm" role="group"
        aria-label={t('تأكيد إلغاء الحجز','Confirm cancellation')}>
