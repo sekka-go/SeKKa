@@ -5,8 +5,8 @@ Status: **PARTIAL; NOT ACCEPTED FOR PRODUCTION.** Never merge to `main` as a sub
 ## Completed this iteration
 - Recorded the owner's decision to revise v3.1 product UX and map rules. See `docs/product/RECURRING_COMMUTE_VNEXT_20261121.md`; `docs/PRD.md`, `docs/DECISIONS.md` and `docs/product/PRODUCT_RULES.md` now explicitly link/precede to it.
 - Installed / store-facing name **Sekka Go**; in-app Arabic brand **سِكّة**.
-- Preserved the original app icon byte geometry exactly. Newly generated `web/public/brand/sekka-go-192.png` and `sekka-go-512.png` change only the PNG color palette. IHDR, tRNS, and compressed IDAT chunks are byte-for-byte identical to the original files.
-- Pointed PWA manifest, favicon and launch splash at the recolored classic icon. Old assets remain available.
+- Earlier icon pass preserved the old Arabic mark under `sekka-go-192.png` / `sekka-go-512.png`; **owner superseded that decision** with their purple white `seKKa` wordmark and yellow road image. New 192/512 mobile icons: `web/public/brand/sekka-go-road-192.png` / `sekka-go-road-512.png`, derived from the uploaded artwork.
+- Updated PWA manifest, browser/favicon, Apple touch icon and launch splash to the new purple road icon. Incremented service-worker cache name to avoid stale icon. Original assets remain available.
 - Began light/dark energetic brand tokens in `web/src/v2/theme.css` and mobile shell overrides. Not all legacy screens and embedded screenshot assets are recolored yet.
 - Added pure client-side helper `web/src/v2/recurringGeo.ts` and tests for metres/kilometres, approximate walking time, deterministic stop order, 50m dedupe, coverage and optional routing adapter. **These are not server-side PostGIS replacements**.
 
