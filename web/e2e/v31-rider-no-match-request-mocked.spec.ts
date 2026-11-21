@@ -21,6 +21,7 @@ type RequestRecord={
 };
 
 test('MOCKED Rider no-match journey saves the selected period and re-reads the owned request',async({page})=>{
+ await page.route('https://photon.komoot.io/api/**',route=>route.fulfill({json:{features:[]}}));
  await page.setViewportSize({width:390,height:844});
  await page.addInitScript(({endpoint,user})=>{
   const key='sb-'+new URL(endpoint).hostname.split('.')[0]+'-auth-token';
@@ -89,10 +90,10 @@ test('MOCKED Rider no-match journey saves the selected period and re-reads the o
  await page.goto('/?tab=search&view=9');
  const origin=page.getByRole('combobox',{name:'Starting point'});
  await origin.fill('Maadi');
- await page.getByRole('group',{name:'Place search suggestions'}).getByRole('option',{name:/Maadi/}).click();
+ await page.getByRole('group',{name:'Place search suggestions'}).getByRole('option',{name:"Maadi Search the whole service area",exact:true}).click();
  const destination=page.getByRole('combobox',{name:'Destination'});
  await destination.fill('Nasr');
- await page.getByRole('group',{name:'Place search suggestions'}).getByRole('option',{name:/Nasr City/}).click();
+ await page.getByRole('group',{name:'Place search suggestions'}).getByRole('option',{name:"Nasr City Search the whole service area",exact:true}).click();
  await page.locator('.rs3__submit').click();
  await expect(page).toHaveURL(/tab=search&view=11/);
 
@@ -152,6 +153,7 @@ test('MOCKED Rider no-match journey saves the selected period and re-reads the o
 });
 
 test('MOCKED guest can review empty search and return with the same areas',async({page})=>{
+ await page.route('https://photon.komoot.io/api/**',route=>route.fulfill({json:{features:[]}}));
  await page.setViewportSize({width:390,height:844});
  await page.addInitScript(()=>localStorage.setItem('language_preference','en'));
  await page.route(endpoint+'/**',route=>{

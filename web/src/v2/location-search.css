@@ -6,6 +6,12 @@
  overflow: auto;
  overscroll-behavior: contain;
 }
+/* Passenger suggestions already scroll as one panel. Keeping the nested
+   list in normal flow prevents late provider results clipping local options. */
+.sekka-mobile .sekka-place-lookup__suggestions .sekka-location-options {
+ max-height: none;
+ overflow: visible;
+}
 .sekka-mobile .sekka-location-options > button,
 .sekka-mobile .sekka-location-prompts button {
  display: grid;

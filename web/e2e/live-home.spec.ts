@@ -3,7 +3,13 @@ test('current guest home opens approved welcome then Google OAuth without fake u
  await page.goto('/');
  await expect(page.locator('.phase-screen-2')).toBeVisible();
  await expect(page.locator('.sekka-bottom-nav')).toBeHidden();
- await page.locator('.phase-screen-2 .phase-start').click();
+ const welcome=page.locator('.phase-screen-2');
+ await expect(welcome.getByRole('navigation',{name:/خطوة 1|Step 1/})).toBeVisible();
+ await welcome.locator('.phase-start').click();
+ await expect(welcome.getByRole('navigation',{name:/خطوة 2|Step 2/})).toBeVisible();
+ await welcome.locator('.phase-start').click();
+ await expect(welcome.getByRole('navigation',{name:/خطوة 3|Step 3/})).toBeVisible();
+ await welcome.locator('.phase-start').click();
  await expect(page.locator('.phase-screen-3')).toBeVisible();
  await page.locator('.phase-screen-3 .phase-role-next').click();
  await expect(page.locator('.phase-screen-4 .phase-google-auth')).toBeVisible();

@@ -371,6 +371,7 @@ test('MOCKED signed-in rider saves validated Home/Work shortcuts and recent sear
 });
 
 test('MOCKED published search delegates round-trip filters and sorts projected prices',async({page})=>{
+ await page.route('https://photon.komoot.io/api/**',route=>route.fulfill({json:{features:[]}}));
  await page.setViewportSize({width:390,height:844});
  await setup(page,{isAdmin:false},'en','light');
  const areaRows=[
@@ -458,6 +459,7 @@ test('MOCKED published search delegates round-trip filters and sorts projected p
 });
 
 test('MOCKED genuine round-trip offer reaches transparent one-or-two person booking review',async({page})=>{
+ await page.route('https://photon.komoot.io/api/**',route=>route.fulfill({json:{features:[]}}));
  await page.setViewportSize({width:390,height:844});
  await setup(page,{isAdmin:false},'en','light');
  const routeId='11111111-1111-4111-8111-111111111111';

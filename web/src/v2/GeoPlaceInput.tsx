@@ -40,7 +40,9 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
   ?t('البحث على الخريطة مش متاح دلوقتي. جرّب تاني.','Map search is temporarily unavailable. Try again.')
   :result.status==='done'&&!picks.length&&!broad.length
     ?result.outside?t(outsideCoverageMessage.ar,outsideCoverageMessage.en):t(noMatchingLocation.ar,noMatchingLocation.en):'';
- return <div className="sekka-place-lookup">
+ return <div className="sekka-place-lookup" onBlur={e=>{
+  if(!e.currentTarget.contains(e.relatedTarget)){setOpen(false);options.reset();}
+ }}>
   <label className="sekka-place-lookup__label">
    <span className="sr-only">{label}</span>
    <input type="search" role="combobox" aria-label={label} aria-autocomplete="list"

@@ -27,6 +27,8 @@ const stops=[
 const item={route,from:stops[0],to:stops[1],reverse:false,
  stops,remaining:2,pickupDistanceKm:null,dropoffDistanceKm:null};
 async function setup(page:import('@playwright/test').Page,language:'ar'|'en',theme:'light'|'dark'){
+ // This fixture books via registered IDs. Provider behavior is covered separately.
+ await page.route('https://photon.komoot.io/api/**',route=>route.fulfill({json:{features:[]}}));
  await page.addInitScript(({endpoint,user,language,theme})=>{
   const key='sb-'+new URL(endpoint).hostname.split('.')[0]+'-auth-token';
   localStorage.setItem(key,JSON.stringify({access_token:'fixture.header.signature',
@@ -79,11 +81,11 @@ for(const variant of [
   const from=form.getByRole('combobox',{name:variant.language==='ar'?'نقطة الانطلاق':'Starting point'});
   await from.fill('Maadi');
   await form.getByRole('group',{name:variant.language==='ar'?'نتائج البحث عن المكان':'Place search suggestions'})
-   .getByRole('option',{name:/Maadi|المعادي/}).first().click();
+   .getByRole('option',{name:/^(Maadi Search the whole service area|المعادي بحث في منطقة الخدمة بالكامل)$/}).click();
   const to=form.getByRole('combobox',{name:variant.language==='ar'?'الوجهة':'Destination'});
   await to.fill('New Cairo');
   await form.getByRole('group',{name:variant.language==='ar'?'نتائج البحث عن المكان':'Place search suggestions'})
-   .getByRole('option',{name:/New Cairo|التجمع/}).first().click();
+   .getByRole('option',{name:/^(New Cairo Search the whole service area|التجمع بحث في منطقة الخدمة بالكامل)$/}).click();
   await form.locator('input[type=time]').first().fill('08:15');
   await form.locator('.rs3__days-toggle').click();
   const sunday=variant.language==='ar'?'الأحد':'Sun';

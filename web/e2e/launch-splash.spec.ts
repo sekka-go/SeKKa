@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const artwork = "/brand/sekka-launch-static-20261118.svg";
+const artwork = "/brand/sekka-go-road-512.png";
 
 test("fresh app open shows a smaller centered seKKa logo with a gentle pulse before Welcome", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -10,7 +10,7 @@ test("fresh app open shows a smaller centered seKKa logo with a gentle pulse bef
   await expect(splash).toBeVisible();
   const picture = splash.locator("img.sekka-launch__artwork");
   await expect(picture).toHaveAttribute("src", artwork);
-  await expect(picture).toHaveAttribute("alt", "seKKa");
+  await expect(picture).toHaveAttribute("alt", "سِكّة");
   await expect(picture).toBeVisible();
   await expect(splash.locator("svg,.sekka-launch__map,.sekka-launch__route,.sekka-launch__wordmark")).toHaveCount(0);
   await expect(splash).not.toContainText("سكة");
@@ -47,16 +47,14 @@ test("fresh app open shows a smaller centered seKKa logo with a gentle pulse bef
   await expect(page.locator(".phase-screen-2")).toBeVisible();
 });
 
-test("static artwork is the exact optimized brand asset, not an external image", async ({ request }) => {
+test("the approved road artwork is served locally as a 512px PNG", async ({ request }) => {
   const response = await request.get(artwork);
   expect(response.ok()).toBeTruthy();
-  const svg = await response.text();
-  expect(svg).toContain('viewBox="0 0 1536 1536"');
-  expect(svg).toContain('aria-label="seKKa"');
-  expect(svg).toContain('fill="#000"');
-  expect(svg).toContain('fill="#ffcd04"');
-  expect(svg).toContain('fill="#fdfdfd"');
-  expect(svg).not.toContain("سكة");
+  expect(response.headers()["content-type"]).toContain("image/png");
+  const bytes = await response.body();
+  expect(bytes.subarray(0,8).toString("hex")).toBe("89504e470d0a1a0a");
+  expect(bytes.readUInt32BE(16)).toBe(512);
+  expect(bytes.readUInt32BE(20)).toBe(512);
 });
 
 test("OAuth callback and the developer gallery never show the opening splash", async ({ page }) => {
@@ -94,38 +92,32 @@ test("refresh replays the approved logo-only splash while preserving current pag
   await expect(page.locator(".phase-screen-2")).toBeVisible();
 });
 
-test("Android-installed PWA uses English logo icon instead of the old yellow Arabic one", async ({ request }) => {
+test("installed PWA uses the current road mark and external app name", async ({ request }) => {
   const manifestResponse = await request.get("/manifest.webmanifest");
   expect(manifestResponse.ok()).toBeTruthy();
   const manifest = await manifestResponse.json();
-  expect(manifest.name).toBe("seKKa");
-  expect(manifest.short_name).toBe("seKKa");
-  expect(manifest.dir).toBe("ltr");
-  expect(manifest.background_color).toBe("#000000");
-  expect(manifest.theme_color).toBe("#000000");
+  expect(manifest.name).toBe("Sekka Go");
+  expect(manifest.short_name).toBe("Sekka Go");
+  expect(manifest.dir).toBe("rtl");
+  expect(manifest.background_color).toBe("#3F056F");
+  expect(manifest.theme_color).toBe("#3F056F");
   expect(manifest.icons.map((icon: {src:string}) => icon.src)).toEqual([
-    artwork,
-    "/brand/sekka-pwa-en-20261118-192.png",
-    "/brand/sekka-pwa-en-20261118-512.png"
+    "/brand/sekka-go-road-192.png",
+    artwork
   ]);
   for (const icon of manifest.icons) {
     const response = await request.get(icon.src);
     expect(response.ok()).toBeTruthy();
-    if(icon.type==="image/svg+xml"){
-      expect(icon.sizes).toBe("any");
-      expect(await response.text()).toContain('aria-label="seKKa"');
-    }else{
-      const bytes = await response.body();
-      expect(bytes.subarray(0,8).toString("hex")).toBe("89504e470d0a1a0a");
-      const size = Number(icon.sizes.split("x")[0]);
-      expect(bytes.readUInt32BE(16)).toBe(size);
-      expect(bytes.readUInt32BE(20)).toBe(size);
-      expect(icon.type).toBe("image/png");
-    }
+    const bytes = await response.body();
+    expect(bytes.subarray(0,8).toString("hex")).toBe("89504e470d0a1a0a");
+    const size = Number(icon.sizes.split("x")[0]);
+    expect(bytes.readUInt32BE(16)).toBe(size);
+    expect(bytes.readUInt32BE(20)).toBe(size);
+    expect(icon.type).toBe("image/png");
   }
   const index = await (await request.get("/")).text();
   expect(index).toContain(artwork);
-  expect(index).toContain("/brand/sekka-pwa-en-20261118-192.png");
+  expect(index).toContain("/brand/sekka-go-road-192.png");
   expect(index).not.toContain("/brand/sekka-pwa-20261115-192.png");
   expect(index).not.toContain('href="/brand/sekka-user-icon.svg"');
   expect(index).not.toContain('href="/brand/sekka-splash-wordmark.svg"');

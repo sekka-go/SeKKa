@@ -178,3 +178,33 @@ test('verified Hosary context remains available during a Photon outage without a
  await input.press('Enter');
  await expect(input).toHaveValue('الحصرى');
 });
+
+for(const [width,height] of [[320,700],[360,800],[390,844],[412,915]] as const){
+ for(const language of ['ar','en'] as const){
+  for(const theme of ['light','dark'] as const){
+   test(`registered area stays operable after Photon results at ${width}px ${language} ${theme}`,async({page})=>{
+    await page.setViewportSize({width,height});
+    await page.addInitScript(({language,theme})=>{
+     localStorage.setItem('language_preference',language);
+     localStorage.setItem('theme_preference',theme);
+    },{language,theme});
+    await intercept(page,[]);
+    await page.route('https://photon.komoot.io/api/**',route=>route.fulfill({json:{features:
+     Array.from({length:12},(_,i)=>({
+      geometry:{type:'Point',coordinates:[31.25,29.96]},
+      properties:{osm_id:7701+i,osm_type:i<6?'N':'W',countrycode:'EG',name:'Maadi '+(i+1),district:'Maadi'}
+     }))
+    }}));
+    await page.goto('/?tab=search&view=9');
+    const origin=page.getByRole('combobox',{name:language==='en'?'Starting point':'نقطة الانطلاق'});
+    await origin.fill('Maadi');
+    await expect(page.getByRole('option',{name:/Maadi 1 Maadi/})).toBeVisible();
+    const area=page.getByRole('option',{name:language==='en'?'Maadi Search the whole service area':'المعادي بحث في منطقة الخدمة بالكامل',exact:true});
+    await area.click();
+    await expect(origin).toHaveValue(language==='en'?'Maadi':'المعادي');
+    await expect(page.getByRole('listbox')).toHaveCount(0);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
+   });
+  }
+ }
+}
