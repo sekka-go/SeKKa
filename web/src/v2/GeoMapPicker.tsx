@@ -11,22 +11,24 @@ import './geo-map-picker.css';
 
 type MapPickerProps={
  initial?:MapPlace|null;
+ focus?:MapCoordinate|null;
  area?:ServiceArea;
  onCancel:()=>void;
  onConfirm:(place:MapPlace)=>boolean|void|Promise<boolean|void>;
 };
 const CAIRO_CENTER={latitude:30.0443934,longitude:31.2357457}; // OSM way/30925727, verified Tahrir
-function startingPoint(initial:MapPlace|null|undefined,area:ServiceArea|undefined):MapCoordinate {
+function startingPoint(initial:MapPlace|null|undefined,focus:MapCoordinate|null|undefined,area:ServiceArea|undefined):MapCoordinate {
  if(initial&&isInsideOperationalRegion(initial))return {latitude:initial.latitude,longitude:initial.longitude};
+ if(focus&&isInsideOperationalRegion(focus))return {latitude:focus.latitude,longitude:focus.longitude};
  const ref=localPlaceCatalog.find(p=>p.area===area?.name_en.toLowerCase()&&p.reference&&
   isInsideOperationalRegion(p.reference))?.reference;
  return ref?{latitude:ref.latitude,longitude:ref.longitude}:CAIRO_CENTER;
 }
-export default function GeoMapPicker({initial,area,onCancel,onConfirm}:MapPickerProps){
+export default function GeoMapPicker({initial,focus,area,onCancel,onConfirm}:MapPickerProps){
  const {language}=usePreferences(),en=language==='en';
  const t=(ar:string,english:string)=>en?english:ar;
- const [center,setCenter]=useState<MapCoordinate>(()=>startingPoint(initial,area));
- const [zoom,setZoom]=useState(initial?15:area?13:11);
+ const [center,setCenter]=useState<MapCoordinate>(()=>startingPoint(initial,focus,area));
+ const [zoom,setZoom]=useState(initial?15:focus?14:area?13:11);
  const [pin,setPin]=useState<MapCoordinate|null>(initial?{latitude:initial.latitude,longitude:initial.longitude}:null);
  const [dimensions,setDimensions]=useState({width:360,height:440});
  const [busy,setBusy]=useState(false),[message,setMessage]=useState('');
