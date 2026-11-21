@@ -1,24 +1,21 @@
 import {useEffect,useRef,useState} from 'react';
 import {usePreferences} from './preferences';
 import {catalogMatches,locationContext,locationContextIcon,noMatchingLocation,mapPlacesFromPhoton,isSearchableMapPlace} from './geoPlace';
-import {popularPlacesForArea} from './popularCaptainPlaces';
 import {useLocationOptions,useLocationSearch,photonEndpoint} from './locationSearch';
 import {straightLineKm} from './nearbyRoutes';
 import GeoMapPicker from './GeoMapPicker';
-import type {PlaceChoice,MapPlace,ServiceArea} from './geoPlace';
-import type {PopularPlace} from './popularCaptainPlaces';
+import type {PlaceChoice,MapPlace} from './geoPlace';
 import './location-search.css';
 
-export default function CaptainPlacePicker({label,value,choice,onPick,onVerified,disabled=false,searchArea}:{
+export default function CaptainPlacePicker({label,value,choice,onPick,onVerified,disabled=false}:{
  label:string;value:string;choice:PlaceChoice|null;
  onPick:(value:string,choice:PlaceChoice|null)=>void;
  onVerified?:(place:MapPlace)=>void;
- areas?:ServiceArea[];disabled?:boolean;searchArea?:ServiceArea;
+ disabled?:boolean;
 }){
  const {language}=usePreferences(),en=language==='en';
  const t=(ar:string,english:string)=>en?english:ar;
  const [query,setQuery]=useState(value);
- const [showAll,setShowAll]=useState(false);
  const [open,setOpen]=useState(false);
  const [immediate,setImmediate]=useState(0);
  const [mapOpen,setMapOpen]=useState(false);
@@ -31,7 +28,6 @@ export default function CaptainPlacePicker({label,value,choice,onPick,onVerified
  },[]);
  const options=useLocationOptions();
  useEffect(()=>{setQuery(value);},[value]);
- useEffect(()=>{setOpen(false);setImmediate(0);setShowAll(false);},[searchArea?.id]);
  const menu=Boolean(open&&!choice&&!disabled);
  // Same wide-area search index as the Rider; area-selection is optional.
  const result=useLocationSearch(query,menu,undefined,en,immediate);
@@ -41,9 +37,6 @@ export default function CaptainPlacePicker({label,value,choice,onPick,onVerified
    if(!isSearchableMapPlace(place)||seen.has(place.id))return false;
    seen.add(place.id);return true;
   }).slice(0,12);
- const popularPriority:Record<PopularPlace['type'],number>={square:1,mall:2,university:3,gathering:4,neighborhood:5,mosque:6};
- const suggestions=searchArea?[...popularPlacesForArea(searchArea.name_en)].sort((a,b)=>popularPriority[a.type]-popularPriority[b.type]):[];
- const visible=showAll?suggestions:suggestions.slice(0,5);
  const catalog=menu&&query&&!points.length?catalogMatches(query).filter(item=>!item.reference):[];
  const choose=(index:number)=>{
   const place=points[index];
@@ -79,22 +72,6 @@ export default function CaptainPlacePicker({label,value,choice,onPick,onVerified
   :menu&&result.status==='done'&&!points.length
   ?t(noMatchingLocation.ar,noMatchingLocation.en):'';
  return <section ref={shellRef} className="cj-easy-place" aria-label={label}>
-  {searchArea&&<>
-   <div className="cj-easy-place-head">
-    <strong>{t('أماكن معروفة في '+searchArea.name_ar,'Popular places in '+searchArea.name_en)}</strong>
-    <small>{t('ابحث باسم المكان واضغط عليه لإضافته للمسار','Tap a place name to add it to the route')}</small>
-   </div>
-   <div className="cj-easy-places">
-    {visible.map(item=><button type="button" key={item.type+item.name_en}
-     className="cj-easy-choice" disabled={disabled}
-     aria-label={t('ابحث عن ','Find ')+t(item.name_ar,item.name_en)}
-     onClick={()=>search(t(item.name_ar,item.name_en))}>
-     <span>{t(item.name_ar,item.name_en)}</span><span aria-hidden="true">‹</span>
-    </button>)}
-   </div>
-   {suggestions.length>5&&<button className="cj-easy-more" type="button"
-     onClick={()=>setShowAll(x=>!x)}>{showAll?t('عرض أقل','Show fewer'):t('عرض أماكن أكتر','More places')}</button>}
-  </>}
   {!menu&&<button type="button" className="cj-easy-map-button"
    disabled={disabled} onClick={()=>{inputRef.current?.blur();setMapOpen(true);setOpen(false);}}>
    <span aria-hidden="true">⌖</span>{t('اختيار على الخريطة (اختياري)','Choose on map (optional)')}
