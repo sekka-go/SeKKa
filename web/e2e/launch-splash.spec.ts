@@ -90,6 +90,7 @@ test("installed identity remains Sekka Go, but launch background and status bar 
 });
 
 test("public app uses black, cream and mauve tokens without restyling dev gallery",async ({page})=>{
+ await page.addInitScript(()=>localStorage.setItem("theme_preference","light"));
  await page.goto("/?tab=login&view=2");
  await expect(page.locator(intro)).toHaveCount(0,{timeout:6000});
  const root=page.locator(".sekka-mobile");
@@ -109,4 +110,17 @@ test("public app uses black, cream and mauve tokens without restyling dev galler
   cream:"#F7F0E5",
   mauve:"#8050AF"
  });
+});
+
+test("dark preference changes the app to black and cream while preserving mauve actions",async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem("theme_preference","dark"));
+ await page.goto("/?tab=login&view=2");
+ await expect(page.locator(intro)).toHaveCount(0,{timeout:6000});
+ await expect(page.locator("html")).toHaveAttribute("data-theme","dark");
+ const root=page.locator(".sekka-mobile");
+ await expect(root).toHaveCSS("background-color","rgb(23, 19, 24)");
+ const ink=await root.evaluate(el=>getComputedStyle(el).getPropertyValue("--ink").trim());
+ expect(ink).toBe("#F7F0E5");
+ const mauve=await root.evaluate(el=>getComputedStyle(el).getPropertyValue("--accent").trim());
+ expect(mauve).toBe("var(--sekka-mauve)");
 });
