@@ -1,4 +1,4 @@
-import {useState,type FormEvent} from 'react';
+import {useState,type FormEvent,type ReactNode} from 'react';
 import GeoPlaceInput from './GeoPlaceInput';
 import PickupExplorerSheet from './PickupExplorerSheet';
 import type {LiveSelection} from './LiveRouteSearch';
@@ -12,14 +12,14 @@ const names={
 };
 export default function RiderSearchV3({origin,destination,originPlace,destinationPlace,
  areas,outbound,returnTime,weekdays,onOrigin,onDestination,onSwap,onOutbound,onReturn,
- onWeekdays,onSearch,onLiveSelect}:{
+ onWeekdays,onSearch,onLiveSelect,shortcuts}:{
  origin:string;destination:string;originPlace:PlaceChoice|null;destinationPlace:PlaceChoice|null;
  areas:ServiceArea[];outbound:string;returnTime:string;weekdays:number[];
  onOrigin:(name:string,choice:PlaceChoice|null)=>void;
  onDestination:(name:string,choice:PlaceChoice|null)=>void;onSwap:()=>void;
  onOutbound:(time:string)=>void;onReturn:(time:string)=>void;
  onWeekdays:(value:number[])=>void;
- onSearch:()=>void;onLiveSelect?:(selection:LiveSelection)=>void;
+ onSearch:()=>void;onLiveSelect?:(selection:LiveSelection)=>void;shortcuts?:ReactNode;
 }){
  const {language}=usePreferences(),en=language==='en',t=(ar:string,english:string)=>en?english:ar;
  const [nearby,setNearby]=useState(false);
@@ -62,6 +62,7 @@ export default function RiderSearchV3({origin,destination,originPlace,destinatio
      </div>
     </div>
    </div>
+   {shortcuts}
    <div className="rs3__section-label rs3__section-label--space"><span className="rs3__number">02</span>
     <h3>{t('الوقت اللي يناسبك','Your preferred time')}</h3></div>
    <div className="rs3__times">
