@@ -28,8 +28,8 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  let status='draft',publishCalls=0,reviewReads=0;
  const routeId='00000000-0000-4000-8000-0000000000f1';
  const savedStops=[
-  {id:'00000000-0000-4000-8000-0000000000f2',area_id:11,name:'Maadi Grand Mall',position:0,pickup_allowed:true,dropoff_allowed:true,latitude:null as number|null,longitude:null as number|null},
-  {id:'00000000-0000-4000-8000-0000000000f3',area_id:22,name:'Nasr City Square',position:1,pickup_allowed:true,dropoff_allowed:true,latitude:null as number|null,longitude:null as number|null}
+  {id:'00000000-0000-4000-8000-0000000000f2',area_id:11,name:'Maadi Grand Mall',position:0,pickup_allowed:true,dropoff_allowed:true,latitude:null as number|null,longitude:null as number|null,outbound_stop_time:null as string|null,return_stop_time:null as string|null},
+  {id:'00000000-0000-4000-8000-0000000000f3',area_id:22,name:'Nasr City Square',position:1,pickup_allowed:true,dropoff_allowed:true,latitude:null as number|null,longitude:null as number|null,outbound_stop_time:null as string|null,return_stop_time:null as string|null}
  ];
  await page.route('https://www.openstreetmap.org/export/embed.html?*',route=>route.fulfill({body:'Map frame fixture'}));
  await page.route('https://photon.komoot.io/api/**',async route=>{
@@ -65,7 +65,9 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
   else if(path==='/rest/v1/rpc/v31_create_geolocated_route_draft'){
    created++;payload=body;
    const input=(body as {p_stops:Array<{latitude:number;longitude:number}>}).p_stops;
-   input.forEach((stop,i)=>{savedStops[i].latitude=stop.latitude;savedStops[i].longitude=stop.longitude;});
+   input.forEach((stop,i)=>{savedStops[i].latitude=stop.latitude;savedStops[i].longitude=stop.longitude;
+    savedStops[i].outbound_stop_time=(stop as {outbound_stop_time?:string|null}).outbound_stop_time??null;
+    savedStops[i].return_stop_time=(stop as {return_stop_time?:string|null}).return_stop_time??null;});
    if(created===1){
     firstAttempt=body.p_attempt;
     await route.abort('failed');
@@ -110,24 +112,19 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  await expect(page).toHaveURL(/tab=routes&view=42/);
  await page.goto('/?tab=routes&view=43');
  const entry=page.locator('.sekka-captain-route-wizard');
- await expect(entry.getByRole('group',{name:'Main areas'})).toBeVisible();
- await entry.getByRole('button',{name:'Maadi'}).click();
+ // Name-first search with no area prerequisite, same as the Rider.
+ await expect(entry.getByRole('group',{name:'Main areas'})).toHaveCount(1);
  const place=entry.getByRole('combobox',{name:'Search street or landmark'});
- // Invalid lookup remains blocked even when its returned map point is nearby in Cairo.
+ await expect(place).toBeVisible();
  await place.fill('Outside street');
- // The geocoder is queried automatically after typing, without an explicit search control.
  await expect(entry.getByRole('button',{name:'Find',exact:true})).toHaveCount(0);
- // The broader discovery envelope and updated copy must not suggest
- // this arbitrary street is a valid published Captain stop.
  await expect(entry.getByText(/This name is not in our current place data/)).toBeVisible();
  await expect(entry.locator('.cj-easy-selected-stops>li')).toHaveCount(0);
- // A popular-place search prompt leaves the stop unselected until confirmation.
- await entry.getByRole('button',{name:'Find Maadi Grand Mall'}).click();
- await expect(entry.locator('.cj-easy-selected-stops>li')).toHaveCount(0);
+ await place.fill('Maadi Grand Mall');
+ await expect(entry.locator('.cj-easy-results').getByRole('option',{name:/Maadi Grand Mall/})).toBeVisible();
  await entry.locator('.cj-easy-results').getByRole('option',{name:/Maadi Grand Mall/}).click();
  await expect(entry.locator('.cj-easy-selected-stops>li')).toHaveCount(1);
- await expect(entry.getByRole('group',{name:'Main areas'})).toBeVisible();
- await entry.getByRole('button',{name:'Nasr City'}).click();
+ await expect(page.getByRole('dialog',{name:'Choose point on map'})).toHaveCount(0);
  const destination=entry.getByRole('combobox',{name:'Search street or landmark'});
  await destination.fill('Nasr City Square');
  await expect(entry.locator('.cj-easy-results').getByRole('option',{name:/Nasr City Square/})).toBeVisible();
@@ -153,6 +150,10 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  await entry.getByRole('button',{name:'Continue'}).click();
  await entry.getByRole('combobox',{name:'Journey direction'}).selectOption('return');
  await expect(entry.getByText('For return only, the first stop served is the last stop in your list.')).toBeVisible();
+ // Return direction serves the listed stops in reverse; each has its own
+ // optional estimated time. This must persist through the atomic draft RPC.
+ await entry.locator('input[aria-label="Return time at Maadi Grand Mall"]').fill('17:45');
+ await entry.locator('input[aria-label="Return time at Nasr City Square"]').fill('17:00');
  await entry.getByRole('button',{name:'Continue'}).click();
  await expect(entry.getByText('Trip review and price')).toBeVisible();
  const save=entry.getByRole('button',{name:'Save draft for publishing'});
@@ -193,6 +194,10 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  expect((payload?.p_stops as Array<{name:string;area_id:number}>).map(x=>x.name))
   .toEqual(['Maadi Grand Mall','Nasr City Square']);
  expect(savedStops.every(x=>x.latitude!==null&&x.longitude!==null)).toBe(true);
+ expect(savedStops.map(x=>x.return_stop_time)).toEqual(['17:45','17:00']);
+ expect(savedStops.every(x=>x.outbound_stop_time===null)).toBe(true);
+ expect((payload?.p_stops as Array<{return_stop_time:string|null}>).map(x=>x.return_stop_time))
+  .toEqual(['17:45','17:00']);
  expect(legacyGpsCalls).toBe(0);
  expect(enrolledAgain).toBe(0);
 });
