@@ -71,6 +71,14 @@ const messages:Record<string,{ar:string;en:string}>={
   ar:'مش قادرين نأكد حفظ المسودة. راجع «رحلاتي» قبل ما تحاول الحفظ مرة تانية.',
   en:'Could not verify the saved draft. Check My routes before retrying.'
  },
+ INVALID_STOP_PASSING_TIME:{
+  ar:'وقت مرور المحطة لازم يكون صحيح بصيغة ساعة ودقيقة (زي 07:30).',
+  en:'Stop passing time must be a valid HH:MM time (for example 07:30).'
+ },
+ STOP_TIME_READBACK_FAILED:{
+  ar:'مواعيد المحطات ما اتحفظتش بالشكل المتوقع. راجع مسودتك قبل إعادة المحاولة.',
+  en:'Stop times were not saved as expected. Review your draft before retrying.'
+ },
  STOP_COORDINATE_READBACK_FAILED:{
   ar:'مش قادرين نأكد إحداثيات المسودة. جرّب الحفظ تاني بنفس التفاصيل.',
   en:'Could not verify the draft coordinates. Retry with the same details.'
