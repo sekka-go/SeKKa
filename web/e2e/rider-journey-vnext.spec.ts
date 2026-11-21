@@ -64,7 +64,7 @@ for(const width of [320,390]){
   await timeDialog.locator('input[type="time"]').nth(0).fill('08:15');
   await timeDialog.locator('input[type="time"]').nth(1).fill('18:20');
   await timeDialog.getByRole('button',{name:variant.language==='en'?'Done':'تم'}).click();
-  await expect(page.locator('.rh-journey__field').nth(2)).toContainText('8');
+  await expect(page.locator('.rh-journey__field').nth(2)).toContainText(variant.language==='en'?'8':'٨');
   // Pick weekdays individually; the day count is derived, not a fake default.
   await page.locator('.rh-journey__field').nth(3).click();
   const daysDialog=page.getByRole('dialog');
