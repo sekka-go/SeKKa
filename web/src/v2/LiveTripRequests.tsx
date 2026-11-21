@@ -256,11 +256,11 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
      {requestPeriod==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')}
     </p>
    </div>}
-   {!loading&&!loadFailed&&!notice&&<button type="button" className="d-primary"
+   {!loading&&!loadFailed&&!notice&&<button type="button" className="d-primary sekka-request-yellow-cta"
     disabled={busy||!search.origin||!search.destination}
     onClick={()=>void create()}>{busy?t('بنحفظ طلب رحلتك…','Saving your trip request…'):
-     uid?t('اطلب رحلة بنفس بيانات البحث','Request a trip using this search'):
-     t('سجّل دخولك لطلب الرحلة','Sign in to request this trip')}</button>}
+     uid?t('اطلب مشوار','Request a ride'):
+     t('اطلب مشوار','Request a ride')}</button>}
    {!loading&&!loadFailed&&!notice&&!uid&&<p>{t('الدخول بجوجل مطلوب لحفظ الطلب، وبيانات البحث هتفضل موجودة.','Google sign-in is required to save a request. Your search is retained.')}</p>}
   </div>;
  }
