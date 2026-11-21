@@ -53,6 +53,7 @@ for(const width of [320,360,390,412]){
 }
 test('skip stays optional, Google login does not forge signed-in identity',async({page})=>{
  await page.setViewportSize({width:360,height:800});
+ await page.addInitScript(()=>localStorage.setItem('language_preference','ar'));
  await page.goto('/');
  await page.locator('.sekka-entry__skip').click();
  await expect(page).toHaveURL(/tab=login&view=3/);
