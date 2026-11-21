@@ -16,6 +16,7 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
  const [open,setOpen]=useState(false);
  const [immediate,setImmediate]=useState(0);
  const [mapOpen,setMapOpen]=useState(false);
+ const [mapFocus,setMapFocus]=useState<{latitude:number;longitude:number}|null>(null);
  const options=useLocationOptions();
  useEffect(()=>{setQuery(choice?.kind==='service'?t(choice.area.name_ar,choice.area.name_en):value);},[value,choice,en]);
  const menu=open&&!disabled&&!choice&&Boolean(query.trim());
@@ -107,10 +108,10 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
    {msg&&<p role="status" className="cj-place-error">{msg}</p>}
   </div>}
   <button type="button" className="sekka-place-lookup__map-search"
-   disabled={disabled} onClick={()=>{setMapOpen(true);setOpen(false);}}>
+   disabled={disabled} onClick={()=>{setMapFocus(broad[0]??result.places[0]??null);setMapOpen(true);setOpen(false);}}>
    <span aria-hidden="true">⌖</span>{t('حدد نقطة على الخريطة','Choose point on map')}
   </button>
-  {mapOpen&&<GeoMapPicker area={searchArea} focus={broad[0]??result.places[0]??null}
+  {mapOpen&&<GeoMapPicker area={searchArea} focus={mapFocus}
    initial={choice?.kind==='map'?choice.place:null} onCancel={()=>setMapOpen(false)}
    onConfirm={place=>{const selected={kind:'map' as const,place};
     setQuery(place.name);onPick(place.name,selected);setMapOpen(false);setOpen(false);return true;}}/>}
