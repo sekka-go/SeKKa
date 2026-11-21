@@ -64,6 +64,10 @@ test('pickup explorer uses opt-in GPS, published stops, map and verified route d
  await expect(page).toHaveURL(/tab=search&view=12/);
  await expect(page.locator('.rd3__stops select').first()).toHaveValue(stops[0].id);
  await expect(page.locator('.rd3__stops select').last()).toHaveValue(stops[1].id);
+ await page.locator('.rd3__back').click();
+ await expect(page).toHaveURL(/tab=search&view=9$/);
+ await expect(page.locator('.rs3')).toBeVisible();
+ await expect(page.locator('.rr3-hero')).toHaveCount(0);
 });
 test('denied GPS keeps manual search accessible, never invents points and closes cleanly',async({page})=>{
  await page.addInitScript(()=>{
