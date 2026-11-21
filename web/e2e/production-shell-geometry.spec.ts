@@ -35,6 +35,6 @@ test('separate developer gallery retains its original screen 9 and 10',async({pa
  await page.goto('/dev/screens?screen=9&preview=phase2');
  await expect(page.locator('.d-screen-9 .d-planner')).toBeVisible();
  await page.goto('/dev/screens?screen=10&preview=phase2');
- await expect(page.locator('.d-screen-10 .d-filter-section')).toBeVisible();
+ await expect(page.locator('.d-screen-10 .d-filter-section').first()).toBeVisible();
  await expect(page.locator('.rs3,.rf3')).toHaveCount(0);
 });
