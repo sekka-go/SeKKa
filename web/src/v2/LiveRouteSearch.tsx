@@ -5,6 +5,7 @@ import {client} from './api';
 import {usePreferences} from './preferences';
 import type {GeoPoint} from './nearbyRoutes';
 import {formatDistanceMeters,approximateWalkMinutes} from './recurringGeo';
+import {sortRealRides} from './riderRank';
 
 export type Route={id:string;title:string;category:string;seat_capacity:number;period:string;direction:string;outbound_time:string|null;return_time:string|null;seat_price_egp:number;return_supported:boolean};
 export type Stop={id:string;route_id:string;area_id:number;position:number;name:string;pickup_allowed:boolean;dropoff_allowed:boolean;latitude?:number|string|null;longitude?:number|string|null};
@@ -50,24 +51,9 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
  const [bookingSuccess,setBookingSuccess]=useState('');
  const [seatCounts,setSeatCounts]=useState<Record<string,number>>({});
  const [sortBy,setSortBy]=useState<'recommended'|'time'|'price'|'seats'>('recommended');
- const visibleItems=items.filter(({route,remaining})=>
+ const visibleItems=sortRealRides(items.filter(({route,remaining})=>
   (!onlyAvailable||remaining>0)&&(maxSeatPrice===null||route.seat_price_egp<=maxSeatPrice)
- ).sort((a,b)=>{
-  if(sortBy==='price')return a.route.seat_price_egp-b.route.seat_price_egp;
-  if(sortBy==='seats')return b.remaining-a.remaining;
-  if(sortBy==='recommended'&&hasMapPoint){
-   // Unknown distances must never rank ahead of known nearby pickup points.
-   // If no GPS was selected, use departure time without invented proximity.
-   const distance=(item:SearchMatch)=>item.pickupDistanceKm??Number.POSITIVE_INFINITY;
-   const difference=distance(a)-distance(b);
-   if(Number.isFinite(difference)&&difference!==0)return difference;
-   if(Number.isFinite(distance(a))!==Number.isFinite(distance(b)))
-    return Number.isFinite(distance(a))?-1:1;
-  }
-  const aTime=a.reverse?a.route.return_time:a.route.outbound_time;
-  const bTime=b.reverse?b.route.return_time:b.route.outbound_time;
-  return (aTime||'99:99').localeCompare(bTime||'99:99');
- });
+ ),sortBy,hasMapPoint);
  const [bookingKeys,setBookingKeys]=useState<Record<string,string>>({});
  const book=async(routeId:string,pickupStopId:string,dropoffStopId:string,reverse:boolean)=>{
   const seats=seatCounts[routeId]||1;
