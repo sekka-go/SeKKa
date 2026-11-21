@@ -189,7 +189,7 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  expect(publishCalls).toBe(0);
  await review.getByRole('button',{name:'Retry loading stops'}).click();
  await expect(review.getByText('Return time')).toBeVisible();
- await expect(review.getByText('17:00')).toBeVisible();
+ await expect(review.getByText('17:00').first()).toBeVisible();
  await expect(review.getByRole('list',{name:'Stop order'}).getByRole('listitem').first()).toContainText('Nasr City Square');
  await expect(confirm).toBeEnabled();
  expect(publishCalls).toBe(0);
