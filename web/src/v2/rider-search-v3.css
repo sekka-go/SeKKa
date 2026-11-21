@@ -1,6 +1,6 @@
 /* Guided Rider search v3: real search controls, never a developer-gallery view. */
-.sekka-mobile .rs3{--rs-bg:#FFF9F5;--rs-paper:#FFF;--rs-ink:#35134F;--rs-muted:#695675;--rs-line:#ECDDE9;
- --rs-purple:#6512A5;--rs-coral:#FF673E;--rs-yellow:#FFCB39;
+.sekka-mobile .rs3{--rs-bg:#FFF9F5;--rs-paper:#FFF;--rs-ink:#111111;--rs-muted:#111111;--rs-line:#FFF1B8;
+ --rs-purple:#FFCC24;--rs-coral:#FF673E;--rs-yellow:#FFCB39;
  margin:0 auto;padding:0 15px 24px;max-width:480px;min-width:0;background:var(--rs-bg);
  color:var(--rs-ink);font-family:Tajawal,'Noto Sans Arabic',Tahoma,Arial,sans-serif;overflow-wrap:anywhere}
 .sekka-mobile .rs3 *{box-sizing:border-box}
@@ -8,26 +8,26 @@
 .sekka-mobile .rs3 button,.sekka-mobile .rs3 input{font-family:inherit}
 .sekka-mobile .rs3 button{cursor:pointer;min-height:44px}
 .sekka-mobile .rs3 :is(button,input):focus-visible{outline:3px solid var(--rs-yellow);outline-offset:3px}
-.sekka-mobile .rs3 .rs3__head{display:block;text-align:start;background:linear-gradient(125deg,#6312A5,#9434BE);
+.sekka-mobile .rs3 .rs3__head{display:block;text-align:start;background:linear-gradient(125deg,#FFCC24,#FFCC24);
  border-radius:24px;margin:8px 0 13px;padding:21px;color:#FFF;position:relative;overflow:hidden}
 .sekka-mobile .rs3__head:after{content:"";position:absolute;width:150px;height:150px;border:18px solid #FFFFFF16;
  border-radius:50%;left:-58px;top:-55px;pointer-events:none}
 .sekka-mobile .rs3__eyebrow{font-size:12px;font-weight:900;color:#FFE19A}
 .sekka-mobile .rs3__head h2{font-size:clamp(23px,6vw,30px);font-weight:900;line-height:1.35;margin:7px 0}
-.sekka-mobile .rs3__head p{font-size:13px;font-weight:700;line-height:1.6;color:#F9EAFD}
+.sekka-mobile .rs3__head p{font-size:13px;font-weight:700;line-height:1.6;color:#FFFFFF}
 .sekka-mobile .rs3__form{display:block;border:1px solid var(--rs-line);border-radius:23px;background:var(--rs-paper);
  box-shadow:0 12px 34px #38124D0D;padding:17px 15px;margin:0}
 .sekka-mobile .rs3__section-label{display:flex;align-items:center;gap:10px;padding:3px 0 12px}
 .sekka-mobile .rs3__section-label--space{margin-top:17px}
 .sekka-mobile .rs3__number{font:900 12px/1.3 Tajawal,sans-serif;display:grid;place-items:center;
- width:29px;height:29px;flex:none;border-radius:10px;background:#FFE1B3;color:#5F177F}
+ width:29px;height:29px;flex:none;border-radius:10px;background:#FFE1B3;color:#111111}
 .sekka-mobile .rs3__section-label h3{font-size:17px;font-weight:900;color:var(--rs-ink)}
 .sekka-mobile .rs3__places{display:flex;flex-direction:column;gap:3px;position:relative}
 .sekka-mobile .rs3__place{display:flex;align-items:center;gap:12px;min-height:88px;padding:12px 13px;
  border:1px solid var(--rs-line);border-radius:16px;background:#FFFCFB;position:relative}
 .sekka-mobile .rs3__marker{width:13px;height:13px;flex:none;border-radius:50%;background:#FF754E;
  border:3px solid #FFF;box-shadow:0 0 0 2px #FF754E}
-.sekka-mobile .rs3__marker--end{background:#6414AE;box-shadow:0 0 0 2px #6414AE}
+.sekka-mobile .rs3__marker--end{background:#FFCC24;box-shadow:0 0 0 2px #B39C55}
 .sekka-mobile .rs3__place-content{flex:1;min-width:0}
 .sekka-mobile .rs3__label{font-size:12px;font-weight:900;color:var(--rs-muted);display:block;margin-bottom:4px}
 .sekka-mobile .rs3__place .sekka-place-lookup{width:100%;position:relative;margin:0}
@@ -41,17 +41,17 @@
  border-radius:14px;box-shadow:none!important;width:100%!important}
 .sekka-mobile .rs3__place .sekka-place-lookup__suggestions button{min-height:48px!important}
 .sekka-mobile .rs3__swap{align-self:center;display:grid;place-items:center;width:44px;min-height:44px;
- border:1px solid #E3C6EB;border-radius:13px;margin:-10px 0;z-index:2;
- color:#6414A5;background:#F4E8FB;box-shadow:0 2px 6px #2B104011}
+ border:1px solid #E8D77A;border-radius:13px;margin:-10px 0;z-index:2;
+ color:#111111;background:#FFF9E9;box-shadow:0 2px 6px #2B104011}
 .sekka-mobile .rs3__times{display:flex;flex-direction:column;gap:9px}
 .sekka-mobile .rs3__time{display:flex;align-items:center;justify-content:space-between;gap:10px;
  border:1px solid var(--rs-line);border-radius:15px;padding:10px 12px;min-height:65px;
  color:var(--rs-ink);font-size:14px;font-weight:900}
 .sekka-mobile .rs3__time input{border:1px solid var(--rs-line);border-radius:12px;
- min-width:112px;max-width:155px;min-height:44px;padding:9px 10px;color:#35134F;background:#FFF;
+ min-width:112px;max-width:155px;min-height:44px;padding:9px 10px;color:#111111;background:#FFF;
  font:800 15px/1 Tajawal,sans-serif;direction:ltr}
-.sekka-mobile .rs3__return-toggle{border:1px dashed #DCC7E3;border-radius:13px;
- min-height:48px;padding:10px 12px;background:#F8EEF9;color:#642597;
+.sekka-mobile .rs3__return-toggle{border:1px dashed #E8D77A;border-radius:13px;
+ min-height:48px;padding:10px 12px;background:#FFF9E9;color:#111111;
  display:flex;justify-content:space-between;gap:12px;align-items:center;font-weight:900;font-size:13px}
 .sekka-mobile .rs3__return-toggle span:last-child{font-size:22px;line-height:1}
 .sekka-mobile .rs3__days-toggle{display:flex;justify-content:space-between;align-items:center;
@@ -59,45 +59,45 @@
  border:1px solid var(--rs-line);border-radius:14px;background:#FFFCFB;color:var(--rs-ink);
  font-weight:900;text-align:start}
 .sekka-mobile .rs3__days-panel{margin-top:9px;padding:10px;
- border:1px solid var(--rs-line);border-radius:15px;background:#FEF8FC}
+ border:1px solid var(--rs-line);border-radius:15px;background:#FFF9E9}
 .sekka-mobile .rs3__days{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
-.sekka-mobile .rs3__days button{border:1px solid #DFCAE6;border-radius:12px;
- background:#FFF;color:#5D287B;font-size:12px;font-weight:800;padding:7px 3px;min-height:46px}
-.sekka-mobile .rs3__days button[aria-pressed="true"]{background:#6513A5;color:#FFF;border-color:#FFCB39}
+.sekka-mobile .rs3__days button{border:1px solid #E8D77A;border-radius:12px;
+ background:#FFF;color:#111111;font-size:12px;font-weight:800;padding:7px 3px;min-height:46px}
+.sekka-mobile .rs3__days button[aria-pressed="true"]{background:#FFCC24;color:#FFF;border-color:#FFCB39}
 .sekka-mobile .rs3__period{display:flex;gap:8px;margin-top:10px}
-.sekka-mobile .rs3__period button{flex:1;min-height:44px;border:1px solid #E6D2EA;
- border-radius:12px;color:#642597;background:#FFF;font-size:13px;font-weight:800}
-.sekka-mobile .rs3__period button[aria-pressed="true"]{background:#FFE1A2;border-color:#FFCD4A;color:#4E166F}
+.sekka-mobile .rs3__period button{flex:1;min-height:44px;border:1px solid #E8D77A;
+ border-radius:12px;color:#111111;background:#FFF;font-size:13px;font-weight:800}
+.sekka-mobile .rs3__period button[aria-pressed="true"]{background:#FFE1A2;border-color:#FFCD4A;color:#111111}
 .sekka-mobile .rs3__days-panel p{font-size:12px;line-height:1.6;margin-top:10px;color:var(--rs-muted)}
 .sekka-mobile .rs3__submit{width:100%;display:flex;align-items:center;justify-content:center;gap:12px;
  min-height:56px;margin-top:18px;padding:13px 18px;border:0;border-radius:16px;
- color:#FFF;background:#6413A7;font-size:17px;font-weight:900;box-shadow:0 8px 15px #6113A52A}
+ color:#FFF;background:#FFCC24;font-size:17px;font-weight:900;box-shadow:0 8px 15px #6113A52A}
 .sekka-mobile .rs3__submit svg{transform:scaleX(-1);color:#FFDD61}
 .sekka-mobile[dir="ltr"] .rs3__submit svg{transform:none}
 .sekka-mobile .rs3__truth{text-align:center;font-size:11px;font-weight:700;
  color:var(--rs-muted);margin-top:9px;line-height:1.5}
 .sekka-mobile .rs3__nearby{margin-top:14px}
 .sekka-mobile .rs3__nearby>button{display:flex;justify-content:space-between;align-items:center;gap:11px;
- width:100%;padding:12px;border-radius:16px;background:#FFECE2;color:#6B2A72;
- border:1px solid #F7D9E0;font-weight:900;font-size:14px;text-align:start}
+ width:100%;padding:12px;border-radius:16px;background:#FFECE2;color:#111111;
+ border:1px solid #E8D77A;font-weight:900;font-size:14px;text-align:start}
 .sekka-mobile .rs3__nearby>button span:first-child{font-size:26px;color:#F2624A}
 .sekka-mobile .rs3__nearby>button span:last-child{font-size:20px;margin-inline-start:auto}
 .sekka-mobile .rs3__nearby>#rs3-nearby-results{border:1px solid var(--rs-line);
  border-radius:16px;background:var(--rs-paper);padding:9px;margin-top:10px}
 html[data-theme="dark"] .sekka-mobile .rs3{
- --rs-bg:#1E0B32;--rs-paper:#321B4B;--rs-ink:#FFF4FB;--rs-muted:#E0C9EB;--rs-line:#624576}
+ --rs-bg:#193449;--rs-paper:#193449;--rs-ink:#FFFFFF;--rs-muted:#FFFFFF;--rs-line:#193449}
 html[data-theme="dark"] .sekka-mobile .rs3__place,
-html[data-theme="dark"] .sekka-mobile .rs3__days-toggle{background:#3F2656}
+html[data-theme="dark"] .sekka-mobile .rs3__days-toggle{background:#193449}
 html[data-theme="dark"] .sekka-mobile .rs3__place .sekka-place-lookup__label input{color:#FFF}
 html[data-theme="dark"] .sekka-mobile .rs3__section-label h3{color:#FFF}
 html[data-theme="dark"] .sekka-mobile .rs3__return-toggle,
-html[data-theme="dark"] .sekka-mobile .rs3__days-panel{background:#442A5A;color:#F7D7FF}
+html[data-theme="dark"] .sekka-mobile .rs3__days-panel{background:#193449;color:#FFFFFF}
 html[data-theme="dark"] .sekka-mobile .rs3__days button,
-html[data-theme="dark"] .sekka-mobile .rs3__period button{background:#53356E;color:#F6E9F9}
+html[data-theme="dark"] .sekka-mobile .rs3__period button{background:#193449;color:#FFFFFF}
 html[data-theme="dark"] .sekka-mobile .rs3__days button[aria-pressed="true"],
-html[data-theme="dark"] .sekka-mobile .rs3__period button[aria-pressed="true"]{background:#FFCD39;color:#34104E}
-html[data-theme="dark"] .sekka-mobile .rs3__submit{background:#FFCD39;color:#35134F}
-html[data-theme="dark"] .sekka-mobile .rs3__nearby>button{background:#573150;color:#FFDCD3}
+html[data-theme="dark"] .sekka-mobile .rs3__period button[aria-pressed="true"]{background:#FFCD39;color:#F5FBFF}
+html[data-theme="dark"] .sekka-mobile .rs3__submit{background:#FFCD39;color:#F5FBFF}
+html[data-theme="dark"] .sekka-mobile .rs3__nearby>button{background:#193449;color:#FFDCD3}
 @media(max-width:345px){.sekka-mobile .rs3{padding-inline:11px}.sekka-mobile .rs3__form{padding:13px 10px}
  .sekka-mobile .rs3__head{padding:17px}.sekka-mobile .rs3__place{padding:9px;gap:8px}
  .sekka-mobile .rs3__days{grid-template-columns:repeat(3,minmax(0,1fr))}}
@@ -108,18 +108,18 @@ html[data-theme="dark"] .sekka-mobile .rs3__nearby>button{background:#573150;col
 .sekka-mobile .rs3__pickup-link{margin-top:12px}
 .sekka-mobile .rs3__pickup-link>button{display:flex;align-items:center;gap:12px;
  width:100%;min-height:76px;padding:12px 14px;border:1px solid #F2D7DC;
- background:linear-gradient(110deg,#FFDED1,#FFEEE7);color:#4B176A;
+ background:linear-gradient(110deg,#FFDED1,#FFEEE7);color:#111111;
  border-radius:18px;text-align:start;box-shadow:0 7px 18px #45124D09}
 .sekka-mobile .rs3__pickup-icon{display:grid;place-items:center;width:43px;height:43px;
  border-radius:14px;background:#FFF7F2;color:#F46544;flex:none}
 .sekka-mobile .rs3__pickup-copy{display:grid;gap:4px;min-width:0;flex:1}
 .sekka-mobile .rs3__pickup-copy strong{font-size:15px;font-weight:900;line-height:1.3}
-.sekka-mobile .rs3__pickup-copy small{font-size:12px;color:#806478;font-weight:750;line-height:1.45}
-.sekka-mobile .rs3__pickup-chevron{font-size:21px;color:#782E9E;flex:none}
+.sekka-mobile .rs3__pickup-copy small{font-size:12px;color:#111111;font-weight:750;line-height:1.45}
+.sekka-mobile .rs3__pickup-chevron{font-size:21px;color:#111111;flex:none}
 html[data-theme="dark"] .sekka-mobile .rs3__pickup-link>button{
- background:linear-gradient(110deg,#62415E,#4B295C);border-color:#775178;color:#FFF}
-html[data-theme="dark"] .sekka-mobile .rs3__pickup-icon{background:#78495C;color:#FFCA99}
-html[data-theme="dark"] .sekka-mobile .rs3__pickup-copy small{color:#F0D6E5}
+ background:linear-gradient(110deg,#193449,#193449);border-color:#E8D77A;color:#FFF}
+html[data-theme="dark"] .sekka-mobile .rs3__pickup-icon{background:#193449;color:#FFCA99}
+html[data-theme="dark"] .sekka-mobile .rs3__pickup-copy small{color:#FFFFFF}
 @media(max-width:345px){.sekka-mobile .rs3__pickup-link>button{padding-inline:9px}
  .sekka-mobile .rs3__pickup-copy strong{font-size:13px}
  .sekka-mobile .rs3__pickup-copy small{font-size:11px}}

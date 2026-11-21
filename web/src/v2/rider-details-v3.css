@@ -1,86 +1,86 @@
 /* Rider route details v3; no invented captain identity, schedules or seat prices. */
 .sekka-mobile .rd3{max-width:480px;min-width:0;margin:0 auto;padding:0 15px 26px;
- font-family:Tajawal,'Noto Sans Arabic',Tahoma,Arial,sans-serif;color:#361451}
+ font-family:Tajawal,'Noto Sans Arabic',Tahoma,Arial,sans-serif;color:#111111}
 .sekka-mobile .rd3 *{box-sizing:border-box}
 .sekka-mobile .rd3 h2,.sekka-mobile .rd3 h3,.sekka-mobile .rd3 p{margin:0}
 .sekka-mobile .rd3 button,.sekka-mobile .rd3 select{font-family:inherit}
 .sekka-mobile .rd3 button{cursor:pointer;min-height:44px}
 .sekka-mobile .rd3 button:focus-visible,.sekka-mobile .rd3 select:focus-visible{outline:3px solid #FFCD38;outline-offset:3px}
-.sekka-mobile .rd3__hero{margin:8px 0 14px;padding:21px;background:linear-gradient(122deg,#6314AA,#9430BA);
+.sekka-mobile .rd3__hero{margin:8px 0 14px;padding:21px;background:linear-gradient(122deg,#FFCC24,#FFCC24);
  border-radius:24px;color:#FFF}
 .sekka-mobile .rd3__step{font-size:12px;font-weight:900;color:#FFDE8B}
 .sekka-mobile .rd3__hero h2{font-size:26px;font-weight:900;margin:6px 0 8px;line-height:1.3}
-.sekka-mobile .rd3__hero>p{font-size:13px;font-weight:700;color:#F9E8FC;line-height:1.6}
-.sekka-mobile .rd3__route{display:flex;gap:13px;background:#FFF;border:1px solid #EBDCE8;
+.sekka-mobile .rd3__hero>p{font-size:13px;font-weight:700;color:#FFFFFF;line-height:1.6}
+.sekka-mobile .rd3__route{display:flex;gap:13px;background:#FFF;border:1px solid #E8D77A;
  border-radius:20px;min-height:135px;padding:18px;margin-bottom:12px;box-shadow:0 7px 18px #35104E0C}
 .sekka-mobile .rd3__route-line{display:flex;flex-direction:column;align-items:center;
  gap:5px;padding:12px 0;width:16px;flex:none}
 .sekka-mobile .rd3__route-line span{width:13px;height:13px;flex:none;border-radius:50%;
  background:#FF774E;box-shadow:0 0 0 3px #FFE9DC}
-.sekka-mobile .rd3__route-line span:last-child{background:#6512AC;box-shadow:0 0 0 3px #EFDEF9}
-.sekka-mobile .rd3__route-line i{min-height:25px;flex:1;border-inline-start:2px dashed #B393C2}
+.sekka-mobile .rd3__route-line span:last-child{background:#FFCC24;box-shadow:0 0 0 3px #B39C55}
+.sekka-mobile .rd3__route-line i{min-height:25px;flex:1;border-inline-start:2px dashed #E8D77A}
 .sekka-mobile .rd3__route-stops{display:flex;flex-direction:column;justify-content:space-between;gap:19px;flex:1;min-width:0}
 .sekka-mobile .rd3__route-stops>div{display:grid;gap:4px}
-.sekka-mobile .rd3__route-stops small{font-size:12px;font-weight:800;color:#7D6887}
+.sekka-mobile .rd3__route-stops small{font-size:12px;font-weight:800;color:#111111}
 .sekka-mobile .rd3__route-stops strong{font-size:18px;font-weight:900;line-height:1.35;
  overflow-wrap:anywhere}
 .sekka-mobile .rd3__facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0 0 11px}
 .sekka-mobile .rd3__facts>div{display:flex;flex-direction:column;gap:5px;
- background:#FFF;border-radius:15px;border:1px solid #EEDFE7;padding:13px;min-height:70px}
-.sekka-mobile .rd3__facts span{font-size:11px;color:#80698A;font-weight:800}
-.sekka-mobile .rd3__facts strong{font-size:16px;font-weight:900;color:#50136E;overflow-wrap:anywhere}
+ background:#FFF;border-radius:15px;border:1px solid #E8D77A;padding:13px;min-height:70px}
+.sekka-mobile .rd3__facts span{font-size:11px;color:#111111;font-weight:800}
+.sekka-mobile .rd3__facts strong{font-size:16px;font-weight:900;color:#111111;overflow-wrap:anywhere}
 .sekka-mobile .rd3__return{border-radius:12px;background:#E2F7EF;color:#145C4B;
  font-size:12px;font-weight:800;line-height:1.55;padding:10px 12px;margin-bottom:12px!important}
-.sekka-mobile .rd3__stops{border-radius:21px;border:1px solid #E9DCE9;background:#FFF;
+.sekka-mobile .rd3__stops{border-radius:21px;border:1px solid #E8D77A;background:#FFF;
  padding:16px;margin-bottom:13px}
 .sekka-mobile .rd3__section-title{display:flex;align-items:flex-start;gap:10px;margin-bottom:14px}
 .sekka-mobile .rd3__section-icon{display:grid;place-items:center;width:43px;height:43px;flex:none;
- border-radius:14px;background:#F5E3FA;color:#6C159F;font-size:25px}
+ border-radius:14px;background:#FFF9E9;color:#111111;font-size:25px}
 .sekka-mobile .rd3__section-title h3{font-size:18px;font-weight:900;line-height:1.35}
-.sekka-mobile .rd3__section-title p{font-size:12px;color:#7C6685;line-height:1.6;margin-top:4px}
+.sekka-mobile .rd3__section-title p{font-size:12px;color:#111111;line-height:1.6;margin-top:4px}
 .sekka-mobile .rd3__stops label{display:grid;gap:8px;margin:11px 0 14px;
  font-size:13px;font-weight:900}
-.sekka-mobile .rd3__stops label>select{min-height:52px;width:100%;border:1px solid #DDC5E7;
- border-radius:13px;background:#FFF9FC;color:#43145C;font:800 15px/1.5 Tajawal,Tahoma,sans-serif;
+.sekka-mobile .rd3__stops label>select{min-height:52px;width:100%;border:1px solid #E8D77A;
+ border-radius:13px;background:#FFF9E9;color:#111111;font:800 15px/1.5 Tajawal,Tahoma,sans-serif;
  padding:10px 13px;max-width:100%}
 .sekka-mobile .rd3__stops select:disabled{opacity:.55}
-.sekka-mobile .rd3__all-stops{border-top:1px solid #F0E5EC;padding-top:8px;margin-top:10px}
+.sekka-mobile .rd3__all-stops{border-top:1px solid #E8D77A;padding-top:8px;margin-top:10px}
 .sekka-mobile .rd3__all-stops summary{min-height:44px;display:flex;align-items:center;
- color:#691E99;font-weight:900;font-size:13px;cursor:pointer;padding:8px 3px}
+ color:#111111;font-weight:900;font-size:13px;cursor:pointer;padding:8px 3px}
 .sekka-mobile .rd3__all-stops ol{margin:0;padding:8px 15px 8px 0;list-style:none;display:grid;gap:9px}
 .sekka-mobile .rd3__all-stops li{display:flex;gap:10px;align-items:center;line-height:1.5;font-size:13px}
 .sekka-mobile .rd3__all-stops li>span:first-child{display:grid;place-items:center;width:25px;height:25px;
- background:#F6E7FB;border-radius:8px;color:#68239A;font-weight:900;flex:none}
-.sekka-mobile .rd3__return-stops{padding:10px;background:#F6EFF9;border-radius:11px;
+ background:#FFF9E9;border-radius:8px;color:#111111;font-weight:900;flex:none}
+.sekka-mobile .rd3__return-stops{padding:10px;background:#FFF9E9;border-radius:11px;
  line-height:1.6;font-size:12px;font-weight:800}
 .sekka-mobile .rd3__price{display:flex;align-items:center;justify-content:space-between;
  gap:10px;flex-wrap:wrap;background:#FFEEC6;padding:15px 17px;border-radius:18px;margin-bottom:13px}
 .sekka-mobile .rd3__price>div{display:grid;gap:4px}
-.sekka-mobile .rd3__price small{font-size:12px;font-weight:800;color:#755C64}
-.sekka-mobile .rd3__price strong{font-size:24px;font-weight:900;color:#551483}
-.sekka-mobile .rd3__price>span{font-size:11px;font-weight:800;color:#6B5368;max-width:133px}
-.sekka-mobile .rd3__notice{font-size:12px;line-height:1.7;color:#765E7E;
- padding:11px;border:1px solid #ECDEED;border-radius:13px;margin-bottom:14px!important}
+.sekka-mobile .rd3__price small{font-size:12px;font-weight:800;color:#111111}
+.sekka-mobile .rd3__price strong{font-size:24px;font-weight:900;color:#111111}
+.sekka-mobile .rd3__price>span{font-size:11px;font-weight:800;color:#111111;max-width:133px}
+.sekka-mobile .rd3__notice{font-size:12px;line-height:1.7;color:#111111;
+ padding:11px;border:1px solid #E8D77A;border-radius:13px;margin-bottom:14px!important}
 .sekka-mobile .rd3__unavailable{padding:11px;border-radius:12px;background:#FFF0EA;
  color:#953C20;margin-bottom:14px!important}
-.sekka-mobile .rd3__primary{min-height:56px;width:100%;background:#6413A5;color:#FFF;
+.sekka-mobile .rd3__primary{min-height:56px;width:100%;background:#FFCC24;color:#FFF;
  border:0;border-radius:16px;font-size:18px;font-weight:900;padding:12px}
 .sekka-mobile .rd3__primary:disabled{opacity:.55;cursor:not-allowed}
-.sekka-mobile .rd3__back{width:100%;background:transparent;color:#672092;
+.sekka-mobile .rd3__back{width:100%;background:transparent;color:#111111;
  border:0;font-size:14px;font-weight:800;margin-top:7px}
 .sekka-mobile .d-screen-12>.sekka-rider-journey-heading{display:none!important}
-html[data-theme="dark"] .sekka-mobile .rd3{color:#FFF6FD}
+html[data-theme="dark"] .sekka-mobile .rd3{color:#FFFFFF}
 html[data-theme="dark"] .sekka-mobile .rd3__route,
 html[data-theme="dark"] .sekka-mobile .rd3__stops,
-html[data-theme="dark"] .sekka-mobile .rd3__facts>div{background:#321C4A;border-color:#664A72}
-html[data-theme="dark"] .sekka-mobile .rd3__facts strong{color:#FFE4FC}
+html[data-theme="dark"] .sekka-mobile .rd3__facts>div{background:#193449;border-color:#E8D77A}
+html[data-theme="dark"] .sekka-mobile .rd3__facts strong{color:#FFFFFF}
 html[data-theme="dark"] .sekka-mobile .rd3__route-stops small,
-html[data-theme="dark"] .sekka-mobile .rd3__section-title p{color:#E0CAE8}
-html[data-theme="dark"] .sekka-mobile .rd3__stops select{background:#452C5F;color:#FFF;border-color:#775A84}
-html[data-theme="dark"] .sekka-mobile .rd3__price{background:#60436B}
+html[data-theme="dark"] .sekka-mobile .rd3__section-title p{color:#FFFFFF}
+html[data-theme="dark"] .sekka-mobile .rd3__stops select{background:#193449;color:#FFF;border-color:#E8D77A}
+html[data-theme="dark"] .sekka-mobile .rd3__price{background:#193449}
 html[data-theme="dark"] .sekka-mobile .rd3__price :is(strong,small,span){color:#FFF1D2}
-html[data-theme="dark"] .sekka-mobile .rd3__notice{border-color:#664A72;color:#D8C3E0}
-html[data-theme="dark"] .sekka-mobile .rd3__primary{background:#FFCE3E;color:#33104F}
+html[data-theme="dark"] .sekka-mobile .rd3__notice{border-color:#E8D77A;color:#FFFFFF}
+html[data-theme="dark"] .sekka-mobile .rd3__primary{background:#FFCE3E;color:#F5FBFF}
 html[data-theme="dark"] .sekka-mobile .rd3__back{color:#FFDB8B}
 @media(max-width:350px){.sekka-mobile .rd3{padding-inline:10px}
  .sekka-mobile .rd3__hero{padding:16px}
