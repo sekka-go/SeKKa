@@ -4,6 +4,7 @@ import {useEffect,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
 import type {GeoPoint} from './nearbyRoutes';
+import {formatDistanceMeters,approximateWalkMinutes} from './recurringGeo';
 
 export type Route={id:string;title:string;category:string;seat_capacity:number;period:string;direction:string;outbound_time:string|null;return_time:string|null;seat_price_egp:number;return_supported:boolean};
 export type Stop={id:string;route_id:string;area_id:number;position:number;name:string;pickup_allowed:boolean;dropoff_allowed:boolean;latitude?:number|string|null;longitude?:number|string|null};
@@ -55,9 +56,13 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
   if(sortBy==='price')return a.route.seat_price_egp-b.route.seat_price_egp;
   if(sortBy==='seats')return b.remaining-a.remaining;
   if(sortBy==='recommended'&&hasMapPoint){
-   const distance=(item:SearchMatch)=>(item.pickupDistanceKm??0)+(item.dropoffDistanceKm??0);
+   // Unknown distances must never rank ahead of known nearby pickup points.
+   // If no GPS was selected, use departure time without invented proximity.
+   const distance=(item:SearchMatch)=>item.pickupDistanceKm??Number.POSITIVE_INFINITY;
    const difference=distance(a)-distance(b);
-   if(difference)return difference;
+   if(Number.isFinite(difference)&&difference!==0)return difference;
+   if(Number.isFinite(distance(a))!==Number.isFinite(distance(b)))
+    return Number.isFinite(distance(a))?-1:1;
   }
   const aTime=a.reverse?a.route.return_time:a.route.outbound_time;
   const bTime=b.reverse?b.route.return_time:b.route.outbound_time;
@@ -105,7 +110,8 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
  },[queryKey,origin,destination,originLat,originLon,destinationLat,destinationLon,
   outbound,returnTime,period,direction,categoryKey]);
  const numberFormat=new Intl.NumberFormat(en?'en-EG':'ar-EG',{maximumFractionDigits:1});
- const distanceText=(distance:number)=>numberFormat.format(distance);
+ const pickupDistanceLabel=(distanceKm:number)=>formatDistanceMeters(distanceKm*1000);
+ const walkingLabel=(distanceKm:number)=>numberFormat.format(approximateWalkMinutes(distanceKm*1000));
  return <section className="d-live-search">
    {!client&&<p role="status">{t('البحث الحقيقي محتاج ربط إعدادات Supabase العامة.','Live search requires public Supabase configuration.')}</p>}
   {loading&&<p role="status">{t('بنبحث عن خطوط مطابقة…','Searching published routes…')}</p>}
@@ -141,13 +147,15 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
    {t('فيه خطوط بتخدم الأماكن اللي اخترتها. عدّل فلاتر السعر أو المقاعد عشان تشوفها.',
       'Routes serve your selected places. Adjust the price or seat filters to see them.')}
   </p>}
-  {visibleItems.map(selection=>{
+  {visibleItems.map((selection,index)=>{
    const {route,from,to,reverse}=selection;
    const primaryTime=reverse?route.return_time:route.outbound_time;
    const otherTime=reverse?route.outbound_time:route.return_time;
    return <article className="d-box d-result sekka-live-result" key={route.id+String(reverse)+from.id+to.id}>
    <header className="sekka-live-result-head">
     <div>
+     {index===0&&sortBy==='recommended'&&selection.pickupDistanceKm!==null&&
+      <span className="sekka-rider-recommended">{t('الأنسب حسب قرب الركوب','Closest pickup match')}</span>}
      <h2 dir="auto">{route.title}</h2>
      <p className="sekka-live-meta">{route.category} · {route.period==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')}</p>
     </div>
@@ -158,11 +166,11 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
    </header>
    <ol className="sekka-live-stops" aria-label={t('محطات الركوب والنزول','Pickup and drop-off')}>
     <li><span>{t('نقطة الركوب','Pickup')}</span><strong dir="auto">{from.name}</strong>
-     {selection.pickupDistanceKm!==null&&<small>{distanceText(selection.pickupDistanceKm)} {t('كم','km')}</small>}</li>
+     {selection.pickupDistanceKm!==null&&<small>{pickupDistanceLabel(selection.pickupDistanceKm)} · {t('مشي حوالي','About')} {walkingLabel(selection.pickupDistanceKm)} {t('دقيقة تقريبًا','min walking (approx.)')}</small>}</li>
     <li><span>{t('نقطة النزول','Drop-off')}</span><strong dir="auto">{to.name}</strong>
-     {selection.dropoffDistanceKm!==null&&<small>{distanceText(selection.dropoffDistanceKm)} {t('كم','km')}</small>}</li>
+     {selection.dropoffDistanceKm!==null&&<small>{pickupDistanceLabel(selection.dropoffDistanceKm)}</small>}</li>
    </ol>
-   {hasMapPoint&&<p className="sekka-live-meta">{t('المسافات بخط مستقيم','Straight-line distance')}</p>}
+   {hasMapPoint&&<p className="sekka-live-meta">{t('المسافات بخط مستقيم، ووقت المشي تقديري','Straight-line distances; walking time is an estimate')}</p>}
    <div className="sekka-live-result-facts">
     <p className="sekka-live-schedule">
      {reverse?t('العودة','Return'):t('الذهاب','Outbound')}{' '}
