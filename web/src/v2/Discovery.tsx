@@ -16,7 +16,7 @@ import RiderFiltersV3 from "./RiderFiltersV3";
 import RiderResultsHero from "./RiderResultsHero";
 import RiderTripDetailsV3 from "./RiderTripDetailsV3";
 import GeoPlaceInput from "./GeoPlaceInput";
-import {geoRequestAvailable,selectOperationalMapPlace,outsideCoverageMessage} from "./geoPlace";
+import {geoRequestAvailable,selectOperationalMapPlace,isSearchableMapPlace,outsideCoverageMessage} from "./geoPlace";
 import type {PlaceChoice} from "./geoPlace";
 import type {LiveSelection} from "./LiveRouteSearch";
 import {saveCommute,isWeekdays} from './riderCommute';
@@ -503,6 +503,12 @@ function readRiderDraft(): RiderDraft {
     if(draft.destinationPlace?.kind==='map'&&(!draft.destinationPlace.place||!selectOperationalMapPlace(draft.destinationPlace.place))){
       delete draft.destination;delete draft.destinationPlace;draft.searched=false;
     }
+    if(draft.originPlace?.kind==='search'&&!isSearchableMapPlace(draft.originPlace.place)){
+      delete draft.origin;delete draft.originPlace;draft.searched=false;
+    }
+    if(draft.destinationPlace?.kind==='search'&&!isSearchableMapPlace(draft.destinationPlace.place)){
+      delete draft.destination;delete draft.destinationPlace;draft.searched=false;
+    }
     return draft;
   } catch { return {}; }
 }
@@ -681,16 +687,21 @@ export default function Discovery(p: DiscoveryProps) {
       return;
     }
     if(p.production){
-      if([originPlace,destinationPlace].some(place=>place?.kind==='map'&&!selectOperationalMapPlace(place.place))){
+      if([originPlace,destinationPlace].some(place=>
+        place?.kind==='map'&&!selectOperationalMapPlace(place.place))){
         setMessage(language==='en'?outsideCoverageMessage.en:outsideCoverageMessage.ar);return;
       }
       const registered=(name:string)=>(p.serviceAreas||[]).some(a=>a.name_ar===name||a.name_en===name);
-      if((originPlace?.kind!=='map'&&!registered(origin))||(destinationPlace?.kind!=='map'&&!registered(destination))){
+      const chosen=(name:string,place:PlaceChoice|null)=>
+        place?.kind==='map'?selectOperationalMapPlace(place.place):
+        place?.kind==='search'?isSearchableMapPlace(place.place):
+        place?.kind==='service'?registered(name):registered(name);
+      if(!chosen(origin,originPlace)||!chosen(destination,destinationPlace)){
         setMessage(language==='en'?'Select a location from the search results.':'اختار مكان الانطلاق والوصول من نتائج البحث.');
         return;
       }
     }
-    if (origin === destination||(originPlace?.kind==='map'&&destinationPlace?.kind==='map'&&originPlace.place.id===destinationPlace.place.id)) {
+    if (origin === destination||(originPlace&&destinationPlace&&originPlace.kind!=='service'&&destinationPlace.kind!=='service'&&originPlace.place.id===destinationPlace.place.id)) {
       setMessage(tr("اختار منطقتين مختلفتين."));
       return;
     }
@@ -1158,8 +1169,8 @@ export default function Discovery(p: DiscoveryProps) {
           :'حفظنا تفضيلك لـ'+new Intl.NumberFormat('ar-EG').format(preferredWeekdays.length)+' أيام. البحث الحالي بيطابق المكان والميعاد، مش أيام الأسبوع تلقائيًا؛ راجع أيام الرحلة قبل الحجز.'}
         </p>}
         {screen === 11 && !demo && <LiveRouteSearch origin={origin} destination={destination}
-         originPoint={originPlace?.kind==='map'?originPlace.place:null}
-         destinationPoint={destinationPlace?.kind==='map'?destinationPlace.place:null}
+         originPoint={originPlace?.kind==='map'||originPlace?.kind==='search'?originPlace.place:null}
+         destinationPoint={destinationPlace?.kind==='map'||destinationPlace?.kind==='search'?destinationPlace.place:null}
          canCreateRequest={geoRequestAvailable(
            originPlace||((p.serviceAreas||[]).find(a=>a.name_ar===origin||a.name_en===origin)?{kind:'service',area:(p.serviceAreas||[]).find(a=>a.name_ar===origin||a.name_en===origin)!}:null),
            destinationPlace||((p.serviceAreas||[]).find(a=>a.name_ar===destination||a.name_en===destination)?{kind:'service',area:(p.serviceAreas||[]).find(a=>a.name_ar===destination||a.name_en===destination)!}:null)
