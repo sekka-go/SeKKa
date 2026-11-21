@@ -1,9 +1,10 @@
 import {useEffect,useState} from 'react';
-import {greaterCairoAttribution} from './greaterCairoBoundary';
 import {usePreferences} from './preferences';
-import {catalogMatches,locationContext,locationContextIcon,outsideCatalogMatch,noMatchingLocation,outsideCoverageMessage,PHOTON_ATTRIBUTION,placeMatchesArea,selectOperationalMapPlace} from './geoPlace';
+import {catalogMatches,locationContext,locationContextIcon,outsideCatalogMatch,noMatchingLocation,outsideCoverageMessage,mapPlacesFromPhoton,placeMatchesArea,selectOperationalMapPlace} from './geoPlace';
 import {popularPlacesForArea} from './popularCaptainPlaces';
-import {useLocationOptions,useLocationSearch} from './locationSearch';
+import {useLocationOptions,useLocationSearch,photonEndpoint} from './locationSearch';
+import {straightLineKm} from './nearbyRoutes';
+import GeoMapPicker from './GeoMapPicker';
 import type {PlaceChoice,MapPlace,ServiceArea} from './geoPlace';
 import type {PopularPlace} from './popularCaptainPlaces';
 import './location-search.css';
@@ -20,6 +21,7 @@ export default function CaptainPlacePicker({label,value,choice,onPick,onVerified
  const [showAll,setShowAll]=useState(false);
  const [open,setOpen]=useState(false);
  const [immediate,setImmediate]=useState(0);
+ const [mapOpen,setMapOpen]=useState(false);
  const options=useLocationOptions();
  useEffect(()=>{setQuery(value);},[value]);
  useEffect(()=>{setOpen(false);setImmediate(0);setShowAll(false);},[searchArea?.id]);
@@ -38,6 +40,24 @@ export default function CaptainPlacePicker({label,value,choice,onPick,onVerified
   if(onVerified)onVerified(place);
   else onPick(place.name,{kind:'map',place});
  };
+ const verifyMapPin=async (place:MapPlace):Promise<boolean>=>{
+  if(!searchArea)return false;
+  try{
+   const url=new URL('/reverse',photonEndpoint);
+   url.searchParams.set('lat',String(place.latitude));
+   url.searchParams.set('lon',String(place.longitude));
+   url.searchParams.set('limit','10');
+   const response=await fetch(url,{headers:{Accept:'application/json'},signal:AbortSignal.timeout(7000)});
+   if(!response.ok)return false;
+   const nearby=mapPlacesFromPhoton(await response.json()).find(candidate=>
+    placeMatchesArea(candidate,searchArea)&&straightLineKm(candidate,place)<=0.35);
+   if(!nearby)return false;
+   const verified={...place,name:t('نقطة قرب ','Point near ')+nearby.name,detail:nearby.detail,locality:nearby.locality};
+   if(onVerified)onVerified(verified);
+   else onPick(verified.name,{kind:'map',place:verified});
+   setMapOpen(false);setOpen(false);return true;
+  }catch{return false;}
+ };
  const search=(name?:string)=>{
   if(name){setQuery(name);onPick(name,null);}
   setOpen(true);setImmediate(i=>i+1);options.reset();
@@ -47,7 +67,7 @@ export default function CaptainPlacePicker({label,value,choice,onPick,onVerified
   :result.status==='error'
   ?t('البحث مش متاح دلوقتي. جرّب تاني.','Location search is unavailable. Try again.')
   :result.status==='done'&&!result.places.length&&!broad.length
-    ?result.outside?t(outsideCoverageMessage.ar,outsideCoverageMessage.en):t(noMatchingLocation.ar,noMatchingLocation.en)
+    ?t(noMatchingLocation.ar,noMatchingLocation.en)
     :'';
  return <section className="cj-easy-place" aria-label={label}>
   {searchArea&&<>
@@ -77,7 +97,7 @@ export default function CaptainPlacePicker({label,value,choice,onPick,onVerified
      value={query} disabled={disabled} maxLength={120}
      onChange={e=>{const next=e.target.value;setQuery(next);onPick(next,null);setOpen(true);setImmediate(0);options.reset();}}
      onKeyDown={e=>options.keys(e,menu,menu?points.length:0,choose,()=>setOpen(false),()=>search())}/>
-    <button type="button" onClick={()=>search()} disabled={disabled||query.trim().length<3}>{t('بحث','Find')}</button>
+
    </div>
   </div>
   {catalog.length>0&&<div className="sekka-location-prompts">{catalog.map(item=>
@@ -96,6 +116,12 @@ export default function CaptainPlacePicker({label,value,choice,onPick,onVerified
    {broad.map(place=><li key={place.id}><strong dir="auto"><span aria-hidden="true">{locationContextIcon(place)} </span>{place.name}</strong><small dir="auto">{place.detail}</small></li>)}
    <li>{t('اختار معلم محدد قريب عشان تضيف نقطة وقوف.','Choose a nearby landmark to add an exact stop.')}</li>
   </ul>}
-  <small className="cj-easy-attribution">{PHOTON_ATTRIBUTION} · {greaterCairoAttribution}</small>
+  <button type="button" className="cj-easy-map-button"
+   disabled={disabled||!searchArea} onClick={()=>{setMapOpen(true);setOpen(false);}}>
+   <span aria-hidden="true">⌖</span>{t('حدد نقطة على الخريطة','Choose point on map')}
+  </button>
+  {mapOpen&&<GeoMapPicker area={searchArea}
+   initial={choice?.kind==='map'?choice.place:null} onCancel={()=>setMapOpen(false)}
+   onConfirm={verifyMapPin}/>}
  </section>;
 }
