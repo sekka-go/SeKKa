@@ -4,14 +4,14 @@
   "snapshot": "d8af1d74f3acfdf37e74dd7ded9a77012366bf739e96e738208285f6aa14dfc0",
   "source_records": 176248,
   "source_aliases": 857073,
-  "records_inside_active_polygon": 103523,
-  "indexed_unique_records": 88677,
-  "road_segment_duplicates_collapsed": 14846,
-  "indexed_alias_entries": 483126,
+  "records_inside_discovery_envelope": 140105,
+  "indexed_unique_records": 119571,
+  "road_segment_duplicates_collapsed": 20534,
+  "indexed_alias_entries": 609362,
   "shards": 512,
-  "shard_record_references": 168743,
-  "max_records_in_one_shard": 6202,
-  "max_uncompressed_shard_bytes": 2270466,
-  "generated_at": "2026-11-21T13:51:02.324Z",
-  "note": "All imported features have approved polygon representative points. Area and road coordinates are context only, not pickup pins."
+  "shard_record_references": 228534,
+  "max_records_in_one_shard": 8273,
+  "max_uncompressed_shard_bytes": 2931921,
+  "generated_at": "2026-11-21T14:27:59.606Z",
+  "note": "All imported features are inside the Cairo DISCOVERY envelope; operational geofence and pin approval are separate. Area and road coordinates are context only, not pickup pins."
 }
