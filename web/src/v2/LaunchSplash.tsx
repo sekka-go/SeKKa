@@ -19,7 +19,7 @@ export function shouldPlayLaunchSplash() {
   return legacy?.type !== 2;
 }
 
-/** One static owner-provided brand image, then the existing real application.
+/** One static owner-selected seKKa road image, then the existing real application.
  * No street animation, Arabic wordmark, delayed logo reveal or intermediate page.
  */
 export default function LaunchSplash({ children }: { children: ReactNode }) {
@@ -37,7 +37,7 @@ export default function LaunchSplash({ children }: { children: ReactNode }) {
       {visible && (
         <div className="sekka-launch" role="status" aria-label="جاري فتح سِكّة">
           <img className="sekka-launch__artwork"
-            src="/brand/sekka-go-512.png"
+            src="/brand/sekka-go-road-512.png"
             alt="سِكّة"
             draggable={false}
             fetchPriority="high" />
