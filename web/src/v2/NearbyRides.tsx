@@ -1,6 +1,8 @@
 import {useEffect,useId,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
+import RiderStopMap from './RiderStopMap';
+import {formatDistanceMeters,approximateWalkMinutes} from './recurringGeo';
 import {fetchPublishedSelection} from './LiveRouteSearch';
 import type {LiveSelection} from './LiveRouteSearch';
 import {nearbyPublishedStops,validCoordinates} from './nearbyRoutes';
@@ -11,7 +13,7 @@ type RouteRow=NearbyRoute&{
  return_time:string|null;seat_price_egp:number;
 };
 type StopRow=Omit<NearbyStop,'latitude'|'longitude'>&{latitude:number|string|null;longitude:number|string|null};
-type Pick=NearbyCandidate&{route:RouteRow;remaining:number};
+type Pick=NearbyCandidate&{route:RouteRow;remaining:number;pickupPoint:GeoPoint|null};
 const RADIUS_OPTIONS=[1,3,5,10] as const;
 
 /** Discovery mounts this panel when the Rider opens nearby search. GPS stays
@@ -30,6 +32,7 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
  const [radius,setRadius]=useState<number>(5);
  const [retry,setRetry]=useState(0);
  const [opening,setOpening]=useState<string|null>(null);
+ const [mapStopId,setMapStopId]=useState<string|null>(null);
  const findMe=()=>{
   setError('');setDeviceLocationUnavailable(false);
   if(!window.isSecureContext||!navigator.geolocation){
@@ -117,7 +120,9 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
      const {data:available,error:capacityError}=await client!.rpc('v31_published_route_available_seats',{p_route:candidate.routeId});
      if(capacityError||typeof available!=='number')throw capacityError||Error('CAPACITY_UNAVAILABLE');
      const route=rows.find(row=>row.id===candidate.routeId);
-     return route&&available>0?{...candidate,route,remaining:available}:null;
+     const pickup=stops.find(stop=>stop.id===candidate.pickupStopId);
+     return route&&available>0?{...candidate,route,remaining:available,
+      pickupPoint:pickup&&validCoordinates(pickup)?{latitude:pickup.latitude,longitude:pickup.longitude}:null}:null;
     }));
     if(active)setCandidates(results.filter((item):item is Pick=>item!==null));
    }catch(e){if(active)setError(t('تعذر تحميل الرحلات القريبة. جرّب تاني.','Could not load nearby routes. Please retry.')+' '+(e instanceof Error?e.message:''));}
@@ -125,6 +130,8 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
   })();
   return()=>{active=false;};
  },[point?.latitude,point?.longitude,radius,retry]);
+ const mappedPick=candidates.find(pick=>pick.pickupStopId===mapStopId&&pick.pickupPoint)||
+   candidates.find(pick=>pick.pickupPoint)||null;
  const open=async(pick:Pick)=>{
   if(!onSelect)return;
   setError('');setOpening(pick.routeId+String(pick.reverse));
@@ -171,6 +178,8 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
   {point&&candidates.length>0&&<p className="sekka-nearby__hint">{t('المسافة خط مستقيم تقريبية، مش وقت مشي أو مسافة طريق.',
    'Distances are approximate straight-line values, not walking times or road distances.')}
    {accuracy!==null&&accuracy>250&&' · '+t('دقة GPS حوالي ','GPS accuracy about ')+Math.round(accuracy)+' '+t('متر','m')}</p>}
+  {point&&!loading&&mappedPick?.pickupPoint&&
+    <RiderStopMap pickup={mappedPick.pickupPoint} name={mappedPick.pickupName}/>}
   {loading&&<p role="status">{t('بندور على أقرب نقط ركوب منشورة…','Finding nearby published pickup points…')}</p>}
   {error&&<div role="alert"><p>{error}</p></div>}
   {point&&!loading&&!error&&candidates.length===0&&<p role="status">{t(
@@ -178,13 +187,20 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
    'No nearby rides are available yet. Widen the radius or search by area.')}</p>}
   {point&&!loading&&candidates.length>0&&<div className="sekka-nearby__results">
    <p>{t('مرتبة من أقرب نقطة ركوب للأبعد','Sorted by nearest eligible pickup point')}</p>
-   <ul>{candidates.map(pick=><li key={pick.routeId+pick.pickupStopId+String(pick.reverse)}>
+   <ul>{candidates.map((pick,index)=><li key={pick.routeId+pick.pickupStopId+String(pick.reverse)}>
+    {index===0&&<span className="sekka-rider-recommended">{t('الأقرب لنقطة ركوبك','Nearest pickup option')}</span>}
     <strong>{pick.route.title}</strong>
     <span>{pick.pickupName} ← {pick.dropoffName}</span>
-    <span>{pick.distanceKm.toFixed(1)} {t('كم من موقعك','km from your location')} · {pick.route.category}</span>
+    <span>{formatDistanceMeters(pick.distanceKm*1000)} {t('بخط مستقيم من موقعك','straight-line from your location')}
+     {' · '}{t('مشي حوالي','Walking about')} {approximateWalkMinutes(pick.distanceKm*1000)} {t('دقيقة تقريبًا','minutes approx.')}
+     {' · '}{pick.route.category}</span>
     <span>{(pick.reverse?pick.route.return_time:pick.route.outbound_time)?.slice(0,5)||'—'}
      {' · '}{pick.route.period==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')}
      {' · '}{pick.remaining} {t('مقاعد متاحة','seats available')}</span>
+    {pick.pickupPoint&&<button type="button" aria-pressed={mappedPick?.pickupStopId===pick.pickupStopId}
+     onClick={()=>setMapStopId(pick.pickupStopId)}>
+      {t('شوف نقطة الركوب على الخريطة','Show pickup on map')}
+    </button>}
     <button type="button" disabled={!onSelect||opening!==null} onClick={()=>void open(pick)}>
      {opening===pick.routeId+String(pick.reverse)?t('بنفتح الخط…','Opening…'):t('عرض تفاصيل الخط','View route details')}
     </button>
