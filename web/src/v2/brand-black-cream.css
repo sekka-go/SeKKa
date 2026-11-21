@@ -19,8 +19,13 @@
  --accent:var(--sekka-mauve);
  --yellow:#AC83C7;
  --line:#DFD0C5;
+ --border:#DFD0C5;
  --ink:#171318;
+ --text:#171318;
+ --black:#171318;
+ --white:#FFFAF2;
  --bg:var(--sekka-cream);
+ --secondary:#EEE4D7;
  --card:var(--sekka-cream-card);
  --elevated:#EEE4D7;
  --muted:#655968;
@@ -29,8 +34,11 @@
 }
 html[data-theme="dark"] .sekka-mobile {
  --line:#544C55;
+ --border:#544C55;
  --ink:#F7F0E5;
+ --text:#F7F0E5;
  --bg:#171318;
+ --secondary:#211D22;
  --card:#282329;
  --elevated:#352C37;
  --muted:#D0C4CC;
