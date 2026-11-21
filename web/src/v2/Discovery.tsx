@@ -11,6 +11,7 @@ import type { Route, Booking } from "./api";
 import "./discovery.css";
 import LiveRouteSearch from "./LiveRouteSearch";
 import NearbyRides from "./NearbyRides";
+import RiderSearchV3 from "./RiderSearchV3";
 import GeoPlaceInput from "./GeoPlaceInput";
 import {geoRequestAvailable} from "./geoPlace";
 import type {PlaceChoice} from "./geoPlace";
@@ -518,8 +519,8 @@ export default function Discovery(p: DiscoveryProps) {
     [destination, setDestination] = useState(restored.destination ?? (demo ? "التجمع" : ""));
   const [originPlace,setOriginPlace]=useState<PlaceChoice|null>(restored.originPlace||null);
   const [destinationPlace,setDestinationPlace]=useState<PlaceChoice|null>(restored.destinationPlace||null);
-  const [outbound, setOutbound] = useState(restored.outbound ?? "07:30"),
-    [returnTime, setReturnTime] = useState(restored.returnTime ?? "17:00"),
+  const [outbound, setOutbound] = useState(restored.outbound ?? (demo?"07:30":"")),
+    [returnTime, setReturnTime] = useState(restored.returnTime ?? (demo?"17:00":"")),
     [period, setPeriod] = useState(restored.period ?? "monthly");
   const [categories, setCategories] = useState<string[]>(Array.isArray(restored.categories) ? restored.categories.filter(v => typeof v === "string") : []),
     [selectedId, setSelectedId] = useState(restored.selectedId ?? examples[0].id),
@@ -606,7 +607,7 @@ export default function Discovery(p: DiscoveryProps) {
   };
   const [filterDirection, setFilterDirection] = useState(restored.filterDirection ?? "");
   const [filterPrice, setFilterPrice] = useState(restored.filterPrice ?? "");
-  const [preferredWeekdays]=useState<number[]>(()=>isWeekdays(restored.weekdays)?restored.weekdays:[]);
+  const [preferredWeekdays,setPreferredWeekdays]=useState<number[]>(()=>isWeekdays(restored.weekdays)?restored.weekdays:[]);
   const [onlyAvailable, setOnlyAvailable] = useState(restored.onlyAvailable ?? false);
   const [appliedFilters, setAppliedFilters] = useState(restored.appliedFilters ?? false);
   useEffect(() => {
@@ -851,7 +852,7 @@ export default function Discovery(p: DiscoveryProps) {
           <DiscoveryIcon name={titleIcon} />
           {heading}
         </h1>
-        {p.production&&[9,11,12].includes(screen)&&(()=>{
+        {p.production&&[11,12].includes(screen)&&(()=>{
           const copy=language==='en'?riderHomeCopy.en:riderHomeCopy.ar;
           const step=screen===9?copy.searchStep:screen===11?copy.resultsStep:copy.detailsStep;
           const title=screen===9?copy.searchTitle:screen===11?copy.resultsTitle:copy.detailsTitle;
@@ -887,7 +888,7 @@ export default function Discovery(p: DiscoveryProps) {
             )}
           </div>
         )}
-        {[8, 9].includes(screen) && (
+        {[8, 9].includes(screen) && !p.production && (
           <>
             {!p.production&&<p className="d-subtitle">
               {tr("حدد نقطة الانطلاق والوجهة، وابدأ رحلتك بسهولة")}</p>}
@@ -990,6 +991,21 @@ export default function Discovery(p: DiscoveryProps) {
             <div className="d-road" aria-hidden="true" />
           </>
         )}
+        {screen===9&&p.production&&<RiderSearchV3
+          origin={origin} destination={destination} originPlace={originPlace}
+          destinationPlace={destinationPlace} areas={p.serviceAreas||[]}
+          outbound={outbound} returnTime={returnTime} period={period}
+          weekdays={preferredWeekdays}
+          onOrigin={(name,choice)=>{setOrigin(name);setOriginPlace(choice);}}
+          onDestination={(name,choice)=>{setDestination(name);setDestinationPlace(choice);}}
+          onSwap={()=>{setOrigin(destination);setDestination(origin);
+           setOriginPlace(destinationPlace);setDestinationPlace(originPlace);}}
+          onOutbound={setOutbound}
+          onReturn={value=>{setReturnTime(value);setFilterDirection(value?'round_trip':'');}}
+          onPeriod={value=>{setPeriod(value);setAppliedFilters(true);}}
+          onWeekdays={setPreferredWeekdays} onSearch={search}
+          onLiveSelect={p.onLiveSelect}
+        />}
         {screen === 10 && (
           <>
             <p className="d-subtitle">
