@@ -66,8 +66,8 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
  const search=()=>{setOpen(true);setImmediate(i=>i+1);};
  const msg=menu&&outsideCatalogMatch(query,searchArea)&&!picks.length
   ?t(outsideCoverageMessage.ar,outsideCoverageMessage.en)
-  :result.status==='error'
-  ?t('البحث على الخريطة مش متاح دلوقتي. جرّب تاني.','Map search is temporarily unavailable. Try again.')
+  :result.status==='error'&&!picks.length
+  ?t('تعذّر البحث الخارجي مؤقتًا. جرّب اسم منطقة تانية.','External location lookup is temporarily unavailable. Try another area.')
   :result.status==='done'&&!picks.length
     ?result.outside?t(outsideCoverageMessage.ar,outsideCoverageMessage.en):
      t(noMatchingLocation.ar,noMatchingLocation.en):'';
