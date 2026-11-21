@@ -48,13 +48,13 @@ export default function LiveHome({onNavigate}:{onNavigate:(screen:number)=>void}
  const retry=()=>{setError('');setBusy(true);setRefresh(n=>n+1);};
  return <main className={`live-home live-home--${theme}`} dir={en?'ltr':'rtl'}>
   <header className="live-home__header">
-   <div className="live-home__brand"><Wordmark/><span>{t('معاك في السِكّة','Your daily route, sorted')}</span></div>
+   <div className="live-home__brand"><Wordmark/><span>{t('معاك في السِكَّة','Your daily route, sorted')}</span></div>
    <button type="button" className="live-home__theme" onClick={()=>setThemePreference(theme==='light'?'dark':'light')} aria-label={t('تغيير المظهر','Switch appearance')}>{theme==='light'?'☾':'☀'}</button>
   </header>
   <section className="live-home__hero">
    <div className="live-home__eyebrow"><span className="live-home__signal"/> {t('القاهرة والجيزة','CAIRO & GIZA')}</div>
    <h1>{identity?t('أهلاً، '+identity.name.split(' ')[0], 'Welcome, '+identity.name.split(' ')[0]):t('مشوارك اليومي، متظبّط.','Your daily commute, sorted.')}</h1>
-   <p>{t('خط واضح. ميعاد ثابت. وسِكّة أسهل كل يوم.','A clear route, reliable schedule and an easier daily commute.')}</p>
+   <p>{t('خط واضح. ميعاد ثابت. وسِكَّة أسهل كل يوم.','A clear route, reliable schedule and an easier daily commute.')}</p>
    <div className="live-home__road" aria-hidden="true"><span/><span/><span/></div>
   </section>
   <section className="live-home__body" aria-label={t('البدء في التطبيق','Get started')}>
