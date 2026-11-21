@@ -26,6 +26,7 @@ const AdminDashboard=lazy(()=>import('./AdminDashboard'));
 import {mobileRouteHref,readMobileRoute} from './mobileNavigation';
 import type {MobileRoute,RouteSelection} from './mobileNavigation';
 import './mobile-app.css';
+import './flow-navigation.css';
 
 export default function MobileApp(){
  const p=usePreferences(),en=p.language==='en',t=(ar:string,english:string)=>en?english:ar;
