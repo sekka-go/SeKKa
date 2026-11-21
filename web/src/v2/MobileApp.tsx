@@ -27,12 +27,13 @@ import {mobileRouteHref,readMobileRoute} from './mobileNavigation';
 import type {MobileRoute,RouteSelection} from './mobileNavigation';
 import './mobile-app.css';
 import './flow-navigation.css';
-import './brand-black-cream.css';
 import './brand-sky-flow.css';
+import './sekka-flow-redesign.css';
 
 export default function MobileApp(){
  const p=usePreferences(),en=p.language==='en',t=(ar:string,english:string)=>en?english:ar;
  const [route,setRoute]=useState<MobileRoute>(()=>readMobileRoute());
+ const [motionStep,setMotionStep]=useState(0);
  const [menuOpen,setMenuOpen]=useState(false);
  const [bookingsSection,setBookingsSection]=useState<'bookings'|'requests'>(()=>{try{return sessionStorage.getItem('sekka.bookingsSection')==='requests'?'requests':'bookings';}catch{return 'bookings';}});
  useEffect(()=>{try{sessionStorage.setItem('sekka.bookingsSection',bookingsSection);}catch{/* Private browsing still works. */}},[bookingsSection]);
@@ -79,7 +80,7 @@ export default function MobileApp(){
  const [areasError,setAreasError]=useState('');
  const [areas,setAreas]=useState<{id:number;name_ar:string;name_en:string}[]>([]);
  const [areasLoaded,setAreasLoaded]=useState(false);
- useEffect(()=>{const back=()=>{setRoute(readMobileRoute());setBookingId(new URL(location.href).searchParams.get('booking'));setSelectionVersion(v=>v+1);};addEventListener('popstate',back);return()=>removeEventListener('popstate',back);},[]);
+ useEffect(()=>{const back=()=>{setMotionStep(step=>step+1);setRoute(readMobileRoute());setBookingId(new URL(location.href).searchParams.get('booking'));setSelectionVersion(v=>v+1);};addEventListener('popstate',back);return()=>removeEventListener('popstate',back);},[]);
  useEffect(()=>{
   const canonical=mobileRouteHref(route,location.href);
   const current=location.pathname+location.search+location.hash;
@@ -90,6 +91,7 @@ export default function MobileApp(){
   const href=mobileRouteHref(next,location.href,options.selection,options.bookingId);
   const current=location.pathname+location.search+location.hash;
   if(href===current){setRoute(next);return;}
+  setMotionStep(step=>step+1);
   const state={route:next,sekkaNavigation:true,from:route};
   if(options.replace)history.replaceState(state,'',href);
   else history.pushState(state,'',href);
@@ -486,7 +488,7 @@ export default function MobileApp(){
   aria-expanded={menuOpen} aria-controls="sekka-side-menu" onClick={()=>setMenuOpen(true)}>
   <span aria-hidden="true">☰</span>
  </button>;
- return <div className={`sekka-mobile sekka-tab-${tab}${fullScreenSearchFilters?' sekka-search-filters':''}${fullScreenAuth?' sekka-fullscreen-auth':''}${fullScreenSearch?' sekka-fullscreen-search':''}${userId&&tab==='captain-onboarding'?' sekka-captain-logged-in':''}${!userId&&tab==='home'?' sekka-guest-welcome':''}${captainLanding?' sekka-captain-home-shell':''}${showRiderTabs?' sekka-rider-navigation':''}`} dir={en?'ltr':'rtl'}>
+ return <div className={`sekka-mobile sekka-tab-${tab}${fullScreenSearchFilters?' sekka-search-filters':''}${fullScreenAuth?' sekka-fullscreen-auth':''}${fullScreenSearch?' sekka-fullscreen-search':''}${userId&&tab==='captain-onboarding'?' sekka-captain-logged-in':''}${!userId&&tab==='home'?' sekka-guest-welcome':''}${captainLanding?' sekka-captain-home-shell':''}${showRiderTabs?' sekka-rider-navigation':''}${motionStep?(motionStep%2?' sk-motion-odd':' sk-motion-even'):''}`} dir={en?'ltr':'rtl'}>
   <a className="sekka-skip" href="#sekka-content">{t('تخطي للمحتوى','Skip to content')}</a>
   <header className={`sekka-mobile-header${ready&&admin?' sekka-mobile-header-admin':''}`}>
    {captainLanding?<div className="sekka-captain-header">
@@ -577,6 +579,7 @@ export default function MobileApp(){
    {adminLookupError&&<button type="button" onClick={()=>setAuthCheckRevision(v=>v+1)}>{t('إعادة فحص الصلاحيات','Retry authorization')}</button>}
    <button onClick={()=>navigate({tab:'home'})}>{t('العودة','Back')}</button></section>)}
   </main>
+  {motionStep>0&&<div key={motionStep} className="sk-route-swoosh" aria-hidden="true"><i/><b/><span/></div>}
   {showRiderTabs&&<RiderTabBar
    active={tab==='search'?'search':tab==='bookings'||tab==='booking'?'bookings':tab==='profile'?'profile':tab==='home'?'home':null}
    onNavigate={onRiderTab}/>}
