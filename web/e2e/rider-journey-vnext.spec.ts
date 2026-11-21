@@ -40,7 +40,20 @@ for(const width of [320,390]){
    await req.fulfill({contentType:'application/json',body:JSON.stringify(data)});
   });
   await page.goto('/');
-  await expect(page.locator('.sekka-rider-home')).toBeVisible();
+  await expect(page.locator('.sekka-rider-home.rh-home')).toBeVisible();
+  const tabs=page.getByRole('navigation',{name:'Passenger navigation'});
+  await expect(tabs).toBeVisible();
+  await expect(tabs.getByRole('button',{name:'Home'})).toHaveAttribute('aria-current','page');
+  await expect(tabs.getByRole('button',{name:'Search'})).toBeVisible();
+  await expect(tabs.getByRole('button',{name:'Bookings'})).toBeVisible();
+  await expect(tabs.getByRole('button',{name:'Account'})).toBeVisible();
+  await page.screenshot({path:'test-results/rider-home-v3-'+width+'.png',animations:'disabled',fullPage:true});
+  await tabs.getByRole('button',{name:'Search'}).click();
+  await expect(page).toHaveURL(/tab=search&view=9/);
+  await expect(page.getByRole('navigation',{name:'Passenger navigation'}).getByRole('button',{name:'Search'}))
+   .toHaveAttribute('aria-current','page');
+  await page.getByRole('navigation',{name:'Passenger navigation'}).getByRole('button',{name:'Home'}).click();
+  await expect(page.locator('.rh-home')).toBeVisible();
   await expect(page.getByRole('button',{name:/Find rides on my route/})).toBeVisible();
   await page.getByRole('button',{name:/Find rides on my route/}).click();
   await expect(page).toHaveURL(/tab=search&view=11/);
