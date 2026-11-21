@@ -21,6 +21,7 @@ import RiderTabBar from './RiderTabBar';
 import type {RiderTab} from './RiderTabBar';
 import LiveTripRequests from './LiveTripRequests';
 import LiveNotifications from './LiveNotifications';
+import SessionLoader from './SessionLoader';
 const AdminDashboard=lazy(()=>import('./AdminDashboard'));
 import {mobileRouteHref,readMobileRoute} from './mobileNavigation';
 import type {MobileRoute,RouteSelection} from './mobileNavigation';
@@ -73,19 +74,27 @@ export default function MobileApp(){
  const [areasLoaded,setAreasLoaded]=useState(false);
  useEffect(()=>{const back=()=>{setRoute(readMobileRoute());setBookingId(new URL(location.href).searchParams.get('booking'));setSelectionVersion(v=>v+1);};addEventListener('popstate',back);return()=>removeEventListener('popstate',back);},[]);
  useEffect(()=>{
-  const canonical=mobileRouteHref(route);
+  const canonical=mobileRouteHref(route,location.href);
   const current=location.pathname+location.search+location.hash;
   if(canonical!==current)history.replaceState({route},'',canonical);
  },[route]);
  function navigate(next:MobileRoute,options:{replace?:boolean;selection?:RouteSelection}={}){
   setMenuOpen(false);
   const href=mobileRouteHref(next,location.href,options.selection);
-  if(options.replace)history.replaceState({route:next},'',href);
-  else history.pushState({route:next},'',href);
+  const current=location.pathname+location.search+location.hash;
+  if(href===current){setRoute(next);return;}
+  const state={route:next,sekkaNavigation:true,from:route};
+  if(options.replace)history.replaceState(state,'',href);
+  else history.pushState(state,'',href);
   setRoute(next);
   setBookingId(new URL(href,location.origin).searchParams.get('booking'));
-  if(!options.replace)window.scrollTo(0,0);
+  window.scrollTo(0,0);
  }
+ const backToPreviousSection=()=>{
+  const state=history.state as {sekkaNavigation?:boolean;from?:MobileRoute}|null;
+  if(state?.sekkaNavigation&&state.from){history.back();return;}
+  navigate(isCaptainAccount?{tab:'routes',view:42}:{tab:'home'},{replace:true});
+ };
  // Google cancellation can return to a protected deep link rather than the
  // login screen. Keep the user's destination, scrub provider error details and
  // offer a real retry instead of silently displaying an unrelated guest gate.
@@ -287,7 +296,9 @@ export default function MobileApp(){
    }
   }
   void read();
-  const sub=client?.auth.onAuthStateChange((_event,session)=>{
+  const sub=client?.auth.onAuthStateChange((event,session)=>{
+    // getSession is already running; INITIAL_SESSION would duplicate verification.
+    if(event==='INITIAL_SESSION')return;
     queueMicrotask(()=>{if(active)void read(session);});
   });
   return()=>{active=false;sessionReadId.current++;sub?.data.subscription.unsubscribe();};
@@ -442,10 +453,14 @@ export default function MobileApp(){
  const blockedRiderTab=isCaptainAccount&&['home','search','bookings','booking','login','captain-onboarding'].includes(tab);
  const captainLanding=isCaptainAccount&&tab==='routes'&&captainScreen===42;
  const showRiderTabs=ready&&Boolean(userId)&&!isCaptainAccount&&!admin&&
-  (tab==='home'||tab==='bookings'||tab==='profile'||(tab==='search'&&discoveryScreen===9));
+  (tab==='home'||tab==='bookings'||tab==='profile'||tab==='notifications'||
+   tab==='booking'||tab==='search');
  const onRiderTab=(destination:RiderTab)=>{
   if(destination==='search')navigate({tab:'search',view:9});
-  else navigate({tab:destination});
+  else{
+   if(destination==='bookings')setBookingsSection('bookings');
+   navigate({tab:destination});
+  }
  };
  useEffect(()=>{
   if(!blockedRiderTab)return;
@@ -493,14 +508,14 @@ export default function MobileApp(){
      onClick={openAdmin}>{t('لوحة الإدارة','Admin dashboard')}</button>}
   </header>
   <main id="sekka-content" className={`sekka-mobile-content${tab==='admin'&&admin?' sekka-admin-workspace':''}`}>
-   {!ready&&<div className="sekka-account-loading" role="status">
-    <span className="sekka-account-loading__spinner" aria-hidden="true"/>
-    <p>{t('بنجهّز حسابك…','Preparing your account…')}</p>
-    {sessionSlow&&<div className="sekka-account-loading__slow">
-     <p>{t('تسجيل الدخول بياخد وقت أطول من المعتاد. راجع اتصالك وحاول تاني.','Sign-in verification is taking longer than expected. Check your connection and retry.')}</p>
-     <button type="button" onClick={()=>{setSessionSlow(false);setAuthCheckRevision(v=>v+1)}}>{t('إعادة المحاولة','Retry')}</button>
-    </div>}
-   </div>}
+   {!ready&&<SessionLoader slow={sessionSlow}
+    onRetry={()=>{setSessionSlow(false);setAuthCheckRevision(v=>v+1)}}/>}
+   {ready&&tab==='notifications'&&<nav className="sekka-screen-back"
+     aria-label={t('التنقل بين الصفحات','Page navigation')}>
+    <button type="button" onClick={backToPreviousSection}>
+     <span aria-hidden="true">‹</span> {t('رجوع للصفحة السابقة','Back to previous page')}
+    </button>
+   </nav>}
    {ready&&userId&&adminLookupError&&<div role="alert" className="sekka-mobile-alert">
      <p>{adminLookupError}</p>
      <button type="button" onClick={()=>setAuthCheckRevision(v=>v+1)}>{t('إعادة فحص الصلاحيات','Retry authorization')}</button>
@@ -516,7 +531,7 @@ export default function MobileApp(){
     ?<button type="button" className="sekka-action" onClick={()=>navigate({tab:'routes',view:42})}>{t('الذهاب إلى خطوطي','Open my routes')}</button>
     :<button type="button" onClick={startCaptainJourney}>{t('متابعة طلب الكابتن','Continue Captain application')}</button>)}<button type="button" onClick={()=>void signOut()}>{t('تسجيل الخروج','Sign out')}</button></section>:<section className="sekka-mobile-card"><h1>{t('حسابي','My profile')}</h1><p>{t('سجّل بجوجل علشان تكمل بياناتك.','Sign in with Google to complete your profile.')}</p><button className="sekka-action" onClick={()=>signInFor('/?tab=login&view=6')}>{t('تسجيل الدخول بجوجل','Sign in with Google')}</button></section>)}
    {selectionError&&['search','booking'].includes(tab)&&<div role="alert" className="sekka-mobile-alert">{selectionError}<button type="button" onClick={()=>setSelectionVersion(v=>v+1)}>{t('إعادة المحاولة','Retry')}</button></div>}
-   {tab==='search'&&!blockedRiderTab&&approvedDiscovery(discoveryScreen)}
+   {ready&&tab==='search'&&!blockedRiderTab&&approvedDiscovery(discoveryScreen)}
    {ready&&tab==='booking'&&!blockedRiderTab&&<Suspense fallback={<p role="status">{t('بنحمّل الحجز…','Loading booking…')}</p>}><V31BookingJourney offer={bookingOffer} routeId={liveSelection?.route.id||''}
      pickupId={new URL(location.href).searchParams.get('pickup')||''} dropoffId={new URL(location.href).searchParams.get('dropoff')||''}
      reverse={new URL(location.href).searchParams.get('reverse')==='1'} bookingId={bookingId}
@@ -540,14 +555,18 @@ export default function MobileApp(){
     </nav>
     {bookingsSection==='bookings'?<RiderBookingsV3 onFindRide={()=>navigate({tab:'search',view:9})}/>:<LiveTripRequests mode="rider"/>}
    </section>:<section className="sekka-mobile-card"><h1>{t('حجوزاتي','My bookings')}</h1><p>{t('سجّل دخولك علشان تشوف حجوزاتك الحقيقية.','Sign in to view your bookings.')}</p><button className="sekka-action" onClick={()=>signInFor('/?tab=bookings')}>{t('تسجيل الدخول','Sign in')}</button></section>)}
-   {ready&&tab==='notifications'&&(userId?<LiveNotifications/>:<section className="sekka-mobile-card"><h1>{t('الإشعارات','Notifications')}</h1><button className="sekka-action" onClick={()=>signInFor('/?tab=notifications')}>{t('تسجيل الدخول','Sign in')}</button></section>)}
+   {ready&&tab==='notifications'&&(userId?<LiveNotifications
+    mode={isCaptainAccount?'captain':'rider'}
+    onOpenRides={()=>{if(isCaptainAccount)navigate({tab:'routes',view:44});
+     else{setBookingsSection('bookings');navigate({tab:'bookings'});}}}
+   />:<section className="sekka-mobile-card"><h1>{t('الإشعارات','Notifications')}</h1><button className="sekka-action" onClick={()=>signInFor('/?tab=notifications')}>{t('تسجيل الدخول','Sign in')}</button></section>)}
    {tab==='admin'&&(!ready?<p role="status">{t('بنتأكد من صلاحية الإدارة…','Checking Admin authorization…')}</p>:admin?<Suspense fallback={<p role="status">{t('بنحمّل لوحة الإدارة…','Loading Admin dashboard…')}</p>}><AdminDashboard production screen={internalScreen(adminScreen)} theme={p.theme}
       onTheme={p.setThemePreference} go={id=>{const n=publicScreen(id);if(n>=62&&n<=73)navigate({tab:'admin',view:n as 62|63|64|65|66|67|68|69|70|71|72|73});}}/></Suspense>:<section className="sekka-mobile-card"><h1>{t('غير مسموح','Access restricted')}</h1><p>{adminLookupError||t('لوحة الإدارة للحسابات المصرح لها فقط.','The admin dashboard requires authorization.')}</p>
    {adminLookupError&&<button type="button" onClick={()=>setAuthCheckRevision(v=>v+1)}>{t('إعادة فحص الصلاحيات','Retry authorization')}</button>}
    <button onClick={()=>navigate({tab:'home'})}>{t('العودة','Back')}</button></section>)}
   </main>
   {showRiderTabs&&<RiderTabBar
-   active={tab==='search'?'search':tab==='bookings'?'bookings':tab==='profile'?'profile':'home'}
+   active={tab==='search'?'search':tab==='bookings'||tab==='booking'?'bookings':tab==='profile'?'profile':tab==='home'?'home':null}
    onNavigate={onRiderTab}/>}
   {menuOpen&&<div className="sekka-menu-layer">
    <button type="button" className="sekka-menu-backdrop" aria-label={t('إغلاق القائمة','Close menu')} onClick={closeMenu}/>
