@@ -96,7 +96,7 @@ export function exactCatalogMatches(query:string,area?:ServiceArea):CatalogPlace
 }
 export function outsideCatalogMatch(query:string,area?:ServiceArea):boolean {
  const matches=exactCatalogMatches(query,area);
- return matches.length>0&&matches.every(item=>item.reference&&!inLaunchRegion(item.reference));
+ return matches.length>0&&matches.every(item=>item.reference&&!isInsideCairoDiscovery(item.reference));
 }
 
 export function placeMatchesArea(place:MapPlace,area:ServiceArea):boolean{
