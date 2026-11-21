@@ -1003,7 +1003,7 @@ export default function Discovery(p: DiscoveryProps) {
         />}
         {screen===10&&p.production&&<RiderFiltersV3
           available={categoryList} categories={categories}
-          period={appliedFilters?filterPeriod:''} direction={filterDirection}
+          period={filterPeriod} direction={filterDirection}
           maxPrice={filterPrice} onlyAvailable={onlyAvailable}
           onCategories={setCategories}
           onPeriod={value=>{setFilterPeriod(value);if(value)setPeriod(value);}}
