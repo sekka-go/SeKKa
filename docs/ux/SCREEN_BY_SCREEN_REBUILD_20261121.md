@@ -57,11 +57,13 @@ The **production-facing** Rider flow now uses a coherent route-first UI across:
 - **Trip details S012:** `RiderTripDetailsV3` shows the server-provided route, pricing, remaining seats, direction and *actual stop order*, with controlled pickup/drop-off selection. It hands the validated stop pair to the existing booking flow and does not claim an unapproved fixed Sunday–Thursday timetable.
 - **Booking review:** the existing `V31BookingJourney` retains its server atomic seat reservation, read-after-write verification and status separation; a scoped `rider-booking-v3.css` facelift improves layout. Pending cancellations now require a second explicit confirmation click.
 - **My rides:** `RiderBookingsV3` reads current Rider-owned `v31_bookings` records, optionally resolves publicly visible route titles, separates current/previous bookings, and supports protected cancellation confirmation. Captain booking screens were not replaced.
-- **The requests and filters sections** still preserve their existing backend workflows; they are not yet fully redesigned. Existing live notifications, profile and Captain flows remain as before.
+- **Requests** retain their existing backend workflows with a scoped visual refresh. **Filters S010** have now also been rebuilt as `RiderFiltersV3` with clear category/period/direction/price/available-only choices and apply/reset; the selected period filter is kept separate from the Rider's saved request duration. Existing live notifications and profile received a matching visual refresh; Captain flows remain unchanged.
 
 **Do not overclaim:** Weekdays saved by the Rider do **not** yet filter the v31 search RPC. The UI openly states this, and users should verify a ride's operating days before booking. Pricing shown before booking is indicative, not payment. No new Supabase migration, production writes, paid maps, OTP, or payment handling.
 
 **Automated checks:** `web/e2e/rider-redesign-v3.spec.ts` exercises mock-authenticated Rider Search → Results → Details → Booking (without fake confirmation), including 320/390px layouts, plus active Rider bookings and cancel confirmation. `v31-rider-no-match-request-mocked.spec.ts` remains a regression for the request flow, updated to the new place labels; original Gallery filters geometry remains separately tested. Await CI and actual authenticated staging walkthrough before marking accepted.
+
+**Additional filters acceptance:** `RiderFiltersV3.tsx` and `rider-filters-v3.css` replace live S010, while the developer's old S010 remains under `/dev/screens`. `rider-redesign-v3.spec.ts` checks selecting weekly, returning to published results, and no invented rows. `production-shell-geometry.spec.ts` now checks redesigned S009 and S010 on 360/390px Arabic/English light/dark independently of the gallery.
 
 ## Release rules
 
