@@ -103,11 +103,11 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
         setOpen(false);options.reset();
        }}>
        <strong dir="auto"><span aria-hidden="true">{locationContextIcon(place)} </span>{place.name}</strong>
-       <small dir="auto">{place.detail}</small>
+       <small dir="auto">{[categoryLabel(place),place.detail].filter(Boolean).join(" · ")}</small>
        <small>{t('بحث عن رحلات في '+registered.name_ar,'Search trips in '+registered.name_en)}</small>
       </button>:<>
        <strong dir="auto"><span aria-hidden="true">{locationContextIcon(place)} </span>{place.name}</strong>
-       <small dir="auto">{place.detail}</small>
+       <small dir="auto">{[categoryLabel(place),place.detail].filter(Boolean).join(" · ")}</small>
        <small>{t('حدد نقطة دقيقة على الخريطة للبحث هنا','Choose an exact map point to search here')}</small>
       </>}
      </li>;
