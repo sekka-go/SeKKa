@@ -289,7 +289,24 @@ export default function MobileApp(){
   });
   return()=>{active=false;sessionReadId.current++;sub?.data.subscription.unsubscribe();};
  },[authCheckRevision]);
- useEffect(()=>{if(!client){setAreasLoaded(true);return;}void client.from('v31_service_areas').select('id,name_ar,name_en').eq('active',true).order('id').then(({data,error:e})=>{if(e)setAreasError(e.message);else if(data){setAreas(data);setAreasError('');}}).finally(()=>setAreasLoaded(true));},[]);
+ useEffect(()=>{
+  let active=true;
+  if(!client){setAreasLoaded(true);return;}
+  void(async()=>{
+   try{
+    const {data,error:e}=await client.from('v31_service_areas')
+     .select('id,name_ar,name_en').eq('active',true).order('id');
+    if(!active)return;
+    if(e)setAreasError(e.message);
+    else{setAreas(data||[]);setAreasError('');}
+   }catch{
+    if(active)setAreasError(t('تعذّر تحميل مناطق الخدمة.','Unable to load service areas.'));
+   }finally{
+    if(active)setAreasLoaded(true);
+   }
+  })();
+  return()=>{active=false;};
+ },[]);
  useEffect(()=>{
   if(tab!=='captain-onboarding'||!ready||userId)return;
   setSelectedRole('captain');
