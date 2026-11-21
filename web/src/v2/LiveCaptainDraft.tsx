@@ -292,7 +292,7 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
  const canContinueSchedule=(direction==='outbound'||direction==='return'||direction==='round_trip')&&
   (direction==='return'||Boolean(departure))&&
   (direction==='outbound'||Boolean(arrival))&&
-  (direction!=='round_trip'||returnSupported);
+  (direction!=='round_trip'||returnSupported)&&validStopSchedule(stops);
  const canContinue=step===1?canContinueRoute:step===2?canContinueVehicle:canContinueSchedule;
  const nextStep=()=>{
   setError('');
