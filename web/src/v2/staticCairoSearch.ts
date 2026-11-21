@@ -1,5 +1,5 @@
-import {isInsideOperationalRegion} from './greaterCairoBoundary';
-import {normalizedPlace,placeMatchesArea} from './geoPlace';
+import {isInsideOperationalRegion} from './greaterCairoBoundary.ts';
+import {normalizedPlace,placeMatchesArea} from './geoPlace.ts';
 import type {MapPlace,ServiceArea} from './geoPlace';
 
 type ShardEntry={i:string;n:string;a:string|null;e:string|null;c:string;k:string;
