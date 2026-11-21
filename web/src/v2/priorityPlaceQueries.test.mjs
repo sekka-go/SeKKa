@@ -5,6 +5,7 @@ import {canonicalNamedQuery} from './priorityPlaceQueries.ts';
 import {isInsideCairoDiscovery} from './discoveryCairo.ts';
 import {isInsideOperationalRegion} from './greaterCairoBoundary.ts';
 import {searchStaticCairo} from './staticCairoSearch.ts';
+import {selectOperationalMapPlace} from './geoPlace.ts';
 
 test('major malls, business hubs and institutions resolve familiar Cairo spelling',()=>{
  assert.equal(canonicalNamedQuery('CFC'),'Cairo Festival City Mall');
@@ -65,4 +66,15 @@ test('mapped Smart Village business park outranks transport stops with equal nam
   assert.equal(results[0].kind,'feature');
   assert.equal(results[0].osmValue,'commercial');
  }finally{globalThis.fetch=original;}
+});
+
+test('school, nursery and mall OSM centers are never silently used as student boarding gates',()=>{
+ const base={id:'N:1234',name:'Mapped institution',detail:'Cairo',
+  kind:'point',source:'map',latitude:30.0443934,longitude:31.2357457};
+ for(const category of ['school','kindergarten','childcare','university','college','mall','commercial']){
+  assert.equal(selectOperationalMapPlace({...base,osmValue:category}),false,category);
+ }
+ assert.equal(selectOperationalMapPlace({...base,osmValue:'bus_stop'}),true);
+ const manual={...base,id:'manual:30.044393,31.235746',source:'manual_map_pin',osmValue:undefined};
+ assert.equal(selectOperationalMapPlace(manual),true);
 });
