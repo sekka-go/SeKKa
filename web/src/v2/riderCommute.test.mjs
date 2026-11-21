@@ -37,3 +37,12 @@ test('partial home selections survive navigation and are always scoped by Google
   riderHomeDraftKey('00000000-0000-4000-8000-000000000002'));
  assert.throws(()=>riderHomeDraftKey('attacker'),/INVALID_RIDER_ID/);
 });
+
+test('two separately selected map pins can share a display label on a saved commute',()=>{
+ const pin=(lat,lon)=>({kind:'map',place:{source:'manual_map_pin',kind:'point',name:'Map pin',
+  id:'manual:'+lat.toFixed(6)+','+lon.toFixed(6),latitude:lat,longitude:lon}});
+ const from=pin(30.044393,31.235746),to=pin(29.972446,30.944807);
+ const trip={...good,origin:'Map pin',destination:'Map pin',originPlace:from,destinationPlace:to};
+ assert.ok(parseSavedCommute(trip));
+ assert.equal(parseSavedCommute({...trip,destinationPlace:from}),null);
+});

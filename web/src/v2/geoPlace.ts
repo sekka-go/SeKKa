@@ -12,6 +12,18 @@ export type MapPlace=GeoPoint&{
 export type ServiceArea={id:number;name_ar:string;name_en:string};
 /** A search landmark is a geographic search anchor, never a booked boarding point. */
 export type PlaceChoice={kind:'service';area:ServiceArea}|{kind:'search';place:MapPlace}|{kind:'map';place:MapPlace};
+export function sameJourneyEndpoint(origin:string,destination:string,from:PlaceChoice|null,to:PlaceChoice|null):boolean {
+ if(from&&to){
+  if(from.kind==='service'&&to.kind==='service')return from.area.id===to.area.id;
+  if(from.kind!=='service'&&to.kind!=='service'){
+   return from.place.id===to.place.id||
+    (from.place.latitude===to.place.latitude&&from.place.longitude===to.place.longitude);
+  }
+  return false;
+ }
+ return origin===destination;
+}
+
 export const inLaunchRegion=isInsideOperationalRegion;
 /** Named OSM locations can anchor nearby Captain-stop search without map pin confirmation. */
 export function isSearchableMapPlace(place:MapPlace|null|undefined):boolean {

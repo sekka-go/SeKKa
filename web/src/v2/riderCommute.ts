@@ -1,4 +1,4 @@
-import {selectOperationalMapPlace,isSearchableMapPlace} from './geoPlace.ts';
+import {sameJourneyEndpoint,selectOperationalMapPlace,isSearchableMapPlace} from './geoPlace.ts';
 import type {MapPlace,PlaceChoice} from './geoPlace.ts';
 
 export const RIDER_DRAFT_KEY='sekka.rider.discoveryDraft.v31';
@@ -37,14 +37,16 @@ const pointChoice=(raw:unknown):raw is PlaceChoice|null=>{
 export function parseSavedCommute(raw:unknown):SavedCommute|null{
  if(!raw||typeof raw!=='object'||Array.isArray(raw))return null;
  const r=raw as Record<string,unknown>;
- if(!starts(r.origin)||!starts(r.destination)||r.origin===r.destination||
+ if(!starts(r.origin)||!starts(r.destination)||
    !clock(r.outbound)||!clock(r.returnTime)||
    !['weekly','monthly'].includes(String(r.period))||
    !['outbound','return','round_trip'].includes(String(r.direction))||
    !pointChoice(r.originPlace??null)||!pointChoice(r.destinationPlace??null)||
    (r.weekdays!==undefined&&!isWeekdays(r.weekdays))||
    typeof r.savedAt!=='string'||!Number.isFinite(Date.parse(r.savedAt)))return null;
- return r as SavedCommute;
+ const commute=r as SavedCommute;
+ if(sameJourneyEndpoint(commute.origin,commute.destination,commute.originPlace,commute.destinationPlace))return null;
+ return commute;
 }
 export function savedCommuteKey(riderId:string):string{
  if(!/^[a-f0-9-]{36}$/i.test(riderId))throw new Error('INVALID_RIDER_ID');

@@ -16,7 +16,7 @@ import RiderFiltersV3 from "./RiderFiltersV3";
 import RiderResultsHero from "./RiderResultsHero";
 import RiderTripDetailsV3 from "./RiderTripDetailsV3";
 import GeoPlaceInput from "./GeoPlaceInput";
-import {geoRequestAvailable,selectOperationalMapPlace,isSearchableMapPlace,outsideCoverageMessage} from "./geoPlace";
+import {geoRequestAvailable,sameJourneyEndpoint,selectOperationalMapPlace,isSearchableMapPlace,outsideCoverageMessage} from "./geoPlace";
 import type {PlaceChoice} from "./geoPlace";
 import type {LiveSelection} from "./LiveRouteSearch";
 import {saveCommute,isWeekdays} from './riderCommute';
@@ -702,7 +702,7 @@ export default function Discovery(p: DiscoveryProps) {
         return;
       }
     }
-    if (origin === destination||(originPlace&&destinationPlace&&originPlace.kind!=='service'&&destinationPlace.kind!=='service'&&originPlace.place.id===destinationPlace.place.id)) {
+    if (sameJourneyEndpoint(origin,destination,originPlace,destinationPlace)) {
       setMessage(tr("اختار منطقتين مختلفتين."));
       return;
     }

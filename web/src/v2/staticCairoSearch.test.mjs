@@ -1,5 +1,6 @@
 /* global Response, AbortController */
 import test from 'node:test';
+import {URL} from 'node:url';
 import assert from 'node:assert/strict';
 import {searchStaticCairo} from './staticCairoSearch.ts';
 import {indexedRowsToPlaces} from './indexedPlaceRows.ts';
