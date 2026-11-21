@@ -1,7 +1,7 @@
 /* Live passenger/Captain entry copy. No fake supply counts, prices or promises. */
 export const entryCopy={
  ar:{
-  brand:"سِكّة",step:"خطوة",of:"من",back:"رجوع",skip:"تخطي التعريف",
+  brand:"سِكَّة",step:"خطوة",of:"من",back:"رجوع",skip:"تخطي التعريف",
   welcomeTag:"رحلات مشتركة للمشاوير المتكررة",
   welcomeTitle:"مشوارك بيتكرر؟\nخلّيه أسهل.",
   welcomeDescription:"حدّد وجهتك وشوف الرحلات المنشورة في نفس اتجاهك. أو شارك خطك لو إنت الكابتن.",
@@ -26,8 +26,8 @@ export const entryCopy={
   chooseButton:"متابعة باستخدام جوجل",
   setupTitle:"كمّل بياناتك الأساسية",
   setupDescription:"ممكن تبدأ بالاسم ورقم للتواصل لو حبيت. باقي البيانات حسب استخدامك.",
-  setupSkip:"الذهاب لسِكّة",
-  signInTitle:"أهلاً بيك في سِكّة",
+  setupSkip:"الذهاب لسِكَّة",
+  signInTitle:"أهلاً بيك في سِكَّة",
   signInDescription:"استخدم حساب Google علشان نحفظ اختيارك ونفتح لك الرحلات الحقيقية.",
   signInSecure:"دخول واحد، حسابك محفوظ",
   signInLoading:"بنفتح جوجل…",
