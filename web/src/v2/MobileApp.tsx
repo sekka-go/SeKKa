@@ -79,9 +79,9 @@ export default function MobileApp(){
   const current=location.pathname+location.search+location.hash;
   if(canonical!==current)history.replaceState({route},'',canonical);
  },[route]);
- function navigate(next:MobileRoute,options:{replace?:boolean;selection?:RouteSelection}={}){
+ function navigate(next:MobileRoute,options:{replace?:boolean;selection?:RouteSelection;bookingId?:string}={}){
   setMenuOpen(false);
-  const href=mobileRouteHref(next,location.href,options.selection);
+  const href=mobileRouteHref(next,location.href,options.selection,options.bookingId);
   const current=location.pathname+location.search+location.hash;
   if(href===current){setRoute(next);return;}
   const state={route:next,sekkaNavigation:true,from:route};
@@ -346,6 +346,11 @@ export default function MobileApp(){
   else if(id===29){setBookingsSection('bookings');navigate({tab:'bookings'});}
   else navigate({tab:'home'});
  };
+ const backFromRideDetails=()=>{
+  const state=history.state as {sekkaNavigation?:boolean;from?:MobileRoute}|null;
+  if(state?.sekkaNavigation&&(state.from?.tab==='home'||(state.from?.tab==='search'&&[9,11].includes(state.from.view)))){history.back();return;}
+  navigate({tab:'search',view:9},{replace:true});
+ };
  const chooseRoute=(s:LiveSelection)=>{
   setLiveSelection(s);setSelectionError('');
   navigate({tab:'search',view:12},{selection:{routeId:s.route.id,pickupId:s.from.id,dropoffId:s.to.id,reverse:s.reverse}});
@@ -361,7 +366,7 @@ export default function MobileApp(){
    history.replaceState({route:{tab:'booking'}},'',u.pathname+u.search);
  };
  const approvedDiscovery=(screen:number)=><Discovery production riderId={userId} screen={screen} serviceAreas={areas} liveSelection={liveSelection} onLiveSelect={chooseRoute} theme={p.theme}
-     onTheme={p.setThemePreference} go={discoveryGo}
+     onTheme={p.setThemePreference} go={discoveryGo} onDetailBack={backFromRideDetails}
      routes={[]} route={null} bookings={[]} signedIn={Boolean(userId)} busy={false} error={areasError}
      onSearch={()=>{}} onSelect={()=>{}}
      onRequest={async()=>{throw Error(t('طلبات الخطوط متاحة من نتائج البحث الحقيقية فقط.','Submit requests through live search results.'));}}
@@ -536,7 +541,7 @@ export default function MobileApp(){
    {ready&&tab==='booking'&&!blockedRiderTab&&<Suspense fallback={<p role="status">{t('بنحمّل الحجز…','Loading booking…')}</p>}><V31BookingJourney offer={bookingOffer} routeId={liveSelection?.route.id||''}
      pickupId={new URL(location.href).searchParams.get('pickup')||''} dropoffId={new URL(location.href).searchParams.get('dropoff')||''}
      reverse={new URL(location.href).searchParams.get('reverse')==='1'} bookingId={bookingId}
-     onBack={()=>{if(bookingId)navigate({tab:'bookings'});else navigate({tab:'search',view:12});}}
+     onBack={()=>{if(bookingId){setBookingsSection('bookings');navigate({tab:'bookings'},{replace:true});}else{const state=history.state as {sekkaNavigation?:boolean;from?:MobileRoute}|null;if(state?.sekkaNavigation&&state.from?.tab==='search'&&state.from.view===12){history.back();}else navigate({tab:'search',view:12},{replace:true});}}}
      onLogin={()=>signInFor(location.pathname+location.search+location.hash)}
      onBooked={bookingSaved}/></Suspense>}
 
@@ -554,7 +559,7 @@ export default function MobileApp(){
      <button type="button" aria-pressed={bookingsSection==='bookings'} onClick={()=>setBookingsSection('bookings')}>{t('حجوزاتي المؤكدة وقيد الانتظار','My seat bookings')}</button>
      <button type="button" aria-pressed={bookingsSection==='requests'} onClick={()=>setBookingsSection('requests')}>{t('طلبات رحلاتي','My trip requests')}</button>
     </nav>
-    {bookingsSection==='bookings'?<RiderBookingsV3 onFindRide={()=>navigate({tab:'search',view:9})}/>:<LiveTripRequests mode="rider"/>}
+    {bookingsSection==='bookings'?<RiderBookingsV3 onFindRide={()=>navigate({tab:'search',view:9})} onOpenBooking={id=>navigate({tab:'booking'},{bookingId:id})}/>:<LiveTripRequests mode="rider"/>}
    </section>:<section className="sekka-mobile-card"><h1>{t('حجوزاتي','My bookings')}</h1><p>{t('سجّل دخولك علشان تشوف حجوزاتك الحقيقية.','Sign in to view your bookings.')}</p><button className="sekka-action" onClick={()=>signInFor('/?tab=bookings')}>{t('تسجيل الدخول','Sign in')}</button></section>)}
    {ready&&tab==='notifications'&&(userId?<LiveNotifications
     mode={isCaptainAccount?'captain':'rider'}
