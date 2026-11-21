@@ -16,6 +16,8 @@ import {internalScreen,publicScreen} from './screenMap';
 import LiveProfile from './LiveProfile';
 import LiveBookings from './LiveBookings';
 import RiderJourneyHome from './RiderJourneyHome';
+import RiderTabBar from './RiderTabBar';
+import type {RiderTab} from './RiderTabBar';
 import LiveTripRequests from './LiveTripRequests';
 import LiveNotifications from './LiveNotifications';
 const AdminDashboard=lazy(()=>import('./AdminDashboard'));
@@ -438,6 +440,12 @@ export default function MobileApp(){
  const isCaptainAccount=ready&&Boolean(userId)&&accountRole==='captain'&&captainApproved&&!admin;
  const blockedRiderTab=isCaptainAccount&&['home','search','bookings','booking','login','captain-onboarding'].includes(tab);
  const captainLanding=isCaptainAccount&&tab==='routes'&&captainScreen===42;
+ const showRiderTabs=ready&&Boolean(userId)&&!isCaptainAccount&&!admin&&
+  (tab==='home'||tab==='bookings'||tab==='profile'||(tab==='search'&&discoveryScreen===9));
+ const onRiderTab=(destination:RiderTab)=>{
+  if(destination==='search')navigate({tab:'search',view:9});
+  else navigate({tab:destination});
+ };
  useEffect(()=>{
   if(!blockedRiderTab)return;
   navigate({tab:'routes',view:42},{replace:true});
@@ -450,7 +458,7 @@ export default function MobileApp(){
   aria-expanded={menuOpen} aria-controls="sekka-side-menu" onClick={()=>setMenuOpen(true)}>
   <span aria-hidden="true">☰</span>
  </button>;
- return <div className={`sekka-mobile sekka-tab-${tab}${fullScreenSearchFilters?' sekka-search-filters':''}${fullScreenAuth?' sekka-fullscreen-auth':''}${fullScreenSearch?' sekka-fullscreen-search':''}${userId&&tab==='captain-onboarding'?' sekka-captain-logged-in':''}${!userId&&tab==='home'?' sekka-guest-welcome':''}${captainLanding?' sekka-captain-home-shell':''}`} dir={en?'ltr':'rtl'}>
+ return <div className={`sekka-mobile sekka-tab-${tab}${fullScreenSearchFilters?' sekka-search-filters':''}${fullScreenAuth?' sekka-fullscreen-auth':''}${fullScreenSearch?' sekka-fullscreen-search':''}${userId&&tab==='captain-onboarding'?' sekka-captain-logged-in':''}${!userId&&tab==='home'?' sekka-guest-welcome':''}${captainLanding?' sekka-captain-home-shell':''}${showRiderTabs?' sekka-rider-navigation':''}`} dir={en?'ltr':'rtl'}>
   <a className="sekka-skip" href="#sekka-content">{t('تخطي للمحتوى','Skip to content')}</a>
   <header className={`sekka-mobile-header${ready&&admin?' sekka-mobile-header-admin':''}`}>
    {captainLanding?<div className="sekka-captain-header">
@@ -468,7 +476,18 @@ export default function MobileApp(){
       <path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 9h18c0-1-3-2-3-9M10 21h4"/>
      </svg>
     </button>
-   </div>:menuButton}
+   </div>:<>{menuButton}
+    {showRiderTabs&&tab==='home'&&<>
+     <span className="rh-shell-title">{t('سِكّة','seKKa')}</span>
+     <button type="button" className="rh-shell-notifications" onClick={()=>navigate({tab:'notifications'})}
+      aria-label={t('الإشعارات','Notifications')}>
+      <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none"
+       stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+       <path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 9h18c0-1-3-2-3-9M10 21h4"/>
+      </svg>
+     </button>
+    </>}
+   </>}
    {ready&&admin&&<button type="button" className="sekka-admin-entry" aria-current={tab==='admin'?'page':undefined}
      onClick={openAdmin}>{t('لوحة الإدارة','Admin dashboard')}</button>}
   </header>
@@ -526,6 +545,9 @@ export default function MobileApp(){
    {adminLookupError&&<button type="button" onClick={()=>setAuthCheckRevision(v=>v+1)}>{t('إعادة فحص الصلاحيات','Retry authorization')}</button>}
    <button onClick={()=>navigate({tab:'home'})}>{t('العودة','Back')}</button></section>)}
   </main>
+  {showRiderTabs&&<RiderTabBar
+   active={tab==='search'?'search':tab==='bookings'?'bookings':tab==='profile'?'profile':'home'}
+   onNavigate={onRiderTab}/>}
   {menuOpen&&<div className="sekka-menu-layer">
    <button type="button" className="sekka-menu-backdrop" aria-label={t('إغلاق القائمة','Close menu')} onClick={closeMenu}/>
    <dialog open id="sekka-side-menu" className="sekka-side-drawer" aria-modal="true"
