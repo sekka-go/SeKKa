@@ -3,6 +3,7 @@ import type {KeyboardEvent} from 'react';
 import {greaterCairoEnvelope,isInsideOperationalRegion} from './greaterCairoBoundary';
 import {client} from './api';
 import {searchStaticCairo} from './staticCairoSearch';
+import {canonicalNamedQuery} from './priorityPlaceQueries';
 import {exactCatalogMatches,inspectPhoton,normalizedPlace,rankMapPlaces} from './geoPlace';
 import {indexedRowsToPlaces} from './indexedPlaceRows';
 import type {IndexedRow} from './indexedPlaceRows';
@@ -43,7 +44,7 @@ export async function lookupLocations(query:string,area:ServiceArea|undefined,en
  const cached=cache.get(key);
  if(cached&&cached.expires>Date.now())return cached.data;
  const staticResults=await searchStaticCairo(query,en,area,signal);
- if(staticResults.length>=5){
+ if(staticResults.length>=5||(canonicalNamedQuery(query)&&staticResults.length)){
   const data={places:staticResults.slice(0,8),outside:false};
   cache.set(key,{expires:Date.now()+300_000,data});
   return data;
