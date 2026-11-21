@@ -218,3 +218,115 @@ html[data-theme="dark"] .sekka-mobile {
 @media(prefers-reduced-motion:reduce) {
  .sekka-mobile * {scroll-behavior:auto!important}
 }
+
+/* Search results, booking, detail and GPS screens should share the same
+   visual language as Home — not the previous purple/orange/yellow gradient. */
+.sekka-mobile .rr3-hero,
+.sekka-mobile .sekka-rider-booking-v3 .rbk3-hero,
+.sekka-mobile .np4__hero,
+.sekka-mobile .rd3__hero{
+ background:linear-gradient(135deg,#171318,#27212B)!important;
+ color:var(--sekka-cream)!important;
+}
+.sekka-mobile .rr3-hero__heading>span,
+.sekka-mobile .sekka-rider-booking-v3 .rbk3-step,
+.sekka-mobile .np4__eyebrow,
+.sekka-mobile .rd3__step {color:#D8C1E9!important}
+.sekka-mobile .rr3-hero__dot,
+.sekka-mobile .np4__mini-route i,
+.sekka-mobile .rd3__route-line span{
+ background:#AA83CD!important;border-color:#FFF8EE!important;
+}
+.sekka-mobile .rr3-hero__dot--end,
+.sekka-mobile .np4__mini-route i:last-child,
+.sekka-mobile .rd3__route-line span:last-child{
+ background:var(--sekka-mauve)!important;
+}
+.sekka-mobile .d-screen-11 .sekka-live-results-toolbar p,
+.sekka-mobile .d-screen-11 .sekka-live-result-head h2 {
+ color:var(--sekka-black)!important;
+}
+.sekka-mobile .d-screen-11 .sekka-live-result{
+ background:var(--sekka-cream-card)!important;
+ color:var(--sekka-black)!important;
+ border-color:var(--sekka-cream-border)!important;
+}
+.sekka-mobile .d-screen-11 .sekka-live-result:before{
+ background:var(--sekka-mauve)!important;
+}
+.sekka-mobile .d-screen-11 .sekka-live-results-toolbar .d-outline,
+.sekka-mobile .rr3-hero__bottom>button{
+ background:var(--sekka-mauve-soft)!important;
+ color:#34273E!important;
+ border-color:var(--sekka-mauve-soft)!important;
+}
+.sekka-mobile .d-screen-11 .sekka-live-sort select{
+ background:var(--sekka-cream-card)!important;
+ color:var(--sekka-black)!important;
+ border-color:var(--sekka-cream-border)!important;
+}
+.sekka-mobile .sekka-rider-booking-v3{
+ --bk-ink:#171318;--bk-purple:var(--sekka-mauve);
+ --bk-line:var(--sekka-cream-border);
+ --bk-surface:var(--sekka-cream-card);
+ --bk-muted:#645765;
+ background:var(--sekka-cream)!important;
+}
+.sekka-mobile .sekka-rider-booking-v3>.b-canvas{
+ background:var(--sekka-cream)!important;color:var(--sekka-black)!important;
+}
+.sekka-mobile .sekka-rider-booking-v3 .b-offer .b-route,
+.sekka-mobile .sekka-rider-booking-v3 .b-row>strong{
+ color:var(--sekka-black)!important;
+}
+.sekka-mobile .sekka-rider-booking-v3 .b-stops,
+.sekka-mobile .sekka-rider-booking-v3 .b-seat-chooser{
+ background:#F0E5D8!important;color:var(--sekka-black)!important;
+}
+.sekka-mobile .sekka-rider-booking-v3 .b-seat-controls>button{
+ background:var(--sekka-mauve)!important;color:#FFF9F0!important;
+}
+.sekka-mobile .np4{
+ --np-ink:#171318;--np-muted:#665A68;
+ --np-purple:var(--sekka-mauve);--np-yellow:#B48CCC;
+ --np-line:var(--sekka-cream-border);
+ --np-bg:var(--sekka-cream);--np-paper:var(--sekka-cream-card);
+}
+.sekka-mobile .np4__hero button.np4__locate{
+ background:var(--sekka-mauve)!important;
+ border-color:var(--sekka-mauve)!important;color:#FFFAF2!important;
+ box-shadow:0 7px 15px #2A1B352B!important;
+}
+.sekka-mobile .np4__mini-route:before{border-color:#D7B6E7!important}
+.sekka-mobile .rd3{color:var(--sekka-black)!important}
+.sekka-mobile .rd3__route,
+.sekka-mobile .rd3__facts>div,
+.sekka-mobile .rd3__stops{
+ background:var(--sekka-cream-card)!important;
+ border-color:var(--sekka-cream-border)!important;
+ color:var(--sekka-black)!important;
+}
+.sekka-mobile .rd3__route-stops strong,
+.sekka-mobile .rd3__facts strong{
+ color:var(--sekka-black)!important;
+}
+.sekka-mobile .rd3__stops label>select{
+ background:var(--sekka-cream-card)!important;
+ color:var(--sekka-black)!important;
+ border-color:var(--sekka-cream-border)!important;
+}
+.sekka-mobile .rd3__section-icon{
+ background:var(--sekka-mauve-soft)!important;
+ color:var(--sekka-mauve)!important;
+}
+.sekka-mobile .sekka-screen-back button{
+ background:var(--sekka-cream-card)!important;
+ color:var(--sekka-black)!important;
+ border-color:var(--sekka-cream-border)!important;
+}
+.sekka-mobile.sekka-tab-notifications>.sekka-mobile-content{
+ background:var(--sekka-cream)!important;
+}
+.sekka-mobile.sekka-tab-notifications .live-notifications .d-outline{
+ background:var(--sekka-mauve)!important;color:var(--sekka-cream)!important;
+}
