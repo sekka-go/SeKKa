@@ -19,7 +19,6 @@ import {geoRequestAvailable} from "./geoPlace";
 import type {PlaceChoice} from "./geoPlace";
 import type {LiveSelection} from "./LiveRouteSearch";
 import {saveCommute,isWeekdays} from './riderCommute';
-import {riderHomeCopy} from './riderHomeCopy';
 import './rider-journey.css';
 
 export const discoveryScreens = [8, 9, 10, 11, 12, 14];
