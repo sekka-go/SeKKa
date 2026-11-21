@@ -313,7 +313,10 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
 
   {step===1&&<fieldset className="sekka-route-step">
    <legend><span>1</span> {t('مسار الرحلة','Route stops')}</legend>
-   <CaptainRouteMap stops={stops}/>
+   {stops.length>=2&&<details className="cj-captain-route-map-preview">
+    <summary>{t('معاينة خط السير على الخريطة (اختياري)','Preview route on map (optional)')}</summary>
+    <CaptainRouteMap stops={stops}/>
+   </details>}
    <p className="cj-route-hint">{t('ابحث عن أي منطقة أو شارع أو مول أو مدرسة، واضغط على الاسم لإضافة محطة.',
     'Search any area, street, mall or school and tap the name to add a stop.')}</p>
    <div className="cj-easy-route-top">
@@ -339,7 +342,7 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
    </ol>}
    <CaptainPlacePicker label={t('ابحث عن محطة','Search for a stop')}
     value={placeLabel} choice={placeChoice} searchArea={selectedArea}
-    onPick={(value,choice)=>{setPlaceLabel(value);setPlaceChoice(choice);setError('');}}
+    onPick={(value,choice)=>{setPlaceLabel(value);setPlaceChoice(choice);if(!choice)setPendingPlace(null);setError('');}}
     onVerified={place=>addVerifiedStop(place)}/>
    {pendingPlace&&<div className="cj-captain-pending-area" role="group"
      aria-label={t('اختار منطقة المحطة','Choose stop service area')}>
