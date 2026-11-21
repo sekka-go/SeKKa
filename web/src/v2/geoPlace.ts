@@ -1,6 +1,7 @@
 import {straightLineKm} from './nearbyRoutes.ts';
 import type {GeoPoint} from './nearbyRoutes.ts';
 import {isInsideOperationalRegion} from './greaterCairoBoundary.ts';
+import {isInsideCairoDiscovery} from './discoveryCairo.ts';
 import {localPlaceCatalog,serviceAreaAliases} from './locationCatalog.ts';
 import type {CatalogPlace} from './locationCatalog.ts';
 
@@ -9,8 +10,16 @@ export type MapPlace=GeoPoint&{
  kind?:'point'|'area'|'road'|'feature'; osmKey?:string;osmValue?:string;catalogKey?:string;catalogKind?:CatalogPlace['kind'];
 };
 export type ServiceArea={id:number;name_ar:string;name_en:string};
-export type PlaceChoice={kind:'service';area:ServiceArea}|{kind:'map';place:MapPlace};
+/** A search landmark is a geographic search anchor, never a booked boarding point. */
+export type PlaceChoice={kind:'service';area:ServiceArea}|{kind:'search';place:MapPlace}|{kind:'map';place:MapPlace};
 export const inLaunchRegion=isInsideOperationalRegion;
+/** Named OSM locations can anchor nearby Captain-stop search without map pin confirmation. */
+export function isSearchableMapPlace(place:MapPlace|null|undefined):boolean {
+ return !!place&&place.source==='map'&&/^[NWR]:\d{1,16}$/.test(place.id)&&
+  typeof place.name==='string'&&place.name.trim().length>=2&&place.name.length<=200&&
+  isInsideCairoDiscovery(place);
+}
+
 export const PHOTON_ATTRIBUTION='© OpenStreetMap contributors · Photon';
 export const outsideCoverageMessage={
  ar:'المكان ده خارج نطاق تشغيل سِكّة حاليًا. بنخدم القاهرة الكبرى فقط.',
