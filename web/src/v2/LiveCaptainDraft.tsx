@@ -7,6 +7,7 @@ import CaptainRouteMap from './CaptainRouteMap';
 import {captainRouteError} from './captainRouteErrors';
 import {draftPriceGuidance,outsideDraftPriceGuidance} from './draftPriceGuidance';
 import {inLaunchRegion,mapPlacesFromPhoton,placeMatchesArea,outsideCoverageMessage} from './geoPlace';
+import {inferCaptainArea,validStopSchedule} from './captainStopPlanning';
 import type {MapPlace} from './geoPlace';
 import type {PlaceChoice} from './geoPlace';
 import {straightLineKm} from './nearbyRoutes';
@@ -15,7 +16,7 @@ import {usePreferences} from './preferences';
 import type {Category} from '../../../packages/domain/subscriptions';
 
 type Area={id:number;name_ar:string;name_en:string;region?:string};
-type StopInput={areaId:number;name:string;pickup:boolean;dropoff:boolean;latitude:number|null;longitude:number|null};
+type StopInput={areaId:number;name:string;pickup:boolean;dropoff:boolean;latitude:number|null;longitude:number|null;outboundStopTime:string;returnStopTime:string};
 type Vehicle={id:string;model:string;plate_number:string;enabled_categories:string[]};
 const categorySeats:Record<Category,number>={PRIME:3,SAVER:4,SPACE:9,MAX:13};
 
@@ -32,6 +33,7 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
  const [placeChoice,setPlaceChoice]=useState<PlaceChoice|null>(null);
  const [locatingStop,setLocatingStop]=useState(false);
  const [stops,setStops]=useState<StopInput[]>([]);
+ const [pendingPlace,setPendingPlace]=useState<MapPlace|null>(null);
  const [vehicleId,setVehicleId]=useState('');
  const [category,setCategory]=useState<Category|null>(null);
  const [period,setPeriod]=useState('monthly');
@@ -166,27 +168,33 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
    {enableHighAccuracy:true,timeout:12000,maximumAge:0}
   );
  };
- const addVerifiedStop=(place:MapPlace)=>{
+ const addVerifiedStop=(place:MapPlace,explicitArea?:Area)=>{
   setError('');setMessage('');
-  if(!selectedArea){setError(t('اختار المنطقة الأول.','Choose an area first.'));return;}
+  const targetArea=explicitArea??selectedArea??inferCaptainArea(place,areas);
+  if(!targetArea){
+   setPendingPlace(place);
+   setError(t('المكان اتحدد. اختار المنطقة الإدارية التابعة له عشان نضيفه للمسار.',
+    'Place selected. Choose its service area to add this stop.'));
+   return;
+  }
   const verifiedPoint=persistableOperationalPoint(place);
   if(!verifiedPoint){
    setError(t(outsideCoverageMessage.ar,outsideCoverageMessage.en));return;
   }
-  if(!placeMatchesArea(place,selectedArea)){
+  if(!explicitArea&&selectedArea&&!placeMatchesArea(place,selectedArea)){
    setError(t('المكان ده مش متأكد إنه في المنطقة دي.','Place is not verified inside this area.'));return;
   }
   const name=place.name.trim();
   if(name.length<3||name.length>100){setError(t('اختار مكان باسم واضح.','Choose a named place.'));return;}
   if(stops.length>=30){setError(t('وصلت لأقصى عدد نقاط.','Maximum stops reached.'));return;}
-  if(stops.some(s=>s.areaId===selectedArea.id&&
+  if(stops.some(s=>s.areaId===targetArea.id&&
     (s.name.toLocaleLowerCase()===name.toLocaleLowerCase()||
      s.latitude!==null&&s.longitude!==null&&straightLineKm({latitude:s.latitude,longitude:s.longitude},place)<0.03))){
    setError(t('المكان ده اتضاف بالفعل.','Stop is already added.'));return;
   }
-  const next=[...stops,{areaId:selectedArea.id,name,pickup:true,dropoff:true,
-   ...verifiedPoint}];
-  setStops(next);setAreaId('');activeAreaId.current='';
+  const next=[...stops,{areaId:targetArea.id,name,pickup:true,dropoff:true,
+   outboundStopTime:'',returnStopTime:'',...verifiedPoint}];
+  setStops(next);setPendingPlace(null);setAreaId('');activeAreaId.current='';
   setPlaceLabel('');setPlaceChoice(null);
 
  };
@@ -194,6 +202,7 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
    if(!client||!uid||saving.current)return;
    setMessage('');setError('');
    if(title.length<3||title.length>120||stops.length<2||stops[0].areaId===stops.at(-1)?.areaId||
+      !validStopSchedule(stops)||
       stops.some(stop=>stop.latitude===null||stop.longitude===null||
        !inLaunchRegion({latitude:stop.latitude,longitude:stop.longitude}))||
       !vehicleId||!category||!eligibleCategories.includes(category)||vehicleCheck!=='clear'||
@@ -215,7 +224,9 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
        p_return_supported:direction==='return'||(direction==='round_trip'&&returnSupported),
        p_price:Number(price),p_stops:stops.map(s=>({
          area_id:s.areaId,name:s.name,pickup:s.pickup,dropoff:s.dropoff,
-         latitude:s.latitude,longitude:s.longitude
+         latitude:s.latitude,longitude:s.longitude,
+         outbound_stop_time:direction==='return'?null:s.outboundStopTime||null,
+         return_stop_time:direction==='outbound'?null:s.returnStopTime||null
        }))
      };
      // Store a payload digest and attempt ID so a reload can retry the same details.
@@ -234,7 +245,7 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
      if(typeof routeId!=='string')throw Error('DRAFT_NOT_CONFIRMED');
      const [{data:saved,error:savedError},{data:savedStops,error:stopsError}]=await Promise.all([
        client.from('v31_routes').select('id,status,vehicle_id,category,seat_capacity').eq('id',routeId).eq('captain_id',uid).maybeSingle(),
-       client.from('v31_route_stops').select('id,area_id,name,position,latitude,longitude,pickup_allowed,dropoff_allowed').eq('route_id',routeId).order('position')
+       client.from('v31_route_stops').select('id,area_id,name,position,latitude,longitude,pickup_allowed,dropoff_allowed,outbound_stop_time,return_stop_time').eq('route_id',routeId).order('position')
      ]);
      if(savedError||stopsError)throw Error(savedError?.message||stopsError?.message||'DRAFT_READ_FAILED');
      const {data:privatePrices,error:privatePriceError}=await client.rpc('v31_captain_private_prices',{p_route:routeId});
@@ -246,6 +257,11 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
           s.pickup_allowed!==stops[i].pickup||s.dropoff_allowed!==stops[i].dropoff)){
        throw Error('DRAFT_PERSISTENCE_NOT_VERIFIED');
      }
+     if(savedStops.some((entry,i)=>
+      (entry.outbound_stop_time?String(entry.outbound_stop_time).slice(0,5):'')!==(direction==='return'?'':stops[i].outboundStopTime)||
+      (entry.return_stop_time?String(entry.return_stop_time).slice(0,5):'')!==(direction==='outbound'?'':stops[i].returnStopTime))){
+      throw Error('STOP_TIME_READBACK_FAILED');
+     }
      if(savedStops.some((entry,i)=>entry.latitude==null||entry.longitude==null||
        !Number.isFinite(Number(entry.latitude))||!Number.isFinite(Number(entry.longitude))||
        Math.abs(Number(entry.latitude)-stops[i].latitude!)>0.000001||
@@ -255,7 +271,7 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
      try{clearReservationAttempt(sessionStorage,signature);}catch{/* Storage can be unavailable in private mode. */}
      draftAttempts.current.delete(signature);
      setMessage(t('تم حفظ المسودة وإحداثيات نقاط الوقوف.','Draft and stop coordinates verified.'));
-     setStops([]);setPlaceLabel('');setPlaceChoice(null);setPrice('');
+     setStops([]);setPendingPlace(null);setPlaceLabel('');setPlaceChoice(null);setPrice('');
      setStep(1);
      onSaved?.(routeId);
    }catch(e){setError(captainRouteError(e,en?'en':'ar'));}
@@ -285,7 +301,7 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
  const draftReady=stops.length>=2&&stops[0].areaId!==stops.at(-1)?.areaId&&
   title.length>=3&&title.length<=120&&Boolean(vehicleId)&&Boolean(category)&&
   eligibleCategories.includes(category as Category)&&vehicleCheck==='clear'&&/^\d{1,7}$/.test(price)&&Number(price)>0&&
-  (direction!=='round_trip'||returnSupported);
+  (direction!=='round_trip'||returnSupported)&&validStopSchedule(stops);
  return <section className="d-box live-route-form sekka-captain-route-wizard">
   <header className="sekka-route-intro">
    <p className="sekka-route-eyebrow">{t('حساب كابتن معتمد','Approved Captain')}</p>
