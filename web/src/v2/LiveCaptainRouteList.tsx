@@ -5,7 +5,7 @@ import {usePreferences} from './preferences';
 
 type RouteRow={id:string;title:string;category:string;status:string;price_egp:number|null;seat_capacity:number;direction:string;period:string;outbound_time:string|null;return_time:string|null};
 type CapacityRow={route_id:string;capacity:number;booked:number;remaining:number;is_full:boolean};
-type RouteStop={id:string;name:string;position:number};
+type RouteStop={id:string;name:string;position:number;outbound_stop_time:string|null;return_stop_time:string|null};
 type Tab='all'|'published'|'draft';
 
 /** Real Captain routes: data is read from Supabase with server-enforced Captain RLS.
@@ -77,7 +77,7 @@ export default function LiveCaptainRouteList({initialReviewId=null}:{initialRevi
   const id=expanded;
   void (async()=>{
    try{
-    const {data,error:readError}=await api.from('v31_route_stops').select('id,name,position')
+    const {data,error:readError}=await api.from('v31_route_stops').select('id,name,position,outbound_stop_time,return_stop_time')
      .eq('route_id',id).order('position').abortSignal(controller.signal);
     if(readError||!Array.isArray(data))throw Error('ROUTE_STOPS_READ_FAILED');
     if(!controller.signal.aborted)setLoadedStops({id,revision,rows:data as RouteStop[],failed:false});
@@ -165,7 +165,11 @@ export default function LiveCaptainRouteList({initialReviewId=null}:{initialRevi
       <button type="button" onClick={()=>setRevision(value=>value+1)}>{t('إعادة المحاولة','Retry loading stops')}</button>
      </div>}
      {currentStops&&!currentStops.failed&&routeStops.length===0&&<p>{t('مفيش نقاط متاحة للعرض.','No stops available.')}</p>}
-     {stopsInTravelOrder.length>0&&<ol aria-label={t('ترتيب المحطات','Stop order')}>{stopsInTravelOrder.map(stop=><li key={stop.id}><bdi>{stop.name}</bdi></li>)}</ol>}
+     {stopsInTravelOrder.length>0&&<ol aria-label={t('ترتيب المحطات','Stop order')}>{stopsInTravelOrder.map(stop=><li key={stop.id}>
+       <bdi>{stop.name}</bdi>
+       {route.direction!=='return'&&stop.outbound_stop_time&&<small> · {t('مرور متوقع ذهاب','Estimated outbound')} <bdi>{stop.outbound_stop_time.slice(0,5)}</bdi></small>}
+       {route.direction!=='outbound'&&stop.return_stop_time&&<small> · {t('مرور متوقع عودة','Estimated return')} <bdi>{stop.return_stop_time.slice(0,5)}</bdi></small>}
+      </li>)}</ol>}
      {route.direction==='round_trip'&&stopsInTravelOrder.length>0&&<p>{t('العودة بنفس المحطات بالترتيب العكسي.','Return uses the same stops in reverse order.')}</p>}
      <p className="cj-private-price">{t('السعر الإجمالي للمركبة لا يظهر للركاب. سعر المقعد بيحسبه السيرفر.','The full-vehicle total is hidden from riders. Seat pricing is server-calculated.')}</p>
      <div className="cj-details-actions">
