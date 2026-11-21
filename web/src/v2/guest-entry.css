@@ -4,7 +4,7 @@
  --se-bg:#FFFFFF;--se-ink:#28143E;--se-muted:#645570;--se-card:#FFF7F3;
  --se-line:#E8DCE8;--se-primary:#6412B1;--se-yellow:#FFCD38;
  display:block!important;min-height:100dvh;padding:0!important;background:var(--se-bg)!important;
- color:var(--se-ink);width:100%;max-width:100%;margin:0!important
+ color:var(--se-ink);width:100%!important;max-width:100%!important;height:auto!important;margin:0!important
 }
 .phase-one-stage.sekka-entry-stage>.phase-canvas.sekka-entry{
  position:relative!important;inset:auto!important;display:flex!important;flex-direction:column!important;
