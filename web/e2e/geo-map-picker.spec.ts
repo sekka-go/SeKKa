@@ -5,9 +5,11 @@ test('Passenger can open the real map with empty search and confirm a Cairo pin 
  await page.goto('/?tab=search&view=9');
  const form=page.locator('.rs3');
  await expect(form).toBeVisible();
- const button=form.getByRole('button',{name:/اختيار من الخريطة/}).first();
+ const button=form.locator('.rs3__optional-map-toggle');
  await expect(button).toBeEnabled();
  await button.click();
+ await expect(page.getByRole('dialog',{name:'حدد نقطة على الخريطة'})).toHaveCount(0);
+ await form.locator('.rs3__optional-map-actions').getByRole('button',{name:'حدد الانطلاق على الخريطة'}).click();
  const dialog=page.getByRole('dialog',{name:'حدد نقطة على الخريطة'});
  await expect(dialog).toBeVisible();
  await expect(dialog.locator('.sekka-map-picker__map')).toBeVisible();
@@ -29,7 +31,8 @@ test('A guest may close the map without replacing the current text',async({page}
  await from.fill('الحي الأول');
  // Dismiss typed suggestions before explicitly opting in to map mode.
  await form.locator('.rs3__head').click();
- await form.getByRole('button',{name:/اختيار من الخريطة/}).first().click();
+ await form.locator('.rs3__optional-map-toggle').click();
+ await form.locator('.rs3__optional-map-actions').getByRole('button',{name:'حدد الانطلاق على الخريطة'}).click();
  const dialog=page.getByRole('dialog',{name:'حدد نقطة على الخريطة'});
  await expect(dialog).toBeVisible();
  await dialog.getByRole('button',{name:'إغلاق الخريطة'}).click();
