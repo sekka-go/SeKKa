@@ -31,6 +31,14 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
   .filter(item=>broad.some(place=>place.catalogKey===item.key)).map(item=>item.area));
  const parent=parentKeys.size===1?areas.find(area=>parentKeys.has(area.name_en.toLowerCase())):undefined;
  const areasToPick=parent&&!local.some(area=>area.id===parent.id)?[...local,parent]:local;
+ const categoryLabel=(place:typeof broad[number])=>{
+  const kind=place.osmValue;
+  return kind==='mall'?t('مول / مركز تسوق','Shopping mall'):
+   kind==='school'?t('مدرسة','School'):
+   ['kindergarten','childcare','nursery'].includes(kind??'')?t('حضانة','Nursery'):
+   ['university','college'].includes(kind??'')?t('جامعة / كلية','University / college'):
+   ['office','commercial','business'].includes(kind??'')?t('منطقة أعمال','Business district'):'';
+ };
  const picks:PlaceChoice[]=[...areasToPick.map(area=>({kind:'service' as const,area})),
   ...points.map(place=>({kind:'map' as const,place}))];
  const pick=(i:number)=>{
