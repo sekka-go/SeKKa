@@ -35,10 +35,10 @@ export default function LaunchSplash({ children }: { children: ReactNode }) {
     <>
       {children}
       {visible && (
-        <div className="sekka-launch" role="status" aria-label="Opening seKKa">
+        <div className="sekka-launch" role="status" aria-label="جاري فتح سِكّة">
           <img className="sekka-launch__artwork"
-            src="/brand/sekka-launch-static-20261118.svg"
-            alt="seKKa"
+            src="/brand/sekka-go-512.png"
+            alt="سِكّة"
             draggable={false}
             fetchPriority="high" />
         </div>
