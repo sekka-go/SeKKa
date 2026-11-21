@@ -1,30 +1,24 @@
 {
-  "name": "seKKa",
-  "short_name": "seKKa",
+  "name": "Sekka Go",
+  "short_name": "Sekka Go",
   "start_url": "/",
   "display": "standalone",
-  "dir": "ltr",
-  "lang": "en",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "dir": "rtl",
+  "lang": "ar",
+  "background_color": "#FFF9F5",
+  "theme_color": "#6412B1",
   "icons": [
     {
-      "src": "/brand/sekka-launch-static-20261118.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "/brand/sekka-pwa-en-20261118-192.png",
+      "src": "/brand/sekka-go-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
-      "src": "/brand/sekka-pwa-en-20261118-512.png",
+      "src": "/brand/sekka-go-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ],
   "scope": "/",
