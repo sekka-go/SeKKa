@@ -26,3 +26,16 @@ test('route changes discard stale booking data while booking destinations retain
   routeId:'r2',pickupId:'p2',dropoffId:'d2',reverse:true
  }),'/?tab=booking&route=r2&pickup=p2&dropoff=d2&reverse=1');
 });
+
+test('canonicalizing the active search detail URL never erases its selected stop pair',()=>{
+ const active='https://sekka.example/?tab=search&view=12&route=r7&pickup=p3&dropoff=d8&reverse=1';
+ const screen=readMobileRoute(active);
+ assert.equal(mobileRouteHref(screen,active),
+  '/?tab=search&view=12&route=r7&pickup=p3&dropoff=d8&reverse=1');
+ const booking='https://sekka.example/?tab=booking&route=r7&pickup=p3&dropoff=d8&booking=b9';
+ assert.equal(mobileRouteHref(readMobileRoute(booking),booking),
+  '/?tab=booking&route=r7&pickup=p3&dropoff=d8&booking=b9');
+ // Different sections must still discard sensitive, stale booking arguments.
+ assert.equal(mobileRouteHref({tab:'notifications'},active),'/?tab=notifications');
+ assert.equal(mobileRouteHref({tab:'bookings'},booking),'/?tab=bookings');
+});
