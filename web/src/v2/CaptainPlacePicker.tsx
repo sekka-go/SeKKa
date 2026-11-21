@@ -42,9 +42,14 @@ export default function CaptainPlacePicker({label,value,choice,onPick,onVerified
   const place=points[index];
   if(!place)return;
   inputRef.current?.blur();
-  setQuery(place.name);setOpen(false);setImmediate(0);options.reset();
-  onPick(place.name,{kind:'search',place});
-  onVerified?.(place);
+  setOpen(false);setImmediate(0);options.reset();
+  if(onVerified){
+   // The selected stop is immediately appended by the parent. Clear the
+   // local combobox directly: parent updates may batch back to the same value.
+   setQuery('');onVerified(place);
+  }else{
+   setQuery(place.name);onPick(place.name,{kind:'search',place});
+  }
  };
  const verifyMapPin=async (place:MapPlace):Promise<boolean>=>{
   try{
@@ -58,8 +63,8 @@ export default function CaptainPlacePicker({label,value,choice,onPick,onVerified
     straightLineKm(candidate,place)<=0.35);
    if(!nearby)return false;
    const verified={...place,name:t('نقطة قرب ','Point near ')+nearby.name,detail:nearby.detail,locality:nearby.locality};
-   onPick(verified.name,{kind:'map',place:verified});
-   onVerified?.(verified);
+   if(onVerified){setQuery('');onVerified(verified);}
+   else {setQuery(verified.name);onPick(verified.name,{kind:'map',place:verified});}
    setMapOpen(false);setOpen(false);return true;
   }catch{return false;}
  };
