@@ -10,7 +10,7 @@ import {formatDistanceForLocale,approximateWalkMinutes} from './recurringGeo';
 import {sortRealRides} from './riderRank';
 
 export type Route={id:string;title:string;category:string;seat_capacity:number;period:string;direction:string;outbound_time:string|null;return_time:string|null;seat_price_egp:number;return_supported:boolean};
-export type Stop={id:string;route_id:string;area_id:number;position:number;name:string;pickup_allowed:boolean;dropoff_allowed:boolean;latitude?:number|string|null;longitude?:number|string|null};
+export type Stop={id:string;route_id:string;area_id:number;position:number;name:string;pickup_allowed:boolean;dropoff_allowed:boolean;latitude?:number|string|null;longitude?:number|string|null;outbound_stop_time?:string|null;return_stop_time?:string|null};
 export type LiveSelection={route:Route;from:Stop;to:Stop;reverse:boolean;stops:Stop[];remaining:number};
 type SearchMatch=LiveSelection&{pickupDistanceKm:number|null;dropoffDistanceKm:number|null};
 type SearchRow={route_id:string;selection:SearchMatch};
@@ -19,7 +19,7 @@ export async function fetchPublishedSelection(routeId:string,fromId:string,toId:
  const {data:route,error:routeError}=await client.from('v31_public_route_offers').select('id,title,category,seat_capacity,period,direction,outbound_time,return_time,seat_price_egp,return_supported').eq('id',routeId).eq('status','published').maybeSingle();
  if(routeError)throw routeError;
  if(!route)throw Error('ROUTE_NOT_AVAILABLE');
- const {data:rows,error:stopsError}=await client.from('v31_route_stops').select('id,route_id,area_id,position,name,pickup_allowed,dropoff_allowed,latitude,longitude').eq('route_id',routeId).order('position');
+ const {data:rows,error:stopsError}=await client.from('v31_route_stops').select('id,route_id,area_id,position,name,pickup_allowed,dropoff_allowed,latitude,longitude,outbound_stop_time,return_stop_time').eq('route_id',routeId).order('position');
  if(stopsError)throw stopsError;
  const stops=((rows||[]) as Stop[]).filter(stop=>
   (stop.latitude==null&&stop.longitude==null)||
@@ -160,8 +160,10 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
    </header>
    <ol className="sekka-live-stops" aria-label={t('محطات الركوب والنزول','Pickup and drop-off')}>
     <li><span>{t('نقطة الركوب','Pickup')}</span><strong dir="auto">{from.name}</strong>
+     {(reverse?from.return_stop_time:from.outbound_stop_time)&&<small>{t('وقت مرور متوقع','Estimated passing time')} <bdi dir="ltr">{(reverse?from.return_stop_time:from.outbound_stop_time)?.slice(0,5)}</bdi></small>}
      {selection.pickupDistanceKm!==null&&<small>{pickupDistanceLabel(selection.pickupDistanceKm)} · {t('مشي حوالي','About')} {walkingLabel(selection.pickupDistanceKm)} {t('دقيقة تقريبًا','min walking (approx.)')}</small>}</li>
     <li><span>{t('نقطة النزول','Drop-off')}</span><strong dir="auto">{to.name}</strong>
+     {(reverse?to.return_stop_time:to.outbound_stop_time)&&<small>{t('وقت مرور متوقع','Estimated passing time')} <bdi dir="ltr">{(reverse?to.return_stop_time:to.outbound_stop_time)?.slice(0,5)}</bdi></small>}
      {selection.dropoffDistanceKm!==null&&<small>{pickupDistanceLabel(selection.dropoffDistanceKm)}</small>}</li>
    </ol>
    {hasMapPoint&&<p className="sekka-live-meta">{t('المسافات بخط مستقيم، ووقت المشي تقديري','Straight-line distances; walking time is an estimate')}</p>}
