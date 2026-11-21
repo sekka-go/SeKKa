@@ -996,7 +996,7 @@ export default function Discovery(p: DiscoveryProps) {
         {screen===9&&p.production&&<RiderSearchV3
           origin={origin} destination={destination} originPlace={originPlace}
           destinationPlace={destinationPlace} areas={p.serviceAreas||[]}
-          outbound={outbound} returnTime={returnTime} period={period}
+          outbound={outbound} returnTime={returnTime}
           weekdays={preferredWeekdays}
           onOrigin={(name,choice)=>{setOrigin(name);setOriginPlace(choice);}}
           onDestination={(name,choice)=>{setDestination(name);setDestinationPlace(choice);}}
@@ -1004,7 +1004,6 @@ export default function Discovery(p: DiscoveryProps) {
            setOriginPlace(destinationPlace);setDestinationPlace(originPlace);}}
           onOutbound={setOutbound}
           onReturn={value=>{setReturnTime(value);setFilterDirection(value?'round_trip':'');}}
-          onPeriod={value=>{setPeriod(value);setAppliedFilters(true);}}
           onWeekdays={setPreferredWeekdays} onSearch={search}
           onLiveSelect={p.onLiveSelect}
         />}
