@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-// Build 256 on-demand static autocomplete shards from licensed Geofabrik OSM.
+// Build 512 on-demand static autocomplete shards from licensed Geofabrik OSM.
 // ODbL 1.0 data; NEVER export Google Maps content. Not bundled into app JS.
 import {readFileSync,mkdirSync,writeFileSync} from 'node:fs';
 import path from 'node:path';
-import {greaterCairoGeometry} from '../../web/src/v2/greaterCairoGeometry.ts';
+import {isInsideCairoDiscovery} from '../../web/src/v2/discoveryCairo.ts';
 
 const root=process.argv[2]||'geo-index';
 const output=process.argv[3]||'web/public/geo-index';
@@ -15,18 +15,7 @@ const normalize=x=>String(x||'').normalize('NFKC').toLowerCase().normalize('NFD'
  .replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-0x660))
  .replace(/[۰-۹]/g,c=>String(c.charCodeAt(0)-0x6f0))
  .replace(/[^\p{Letter}\p{Number}]+/gu,' ').trim();
-function covered(lon,lat){
- return greaterCairoGeometry.coordinates.some(poly=>{
-  const inside=ring=>{let good=false;
-   for(let i=0,j=ring.length-1;i<ring.length;j=i++){
-    const a=ring[i],b=ring[j];
-    if((a[1]>lat)!==(b[1]>lat)&&lon<(b[0]-a[0])*(lat-a[1])/(b[1]-a[1])+a[0])good=!good;
-   }
-   return good;
-  };
-  return inside(poly[0])&&poly.slice(1).every(r=>!inside(r));
- });
-}
+function covered(lon,lat){return isInsideCairoDiscovery({latitude:lat,longitude:lon});}
 function parse(x){return x==='\\N'?null:x.replace(/\\t/g,'\t').replace(/\\n/g,'\n')
  .replace(/\\r/g,'\r').replace(/\\\\/g,'\\');}
 function hash(s){
@@ -80,12 +69,12 @@ for(let bucket=0;bucket<512;bucket++){
 }
 const summary={data_license:'ODbL 1.0',source:input.source_url,snapshot:input.snapshot,
  source_records:input.records,source_aliases:input.aliases,
- records_inside_active_polygon:approvedCount,
+ records_inside_discovery_envelope:approvedCount,
  indexed_unique_records:places.size,road_segment_duplicates_collapsed:roadDuplicateCount,
  indexed_alias_entries:aliasCount,shards:512,shard_record_references:stored,
  max_records_in_one_shard:maxBucket,max_uncompressed_shard_bytes:maximumBytes,
  generated_at:new Date().toISOString(),
- note:'All imported features have approved polygon representative points. Area and road coordinates are context only, not pickup pins.'};
+ note:'All imported features are inside the Cairo DISCOVERY envelope; operational geofence and pin approval are separate. Area and road coordinates are context only, not pickup pins.'};
 writeFileSync(path.join(output,'manifest.json'),JSON.stringify(summary,null,2)+'\n');
 writeFileSync(path.join(output,'ATTRIBUTION.txt'),
  'Contains OpenStreetMap data © OpenStreetMap contributors, ODbL 1.0.\nSource: '+
