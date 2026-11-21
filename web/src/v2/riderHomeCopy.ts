@@ -1,12 +1,12 @@
 export const riderHomeCopy={
  ar:{
-  kicker:'سِكّة.. مشاوير أذكى',title:'جاهز لمشوارك؟',
+  kicker:'سِكَّة · معاك في السِكَّة',title:'رايح فين؟',
   subtitle:'دور على رحلة في طريقك، واختار نقطة الركوب اللي تناسبك.',
-  searchButton:'ابحث',originEditor:'اختار مكان الانطلاق',destinationEditor:'اختار وجهتك',timeEditor:'حدد مواعيدك',daysEditor:'اختار أيام المشوار',close:'إغلاق',done:'تم',placeHint:'اكتب مكانك واختاره من نتائج البحث الحقيقية.',outboundTime:'ميعاد الذهاب',returnTimeOptional:'ميعاد العودة (اختياري)',timeHint:'ممكن تسيب الميعاد فاضي وتشوف الرحلات في كل المواعيد.',daysHint:'اختار أيام الأسبوع اللي تناسبك؛ عدد الأيام بيتحسب تلقائيًا.',daysSearchHint:'الأيام المحفوظة تفضيل شخصي حاليًا؛ لازم تتأكد من أيام الرحلة قبل الحجز، لأن البحث الحالي مش بيفلتر بالأيام.',periodLabel:'نظام المشوار',samePlaceError:'لازم تختار مكان انطلاق ووصول مختلفين.',
+  searchButton:'دور على رحلة',originEditor:'اختار مكان الانطلاق',destinationEditor:'اختار وجهتك',timeEditor:'حدد مواعيدك',daysEditor:'اختار أيام المشوار',close:'إغلاق',done:'تم',placeHint:'اكتب مكانك واختاره من نتائج البحث الحقيقية.',outboundTime:'ميعاد الذهاب',returnTimeOptional:'ميعاد العودة (اختياري)',timeHint:'ممكن تسيب الميعاد فاضي وتشوف الرحلات في كل المواعيد.',daysHint:'اختار أيام الأسبوع اللي تناسبك؛ عدد الأيام بيتحسب تلقائيًا.',daysSearchHint:'الأيام المحفوظة تفضيل شخصي حاليًا؛ لازم تتأكد من أيام الرحلة قبل الحجز، لأن البحث الحالي مش بيفلتر بالأيام.',periodLabel:'نظام المشوار',samePlaceError:'لازم تختار مكان انطلاق ووصول مختلفين.',
   savedLabel:'مشوارك المعتاد',timeLabel:'الساعة',daysLabel:'الأيام',timePrompt:'حدد ميعادك',daysPrompt:'بتظهر مع الرحلة',editInitial:'حدّد أو غيّر مشوارك',quickActions:'اختصارات الراكب',nearbyShortTitle:'نقط قريبة منك',bookingsShortTitle:'رحلاتي',pickup:'من',dropoff:'إلى',departure:'الذهاب',arrival:'العودة',
   weekly:'أسبوعي',monthly:'شهري',outbound:'ذهاب',return:'عودة',round_trip:'ذهاب وعودة',
   searchSaved:'شوف الرحلات على خطّي',change:'غيّر المكان أو الميعاد',find:'دور على رحلة',
-  firstTitle:'أول مرة تستخدم سِكّة؟',firstDesc:'حدّد نقطة البداية والوجهة والميعاد مرة واحدة. بعدها مشوارك هيبقى جاهز لإعادة البحث.',
+  firstTitle:'أول مرة تستخدم سِكَّة؟',firstDesc:'حدّد نقطة البداية والوجهة والميعاد مرة واحدة. بعدها مشوارك هيبقى جاهز لإعادة البحث.',
   begin:'حدّد مشوارك',nearbyTitle:'ممكن رحلة تعدّي من جنبك',
   nearbyDesc:'اعرف أقرب نقطة ركوب فعلية بعد السماح بالموقع. مش هنخمن مسافات أو أسعار.',
   nearbyAction:'اكتشف نقاط الركوب القريبة',nearbyClose:'إخفاء البحث القريب',
@@ -17,7 +17,7 @@ export const riderHomeCopy={
   localFailure:'مش قادرين نفتح البحث المحفوظ. افتح البحث وعدّل التفاصيل.',
   mapHint:'البحث القريب اختياري ويستخدم الموقع بعد موافقتك.',
   progress:'1. اختر الطريق   2. قارن الرحلات   3. راجع واحجز',
-  homeCaption:'طريقك على سِكّة',changeShort:'تعديل',originPrompt:'حدد نقطة انطلاقك',destinationPrompt:'حدد وجهتك',nextHeading:'إيه كمان تقدر تعمل؟',nextHint:'كل حاجة في مكانها',nearbyShort:'شوف أقرب نقاط ركوب منشورة',bookingsShort:'تابع حجوزاتك وطلباتك',footerMessage:'مش هنقولك رحلة متاحة غير لما تكون منشورة فعلًا.',
+  homeCaption:'معاك في السِكَّة',changeShort:'تعديل',originPrompt:'حدد نقطة انطلاقك',destinationPrompt:'حدد وجهتك',nextHeading:'إيه كمان تقدر تعمل؟',nextHint:'كل حاجة في مكانها',nearbyShort:'شوف أقرب نقاط ركوب منشورة',bookingsShort:'تابع حجوزاتك وطلباتك',footerMessage:'مش هنقولك رحلة متاحة غير لما تكون منشورة فعلًا.',
   searchStep:'الخطوة 1 من 3',searchTitle:'ظبّط مشوارك',searchHelp:'حدد نقطة البداية والوجهة والميعاد. البحث هيعرض الخطوط المنشورة فعلًا.',
   resultsStep:'الخطوة 2 من 3',resultsTitle:'اختار الرحلة الأنسب',detailsStep:'الخطوة 3 من 3',detailsTitle:'راجع التفاصيل قبل الحجز'
  },
