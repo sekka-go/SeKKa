@@ -2,9 +2,8 @@ import {test,expect,type Page} from '@playwright/test';
 
 // Legacy gallery is not the baseline for the owner-redesigned onboarding.
 // Those new production pages are verified in guest-entry-vnext.spec.ts.
-// Keep the independently approved search/filters geometry regression gate.
+// Search S009 was explicitly redesigned; only unchanged filter S010 retains gallery geometry comparison.
 const screens=[
- {id:9,original:'/dev/screens?screen=9&preview=phase2',integrated:'/?tab=search&view=9',heading:'.d-screen-9 .d-title',canvas:'.d-screen-9'},
  {id:10,original:'/dev/screens?screen=10&preview=phase2',integrated:'/?tab=search&view=10',heading:'.d-screen-10 .d-title',canvas:'.d-screen-10'}
 ] as const;
 type Rect={x:number;y:number;width:number;height:number};
