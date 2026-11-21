@@ -47,22 +47,15 @@ function ReferenceArt({
   );
 }
 export function Wordmark({ className = "" }: { className?: string }) {
-  return (
-    <span className={`phase-wordmark ${className}`} role="img" aria-label="سِكّة">
-      <ReferenceArt
-        source={1}
-        crop={[185, 280, 445, 225]}
-        theme="dark"
-        className="wordmark-dark"
-      />
-      <ReferenceArt
-        source={1}
-        crop={[185, 280, 445, 225]}
-        theme="light"
-        className="wordmark-light"
-      />
-    </span>
-  );
+  // Keep the original visual reference in the developer gallery only.
+  if (window.location.pathname.startsWith("/dev/screens")) {
+    return <span className={`phase-wordmark ${className}`} role="img" aria-label="سِكَّة">
+      <ReferenceArt source={1} crop={[185,280,445,225]} theme="dark" className="wordmark-dark"/>
+      <ReferenceArt source={1} crop={[185,280,445,225]} theme="light" className="wordmark-light"/>
+    </span>;
+  }
+  return <span className={`phase-wordmark sekka-live-wordmark ${className}`} role="img"
+    aria-label="سِكَّة" dir="rtl">سِكَّة</span>;
 }
 function SvgIcon({ name }: { name: string }) {
   const p = {
