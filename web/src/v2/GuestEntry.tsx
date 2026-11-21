@@ -16,15 +16,15 @@ function RideIllustration({variant}:{variant:0|1|2}){
    aria-label="" focusable="false" aria-hidden="true">
   <defs>
    <linearGradient id="se-road" x1="0" y1="0" x2="1" y2="1">
-    <stop stopColor="#FFCD38"/><stop offset="1" stopColor="#FF7848"/>
+    <stop stopColor="#FFCD38"/><stop offset="1" stopColor="#FFCA27"/>
    </linearGradient>
    <linearGradient id="se-car" x1="0" y1="0" x2="1" y2="1">
-    <stop stopColor="#FF7C4F"/><stop offset="1" stopColor="#F73587"/>
+    <stop stopColor="#FFCA27"/><stop offset="1" stopColor="#0DBFD3"/>
    </linearGradient>
   </defs>
-  <circle cx="170" cy="140" r="119" fill={variant===0?"#FFF2DF":variant===1?"#EFE0FF":"#FFE1EE"}/>
+  <circle cx="170" cy="140" r="119" fill={variant===0?"#FFF2DF":variant===1?"#E3F8FE":"#D9F9FA"}/>
   <circle cx="44" cy="88" r="11" fill="#FFCD38"/>
-  <circle cx="301" cy="78" r="13" fill="#DDC8FA"/>
+  <circle cx="301" cy="78" r="13" fill="#BCEEF7"/>
   <circle cx="297" cy="220" r="9" fill="#B9E6DF"/>
   <path d="M0 244 C70 169,97 309,174 235 S262 174,340 239" fill="none"
     stroke="url(#se-road)" strokeWidth="23" strokeLinecap="round"/>
@@ -36,12 +36,12 @@ function RideIllustration({variant}:{variant:0|1|2}){
    <rect x="101" y="139" width="45" height="29" rx="9" fill="#E8F8FF"/>
    <rect x="155" y="139" width="61" height="29" rx="9" fill="#E8F8FF"/>
    <rect x="64" y="182" width="209" height="21" rx="9" fill="#FE7250"/>
-   <circle cx="102" cy="211" r="26" fill="#35134F"/>
+   <circle cx="102" cy="211" r="26" fill="#17405A"/>
    <circle cx="102" cy="211" r="14" fill="#FFF5EF"/>
-   <circle cx="233" cy="211" r="26" fill="#35134F"/>
+   <circle cx="233" cy="211" r="26" fill="#17405A"/>
    <circle cx="233" cy="211" r="14" fill="#FFF5EF"/>
    <circle cx="185" cy="151" r="10" fill="#E9A37E"/>
-   <path d="M170 165q15-16 30 0" fill="#6412B1"/>
+   <path d="M170 165q15-16 30 0" fill="#078BEA"/>
    <circle cx="126" cy="151" r="10" fill="#AD715A"/>
    <path d="M111 165q15-16 30 0" fill="#5E25A4"/>
   </g>
@@ -56,15 +56,15 @@ function RideIllustration({variant}:{variant:0|1|2}){
   </>}
   {variant===1&&<>
    <g transform="translate(22 32)"><rect width="120" height="44" rx="19" fill="#fff"/>
-    <circle cx="24" cy="22" r="11" fill="#6412B1"/><path d="M24 14v16m-8-8h16" stroke="#fff" strokeWidth="3"/>
+    <circle cx="24" cy="22" r="11" fill="#078BEA"/><path d="M24 14v16m-8-8h16" stroke="#fff" strokeWidth="3"/>
     <path d="M49 16h55M49 27h44" stroke="#AE9CB8" strokeLinecap="round" strokeWidth="5"/>
    </g>
-   <path d="M282 123c9-21 23-21 31 0 4 16-17 27-17 27s-19-11-14-27Z" fill="#6412B1"/>
+   <path d="M282 123c9-21 23-21 31 0 4 16-17 27-17 27s-19-11-14-27Z" fill="#078BEA"/>
    <circle cx="296" cy="120" r="7" fill="#FFCD38"/>
   </>}
   {variant===2&&<>
    <g transform="translate(32 25)"><rect width="98" height="48" rx="18" fill="#fff"/>
-    <path d="M19 17h60M19 29h44" stroke="#6412B1" strokeWidth="6" strokeLinecap="round"/>
+    <path d="M19 17h60M19 29h44" stroke="#078BEA" strokeWidth="6" strokeLinecap="round"/>
    </g>
    <g transform="translate(249 39)"><rect width="73" height="53" rx="18" fill="#fff"/>
     <path d="M20 27l10 10 20-23" fill="none" stroke="#00A998" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"/>
@@ -74,8 +74,8 @@ function RideIllustration({variant}:{variant:0|1|2}){
 }
 function PersonIcon({captain}:{captain:boolean}){
  return captain
- ?<svg viewBox="0 0 56 56" fill="none" aria-hidden="true"><rect x="6" y="20" width="44" height="23" rx="9" fill="#F73587"/><path d="M16 20l7-10h12l7 10" stroke="#6412B1" strokeWidth="4"/><circle cx="17" cy="42" r="6" fill="#35134F"/><circle cx="40" cy="42" r="6" fill="#35134F"/><path d="M23 26h10" stroke="#fff" strokeWidth="3" strokeLinecap="round"/></svg>
- :<svg viewBox="0 0 56 56" fill="none" aria-hidden="true"><circle cx="28" cy="17" r="11" fill="#FFCD38"/><path d="M9 51v-7c0-11 7-18 19-18s19 7 19 18v7" fill="#6412B1"/><path d="M23 18l4 4 8-8" stroke="#fff" strokeWidth="3" strokeLinecap="round"/></svg>;
+ ?<svg viewBox="0 0 56 56" fill="none" aria-hidden="true"><rect x="6" y="20" width="44" height="23" rx="9" fill="#0DBFD3"/><path d="M16 20l7-10h12l7 10" stroke="#078BEA" strokeWidth="4"/><circle cx="17" cy="42" r="6" fill="#17405A"/><circle cx="40" cy="42" r="6" fill="#17405A"/><path d="M23 26h10" stroke="#fff" strokeWidth="3" strokeLinecap="round"/></svg>
+ :<svg viewBox="0 0 56 56" fill="none" aria-hidden="true"><circle cx="28" cy="17" r="11" fill="#FFCD38"/><path d="M9 51v-7c0-11 7-18 19-18s19 7 19 18v7" fill="#078BEA"/><path d="M23 18l4 4 8-8" stroke="#fff" strokeWidth="3" strokeLinecap="round"/></svg>;
 }
 export default function GuestEntry({screen,language,role,onRole,go}:Props){
  const tr=language==='en'?entryCopy.en:entryCopy.ar;
