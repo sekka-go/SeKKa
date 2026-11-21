@@ -12,24 +12,20 @@ test.beforeEach(async({page})=>{
  await page.route('**/geo-index/*.json',r=>r.fulfill({json:{version:'ux-regression',results:[streetRow]}}));
 });
 
-test('tapping named street is actionable and confirms a named exact pickup point',async({page})=>{
+test('tapping a named street fills the origin without opening a map',async({page})=>{
  await page.goto('/?tab=search&view=9');
  const start=page.getByRole('combobox',{name:'نقطة الانطلاق'});
  await start.fill(street);
- const choice=page.locator('.sekka-location-context__select').filter({hasText:street}).first();
+ const choice=page.getByRole('option',{name:new RegExp(street)}).first();
  await expect(choice).toBeVisible();
  await expect(choice).not.toContainText('حدد نقطة على الخريطة');
  await choice.click();
- const dialog=page.getByRole('dialog',{name:'حدد نقطة على الخريطة'});
- await expect(dialog).toBeVisible();
  await expect(start).toHaveValue(street);
- await expect(dialog.getByRole('combobox',{name:'ابحث داخل الخريطة'})).toHaveValue(street);
- await expect(dialog.getByRole('button',{name:'تأكيد النقطة'})).toBeDisabled();
- await dialog.locator('.sekka-map-picker__map').click({position:{x:180,y:170}});
- await expect(dialog.getByRole('button',{name:'تأكيد النقطة'})).toBeEnabled();
- await dialog.getByRole('button',{name:'تأكيد النقطة'}).click();
- await expect(dialog).toHaveCount(0);
- await expect(start).toHaveValue('نقطة قرب '+street);
+ await expect(page.getByText('✓ هنبحث عن أقرب نقاط الكباتن')).toBeVisible();
+ await expect(page.getByRole('dialog',{name:'حدد نقطة على الخريطة'})).toHaveCount(0);
+ // Opening the map is always optional and a different action.
+ await page.locator('.rs3').getByRole('button',{name:/حدد نقطة على الخريطة/}).first().click();
+ await expect(page.getByRole('dialog',{name:'حدد نقطة على الخريطة'})).toBeVisible();
 });
 
 test('searching inside map navigates to a real place before explicit pin confirmation',async({page})=>{
