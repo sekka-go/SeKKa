@@ -81,7 +81,7 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
   chooseSearch();
  };
  const loadingSaved=Boolean(saved&&!areasLoaded&&!areasFailed);
- return <div className="rh-home" dir={en?'ltr':'rtl'}>
+ return <div className="rh-home sekka-rider-home" dir={en?'ltr':'rtl'}>
   <section className="rh-hero" aria-labelledby="rh-home-title">
    <div className="rh-hero__content">
     <span className="rh-hero__eyebrow"><span aria-hidden="true" className="rh-hero__spark">✳</span>{tr.kicker}</span>
