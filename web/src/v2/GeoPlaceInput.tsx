@@ -79,7 +79,7 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
     ?t('✓ هنبحث عن أقرب نقاط الكباتن','✓ Looking for nearby Captain stops')
     :choice.kind==='map'
     ?t('✓ نقطة محددة على الخريطة','✓ Selected map point')
-    :t('✓ منطقة خدمة مسجلة','✓ Registered service area')}</span>
+    :t('✓ منطقة خدمة مسجلة','✓ Registered service area')}</span>}
   {menu&&<div className="sekka-place-lookup__suggestions" role="group"
     aria-label={t('نتائج البحث عن المكان','Place search suggestions')}>
    {picks.length>0&&<div className="sekka-location-options" id={options.id} role="listbox" aria-label={label}>
