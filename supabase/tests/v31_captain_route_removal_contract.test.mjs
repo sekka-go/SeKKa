@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const sql=readFileSync(new URL('../migrations/20261121202400_v31_captain_route_removal.sql',import.meta.url),'utf8');
 const ui=readFileSync(new URL('../../web/src/v2/LiveCaptainRouteList.tsx',import.meta.url),'utf8');
-test('route removal can only act on signed-in owner's own route',()=>{
+test("route removal can only act on the signed-in Captain\u2019s own route",()=>{
  assert.match(sql,/actor uuid := \(select auth.uid\(\)\)/);
  assert.match(sql,/current_route\.captain_id is distinct from actor/);
  assert.match(sql,/where id=p_route for update/);
