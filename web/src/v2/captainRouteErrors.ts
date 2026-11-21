@@ -31,6 +31,10 @@ const messages:Record<string,{ar:string;en:string}>={
   ar:'في نقطة موقعها مش متأكد منه. اختارها من نتائج الخريطة مرة تانية.',
   en:'A stop is missing a verified map location. Choose it again.'
  },
+ STOP_OUTSIDE_OPERATIONAL_REGION:{
+  ar:'في نقطة خارج نطاق تشغيل سِكّة. بنخدم القاهرة الكبرى فقط.',
+  en:'A stop is outside seKKa’s Greater Cairo service area.'
+ },
  STOP_OUTSIDE_LAUNCH_REGION:{
   ar:'في نقطة خارج نطاق خدمة القاهرة والجيزة الحالي.',
   en:'One of the stops is outside the current Cairo/Giza service region.'

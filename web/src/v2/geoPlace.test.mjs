@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mapPlacesFromPhoton,serviceMatches,placeMatchesArea,stopNearPoint,geoRequestAvailable,inLaunchRegion} from './geoPlace.ts';
+import {greaterCairoGeometry} from './greaterCairoGeometry.ts';
+import {readFileSync,readdirSync} from 'node:fs';
+import {mapPlacesFromPhoton,serviceMatches,placeMatchesArea,stopNearPoint,geoRequestAvailable,inLaunchRegion,normalizedPlace,catalogMatches,rankMapPlaces,selectOperationalMapPlace,inspectPhoton} from './geoPlace.ts';
 
 const areas=[
  {id:1,name_ar:'المعادي',name_en:'Maadi'},
@@ -13,7 +15,7 @@ test('service-area text lookup handles English and Arabic spelling variations',(
  assert.equal(serviceMatches(areas,'المعادِي')[0]?.id,1);
  assert.equal(serviceMatches(areas,'').length,0);
 });
-test('Photon place parsing accepts Cairo/Giza Egypt coordinates, rejects out-of-region',()=>{
+test('Photon place parsing accepts verified Greater Cairo coordinates, rejects out-of-region',()=>{
  const geo={features:[
   {geometry:{coordinates:[31.2357,30.0444]},properties:{osm_id:10,osm_type:'N',name:'Downtown Cairo',city:'Cairo',countrycode:'EG'}},
   {geometry:{coordinates:[31.2357,30.0444]},properties:{osm_id:10,osm_type:'N',name:'Duplicate',countrycode:'EG'}},
@@ -30,7 +32,7 @@ test('Photon place parsing accepts Cairo/Giza Egypt coordinates, rejects out-of-
 test('map stop locality must belong to the explicitly chosen seKKa service area',()=>{
  const maadi={...mapPlacesFromPhoton({features:[{
   geometry:{coordinates:[31.25,29.96]},
-  properties:{name:'Maadi Market',district:'Maadi',city:'Cairo',countrycode:'EG',osm_id:101}
+  properties:{name:'Maadi Market',district:'Maadi',city:'Cairo',countrycode:'EG',osm_id:101,osm_type:'N'}
  }]})[0]};
  assert.equal(placeMatchesArea(maadi,areas[0]),true);
  assert.equal(placeMatchesArea(maadi,areas[1]),false);
@@ -54,4 +56,64 @@ test('new trip requests may not silently map an arbitrary GPS point into service
  assert.equal(geoRequestAvailable(first,first),false);
  assert.equal(geoRequestAvailable(map,other),false);
  assert.equal(geoRequestAvailable(null,other),false);
+});
+
+test('Egyptian spelling, numerals, aliases and curated Hosary order are deterministic',()=>{
+ assert.equal(normalizedPlace('  ألتّجمُّعُ ـ ۵،٦  '),'التجمع 5 6');
+ assert.equal(normalizedPlace('الحصرى'),'الحصري');
+ for(const query of ['الحصري','الحصرى','El Hosary']){
+  assert.deepEqual(catalogMatches(query).map(x=>x.key),['hosary-square','hosary-mosque']);
+ }
+ for(const query of ['التجمع 5','Fifth Settlement','التجمع الخامس']){
+  assert.equal(catalogMatches(query)[0]?.key,'fifth-settlement');
+ }
+ const oct={id:8,name_ar:'6 أكتوبر',name_en:'6th of October'};
+ for(const query of ['أكتوبر','٦ أكتوبر','6 اكتوبر']){
+  assert.equal(serviceMatches([oct],query)[0],oct);
+ }
+ assert.deepEqual(serviceMatches(areas,'زايد'),[areas[2]]);
+ assert.deepEqual(serviceMatches(areas,'Alexandria'),[]);
+});
+
+const feature=(coordinates,properties)=>({
+ geometry:{type:'Point',coordinates},
+ properties:{countrycode:'EG',...properties}
+});
+test('out-of-scope points, foreign providers and missing OSM references cannot be selected',()=>{
+ const check=inspectPhoton({features:[
+  feature([30.8428,29.3084],{name:'Fayoum',osm_type:'N',osm_id:210}),
+  feature([31.6295623,30.1488541],{name:'Unverified Shorouk fringe',osm_type:'N',osm_id:211}),
+  feature([31.2357,30.0444],{name:'Missing OSM reference'}),
+  feature([31.2357,30.0444],{name:'Foreign feature',countrycode:'AE',osm_type:'N',osm_id:212}),
+ ]});
+ assert.equal(check.outside,true);
+ assert.deepEqual(check.places,[]);
+});
+
+test('Fifth Settlement ranks as a neighborhood and its namesake shop in October is discarded',()=>{
+ const canonical=feature([31.4249357,30.0038046],{name:'التجمع الخامس',city:'القاهرة الجديدة',osm_type:'W',osm_id:774635278,osm_key:'place',osm_value:'neighbourhood'});
+ const unrelated=feature([30.9459443,29.9731044],{name:'التجمع الخامس',city:'السادس من أكتوبر',osm_type:'N',osm_id:4555939289,osm_key:'shop',osm_value:'bookmaker'});
+ const ranked=rankMapPlaces(mapPlacesFromPhoton({features:[unrelated,canonical]}),'التجمع 5');
+ assert.deepEqual(ranked.map(r=>[r.id,r.kind]),[['W:774635278','area']]);
+ assert.equal(selectOperationalMapPlace(ranked[0]),false);
+});
+
+test('a road or a mapped square representative point is never selected as an exact stop',()=>{
+ const square=feature([30.9448074,29.9724456],{name:'ميدان الحصري',city:'السادس من أكتوبر',osm_type:'W',osm_id:1393055714,osm_key:'place',osm_value:'square'});
+ const points=rankMapPlaces(mapPlacesFromPhoton({features:[square]}),'El Hosary');
+ assert.equal(points[0]?.name,'ميدان الحصري');
+ assert.equal(selectOperationalMapPlace(points[0]),false);
+});
+
+test('browser polygon and PostGIS use the same source geometry and cover outer edges',()=>{
+ const migrationDir=new URL('../../../supabase/migrations/',import.meta.url);
+ const filename=readdirSync(migrationDir).find(n=>n.endsWith('_v31_operational_geofence.sql'));
+ const sql=readFileSync(new URL(filename,migrationDir),'utf8');
+ const match=sql.match(/\$geo\$(.+?)\$geo\$/);
+ assert.deepEqual(JSON.parse(match[1]),greaterCairoGeometry);
+ const [longitude,latitude]=greaterCairoGeometry.coordinates[0][0][0];
+ assert.equal(inLaunchRegion({latitude,longitude}),true);
+ assert.match(sql,/st_covers\(b.geometry/);
+ assert.match(sql,/before insert or update of latitude,longitude/);
+ assert.match(sql,/endpoint.covered/);
 });

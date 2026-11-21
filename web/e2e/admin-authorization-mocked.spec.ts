@@ -50,7 +50,7 @@ async function setup(page:Page,fixture:Fixture,language:'ar'|'en',theme:'light'|
 async function pickSearchArea(page:Page,field:'Starting point'|'Destination',name:string){
  await page.getByRole('combobox',{name:field}).fill(name);
  await page.getByRole('group',{name:'Place search suggestions'})
-  .getByRole('button',{name:name+' Service area',exact:true}).click();
+  .getByRole('option',{name:name+' Search the whole service area',exact:true}).click();
 }
 for(const width of [360,390]){
  for(const language of ['ar','en'] as const){

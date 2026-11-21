@@ -116,12 +116,47 @@ test('map search remains usable without GPS and real stops remain server-matched
  await page.goto('/?tab=search&view=9');
  await page.getByRole('combobox',{name:'Starting point'}).fill('City Stars');
  await page.getByRole('button',{name:'Find this street or place on the map'}).click();
- await page.getByRole('button',{name:/City Stars/}).click();
- await expect(page.getByText(/Verified location selected/)).toBeVisible();
+ await page.getByRole('option',{name:/City Stars/}).click();
+ await expect(page.getByText(/OpenStreetMap location selected/)).toBeVisible();
  await page.getByRole('combobox',{name:'Destination'}).fill('Maadi');
- await page.getByRole('group',{name:'Place search suggestions'}).getByRole('button',{name:/Maadi/}).first().click();
+ await page.getByRole('group',{name:'Place search suggestions'}).getByRole('option',{name:/Maadi/}).first().click();
  await page.locator('.rs3__submit').click();
  await expect(page).toHaveURL(/tab=search&view=11/);
  await expect(page.locator('.sekka-live-result').first()).toContainText('Pickup near me');
  await expect(page.locator('.sekka-live-result').first()).toContainText('Maadi dropoff');
+});
+
+test('Greater Cairo search rejects external results, preserves neighborhood context and requires an explicit selection',async({page})=>{
+ await page.setViewportSize({width:360,height:800});
+ await page.addInitScript(()=>localStorage.setItem('language_preference','en'));
+ const feature=(coordinates:number[],properties:Record<string,unknown>)=>({
+  geometry:{type:'Point',coordinates},properties:{countrycode:'EG',...properties}
+ });
+ await page.route('https://photon.komoot.io/api/**',async request=>{
+  const query=new URL(request.request().url()).searchParams.get('q')||'';
+  const features=query.includes('Fayoum')?[feature([30.8428,29.3084],{name:'Fayoum',osm_type:'N',osm_id:210})]:
+   [feature([30.9459443,29.9731044],{name:'التجمع الخامس',city:'السادس من أكتوبر',osm_type:'N',osm_id:4555939289,osm_key:'shop',osm_value:'bookmaker'}),
+    feature([31.4249357,30.0038046],{name:'Fifth Settlement',city:'New Cairo',osm_type:'W',osm_id:774635278,osm_key:'place',osm_value:'neighbourhood'})];
+  await request.fulfill({json:{features}});
+ });
+ await page.route(endpoint+'/**',async request=>{
+  const path=new URL(request.request().url()).pathname;
+  await request.fulfill({json:path==='/rest/v1/v31_service_areas'?
+   [...areas,{id:2,name_ar:'التجمع',name_en:'New Cairo'}]:[]});
+ });
+ await page.goto('/?tab=search&view=9');
+ const input=page.getByRole('combobox',{name:'Starting point'});
+ await input.fill('Fayoum');
+ await expect(page.getByText(/outside seKKa's current service area/)).toBeVisible();
+ await expect(page.getByRole('option',{name:/Fayoum/})).toHaveCount(0);
+ await input.fill('التجمع 5');
+ await input.press('Enter');
+ const context=page.locator('.sekka-location-context');
+ await expect(context).toContainText('Fifth Settlement');
+ await expect(page.getByRole('option',{name:/Fifth Settlement/})).toHaveCount(0);
+ await expect(page.getByText(/Registered service area/)).toHaveCount(0);
+ await input.press('ArrowDown');
+ await expect(page.getByRole('option',{name:/New Cairo/})).toHaveAttribute('aria-selected','true');
+ await input.press('Enter');
+ await expect(page.getByText(/Registered service area/)).toBeVisible();
 });

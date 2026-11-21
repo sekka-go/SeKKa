@@ -16,7 +16,7 @@ import RiderFiltersV3 from "./RiderFiltersV3";
 import RiderResultsHero from "./RiderResultsHero";
 import RiderTripDetailsV3 from "./RiderTripDetailsV3";
 import GeoPlaceInput from "./GeoPlaceInput";
-import {geoRequestAvailable} from "./geoPlace";
+import {geoRequestAvailable,selectOperationalMapPlace,outsideCoverageMessage} from "./geoPlace";
 import type {PlaceChoice} from "./geoPlace";
 import type {LiveSelection} from "./LiveRouteSearch";
 import {saveCommute,isWeekdays} from './riderCommute';
@@ -496,7 +496,14 @@ function readRiderDraft(): RiderDraft {
   try {
     const value: unknown = JSON.parse(sessionStorage.getItem(riderDraftKey) || "null");
     if (!value || typeof value !== "object" || Array.isArray(value)) return {};
-    return value as RiderDraft;
+    const draft=value as RiderDraft;
+    if(draft.originPlace?.kind==='map'&&(!draft.originPlace.place||!selectOperationalMapPlace(draft.originPlace.place))){
+      delete draft.origin;delete draft.originPlace;draft.searched=false;
+    }
+    if(draft.destinationPlace?.kind==='map'&&(!draft.destinationPlace.place||!selectOperationalMapPlace(draft.destinationPlace.place))){
+      delete draft.destination;delete draft.destinationPlace;draft.searched=false;
+    }
+    return draft;
   } catch { return {}; }
 }
 export default function Discovery(p: DiscoveryProps) {
@@ -674,8 +681,11 @@ export default function Discovery(p: DiscoveryProps) {
       return;
     }
     if(p.production){
+      if([originPlace,destinationPlace].some(place=>place?.kind==='map'&&!selectOperationalMapPlace(place.place))){
+        setMessage(language==='en'?outsideCoverageMessage.en:outsideCoverageMessage.ar);return;
+      }
       const registered=(name:string)=>(p.serviceAreas||[]).some(a=>a.name_ar===name||a.name_en===name);
-      if((!originPlace&&!registered(origin))||(!destinationPlace&&!registered(destination))){
+      if((originPlace?.kind!=='map'&&!registered(origin))||(destinationPlace?.kind!=='map'&&!registered(destination))){
         setMessage(language==='en'?'Select a location from the search results.':'اختار مكان الانطلاق والوصول من نتائج البحث.');
         return;
       }

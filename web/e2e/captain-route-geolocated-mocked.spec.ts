@@ -115,19 +115,20 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  const place=entry.getByRole('combobox',{name:'Search street or landmark'});
  // Invalid lookup remains blocked even when its returned map point is nearby in Cairo.
  await place.fill('Outside street');
- await entry.getByRole('button',{name:'Find'}).click();
- await expect(entry.getByText(/We could not locate that place in this area/)).toBeVisible();
+ await entry.getByRole('button',{name:'Find',exact:true}).click();
+ await expect(entry.getByText(/No matching location was found within Greater Cairo/)).toBeVisible();
  await expect(entry.locator('.cj-easy-selected-stops>li')).toHaveCount(0);
- // The popular-place suggestion automatically selects an exact verified map result
- // without manually opening the map or confirming a second button.
- await entry.getByRole('button',{name:'Choose Maadi Grand Mall'}).click();
+ // A popular-place search prompt leaves the stop unselected until confirmation.
+ await entry.getByRole('button',{name:'Find Maadi Grand Mall'}).click();
+ await expect(entry.locator('.cj-easy-selected-stops>li')).toHaveCount(0);
+ await entry.locator('.cj-easy-results').getByRole('option',{name:/Maadi Grand Mall/}).click();
  await expect(entry.locator('.cj-easy-selected-stops>li')).toHaveCount(1);
  await expect(entry.getByRole('group',{name:'Main areas'})).toBeVisible();
  await entry.getByRole('button',{name:'Nasr City'}).click();
  const destination=entry.getByRole('combobox',{name:'Search street or landmark'});
  await destination.fill('Nasr City Square');
- await entry.getByRole('button',{name:'Find'}).click();
- await entry.locator('.cj-easy-results').getByRole('button',{name:/Nasr City Square/}).click();
+ await entry.getByRole('button',{name:'Find',exact:true}).click();
+ await entry.locator('.cj-easy-results').getByRole('option',{name:/Nasr City Square/}).click();
  await expect(entry.locator('.cj-easy-selected-stops>li')).toHaveCount(2);
  await expect(entry.getByTitle('OpenStreetMap route stop map')).toBeVisible();
  await entry.getByRole('button',{name:'Move earlier: Nasr City Square'}).click();

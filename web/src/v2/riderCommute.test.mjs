@@ -11,7 +11,7 @@ test('reject invalid times, same-place routes and untrusted coordinates',()=>{
  assert.equal(parseSavedCommute({...good,outbound:'27:90'}),null);
  assert.equal(parseSavedCommute({...good,destination:good.origin}),null);
  assert.equal(parseSavedCommute({...good,originPlace:{kind:'map',place:{id:'x',name:'X',latitude:129,longitude:45}}}),null);
- assert.equal(parseSavedCommute({...good,originPlace:{kind:'map',place:{id:'x',name:'X',latitude:30,longitude:31}}})?.origin,good.origin);
+ assert.equal(parseSavedCommute({...good,originPlace:{kind:'map',place:{id:'N:1',kind:'point',source:'map',name:'X',latitude:30.0444,longitude:31.2357}}})?.origin,good.origin);
  assert.throws(()=>savedCommuteKey('../../another-user'),/INVALID_RIDER_ID/);
 });
 

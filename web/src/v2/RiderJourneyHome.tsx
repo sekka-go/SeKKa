@@ -1,6 +1,7 @@
 import {useEffect,useRef,useState} from 'react';
 import {readSavedCommute,restoreCommuteDraft,saveCommute,readHomeDraft,saveHomeDraft,clearHomeDraft,WEEKDAY_IDS} from './riderCommute';
 import type {SavedCommute} from './riderCommute';
+import {selectOperationalMapPlace} from './geoPlace';
 import type {PlaceChoice} from './geoPlace';
 import {riderHomeCopy} from './riderHomeCopy';
 import GeoPlaceInput from './GeoPlaceInput';
@@ -76,11 +77,12 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
  useEffect(()=>{
   if(!editor)return;
   editorTitle.current?.focus();
-  const escape=(event:KeyboardEvent)=>{if(event.key==='Escape')setEditor(null);};
+  const escape=(event:KeyboardEvent)=>{if(event.key==='Escape'&&!event.defaultPrevented)setEditor(null);};
   window.addEventListener('keydown',escape);
   return()=>window.removeEventListener('keydown',escape);
  },[editor]);
  const registered=(name:string)=>serviceAreas.some(a=>a.name_ar===name||a.name_en===name);
+ const selectable=(name:string,choice:PlaceChoice|null)=>choice?.kind==='map'?selectOperationalMapPlace(choice.place):registered(name);
  const display=(name:string)=>en?(serviceAreas.find(a=>a.name_ar===name)?.name_en||name):name;
  const selectedDays=draft.weekdays??[];
  const count=selectedDays.length;
@@ -90,8 +92,8 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
  const timeText=[draft.direction==='return'?'':formatRiderClock(draft.outbound,en),
   draft.direction!=='outbound'&&draft.returnTime?formatRiderClock(draft.returnTime,en):''].filter(Boolean).join(' – ');
  const fields=[
-  {id:'from' as const,label:tr.pickup,value:draft.origin?display(draft.origin):tr.originPrompt,filled:!!draft.originPlace||registered(draft.origin)},
-  {id:'to' as const,label:tr.dropoff,value:draft.destination?display(draft.destination):tr.destinationPrompt,filled:!!draft.destinationPlace||registered(draft.destination)},
+  {id:'from' as const,label:tr.pickup,value:draft.origin?display(draft.origin):tr.originPrompt,filled:selectable(draft.origin,draft.originPlace)},
+  {id:'to' as const,label:tr.dropoff,value:draft.destination?display(draft.destination):tr.destinationPrompt,filled:selectable(draft.destination,draft.destinationPlace)},
   {id:'time' as const,label:tr.timeLabel,value:timeText||tr.timePrompt,filled:!!timeText},
   {id:'days' as const,label:tr.daysLabel,value:daysSummary,filled:count>0}
  ];
@@ -102,8 +104,8 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
  };
  const search=()=>{
   setError('');
-  if(!draft.originPlace&&!registered(draft.origin)){setEditor('from');return;}
-  if(!draft.destinationPlace&&!registered(draft.destination)){setEditor('to');return;}
+  if(!selectable(draft.origin,draft.originPlace)){setEditor('from');return;}
+  if(!selectable(draft.destination,draft.destinationPlace)){setEditor('to');return;}
   if(draft.origin===draft.destination||
    (draft.originPlace?.kind==='map'&&draft.destinationPlace?.kind==='map'&&
     draft.originPlace.place.id===draft.destinationPlace.place.id)){

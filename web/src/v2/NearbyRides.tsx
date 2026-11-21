@@ -1,3 +1,4 @@
+import {inLaunchRegion,outsideCoverageMessage} from './geoPlace';
 import {useEffect,useId,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
@@ -49,6 +50,10 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
     if(!validCoordinates(next)||!Number.isFinite(result.coords.accuracy)){
      setError(t('الموقع غير دقيق، جرّب تاني أو اختار المنطقة يدويًا.','Location was not reliable. Try again or use manual search.'));
      return;
+    }
+    if(!inLaunchRegion(next)){
+     setPoint(null);setAccuracy(null);setCandidates([]);
+     setError(t(outsideCoverageMessage.ar,outsideCoverageMessage.en));return;
     }
     setPoint(next);setAccuracy(result.coords.accuracy);setRetry(v=>v+1);
    },
@@ -113,7 +118,7 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
     const stops:NearbyStop[]=(stopRows||[] as StopRow[]).map(raw=>({
      ...raw,latitude:raw.latitude===null?NaN:Number(raw.latitude),
      longitude:raw.longitude===null?NaN:Number(raw.longitude)
-    }));
+    })).filter(stop=>inLaunchRegion(stop));
     const matched=nearbyPublishedStops(point,rows,stops,NEARBY_MAX_KM).slice(0,12);
     // Availability remains a server-owned aggregate, never inferred from
     // hidden bookings. Only show actual capacity-confirmed route offers.

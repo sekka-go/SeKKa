@@ -79,11 +79,11 @@ for(const variant of [
   const from=form.getByRole('combobox',{name:variant.language==='ar'?'نقطة الانطلاق':'Starting point'});
   await from.fill('Maadi');
   await form.getByRole('group',{name:variant.language==='ar'?'نتائج البحث عن المكان':'Place search suggestions'})
-   .getByRole('button',{name:/Maadi|المعادي/}).first().click();
+   .getByRole('option',{name:/Maadi|المعادي/}).first().click();
   const to=form.getByRole('combobox',{name:variant.language==='ar'?'الوجهة':'Destination'});
   await to.fill('New Cairo');
   await form.getByRole('group',{name:variant.language==='ar'?'نتائج البحث عن المكان':'Place search suggestions'})
-   .getByRole('button',{name:/New Cairo|التجمع/}).first().click();
+   .getByRole('option',{name:/New Cairo|التجمع/}).first().click();
   await form.locator('input[type=time]').first().fill('08:15');
   await form.locator('.rs3__days-toggle').click();
   const sunday=variant.language==='ar'?'الأحد':'Sun';

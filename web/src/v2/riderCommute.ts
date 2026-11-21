@@ -1,4 +1,5 @@
-import type {PlaceChoice} from './geoPlace';
+import {selectOperationalMapPlace} from './geoPlace.ts';
+import type {MapPlace,PlaceChoice} from './geoPlace.ts';
 
 export const RIDER_DRAFT_KEY='sekka.rider.discoveryDraft.v31';
 export type SavedCommute={
@@ -29,7 +30,7 @@ const pointChoice=(raw:unknown):raw is PlaceChoice|null=>{
   if(!v.place||typeof v.place!=='object')return false;
   const p=v.place as Record<string,unknown>;
   return starts(p.id)&&starts(p.name)&&typeof p.latitude==='number'&&typeof p.longitude==='number'
-    &&p.latitude>=-90&&p.latitude<=90&&p.longitude>=-180&&p.longitude<=180;
+    &&selectOperationalMapPlace(p as MapPlace);
  }
  return false;
 };
@@ -104,6 +105,7 @@ export function clearHomeDraft(riderId:string){
 }
 export function restoreCommuteDraft(commute:SavedCommute):boolean{
  try{
+  if(!parseSavedCommute(commute))return false;
   const draft={origin:commute.origin,destination:commute.destination,
    originPlace:commute.originPlace,destinationPlace:commute.destinationPlace,
    outbound:commute.outbound,returnTime:commute.returnTime,

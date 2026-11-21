@@ -1,10 +1,12 @@
 import {useEffect,useRef,useState} from 'react';
 import {client} from './api';
 import CaptainPlacePicker from './CaptainPlacePicker';
+import {isPersistableOperationalPoint} from './greaterCairoBoundary';
+import {photonEndpoint} from './locationSearch';
 import CaptainRouteMap from './CaptainRouteMap';
 import {captainRouteError} from './captainRouteErrors';
 import {draftPriceGuidance,outsideDraftPriceGuidance} from './draftPriceGuidance';
-import {inLaunchRegion,mapPlacesFromPhoton,placeMatchesArea} from './geoPlace';
+import {inLaunchRegion,mapPlacesFromPhoton,placeMatchesArea,outsideCoverageMessage} from './geoPlace';
 import type {MapPlace} from './geoPlace';
 import type {PlaceChoice} from './geoPlace';
 import {straightLineKm} from './nearbyRoutes';
@@ -134,13 +136,16 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
   navigator.geolocation.getCurrentPosition(
    position=>{void(async()=>{
     const point={latitude:position.coords.latitude,longitude:position.coords.longitude};
-    if(position.coords.accuracy>100||!inLaunchRegion(point)){
+    if(!inLaunchRegion(point)||!isPersistableOperationalPoint(point)){
+     setLocatingStop(false);setError(t(outsideCoverageMessage.ar,outsideCoverageMessage.en));return;
+    }
+    if(!Number.isFinite(position.coords.accuracy)||position.coords.accuracy>100){
      setLocatingStop(false);
-     setError(t('دقة GPS مش كفاية أو الموقع خارج القاهرة والجيزة. فعّل الموقع الدقيق، أو ابحث عن مكان على الخريطة.',
-      'GPS is not accurate enough or outside Cairo/Giza. Enable precise GPS or use map search.'));return;
+     setError(t('دقة GPS مش كفاية. فعّل الموقع الدقيق أو ابحث عن مكان على الخريطة.',
+      'GPS is not accurate enough. Enable precise GPS or use map search.'));return;
     }
     try{
-     const url=new URL('https://photon.komoot.io/reverse');
+     const url=new URL('/reverse',photonEndpoint);
      url.searchParams.set('lat',String(point.latitude));url.searchParams.set('lon',String(point.longitude));
      url.searchParams.set('limit','10');
      const response=await fetch(url.toString(),{headers:{Accept:'application/json'},signal:AbortSignal.timeout(9000)});
@@ -164,7 +169,10 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
  const addVerifiedStop=(place:MapPlace)=>{
   setError('');setMessage('');
   if(!selectedArea){setError(t('اختار المنطقة الأول.','Choose an area first.'));return;}
-  if(!inLaunchRegion(place)||!placeMatchesArea(place,selectedArea)){
+  if(!inLaunchRegion(place)||!isPersistableOperationalPoint(place)){
+   setError(t(outsideCoverageMessage.ar,outsideCoverageMessage.en));return;
+  }
+  if(!placeMatchesArea(place,selectedArea)){
    setError(t('المكان ده مش متأكد إنه في المنطقة دي.','Place is not verified inside this area.'));return;
   }
   const name=place.name.trim();

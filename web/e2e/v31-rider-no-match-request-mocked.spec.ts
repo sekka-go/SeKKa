@@ -89,10 +89,10 @@ test('MOCKED Rider no-match journey saves the selected period and re-reads the o
  await page.goto('/?tab=search&view=9');
  const origin=page.getByRole('combobox',{name:'Starting point'});
  await origin.fill('Maadi');
- await page.getByRole('group',{name:'Place search suggestions'}).getByRole('button',{name:/Maadi/}).click();
+ await page.getByRole('group',{name:'Place search suggestions'}).getByRole('option',{name:/Maadi/}).click();
  const destination=page.getByRole('combobox',{name:'Destination'});
  await destination.fill('Nasr');
- await page.getByRole('group',{name:'Place search suggestions'}).getByRole('button',{name:/Nasr City/}).click();
+ await page.getByRole('group',{name:'Place search suggestions'}).getByRole('option',{name:/Nasr City/}).click();
  await page.locator('.rs3__submit').click();
  await expect(page).toHaveURL(/tab=search&view=11/);
 
@@ -162,9 +162,9 @@ test('MOCKED guest can review empty search and return with the same areas',async
  const from=page.getByRole('combobox',{name:'Starting point'});
  const to=page.getByRole('combobox',{name:'Destination'});
  await from.fill('Maadi');
- await page.getByRole('button',{name:'Maadi Service area'}).click();
+ await page.getByRole('option',{name:'Maadi Search the whole service area'}).click();
  await to.fill('Nasr City');
- await page.getByRole('button',{name:'Nasr City Service area'}).click();
+ await page.getByRole('option',{name:'Nasr City Search the whole service area'}).click();
  await page.getByRole('button',{name:'See available rides'}).click();
  await expect(page.getByRole('button',{name:'Sign in to request this trip'})).toBeVisible();
  await expect(page.getByText('Auth session missing!')).toHaveCount(0);

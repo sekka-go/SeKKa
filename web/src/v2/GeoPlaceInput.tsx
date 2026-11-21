@@ -1,23 +1,11 @@
-import {useEffect,useRef,useState} from 'react';
+import {useEffect,useState} from 'react';
+import {greaterCairoAttribution} from './greaterCairoBoundary';
 import {usePreferences} from './preferences';
-import {mapPlacesFromPhoton,serviceMatches,placeMatchesArea,PHOTON_ATTRIBUTION} from './geoPlace';
-import {filterPopularPlaces,popularPlacesForArea,popularPlaceTypes} from './popularCaptainPlaces';
-import type {PlaceChoice,MapPlace,ServiceArea} from './geoPlace';
-import type {PopularPlace,PopularPlaceType} from './popularCaptainPlaces';
+import {catalogMatches,noMatchingLocation,outsideCoverageMessage,PHOTON_ATTRIBUTION,selectOperationalMapPlace,serviceMatches} from './geoPlace';
+import {useLocationOptions,useLocationSearch} from './locationSearch';
+import type {PlaceChoice,ServiceArea} from './geoPlace';
+import './location-search.css';
 
-const types:Record<PopularPlaceType,{ar:string;en:string;icon:string}>={
- neighborhood:{ar:'أحياء وشوارع',en:'Districts',icon:'⌂'},
- square:{ar:'ميادين',en:'Squares',icon:'◎'},
- university:{ar:'جامعات',en:'Universities',icon:'▤'},
- mall:{ar:'مولات',en:'Malls',icon:'▦'},
- mosque:{ar:'مساجد',en:'Mosques',icon:'◇'},
- gathering:{ar:'تجمعات ومعالم',en:'Landmarks',icon:'⌖'}
-};
-
-/** Area → popular place → verified OSM coordinate. Suggested places are NOT
- * pre-approved GPS coordinates. The rider will only see an explicit map result
- * that the Captain selects after the locality validation.
- */
 export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=false,searchArea}:{
  label:string;value:string;choice:PlaceChoice|null;areas:ServiceArea[];
  onPick:(value:string,choice:PlaceChoice|null)=>void;disabled?:boolean;searchArea?:ServiceArea
@@ -26,146 +14,78 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
  const t=(ar:string,english:string)=>en?english:ar;
  const [query,setQuery]=useState(value);
  const [open,setOpen]=useState(false);
- const [busy,setBusy]=useState(false),[error,setError]=useState('');
- const [found,setFound]=useState<MapPlace[]>([]);
- const [type,setType]=useState<PopularPlaceType|'all'>('all');
- const [expanded,setExpanded]=useState(false);
- const requestSerial=useRef(0);
- useEffect(()=>{
-  setQuery(choice?.kind==='service'?(en?choice.area.name_en:choice.area.name_ar):value);
- },[value,choice,en]);
- useEffect(()=>{
-  requestSerial.current++;
-  setFound([]);setError('');setBusy(false);setOpen(false);
-  setExpanded(false);setType('all');
- },[searchArea?.id]);
- const local=serviceMatches(areas,query);
- const suggestions=searchArea?popularPlacesForArea(searchArea.name_en):[];
- const visibleSuggestions=filterPopularPlaces(suggestions,type);
- const shownSuggestions=expanded?visibleSuggestions:visibleSuggestions.slice(0,6);
- const pick=(name:string,next:PlaceChoice)=>{
-  requestSerial.current++;
-  setQuery(name);onPick(name,next);setFound([]);setOpen(false);setError('');setBusy(false);
+ const [immediate,setImmediate]=useState(0);
+ const options=useLocationOptions();
+ useEffect(()=>{setQuery(choice?.kind==='service'?t(choice.area.name_ar,choice.area.name_en):value);},[value,choice,en]);
+ const menu=open&&!disabled&&!choice&&Boolean(query.trim());
+ const result=useLocationSearch(query.trim(),menu,searchArea,en,immediate);
+ const local=menu?serviceMatches(areas,query):[];
+ const hints=menu?catalogMatches(query,searchArea).filter(hint=>areas.some(area=>area.name_en.toLowerCase()===hint.area)):[];
+ const points=result.places.filter(selectOperationalMapPlace);
+ const broad=result.places.filter(place=>!selectOperationalMapPlace(place));
+ const broadArea=broad.some(place=>place.kind==='area')?
+  catalogMatches(query,searchArea).find(item=>item.kind==='area')?.area:undefined;
+ const parent=areas.find(area=>area.name_en.toLowerCase()===broadArea);
+ const areasToPick=parent&&!local.some(area=>area.id===parent.id)?[...local,parent]:local;
+ const picks:PlaceChoice[]=[...areasToPick.map(area=>({kind:'service' as const,area})),
+  ...points.map(place=>({kind:'map' as const,place}))];
+ const pick=(i:number)=>{
+  const next=picks[i];
+  if(!next||(next.kind==='map'&&!selectOperationalMapPlace(next.place)))return;
+  const name=next.kind==='service'?next.area.name_ar:next.place.name;
+  setQuery(name);onPick(name,next);setOpen(false);setImmediate(0);options.reset();
  };
- const searchMap=async(explicitQuery?:string)=>{
-  const q=(explicitQuery??query).trim();
-  if(q.length<3||q.length>120||disabled)return;
-  const token=++requestSerial.current;
-  setBusy(true);setError('');setFound([]);setOpen(true);
-  try{
-   // One deliberate request per click (plus one fallback if needed).
-   // Photon is a fair-use OpenStreetMap service, not a production SLA.
-   const url=new URL('https://photon.komoot.io/api/');
-   const areaInQuery=searchArea&&[searchArea.name_ar,searchArea.name_en].some(name=>
-    q.toLocaleLowerCase().includes(name.toLocaleLowerCase()));
-   const contextual=Boolean(searchArea&&!areaInQuery);
-   url.searchParams.set('q',contextual?q+', '+searchArea!.name_en+', Egypt':q);
-   url.searchParams.set('bbox','30.45,29.45,31.95,30.45');
-   url.searchParams.set('countrycode','EG');
-   url.searchParams.set('limit','12');
-   if(en)url.searchParams.set('lang','en');
-   const response=await fetch(url.toString(),{headers:{Accept:'application/json'},signal:AbortSignal.timeout(9000)});
-   if(!response.ok)throw Error('MAP_SEARCH_UNAVAILABLE');
-   let places=mapPlacesFromPhoton(await response.json());
-   if(requestSerial.current!==token)return;
-   let matching=searchArea?places.filter(place=>placeMatchesArea(place,searchArea)):places;
-   if(searchArea&&matching.length===0&&contextual){
-    const fallback=new URL(url);fallback.searchParams.set('q',q);
-    const second=await fetch(fallback.toString(),{headers:{Accept:'application/json'},signal:AbortSignal.timeout(9000)});
-    if(second.ok)places=mapPlacesFromPhoton(await second.json());
-    matching=places.filter(place=>placeMatchesArea(place,searchArea));
-   }
-   if(requestSerial.current!==token)return;
-   setFound(matching);
-   if(!matching.length)setError(searchArea
-    ?t('مفيش موقع اتأكد داخل '+searchArea.name_ar+'. جرّب اسم المكان بالإنجليزي، أو شارع قريب منه، أو اختار اقتراح تاني.',
-       'No verified location in '+searchArea.name_en+'. Try the English name, a nearby street or another suggestion.')
-    :t('مفيش مكان مطابق في القاهرة والجيزة. جرّب اسم مختلف.',
-       'No matching place in Cairo or Giza. Try another name.'));
-  }catch{
-   if(requestSerial.current!==token)return;
-   setError(t('البحث على الخريطة مش متاح دلوقتي. جرّب تاني؛ مش هنضيف مكان من غير موقع مؤكد.',
-    'Map search is temporarily unavailable. Retry; we cannot add an unverified location.'));
-  }finally{if(requestSerial.current===token)setBusy(false);}
- };
- const lookupSuggestion=(item:PopularPlace)=>{
-  const display=en?item.name_en:item.name_ar;
-  setQuery(display);
-  onPick(display,null);
-  // The title is a search prompt. Never auto-confirm the first search result.
-  void searchMap(item.name_en);
- };
- return <div className="sekka-place-lookup cj-place-picker">
-  {searchArea&&suggestions.length>0&&<section className="cj-popular" aria-label={t('أماكن مشهورة','Popular places')}>
-   <div className="cj-popular-heading">
-    <strong>{t('أماكن معروفة في '+searchArea.name_ar,'Popular places in '+searchArea.name_en)}</strong>
-    <small>{t('اختار نوع المكان، وبعدها حدده من نتائج الخريطة','Choose a category, then confirm a map result')}</small>
-   </div>
-   <div className="cj-popular-types" role="group" aria-label={t('نوع المكان','Place type')}>
-    <button type="button" aria-pressed={type==='all'} onClick={()=>{setType('all');setExpanded(false);}}>
-     {t('الكل','All')}</button>
-    {popularPlaceTypes.filter(key=>suggestions.some(place=>place.type===key)).map(key=><button key={key} type="button" aria-pressed={type===key}
-      onClick={()=>{setType(key);setExpanded(true);}}>
-      <span aria-hidden="true">{types[key].icon}</span> {en?types[key].en:types[key].ar}</button>)}
-   </div>
-   <div className="cj-popular-grid">
-    {shownSuggestions.map(item=><button key={item.type+item.name_en} type="button"
-      disabled={disabled||busy} className="cj-popular-place" onClick={()=>lookupSuggestion(item)}
-      aria-label={t('ابحث عن ','Find ')+(en?item.name_en:item.name_ar)}>
-      <span className="cj-popular-place-icon" aria-hidden="true">{types[item.type].icon}</span>
-      <span className="cj-popular-place-copy"><strong>{en?item.name_en:item.name_ar}</strong>
-       <small>{en?types[item.type].en:types[item.type].ar}</small></span>
-    </button>)}
-   </div>
-   {!expanded&&visibleSuggestions.length>6&&<button className="cj-popular-more" type="button"
-     onClick={()=>setExpanded(true)}>{t('عرض كل الأماكن','View all places')} ({visibleSuggestions.length})</button>}
-   <p className="cj-popular-note">{t('دي اقتراحات للبحث، مش نقاط GPS محفوظة. هتختار المكان الصحيح من نتائج OpenStreetMap.',
-     'These are search suggestions, not stored GPS points. Confirm the correct OpenStreetMap result.')}</p>
-  </section>}
+ const search=()=>{setOpen(true);setImmediate(i=>i+1);};
+ const msg=result.status==='error'
+  ?t('البحث على الخريطة مش متاح دلوقتي. جرّب تاني.','Map search is temporarily unavailable. Try again.')
+  :result.status==='done'&&!picks.length&&!broad.length
+    ?result.outside?t(outsideCoverageMessage.ar,outsideCoverageMessage.en):t(noMatchingLocation.ar,noMatchingLocation.en):'';
+ return <div className="sekka-place-lookup">
   <label className="sekka-place-lookup__label">
    <span className="sr-only">{label}</span>
    <input type="search" role="combobox" aria-label={label} aria-autocomplete="list"
-    aria-expanded={open} autoComplete="off" disabled={disabled}
-    placeholder={t('أو اكتب اسم شارع، مسجد، جامعة، مول…','Or search street, mosque, university, mall…')}
-    value={query} maxLength={120}
-    onFocus={()=>setOpen(true)} onChange={e=>{
-     const next=e.target.value;setQuery(next);requestSerial.current++;
-     setBusy(false);onPick(next,null);setFound([]);setError('');setOpen(true);
+    aria-expanded={menu&&picks.length>0} aria-controls={menu&&picks.length?options.id:undefined}
+    aria-activedescendant={menu&&options.highlight>=0&&options.highlight<picks.length?options.optionId(options.highlight):undefined}
+    autoComplete="off" disabled={disabled}
+    placeholder={t('اكتب اسم منطقة أو شارع أو معلم','Search for a district, street or landmark')}
+    value={query} maxLength={120} onFocus={()=>setOpen(true)}
+    onChange={e=>{
+     const next=e.target.value;
+     setQuery(next);onPick(next,null);setImmediate(0);setOpen(true);options.reset();
     }}
-    onKeyDown={e=>{
-     if(e.key==='Escape'){setOpen(false);setError('');}
-     if(e.key==='Enter'){
-      e.preventDefault();
-      if(open&&local.length){const area=local[0];pick(area.name_ar,{kind:'service',area});}
-      else if(query.trim().length>=3)void searchMap();
-     }
-    }}/>
+    onKeyDown={e=>options.keys(e,menu,menu?picks.length:0,pick,()=>setOpen(false),search)}/>
   </label>
   {choice&&<span className="sekka-place-lookup__selected">{choice.kind==='map'?
-    t('✓ موقع تم تحديده من خريطة OpenStreetMap','✓ Verified location selected · OpenStreetMap'):
+    t('✓ موقع محدد من OpenStreetMap','✓ OpenStreetMap location selected'):
     t('✓ منطقة خدمة مسجلة','✓ Registered service area')}</span>}
-  {(open&&query.trim().length>0||busy||Boolean(error))&&<div className="sekka-place-lookup__suggestions"
-    role="group" aria-label={t('نتائج البحث عن المكان','Place search suggestions')}>
-   {local.map(area=><button type="button" key={area.id} disabled={disabled}
-    onClick={()=>pick(area.name_ar,{kind:'service',area})}>
-    <span>{en?area.name_en:area.name_ar}</span>
-    <small>{t('منطقة خدمة','Service area')}</small>
-   </button>)}
-   {found.map(place=><button type="button" key={place.id} disabled={disabled}
-    onClick={()=>pick(place.name+(place.detail?' — '+place.detail:''),{kind:'map',place})}>
-    <span>⌖ {place.name}</span><small>{place.detail||t('موقع من الخريطة','Map location')} · OSM</small>
-   </button>)}
-   {busy&&<p role="status" className="cj-place-loading">{t('بنجيب الأماكن من OpenStreetMap…','Looking up locations on OpenStreetMap…')}</p>}
+  {menu&&<div className="sekka-place-lookup__suggestions" role="group"
+    aria-label={t('نتائج البحث عن المكان','Place search suggestions')}>
+   {picks.length>0&&<div className="sekka-location-options" id={options.id} role="listbox" aria-label={label}>
+    {picks.map((item,i)=><button type="button" role="option" key={item.kind==='service'?'area-'+item.area.id:item.place.id}
+     id={options.optionId(i)} aria-selected={options.highlight===i}
+     onMouseDown={e=>e.preventDefault()} onClick={()=>pick(i)}>
+     {item.kind==='service'?<><span>{t(item.area.name_ar,item.area.name_en)}</span>
+      <small>{t('بحث في منطقة الخدمة بالكامل','Search the whole service area')}</small></>
+      :<><span dir="auto">⌖ {item.place.name}</span><small dir="auto">{item.place.detail}</small></>}
+    </button>)}
+   </div>}
+   {!result.places.length&&hints.length>0&&<div className="sekka-location-prompts">
+    {hints.map(item=><button type="button" key={item.key} onClick={()=>{
+     const name=t(item.ar,item.en);
+     setQuery(name);onPick(name,null);search();options.reset();
+    }}>{t('ابحث عن ','Search for ')}{t(item.ar,item.en)}</button>)}
+   </div>}
+   {broad.length>0&&<ul className="sekka-location-context">
+    {broad.map(place=><li key={place.id}><strong dir="auto">{place.name}</strong><small dir="auto">{place.detail}</small></li>)}
+    <li>{t('اكتب اسم معلم محدد قريب لاختيار نقطة على الخريطة.','Enter a nearby landmark to choose a precise map point.')}</li>
+   </ul>}
+   {result.busy&&<p role="status">{t('بنجيب الأماكن من OpenStreetMap…','Looking up places on OpenStreetMap…')}</p>}
    <button type="button" className="sekka-place-lookup__map-search"
-    disabled={busy||disabled||query.trim().length<3} onClick={()=>void searchMap()}>
-    {busy?t('جارٍ البحث في الخريطة…','Searching map…'):
-     t('ابحث عن الشارع أو المكان على الخريطة','Find this street or place on the map')}
+    disabled={query.trim().length<3} onClick={search}>
+    {t('ابحث عن الشارع أو المكان على الخريطة','Find this street or place on the map')}
    </button>
-   {error&&<p role="status" className="cj-place-error">{error}</p>}
-   <small className="sekka-place-lookup__attribution">{PHOTON_ATTRIBUTION}</small>
+   {msg&&<p role="status" className="cj-place-error">{msg}</p>}
+   <small className="sekka-place-lookup__attribution">{PHOTON_ATTRIBUTION} · {greaterCairoAttribution}</small>
   </div>}
-  {!open&&query&&!choice&&<p className="sekka-place-lookup__hint">{t(
-   'اختار نتيجة حقيقية من الخريطة قبل المتابعة؛ الكتابة وحدها مش بتحدد مكان الركوب.',
-   'Select a real map result before continuing. Typing alone does not confirm a stop.')}</p>}
  </div>;
 }

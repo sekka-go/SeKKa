@@ -1,3 +1,4 @@
+import {inLaunchRegion,outsideCoverageMessage} from './geoPlace';
 import LiveTripRequests from './LiveTripRequests';
 import {reserveSeatsWithStops,MAX_SEATS_PER_RIDER} from './reservations';
 import {useEffect,useState} from 'react';
@@ -17,9 +18,11 @@ export async function fetchPublishedSelection(routeId:string,fromId:string,toId:
  const {data:route,error:routeError}=await client.from('v31_public_route_offers').select('id,title,category,seat_capacity,period,direction,outbound_time,return_time,seat_price_egp,return_supported').eq('id',routeId).eq('status','published').maybeSingle();
  if(routeError)throw routeError;
  if(!route)throw Error('ROUTE_NOT_AVAILABLE');
- const {data:rows,error:stopsError}=await client.from('v31_route_stops').select('id,route_id,area_id,position,name,pickup_allowed,dropoff_allowed').eq('route_id',routeId).order('position');
+ const {data:rows,error:stopsError}=await client.from('v31_route_stops').select('id,route_id,area_id,position,name,pickup_allowed,dropoff_allowed,latitude,longitude').eq('route_id',routeId).order('position');
  if(stopsError)throw stopsError;
- const stops=(rows||[]) as Stop[];
+ const stops=((rows||[]) as Stop[]).filter(stop=>
+  (stop.latitude==null&&stop.longitude==null)||
+  (stop.latitude!=null&&stop.longitude!=null&&inLaunchRegion({latitude:Number(stop.latitude),longitude:Number(stop.longitude)})));
  const ordered=reverse?[...stops].reverse():stops;
  const from=ordered.find(s=>s.id===fromId),to=ordered.find(s=>s.id===toId);
  if(!from||!to||ordered.indexOf(from)>=ordered.indexOf(to)||
@@ -35,6 +38,7 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
  const {language}=usePreferences(),en=language==='en';
  const t=(ar:string,english:string)=>en?english:ar;
  const [retry,setRetry]=useState(0);
+ const outside=[originPoint,destinationPoint].some(point=>point&&!inLaunchRegion(point));
  const originLat=originPoint?.latitude??null,originLon=originPoint?.longitude??null;
  const destinationLat=destinationPoint?.latitude??null,destinationLon=destinationPoint?.longitude??null;
  const categoryKey=categories.join(',');
@@ -42,7 +46,7 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
   outbound,returnTime,period,direction,categoryKey,retry]);
  const [result,setResult]=useState<{key:string;items:SearchMatch[];failed:boolean}|null>(null);
  const current=result?.key===queryKey?result:null;
- const loading=Boolean(client&&!current);
+ const loading=Boolean(client&&!outside&&!current);
  const items=current?.items??[];
  const error=current?.failed??false;
  const hasMapPoint=originLat!==null||destinationLat!==null;
@@ -66,7 +70,7 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
  };
  useEffect(()=>{
   const api=client;
-  if(!api)return;
+  if(!api||outside)return;
   const controller=new AbortController();
   void (async()=>{
    try{
@@ -93,11 +97,12 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
    }
   })();
   return ()=>controller.abort();
- },[queryKey,origin,destination,originLat,originLon,destinationLat,destinationLon,
+ },[queryKey,outside,origin,destination,originLat,originLon,destinationLat,destinationLon,
   outbound,returnTime,period,direction,categoryKey]);
  const numberFormat=new Intl.NumberFormat(en?'en-EG':'ar-EG',{maximumFractionDigits:1});
  const pickupDistanceLabel=(distanceKm:number)=>formatDistanceForLocale(distanceKm*1000,en);
  const walkingLabel=(distanceKm:number)=>numberFormat.format(approximateWalkMinutes(distanceKm*1000));
+ if(outside)return <p role="status">{t(outsideCoverageMessage.ar,outsideCoverageMessage.en)}</p>;
  return <section className="d-live-search">
    {!client&&<p role="status">{t('البحث الحقيقي محتاج ربط إعدادات Supabase العامة.','Live search requires public Supabase configuration.')}</p>}
   {loading&&<p role="status">{t('بنبحث عن خطوط مطابقة…','Searching published routes…')}</p>}
