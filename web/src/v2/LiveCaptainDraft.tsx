@@ -6,8 +6,8 @@ import {photonEndpoint} from './locationSearch';
 import CaptainRouteMap from './CaptainRouteMap';
 import {captainRouteError} from './captainRouteErrors';
 import {draftPriceGuidance,outsideDraftPriceGuidance} from './draftPriceGuidance';
-import {inLaunchRegion,mapPlacesFromPhoton,placeMatchesArea,outsideCoverageMessage} from './geoPlace';
-import {inferCaptainArea,validStopSchedule} from './captainStopPlanning';
+import {inLaunchRegion,mapPlacesFromPhoton,outsideCoverageMessage} from './geoPlace';
+import {resolveCaptainRoutingArea,validStopSchedule} from './captainStopPlanning';
 import type {MapPlace} from './geoPlace';
 import type {PlaceChoice} from './geoPlace';
 import {straightLineKm} from './nearbyRoutes';
@@ -27,13 +27,10 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
  const [uid,setUid]=useState<string|null>(null);
  const [areas,setAreas]=useState<Area[]>([]);
  const [vehicles,setVehicles]=useState<Vehicle[]>([]);
- const [areaId,setAreaId]=useState('');
- const activeAreaId=useRef('');
  const [placeLabel,setPlaceLabel]=useState('');
  const [placeChoice,setPlaceChoice]=useState<PlaceChoice|null>(null);
  const [locatingStop,setLocatingStop]=useState(false);
  const [stops,setStops]=useState<StopInput[]>([]);
- const [pendingPlace,setPendingPlace]=useState<MapPlace|null>(null);
  const [vehicleId,setVehicleId]=useState('');
  const [category,setCategory]=useState<Category|null>(null);
  const [period,setPeriod]=useState('monthly');
@@ -71,8 +68,6 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
     }
     const availableVehicles=(vehicleResult.data||[]) as Vehicle[];
     setAreas((areaResult.data||[]) as Area[]);
-    // Do not guess the Captain's operating area from the first database row.
-    setAreaId('');
     setVehicles(availableVehicles);
     setVehicleId(availableVehicles[0]?.id||'');
     const firstCategory=availableVehicles[0]?.enabled_categories?.[0];
@@ -85,16 +80,6 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
   draftPriceGuidance(stops.map(s=>({latitude:s.latitude!,longitude:s.longitude!}))):null;
  const priceOutOfBand=outsideDraftPriceGuidance(Number(price),pricing);
  const title=stops.length>=2?stops[0].name.slice(0,55)+' ← '+stops[stops.length-1].name.slice(0,55):'';
- const selectedArea=areas.find(area=>String(area.id)===areaId);
- const areaOrder=['6th of october','new cairo','dokki','maadi','nasr city','heliopolis','sheikh zayed','mohandessin','zamalek'];
- const orderedAreas=[...areas].sort((a,b)=>{
-  const ia=areaOrder.indexOf(a.name_en.toLowerCase()),ib=areaOrder.indexOf(b.name_en.toLowerCase());
-  return (ia<0?99:ia)-(ib<0?99:ib)||a.name_ar.localeCompare(b.name_ar,'ar');
- });
- const chooseArea=(id:string)=>{
-  activeAreaId.current=id;setAreaId(id);setPlaceChoice(null);setPlaceLabel('');
-  setError('');
- };
  const eligibleCategories=(vehicles.find(vehicle=>vehicle.id===vehicleId)?.enabled_categories||[])
   .filter((value):value is Category=>value in categorySeats);
  useEffect(()=>{
@@ -129,8 +114,6 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
  },[uid,vehicleId,vehicleCheckVersion]);
  const useMyStopPosition=()=>{
   setError('');
-  if(!selectedArea){setError(t('اختار المنطقة الأول علشان نتحقق من مكانك.','Choose an area before locating your stop.'));return;}
-  const checkedArea=selectedArea;
   if(!window.isSecureContext||!navigator.geolocation){
    setError(t('الموقع محتاج إذن GPS واتصال آمن.','Your location requires GPS permission and a secure connection.'));return;
   }
@@ -143,8 +126,8 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
     }
     if(!Number.isFinite(position.coords.accuracy)||position.coords.accuracy>100){
      setLocatingStop(false);
-     setError(t('دقة GPS مش كفاية. فعّل الموقع الدقيق أو ابحث عن مكان على الخريطة.',
-      'GPS is not accurate enough. Enable precise GPS or use map search.'));return;
+     setError(t('دقة GPS مش كفاية. فعّل الموقع الدقيق أو ابحث عن مكان بالاسم.',
+      'GPS accuracy is too low. Enable precise location or search for a place by name.'));return;
     }
     try{
      const url=new URL('/reverse',photonEndpoint);
@@ -153,50 +136,44 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
      const response=await fetch(url.toString(),{headers:{Accept:'application/json'},signal:AbortSignal.timeout(9000)});
      if(!response.ok)throw Error('REVERSE_UNAVAILABLE');
      const match=mapPlacesFromPhoton(await response.json()).find(place=>
-      placeMatchesArea(place,checkedArea)&&straightLineKm(place,point)*1000<=position.coords.accuracy);
-     if(activeAreaId.current!==String(checkedArea.id))return;
-     if(!match){setError(t('GPS حدد مكانك لكن بيانات الخريطة ما أكدتش إنه في '+checkedArea.name_ar+'. اختار شارع أو معلم من بحث المنطقة.',
-       'GPS located you but the map could not verify '+checkedArea.name_en+'. Pick a street or landmark in that area.'));return;}
-     const verified={...match,latitude:point.latitude,longitude:point.longitude};
-     addVerifiedStop(verified);
-    }catch{if(activeAreaId.current===String(checkedArea.id))setError(t('تعذّر تأكيد المنطقة من الخريطة. جرّب البحث عن شارع أو معلم قريب.',
-      'The map could not verify your area. Search for a nearby street or landmark.'));}
+      straightLineKm(place,point)*1000<=Math.max(position.coords.accuracy,40));
+     if(!match){setError(t('موقعك اتحدد لكن اسمه مش متوفر. ابحث عن شارع أو معلم قريب بالاسم.',
+       'GPS found you, but no verified place name is available. Search for a nearby landmark.'));return;}
+     addVerifiedStop({...match,latitude:point.latitude,longitude:point.longitude});
+    }catch{setError(t('تعذّر تحديد اسم موقعك. ابحث عن مكان قريب بالاسم.',
+     'Could not identify your location name. Search by nearby place name.'));}
     finally{setLocatingStop(false);}
    })();},
-   ()=>{setLocatingStop(false);setError(t('تعذّر الوصول للموقع. اسمح بالموقع الدقيق أو ابحث على الخريطة.',
-    'Precise location access failed. Allow GPS or search the map.'));},
+   ()=>{setLocatingStop(false);setError(t('تعذّر الوصول للموقع. اسمح بالموقع الدقيق أو ابحث بالاسم.',
+    'Precise location access failed. Allow GPS or search by name.'));},
    {enableHighAccuracy:true,timeout:12000,maximumAge:0}
   );
  };
- const addVerifiedStop=(place:MapPlace,explicitArea?:Area)=>{
+ const addVerifiedStop=(place:MapPlace)=>{
   setError('');setMessage('');
-  const targetArea=explicitArea??selectedArea??inferCaptainArea(place,areas);
-  if(!targetArea){
-   setPendingPlace(place);
-   setError(t('المكان اتحدد. اختار المنطقة الإدارية التابعة له عشان نضيفه للمسار.',
-    'Place selected. Choose its service area to add this stop.'));
-   return;
-  }
   const verifiedPoint=persistableOperationalPoint(place);
   if(!verifiedPoint){
    setError(t(outsideCoverageMessage.ar,outsideCoverageMessage.en));return;
   }
-  if(!explicitArea&&selectedArea&&!placeMatchesArea(place,selectedArea)){
-   setError(t('المكان ده مش متأكد إنه في المنطقة دي.','Place is not verified inside this area.'));return;
+  // Legacy zone is resolved internally for the required FK; the actual stop
+  // is the selected place name + coordinates and must never be silently changed.
+  const targetArea=resolveCaptainRoutingArea(place,areas);
+  if(!targetArea){
+   setError(t('تعذّر حفظ المنطقة الداخلية للمكان. جرّب تحديث الصفحة.',
+    'Unable to resolve this place for route storage. Refresh and retry.'));return;
   }
   const name=place.name.trim();
   if(name.length<3||name.length>100){setError(t('اختار مكان باسم واضح.','Choose a named place.'));return;}
   if(stops.length>=30){setError(t('وصلت لأقصى عدد نقاط.','Maximum stops reached.'));return;}
-  if(stops.some(s=>s.areaId===targetArea.id&&
-    (s.name.toLocaleLowerCase()===name.toLocaleLowerCase()||
-     s.latitude!==null&&s.longitude!==null&&straightLineKm({latitude:s.latitude,longitude:s.longitude},place)<0.03))){
+  if(stops.some(s=>
+    (s.name.toLocaleLowerCase()===name.toLocaleLowerCase()&&s.areaId===targetArea.id)||
+    s.latitude!==null&&s.longitude!==null&&
+    straightLineKm({latitude:s.latitude,longitude:s.longitude},verifiedPoint)<0.03)){
    setError(t('المكان ده اتضاف بالفعل.','Stop is already added.'));return;
   }
-  const next=[...stops,{areaId:targetArea.id,name,pickup:true,dropoff:true,
-   outboundStopTime:'',returnStopTime:'',...verifiedPoint}];
-  setStops(next);setPendingPlace(null);setAreaId('');activeAreaId.current='';
+  setStops(next=>[...next,{areaId:targetArea.id,name,pickup:true,dropoff:true,
+   outboundStopTime:'',returnStopTime:'',...verifiedPoint}]);
   setPlaceLabel('');setPlaceChoice(null);
-
  };
  const save=async()=>{
    if(!client||!uid||saving.current)return;
@@ -271,7 +248,7 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
      try{clearReservationAttempt(sessionStorage,signature);}catch{/* Storage can be unavailable in private mode. */}
      draftAttempts.current.delete(signature);
      setMessage(t('تم حفظ المسودة وإحداثيات نقاط الوقوف.','Draft and stop coordinates verified.'));
-     setStops([]);setPendingPlace(null);setPlaceLabel('');setPlaceChoice(null);setPrice('');
+     setStops([]);setPlaceLabel('');setPlaceChoice(null);setPrice('');
      setStep(1);
      onSaved?.(routeId);
    }catch(e){setError(captainRouteError(e,en?'en':'ar'));}
@@ -329,44 +306,22 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
    {stops.length>0&&<ol className="cj-easy-selected-stops" aria-label={t('نقط الرحلة','Trip stops')}>
     {stops.map((stop,index)=><li key={stop.latitude+':'+stop.longitude}>
      <span className="cj-easy-stop-number">{index+1}</span>
-     <div><strong>{stop.name}</strong><small>{en?areas.find(a=>a.id===stop.areaId)?.name_en:areas.find(a=>a.id===stop.areaId)?.name_ar}</small></div>
+     <div><strong>{stop.name}</strong></div>
      <div className="sekka-route-stop-actions">
       <button type="button" disabled={index===0} onClick={()=>moveStop(index,-1)}
        aria-label={t('قدّم ','Move earlier: ')+stop.name}>{t('فوق','Up')}</button>
       <button type="button" disabled={index===stops.length-1} onClick={()=>moveStop(index,1)}
        aria-label={t('أخّر ','Move later: ')+stop.name}>{t('تحت','Down')}</button>
-      <button type="button" onClick={()=>{setStops(old=>old.filter((_,i)=>i!==index));chooseArea('');}}
+      <button type="button" onClick={()=>setStops(old=>old.filter((_,i)=>i!==index))}
        aria-label={t('احذف ','Remove ')+stop.name}>{t('حذف','Remove')}</button>
      </div>
     </li>)}
    </ol>}
    <CaptainPlacePicker label={t('ابحث عن محطة','Search for a stop')}
-    value={placeLabel} choice={placeChoice} searchArea={selectedArea}
-    onPick={(value,choice)=>{setPlaceLabel(value);setPlaceChoice(choice);if(!choice)setPendingPlace(null);setError('');}}
-    onVerified={place=>addVerifiedStop(place)}/>
-   {pendingPlace&&<div className="cj-captain-pending-area" role="group"
-     aria-label={t('اختار منطقة المحطة','Choose stop service area')}>
-    <strong>{t('اختر منطقة المحطة: ','Choose the stop area: ')}{pendingPlace.name}</strong>
-    <p>{t('المكان اتحدد، بس مش قادرين نطابق منطقته تلقائيًا. اختار المنطقة التابعة له.',
-      'Place found, but we cannot identify its service area uniquely. Choose its area.')}</p>
-    <div className="cj-easy-areas">{orderedAreas.map(area=><button key={area.id} type="button"
-     onClick={()=>addVerifiedStop(pendingPlace,area)}>{en?area.name_en:area.name_ar}</button>)}</div>
-    <button type="button" onClick={()=>{setPendingPlace(null);setPlaceLabel('');setPlaceChoice(null);setError('');}}>
-     {t('إلغاء اختيار المكان','Cancel place')}</button>
-   </div>}
-   <details className="cj-captain-area-fallback">
-    <summary>{selectedArea
-     ?t('منطقة المحطة: ','Stop area: ')+(en?selectedArea.name_en:selectedArea.name_ar)
-     :t('اختيار منطقة يدويًا عند الحاجة (اختياري)','Choose area manually if needed (optional)')}</summary>
-    <div className="cj-easy-areas" role="group" aria-label={t('المناطق الرئيسية','Main areas')}>
-     {orderedAreas.map(area=><button type="button" key={area.id}
-      aria-pressed={selectedArea?.id===area.id}
-      onClick={()=>chooseArea(String(area.id))}>{en?area.name_en:area.name_ar}</button>)}
-     {selectedArea&&<button type="button" onClick={()=>chooseArea('')}>
-      {t('بحث في كل القاهرة الكبرى','Search all Greater Cairo')}</button>}
-    </div>
-   </details>
-   <button type="button" className="cj-easy-gps" disabled={locatingStop||!selectedArea}
+    value={placeLabel} choice={placeChoice}
+    onPick={(value,choice)=>{setPlaceLabel(value);setPlaceChoice(choice);setError('');}}
+    onVerified={addVerifiedStop}/>
+   <button type="button" className="cj-easy-gps" disabled={locatingStop}
     onClick={useMyStopPosition}>{locatingStop?t('بنحدد موقعك…','Locating…'):
      t('⌖ استخدم موقعي الحالي (اختياري)','⌖ Use my current location (optional)')}</button>
    {stops.length<2&&<p className="cj-easy-help" role="status">{stops.length===0?
