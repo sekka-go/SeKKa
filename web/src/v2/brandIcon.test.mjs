@@ -45,7 +45,7 @@ for(const size of [192,512]){
   assert.notDeepEqual(data,readFileSync(new URL(`../../public/brand/sekka-go-${size}.png`,import.meta.url)));
  });
 }
-test('manifest, favicon and splash reference only the owner-selected icon',()=>{
+test('manifest and favicon retain owner-selected icon while splash uses the new Hiace animation',()=>{
  const manifest=JSON.parse(readFileSync(new URL('../../public/manifest.webmanifest',import.meta.url),'utf8'));
  const index=readFileSync(new URL('../../index.html',import.meta.url),'utf8');
  const splash=readFileSync(new URL('./LaunchSplash.tsx',import.meta.url),'utf8');
@@ -55,5 +55,8 @@ test('manifest, favicon and splash reference only the owner-selected icon',()=>{
  ]);
  assert.match(index,/sekka-go-road-192\.png/);
  assert.match(index,/sekka-go-road-512\.png/);
- assert.match(splash,/sekka-go-road-512\.png/);
+ assert.match(splash,/HiaceArtwork/);
+ assert.match(splash,/sekka-launch__black-wipe/);
+ assert.match(splash,/sekka-launch__hiace/);
+ assert.doesNotMatch(splash,/sekka-go-road-512\\.png/);
 });
