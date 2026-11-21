@@ -487,7 +487,10 @@ export default function MobileApp(){
  const menuButton=<button type="button" ref={menuTrigger}
   className={captainLanding?'sekka-captain-head-action':'sekka-shell-menu'} aria-label={t('فتح القائمة','Open menu')}
   aria-expanded={menuOpen} aria-controls="sekka-side-menu" onClick={()=>setMenuOpen(true)}>
-  <span aria-hidden="true">☰</span>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1"
+    strokeLinecap="round" aria-hidden="true" focusable="false">
+    <path d="M4.5 6h15M4.5 12h15M4.5 18h15"/>
+   </svg>
  </button>;
  return <div className={`sekka-mobile sekka-tab-${tab}${fullScreenSearchFilters?' sekka-search-filters':''}${fullScreenAuth?' sekka-fullscreen-auth':''}${fullScreenSearch?' sekka-fullscreen-search':''}${userId&&tab==='captain-onboarding'?' sekka-captain-logged-in':''}${!userId&&tab==='home'?' sekka-guest-welcome':''}${captainLanding?' sekka-captain-home-shell':''}${showRiderTabs?' sekka-rider-navigation':''}${motionStep?(motionStep%2?' sk-motion-odd':' sk-motion-even'):''}`} dir={en?'ltr':'rtl'}>
   <a className="sekka-skip" href="#sekka-content">{t('تخطي للمحتوى','Skip to content')}</a>
@@ -608,15 +611,25 @@ export default function MobileApp(){
      {ready&&admin&&<><h2>{t('الإدارة','Administration')}</h2>
       {menuLink(t('لوحة الإدارة','Admin dashboard'),{tab:'admin',view:62})}</>}
      <h2>{t('اللغة والمظهر','Language & appearance')}</h2>
-     <button type="button" className="sekka-drawer-preference sekka-language" aria-label={en?'Switch to Arabic':'التبديل إلى الإنجليزية'}
-       onClick={()=>p.setLanguagePreference(en?'ar':'en')}>
-      <span aria-hidden="true" className="sekka-drawer-pref-icon">🌐</span><span>{t('اللغة','Language')} · {en?'العربية':'English'}</span>
-     </button>
-     <button type="button" className="sekka-drawer-preference sekka-theme" aria-label={t('تغيير المظهر','Switch appearance')}
-       onClick={()=>p.setThemePreference(p.theme==='dark'?'light':'dark')}>
-      <span aria-hidden="true" className="sekka-drawer-pref-icon">☾</span>
-      <span>{p.theme==='dark'?t('الوضع الفاتح','Light mode'):t('الوضع الداكن','Dark mode')}</span>
-     </button>
+     <div className="sekka-preference-controls">
+      <label htmlFor="sekka-language-pref">{t('لغة التطبيق','App language')}
+       <select id="sekka-language-pref" value={p.languagePreference}
+        onChange={event=>p.setLanguagePreference(event.target.value as 'system'|'ar'|'en')}>
+        <option value="system">{t('تلقائي حسب لغة الموبايل','Follow phone language')}</option>
+        <option value="ar">{t('العربية','Arabic')}</option>
+        <option value="en">{t('الإنجليزية','English')}</option>
+       </select>
+      </label>
+      <label htmlFor="sekka-appearance-pref">{t('مظهر التطبيق','App appearance')}
+       <select id="sekka-appearance-pref" value={p.themePreference}
+        onChange={event=>p.setThemePreference(event.target.value as 'system'|'light'|'dark')}>
+        <option value="system">{t('تلقائي حسب الموبايل','Follow phone appearance')}</option>
+        <option value="light">{t('فاتح','Light')}</option>
+        <option value="dark">{t('غامق','Dark')}</option>
+       </select>
+      </label>
+      <p>{t('اختياراتك بتتحفظ على جهازك، وهيفضل التطبيق يفتح بيها لحد ما تغيّرها.','Your preferences are saved on this device until you change them.')}</p>
+     </div>
      {ready&&userId&&<><h2>{t('الحساب','Account')}</h2>
       <button type="button" onClick={()=>void signOut()}>{t('تسجيل الخروج','Sign out')}</button></>}
     </nav>
