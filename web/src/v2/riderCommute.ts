@@ -61,6 +61,47 @@ export function saveCommute(riderId:string,commute:Omit<SavedCommute,'savedAt'>)
   return true;
  }catch{return false;}
 }
+/** Unsubmitted home edits are scoped to both this browser tab and the Google user.
+ * We explicitly validate partial values: incomplete searches are legitimate drafts.
+ */
+export type EditableCommute=Omit<SavedCommute,'savedAt'>;
+export function parseHomeDraft(raw:unknown):EditableCommute|null{
+ if(!raw||typeof raw!=='object'||Array.isArray(raw))return null;
+ const d=raw as Record<string,unknown>;
+ const partial=(x:unknown)=>typeof x==='string'&&x.length<=160;
+ if(!partial(d.origin)||!partial(d.destination)||
+  !pointChoice(d.originPlace??null)||!pointChoice(d.destinationPlace??null)||
+  !clock(d.outbound)||!clock(d.returnTime)||
+  !['weekly','monthly'].includes(String(d.period))||
+  !['outbound','return','round_trip'].includes(String(d.direction))||
+  !isWeekdays(d.weekdays??[]))return null;
+ return {origin:d.origin as string,destination:d.destination as string,
+  originPlace:(d.originPlace??null) as PlaceChoice|null,
+  destinationPlace:(d.destinationPlace??null) as PlaceChoice|null,
+  outbound:d.outbound as string,returnTime:d.returnTime as string,
+  period:d.period as 'weekly'|'monthly',
+  direction:d.direction as 'outbound'|'return'|'round_trip',
+  weekdays:[...((d.weekdays??[]) as number[])]};
+}
+export function riderHomeDraftKey(riderId:string){
+ savedCommuteKey(riderId); // refuse untrusted account IDs
+ return 'sekka.rider.homeDraft.v1.'+riderId;
+}
+export function readHomeDraft(riderId:string):EditableCommute|null{
+ try{return parseHomeDraft(JSON.parse(sessionStorage.getItem(riderHomeDraftKey(riderId))||'null'));}
+ catch{return null;}
+}
+export function saveHomeDraft(riderId:string,draft:EditableCommute):boolean{
+ try{
+  const validated=parseHomeDraft(draft);
+  if(!validated)return false;
+  sessionStorage.setItem(riderHomeDraftKey(riderId),JSON.stringify(validated));
+  return true;
+ }catch{return false;}
+}
+export function clearHomeDraft(riderId:string){
+ try{sessionStorage.removeItem(riderHomeDraftKey(riderId));}catch{/* Optional storage */ }
+}
 export function restoreCommuteDraft(commute:SavedCommute):boolean{
  try{
   const draft={origin:commute.origin,destination:commute.destination,
