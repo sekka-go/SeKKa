@@ -1,4 +1,9 @@
 import {test,expect} from '@playwright/test';
+// This suite isolates Photon behavior. The separately tested licensed OSM index
+// is intercepted so indexed autocomplete does not hide the mocked provider cases.
+test.beforeEach(async({page})=>{
+ await page.route('**/geo-index/*.json',route=>route.fulfill({json:{version:'mocked',results:[]}}));
+});
 
 // Mock GPS + public published-stop data only; no actual Google account, live
 // location, Captain pricing mutation or payment.
@@ -115,9 +120,10 @@ test('map search remains usable without GPS and real stops remain server-matched
  });
  await page.goto('/?tab=search&view=9');
  await page.getByRole('combobox',{name:'Starting point'}).fill('City Stars');
- await page.getByRole('button',{name:'Find this street or place on the map'}).click();
+ // Owner-approved autocomplete: a Photon result appears without a Search button.
+ await expect(page.getByRole('option',{name:/City Stars/})).toBeVisible();
  await page.getByRole('option',{name:/City Stars/}).click();
- await expect(page.getByText(/OpenStreetMap location selected/)).toBeVisible();
+ await expect(page.getByText(/Selected location/)).toBeVisible();
  await page.getByRole('combobox',{name:'Destination'}).fill('Maadi');
  await page.getByRole('group',{name:'Place search suggestions'}).getByRole('option',{name:/Maadi/}).first().click();
  await page.locator('.rs3__submit').click();
@@ -134,7 +140,7 @@ test('Greater Cairo search rejects external results, preserves neighborhood cont
  });
  await page.route('https://photon.komoot.io/api/**',async request=>{
   const query=new URL(request.request().url()).searchParams.get('q')||'';
-  const features=query.includes('Fayoum')?[feature([30.8428,29.3084],{name:'Fayoum',osm_type:'N',osm_id:210})]:
+  const features=query.includes('Fayoum')?[feature([30.8428,29.3084],{name:'Fayoum',osm_type:'N',osm_id:210,osm_key:'place',osm_value:'city'})]:
    [feature([30.9459443,29.9731044],{name:'التجمع الخامس',city:'السادس من أكتوبر',osm_type:'N',osm_id:4555939289,osm_key:'shop',osm_value:'bookmaker'}),
     feature([31.4249357,30.0038046],{name:'Fifth Settlement',city:'New Cairo',osm_type:'W',osm_id:774635278,osm_key:'place',osm_value:'neighbourhood'})];
   await request.fulfill({json:{features}});
