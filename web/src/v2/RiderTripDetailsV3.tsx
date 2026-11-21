@@ -84,6 +84,6 @@ export default function RiderTripDetailsV3({line,stops,pickup,dropoff,pickupPosi
   <button type="button" className="rd3__primary"
    disabled={line.amount===null||line.available<1||!pickup||!validDropoff}
    onClick={onProceed}>{t('كمّل للحجز','Continue to booking')}</button>
-  <button type="button" className="rd3__back" onClick={onBack}>{t('رجوع لنتائج البحث','Back to results')}</button>
+  <button type="button" className="rd3__back" onClick={onBack}>{t('رجوع','Back')}</button>
  </section>;
 }
