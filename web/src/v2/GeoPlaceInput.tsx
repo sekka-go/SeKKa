@@ -1,9 +1,9 @@
 import {useEffect,useState} from 'react';
-import {greaterCairoAttribution} from './greaterCairoBoundary';
 import {usePreferences} from './preferences';
-import {catalogMatches,exactCatalogMatches,locationContext,locationContextIcon,outsideCatalogMatch,noMatchingLocation,outsideCoverageMessage,PHOTON_ATTRIBUTION,selectOperationalMapPlace,serviceMatches} from './geoPlace';
+import {catalogMatches,exactCatalogMatches,locationContext,locationContextIcon,outsideCatalogMatch,noMatchingLocation,outsideCoverageMessage,selectOperationalMapPlace,serviceMatches} from './geoPlace';
 import {useLocationOptions,useLocationSearch} from './locationSearch';
 import type {PlaceChoice,ServiceArea} from './geoPlace';
+import GeoMapPicker from './GeoMapPicker';
 import './location-search.css';
 
 export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=false,searchArea}:{
@@ -15,6 +15,7 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
  const [query,setQuery]=useState(value);
  const [open,setOpen]=useState(false);
  const [immediate,setImmediate]=useState(0);
+ const [mapOpen,setMapOpen]=useState(false);
  const options=useLocationOptions();
  useEffect(()=>{setQuery(choice?.kind==='service'?t(choice.area.name_ar,choice.area.name_en):value);},[value,choice,en]);
  const menu=open&&!disabled&&!choice&&Boolean(query.trim());
@@ -43,7 +44,7 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
   :result.status==='error'
   ?t('البحث على الخريطة مش متاح دلوقتي. جرّب تاني.','Map search is temporarily unavailable. Try again.')
   :result.status==='done'&&!picks.length&&!broad.length
-    ?result.outside?t(outsideCoverageMessage.ar,outsideCoverageMessage.en):t(noMatchingLocation.ar,noMatchingLocation.en):'';
+    ?t(noMatchingLocation.ar,noMatchingLocation.en):'';
  return <div className="sekka-place-lookup" onBlur={e=>{
   if(!e.currentTarget.contains(e.relatedTarget)){setOpen(false);options.reset();}
  }}>
@@ -86,12 +87,15 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
     <li>{t('اكتب اسم معلم محدد قريب لاختيار نقطة على الخريطة.','Enter a nearby landmark to choose a precise map point.')}</li>
    </ul>}
    {result.busy&&<p role="status">{t('بنجيب الأماكن من OpenStreetMap…','Looking up places on OpenStreetMap…')}</p>}
-   <button type="button" className="sekka-place-lookup__map-search"
-    disabled={query.trim().length<3} onClick={search}>
-    {t('ابحث عن الشارع أو المكان على الخريطة','Find this street or place on the map')}
-   </button>
    {msg&&<p role="status" className="cj-place-error">{msg}</p>}
-   <small className="sekka-place-lookup__attribution">{PHOTON_ATTRIBUTION} · {greaterCairoAttribution}</small>
   </div>}
+  <button type="button" className="sekka-place-lookup__map-search"
+   disabled={disabled} onClick={()=>{setMapOpen(true);setOpen(false);}}>
+   <span aria-hidden="true">⌖</span>{t('حدد نقطة على الخريطة','Choose point on map')}
+  </button>
+  {mapOpen&&<GeoMapPicker area={searchArea}
+   initial={choice?.kind==='map'?choice.place:null} onCancel={()=>setMapOpen(false)}
+   onConfirm={place=>{const selected={kind:'map' as const,place};
+    setQuery(place.name);onPick(place.name,selected);setMapOpen(false);setOpen(false);return true;}}/>}
  </div>;
 }
