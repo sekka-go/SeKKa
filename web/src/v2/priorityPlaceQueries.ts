@@ -5,7 +5,7 @@
 const namedPlaces=[
  {name:'Cairo Festival City Mall',aliases:['cfc','cfc mall','cfcm','cairo festival city','كايرو فستيفال سيتي','كايرو فستيفال سيتي مول','كايرو فيستيفال سيتي','فستيفال سيتي','سي اف سي','سى اف سى','كايرو فيستيفال']},
  {name:'Smart Village',aliases:['القرية الذكية','القريه الذكيه','قرية ذكية','قريه ذكيه','سمارت فيلدج','سمارت فيليدج']},
- {name:'Cairo Mall',aliases:['كايرو مول','مول كايرو','cairo mall']},
+ {name:'Cairo Mall',aliases:['كايرو مول','وكايرو مول','مول كايرو','cairo mall']},
  {name:'Talaat Harb Mall',aliases:['مول طلعت حرب','طلعت حرب مول','طلعت حرب مال','talaat harb mall','talat harb mall']},
  {name:'Mall of Arabia',aliases:['مول العرب','مول اوف ارابيا','مول أوف أرابيا','mall of arabia']},
  {name:'Mall of Egypt',aliases:['مول مصر','مول اوف ايجيبت','مول أوف إيجيبت','mall of egypt']},
