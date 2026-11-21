@@ -1,6 +1,6 @@
 import {useEffect,useState} from 'react';
 import {usePreferences} from './preferences';
-import {catalogMatches,exactCatalogMatches,locationContext,locationContextIcon,outsideCatalogMatch,noMatchingLocation,outsideCoverageMessage,selectOperationalMapPlace,serviceMatches,placeMatchesArea} from './geoPlace';
+import {catalogMatches,exactCatalogMatches,locationContext,locationContextIcon,outsideCatalogMatch,noMatchingLocation,outsideCoverageMessage,selectOperationalMapPlace,serviceMatches} from './geoPlace';
 import {useLocationOptions,useLocationSearch} from './locationSearch';
 import type {PlaceChoice,ServiceArea} from './geoPlace';
 import GeoMapPicker from './GeoMapPicker';
@@ -46,6 +46,12 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
   if(!next||(next.kind==='map'&&!selectOperationalMapPlace(next.place)))return;
   const name=next.kind==='service'?next.area.name_ar:next.place.name;
   setQuery(name);onPick(name,next);setOpen(false);setImmediate(0);options.reset();
+ };
+ const selectContext=(place:typeof broad[number])=>{
+  // Choosing a street/venue should take the user to that place, not silently
+  // pretend its representative map coordinate is a verified pickup point.
+  setQuery(place.name);onPick(place.name,null);setMapFocus(place);
+  setMapOpen(true);setOpen(false);setImmediate(0);options.reset();
  };
  const search=()=>{setOpen(true);setImmediate(i=>i+1);};
  const msg=menu&&outsideCatalogMatch(query,searchArea)&&!picks.length&&!broad.length
@@ -93,25 +99,13 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
     }}>{t('ابحث عن ','Search for ')}{t(item.ar,item.en)}</button>)}
    </div>}
    {broad.length>0&&<ul className="sekka-location-context">
-    {broad.map(place=>{
-     const matches=areas.filter(area=>placeMatchesArea(place,area));
-     const registered=matches.length===1?matches[0]:null;
-     return <li key={place.id}>
-      {registered?<button type="button" className="sekka-location-context__select"
-       onMouseDown={event=>event.preventDefault()} onClick={()=>{
-        setQuery(registered.name_ar);onPick(registered.name_ar,{kind:'service',area:registered});
-        setOpen(false);options.reset();
-       }}>
-       <strong dir="auto"><span aria-hidden="true">{locationContextIcon(place)} </span>{place.name}</strong>
-       <small dir="auto">{[categoryLabel(place),place.detail].filter(Boolean).join(" · ")}</small>
-       <small>{t('بحث عن رحلات في '+registered.name_ar,'Search trips in '+registered.name_en)}</small>
-      </button>:<>
-       <strong dir="auto"><span aria-hidden="true">{locationContextIcon(place)} </span>{place.name}</strong>
-       <small dir="auto">{[categoryLabel(place),place.detail].filter(Boolean).join(" · ")}</small>
-       <small>{t('حدد نقطة دقيقة على الخريطة للبحث هنا','Choose an exact map point to search here')}</small>
-      </>}
-     </li>;
-    })}
+    {broad.map(place=><li key={place.id}>
+     <button type="button" className="sekka-location-context__select"
+      onMouseDown={event=>event.preventDefault()} onClick={()=>selectContext(place)}>
+      <strong dir="auto"><span aria-hidden="true">{locationContextIcon(place)} </span>{place.name}</strong>
+      <small dir="auto">{[categoryLabel(place),place.detail].filter(Boolean).join(' · ')}</small>
+     </button>
+    </li>)}
    </ul>}
    {result.busy&&<p role="status">{t('بنجيب الأماكن من OpenStreetMap…','Looking up places on OpenStreetMap…')}</p>}
    {msg&&<p role="status" className="cj-place-error">{msg}</p>}
@@ -120,7 +114,7 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
    disabled={disabled} onClick={()=>{setMapFocus(broad[0]??result.places[0]??null);setMapOpen(true);setOpen(false);}}>
    <span aria-hidden="true">⌖</span>{t('حدد نقطة على الخريطة','Choose point on map')}
   </button>
-  {mapOpen&&<GeoMapPicker area={searchArea} focus={mapFocus}
+  {mapOpen&&<GeoMapPicker area={searchArea} focus={mapFocus} focusLabel={query}
    initial={choice?.kind==='map'?choice.place:null} onCancel={()=>setMapOpen(false)}
    onConfirm={place=>{const selected={kind:'map' as const,place};
     setQuery(place.name);onPick(place.name,selected);setMapOpen(false);setOpen(false);return true;}}/>}
