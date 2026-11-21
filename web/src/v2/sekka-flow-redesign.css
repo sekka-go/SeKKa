@@ -111,10 +111,10 @@
  47%{opacity:1;transform:translate(0,0) scale(1)}
  80%,100%{opacity:0;transform:translate(-200px,-70px) scale(.4)}}
 .sekka-mobile.sk-motion-odd>.sekka-mobile-content{
- animation:flow-page-odd .54s var(--flow-ease) both;
+ animation:flow-page-odd .54s var(--flow-ease);
 }
 .sekka-mobile.sk-motion-even>.sekka-mobile-content{
- animation:flow-page-even .54s var(--flow-ease) both;
+ animation:flow-page-even .54s var(--flow-ease);
 }
 @keyframes flow-page-odd{
  from{opacity:.25;transform:translate3d(19px,17px,0) scale(.988);
