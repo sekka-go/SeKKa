@@ -16,6 +16,8 @@ import {geoRequestAvailable} from "./geoPlace";
 import type {PlaceChoice} from "./geoPlace";
 import type {LiveSelection} from "./LiveRouteSearch";
 import {saveCommute} from './riderCommute';
+import {riderHomeCopy} from './riderHomeCopy';
+import './rider-journey.css';
 
 export const discoveryScreens = [8, 9, 10, 11, 12, 14];
 const titles: Record<number, string> = {
@@ -846,6 +848,15 @@ export default function Discovery(p: DiscoveryProps) {
           <DiscoveryIcon name={titleIcon} />
           {heading}
         </h1>
+        {p.production&&[9,11,12].includes(screen)&&(()=>{
+          const copy=language==='en'?riderHomeCopy.en:riderHomeCopy.ar;
+          const step=screen===9?copy.searchStep:screen===11?copy.resultsStep:copy.detailsStep;
+          const title=screen===9?copy.searchTitle:screen===11?copy.resultsTitle:copy.detailsTitle;
+          return <section className="sekka-rider-journey-heading">
+           <span>{step}</span><h2>{title}</h2>
+           {screen===9&&<p>{copy.searchHelp}</p>}
+          </section>;
+        })()}
         {p.busy && !demo && (
           <p className="d-feedback" role="status">
             {tr("بنحمّل البيانات…")}</p>
@@ -970,7 +981,7 @@ export default function Discovery(p: DiscoveryProps) {
                 </label>
               </div>
               <button className="d-primary" type="submit">
-                {tr("ابحث عن الرحلات")}<DiscoveryIcon name="arrow" />
+                {p.production?(language==='en'?'Show available rides':'شوف الرحلات المتاحة'):tr("ابحث عن الرحلات")}<DiscoveryIcon name="arrow" />
               </button>
             </form>
             <div className="d-road" aria-hidden="true" />
