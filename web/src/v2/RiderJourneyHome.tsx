@@ -18,7 +18,7 @@ const EN_DAYS=['Saturday','Sunday','Monday','Tuesday','Wednesday','Thursday','Fr
 function initialDraft(saved:SavedCommute|null):Draft{
  return {origin:saved?.origin??'',destination:saved?.destination??'',
   originPlace:saved?.originPlace??null,destinationPlace:saved?.destinationPlace??null,
-  outbound:saved?.outbound??'',returnTime:saved?.returnTime??'',
+  outbound:saved?.outbound??'',returnTime:saved?.direction==='outbound'?'':(saved?.returnTime??''),
   period:saved?.period??'weekly',
   direction:saved?.direction??'outbound',weekdays:saved?.weekdays??[]};
 }
@@ -86,8 +86,8 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
  const daysSummary=!count?tr.daysPrompt:en?
   (count===1?'1 day selected':count+' days selected'):
   (count===1?'يوم واحد':count===2?'يومين':new Intl.NumberFormat('ar-EG').format(count)+' أيام');
- const timeText=[formatRiderClock(draft.outbound,en),
-  draft.returnTime?formatRiderClock(draft.returnTime,en):''].filter(Boolean).join(' – ');
+ const timeText=[draft.direction==='return'?'':formatRiderClock(draft.outbound,en),
+  draft.direction!=='outbound'&&draft.returnTime?formatRiderClock(draft.returnTime,en):''].filter(Boolean).join(' – ');
  const fields=[
   {id:'from' as const,label:tr.pickup,value:draft.origin?display(draft.origin):tr.originPrompt,filled:!!draft.originPlace||registered(draft.origin)},
   {id:'to' as const,label:tr.dropoff,value:draft.destination?display(draft.destination):tr.destinationPrompt,filled:!!draft.destinationPlace||registered(draft.destination)},
@@ -110,7 +110,7 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
   }
   // Weekdays are saved as rider preferences but the existing v31 route-search
   // RPC does not accept a weekday parameter: do NOT promise weekday filtering.
-  const commute:SavedCommute={...draft,direction:draft.returnTime?'round_trip':'outbound',
+  const commute:SavedCommute={...draft,
    weekdays:[...selectedDays].sort((a,b)=>a-b),savedAt:new Date().toISOString()};
   const restored=restoreCommuteDraft(commute);
   if(!restored){setError(tr.localFailure);return;}
@@ -190,7 +190,7 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
       <input type="time" value={draft.outbound} onChange={event=>setDraft(prev=>({...prev,outbound:event.target.value}))}/>
      </label>
      <label>{tr.returnTimeOptional}
-      <input type="time" value={draft.returnTime} onChange={event=>setDraft(prev=>({...prev,returnTime:event.target.value}))}/>
+      <input type="time" value={draft.returnTime} onChange={event=>setDraft(prev=>({...prev,returnTime:event.target.value,direction:event.target.value?'round_trip':'outbound'}))}/>
      </label>
      <p>{tr.timeHint}</p>
      <button type="button" className="rh-picker__confirm" onClick={()=>setEditor(null)}>{tr.done}</button>
