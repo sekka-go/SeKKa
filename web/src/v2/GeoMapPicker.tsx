@@ -119,9 +119,9 @@ export default function GeoMapPicker({initial,focus,area,onCancel,onConfirm}:Map
    setMessage(t('تعذّر تأكيد النقطة دلوقتي. جرّب تاني.','Could not confirm this point. Try again.'));
   }finally{setBusy(false);}
  };
- const projected=pin?mapProject(pin,zoom):null,focus=mapProject(center,zoom);
- const marker=projected?{left:dimensions.width/2+projected.x-focus.x,
-  top:dimensions.height/2+projected.y-focus.y}:null;
+ const projected=pin?mapProject(pin,zoom):null,projectedCenter=mapProject(center,zoom);
+ const marker=projected?{left:dimensions.width/2+projected.x-projectedCenter.x,
+  top:dimensions.height/2+projected.y-projectedCenter.y}:null;
  const allowed=Boolean(pin&&isInsideOperationalRegion(pin));
  return createPortal(<div className="sekka-map-picker" role="dialog" aria-modal="true"
   aria-label={t('حدد نقطة على الخريطة','Choose point on map')}>
