@@ -1,5 +1,6 @@
 import {useState,type FormEvent,type ReactNode} from 'react';
 import GeoPlaceInput from './GeoPlaceInput';
+import GeoMapPicker from './GeoMapPicker';
 import PickupExplorerSheet from './PickupExplorerSheet';
 import type {LiveSelection} from './LiveRouteSearch';
 import type {PlaceChoice,ServiceArea} from './geoPlace';
@@ -23,6 +24,11 @@ export default function RiderSearchV3({origin,destination,originPlace,destinatio
 }){
  const {language}=usePreferences(),en=language==='en',t=(ar:string,english:string)=>en?english:ar;
  const [nearby,setNearby]=useState(false);
+ const [mapMenuOpen,setMapMenuOpen]=useState(false);
+ const [mapTarget,setMapTarget]=useState<'origin'|'destination'|null>(null);
+ const mapChoice=mapTarget==='origin'?originPlace:mapTarget==='destination'?destinationPlace:null;
+ const mapFocus=mapChoice?.kind==='search'||mapChoice?.kind==='map'?mapChoice.place:null;
+ const mapLabel=mapTarget==='origin'?origin:destination;
  const [returnOpen,setReturnOpen]=useState(Boolean(returnTime));
  const [daysOpen,setDaysOpen]=useState(Boolean(weekdays.length));
  const toggleDay=(day:number)=>onWeekdays(weekdays.includes(day)?weekdays.filter(n=>n!==day):[...weekdays,day].sort((a,b)=>a-b));
@@ -62,6 +68,37 @@ export default function RiderSearchV3({origin,destination,originPlace,destinatio
      </div>
     </div>
    </div>
+   {/* Map is not a field autocomplete behavior. It requires two separate
+       explicit user actions and is never mounted during ordinary typing. */}
+   <div className="rs3__optional-map">
+    <button type="button" className="rs3__optional-map-toggle"
+     aria-expanded={mapMenuOpen} aria-controls="rs3-map-actions"
+     onClick={()=>{setMapMenuOpen(value=>!value);}}>
+     <span aria-hidden="true">⌖</span>
+     {t('عايز تحدد نقطة بنفسك على الخريطة؟ (اختياري)',
+        'Want to choose an exact point on the map? (optional)')}
+    </button>
+    {mapMenuOpen&&<div id="rs3-map-actions" className="rs3__optional-map-actions"
+      role="group" aria-label={t('اختيار نقطة من الخريطة','Choose point from map')}>
+     <button type="button" onClick={()=>setMapTarget('origin')}>
+      {t('حدد الانطلاق على الخريطة','Choose origin on map')}
+     </button>
+     <button type="button" onClick={()=>setMapTarget('destination')}>
+      {t('حدد الوصول على الخريطة','Choose destination on map')}
+     </button>
+    </div>}
+   </div>
+   {mapTarget&&<GeoMapPicker
+    focus={mapFocus} focusLabel={mapLabel}
+    initial={mapChoice?.kind==='map'?mapChoice.place:null}
+    onCancel={()=>setMapTarget(null)}
+    onConfirm={place=>{
+     const selected:PlaceChoice={kind:'map',place};
+     if(mapTarget==='origin')onOrigin(place.name,selected);
+     else onDestination(place.name,selected);
+     setMapTarget(null);setMapMenuOpen(false);
+     return true;
+    }}/>}
    {shortcuts}
    <div className="rs3__section-label rs3__section-label--space"><span className="rs3__number">02</span>
     <h3>{t('الوقت اللي يناسبك','Your preferred time')}</h3></div>
