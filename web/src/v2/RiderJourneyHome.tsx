@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
-import {readSavedCommute,restoreCommuteDraft,saveCommute,WEEKDAY_IDS} from './riderCommute';
+import {readSavedCommute,restoreCommuteDraft,saveCommute,readHomeDraft,saveHomeDraft,clearHomeDraft,WEEKDAY_IDS} from './riderCommute';
 import type {SavedCommute} from './riderCommute';
 import type {PlaceChoice} from './geoPlace';
 import {riderHomeCopy} from './riderHomeCopy';
@@ -51,12 +51,27 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
  onSelect:(selection:LiveSelection)=>void;
 }){
  const {language}=usePreferences(),en=language==='en',tr=en?riderHomeCopy.en:riderHomeCopy.ar;
- const [draft,setDraft]=useState<Draft>(()=>initialDraft(readSavedCommute(riderId)));
+ const [stored,setStored]=useState<{owner:string;values:Draft}>(()=>({
+  owner:riderId,values:readHomeDraft(riderId)??initialDraft(readSavedCommute(riderId))
+ }));
+ const draft=stored.owner===riderId?stored.values:
+  (readHomeDraft(riderId)??initialDraft(readSavedCommute(riderId)));
+ const setDraft=(update:(previous:Draft)=>Draft)=>setStored(previous=>({
+  owner:riderId,values:update(previous.owner===riderId?previous.values:
+   (readHomeDraft(riderId)??initialDraft(readSavedCommute(riderId))))
+ }));
  const [editor,setEditor]=useState<Editor|null>(null);
  const [nearbyOpen,setNearbyOpen]=useState(false);
  const [error,setError]=useState('');
  const editorTitle=useRef<HTMLHeadingElement>(null);
- useEffect(()=>{setDraft(initialDraft(readSavedCommute(riderId)));setError('');setNearbyOpen(false);setEditor(null);},[riderId]);
+ useEffect(()=>{
+  if(stored.owner===riderId)saveHomeDraft(riderId,stored.values);
+ },[riderId,stored]);
+ useEffect(()=>{
+  setStored(previous=>previous.owner===riderId?previous:{
+   owner:riderId,values:readHomeDraft(riderId)??initialDraft(readSavedCommute(riderId))});
+  setError('');setNearbyOpen(false);setEditor(null);
+ },[riderId]);
  useEffect(()=>{
   if(!editor)return;
   editorTitle.current?.focus();
@@ -100,6 +115,7 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
   const restored=restoreCommuteDraft(commute);
   if(!restored){setError(tr.localFailure);return;}
   saveCommute(riderId,{...commute});
+  clearHomeDraft(riderId);
   onNavigate(11);
  };
  const title=editor==='from'?tr.originEditor:editor==='to'?tr.destinationEditor:
@@ -185,7 +201,7 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
       {WEEKDAY_IDS.map(day=><button type="button" key={day}
        aria-pressed={selectedDays.includes(day)}
        onClick={()=>setDraft(prev=>({...prev,weekdays:prev.weekdays?.includes(day)?
-        prev.weekdays.filter(x=>x!==day):[...(prev.weekdays??[]),day]}))}>
+        (prev.weekdays??[]).filter(x=>x!==day):[...(prev.weekdays??[]),day]}))}>
        {en?EN_DAYS[day]:AR_DAYS[day]}
       </button>)}
      </div>
