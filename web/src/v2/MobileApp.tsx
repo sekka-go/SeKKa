@@ -14,7 +14,7 @@ const CaptainRoutes=lazy(()=>import('./CaptainRoutes'));
 const CaptainOnboarding=lazy(()=>import('./CaptainOnboarding'));
 import {internalScreen,publicScreen} from './screenMap';
 import LiveProfile from './LiveProfile';
-import LiveBookings from './LiveBookings';
+import RiderBookingsV3 from './RiderBookingsV3';
 import RiderJourneyHome from './RiderJourneyHome';
 import RiderTabBar from './RiderTabBar';
 import type {RiderTab} from './RiderTabBar';
@@ -537,7 +537,7 @@ export default function MobileApp(){
      <button type="button" aria-pressed={bookingsSection==='bookings'} onClick={()=>setBookingsSection('bookings')}>{t('حجوزاتي المؤكدة وقيد الانتظار','My seat bookings')}</button>
      <button type="button" aria-pressed={bookingsSection==='requests'} onClick={()=>setBookingsSection('requests')}>{t('طلبات رحلاتي','My trip requests')}</button>
     </nav>
-    {bookingsSection==='bookings'?<LiveBookings mode="rider" onFindRide={()=>navigate({tab:'search',view:9})}/>:<LiveTripRequests mode="rider"/>}
+    {bookingsSection==='bookings'?<RiderBookingsV3 onFindRide={()=>navigate({tab:'search',view:9})}/>:<LiveTripRequests mode="rider"/>}
    </section>:<section className="sekka-mobile-card"><h1>{t('حجوزاتي','My bookings')}</h1><p>{t('سجّل دخولك علشان تشوف حجوزاتك الحقيقية.','Sign in to view your bookings.')}</p><button className="sekka-action" onClick={()=>signInFor('/?tab=bookings')}>{t('تسجيل الدخول','Sign in')}</button></section>)}
    {ready&&tab==='notifications'&&(userId?<LiveNotifications/>:<section className="sekka-mobile-card"><h1>{t('الإشعارات','Notifications')}</h1><button className="sekka-action" onClick={()=>signInFor('/?tab=notifications')}>{t('تسجيل الدخول','Sign in')}</button></section>)}
    {tab==='admin'&&(!ready?<p role="status">{t('بنتأكد من صلاحية الإدارة…','Checking Admin authorization…')}</p>:admin?<Suspense fallback={<p role="status">{t('بنحمّل لوحة الإدارة…','Loading Admin dashboard…')}</p>}><AdminDashboard production screen={internalScreen(adminScreen)} theme={p.theme}
