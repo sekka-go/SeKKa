@@ -1,0 +1,17 @@
+{
+  "data_license": "ODbL 1.0",
+  "source": "https://download.geofabrik.de/africa/egypt.html",
+  "snapshot": "d8af1d74f3acfdf37e74dd7ded9a77012366bf739e96e738208285f6aa14dfc0",
+  "source_records": 176248,
+  "source_aliases": 857073,
+  "records_inside_active_polygon": 103523,
+  "indexed_unique_records": 88677,
+  "road_segment_duplicates_collapsed": 14846,
+  "indexed_alias_entries": 490259,
+  "shards": 256,
+  "shard_record_references": 169158,
+  "max_records_in_one_shard": 51778,
+  "max_uncompressed_shard_bytes": 19337020,
+  "generated_at": "2026-11-21T13:46:43.827Z",
+  "note": "All imported features have approved polygon representative points. Area and road coordinates are context only, not pickup pins."
+}
