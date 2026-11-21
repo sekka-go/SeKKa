@@ -1,6 +1,6 @@
 import {useState,type FormEvent} from 'react';
 import GeoPlaceInput from './GeoPlaceInput';
-import NearbyRides from './NearbyRides';
+import PickupExplorerSheet from './PickupExplorerSheet';
 import type {LiveSelection} from './LiveRouteSearch';
 import type {PlaceChoice,ServiceArea} from './geoPlace';
 import {usePreferences} from './preferences';
@@ -106,14 +106,25 @@ export default function RiderSearchV3({origin,destination,originPlace,destinatio
    <p className="rs3__truth">{t('هنعرض رحلات منشورة فعلًا؛ مش مجرد نتائج تجريبية.',
     'We only show genuinely published rides, never demo availability.')}</p>
   </form>
-  <div className="rs3__nearby">
-   <button type="button" onClick={()=>setNearby(!nearby)} aria-expanded={nearby}
-    aria-controls="rs3-nearby-results">
-    <span aria-hidden="true">⌖</span>
-    {t('مش عارف أقرب نقطة ركوب؟','Not sure about the nearest pickup?')}
-    <span aria-hidden="true">{nearby?'−':'+'}</span>
+  <div className="rs3__pickup-link">
+   <button type="button" onClick={()=>setNearby(true)}
+    aria-haspopup="dialog" aria-expanded={nearby}>
+    <span className="rs3__pickup-icon" aria-hidden="true">
+     <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 0 1 16 0Z"/>
+      <circle cx="12" cy="10" r="3"/>
+     </svg>
+    </span>
+    <span className="rs3__pickup-copy">
+     <strong>{t('مش عارف تركب منين؟','Not sure where to board?')}</strong>
+     <small>{t('اكتشف نقط الركوب الحقيقية حولك','Explore real pickup spots around you')}</small>
+    </span>
+    <span className="rs3__pickup-chevron" aria-hidden="true">←</span>
    </button>
-   {nearby&&<div id="rs3-nearby-results"><NearbyRides onSelect={onLiveSelect}/></div>}
   </div>
+  {nearby&&<PickupExplorerSheet onClose={()=>setNearby(false)}
+   onManualSearch={()=>setNearby(false)}
+   onSelect={selection=>{setNearby(false);onLiveSelect?.(selection);}}/>}
  </section>;
 }
