@@ -69,7 +69,9 @@ test('MOCKED: already-published vehicle is blocked before price, existing route 
  await expect(form.locator('.cj-easy-selected-stops>li')).toHaveCount(1);
  await form.getByRole('button',{name:'Nasr City'}).click();
  await form.getByRole('combobox',{name:'Search street or landmark'}).fill('Nasr City Square');
- await form.getByRole('button',{name:'Find',exact:true}).click();
+ // Owner-approved autocomplete: the real option must appear without a Find button.
+ await expect(form.getByRole('button',{name:'Find',exact:true})).toHaveCount(0);
+ await expect(form.locator('.cj-easy-results').getByRole('option',{name:/Nasr City Square/})).toBeVisible();
  await form.locator('.cj-easy-results').getByRole('option',{name:/Nasr City Square/}).click();
  await form.getByRole('button',{name:'Continue'}).click();
  await expect(form.getByRole('combobox',{name:'Approved vehicle'})).toBeVisible();
