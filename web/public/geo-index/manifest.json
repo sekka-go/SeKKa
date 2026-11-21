@@ -7,11 +7,11 @@
   "records_inside_active_polygon": 103523,
   "indexed_unique_records": 88677,
   "road_segment_duplicates_collapsed": 14846,
-  "indexed_alias_entries": 490259,
-  "shards": 256,
-  "shard_record_references": 169158,
-  "max_records_in_one_shard": 51778,
-  "max_uncompressed_shard_bytes": 19337020,
-  "generated_at": "2026-11-21T13:46:43.827Z",
+  "indexed_alias_entries": 483126,
+  "shards": 512,
+  "shard_record_references": 168743,
+  "max_records_in_one_shard": 6202,
+  "max_uncompressed_shard_bytes": 2270466,
+  "generated_at": "2026-11-21T13:51:02.324Z",
   "note": "All imported features have approved polygon representative points. Area and road coordinates are context only, not pickup pins."
 }
