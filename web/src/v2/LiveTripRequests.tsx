@@ -18,14 +18,14 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
  const [seats,setSeats]=useState(1),[routeSelection,setRouteSelection]=useState<Record<string,string>>({});
  const [editing,setEditing]=useState<RequestEdit|null>(null);
  const [requestPeriod,setRequestPeriod]=useState<'weekly'|'monthly'>(search?.period==='weekly'?'weekly':'monthly');
- const [requestTime,setRequestTime]=useState(search?.outbound||'07:30');
- const [requestReturnTime,setRequestReturnTime]=useState(search?.returnTime||'17:00');
+ const [requestTime,setRequestTime]=useState(search?.outbound??'');
+ const [requestReturnTime,setRequestReturnTime]=useState(search?.returnTime??'');
  const [requestDirection,setRequestDirection]=useState<RequestDirection>(search?.direction||'outbound');
  useEffect(()=>{
   if(!search)return;
   setRequestDirection(search.direction||'outbound');
-  setRequestTime(search.outbound||'07:30');
-  setRequestReturnTime(search.returnTime||'17:00');
+  setRequestTime(search.outbound??'');
+  setRequestReturnTime(search.returnTime??'');
   setRequestPeriod(search.period==='weekly'?'weekly':'monthly');
  },[search?.origin,search?.destination,search?.direction,search?.outbound,search?.returnTime,search?.period]);
  const [key,setKey]=useState(()=>crypto.randomUUID()),[busy,setBusy]=useState(false),[loading,setLoading]=useState(true),[error,setError]=useState(''),[notice,setNotice]=useState(''),[revision,setRevision]=useState(0);
