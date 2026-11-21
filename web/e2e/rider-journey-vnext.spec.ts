@@ -50,6 +50,13 @@ for(const width of [320,390]){
   await expect(page.locator('.rh-journey__ribbon')).toBeVisible();
   await expect(page.locator('.rh-journey__fields')).toContainText(variant.language==='en'?'Maadi':'المعادي');
   await expect(page.locator('.rh-journey__fields')).toContainText(variant.language==='en'?'New Cairo':'التجمع');
+  // Both location rows open the real place picker rather than being inert text.
+  await page.locator('.rh-journey__field').nth(0).click();
+  await expect(page.getByRole('dialog').getByRole('combobox')).toBeVisible();
+  await page.getByRole('dialog').getByRole('button',{name:variant.language==='en'?'Close':'إغلاق'}).click();
+  await page.locator('.rh-journey__field').nth(1).click();
+  await expect(page.getByRole('dialog').getByRole('combobox')).toBeVisible();
+  await page.getByRole('dialog').getByRole('button',{name:variant.language==='en'?'Close':'إغلاق'}).click();
   // Pick both times directly on Home; the return time must reach the real search.
   await page.locator('.rh-journey__field').nth(2).click();
   const timeDialog=page.getByRole('dialog');
