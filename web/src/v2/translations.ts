@@ -1,5 +1,14 @@
 // Application-owned copy. User-entered names, messages and route data are never translated.
 export const english: Readonly<Record<string,string>> = {
+  "اختصارات المناطق المحفوظة": "Saved area shortcuts",
+  "✓ البيت محفوظ": "✓ Home saved",
+  "✓ الشغل محفوظ": "✓ Work saved",
+  "احفظ البداية كبيت": "Save origin as Home",
+  "احفظ الوصول كشغل": "Save destination as Work",
+  "البيت ← الشغل": "Home to Work",
+  "الشغل ← البيت": "Work to Home",
+  "آخر عمليات البحث": "Recent searches",
+  "إعادة البحث عن ": "Reuse route ",
   "معاك في السِكّة": "With you on your commute",
   "اختر نوع حسابك": "Choose your account type",
   "أدخل رقم موبايلك": "Enter your mobile number",

@@ -531,3 +531,15 @@ html[dir="ltr"] .admin-stage .ad-metrics button { text-align: left; }
     display: block;
   }
 }
+
+/* Production data inside the original Admin sidebar-and-content grid.
+   The approved gallery layout and preview artwork are unchanged. */
+.ad-layout>.ad-integrated-review{min-width:0;max-width:100%;overflow-wrap:anywhere}
+.ad-integrated-review>.ad-content{min-width:0;max-width:100%}
+.ad-integrated-review .ad-card{min-width:0}
+.ad-integrated-review .ad-card :is(input,textarea,select){max-width:100%}
+@media(max-width:700px){
+ .ad-integrated-review>.ad-content{padding:20px 16px}
+ .ad-integrated-review .ad-tools{gap:8px}
+ .ad-integrated-review .ad-tools button{min-height:44px}
+}

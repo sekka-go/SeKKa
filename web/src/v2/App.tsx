@@ -1,3 +1,4 @@
+import LiveHome from "./LiveHome";
 import CaptainRoutes, { captainRouteScreens } from "./CaptainRoutes";
 import { usePreferences } from "./preferences";
 import AdminDashboard, { adminScreens } from "./AdminDashboard";
@@ -10,10 +11,7 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { api, client } from "./api";
 import type { Profile, Route, Quote, Booking } from "./api";
-import {
-  categories,
-  normalizePhone,
-} from "../../../packages/domain/subscriptions";
+import { categories } from "../../../packages/domain/subscriptions";
 import { publicScreens, adminResources } from "./screens";
 import { copy, errorCopy } from "./copy";
 import "./theme.css";
@@ -184,6 +182,8 @@ export default function SubscriptionApp() {
     [profile, setProfile] = useState<Profile | null>(null),
     [signedIn, setSignedIn] = useState(false),
     [authReady, setAuthReady] = useState(false);
+  const [verifiedAdmin,setVerifiedAdmin]=useState(false);
+  const [hasCaptainProfile,setHasCaptainProfile]=useState(false);
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
@@ -196,8 +196,6 @@ export default function SubscriptionApp() {
     [quote, setQuote] = useState<Quote | null>(null);
   const [bookingOffer, setBookingOffer] = useState<Line | null>(null);
   const [role, setRole] = useState("rider"),
-    [phone, setPhone] = useState(""),
-    [otp, setOtp] = useState(""),
     [name, setName] = useState(""),
     [consent, setConsent] = useState(false);
   const [origin, setOrigin] = useState(""),
@@ -335,17 +333,33 @@ export default function SubscriptionApp() {
       ].includes(new URLSearchParams(location.search).get("preview") || "")
     )
       return;
-    const { data } = await client.auth.getSession();
-    setSignedIn(Boolean(data.session));
-    if (data.session) {
-      const p = await api<Profile | null>("me");
-      setProfile(p);
-      if (p) {
-        setName(p.full_name);
-        setRole(p.role);
-        setBalance(p.balance);
+    const {data:{session},error:sessionError}=await client.auth.getSession();
+    if(sessionError||!session){
+      setSignedIn(false);setVerifiedAdmin(false);setHasCaptainProfile(false);setProfile(null);return;
+    }
+    setSignedIn(true);
+    const identityName=session.user.user_metadata?.full_name||session.user.email||"";
+    const [{data:adminAccess,error:adminError},{data:existing,error:readError},{data:captainAccount,error:captainError}]=await Promise.all([
+      client.rpc("v31_is_admin"),
+      client.from("v31_profiles").select("display_name,role_preference").eq("user_id",session.user.id).maybeSingle(),
+      client.from("v31_captain_profiles").select("approval_status").eq("user_id",session.user.id).maybeSingle()
+    ]);
+    setHasCaptainProfile(!captainError&&Boolean(captainAccount));
+    setVerifiedAdmin(!adminError&&adminAccess===true);
+    if(readError){
+      setProfile(null);setName(identityName);setRole("rider");return;
+    }
+    if(!existing){
+      const {error:createError}=await client.from("v31_profiles").insert({
+        user_id:session.user.id,display_name:identityName,role_preference:"rider"
+      });
+      if(createError&&createError.code!=="23505"){
+        setProfile(null);setName(identityName);setRole("rider");return;
       }
-    } else setProfile(null);
+    }
+    setName(existing?.display_name||identityName);
+    setRole(existing?.role_preference||"rider");
+    setProfile(null); // Legacy wallet/booking roles are not inferred from new profile rows.
   }
   useEffect(() => {
     if (!client) {
@@ -524,15 +538,17 @@ export default function SubscriptionApp() {
     !inPhasePreview &&
     !publicScreens.has(screen) &&
     ![6, 7].includes(screen) &&
-    (!signedIn || !profile);
+    !(signedIn && hasCaptainProfile && captainRouteScreens.includes(screen)) &&
+    (!signedIn || (!profile && !(verifiedAdmin && publicScreen(screen)>=62)));
   const captainBlocked =
     !inPhasePreview &&
     publicScreen(screen) >= 36 &&
     publicScreen(screen) <= 61 &&
+    !(hasCaptainProfile && captainRouteScreens.includes(screen)) &&
     profile?.role !== "captain";
   const adminBlocked =
     !inPhasePreview &&
-    publicScreen(screen) >= 62 && !profile?.permissions?.length;
+    publicScreen(screen) >= 62 && !verifiedAdmin;
   const selectedRoute = route;
   function RouteCard({ r }: { r: Route }) {
     return (
@@ -740,61 +756,34 @@ export default function SubscriptionApp() {
           </button>
         </Panel>
       );
-    if (screen === 4)
+    if (screen === 4 || screen === 5)
       return (
-        <form
-          className="panel"
-          onSubmit={submit(async () => {
-            if (!client) throw new Error("V2_BACKEND_NOT_CONFIGURED");
-            const { error } = await client.auth.signInWithOtp({
-              phone: normalizePhone(phone),
-            });
-            if (error) throw error;
-            go(5);
-          })}
-        >
-          <Field
-            label="رقم الموبايل"
-            type="tel"
-            autoComplete="tel"
-            required
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="01xxxxxxxxx"
-          />
-          <p className="muted">هنبعت لك كود تأكيد على موبايلك.</p>
-          <button disabled={busy}>ابعت الكود</button>
-        </form>
-      );
-    if (screen === 5)
-      return (
-        <form
-          className="panel"
-          onSubmit={submit(async () => {
-            if (!client) throw new Error("V2_BACKEND_NOT_CONFIGURED");
-            const { error } = await client.auth.verifyOtp({
-              phone: normalizePhone(phone),
-              token: otp,
-              type: "sms",
-            });
-            if (error) throw error;
-            await refreshProfile();
-            go(6);
-          })}
-        >
-          <Field
-            label="كود التأكيد"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            required
-            value={otp}
-            onChange={(e) => setOtp(e.target.value)}
-          />
-          <button disabled={busy}>أكد رقمك</button>
-          <button type="button" className="text-button" onClick={() => go(4)}>
-            غيّر الرقم أو اطلب كود تاني
-          </button>
-        </form>
+        <section className="panel">
+          <h2>الدخول بجوجل</h2>
+          <p className="muted">تسجيل الدخول بجوجل متاح مؤقتًا. الدخول برقم الموبايل وOTP مؤجل.</p>
+          {signedIn ? (
+            <>
+              <p role="status">تم تسجيل الدخول بحساب جوجل.</p>
+              <button type="button" onClick={() => go(8)}>متابعة للتطبيق</button>
+              <button type="button" className="text-button" onClick={() => void run(async () => {
+                if (!client) return;
+                const {error} = await client.auth.signOut();
+                if(error) throw error;
+                setSignedIn(false);
+              })}>تسجيل الخروج</button>
+            </>
+          ) : (
+            <button type="button" disabled={busy || !client} onClick={() => void run(async () => {
+              if (!client) throw new Error("V2_BACKEND_NOT_CONFIGURED");
+              const {error} = await client.auth.signInWithOAuth({
+                provider: "google",
+                options: { redirectTo: window.location.origin + window.location.pathname + "?screen=8" },
+              });
+              if(error) throw error;
+            })}>المتابعة باستخدام جوجل</button>
+          )}
+          {!client && <p role="status">دخول جوجل محتاج إعداد متغيرات Supabase العامة وربط Google OAuth.</p>}
+        </section>
       );
     if (screen === 6 || screen === 7 || screen === 35)
       return (
@@ -1683,6 +1672,10 @@ export default function SubscriptionApp() {
       );
     return <Empty />;
   }
+  // Authenticated, database-backed home replaces the old preview dashboard.
+  if (screen===8 && !new URLSearchParams(location.search).has("preview") && !new URLSearchParams(location.search).has("inspect")) {
+    return <div className={`app live-app ${theme}`}><LiveHome onNavigate={go}/></div>;
+  }
   // Check prerequisites before delegating to phase-specific screen components.
   // These routes do not call content(), so a content-only guard leaves dead ends.
   if (authReady && (guarded || (!publicScreens.has(screen) && (captainBlocked || adminBlocked)))) {
@@ -1960,6 +1953,10 @@ export default function SubscriptionApp() {
           go(12, r.id);
         }}
         onBook={(offer) => {
+          if(!inPhasePreview && !signedIn){
+            setError(language==="en"?"Sign in with Google to book.":"سجّل دخولك بجوجل علشان تحجز.");
+            return;
+          }
           setBookingOffer(offer);
           if (offer.id.startsWith("preview-")) {try {sessionStorage.setItem("sekka.preview.selectedOffer", JSON.stringify(offer));} catch {/* in-memory selection still works */}}
           setPeriod(offer.period);
@@ -1972,6 +1969,7 @@ export default function SubscriptionApp() {
           url.searchParams.set("offerPeriod", offer.period);
           url.searchParams.set("offerDirection", offer.direction);
           history.replaceState({}, "", url);
+
         }}
         onBooking={(id) => {
           const b = bookings.find((b) => b.id === id);

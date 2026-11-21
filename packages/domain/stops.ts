@@ -1,4 +1,4 @@
-export type Stop = { id: string; name: string; area: string; pickup: boolean; dropoff: boolean };
+export type Stop = { id: string; name: string; area: string; pickup: boolean; dropoff: boolean; passingTime?: string | null };
 export function selectStops(stops: readonly Stop[], pickup: string, dropoff: string, returnStops?: readonly Stop[]) {
   const from = stops.findIndex(s => s.id === pickup && s.pickup);
   const to = stops.findIndex(s => s.id === dropoff && s.dropoff);

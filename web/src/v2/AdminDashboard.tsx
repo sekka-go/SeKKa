@@ -1,3 +1,5 @@
+import LiveAdminOverview from './LiveAdminOverview';
+import AdminApprovalLive from './AdminApprovalLive';
 import {usePreferences} from "./preferences";
 import {readPreviewBookings, previewSubscriberRows, previewSecurityTransactions} from "./previewBookingStore";
 import {translate} from "./translations";
@@ -193,10 +195,11 @@ export default function AdminDashboard(p: {
   theme: Appearance;
   onTheme: (v: Appearance) => void;
   go: (v: number) => void;
+  production?: boolean;
 }) {
   const {language}=usePreferences();
   const tr=(text:string)=>translate(text,language);
-  const demo = new URLSearchParams(location.search).get("preview") === "phase8",
+  const demo = !p.production && new URLSearchParams(location.search).get("preview") === "phase8",
     n = publicScreen(p.screen) + 1;
   const [data, setData] = useState(seed),
     [query, setQuery] = useState(""),
@@ -287,11 +290,54 @@ export default function AdminDashboard(p: {
     setDecision("");
     setReason("");
   }
+  // Retain the approved Admin frame in production. Only expose modules with
+  // real backend integration; never render preview sample rows as live data.
+  if(p.production&&(n===63||n===65||n===66))return <div className={`admin-stage ${p.theme}`}>
+    <header className="ad-top">
+      <div className="ad-brand"><span>{tr("لوحة الإدارة")}</span></div>
+      <div className="ad-themes">
+        {(["dark","light"] as const).map(theme=><button key={theme} type="button"
+          aria-pressed={p.theme===theme} onClick={()=>p.onTheme(theme)}>
+          {theme==='dark'?tr("دارك"):tr("لايت")}
+        </button>)}
+      </div>
+    </header>
+    <div className="ad-layout">
+      <aside className="ad-sidebar">
+        <p>{tr("إدارة المنصة")}</p>
+        <nav aria-label={tr("شاشات الإدارة")}>
+          {([62,64,65] as const).map(id=>{
+            const screen=internalScreen(id);
+            return <button key={id} type="button" aria-current={p.screen===screen?'page':undefined}
+              onClick={()=>p.go(screen)}>
+              <span className="ad-number">{id}</span>
+              {screenTitle(screen,language)}
+            </button>;
+          })}
+        </nav>
+      </aside>
+      {n===63?<main className="ad-content">
+        <div className="ad-heading">
+          <div><span className="ad-eyebrow">{tr("سِكّة / الإدارة /")}{publicScreen(p.screen)}</span>
+            <h1>{screenTitle(p.screen,language)}</h1>
+          </div>
+        </div>
+        <LiveAdminOverview/>
+        <nav className="ad-tools" aria-label={tr("أقسام الإدارة")}>
+          <button type="button" onClick={()=>p.go(internalScreen(64))}>{language==='en'?'Captain applications':'طلبات الكباتن'}</button>
+          <button type="button" onClick={()=>p.go(internalScreen(65))}>{language==='en'?'Document review':'مراجعة المستندات'}</button>
+        </nav>
+      </main>:<div className="ad-integrated-review">
+        <AdminApprovalLive screen={n-1} onGo={id=>p.go(internalScreen(id))}/>
+      </div>}
+    </div>
+  </div>;
+  if(!demo&&n===63)return <div className={`admin-stage ${p.theme}`}><LiveAdminOverview/><button type="button" onClick={()=>p.go(64)}>{tr("قائمة المستخدمين")}</button></div>;
   return (
     <div className={`admin-stage ${p.theme}`} >
       <header className="ad-top">
         <div className="ad-brand">
-          <Wordmark />
+          {!p.production&&<Wordmark />}
           <span>{tr("لوحة الإدارة")}</span>
         </div>
         <div className="ad-themes">

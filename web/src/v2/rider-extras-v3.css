@@ -1,0 +1,97 @@
+/* Last-mile Rider auxiliary screens — same product language as search and bookings.
+   Content remains server-owned; no role or payment rules change. */
+.sekka-mobile.sekka-tab-profile .sekka-mobile-card{
+ max-width:480px;margin:0 auto;min-height:70vh;padding:15px;background:#FFF9F5;color:#371451;
+ display:flex;flex-direction:column;gap:12px}
+.sekka-mobile.sekka-tab-profile .live-profile,
+.sekka-mobile.sekka-tab-notifications .live-notifications,
+.sekka-mobile.sekka-tab-bookings .sekka-bookings-workspace .live-trip-requests{
+ max-width:480px;width:100%;box-sizing:border-box;
+ background:#FFF!important;border:1px solid #E9DCE9!important;border-radius:22px!important;
+ padding:19px 16px!important;color:#381551!important;margin:0 auto!important;
+ box-shadow:0 8px 20px #3210470D!important;
+ font-family:Tajawal,'Noto Sans Arabic',Tahoma,Arial,sans-serif}
+.sekka-mobile.sekka-tab-profile .live-profile h2,
+.sekka-mobile.sekka-tab-notifications .live-notifications h2,
+.sekka-mobile.sekka-tab-bookings .live-trip-requests h2{
+ font:900 clamp(21px,5.8vw,27px)/1.35 Tajawal,Tahoma,sans-serif!important;
+ color:#4B1373!important;margin:0 0 17px!important}
+.sekka-mobile.sekka-tab-profile .live-profile h2:before,
+.sekka-mobile.sekka-tab-notifications .live-notifications h2:before,
+.sekka-mobile.sekka-tab-bookings .live-trip-requests h2:before{
+ content:"";display:inline-block;width:9px;height:22px;border-radius:5px;
+ background:#FFCF44;margin-inline-end:10px;vertical-align:middle}
+.sekka-mobile.sekka-tab-profile .live-profile label{display:grid!important;gap:7px;
+ font-weight:900;font-size:14px;color:#57346B;margin-bottom:13px}
+.sekka-mobile.sekka-tab-profile .live-profile input{min-height:52px!important;
+ border:1px solid #DFCEE8!important;border-radius:13px!important;padding:12px 13px!important;
+ background:#FFF9FD!important;color:#361451!important;font:700 16px/1.4 Tajawal,Tahoma,sans-serif!important}
+.sekka-mobile.sekka-tab-profile .live-profile p,
+.sekka-mobile.sekka-tab-notifications .live-notifications p,
+.sekka-mobile.sekka-tab-bookings .live-trip-requests p{
+ font-size:13px;line-height:1.65;color:#735E81;margin:8px 0}
+.sekka-mobile.sekka-tab-profile .live-profile .d-primary{
+ display:flex!important;justify-content:center!important;align-items:center!important;
+ border:0!important;border-radius:14px!important;background:#6513A6!important;
+ color:#FFF!important;width:100%!important;min-height:52px!important;margin-top:13px!important;
+ font-weight:900!important;font-size:15px!important}
+.sekka-mobile.sekka-tab-profile .sekka-mobile-card>button:not(.sekka-action){
+ border:1px solid #DEC8E8;background:#F3E6FB;border-radius:13px;
+ min-height:49px;color:#5C2586;font-weight:900;font-family:inherit}
+.sekka-mobile.sekka-tab-notifications .live-notifications{margin:15px auto!important}
+.sekka-mobile.sekka-tab-notifications .live-notifications ul,
+.sekka-mobile.sekka-tab-bookings .live-trip-requests ul{margin:10px 0 16px;padding:0;list-style:none;display:grid;gap:11px}
+.sekka-mobile.sekka-tab-notifications .live-notifications li{
+ border:1px solid #EBDCE8;border-radius:17px;background:#FDF9FD;padding:14px;
+ display:grid;gap:6px;min-width:0}
+.sekka-mobile.sekka-tab-notifications .live-notifications li>p{font-size:14px;font-weight:800;color:#43205C;line-height:1.5}
+.sekka-mobile.sekka-tab-notifications .live-notifications li>small{font-size:12px;color:#80658B}
+.sekka-mobile.sekka-tab-notifications .live-notifications button,
+.sekka-mobile.sekka-tab-bookings .live-trip-requests button{min-height:44px;border-radius:12px;
+ border:1px solid #E6CCE9;background:#F5E7F9;color:#5A207C;
+ font-weight:900;font-family:inherit;padding:9px 12px}
+.sekka-mobile.sekka-tab-notifications .live-notifications .d-outline{display:flex;align-items:center;
+ justify-content:center;min-height:47px;border-radius:12px;border:0;background:#6514A7;
+ color:#FFF;text-decoration:none}
+.sekka-mobile.sekka-tab-bookings .sekka-bookings-workspace .live-trip-requests{
+ margin:10px auto!important}
+.sekka-mobile.sekka-tab-bookings .live-trip-requests h3{
+ font-size:17px;font-weight:900;margin:15px 0 10px;color:#541880}
+.sekka-mobile.sekka-tab-bookings .live-trip-requests>button:last-child{width:100%;margin-top:11px}
+.sekka-mobile.sekka-tab-bookings .live-trip-requests .sekka-request-list>li{
+ border:1px solid #EADCE9;background:#FDF9FD;
+ border-radius:17px;padding:14px;min-width:0}
+.sekka-mobile.sekka-tab-bookings .live-trip-requests .sekka-request-card__route{
+ font-size:16px;font-weight:900;line-height:1.55;color:#4B176C}
+.sekka-mobile.sekka-tab-bookings .live-trip-requests .sekka-request-card__actions{
+ display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:9px}
+.sekka-mobile.sekka-tab-bookings .live-trip-requests select,
+.sekka-mobile.sekka-tab-bookings .live-trip-requests input,
+.sekka-mobile.sekka-tab-bookings .live-trip-requests textarea{
+ width:100%;max-width:100%;min-height:45px;border:1px solid #DECBE5;
+ border-radius:11px;padding:9px;color:#35134F;background:#FFF}
+.sekka-mobile.sekka-tab-bookings .live-trip-requests label{
+ display:grid;gap:7px;margin:11px 0;font-size:13px;font-weight:900;color:#5C3875}
+.sekka-mobile.sekka-tab-bookings .live-trip-requests .d-request-history{
+ padding:12px;border:1px solid #EADCE8;border-radius:15px;margin-top:14px}
+.sekka-mobile.sekka-tab-bookings .live-trip-requests .d-request-history>summary{
+ cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:900;color:#5B1B86}
+.sekka-mobile :is(.live-profile,.live-notifications,.live-trip-requests) :is(button,a,input,select):focus-visible{
+ outline:3px solid #FFCC3F;outline-offset:3px}
+html[data-theme="dark"] .sekka-mobile.sekka-tab-profile .sekka-mobile-card{background:#1E0B32;color:#FFF4FC}
+html[data-theme="dark"] .sekka-mobile :is(.live-profile,.live-notifications,.sekka-bookings-workspace .live-trip-requests){
+ background:#321B4B!important;color:#FFF6FC!important;border-color:#634775!important}
+html[data-theme="dark"] .sekka-mobile :is(.live-profile,.live-notifications,.live-trip-requests) h2{color:#FFDF8B!important}
+html[data-theme="dark"] .sekka-mobile :is(.live-profile,.live-notifications,.live-trip-requests) p{color:#E4D1EC}
+html[data-theme="dark"] .sekka-mobile.sekka-tab-profile .live-profile label{color:#E9D8F3}
+html[data-theme="dark"] .sekka-mobile.sekka-tab-profile .live-profile input{background:#45295E!important;color:#FFF!important;border-color:#755A82!important}
+html[data-theme="dark"] .sekka-mobile.sekka-tab-profile .live-profile .d-primary{background:#FFCD3D!important;color:#32104E!important}
+html[data-theme="dark"] .sekka-mobile.sekka-tab-notifications .live-notifications li,
+html[data-theme="dark"] .sekka-mobile.sekka-tab-bookings .live-trip-requests .sekka-request-list>li{
+ background:#42295B;color:#FFF;border-color:#6A4C7B}
+html[data-theme="dark"] .sekka-mobile.sekka-tab-notifications .live-notifications li>p{color:#FFF}
+@media(max-width:350px){
+ .sekka-mobile.sekka-tab-profile .sekka-mobile-card{padding:10px}
+ .sekka-mobile.sekka-tab-notifications .live-notifications,
+ .sekka-mobile.sekka-tab-bookings .sekka-bookings-workspace .live-trip-requests{padding:14px 11px!important;margin-inline:10px!important;width:calc(100% - 20px)}}
+@media(prefers-reduced-motion:reduce){.sekka-mobile :is(.live-profile,.live-notifications,.live-trip-requests) *{animation:none!important;transition:none!important}}

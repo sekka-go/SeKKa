@@ -623,3 +623,26 @@
   background: transparent;
   align-self: center;
 }
+
+/* Live booking review only: accessible two-person limit and transparent
+ * off-app settlement. Original design-preview screens are unchanged. */
+.sekka-mobile .booking-stage .b-seat-chooser{
+ display:flex;justify-content:space-between;align-items:center;gap:10px;
+ padding-block:9px;flex-wrap:wrap;font-weight:800;
+}
+.sekka-mobile .booking-stage .b-seat-controls{display:flex;align-items:center;gap:12px;direction:ltr}
+.sekka-mobile .booking-stage .b-seat-controls button{
+ display:inline-flex;align-items:center;justify-content:center;
+ min-width:46px;width:46px;min-height:46px;height:46px;
+ border:1px solid var(--d-line);border-radius:12px;
+ background:var(--phase-card);color:var(--phase-text);
+ font:inherit;font-size:24px;cursor:pointer;
+}
+.sekka-mobile .booking-stage .b-seat-controls button:disabled{opacity:.45;cursor:not-allowed}
+.sekka-mobile .booking-stage .b-seat-controls button:focus-visible{outline:3px solid #b68b00;outline-offset:2px}
+.sekka-mobile .booking-stage .b-seat-controls strong{min-width:22px;text-align:center;font-size:20px}
+.sekka-mobile .booking-stage .b-payment-explainer{
+ display:flex;flex-direction:column;gap:8px;line-height:1.55;
+}
+.sekka-mobile .booking-stage .b-payment-explainer h2{font-size:15px;font-weight:900;margin:0}
+.sekka-mobile .booking-stage .b-payment-explainer p{font-size:13px;margin:0;overflow-wrap:anywhere}

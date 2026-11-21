@@ -1,10 +1,10 @@
 # seKKa — UI/UX Design Quality Standard (Phase 2)
 
-Status: **implementation guideline**, not independent visual acceptance. Applies to all future changes across rider, captain and admin. Canonical product authority remains `docs/PRD.md` v3.1 (73 public screens).
+Status: **implementation guideline**, not independent visual acceptance. Applies to all future changes across rider, captain and admin. For the new brand and recurring UX, the 2026-11-21 owner vNext amendment takes precedence over incompatible v3.1 UI instructions; unamended financial/product rules remain in v3.1.
 
 ## Design principles
 - World-class quality means legibility, predictable behavior, accessibility, consistency and truthful states, **not** extra animation or cosmetic decoration.
-- Mobile-first hierarchy; keep brand assets, Tajawal typography, yellow accent and established onboarding screens 1–7 intact unless explicitly approved.
+- Mobile-first hierarchy; use the **owner-selected purple seKKa/white lettering/yellow road icon** for installed PWA, favicon and Splash, bundled Tajawal typography, and accessibility. Owner explicitly approved replacing black/yellow colors with the warm purple/coral/yellow palette on 2026-11-21. Screens 1–7 may be recolored as part of the renewed onboarding UX.
 - Consistent spacing scale: 4 / 8 / **12** / 16 / 24 / 32 px. Separate adjacent independent interactive buttons by **at least 12px** wherever presented as a group; prefer a two-column grid for rider-home shortcuts at mobile widths.
 - Minimum interactive target: **44 × 44 CSS px**, with a visible focus state; never communicate selection by color alone. Wrap long English and Arabic labels rather than letting them overlap.
 - Prefer logical CSS properties (`inline-start`, `inline-end`) and verify RTL/LTR. Dates, currency, time, empty and validation copy must be localized in the rendered screen, not merely present in a catalog.

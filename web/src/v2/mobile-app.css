@@ -1,0 +1,724 @@
+.sekka-mobile{--bg:#f6f7f8;--ink:#15202b;--card:#fff;--line:#dfe3e6;--muted:#5b6671;min-height:100dvh;background:var(--bg);color:var(--ink);font-family:Tajawal,Tahoma,sans-serif;padding-bottom:calc(80px + env(safe-area-inset-bottom));overflow-x:clip}html[data-theme=dark] .sekka-mobile{--bg:#0d151e;--ink:#f0f3f5;--card:#15212e;--line:#354452;--muted:#b4c0c9}.sekka-mobile-header{height:64px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 16px;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}.sekka-mobile-header>span{font-size:12px;color:var(--muted);font-weight:700}.sekka-brand-button{background:none;border:0;width:100px;min-height:44px;display:grid;place-items:center}.sekka-brand-button .phase-wordmark{max-width:90px;width:90px}.sekka-theme{background:var(--bg);border:1px solid var(--line);border-radius:12px;width:44px;height:44px;color:var(--ink);font-size:22px}.sekka-mobile-content{max-width:680px;margin:auto;padding:12px 14px 22px;min-height:calc(100dvh - 152px)}.sekka-mobile-content .live-home{min-height:0;margin:-12px -14px -22px;padding-bottom:20px}.sekka-mobile-content .live-home__header{display:none}.sekka-mobile-content .live-home__hero{border-radius:0 0 23px 23px;min-height:230px;padding-top:22px;padding-bottom:85px}.sekka-mobile-content .live-home__hero h1{font-size:clamp(24px,6.5vw,34px);margin-top:20px}.sekka-mobile-content .live-home__panel{margin-top:-24px}.sekka-mobile-card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px 16px;min-width:0;margin-bottom:16px}.sekka-mobile-card h1{font-size:24px;line-height:1.3;margin:0 0 12px}.sekka-mobile-card p{font-size:14px;line-height:1.65;color:var(--muted)}.sekka-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin:18px 0}.sekka-fields label{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:13px;min-width:0}.sekka-fields select,.sekka-fields input{min-width:0;width:100%;min-height:46px;border-radius:12px;background:var(--bg);color:var(--ink);border:1px solid var(--line);font:inherit;padding:8px}.sekka-action{border:0;border-radius:14px;min-height:51px;background:#FF663D;color:#101820;padding:10px 18px;font:inherit;font-weight:900;width:100%}.sekka-action:disabled{opacity:.5;cursor:not-allowed}.sekka-bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;min-height:68px;padding:6px max(9px,env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(9px,env(safe-area-inset-left));justify-content:space-around;align-items:center;border-top:1px solid var(--line);background:var(--card);z-index:30;box-shadow:0 -6px 20px #0000000a}.sekka-bottom-nav button{width:20%;background:transparent;border:0;display:flex;min-height:48px;align-items:center;justify-content:center;flex-direction:column;gap:2px;color:var(--muted);font:inherit}.sekka-bottom-nav button[aria-current=page]{color:var(--ink);font-weight:900}.sekka-bottom-nav button[aria-current=page]>span{background:#FF663D;border-radius:10px;color:#171c22}.sekka-bottom-nav button>span{width:35px;height:28px;display:grid;place-items:center;font-size:23px}.sekka-bottom-nav small{font-size:11px;white-space:nowrap}.sekka-mobile-alert{background:var(--card);border:1px solid #da9b53;border-radius:13px;padding:12px;margin:8px 0;font-size:13px;display:flex;align-items:center;gap:10px}.sekka-mobile-alert button{border:0;background:#FF663D;padding:8px;border-radius:9px}.sekka-skip{position:absolute;top:-100px;z-index:50}.sekka-skip:focus{top:0;background:var(--card);padding:12px}.sekka-mobile button:focus-visible,.sekka-mobile a:focus-visible{outline:3px solid #d7aa00;outline-offset:2px}@media(max-width:380px){.sekka-mobile-content{padding-inline:10px}.sekka-mobile-card{padding:16px 12px}.sekka-bottom-nav small{font-size:10px}.sekka-mobile-content .live-home{margin-inline:-10px}}
+/* Keep the authenticated home compact, without presentation-style oversized sections. */
+.sekka-mobile-content .live-home__hero{min-height:175px;padding:18px 20px 62px}
+.sekka-mobile-content .live-home__road{height:60px;bottom:-35px;border-top-width:9px}
+.sekka-mobile-content .live-home__hero h1{margin:14px 0 8px;line-height:1.25}
+.sekka-mobile-content .live-home__hero p{font-size:13px}
+.sekka-mobile-content .live-home__panel{border-radius:18px;padding:20px 16px}
+
+.sekka-approved-logo{width:48px;height:48px;object-fit:contain;display:block}
+
+
+/* Admin entry is exposed only after verified server authorization. Keep the
+   original five-tab mobile navigation and official artwork unchanged. */
+.sekka-mobile-header>span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sekka-admin-entry{border:1px solid #b88d00;border-radius:11px;background:#FF663D;color:#171c22;
+ min-height:44px;max-width:132px;padding:7px 10px;flex:0 1 auto;font:inherit;font-size:12px;
+ font-weight:900;white-space:normal;text-align:center;line-height:1.2}
+.sekka-admin-entry[aria-current=page]{outline:2px solid #997400;outline-offset:2px}
+@media(max-width:420px){.sekka-mobile-header>span{display:none}.sekka-brand-button{width:60px;flex-shrink:0}}
+
+/* Original Admin dashboard is desktop-first; don't confine it to the mobile
+   passenger content column. The mobile bottom navigation remains usable. */
+.sekka-mobile-content.sekka-admin-workspace{max-width:none;padding:0;min-width:0}
+.sekka-admin-workspace .admin-stage{min-width:0;overflow-x:clip}
+.sekka-admin-workspace .ad-content{min-width:0}
+
+
+/*
+ * Integrated production shell geometry only. Do not alter /dev/screens or
+ * approved absolute-positioned screen artwork.
+ *
+ * Root cause: the app's 12/14px content padding + the original phase's 90/18px
+ * inspection padding were applied together. The full-height phase was then
+ * nested below a sticky header and over a fixed bottom bar, producing smaller
+ * original artwork, a phantom 992px page and shifted hit targets.
+ */
+.sekka-mobile,
+.sekka-mobile *,
+.sekka-mobile *::before,
+.sekka-mobile *::after{box-sizing:border-box}
+.sekka-mobile{--sekka-nav-height:calc(68px + env(safe-area-inset-bottom,0px));min-width:0;
+ padding-bottom:var(--sekka-nav-height)}
+.sekka-mobile-header{height:64px;min-height:64px;padding:8px max(12px,env(safe-area-inset-right,0px))
+  8px max(12px,env(safe-area-inset-left,0px));box-sizing:border-box;gap:8px}
+.sekka-mobile-header>.sekka-brand-button{width:56px;height:48px;min-height:48px;flex:0 0 56px;padding:0}
+.sekka-mobile-header .sekka-approved-logo{width:48px;height:48px}
+.sekka-mobile-header>.sekka-theme{width:44px;height:44px;min-height:44px;flex:0 0 44px;padding:0}
+.sekka-mobile-content{min-width:0;overflow:visible;min-height:0}
+.sekka-bottom-nav{height:var(--sekka-nav-height);min-height:0;
+ padding-block:5px calc(5px + env(safe-area-inset-bottom,0px))}
+.sekka-bottom-nav>button{height:58px;min-height:0;min-width:0;padding:2px 1px;flex:1 1 0;width:auto}
+.sekka-bottom-nav small{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.sekka-mobile-content > .phase-one-stage{
+ width:calc(100% + 28px);max-width:none;min-height:0;margin-inline:-14px;
+ padding:44px 0 calc(20px + var(--sekka-nav-height));
+ box-sizing:border-box;overflow:visible;
+}
+.sekka-mobile-content > .phase-one-stage > .phase-canvas{width:100%;max-width:600px;min-width:0}
+.sekka-mobile-content > .phase-one-stage.discovery-stage{
+ padding-block-start:12px;
+ padding-inline:0;
+}
+/* Route discovery and booking already have their approved logo/back header.
+ * Remove only duplicate outer chrome; keep bottom navigation on these flows. */
+.sekka-tab-search > .sekka-mobile-header,
+.sekka-tab-booking > .sekka-mobile-header{display:none}
+/* Screen 10 is an approved full-screen filter step with its own Back action.
+ * The shell tabs otherwise cover its final "Show results" button. */
+.sekka-search-filters{padding-bottom:0}
+.sekka-search-filters > .sekka-bottom-nav{display:none}
+.sekka-search-filters > .sekka-mobile-content > .phase-one-stage.discovery-stage{
+ padding-block-end:calc(20px + env(safe-area-inset-bottom,0px))
+}
+/* Original Captain application steps are full-screen as well; do not place
+ * the Passenger header or fixed tabs over document fields and review CTAs. */
+.sekka-tab-captain-onboarding > .sekka-mobile-header,
+.sekka-tab-captain-onboarding > .sekka-bottom-nav{display:none}
+.sekka-tab-captain-onboarding{padding-bottom:0}
+.sekka-mobile-content > .phase-one-stage.discovery-stage > .d-canvas{
+ width:100%;max-width:600px;
+}
+/* Onboarding is itself a full-screen approved flow with its own wordmark and
+ * Back button. Repeating the shell header and persistent navigation shifts its
+ * absolute composition and obscures approval CTAs. */
+.sekka-guest-welcome > .sekka-mobile-header,
+.sekka-guest-welcome > .sekka-bottom-nav,
+.sekka-tab-login > .sekka-mobile-header,
+.sekka-tab-login > .sekka-bottom-nav{display:none}
+.sekka-guest-welcome,.sekka-tab-login{padding-bottom:0}
+.sekka-guest-welcome > .sekka-mobile-content,
+.sekka-tab-login > .sekka-mobile-content{max-width:none;min-height:100dvh;padding-bottom:0}
+.sekka-guest-welcome .sekka-mobile-content > .phase-one-stage,
+.sekka-tab-login .sekka-mobile-content > .phase-one-stage{
+ padding-block-start:107px;
+ padding-block-end:calc(24px + env(safe-area-inset-bottom,0px));
+ min-height:calc(100dvh - 12px);
+}
+.sekka-mobile-content :is(button,input,select,textarea,a){scroll-margin-block:84px calc(var(--sekka-nav-height) + 16px)}
+.sekka-admin-workspace .ad-content{overflow-wrap:anywhere}
+@media(max-width:380px){
+ .sekka-mobile-content > .phase-one-stage{width:calc(100% + 20px);margin-inline:-10px}
+}
+@media(min-width:681px){
+ .sekka-mobile-content > .phase-one-stage{width:100%;margin-inline:0}
+ .sekka-mobile-content > .phase-one-stage.discovery-stage{padding-inline:0}
+ .sekka-guest-welcome .sekka-mobile-content > .phase-one-stage,
+ .sekka-tab-login .sekka-mobile-content > .phase-one-stage{width:100%;margin-inline:0}
+}
+@media(max-width:680px){
+ .sekka-guest-welcome,
+ .sekka-fullscreen-auth{padding-bottom:0}
+ .sekka-guest-welcome > .sekka-mobile-content,
+ .sekka-fullscreen-auth > .sekka-mobile-content{
+  width:100%;max-width:none;height:100dvh;min-height:100dvh;padding:0
+ }
+ .sekka-guest-welcome > .sekka-mobile-content > .phase-one-stage,
+ .sekka-fullscreen-auth > .sekka-mobile-content > .phase-one-stage{
+  width:100%;height:100dvh;min-height:100dvh;margin:0;
+  padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);
+  align-items:stretch
+ }
+ .sekka-guest-welcome .phase-canvas:is(.phase-screen-2,.phase-screen-3),
+ .sekka-fullscreen-auth .phase-canvas:is(.phase-screen-3,.phase-screen-4){
+  width:100%;max-width:none;height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
+  min-height:0;aspect-ratio:auto
+ }
+ .sekka-guest-welcome .phase-screen-2 .phase-title{top:20cqw}
+ .sekka-guest-welcome .phase-screen-2 .phase-subtitle{top:30.8cqw}
+ .sekka-fullscreen-auth .phase-screen-3 .phase-title{top:21.6cqw}
+ .sekka-fullscreen-auth .phase-screen-3 .phase-subtitle{top:31.73cqw}
+ .sekka-fullscreen-auth .phase-screen-4 .phase-google-auth{top:50%;transform:translateY(-50%)}
+ .sekka-fullscreen-search .sekka-mobile-content > .phase-one-stage.discovery-stage{
+  padding-block-end:20px
+ }
+ .sekka-fullscreen-search .sekka-mobile-content > .phase-one-stage.discovery-stage > .d-canvas{
+  min-height:max(calc(min(100vw,600px)*1.3333333),calc(100dvh - var(--sekka-nav-height) - 24px))
+ }
+ .sekka-search-filters .sekka-mobile-content > .phase-one-stage.discovery-stage > .d-canvas{
+  min-height:max(calc(min(100vw,600px)*1.3333333),calc(100dvh - 44px))
+ }
+}
+
+/* The authenticated Captain wizard owns the full screen instead of sitting
+   inside the padded Passenger shell. Its form grows only when content needs it. */
+.sekka-tab-captain-onboarding > .sekka-mobile-content {
+  max-width:none;
+  padding:0;
+}
+.sekka-tab-captain-onboarding > .sekka-mobile-content > .phase-one-stage.discovery-stage {
+  width:100%;
+  min-height:100dvh;
+  margin:0;
+  padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);
+}
+.sekka-tab-captain-onboarding .captain-onboarding-canvas {
+  min-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
+}
+
+/*
+ * Real-mobile overflow/brand guards.  Scope to the integrated application:
+ * /dev/screens retains the owner's original reference geometry.
+ */
+.sekka-mobile .phase-logo {
+  max-width: min(26%, 124px);
+  min-width: 0;
+}
+.sekka-mobile .d-header > .phase-wordmark {
+  max-width: min(24%, 124px);
+  height: auto;
+}
+.sekka-mobile .phase-logo .phase-wordmark,
+.sekka-mobile .d-header > .phase-wordmark {
+  display: block;
+  aspect-ratio: 445 / 225;
+}
+.sekka-mobile-header .sekka-approved-logo {
+  width: 48px;
+  height: 48px;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.sekka-mobile-card > button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  width: 100%;
+  max-width: 100%;
+  margin-block-start: 12px;
+  padding: 10px 14px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+  text-align: center;
+}
+.sekka-mobile-alert {
+  min-width: 0;
+  flex-wrap: wrap;
+  overflow-wrap: anywhere;
+}
+.sekka-mobile-alert > p { flex: 1 1 190px; min-width: 0; margin: 0; }
+.sekka-mobile-alert > button { flex: 0 0 auto; min-height: 44px; }
+
+/* S006: profile retrieval, form and continuation are not fixed artwork.
+ * Restore a scrolling document flow beneath the original approved wordmark. */
+.sekka-mobile .phase-screen-6 {
+  height: auto;
+  min-height: calc(100dvh - env(safe-area-inset-top, 0px));
+  aspect-ratio: auto;
+  overflow: visible;
+}
+.sekka-mobile .phase-screen-6 .phase-live-profile-flow {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: clamp(100px, 25cqw, 150px) max(16px, 6cqw)
+    calc(24px + env(safe-area-inset-bottom, 0px));
+}
+.sekka-mobile .phase-screen-6 .phase-live-profile-flow :is(.phase-title,.phase-primary) {
+  position: static;
+  inset: auto;
+  transform: none;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  margin: 0;
+  white-space: normal;
+}
+.sekka-mobile .phase-screen-6 .phase-live-profile-flow .phase-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 12px 16px !important;
+  line-height: 1.4;
+}
+.sekka-mobile .phase-screen-6 .phase-live-profile-flow .live-profile {
+  position: static;
+  display: grid;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 16px;
+  overflow-wrap: anywhere;
+}
+.sekka-mobile .phase-screen-6 .phase-live-profile-flow .live-profile label {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.sekka-mobile .phase-screen-6 .phase-live-profile-flow .live-profile input,
+.sekka-mobile .phase-screen-6 .phase-live-profile-flow .live-profile button {
+  position: static;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.sekka-mobile .phase-screen-6 .phase-live-profile-flow .live-profile input {
+  font: inherit;
+  color: var(--phase-text);
+}
+@media (max-width:680px) {
+  .sekka-tab-login .sekka-mobile-content > .phase-one-stage:has(> .phase-screen-6) {
+    padding-block-start: 0;
+    min-height: 100dvh;
+  }
+  .sekka-tab-login .phase-screen-6 {
+    max-width: none;
+    width: 100%;
+  }
+  /* S010 must scroll all the way to the results action, with no fixed tabs. */
+  .sekka-search-filters .d-screen-10 {
+    height: auto;
+    overflow: visible;
+    padding-block-end: calc(28px + env(safe-area-inset-bottom, 0px));
+  }
+  .sekka-search-filters .d-screen-10 > .d-primary {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    height: auto;
+    padding: 10px 14px;
+    white-space: normal;
+    line-height: 1.4;
+  }
+}
+@media (max-width:380px) {
+  .sekka-mobile-card > button { margin-block-start: 14px; }
+  .sekka-mobile .phase-screen-6 .phase-live-profile-flow { gap: 14px; }
+}
+
+
+/* PWA portrait viewport fix: CSS viewport width can exceed 680px on some
+ * installed Android WebViews. Do not let the 3:4 preview canvas letterbox.
+ * Scope to the actual guest/unauthenticated flows, never /dev/screens. */
+@media (max-width: 900px), (display-mode: standalone) {
+  .sekka-mobile.sekka-guest-welcome,
+  .sekka-mobile.sekka-fullscreen-auth {
+    padding: 0;
+    min-height: 100dvh;
+  }
+
+  .sekka-mobile.sekka-guest-welcome > .sekka-mobile-content,
+  .sekka-mobile.sekka-fullscreen-auth > .sekka-mobile-content {
+    width: 100%;
+    max-width: none;
+    padding: 0;
+    margin: 0;
+    min-height: 100dvh;
+  }
+
+  .sekka-mobile.sekka-guest-welcome > .sekka-mobile-content > .phase-one-stage,
+  .sekka-mobile.sekka-fullscreen-auth > .sekka-mobile-content > .phase-one-stage {
+    display: flex;
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    min-height: 100dvh;
+    margin: 0;
+    padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+    align-items: stretch;
+    justify-content: flex-start;
+    overflow: visible;
+    box-sizing: border-box;
+  }
+
+  .sekka-mobile.sekka-guest-welcome .phase-canvas:is(.phase-screen-2,.phase-screen-3),
+  .sekka-mobile.sekka-fullscreen-auth .phase-canvas:is(.phase-screen-3,.phase-screen-4) {
+    display: block;
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    min-height: 0;
+    aspect-ratio: auto;
+    margin: 0;
+    overflow: hidden;
+    box-shadow: none;
+  }
+}
+
+/* Quick language switch uses the same 44px square control as the theme toggle.
+ * It follows user preference persistence in preferences.tsx, without changing
+ * approved screen artwork or creating a separate navigation destination. */
+.sekka-mobile-header > .sekka-language {
+ display:inline-flex; align-items:center; justify-content:center;
+ flex-direction:column; gap:0; line-height:1; font-size:19px;
+}
+.sekka-mobile-header > .sekka-language > small {
+ font-size:11px; font-family:inherit; font-weight:900; margin-top:-1px;
+}
+
+/* Keep both 44px preference controls and the server-authorized Admin entry
+ * inside a narrow 320px header; no auto-shrinking of touch targets. */
+@media(max-width:359px){
+ .sekka-mobile-header{gap:5px;padding-inline:8px}
+ .sekka-mobile-header>.sekka-brand-button{width:48px;flex-basis:48px}
+ .sekka-mobile-header .sekka-approved-logo{width:44px;height:44px}
+ .sekka-mobile-header>.sekka-admin-entry{min-width:0;max-width:94px;
+  padding:5px 4px;font-size:10px;line-height:1.1;overflow-wrap:anywhere}
+}
+
+
+/* Owner-approved shell header correction: official logo geometrically
+ * centered, independent of RTL/LTR or other header controls.
+ * Arabic (RTL): language on the LEFT, theme on the RIGHT.
+ * English (LTR): language on the RIGHT, theme on the LEFT.
+ * Keep approved screen artwork unaffected. */
+.sekka-mobile-header{height:64px;min-height:64px;position:sticky;isolation:isolate}
+.sekka-mobile-header>span{display:none}
+.sekka-mobile-header>.sekka-brand-button{
+ position:absolute;inset-inline-start:auto;inset-inline-end:auto;
+ left:50%;top:8px;transform:translateX(-50%);
+ width:56px;height:48px;min-height:48px;flex:none;padding:0;z-index:1
+}
+.sekka-mobile-header>.sekka-language{
+ position:absolute;inset-inline-end:12px;inset-inline-start:auto;
+ top:10px;width:44px;height:44px;min-height:44px;flex:none;padding:0;z-index:1
+}
+.sekka-mobile-header>.sekka-theme:not(.sekka-language){
+ position:absolute;inset-inline-start:12px;inset-inline-end:auto;
+ top:10px;width:44px;height:44px;min-height:44px;flex:none;padding:0;z-index:1
+}
+/* Admin controls have a dedicated second row; never squeeze the
+ * brand and 44px language/theme tap targets at 320px. */
+.sekka-mobile-header.sekka-mobile-header-admin{height:112px;min-height:112px}
+.sekka-mobile-header.sekka-mobile-header-admin>.sekka-admin-entry{
+ position:absolute;top:65px;left:50%;transform:translateX(-50%);
+ width:max-content;max-width:calc(100% - 24px);min-height:40px;
+ display:flex;align-items:center;justify-content:center;z-index:1
+}
+@media(max-width:359px){
+ .sekka-mobile-header>.sekka-brand-button{left:50%;width:48px;height:48px}
+ .sekka-mobile-header>.sekka-language{inset-inline-end:8px}
+ .sekka-mobile-header>.sekka-theme:not(.sekka-language){inset-inline-start:8px}
+ .sekka-mobile-header.sekka-mobile-header-admin>.sekka-admin-entry{
+  width:max-content;max-width:calc(100% - 16px);padding:7px 10px;font-size:12px
+ }
+}
+
+
+/* Owner-approved left-side navigation drawer. Keep five original core tabs,
+   add the menu at the physical LEFT in BOTH RTL and LTR modes. */
+.sekka-bottom-nav>.sekka-menu-tab{flex:1 1 0;min-width:44px}
+.sekka-mobile[dir="ltr"] .sekka-bottom-nav>.sekka-menu-tab{order:-1}
+.sekka-mobile[dir="rtl"] .sekka-bottom-nav>.sekka-menu-tab{order:0}
+.sekka-menu-layer{position:fixed;inset:0;z-index:100;isolation:isolate}
+.sekka-menu-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.53);border:0;width:100%;height:100%}
+.sekka-side-drawer{
+ position:absolute;left:0;right:auto;top:0;bottom:0; margin:0; height:100%;max-height:100%; border:0;
+ width:min(86vw,320px);max-width:100%;overflow-y:auto;overscroll-behavior:contain;
+ padding:calc(12px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom));
+ background:var(--card);color:var(--ink);border-right:1px solid var(--line);
+ box-shadow:8px 0 28px rgba(0,0,0,.22);font-family:Tajawal,Tahoma,sans-serif;
+}
+.sekka-side-drawer__header{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:54px}
+.sekka-side-drawer__header strong{font-size:22px}
+.sekka-side-drawer__close{width:44px;height:44px;border-radius:12px;background:var(--bg);color:var(--ink);border:1px solid var(--line);font-size:27px}
+.sekka-side-drawer nav{display:flex;flex-direction:column;gap:7px;padding-bottom:25px}
+.sekka-side-drawer nav h2{font-size:14px;font-weight:900;line-height:1.4;margin:18px 0 3px;color:var(--muted)}
+.sekka-side-drawer nav button{display:block;width:100%;min-height:48px;padding:11px 13px;background:var(--bg);
+ border:1px solid var(--line);border-radius:12px;font:inherit;font-weight:800;color:var(--ink);text-align:start}
+.sekka-side-drawer nav button[aria-current="page"]{background:#FF663D;color:#151515;border-color:#FF663D}
+.sekka-side-drawer button:focus-visible{outline:3px solid #d7aa00;outline-offset:2px}
+@media(max-width:359px){.sekka-bottom-nav small{font-size:9px}.sekka-bottom-nav>button{min-width:44px}}
+
+
+/* Real app: distinguish actual seat bookings from non-binding trip requests. */
+.sekka-bookings-workspace{display:flex;flex-direction:column;gap:12px;min-width:0}
+.sekka-bookings-section-tabs{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
+ padding:8px;border:1px solid var(--line);border-radius:14px;background:var(--card)
+}
+.sekka-bookings-section-tabs button{
+ display:flex;align-items:center;justify-content:center;min-width:0;min-height:48px;
+ padding:10px 8px;font:inherit;font-weight:800;line-height:1.4;text-align:center;
+ color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;
+ overflow-wrap:anywhere;
+}
+.sekka-bookings-section-tabs button[aria-pressed="true"]{background:#FF663D;color:#151515;border-color:#FF663D}
+.sekka-bookings-section-tabs button:focus-visible{outline:3px solid #b68b00;outline-offset:2px}
+
+
+/* 2026-11-18 owner-approved production-only light palette and single-drawer
+ * navigation. Dev/gallery originals are intentionally left untouched. */
+.sekka-mobile{
+  --bg:#f7f8fa;--ink:#0b0b0d;--card:#fff;--line:#e2e5e9;
+  --muted:#535d69;--sekka-brand:#FF663D;--sekka-icon-accent:#F73587;
+  --sekka-nav-height:0px;
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+html[data-theme="dark"] .sekka-mobile{
+  --bg:#0d151e;--ink:#f0f3f5;--card:#15212e;--line:#354452;
+  --muted:#b4c0c9;--sekka-icon-accent:#FFAB7E;
+}
+/* Top bar is for one 48px physical-left menu control, not a second wordmark
+ * or duplicate preference buttons. Keep the official art within its screen. */
+.sekka-mobile-header,
+.sekka-tab-search > .sekka-mobile-header,
+.sekka-tab-booking > .sekka-mobile-header{
+  display:flex;position:sticky;top:0;isolation:isolate;
+  justify-content:center;align-items:center;
+  min-height:56px;height:56px;padding:0 68px;
+  background:var(--card);border-bottom:1px solid var(--line);
+}
+.sekka-mobile-header>.sekka-shell-menu{
+  position:absolute;top:4px;left:max(12px,env(safe-area-inset-left,0px));
+  right:auto;display:flex;align-items:center;justify-content:center;
+  min-width:48px;width:48px;min-height:48px;height:48px;
+  padding:0;background:var(--bg);color:var(--ink);
+  border:1px solid var(--line);border-radius:12px;
+  font:inherit;font-size:25px;line-height:1;cursor:pointer;
+}
+.sekka-mobile-header>.sekka-current-section{
+  position:static;display:block;min-width:0;max-width:100%;flex:none;
+  text-align:center;font-size:16px;line-height:1.35;font-weight:900;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink);
+}
+.sekka-mobile-header.sekka-mobile-header-admin{
+  min-height:102px;height:102px;
+}
+.sekka-mobile-header.sekka-mobile-header-admin>.sekka-admin-entry{
+  top:57px;min-height:40px;
+}
+.sekka-tab-captain-onboarding > .sekka-mobile-header,
+.sekka-guest-welcome > .sekka-mobile-header,
+.sekka-tab-login > .sekka-mobile-header{display:none}
+/* Content is no longer clipped behind a fixed 68px tab strip. */
+.sekka-mobile-content > .phase-one-stage{
+  padding-block-end:calc(22px + env(safe-area-inset-bottom,0px));
+}
+.sekka-mobile-content :is(button,input,select,textarea,a){
+  scroll-margin-block:64px calc(20px + env(safe-area-inset-bottom,0px));
+}
+.sekka-mobile-content .live-home__hero{min-height:152px;padding-bottom:52px}
+.sekka-mobile-content .live-home__panel{margin-top:-20px}
+.sekka-side-drawer nav .sekka-drawer-preference{
+  display:flex;align-items:center;gap:12px;direction:inherit;
+  text-align:start;min-height:52px;
+}
+.sekka-side-drawer .sekka-drawer-pref-icon{
+  display:inline-flex;align-items:center;justify-content:center;
+  flex:0 0 35px;width:35px;height:35px;font-size:24px;line-height:1;
+  background:var(--card);border:1px solid var(--line);border-radius:9px;
+}
+.sekka-mobile .discovery-stage.light .d-title>.discovery-icon,
+.sekka-mobile .discovery-stage.light .d-place>.discovery-icon,
+.sekka-mobile .discovery-stage.light .d-category-grid button:not([aria-pressed="true"])>.discovery-icon{
+  color:var(--sekka-icon-accent);
+}
+.sekka-mobile .discovery-stage.light .d-origin-dot{border-color:var(--sekka-icon-accent)}
+.sekka-mobile .discovery-stage.light .d-origin-dot:after{background:var(--sekka-icon-accent)}
+.sekka-mobile .discovery-stage.dark .d-place>.discovery-icon,
+.sekka-mobile .discovery-stage.dark .d-title>.discovery-icon{
+  color:var(--sekka-icon-accent);
+}
+@media(max-width:359px){
+ .sekka-mobile-header>.sekka-shell-menu{left:max(8px,env(safe-area-inset-left,0px))}
+ .sekka-mobile-header>.sekka-current-section{font-size:14px}
+}
+
+/* A logged-in Captain must never be trapped in the seven-step onboarding flow
+ * once the old bottom navigation has been removed. Guest OAuth stays full-screen. */
+.sekka-captain-logged-in > .sekka-mobile-header{
+ display:flex;position:sticky;top:0;min-height:56px;height:56px;
+}
+
+/* Optional home/work and recent-route shortcuts only for an authenticated
+ * search; they do not replace published route inventory or original screens. */
+.sekka-mobile .sekka-search-shortcuts{
+ display:flex;flex-direction:column;gap:7px;margin:0 4.4% 16px;
+ padding:10px;border:1px solid var(--line);border-radius:14px;
+ background:var(--card);font-size:12px;min-width:0;
+}
+.sekka-mobile .sekka-search-shortcuts__actions{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;
+}
+.sekka-mobile .sekka-search-shortcuts button{
+ display:flex;align-items:center;justify-content:center;
+ width:100%;min-width:0;min-height:44px;
+ border:1px solid var(--line);border-radius:9px;
+ background:var(--bg);color:var(--ink);padding:7px;
+ font:inherit;font-weight:800;text-align:center;line-height:1.3;
+ white-space:normal;overflow-wrap:anywhere;
+}
+.sekka-mobile .sekka-search-shortcuts button:disabled{opacity:.55;cursor:not-allowed}
+.sekka-mobile .sekka-search-shortcuts__recent{display:flex;flex-direction:column;gap:6px}
+.sekka-mobile .sekka-search-shortcuts__recent>span{color:var(--muted);font-weight:800}
+.sekka-mobile .sekka-search-shortcuts__recent button{justify-content:flex-start;text-align:start}
+
+/* Published-route comparisons: real database values only, never demo prices. */
+.sekka-mobile .d-live-search .sekka-live-sort{
+ display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+ gap:9px;margin:10px 0 16px;font-size:14px;font-weight:800;
+}
+.sekka-mobile .d-live-search .sekka-live-sort select{
+ flex:1 1 170px;max-width:100%;min-width:0;min-height:44px;
+ padding:8px 11px;border:1px solid var(--line);border-radius:11px;
+ background:var(--card);color:var(--ink);font:inherit;
+}
+.sekka-mobile .d-live-search .sekka-live-stops{font-weight:900;overflow-wrap:anywhere}
+.sekka-mobile .d-live-search .sekka-live-schedule{
+ line-height:1.5;margin-block:9px;
+ color:var(--phase-text);overflow-wrap:anywhere;
+}
+.sekka-mobile .d-live-search .sekka-live-meta{color:var(--phase-muted)}
+.sekka-mobile .d-live-search .sekka-live-price{font-weight:800}
+.sekka-mobile .d-live-search .sekka-live-price strong{font-size:1.1em;color:var(--phase-text)}
+
+/* Owner-directed branding: never show shell page names as a top bar title.
+ * The same official English splash artwork is used in the main shell and
+ * real route screens. The reference/gallery artwork is left untouched. */
+.sekka-mobile-header>.sekka-brand-button{
+ width:124px;min-width:0;max-width:calc(100% - 130px);height:48px;
+ left:50%;top:8px;transform:translateX(-50%);
+ display:flex;align-items:center;justify-content:center;
+ background:#000;border:0;border-radius:12px;padding:4px 8px;overflow:hidden
+}
+.sekka-mobile-header .sekka-wordmark-en{
+ display:block;width:100%;height:37px;max-width:108px;object-fit:contain
+}
+.sekka-mobile .d-header>.sekka-discovery-logo-en{
+ display:block;width:124px;max-width:32%;height:49px;object-fit:contain;
+ border-radius:12px;background:#000;padding:5px 7px
+}
+@media(max-width:359px){
+ .sekka-mobile-header>.sekka-brand-button{width:112px;max-width:calc(100% - 125px)}
+ .sekka-mobile .d-header>.sekka-discovery-logo-en{width:112px}
+}
+
+/* Real app only: Onboarding and Captain screens share the official English
+ * launch mark while the 73-screen reference gallery keeps its original assets. */
+.sekka-mobile .phase-wordmark{
+ background:transparent url("/brand/sekka-go-road-192.png") center/contain no-repeat;
+ border-radius:10px;mix-blend-mode:normal
+}
+.sekka-mobile .phase-wordmark>.reference-art{visibility:hidden}
+
+
+/* Owner decision: the only seKKa logo is on the pulsing launch splash.
+ * Never show logos in real navigation, auth, ride search, Captain or Admin.
+ * Developer reference gallery stays unchanged. */
+.sekka-mobile .phase-wordmark,
+.sekka-mobile .phase-logo,
+.sekka-mobile .sekka-approved-logo,
+.sekka-mobile .sekka-brand-button,
+.sekka-mobile .sekka-discovery-logo-en,
+.sekka-mobile .d-header > .phase-wordmark {display:none!important}
+.sekka-mobile-header:not(.sekka-mobile-header-admin){justify-content:flex-start;padding-inline:12px}
+.sekka-mobile .sekka-account-loading{
+ min-height:calc(100dvh - 140px);display:flex;flex-direction:column;
+ align-items:center;justify-content:center;gap:16px;
+ text-align:center;padding:32px 18px;color:var(--ink)
+}
+.sekka-account-loading p{margin:0;line-height:1.6;max-width:310px}
+.sekka-account-loading__spinner{
+ display:block;width:32px;height:32px;border:3px solid var(--line);
+ border-top-color:#FF663D;border-radius:50%;animation:sekka-load-spin .8s linear infinite
+}
+@keyframes sekka-load-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.sekka-account-loading__spinner{animation:none;border-top-width:6px}}
+.sekka-account-loading__slow{display:grid;gap:12px;max-width:320px}
+.sekka-account-loading__slow button{min-height:44px;padding:10px 16px;background:#FF663D;color:#141414;border:0;border-radius:12px;font:inherit;font-weight:800}
+
+/* Drawer is compact, touch-safe and scrollable. */
+.sekka-side-drawer{width:min(82vw,310px);padding-inline:14px}
+.sekka-side-drawer nav{gap:4px}
+.sekka-side-drawer nav h2{margin:9px 0 2px;font-size:12px}
+.sekka-side-drawer nav button{min-height:44px;padding:8px 12px;border-radius:10px;font-size:15px;line-height:1.35}
+.sekka-side-drawer__header{min-height:48px}
+.sekka-side-drawer__header strong{font-size:19px}
+
+/* Each request is a self-contained card with a predictable action row. */
+.sekka-mobile .sekka-request-list{
+ display:grid;gap:12px;list-style:none;margin:0;padding:0;
+}
+.sekka-mobile .sekka-request-card{
+ display:flex;flex-direction:column;gap:7px;min-width:0;
+ padding:14px;border:1px solid var(--line);border-radius:14px;
+ background:var(--card);overflow-wrap:anywhere;line-height:1.55
+}
+.sekka-mobile .sekka-request-card__route{font-size:16px;line-height:1.5}
+.sekka-mobile .sekka-request-card__actions{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;
+ margin-block:8px 0
+}
+.sekka-mobile .sekka-request-card__actions button{
+ position:static;transform:none;float:none;
+ display:flex;justify-content:center;align-items:center;
+ width:100%;max-width:100%;min-width:0;min-height:44px;
+ margin:0;padding:8px 10px;border-radius:10px;
+ font:inherit;font-size:14px;font-weight:800;line-height:1.3;
+ white-space:normal;overflow-wrap:anywhere;
+}
+.sekka-mobile .sekka-request-card__actions .sekka-request-edit{
+ background:#FF663D;border:1px solid #FF663D;color:#171b22
+}
+.sekka-mobile .sekka-request-card__actions .sekka-request-cancel{
+ background:transparent;border:1px solid var(--line);color:var(--ink)
+}
+.sekka-mobile .sekka-request-card__actions button:only-child{grid-column:1/-1}
+
+
+/* Approved Captain landing header only: logo centered, account and notifications.
+ * No global header or Rider navigation changes. */
+.sekka-mobile.sekka-captain-home-shell{
+ padding-bottom:0;
+}
+.sekka-captain-home-shell > .sekka-mobile-header{
+ position:relative;top:auto;z-index:10;border-bottom:0;
+ height:79px;min-height:79px;background:var(--card,#fff);
+ padding:6px 13px;
+}
+.sekka-captain-home-shell .sekka-captain-header{
+ display:grid;grid-template-columns:52px minmax(0,1fr) 52px;
+ align-items:center;justify-items:center;gap:10px;width:100%;min-width:0;
+}
+.sekka-captain-home-shell .sekka-captain-head-action{
+ display:grid;place-items:center;
+ width:48px;height:48px;min-width:48px;min-height:48px;
+ border-radius:15px;border:1px solid var(--line,#eee);
+ background:var(--card,#fff);color:var(--ink,#121212);
+ padding:10px;
+}
+.sekka-captain-home-shell .sekka-captain-head-action svg{
+ width:24px;height:24px;
+}
+.sekka-captain-home-shell .sekka-mobile-content{
+ max-width:680px;padding:0 0 20px;min-height:0;
+}
+.sekka-captain-home-shell .sekka-mobile-content > .phase-one-stage.discovery-stage{
+ margin:0;width:100%;padding:0;min-height:0;
+}
+.sekka-captain-home-shell .sekka-bottom-nav{display:none!important}
+.sekka-captain-home-shell .sekka-mobile-content > .phase-one-stage > .captain-routes-canvas{
+ max-width:680px!important;padding:0!important;
+}
+@media(max-width:370px){
+ .sekka-captain-home-shell > .sekka-mobile-header{height:69px;min-height:69px}
+ .sekka-captain-home-shell .sekka-captain-header{grid-template-columns:44px minmax(0,1fr) 44px;gap:6px}
+ .sekka-captain-home-shell .sekka-captain-head-action{width:44px;height:44px;min-width:44px;min-height:44px}
+}
+
+/* 2026-11-21 owner-approved warm rebrand; do not modify old icon artwork. */
+.sekka-mobile{--bg:#FFF9F5;--ink:#35134F;--card:#FFFFFF;--line:#E9D6E5;--muted:#674F72;--sekka-brand:#FF663D;--sekka-icon-accent:#F73587}
+html[data-theme="dark"] .sekka-mobile{--bg:#1E0B32;--ink:#FFF7FC;--card:#301A4B;--line:#60436F;--muted:#DBC9E5;--sekka-brand:#FF663D;--sekka-icon-accent:#FFAB7E}
+.sekka-mobile-header>.sekka-brand-button{background:#1E0B32}
+.sekka-mobile :is(.sekka-action,.sekka-mobile-alert button){background:#FF663D;color:#241038}
+.sekka-mobile .sekka-bottom-nav button[aria-current=page]>span{background:#FFCD38;color:#35134F}
+.sekka-mobile :is(button,a,input,select,textarea):focus-visible{outline:3px solid #6412B1;outline-offset:3px}
+@media(prefers-reduced-motion:reduce){.sekka-mobile *, .sekka-mobile *::before, .sekka-mobile *::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}

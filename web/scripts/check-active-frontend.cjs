@@ -27,8 +27,16 @@ if (stillThere.length) {
   process.exitCode = 1;
 }
 const entry = fs.readFileSync(path.join(root, 'src/main.tsx'), 'utf8');
-if (!entry.includes('from "./v2/App"') || !entry.includes('from "./v2/preferences"')) {
-  console.error('The entrypoint must use the current v3.1 application and preferences.');
+// Public entry mounts the real MobileApp; the approved 73-screen gallery must
+// remain reachable only through a lazy import on its exact developer route.
+// A static App import would bundle the developer gallery into every PWA visit.
+const hasPreferences = /from\s+["']\.\/v2\/preferences["']/.test(entry);
+const hasMobileApp = /from\s+["']\.\/v2\/MobileApp["']/.test(entry);
+const hasLazyGallery = /React\.lazy\s*\(\s*\(\)\s*=>\s*import\s*\(\s*["']\.\/v2\/App["']\s*\)\s*\)/.test(entry);
+const hasStaticGallery = /from\s+["']\.\/v2\/App["']/.test(entry);
+const hasExactDeveloperRoute = entry.includes('["/dev/screens", "/dev/screens/"].includes(window.location.pathname)');
+if (!hasPreferences || !hasMobileApp || !hasLazyGallery || hasStaticGallery || !hasExactDeveloperRoute) {
+  console.error('The public entry must mount MobileApp with preferences and lazily isolate the 73-screen gallery on its exact /dev/screens route.');
   process.exitCode = 1;
 }
 const activeFiles = ['src/main.tsx', 'vite.config.ts'];

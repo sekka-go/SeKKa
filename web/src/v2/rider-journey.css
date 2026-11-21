@@ -1,0 +1,86 @@
+/* Production rider flow only; the separate 73-screen developer gallery stays untouched. */
+.sekka-mobile .discovery-stage .d-screen-9,
+.sekka-mobile .discovery-stage .d-screen-11,
+.sekka-mobile .discovery-stage .d-screen-12{
+ --rj-bg:#FFF9F5;--rj-ink:#35134F;--rj-muted:#725A78;
+ --rj-card:#FFF;--rj-line:#E6D6E5;--rj-primary:#6412B1;
+ background:var(--rj-bg);color:var(--rj-ink);overflow:visible;padding-bottom:38px
+}
+.sekka-mobile .discovery-stage :is(.d-screen-9,.d-screen-11,.d-screen-12)::before,
+.sekka-mobile .discovery-stage :is(.d-screen-9,.d-screen-11,.d-screen-12)::after{display:none!important}
+.sekka-mobile .discovery-stage .d-screen-9 .d-road{display:none}
+.sekka-mobile .sekka-rider-journey-heading{margin:10px 16px 15px;padding:16px 17px 18px!important;
+ border-radius:21px;background:linear-gradient(120deg,#6412B1,#8A36C0);color:#fff;display:block;position:relative;z-index:1}
+.sekka-mobile .sekka-rider-journey-heading>span{font:800 13px/1.5 Tajawal,Tahoma,sans-serif;color:#FFDE83}
+.sekka-mobile .sekka-rider-journey-heading h2{font:900 clamp(21px,5.5vw,27px)/1.4 Tajawal,Tahoma,sans-serif;color:#fff;margin:5px 0!important;text-align:start}
+.sekka-mobile .sekka-rider-journey-heading p{font-size:13px;line-height:1.55;color:#FCF0FF;margin:6px 0 0}
+.sekka-mobile .d-screen-9>.d-header{min-height:52px}
+.sekka-mobile .d-screen-9 .d-planner{margin:0 16px 30px!important;padding:16px;background:var(--rj-card);
+ border:1px solid var(--rj-line);border-radius:22px}
+.sekka-mobile .d-screen-9 .d-planner-places{
+ position:relative;display:flex;flex-direction:column;gap:8px;
+ padding:0!important;margin:0 0 14px!important
+}
+.sekka-mobile .d-screen-9 .d-place{min-height:72px;border-radius:15px;border:1px solid var(--rj-line);
+ padding:10px;background:var(--rj-bg)}
+.sekka-mobile .d-screen-9 .d-place>.discovery-icon,
+.sekka-mobile .d-screen-9 .d-place>.d-origin-dot{display:none}
+.sekka-mobile .d-screen-9 .d-planner-places>.d-swap{
+ position:static!important;inset:auto!important;align-self:center;flex:none;
+ min-width:46px;width:46px;height:46px;min-height:46px;margin:-6px 0;
+ border-radius:14px;border:1px solid var(--rj-line);background:#FFF;color:#6412B1;padding:9px;
+ z-index:2;display:flex;align-items:center;justify-content:center
+}
+.sekka-mobile .d-screen-9 .d-planner-places>.d-swap .discovery-icon{width:24px;height:24px}
+.sekka-mobile .d-screen-9 .sekka-place-lookup input{min-height:48px;font-size:15px;background:var(--rj-card);
+ color:var(--rj-ink);border-radius:12px}
+.sekka-mobile .d-screen-9 .d-time-picker{
+ display:flex;gap:9px;padding:12px 10px;margin:12px 0!important;border:1px solid var(--rj-line);
+ background:var(--rj-bg);border-radius:16px
+}
+.sekka-mobile .d-screen-9 .d-time-picker>label{font-size:13px;font-weight:800;min-width:0;line-height:1.45}
+.sekka-mobile .d-screen-9 .d-time-picker input{min-height:44px;font-size:15px;color:var(--rj-ink);width:100%}
+.sekka-mobile .d-screen-9 .d-planner>.d-primary{
+ position:static;display:flex;align-items:center;justify-content:center;gap:12px;
+ width:100%!important;min-height:54px!important;margin:14px 0 0!important;
+ border-radius:15px;background:#6412B1!important;color:#fff!important;
+ font:900 17px/1.35 Tajawal,Tahoma,sans-serif;border:0
+}
+.sekka-mobile .d-screen-9 .sekka-gps-inline{margin:12px 0!important;background:var(--rj-bg);
+ border:1px solid var(--rj-line);border-radius:14px;padding:12px}
+.sekka-mobile .d-screen-9 .sekka-search-shortcuts{padding:8px 0;margin:10px 0}
+.sekka-mobile .d-screen-9 .sekka-search-shortcuts button{min-height:44px}
+.sekka-mobile :is(.d-screen-11,.d-screen-12) .d-live-search{margin-inline:16px!important}
+.sekka-mobile .d-screen-11 .sekka-live-result{
+ border:1px solid var(--rj-line);background:var(--rj-card);border-radius:20px;
+ margin:12px 0!important;padding:16px!important;overflow:hidden
+}
+.sekka-mobile .d-screen-11 .sekka-live-result::before{display:none}
+.sekka-mobile .sekka-rider-recommended{display:inline-flex;align-items:center;padding:5px 10px;
+ border-radius:999px;background:#FFCD38;color:#35134F;font-weight:900;font-size:12px;margin-bottom:8px}
+.sekka-mobile .d-screen-11 .sekka-live-result .d-offer-select{border:0;background:#6412B1;
+ color:#fff;font-weight:900;border-radius:14px;min-height:48px}
+.sekka-mobile :is(.d-screen-9,.d-screen-11,.d-screen-12) button:focus-visible,
+.sekka-mobile :is(.d-screen-9,.d-screen-11,.d-screen-12) input:focus-visible{outline:3px solid #AA6EF3;outline-offset:3px}
+@media(max-width:360px){
+ .sekka-mobile .sekka-rider-journey-heading{margin-inline:12px}
+ .sekka-mobile .d-screen-9 .d-planner{margin-inline:12px!important;padding:12px}
+}
+html[data-theme="dark"] .sekka-mobile .discovery-stage :is(.d-screen-9,.d-screen-11,.d-screen-12){
+ --rj-bg:#1E0B32;--rj-ink:#FFF9FC;--rj-muted:#E0C9EB;--rj-card:#321A4C;--rj-line:#614376;--rj-primary:#FFCD38
+}
+html[data-theme="dark"] .sekka-mobile .d-screen-9 .d-planner>.d-primary,
+html[data-theme="dark"] .sekka-mobile .d-screen-11 .sekka-live-result .d-offer-select{
+ background:#FFCD38!important;color:#35134F!important
+}
+html[data-theme="dark"] .sekka-mobile .d-screen-9 .d-planner-places>.d-swap{background:#452960;color:#FFDE83}
+@media(prefers-reduced-motion:reduce){.sekka-mobile :is(.d-screen-9,.d-screen-11,.d-screen-12) *{transition:none!important;animation:none!important}}
+
+.sekka-mobile .sekka-weekdays-disclaimer{
+ margin:8px 16px 13px!important;padding:11px 13px;
+ border:1px solid #EACD8E;background:#FFF5DC;color:#583B15;
+ border-radius:14px;font:700 13px/1.6 Tajawal,Tahoma,sans-serif;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-weekdays-disclaimer{
+ background:#463C33;color:#FFE2A7;border-color:#907044;
+}

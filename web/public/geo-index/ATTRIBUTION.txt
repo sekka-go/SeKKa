@@ -1,0 +1,4 @@
+Contains OpenStreetMap data © OpenStreetMap contributors, ODbL 1.0.
+Source: https://download.geofabrik.de/africa/egypt.html
+Snapshot SHA-256: d8af1d74f3acfdf37e74dd7ded9a77012366bf739e96e738208285f6aa14dfc0
+See https://www.openstreetmap.org/copyright

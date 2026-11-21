@@ -1,0 +1,215 @@
+/* User-selected Poparide-like interaction sequence, custom seKKa visual identity.
+   Only production entry; /dev/screens remains independent. */
+.phase-one-stage.sekka-entry-stage{
+ --se-bg:#FFFFFF;--se-ink:#28143E;--se-muted:#645570;--se-card:#FFF7F3;
+ --se-line:#E8DCE8;--se-primary:#6412B1;--se-yellow:#FFCD38;
+ display:block!important;min-height:100dvh;padding:0!important;background:var(--se-bg)!important;
+ color:var(--se-ink);width:100%!important;max-width:100%!important;height:auto!important;margin:0!important
+}
+.phase-one-stage.sekka-entry-stage>.phase-canvas.sekka-entry{
+ position:relative!important;inset:auto!important;display:flex!important;flex-direction:column!important;
+ align-items:stretch!important;justify-content:flex-start!important;
+ width:min(100%,480px)!important;max-width:480px!important;min-height:100dvh!important;height:auto!important;
+ aspect-ratio:auto!important;container-type:normal!important;padding:0!important;margin:0 auto!important;
+ background:var(--se-bg)!important;color:var(--se-ink)!important;
+ border-radius:0!important;box-shadow:none!important;overflow:visible!important;
+ font-family:Tajawal,'Noto Sans Arabic',Tahoma,Arial,sans-serif;
+}
+/* Installed portrait windows can report tablet-width CSS viewports. */
+@media (max-width:900px) and (orientation:portrait), (display-mode:standalone) and (orientation:portrait) {
+ .phase-one-stage.sekka-entry-stage>.phase-canvas.sekka-entry{
+  width:100%!important;max-width:none!important;
+ }
+}
+.sekka-entry::before,.sekka-entry::after{display:none!important}
+.sekka-entry button{font-family:inherit;cursor:pointer}
+.sekka-entry__header{
+ display:flex;align-items:center;justify-content:space-between;
+ gap:12px;padding:calc(16px + env(safe-area-inset-top)) 22px 6px;min-height:94px
+}
+.sekka-entry__brand{width:63px;height:63px;object-fit:contain;border-radius:16px;flex-shrink:0}
+.sekka-entry__header-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;min-width:44px}
+.sekka-entry :is(.sekka-entry__skip,.sekka-entry__back){
+ appearance:none;border:0!important;position:static!important;display:inline-flex!important;gap:7px;
+ align-items:center;justify-content:center;min-width:44px;min-height:44px!important;padding:8px 10px!important;
+ background:transparent!important;color:var(--se-primary)!important;font-size:14px!important;font-weight:800!important;
+ width:auto!important;height:auto!important;text-decoration:none
+}
+.sekka-entry__back{font-size:22px!important;direction:ltr}
+.sekka-entry__back span{font-size:13px}
+.sekka-entry__progress{display:flex;gap:7px;padding:5px 23px 0;direction:ltr;min-height:14px}
+.sekka-entry__progress span{height:5px;flex:1;background:var(--se-line);border-radius:999px}
+.sekka-entry__progress span.is-active{background:var(--se-primary)}
+.sekka-entry__content{
+ display:flex;flex-direction:column;align-items:stretch;
+ gap:0;flex:1;min-height:0;padding:22px 23px 12px;animation:se-come-in .28s ease-out both
+}
+.sekka-entry .sekka-entry__eyebrow{
+ position:static!important;inset:auto!important;display:inline-flex;margin:0 0 6px!important;
+ font:800 clamp(12px,3.8vw,14px)/1.5 Tajawal,Tahoma,sans-serif;
+ color:var(--se-primary);letter-spacing:0
+}
+.sekka-entry h1.sekka-entry__title.phase-title{
+ position:static!important;inset:auto!important;width:100%!important;height:auto!important;
+ max-width:100%!important;white-space:pre-line!important;overflow:visible!important;
+ font:900 clamp(26px,7vw,36px)/1.34 Tajawal,Tahoma,sans-serif!important;
+ margin:0 0 9px!important;text-align:start!important;letter-spacing:-.025em!important;
+ color:var(--se-ink)!important;outline:none
+}
+.sekka-entry .sekka-entry__description{
+ position:static!important;inset:auto!important;text-align:start!important;
+ font:600 clamp(13px,3.8vw,16px)/1.65 Tajawal,Tahoma,sans-serif!important;
+ color:var(--se-muted)!important;white-space:normal!important;max-width:430px;
+ margin:0!important;overflow-wrap:anywhere
+}
+.sekka-entry__art{display:grid;place-items:center;flex:1;min-height:220px;max-height:400px;align-self:stretch;margin:16px -7px 0}
+.sekka-entry__illustration{width:min(100%,340px);height:auto;max-height:min(39dvh,320px);overflow:visible}
+.sekka-entry__float{transform-origin:50% 70%;animation:se-floating 3.4s ease-in-out infinite}
+.sekka-entry__footer{
+ margin-top:auto;display:flex;flex-direction:column;gap:12px;
+ padding:13px 23px calc(21px + env(safe-area-inset-bottom));
+ background:var(--se-bg);border-top:1px solid var(--se-line);
+ position:relative;z-index:1
+}
+.sekka-entry button.sekka-entry__primary{
+ width:100%!important;min-height:54px!important;height:auto!important;
+ position:static!important;inset:auto!important;display:flex!important;align-items:center;justify-content:center;gap:14px;
+ background:var(--se-primary)!important;color:#FFFFFF!important;border:1px solid var(--se-primary)!important;
+ border-radius:15px!important;padding:12px 18px!important;margin:0!important;
+ font:900 clamp(15px,4vw,17px)/1.35 Tajawal,Tahoma,sans-serif!important;
+ box-shadow:0 8px 18px #6412B124;white-space:normal!important;overflow-wrap:anywhere
+}
+.sekka-entry button.sekka-entry__primary>span{font-size:24px;line-height:1}
+.sekka-entry__signin{display:flex;justify-content:center;align-items:center;gap:4px;flex-wrap:wrap;
+ color:var(--se-muted)!important;margin:0!important;font-size:14px!important}
+.sekka-entry__signin button{
+ position:static!important;inset:auto!important;width:auto!important;height:auto!important;
+ min-width:44px;min-height:44px!important;padding:8px 5px!important;
+ background:transparent!important;color:var(--se-primary)!important;border:0!important;font-size:14px!important;
+ font-weight:900!important
+}
+.sekka-entry__details{list-style:none;display:grid;gap:14px;margin:20px 0 0;padding:0}
+.sekka-entry__details li{display:flex;align-items:center;gap:15px;min-height:65px;background:var(--se-card);
+ border:1px solid var(--se-line);border-radius:17px;padding:11px 14px;color:var(--se-ink)}
+.sekka-entry__details li>span{display:grid;place-items:center;width:36px;height:36px;flex:none;border-radius:13px;
+ background:#FFCD38;color:#35134F;font-size:17px;font-weight:900}
+.sekka-entry__details li strong{font-size:clamp(13px,3.6vw,16px);line-height:1.5;font-weight:800}
+.sekka-entry__roles{display:flex;flex-direction:column;gap:13px;margin-top:20px}
+.sekka-entry button.sekka-entry__role.phase-role-card{
+ position:static!important;inset:auto!important;display:flex!important;align-items:center!important;
+ gap:12px;width:100%!important;min-height:116px!important;height:auto!important;
+ text-align:start!important;border:2px solid var(--se-line)!important;
+ border-radius:21px!important;padding:14px!important;background:var(--se-card)!important;
+ color:var(--se-ink)!important;box-shadow:none!important;overflow:visible!important
+}
+.sekka-entry button.sekka-entry__role.is-selected{
+ border-color:var(--se-primary)!important;background:#F3EAFC!important
+}
+.sekka-entry__role-icon{display:grid;place-items:center;flex:none;width:60px;height:60px;border-radius:18px;background:#FFE6D8}
+.sekka-entry__role-icon svg{width:47px;height:47px}
+.sekka-entry__role-text{display:flex;flex-direction:column;gap:5px;flex:1;min-width:0}
+.sekka-entry__role-text strong{font-size:17px;font-weight:900;line-height:1.25}
+.sekka-entry__role-text small{font-size:13px;font-weight:600;line-height:1.55;color:var(--se-muted);overflow-wrap:anywhere}
+.sekka-entry__check{display:grid;place-items:center;width:24px;height:24px;flex:none;
+ border:2px solid var(--se-primary);border-radius:50%;font-size:15px;font-weight:900;color:#fff}
+.is-selected .sekka-entry__check{background:var(--se-primary)}
+.sekka-entry :is(button,a):focus-visible{outline:3px solid var(--se-yellow)!important;outline-offset:3px!important}
+@keyframes se-come-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes se-floating{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+/* New Google screen: the exact existing Supabase OAuth handler stays in charge. */
+.phase-one-stage.sekka-entry-stage>.phase-canvas.sekka-entry-login{
+ position:relative!important;display:flex!important;flex-direction:column!important;
+ max-width:480px!important;width:100%!important;min-height:100dvh!important;aspect-ratio:auto!important;
+ padding:calc(18px + env(safe-area-inset-top)) 23px calc(24px + env(safe-area-inset-bottom))!important;
+ margin:0 auto!important;background:var(--se-bg)!important;box-shadow:none!important;overflow:visible!important
+}
+.sekka-entry-login .phase-back{
+ position:static!important;inset:auto!important;width:52px!important;height:52px!important;
+ min-height:52px!important;align-self:flex-start;background:var(--se-card)!important;
+ border:1px solid var(--se-line)!important;border-radius:15px!important;color:var(--se-primary)!important;
+ font:900 30px/1 Tajawal,sans-serif!important;margin:0 0 12px!important
+}
+.sekka-entry-login .sekka-entry-login__brand{width:96px;height:96px;align-self:center;margin:8px 0 30px}
+.sekka-entry-login .phase-google-auth.sekka-entry-login__form{
+ position:static!important;inset:auto!important;transform:none!important;
+ display:flex!important;flex-direction:column!important;gap:16px!important;
+ align-items:stretch!important;justify-content:flex-start!important;
+ width:100%!important;max-width:100%!important;margin:auto 0!important;
+ padding:0!important;text-align:start!important
+}
+.sekka-entry-login .phase-google-auth .phase-title{
+ position:static!important;width:100%!important;height:auto!important;
+ color:var(--se-ink)!important;text-align:start!important;font:900 clamp(27px,7vw,35px)/1.4 Tajawal,sans-serif!important
+}
+.sekka-entry-login .phase-google-auth .phase-subtitle{
+ position:static!important;width:100%!important;height:auto!important;
+ color:var(--se-muted)!important;font:600 clamp(14px,3.6vw,16px)/1.65 Tajawal,sans-serif!important;text-align:start!important
+}
+.sekka-entry-login .phase-google-auth .sekka-entry-login__secure{display:flex;gap:10px;align-items:center;
+ padding:15px;border:1px solid var(--se-line);border-radius:15px;
+ background:var(--se-card);font-size:14px;font-weight:800;color:var(--se-ink)}
+.sekka-entry-login .phase-google-auth .sekka-entry-login__secure>span{
+ display:grid;place-items:center;width:33px;height:33px;border-radius:50%;background:#BCEFE6;color:#067768;font-size:20px}
+.sekka-entry-login .phase-google-auth button.phase-primary{position:static!important;width:100%!important;
+ min-height:54px!important;height:auto!important;margin-top:14px!important;padding:12px 18px!important;
+ display:flex!important;align-items:center!important;justify-content:center!important;gap:12px!important;
+ background:var(--se-primary)!important;color:#fff!important;border-radius:15px!important;
+ font:900 16px/1.45 Tajawal,sans-serif!important}
+.sekka-entry-login .phase-google-auth :is([role="alert"],[role="status"]){position:static!important;text-align:start!important}
+@media(max-width:350px){
+ .sekka-entry__header{padding-inline:15px}
+ .sekka-entry__content{padding-inline:16px}
+ .sekka-entry__footer{padding-inline:16px}
+ .sekka-entry__role-icon{width:50px;height:50px}
+ .sekka-entry__role-icon svg{width:40px;height:40px}
+ .sekka-entry__art{min-height:160px}
+}
+@media(prefers-reduced-motion:reduce){
+ .sekka-entry__content,.sekka-entry__float{animation:none!important;transform:none!important}
+}
+html[data-theme="dark"] .phase-one-stage.sekka-entry-stage{
+ --se-bg:#1E0B32;--se-ink:#FFF8FC;--se-muted:#E0CDE7;--se-card:#32184C;--se-line:#60436F;--se-primary:#B881FF;
+}
+html[data-theme="dark"] .sekka-entry button.sekka-entry__primary,
+html[data-theme="dark"] .sekka-entry-login .phase-google-auth button.phase-primary{
+ background:#FFCD38!important;border-color:#FFCD38!important;color:#35134F!important
+}
+html[data-theme="dark"] .sekka-entry button.sekka-entry__role.is-selected{
+ background:#4B266A!important;border-color:#FFCD38!important
+}
+html[data-theme="dark"] .sekka-entry__check{border-color:#FFCD38}
+html[data-theme="dark"] .is-selected .sekka-entry__check{background:#FFCD38;color:#35134F}
+
+/* Authenticated profile step keeps the existing verified Supabase form and
+   never invents upload/notifications support to imitate the reference. */
+.sekka-entry-login .phase-flow-content.sekka-entry-login__profile{
+ display:flex!important;flex-direction:column!important;gap:14px!important;
+ position:static!important;inset:auto!important;
+ width:100%!important;height:auto!important;min-height:0!important;
+ padding:0 0 12px!important;margin:auto 0!important
+}
+.sekka-entry-login .sekka-entry-login__profile .phase-title{
+ position:static!important;width:100%!important;height:auto!important;margin:0!important;
+ color:var(--se-ink)!important;font:900 clamp(25px,7vw,34px)/1.4 Tajawal,sans-serif!important;
+ text-align:start!important;white-space:normal!important
+}
+.sekka-entry-login .sekka-entry-login__profile .phase-subtitle{
+ position:static!important;width:100%!important;height:auto!important;margin:0!important;
+ color:var(--se-muted)!important;font:600 15px/1.6 Tajawal,sans-serif!important;
+ text-align:start!important;white-space:normal!important
+}
+.sekka-entry-login__profile .live-profile{width:100%;max-width:100%!important;padding:16px!important;
+ margin:0!important;border:1px solid var(--se-line)!important;border-radius:16px!important;
+ background:var(--se-card)!important}
+.sekka-entry-login__profile .live-profile input{min-height:48px!important}
+.sekka-entry-login__profile .live-profile button{min-height:48px!important}
+.sekka-entry-login .sekka-entry-login__profile>.phase-primary{
+ position:static!important;inset:auto!important;width:100%!important;height:auto!important;
+ min-height:54px!important;padding:12px 16px!important;display:flex!important;
+ justify-content:center!important;align-items:center!important;gap:12px!important;
+ border-radius:15px!important;background:var(--se-primary)!important;
+ color:#FFFFFF!important;font:900 16px/1.5 Tajawal,sans-serif!important
+}
+html[data-theme="dark"] .sekka-entry-login .sekka-entry-login__profile>.phase-primary{
+ background:#FFCD38!important;color:#35134F!important
+}

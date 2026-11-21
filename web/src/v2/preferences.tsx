@@ -4,6 +4,10 @@ export type LanguagePreference = 'system' | 'ar' | 'en';
 export const resolveLanguage = (p: LanguagePreference, device: string): 'ar'|'en' => p === 'system' ? device.toLowerCase().split('-')[0] === 'en' ? 'en' : 'ar' : p;
 export const resolveTheme = (p: ThemePreference, dark: boolean): 'dark'|'light' => p === 'system' ? dark ? 'dark' : 'light' : p;
 function read<T extends string>(key: string, allowed: readonly T[], fallback: T): T {
+  // OAuth may open in a separate browser context: carry explicit manual preferences in the callback URL.
+  const queryKey = key === 'theme_preference' ? 'oauth_theme' : key === 'language_preference' ? 'oauth_language' : '';
+  const fromUrl = queryKey ? new URLSearchParams(window.location.search).get(queryKey) : null;
+  if (fromUrl && allowed.includes(fromUrl as T)) return fromUrl as T;
   try {const v = localStorage.getItem(key); return allowed.includes(v as T) ? v as T : fallback;} catch {return fallback;}
 }
 const Context = createContext<null | {theme:'dark'|'light';language:'ar'|'en';themePreference:ThemePreference;languagePreference:LanguagePreference;setThemePreference:(v:ThemePreference)=>void;setLanguagePreference:(v:LanguagePreference)=>void}>(null);
@@ -22,6 +26,13 @@ export function PreferencesProvider({children}: {children:ReactNode}) {
   useEffect(()=>{
     document.documentElement.dataset.theme=theme;document.documentElement.lang=language;document.documentElement.dir=language==='ar'?'rtl':'ltr';
     try{localStorage.setItem('theme_preference',themePreference);localStorage.setItem('language_preference',languagePreference);}catch{/* Memory-only when storage unavailable. */}
+    // OAuth callback parameters are one-time transport, not permanent preference overrides.
+    // Remove them after preferences have been adopted so a later manual change survives reload.
+    const url=new URL(window.location.href);
+    if(url.searchParams.has('oauth_theme')||url.searchParams.has('oauth_language')){
+      url.searchParams.delete('oauth_theme');url.searchParams.delete('oauth_language');
+      window.history.replaceState(window.history.state,'',url.pathname+url.search+url.hash);
+    }
   },[theme,language,themePreference,languagePreference]);
   return <Context.Provider value={{theme,language,themePreference,languagePreference,setThemePreference,setLanguagePreference}}>{children}</Context.Provider>;
 }

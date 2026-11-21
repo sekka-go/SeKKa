@@ -1,0 +1,57 @@
+/* 2026-11-21 owner-selected seKKa road mark. Same purple background as the artwork. */
+.sekka-launch {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: #3F056F;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  direction: ltr;
+}
+
+.sekka-launch__artwork {
+  display: block;
+  width: min(64vw, 300px);
+  height: auto;
+  max-width: calc(100% - 64px);
+  object-fit: contain;
+  object-position: center;
+  flex-shrink: 0;
+  pointer-events: none;
+  user-select: none;
+  transform-origin: center;
+  animation: sekka-launch-pulse 1.15s ease-in-out infinite;
+}
+
+@keyframes sekka-launch-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: .96;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sekka-launch__artwork {
+    animation: none !important;
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* Keep the existing approved pulsing wordmark; show a readable load state. */
+.sekka-launch{flex-direction:row;gap:0}
+.sekka-launch__loading{
+ position:absolute;left:50%;top:calc(50% + min(34vw,165px));
+ transform:translateX(-50%);
+ display:block;color:#fff;font:600 14px/1.3 system-ui,-apple-system,Arial,sans-serif;
+ letter-spacing:.1em;text-align:center
+}
