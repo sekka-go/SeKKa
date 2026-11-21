@@ -431,6 +431,8 @@ export type DiscoveryProps = {
   serviceAreas?: {id:number;name_ar:string;name_en:string}[];
   liveSelection?: LiveSelection | null;
   onLiveSelect?: (selection:LiveSelection)=>void;
+  onDetailBack?:()=>void;
+  selectionLoading?:boolean;
   theme: Appearance;
   onTheme: (t: Appearance) => void;
   go: (id: number) => void;
@@ -844,7 +846,7 @@ export default function Discovery(p: DiscoveryProps) {
             className="phase-back"
             aria-label={tr("رجوع")}
             onClick={() =>
-              nav(
+              p.production&&screen===12&&p.onDetailBack?p.onDetailBack():nav(
                 screen === 8 ? 2 : screen === 13 ? 29 : screen === 12 ? 11 : p.production&&screen === 10 ? 11 : p.production&&screen === 11 ? 9 : 8,
               )
             }
@@ -1234,7 +1236,7 @@ export default function Discovery(p: DiscoveryProps) {
           line={selected} stops={detailStops} pickup={chosenPickup} dropoff={chosenDropoff}
           pickupPosition={pickupPosition} lastDropoffPosition={lastDropoffPosition}
           validDropoff={validDropoff} onPickupChange={changePickup}
-          onDropoffChange={changeDropoff} onBack={()=>nav(11)}
+          onDropoffChange={changeDropoff} onBack={p.onDetailBack||(()=>nav(11))}
           onProceed={()=>{
            try{
             const selectedStops=selectStops(detailStops,chosenPickup,chosenDropoff,
@@ -1247,10 +1249,11 @@ export default function Discovery(p: DiscoveryProps) {
            }
           }}
         />}
-        {screen===12&&p.production&&!selected&&<div className="d-empty" role="status">
+        {screen===12&&p.production&&!selected&&p.selectionLoading&&<div className="d-empty" role="status"><p>{language==='en'?'Loading ride details…':'بنحمّل تفاصيل الرحلة…'}</p></div>}
+        {screen===12&&p.production&&!selected&&!p.selectionLoading&&<div className="d-empty" role="status">
           <p>{language==='en'?'No published ride is selected. Return to search results.':'مفيش رحلة منشورة مختارة دلوقتي. ارجع للنتائج.'}</p>
-          <button type="button" className="d-primary" onClick={()=>nav(11)}>
-           {language==='en'?'Back to results':'ارجع للنتائج'}
+          <button type="button" className="d-primary" onClick={p.onDetailBack||(()=>nav(9))}>
+           {language==='en'?'Back':'رجوع'}
           </button>
         </div>}
         {screen === 12 && !p.production &&
