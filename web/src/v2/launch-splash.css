@@ -1,46 +1,38 @@
-/* Approved سِكَّة launch: stationary white SUV; background road markings flow.
-   No car transforms, no explanatory copy and no black wipe. */
+/* سِكَّة — owner-approved Cairo splash art, blue/cyan/yellow identity.
+   The artwork stays stationary, including the intact SUV. Only the short
+   road lane marks run backwards, without touching the car. */
 .sekka-launch{position:fixed;inset:0;z-index:100000;overflow:hidden;
  width:100%;height:100vh;height:100dvh;isolation:isolate;
  font-family:Tajawal,'Noto Sans Arabic',Tahoma,Arial,sans-serif;
  background:#078FF0;pointer-events:auto}
 .sekka-launch__stage{position:absolute;inset:0;overflow:hidden;
- background:linear-gradient(135deg,#20E5E4 0%,#06AFF4 30%,#0787EF 73%,#0679DF 100%);
+ background:linear-gradient(145deg,#21E1E8 0%,#06B6F5 27%,#078AF1 72%,#057DE0 100%);
  animation:sk-stage-finish 5.15s linear both}
 .sekka-launch__wave{position:absolute;pointer-events:none;z-index:2}
-.sekka-launch__wave--top{width:160%;height:23%;top:-10%;left:-25%;
- border-radius:0 0 55% 62%;background:linear-gradient(110deg,#42EDF0,#13CBEC);
- transform:rotate(-8deg)}
-.sekka-launch__wave--bottom{bottom:-7%;left:-28%;width:165%;height:17%;
- border-radius:54% 44% 0 0;transform:rotate(-6deg);
+.sekka-launch__wave--top{width:150%;height:21%;top:-10%;left:-23%;
+ border-radius:0 0 50% 61%;background:linear-gradient(110deg,#52EFF0,#12C9F1);
+ transform:rotate(-9deg)}
+.sekka-launch__wave--bottom{bottom:-7%;left:-28%;width:165%;height:16%;
+ border-radius:54% 44% 0 0;transform:rotate(-5deg);
  background:linear-gradient(90deg,#1AF0E6 8%,#06C6E8 67%,#01A9E8 95%);
- border-top:7px solid #FFCC24;z-index:8}
-.sekka-launch__brand{position:absolute;top:13%;left:4%;right:4%;z-index:9;
+ border-top:6px solid #FFCC24;z-index:8}
+.sekka-launch__brand{position:absolute;top:14%;left:4%;right:4%;z-index:9;
  display:flex;flex-direction:column;align-items:center;justify-content:center;
- text-align:center;gap:8px;color:#FFFFFF;text-shadow:0 3px 9px #0568B044}
+ text-align:center;gap:2px;color:#FFFFFF;text-shadow:0 3px 9px #0568B044}
 .sekka-launch__brand-name{font-size:clamp(76px,23vw,138px);font-weight:900;
  line-height:1.45;letter-spacing:-.07em;color:#FFFFFF;
  font-family:Tajawal,'Noto Sans Arabic',Tahoma,sans-serif}
 .sekka-launch__tagline{font-weight:900!important;margin:0;
  font-size:clamp(25px,7vw,40px);line-height:1.6!important}
 .sekka-launch__tagline b{color:#FFCC24}
-.sekka-launch__skyline{position:absolute;width:110%;left:-5%;height:40%;
- top:40%;z-index:2;opacity:1}
-.sekka-launch__road-scene{position:absolute;bottom:-2%;left:-8%;
- width:116%;height:47%;z-index:4;overflow:visible}
-.sekka-launch__road-markings{animation:sk-road-backwards .9s linear infinite}
-.sekka-launch__road-markings--near{animation-duration:.65s}
-@keyframes sk-road-backwards{to{stroke-dashoffset:150}}
-.sekka-launch__car{position:absolute;z-index:6;bottom:11%;left:0;width:89%;
- max-width:475px;filter:drop-shadow(0 7px 6px #1C46622B)}
-.sekka-launch__suv{width:100%;height:auto;display:block}
-.sekka-launch__destination{position:absolute;z-index:5;bottom:28%;right:7%;
- width:39px;height:49px;border-radius:50% 50% 50% 0;
- transform:rotate(-45deg);background:#00AFC3;border:5px solid #C7FAFE;
- box-shadow:0 5px 24px #0BAFD981}
-.sekka-launch__destination:after{content:"";position:absolute;
- width:11px;height:11px;border-radius:50%;background:#FFFFFF;
- left:9px;top:12px}
+.sekka-launch__approved-scene{display:block;position:absolute;z-index:4;left:0;bottom:0;
+ width:100%;height:50%;object-fit:cover;object-position:center bottom;
+ pointer-events:none;user-select:none;-webkit-user-drag:none}
+.sekka-launch__road-flow{position:absolute;inset:0;z-index:5;
+ width:100%;height:100%;overflow:hidden;pointer-events:none}
+.sekka-launch__road-flow-mark{animation:sekka-road-backwards 1050ms linear infinite;opacity:.8}
+.sekka-launch__road-flow-mark--far{animation-duration:1250ms;opacity:.7}
+@keyframes sekka-road-backwards{to{stroke-dashoffset:110}}
 .sekka-launch__wave-wipe{position:absolute;inset:0;z-index:10;
  background:linear-gradient(155deg,#26DBF0,#0999EB);
  clip-path:ellipse(0% 0% at 100% 100%);
@@ -52,13 +44,12 @@
  100%{clip-path:ellipse(145% 130% at 100% 100%);opacity:0}
 }
 @keyframes sk-stage-finish{0%,85%{opacity:1}100%{opacity:0}}
-@media(max-height:680px){.sekka-launch__brand{top:10%}
+@media(max-height:680px){.sekka-launch__brand{top:9%}
  .sekka-launch__brand-name{font-size:clamp(64px,18vh,115px)}
- .sekka-launch__skyline{top:37%}
- .sekka-launch__car{bottom:8%;width:80%}}
+ .sekka-launch__approved-scene{height:54%}}
 @media(min-width:620px){.sekka-launch__stage{max-width:540px;left:50%;
- transform:translateX(-50%)}.sekka-launch__car{left:2%}}
+ transform:translateX(-50%)}}
 @media(prefers-reduced-motion:reduce){
- .sekka-launch__stage,.sekka-launch__road-markings,.sekka-launch__wave-wipe{animation:none!important}
+ .sekka-launch__stage,.sekka-launch__road-flow-mark,.sekka-launch__wave-wipe{animation:none!important}
  .sekka-launch__wave-wipe{display:none}
 }
