@@ -845,7 +845,7 @@ export default function Discovery(p: DiscoveryProps) {
             aria-label={tr("رجوع")}
             onClick={() =>
               nav(
-                screen === 8 ? 2 : screen === 13 ? 29 : screen === 12 ? 11 : p.production&&screen === 11 ? 9 : 8,
+                screen === 8 ? 2 : screen === 13 ? 29 : screen === 12 ? 11 : p.production&&screen === 10 ? 11 : p.production&&screen === 11 ? 9 : 8,
               )
             }
           >
