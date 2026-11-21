@@ -5,7 +5,7 @@ import {localPlaceCatalog,serviceAreaAliases} from './locationCatalog.ts';
 import type {CatalogPlace} from './locationCatalog.ts';
 
 export type MapPlace=GeoPoint&{
- id:string;name:string;detail:string;source:'map';locality?:string[];
+ id:string;name:string;detail:string;source:'map'|'manual_map_pin';locality?:string[];
  kind?:'point'|'area'|'road'|'feature'; osmKey?:string;osmValue?:string;catalogKey?:string;catalogKind?:CatalogPlace['kind'];
 };
 export type ServiceArea={id:number;name_ar:string;name_en:string};
@@ -137,7 +137,10 @@ export function inspectPhoton(raw:unknown):{places:MapPlace[];outside:boolean}{
 export const mapPlacesFromPhoton=(raw:unknown)=>inspectPhoton(raw).places;
 
 export function selectOperationalMapPlace(place:MapPlace):boolean{
- return place.source==='map'&&!place.catalogKind&&place.kind==='point'&&inLaunchRegion(place)&&/^N:\d{1,16}$/.test(place.id);
+ return !place.catalogKind&&place.kind==='point'&&inLaunchRegion(place)&&(
+  (place.source==='map'&&/^N:\d{1,16}$/.test(place.id))||
+  (place.source==='manual_map_pin'&&/^manual:-?\d+\.\d{6},-?\d+\.\d{6}$/.test(place.id))
+ );
 }
 
 function catalogCandidate(place:MapPlace,item:CatalogPlace):boolean {
