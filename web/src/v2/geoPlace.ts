@@ -129,7 +129,7 @@ export function inspectPhoton(raw:unknown):{places:MapPlace[];outside:boolean}{
      typeof coords[0]!=='number'||typeof coords[1]!=='number'||
      !Number.isFinite(coords[0])||!Number.isFinite(coords[1]))continue;
   const point={latitude:coords[1],longitude:coords[0]};
-  if(value(props.countrycode).toLowerCase()!=='eg'||!inLaunchRegion(point)){outside=true;continue;}
+  if(value(props.countrycode).toLowerCase()!=='eg'||!isInsideCairoDiscovery(point)){outside=true;continue;}
   const osmType=value(props.osm_type).toUpperCase();
   const osmId=String(props.osm_id??'');
   if(!/^[NWR]$/.test(osmType)||!/^\d{1,16}$/.test(osmId))continue;
@@ -184,7 +184,7 @@ function catalogCandidate(place:MapPlace,item:CatalogPlace):boolean {
 
 export function rankMapPlaces(places:MapPlace[],query:string,area?:ServiceArea):MapPlace[]{
  const catalog=exactCatalogMatches(query,area);
- const ranked=places.filter(place=>inLaunchRegion(place)&&(!area||placeMatchesArea(place,area)))
+ const ranked=places.filter(place=>isInsideCairoDiscovery(place)&&(!area||placeMatchesArea(place,area)))
   .map(place=>{
    const entry=catalog.find(item=>catalogCandidate(place,item));
    const match=catalog.length?(entry?Math.max(nameRelevance(place.name,query),400):0):nameRelevance(place.name,query);
@@ -213,7 +213,7 @@ export function locationContext(query:string,places:MapPlace[],en:boolean,area?:
  const exact=exactCatalogMatches(query,area);
  const known=(exact.length?exact:catalogMatches(query,area)).flatMap(item=>{
   const ref=item.reference;
-  if(!ref||!inLaunchRegion(ref)||places.some(place=>place.catalogKey===item.key&&selectOperationalMapPlace(place)))return [];
+  if(!ref||!isInsideCairoDiscovery(ref)||places.some(place=>place.id===ref.osmId))return [];
   const context=item.context?.[en?1:0]??(item.area==='new cairo'
    ?en?'New Cairo · Cairo':'القاهرة الجديدة · القاهرة'
    :en?'6th of October · Giza':'مدينة 6 أكتوبر · الجيزة');
@@ -226,7 +226,7 @@ export function locationContext(query:string,places:MapPlace[],en:boolean,area?:
 }
 
 export function stopNearPoint(stop:GeoPoint,chosen:GeoPoint,radiusKm=3):boolean{
- return inLaunchRegion(chosen)&&inLaunchRegion(stop)&&straightLineKm(stop,chosen)<=radiusKm;
+ return isInsideCairoDiscovery(chosen)&&inLaunchRegion(stop)&&straightLineKm(stop,chosen)<=radiusKm;
 }
 export function geoRequestAvailable(origin:PlaceChoice|null,destination:PlaceChoice|null):boolean{
  return origin?.kind==='service'&&destination?.kind==='service'&&origin.area.id!==destination.area.id;
