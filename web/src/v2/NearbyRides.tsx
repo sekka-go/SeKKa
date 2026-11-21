@@ -153,7 +153,7 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
     <span className="np4__eyebrow">{t('اختار نقطة ركوبك','YOUR PICKUP SPOT')}</span>
     <span className="np4__mini-route" aria-hidden="true"><i/><i/><i/></span>
    </div>
-   <h2 id={headingId}>{t('أقرب ركوبة ليك؟','Your nearest pickup?')}</h2>
+   <h2 id={headingId}>{t('هتركب منين؟','Where will you board?')}</h2>
    <p>{t('هنشوف نقط الركوب اللي الكباتن نشروها فعلًا حوالينك، من غير ما نحفظ مكانك.',
     'Find real published pickup stops around you, without saving your location.')}</p>
    <button type="button" className="sekka-nearby__locate np4__locate" disabled={permissionBusy}
@@ -227,10 +227,10 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
       className={'np4__card'+(index===0?' np4__card--first':'')}>
       <div className="np4__card-top">
        <div className="np4__card-badges">
-        {index===0&&<span className="np4__featured">{t('الأقرب ليك','NEAREST PICKUP')}</span>}
+        {index===0&&<span className="np4__featured">{t('من أقرب النتائج','ONE OF THE NEAREST')}</span>}
         <span className="np4__category">{pick.route.category}</span>
        </div>
-       <strong className="np4__price">{new Intl.NumberFormat(en?'en-EG':'ar-EG').format(pick.route.seat_price_egp)}
+       <strong className="np4__price">{Number.isFinite(pick.route.seat_price_egp)&&pick.route.seat_price_egp>=0?new Intl.NumberFormat(en?'en-EG':'ar-EG').format(pick.route.seat_price_egp):t('غير متاح','Unavailable')}
         <small>{t('جنيه / مقعد','EGP / seat')}</small>
        </strong>
       </div>
