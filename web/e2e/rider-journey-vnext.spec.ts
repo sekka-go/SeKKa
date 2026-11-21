@@ -36,6 +36,8 @@ for(const width of [320,390]){
     const args=req.request().postDataJSON();
     expect(args.p_origin_area).toBe('المعادي');
     expect(args.p_destination_area).toBe('التجمع');
+    expect(args.p_outbound).toBe('08:15');
+    expect(args.p_return).toBe('18:20');
     data=[];
    }
    await req.fulfill({contentType:'application/json',body:JSON.stringify(data)});
@@ -48,6 +50,25 @@ for(const width of [320,390]){
   await expect(page.locator('.rh-journey__ribbon')).toBeVisible();
   await expect(page.locator('.rh-journey__fields')).toContainText(variant.language==='en'?'Maadi':'المعادي');
   await expect(page.locator('.rh-journey__fields')).toContainText(variant.language==='en'?'New Cairo':'التجمع');
+  // Pick both times directly on Home; the return time must reach the real search.
+  await page.locator('.rh-journey__field').nth(2).click();
+  const timeDialog=page.getByRole('dialog');
+  await expect(timeDialog).toBeVisible();
+  await timeDialog.locator('input[type="time"]').nth(0).fill('08:15');
+  await timeDialog.locator('input[type="time"]').nth(1).fill('18:20');
+  await timeDialog.getByRole('button',{name:variant.language==='en'?'Done':'تم'}).click();
+  await expect(page.locator('.rh-journey__field').nth(2)).toContainText('8');
+  // Pick weekdays individually; the day count is derived, not a fake default.
+  await page.locator('.rh-journey__field').nth(3).click();
+  const daysDialog=page.getByRole('dialog');
+  const dayNames=variant.language==='en'?['Sunday','Tuesday','Thursday']:['الأحد','الثلاثاء','الخميس'];
+  for(const day of dayNames){
+   await daysDialog.getByRole('button',{name:day,exact:true}).click();
+   await expect(daysDialog.getByRole('button',{name:day,exact:true})).toHaveAttribute('aria-pressed','true');
+  }
+  await expect(daysDialog.locator('.rh-picker__count')).toBeVisible();
+  await daysDialog.getByRole('button',{name:variant.language==='en'?'Done':'تم'}).click();
+  await expect(page.locator('.rh-journey__field').nth(3)).toContainText(variant.language==='en'?'3 days':'أيام');
   await expect(page.locator('.rh-shortcut--nearby')).toBeVisible();
   await expect(page.locator('.rh-shortcut--bookings')).toBeVisible();
   await expect(page.locator('.rh-hero h1')).toBeVisible();
@@ -64,10 +85,11 @@ for(const width of [320,390]){
    .toHaveAttribute('aria-current','page');
   await page.getByRole('navigation',{name:variant.language==='en'?'Passenger navigation':'التنقل للراكب'}).getByRole('button',{name:variant.language==='en'?'Home':'الرئيسية'}).click();
   await expect(page.locator('.rh-home')).toBeVisible();
-  await expect(page.getByRole('button',{name:variant.language==='en'?'Find rides on my route':'شوف الرحلات على خطّي'})).toBeVisible();
-  await page.getByRole('button',{name:variant.language==='en'?'Find rides on my route':'شوف الرحلات على خطّي'}).click();
+  await expect(page.locator('.rh-button--primary')).toHaveText(variant.language==='en'?'Search':'ابحث');
+  await page.locator('.rh-button--primary').click();
   await expect(page).toHaveURL(/tab=search&view=11/);
   await expect(page.locator('.sekka-no-match')).toBeVisible();
+  await expect(page.locator('.sekka-weekdays-disclaimer')).toBeVisible();
   expect(searchCount).toBeGreaterThan(0);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
   await expect(page.getByText(/Booking confirmed|تم الحجز بنجاح/)).toHaveCount(0);
