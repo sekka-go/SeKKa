@@ -80,7 +80,7 @@ test("installed identity remains Sekka Go, but launch background and status bar 
  ]);
  const index=await (await request.get("/")).text();
  expect(index).toContain('name="theme-color" content="#171318"');
- expect(index).toContain('background:#171318');
+ expect(index).toContain('background:#F7F0E5');
  for(const item of manifest.icons) {
   const img=await request.get(item.src);
   expect(img.ok()).toBeTruthy();
