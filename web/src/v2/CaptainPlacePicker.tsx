@@ -36,7 +36,7 @@ export default function CaptainPlacePicker({label,value,choice,onPick,onVerified
  // Same wide-area search index as the Rider; area-selection is optional.
  const result=useLocationSearch(query,menu,undefined,en,immediate);
  const seen=new Set<string>();
- const points=[...result.places,...(menu?locationContext(query,result.places,en):[])]
+ const points=(menu?[...result.places,...locationContext(query,result.places,en)]:[])
   .filter(place=>{
    if(!isSearchableMapPlace(place)||seen.has(place.id))return false;
    seen.add(place.id);return true;
@@ -95,6 +95,10 @@ export default function CaptainPlacePicker({label,value,choice,onPick,onVerified
    {suggestions.length>5&&<button className="cj-easy-more" type="button"
      onClick={()=>setShowAll(x=>!x)}>{showAll?t('عرض أقل','Show fewer'):t('عرض أماكن أكتر','More places')}</button>}
   </>}
+  {!menu&&<button type="button" className="cj-easy-map-button"
+   disabled={disabled} onClick={()=>{inputRef.current?.blur();setMapOpen(true);setOpen(false);}}>
+   <span aria-hidden="true">⌖</span>{t('اختيار على الخريطة (اختياري)','Choose on map (optional)')}
+  </button>}
   <div className="cj-easy-search">
    <label htmlFor={options.id+'-input'}>{t('ابحث عن محطة: منطقة، شارع، مول، جامعة أو مدرسة','Find a stop: area, street, mall, university or school')}</label>
    <div className="cj-easy-search-row">
@@ -121,10 +125,6 @@ export default function CaptainPlacePicker({label,value,choice,onPick,onVerified
     <span dir="auto">{locationContextIcon(place)} {place.name}</span><small dir="auto">{place.detail}</small>
    </button>)}
   </div>}
-  {!menu&&<button type="button" className="cj-easy-map-button"
-   disabled={disabled} onClick={()=>{inputRef.current?.blur();setMapOpen(true);setOpen(false);}}>
-   <span aria-hidden="true">⌖</span>{t('اختيار على الخريطة (اختياري)','Choose on map (optional)')}
-  </button>}
   {mapOpen&&<GeoMapPicker focus={choice?.kind==='search'?choice.place:null}
    focusLabel={query} initial={choice?.kind==='map'?choice.place:null} onCancel={()=>setMapOpen(false)}
    onConfirm={verifyMapPin}/>}
