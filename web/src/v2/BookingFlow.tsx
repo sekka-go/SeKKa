@@ -1053,9 +1053,9 @@ const dateText = (v: string) =>
  * Offer, Row, Box and illustration components. The preview wallet/payment
  * experience above remains isolated to /dev/screens.
  */
-export function V31BookingJourney({offer,routeId,pickupId,dropoffId,reverse,bookingId,onBack,onLogin,onBooked}:{
+export function V31BookingJourney({offer,routeId,pickupId,dropoffId,reverse,bookingId,onBack,onLogin,onBooked,selectionLoading=false}:{
  offer:Line|null;routeId:string;pickupId:string;dropoffId:string;reverse:boolean;
- bookingId:string|null;onBack:()=>void;onLogin:()=>void;onBooked:(id:string)=>void;
+ bookingId:string|null;onBack:()=>void;onLogin:()=>void;onBooked:(id:string)=>void;selectionLoading?:boolean;
 }){
  const {language,theme}=usePreferences(),en=language==='en';
  const t=(ar:string,english:string)=>en?english:ar;
@@ -1146,7 +1146,8 @@ export function V31BookingJourney({offer,routeId,pickupId,dropoffId,reverse,book
        <p className="b-hint">{t('الحد الأقصى لكل حساب شخصين فقط على نفس الخط. المقاعد بيتأكد منها الخادم عند الحجز.','At most two people per account on the same route. The server validates seats during booking.')}</p>
        <Primary disabled={busy||!Number.isInteger(seats)||seats<1||seats>MAX_SEATS_PER_RIDER||seats>offer.available} onClick={()=>void reserve()}>{busy?t('جارٍ إرسال الطلب…','Submitting…'):t('تقديم طلب الحجز','Submit booking request')}</Primary>
      </>}
-     {!bookingId&&!offer&&<Box><p role="status">{t('بيانات الخط مش متاحة. ارجع للبحث واختار خط منشور.','Route unavailable. Return to search and choose a published route.')}</p><Primary onClick={onBack}>{t('الرجوع للبحث','Back to search')}</Primary></Box>}
+     {!bookingId&&!offer&&selectionLoading&&<p role="status" className="b-loading">{t('بنحمّل تفاصيل الرحلة…','Loading ride details…')}</p>}
+     {!bookingId&&!offer&&!selectionLoading&&<Box><p role="status">{t('بيانات الخط مش متاحة. ارجع للبحث واختار خط منشور.','Route unavailable. Return to search and choose a published route.')}</p><Primary onClick={onBack}>{t('الرجوع للبحث','Back to search')}</Primary></Box>}
      {stored&&<><Illustration kind="waiting"/><Box className="b-summary">
        <Row label={t('رقم الحجز','Booking ID')}>{stored.id}</Row>
        <Row label={t('حالة الحجز من الخادم','Server booking status')}>{stored.status==='pending'?t('قيد الانتظار','Pending'):stored.status==='cancelled'?t('ملغي','Cancelled'):stored.status==='confirmed'?t('مؤكد من الخادم','Confirmed by server'):stored.status}</Row>
