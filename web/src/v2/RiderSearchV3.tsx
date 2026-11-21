@@ -36,14 +36,18 @@ export default function RiderSearchV3({origin,destination,originPlace,destinatio
  const dayCount=weekdays.length;
  return <section className="rs3" aria-labelledby="rs3-title">
   <header className="rs3__head">
-   <span className="rs3__eyebrow">{t('الخطوة ١ من ٣','STEP 1 OF 3')}</span>
-   <h2 id="rs3-title">{t('هنوصّلك في سِكّتك','Find a ride your way')}</h2>
-   <p>{t('منين، لفين، وإمتى؟ ٣ حاجات ونبدأ ندور.','Choose where and when. We’ll show actual published rides.')}</p>
+   <span className="rs3__eyebrow">{t('سِكَّة / دور على رحلة','seKKa / Find a ride')}</span>
+   <h2 id="rs3-title">{t('مشوارك يبدأ منين؟','Where does your ride begin?')}</h2>
+   <p>{t('اختار مكانك ووجهتك، وهنعرض الخطوط المنشورة فعلًا.','Choose your places and see actual published routes.')}</p>
+   <div className="rs3__progress" aria-label={t('الخطوة الأولى: البحث','Step one: search')}>
+    <span className="is-current"><b>01</b>{t('بحث','Search')}</span><i/><span><b>02</b>{t('نتائج','Results')}</span><i/><span><b>03</b>{t('تفاصيل','Details')}</span>
+   </div>
+   <div className="rs3__head-orbit" aria-hidden="true"><span/><span/></div>
   </header>
   <form className="rs3__form" onSubmit={submit}>
    <div className="rs3__section-label"><span className="rs3__number">01</span>
     <h3>{t('مشوارك منين لفين؟','Where are you travelling?')}</h3></div>
-   <div className="rs3__places">
+   <div className="rs3__places"><span className="rs3__places-rail" aria-hidden="true"><i/></span>
     <div className="rs3__place">
      <span className="rs3__marker rs3__marker--start" aria-hidden="true"/>
      <div className="rs3__place-content">
