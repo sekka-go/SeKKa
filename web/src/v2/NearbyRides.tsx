@@ -1,4 +1,5 @@
 import {inLaunchRegion,outsideCoverageMessage} from './geoPlace';
+import {isInsideCairoDiscovery} from './discoveryCairo';
 import {useEffect,useId,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
@@ -51,7 +52,9 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
      setError(t('الموقع غير دقيق، جرّب تاني أو اختار المنطقة يدويًا.','Location was not reliable. Try again or use manual search.'));
      return;
     }
-    if(!inLaunchRegion(next)){
+    // The passenger's device location is ONLY a search origin.
+    // The approved Captain-stop geofence is separately enforced below.
+    if(!isInsideCairoDiscovery(next)){
      setPoint(null);setAccuracy(null);setCandidates([]);
      setError(t(outsideCoverageMessage.ar,outsideCoverageMessage.en));return;
     }
