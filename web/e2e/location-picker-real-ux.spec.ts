@@ -107,3 +107,21 @@ test('map mode is a separate two-step opt-in, not a location suggestion action',
  await page.locator('.rs3__optional-map-actions').getByRole('button',{name:'حدد الانطلاق على الخريطة'}).click();
  await expect(page.getByRole('dialog',{name:'حدد نقطة على الخريطة'})).toBeVisible();
 });
+
+test('October Gardens, Hadayek Al Ahram, and 800 Feddan all select by name without opening map',async({page})=>{
+ await page.route('https://photon.komoot.io/api/**',r=>r.fulfill({status:503,json:{}}));
+ await page.goto('/?tab=search&view=9');
+ const origin=page.getByRole('combobox',{name:'نقطة الانطلاق'});
+ for(const [query,expected] of [
+  ['حدايق اكتوبر','حدائق أكتوبر'],
+  ['حدائق الاهرام','حدائق الأهرام'],
+  ['800 فدان','زهراء أكتوبر الجديدة (800 فدان)']
+ ]){
+  await origin.fill(query);
+  const option=page.locator('.rs3 .sekka-place-lookup').first().getByRole('option',{name:new RegExp(expected.replace(/[()]/g,'\\$&'))}).first();
+  await expect(option).toBeVisible();
+  await option.tap();
+  await expect(origin).toHaveValue(expected);
+  await expect(page.getByRole('dialog',{name:'حدد نقطة على الخريطة'})).toHaveCount(0);
+ }
+});
