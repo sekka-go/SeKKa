@@ -1,6 +1,6 @@
 import {useEffect,useId,useState} from 'react';
 import type {KeyboardEvent} from 'react';
-import {greaterCairoEnvelope,isInsideOperationalRegion} from './greaterCairoBoundary';
+import {cairoDiscoveryPhotonBbox,isInsideCairoDiscovery} from './discoveryCairo';
 import {client} from './api';
 import {searchStaticCairo} from './staticCairoSearch';
 import {exactCatalogMatches,inspectPhoton,normalizedPlace,rankMapPlaces} from './geoPlace';
@@ -35,7 +35,7 @@ function confirmedOutsideSettlement(raw:unknown,query:string):boolean {
   if(typeof name!=='string'||normalizedPlace(name)!==q||!Array.isArray(coords)||
     coords.length!==2||typeof coords[0]!=='number'||typeof coords[1]!=='number')return false;
   if(p.osm_key!=='place'||!['city','town','village'].includes(String(p.osm_value)))return false;
-  return !isInsideOperationalRegion({latitude:coords[1],longitude:coords[0]});
+  return !isInsideCairoDiscovery({latitude:coords[1],longitude:coords[0]});
  });
 }
 export async function lookupLocations(query:string,area:ServiceArea|undefined,en:boolean,signal:AbortSignal):Promise<SearchResult>{
@@ -68,7 +68,7 @@ export async function lookupLocations(query:string,area:ServiceArea|undefined,en
   signal.throwIfAborted();
   const url=new URL('/api/',photonEndpoint);
   url.searchParams.set('q',probe);
-  url.searchParams.set('bbox',greaterCairoEnvelope);
+  url.searchParams.set('bbox',cairoDiscoveryPhotonBbox);
   url.searchParams.set('limit','12');
   if(en)url.searchParams.set('lang','en');
   try{
