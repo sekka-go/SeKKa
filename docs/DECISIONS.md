@@ -2,7 +2,7 @@
 
 Authority: [vNext owner-approved changes](product/RECURRING_COMMUTE_VNEXT_20261121.md) for recurring UX/map/brand only. [PRD v3.1](PRD.md) remains the legacy baseline for unresolved subscription, payment, vehicle and reporting decisions. No production rollout is authorized.
 
-- Preserve React, TypeScript, Vite and existing official icon geometry; recolor the original mark only. The new identity uses warm violet/coral/yellow, with external name Sekka Go and in-app name سِكّة.
+- Preserve React, TypeScript and Vite. **Owner icon update (2026-11-21):** the installed icon is the owner-provided purple graphic with white «seKKa» and yellow road, overriding the preceding palette-only Arabic icon approach. The warm violet/coral/yellow UI remains; external name Sekka Go, in-app name سِكّة.
 - Keep stable internal view IDs behind the 73-screen public registry. Captain identity belongs inside post-booking subscription details.
 - Theme and language are independent: device defaults, persistent manual override, instant application. Settings remain in rider 32 and captain 60.
 - Monthly calculations end at the end of the starting calendar month, not the anniversary date. Cairo time and approved eligible-day rules remain mandatory.
