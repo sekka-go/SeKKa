@@ -186,7 +186,7 @@ test('verified Hosary context remains available during a Photon outage without a
  await square.click();
  await expect(input).toHaveValue('Hosary Square');
  await expect(page.getByRole('dialog',{name:'Choose point on map'})).toHaveCount(0);
- await input.fill('6 October');
+ await input.fill('6th of October');
  await page.getByRole('option',{name:'6th of October Search the whole service area',exact:true}).click();
  await expect(input).toHaveValue('6th of October');
  await expect(page.getByText(/Registered service area/)).toBeVisible();
