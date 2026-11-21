@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {parseSavedCommute,savedCommuteKey} from './riderCommute.ts';
+import {parseSavedCommute,savedCommuteKey,isWeekdays} from './riderCommute.ts';
 const good={origin:'المعادي',destination:'التجمع',originPlace:null,destinationPlace:null,
  outbound:'07:30',returnTime:'17:00',period:'weekly',direction:'outbound',savedAt:'2026-11-21T00:00:00.000Z'};
 test('valid account-scoped commute can be restored without demo data',()=>{
@@ -13,4 +13,15 @@ test('reject invalid times, same-place routes and untrusted coordinates',()=>{
  assert.equal(parseSavedCommute({...good,originPlace:{kind:'map',place:{id:'x',name:'X',latitude:129,longitude:45}}}),null);
  assert.equal(parseSavedCommute({...good,originPlace:{kind:'map',place:{id:'x',name:'X',latitude:30,longitude:31}}})?.origin,good.origin);
  assert.throws(()=>savedCommuteKey('../../another-user'),/INVALID_RIDER_ID/);
+});
+
+test('weekdays persist as real unique Saturday-to-Friday IDs, 0 through 6',()=>{
+ assert.equal(isWeekdays([0,2,4]),true);
+ assert.equal(isWeekdays([]),true);
+ assert.equal(isWeekdays([7]),false);
+ assert.equal(isWeekdays([1,1]),false);
+ assert.equal(isWeekdays(['1']),false);
+ assert.deepEqual(parseSavedCommute({...good,weekdays:[0,2,4]}).weekdays,[0,2,4]);
+ assert.equal(parseSavedCommute({...good,weekdays:[1,1]}),null);
+ assert.equal(parseSavedCommute({...good,weekdays:[-1]}),null);
 });
