@@ -47,7 +47,7 @@ test('pickup explorer uses opt-in GPS, published stops, map and verified route d
  await page.locator('.rs3__pickup-link>button').click();
  const explorer=page.getByRole('dialog',{name:'Explore pickup stops'});
  await expect(explorer).toBeVisible();
- await expect(explorer.locator('.np4__hero')).toContainText('Your nearest pickup?');
+ await expect(explorer.locator('.np4__hero')).toContainText('Where will you board?');
  const card=explorer.locator('.np4__card').first();
  await expect(card.getByText('Pickup near me')).toBeVisible();
  await expect(card.locator('.np4__metrics')).toContainText('0.1');
