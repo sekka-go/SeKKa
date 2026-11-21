@@ -8,20 +8,24 @@
 }
 .sekka-launch__stage {
  position:absolute;inset:0;background:#F7F0E5;
+ background-image:
+  radial-gradient(ellipse 75% 56% at 13% 16%,#FFE9C9 0%,transparent 78%),
+  radial-gradient(ellipse 78% 62% at 90% 78%,#EDD3FC 0%,transparent 82%),
+  linear-gradient(132deg,#FFF9EF 0%,#FFF1E5 50%,#FBE8F6 100%);
  display:flex;align-items:center;justify-content:center;
  animation:sekka-stage-out 5.15s linear both;
 }
 .sekka-launch__stage:before{
  content:"";position:absolute;left:50%;top:50%;
  width:min(90vw,430px);aspect-ratio:1;transform:translate(-50%,-55%);
- border:1.5px solid #D9C8E5;border-radius:50%;opacity:.75;
- box-shadow:0 0 0 32px #9B75BA09,0 0 0 68px #9B75BA09;
+ border:1.5px solid #B982D2;border-radius:50%;opacity:.86;
+ box-shadow:0 0 0 32px #B97ADC11,0 0 0 68px #E7A5C714;
  pointer-events:none;
 }
 .sekka-launch__road{
  position:absolute;left:0;right:0;top:calc(50% + 12px);
- height:4px;opacity:.35;
- background:repeating-linear-gradient(to right,#9E85AA 0 34px,transparent 34px 60px);
+ height:4px;opacity:.54;
+ background:repeating-linear-gradient(to right, #AA77C3 0 34px,transparent 34px 60px);
 }
 .sekka-launch__vehicle{
  width:min(88vw,400px);max-width:400px;min-width:0;
@@ -30,7 +34,7 @@
  animation:sekka-hiace-drive 5.15s cubic-bezier(.36,.04,.4,1) both;
 }
 .sekka-launch__hiace{width:100%;height:auto;display:block;overflow:visible;
- filter:drop-shadow(0 14px 12px #1B182421)}
+ filter:drop-shadow(0 14px 12px #40224833)}
 .sekka-launch__wheel{transform-box:view-box;
  animation:sekka-wheel-turn .35s linear infinite}
 .sekka-launch__copy{
@@ -41,11 +45,11 @@
 }
 .sekka-launch__wordmark{
  font:900 clamp(30px,9vw,49px)/1.25 Tajawal,'Noto Sans Arabic',Tahoma,sans-serif;
- letter-spacing:-.04em;color:#1A171C;
+ letter-spacing:-.04em;color:#46235B;text-shadow:0 2px 0 #FFF7EF;
 }
 .sekka-launch__subline{
  font:800 10px/1.5 system-ui,Arial,sans-serif;letter-spacing:.42em;
- padding-inline-start:.42em;color:#8054AA;
+ padding-inline-start:.42em;color:#9143BA;
 }
 .sekka-launch__black-wipe{
  position:absolute;inset:0;z-index:3;
