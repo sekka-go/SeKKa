@@ -458,7 +458,7 @@
  * navigation. Dev/gallery originals are intentionally left untouched. */
 .sekka-mobile{
   --bg:#f7f8fa;--ink:#0b0b0d;--card:#fff;--line:#e2e5e9;
-  --muted:#535d69;--sekka-brand:#FF663D;--sekka-icon-accent:#F73587;
+  --muted:#535d69;--sekka-brand:#FF663D;--sekka-icon-accent:#FFCC24;
   --sekka-nav-height:0px;
   padding-bottom:env(safe-area-inset-bottom,0px);
 }
@@ -715,10 +715,10 @@ html[data-theme="dark"] .sekka-mobile{
 }
 
 /* 2026-11-21 owner-approved warm rebrand; do not modify old icon artwork. */
-.sekka-mobile{--bg:#FFF9F5;--ink:#35134F;--card:#FFFFFF;--line:#E9D6E5;--muted:#674F72;--sekka-brand:#FF663D;--sekka-icon-accent:#F73587}
-html[data-theme="dark"] .sekka-mobile{--bg:#1E0B32;--ink:#FFF7FC;--card:#301A4B;--line:#60436F;--muted:#DBC9E5;--sekka-brand:#FF663D;--sekka-icon-accent:#FFAB7E}
-.sekka-mobile-header>.sekka-brand-button{background:#1E0B32}
-.sekka-mobile :is(.sekka-action,.sekka-mobile-alert button){background:#FF663D;color:#241038}
-.sekka-mobile .sekka-bottom-nav button[aria-current=page]>span{background:#FFCD38;color:#35134F}
-.sekka-mobile :is(button,a,input,select,textarea):focus-visible{outline:3px solid #6412B1;outline-offset:3px}
+.sekka-mobile{--bg:#FFF9F5;--ink:#111111;--card:#FFFFFF;--line:#FFF1B8;--muted:#111111;--sekka-brand:#FF663D;--sekka-icon-accent:#FFCC24}
+html[data-theme="dark"] .sekka-mobile{--bg:#193449;--ink:#FFFFFF;--card:#193449;--line:#193449;--muted:#FFFFFF;--sekka-brand:#FF663D;--sekka-icon-accent:#FFAB7E}
+.sekka-mobile-header>.sekka-brand-button{background:#193449}
+.sekka-mobile :is(.sekka-action,.sekka-mobile-alert button){background:#FF663D;color:#111111}
+.sekka-mobile .sekka-bottom-nav button[aria-current=page]>span{background:#FFCD38;color:#111111}
+.sekka-mobile :is(button,a,input,select,textarea):focus-visible{outline:3px solid #E8D77A;outline-offset:3px}
 @media(prefers-reduced-motion:reduce){.sekka-mobile *, .sekka-mobile *::before, .sekka-mobile *::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}

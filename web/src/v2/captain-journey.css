@@ -675,19 +675,19 @@
 .sekka-mobile .captain-routes-canvas .cj-publish-facts dd {margin:3px 0 0;font-weight:800;overflow-wrap:anywhere}
 
 /* Captain: name-first search, optional area fallback and leg-specific stop times. */
-.sekka-mobile .captain-routes-canvas .cj-captain-stop-times{margin:16px 0;padding:14px;border:1px solid #e0d4e7;border-radius:16px;min-width:0}
+.sekka-mobile .captain-routes-canvas .cj-captain-stop-times{margin:16px 0;padding:14px;border:1px solid #E8D77A;border-radius:16px;min-width:0}
 .sekka-mobile .captain-routes-canvas .cj-captain-stop-times>strong{display:block;font-size:1rem;line-height:1.5}
 .sekka-mobile .captain-routes-canvas .cj-captain-stop-times>p{margin:8px 0 12px;font-size:.85rem;line-height:1.6}
 .sekka-mobile .captain-routes-canvas .cj-captain-stop-times ol{list-style:none;margin:0;padding:0;display:grid;gap:12px}
-.sekka-mobile .captain-routes-canvas .cj-captain-stop-times li{padding:12px;border:1px solid #e8dce8;border-radius:12px;min-width:0;display:grid;gap:10px;background:rgba(255,255,255,.04)}
+.sekka-mobile .captain-routes-canvas .cj-captain-stop-times li{padding:12px;border:1px solid #E8D77A;border-radius:12px;min-width:0;display:grid;gap:10px;background:rgba(255,255,255,.04)}
 .sekka-mobile .captain-routes-canvas .cj-captain-stop-times li>bdi{font-weight:800;overflow-wrap:anywhere}
 .sekka-mobile .captain-routes-canvas .cj-captain-stop-time-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));gap:10px;min-width:0}
 .sekka-mobile .captain-routes-canvas .cj-captain-stop-time-fields label{display:grid;gap:6px;font-size:.86rem;font-weight:700;min-width:0}
-.sekka-mobile .captain-routes-canvas .cj-captain-stop-time-fields input{font:inherit;min-height:46px;min-width:0;width:100%;box-sizing:border-box;padding:8px;border:1px solid #c9b6d5;border-radius:10px;color:#2f163f;background:#fff;direction:ltr}
+.sekka-mobile .captain-routes-canvas .cj-captain-stop-time-fields input{font:inherit;min-height:46px;min-width:0;width:100%;box-sizing:border-box;padding:8px;border:1px solid #E8D77A;border-radius:10px;color:#111111;background:#fff;direction:ltr}
 .sekka-mobile .captain-routes-canvas .cj-captain-stop-time-fields input:focus-visible{outline:3px solid #f7c74f;outline-offset:2px}
 
 .sekka-mobile .captain-routes-canvas .cj-captain-route-map-preview{margin:12px 0;max-width:100%;min-width:0}
-.sekka-mobile .captain-routes-canvas .cj-captain-route-map-preview>summary{min-height:44px;display:list-item;cursor:pointer;font-size:.83rem;font-weight:750;padding:10px;border:1px dashed #c9b6d6;border-radius:12px}
+.sekka-mobile .captain-routes-canvas .cj-captain-route-map-preview>summary{min-height:44px;display:list-item;cursor:pointer;font-size:.83rem;font-weight:750;padding:10px;border:1px dashed #E8D77A;border-radius:12px}
 .sekka-mobile .captain-routes-canvas .cj-captain-route-map-preview[open]>summary{margin-bottom:10px}
 
 /* Safe Captain trip removal: secondary destructive action + inline confirmation. */

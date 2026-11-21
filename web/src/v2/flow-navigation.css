@@ -4,8 +4,8 @@
  max-width:480px;padding:0 14px;
 }
 .sekka-mobile .sekka-screen-back button{
- min-height:44px;padding:8px 12px;border:1px solid #EAD6EA;
- border-radius:13px;background:#FFF;color:#551A83;
+ min-height:44px;padding:8px 12px;border:1px solid #E8D77A;
+ border-radius:13px;background:#FFF;color:#111111;
  font:900 13px/1.5 Tajawal,Tahoma,sans-serif;
  display:inline-flex;align-items:center;gap:8px;
 }
@@ -18,13 +18,13 @@
 .sekka-mobile.sekka-tab-notifications .live-notifications{margin-top:0!important}
 .sekka-mobile.sekka-tab-notifications .live-notifications .d-outline{
  display:flex!important;justify-content:center!important;align-items:center!important;
- min-height:46px!important;background:#6513A6!important;
+ min-height:46px!important;background:#FFCC24!important;
  color:#FFF!important;text-decoration:none!important;border:0!important
 }
 html[data-theme="dark"] .sekka-mobile .sekka-screen-back button{
- background:#34204A;color:#FFDD8B;border-color:#6A5078
+ background:#193449;color:#FFDD8B;border-color:#E8D77A
 }
-html[data-theme="dark"] .sekka-mobile.sekka-tab-notifications>.sekka-mobile-content{background:#1D0C2C}
+html[data-theme="dark"] .sekka-mobile.sekka-tab-notifications>.sekka-mobile-content{background:#193449}
 @media(max-width:350px){
  .sekka-mobile .sekka-screen-back{padding-inline:10px}
  .sekka-mobile.sekka-tab-notifications>.sekka-mobile-content{padding-inline:10px}
