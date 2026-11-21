@@ -1,66 +1,40 @@
-import {test,expect,type Page} from '@playwright/test';
-
-// Legacy gallery is not the baseline for the owner-redesigned onboarding.
-// Those new production pages are verified in guest-entry-vnext.spec.ts.
-// Search S009 was explicitly redesigned; only unchanged filter S010 retains gallery geometry comparison.
-const screens=[
- {id:10,original:'/dev/screens?screen=10&preview=phase2',integrated:'/?tab=search&view=10',heading:'.d-screen-10 .d-title',canvas:'.d-screen-10'}
-] as const;
-type Rect={x:number;y:number;width:number;height:number};
-async function rect(page:Page,selector:string){
- const r=await page.locator(selector).first().boundingBox();
- expect(r,'Missing component '+selector).not.toBeNull();
- return r as Rect;
-}
+import {test,expect} from '@playwright/test';
+// Owner deliberately replaced production S009 and S010. Do NOT compare against
+// the old gallery's exact geometry. Check real RTL/LTR layout and preserve
+// the developer gallery as a separate isolated reference.
 for(const width of [360,390]){
  for(const language of ['ar','en'] as const){
   for(const theme of ['light','dark'] as const){
-   for(const scene of screens){
-    test('search shell geometry '+scene.id+' '+width+' '+language+' '+theme,async({page})=>{
-     await page.setViewportSize({width,height:width===360?800:844});
-     await page.addInitScript(({language,theme})=>{
-      localStorage.setItem('language_preference',language);
-      localStorage.setItem('theme_preference',theme);
-     },{language,theme});
-     await page.goto(scene.original);
-     await expect(page.locator(scene.heading)).toBeVisible();
-     const reference=await rect(page,scene.canvas);
-     const oldAction=scene.id===10?await rect(page,'.d-screen-10 > .d-primary'):null;
-     await page.screenshot({path:'../docs/audit/layout-reference-S'+String(scene.id).padStart(3,'0')+'-'+width+'-'+language+'-'+theme+'.png',
-      animations:'disabled',fullPage:true});
-     await page.goto(scene.integrated);
-     await expect(page.locator('.sekka-launch')).toBeHidden();
-     await expect(page.locator(scene.heading)).toHaveCount(0);
-     await expect(page.locator(scene.canvas+' > h1.sr-only')).toHaveCount(1);
-     await expect(page.locator('.sekka-discovery-logo-en')).toHaveCount(0);
-     const actual=await rect(page,scene.canvas);
-     const header=page.locator('.sekka-mobile-header');
-     await expect(header).toBeVisible();
-     const menu=page.locator('.sekka-shell-menu');
-     await expect(menu).toBeVisible();
-     const menuBox=await menu.boundingBox(),headerBox=await header.boundingBox();
-     expect(menuBox).not.toBeNull();
-     expect(headerBox).not.toBeNull();
-     expect(menuBox!.width).toBeGreaterThanOrEqual(44);
-     expect(menuBox!.x+menuBox!.width/2).toBeLessThan(width/2);
-     expect(actual.y).toBeLessThanOrEqual(headerBox!.y+headerBox!.height+70);
-     expect(Math.abs(actual.width-reference.width)).toBeLessThanOrEqual(3);
-     await expect(page.locator('.sekka-bottom-nav')).toHaveCount(0);
-     if(scene.id===9)await expect(page.locator('.d-header .phase-back')).toBeHidden();
-     else{
-      await expect(page.locator('.d-header .phase-back')).toBeVisible();
-      const action=await rect(page,'.d-screen-10 > .d-primary');
-      if(!oldAction)throw Error('Missing reference filter button');
-      expect(Math.abs(action.width-oldAction.width)).toBeLessThanOrEqual(4);
-      expect(Math.abs(action.height-oldAction.height)).toBeLessThanOrEqual(4);
-      await page.locator('.d-screen-10 > .d-primary').scrollIntoViewIfNeeded();
-     }
-     const overflow=await page.evaluate(()=>document.documentElement.scrollWidth);
-     expect(overflow).toBeLessThanOrEqual(width+1);
-     await page.screenshot({path:'../docs/audit/layout-after-S'+String(scene.id).padStart(3,'0')+'-'+width+'-'+language+'-'+theme+'.png',
-      animations:'disabled',fullPage:true});
-    });
-   }
+   test('redesigned production search + filters '+width+' '+language+' '+theme,async({page})=>{
+    await page.setViewportSize({width,height:width===360?800:844});
+    await page.addInitScript(({language,theme})=>{
+     localStorage.setItem('language_preference',language);
+     localStorage.setItem('theme_preference',theme);
+    },{language,theme});
+    for(const view of [9,10] as const){
+     await page.goto('/?tab=search&view='+view);
+     const container=page.locator('.d-screen-'+view);
+     await expect(container).toBeVisible();
+     await expect(container.locator(view===9?'.rs3':'.rf3')).toBeVisible();
+     await expect(page.locator('.phase-review-bar,.phase-preview-note')).toHaveCount(0);
+     const cta=container.locator(view===9?'.rs3__submit':'.rf3__apply');
+     await expect(cta).toBeVisible();
+     const rect=await cta.boundingBox();
+     expect(rect).not.toBeNull();
+     expect(rect!.height).toBeGreaterThanOrEqual(44);
+     expect(await page.evaluate(()=>document.documentElement.scrollWidth))
+      .toBeLessThanOrEqual(width+1);
+     await page.screenshot({path:'../docs/audit/redesign-S'+String(view).padStart(3,'0')+
+      '-'+width+'-'+language+'-'+theme+'.png',fullPage:true,animations:'disabled'});
+    }
+   });
   }
  }
 }
+test('separate developer gallery retains its original screen 9 and 10',async({page})=>{
+ await page.goto('/dev/screens?screen=9&preview=phase2');
+ await expect(page.locator('.d-screen-9 .d-planner')).toBeVisible();
+ await page.goto('/dev/screens?screen=10&preview=phase2');
+ await expect(page.locator('.d-screen-10 .d-filter-section')).toBeVisible();
+ await expect(page.locator('.rs3,.rf3')).toHaveCount(0);
+});
