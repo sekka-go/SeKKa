@@ -253,3 +253,34 @@ html[data-theme="dark"] .rh-picker__hint{background:#4D315F;color:#EEDFF3!import
  .rh-picker__week{grid-template-columns:repeat(3,minmax(0,1fr))}
  .rh-journey__field-copy>strong{font-size:15px}
 }
+
+
+/* 2026-11-21: one meaningful pickup-discovery action, not competing legacy cards. */
+.rh-pickup-actions{display:grid;grid-template-columns:minmax(0,1fr) 98px;gap:10px;margin:2px 0 12px}
+.rh-pickup-actions button{min-height:82px!important;border-radius:20px;border:1px solid #F0D8DF;
+ display:flex;align-items:center;gap:10px;font-family:inherit;cursor:pointer;text-align:start}
+.rh-pickup-actions__explore{padding:12px 10px;background:linear-gradient(112deg,#FFDFD0,#FFEDE5);
+ color:#4B166A;box-shadow:0 6px 16px #6E214D12}
+.rh-pickup-actions__symbol{display:grid;place-items:center;width:42px;height:42px;flex:none;
+ background:#FFF8F3;border-radius:14px;color:#FF6E46}
+.rh-pickup-actions__copy{display:grid;gap:4px;min-width:0;flex:1}
+.rh-pickup-actions__copy strong{font-size:14px;line-height:1.3;font-weight:900}
+.rh-pickup-actions__copy small{font-size:11px;line-height:1.5;font-weight:750;color:#806378}
+.rh-pickup-actions__arrow{color:#692194;flex:none;transform:scaleX(-1)}
+.rh-home[dir="ltr"] .rh-pickup-actions__arrow{transform:none}
+.rh-pickup-actions__bookings{flex-direction:column;justify-content:center;padding:9px 5px;
+ background:#FFF3CC;color:#63228B;gap:5px!important;
+ border-color:#FFE7A7!important;box-shadow:0 6px 16px #6542210D}
+.rh-pickup-actions__bookings>span:last-child{font-size:12px;font-weight:900;text-align:center;line-height:1.3}
+.rh-pickup-actions__ticket{display:grid;place-items:center;width:32px;height:32px}
+html[data-theme="dark"] .rh-pickup-actions__explore{background:linear-gradient(112deg,#60405F,#432453);
+ color:#FFF0FB;border-color:#765079}
+html[data-theme="dark"] .rh-pickup-actions__symbol{background:#71485B}
+html[data-theme="dark"] .rh-pickup-actions__copy small{color:#F2D9EA}
+html[data-theme="dark"] .rh-pickup-actions__bookings{background:#66445A;color:#FFDB8A;border-color:#856375!important}
+@media(max-width:355px){.rh-pickup-actions{grid-template-columns:minmax(0,1fr) 84px;gap:7px}
+ .rh-pickup-actions__explore{padding:9px 6px}
+ .rh-pickup-actions__symbol{width:36px;height:36px}
+ .rh-pickup-actions__copy strong{font-size:12px}
+ .rh-pickup-actions__copy small{font-size:10px}
+ .rh-pickup-actions__arrow{display:none}}
