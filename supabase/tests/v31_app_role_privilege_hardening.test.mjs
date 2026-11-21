@@ -25,9 +25,13 @@ test('real booking concurrency harness only targets dedicated staging QA route a
  assert.match(preflight,/v31_captain_route_capacity_summary/);
  assert.match(preflight,/v31_rider_booking_fare_status/);
 });
-test('Captain receives direct actions for full and reopened seating only',()=>{
+test('Captain can open capacity alerts without sending Riders to Captain routes',()=>{
+ const shell=readFileSync(new URL('../../web/src/v2/MobileApp.tsx',import.meta.url),'utf8');
  assert.match(ui,/n\.kind==='route_capacity_full'/);
  assert.match(ui,/n\.kind==='route_seat_reopened'/);
- assert.match(ui,/href="\/\?tab=routes&view=44"/);
+ assert.match(ui,/onClick=\{onOpenRides\}/);
+ assert.match(shell,/if\(isCaptainAccount\)navigate\(\{tab:'routes',view:44\}\)/);
+ assert.match(shell,/setBookingsSection\('bookings'\);navigate\(\{tab:'bookings'\}\)/);
+ assert.doesNotMatch(ui,/href="\/\?tab=routes&view=44"/);
  assert.doesNotMatch(ui,/scheduleDepartureAutomatically|autoSetDeparture/);
 });
