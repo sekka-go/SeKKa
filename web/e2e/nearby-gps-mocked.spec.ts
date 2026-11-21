@@ -181,7 +181,10 @@ test('verified Hosary context remains available during a Photon outage without a
  const mosque=page.getByRole('option',{name:/Hosary Mosque/}).first();
  await expect(square).toBeVisible();
  await expect(mosque).toBeVisible();
- await expect(page.getByText('Map search is temporarily unavailable. Try again.')).toBeVisible();
+ // Verified offline names remain selectable; a failed external Photon lookup
+ // must not show a misleading map error when local results exist.
+ await expect(page.getByText('Map search is temporarily unavailable. Try again.')).toHaveCount(0);
+ await expect(page.getByText('External location lookup is temporarily unavailable. Try another area.')).toHaveCount(0);
  // Even without Photon, select the sourced place without needing the map.
  await square.click();
  await expect(input).toHaveValue('Hosary Square');
