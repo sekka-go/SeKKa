@@ -102,7 +102,7 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
    {msg&&<p role="status" className="cj-place-error">{msg}</p>}
   </div>}
   <button type="button" className="sekka-place-lookup__map-search"
-   disabled={disabled} onClick={()=>{inputRef.current?.blur();setMapFocus(foundPlaces[0]??null);setMapOpen(true);setOpen(false);}}>
+   disabled={disabled} onClick={()=>{inputRef.current?.blur();setMapFocus(choice?.kind==='search'?choice.place:foundPlaces[0]??null);setMapOpen(true);setOpen(false);}}>
    <span aria-hidden="true">⌖</span>{t('حدد نقطة على الخريطة','Choose point on map')}
   </button>
   {mapOpen&&<GeoMapPicker area={searchArea} focus={mapFocus} focusLabel={query}
