@@ -1,6 +1,6 @@
 import {useEffect,useId,useState} from 'react';
 import type {KeyboardEvent} from 'react';
-import {greaterCairoEnvelope} from './greaterCairoBoundary';
+import {greaterCairoEnvelope,isInsideOperationalRegion} from './greaterCairoBoundary';
 import {client} from './api';
 import {searchStaticCairo} from './staticCairoSearch';
 import {exactCatalogMatches,inspectPhoton,normalizedPlace,rankMapPlaces} from './geoPlace';
@@ -21,6 +21,22 @@ async function indexedLookup(query:string,area:ServiceArea|undefined,en:boolean,
   if(error||signal.aborted)return [];
   return indexedRowsToPlaces(data as IndexedRow[],en,area);
  }catch{return [];}
+}
+/** Only classify an outside region when a named geographic settlement itself
+ * matches the typed query. Unrelated provider hits must not imply exclusion. */
+function confirmedOutsideSettlement(raw:unknown,query:string):boolean {
+ if(!raw||typeof raw!=='object'||!('features' in raw)||!Array.isArray(raw.features))return false;
+ const q=normalizedPlace(query);
+ if(q.length<4)return false;
+ return raw.features.some((item:unknown)=>{
+  if(!item||typeof item!=='object'||!('properties' in item)||!('geometry' in item))return false;
+  const f=item as {properties?:Record<string,unknown>;geometry?:{coordinates?:unknown}};
+  const p=f.properties??{},name=p.name,coords=f.geometry?.coordinates;
+  if(typeof name!=='string'||normalizedPlace(name)!==q||!Array.isArray(coords)||
+    coords.length!==2||typeof coords[0]!=='number'||typeof coords[1]!=='number')return false;
+  if(p.osm_key!=='place'||!['city','town','village'].includes(String(p.osm_value)))return false;
+  return !isInsideOperationalRegion({latitude:coords[1],longitude:coords[0]});
+ });
 }
 export async function lookupLocations(query:string,area:ServiceArea|undefined,en:boolean,signal:AbortSignal):Promise<SearchResult>{
  const key=JSON.stringify([query,area?.name_en,en]);
@@ -58,8 +74,9 @@ export async function lookupLocations(query:string,area:ServiceArea|undefined,en
   try{
    const response=await fetch(url,{headers:{Accept:'application/json'},signal:AbortSignal.any([signal,AbortSignal.timeout(6000)])});
    if(!response.ok)throw Error('MAP_SEARCH_UNAVAILABLE');
-   const result=inspectPhoton(await response.json());
-   fetched=true;outside ||= result.outside;
+   const raw=await response.json();
+   const result=inspectPhoton(raw);
+   fetched=true;outside ||= result.outside&&confirmedOutsideSettlement(raw,query);
    for(const place of result.places)if(!places.some(item=>item.id===place.id))places.push(place);
    if(catalog.length<2&&rankMapPlaces(places,query,area).length>=3)break;
   }catch(error){
