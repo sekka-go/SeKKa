@@ -1,3 +1,8 @@
+> **2026-11-21 OWNER AMENDMENT — vNext experience under implementation**
+> The owner authorized changing v3.1 UX/product assumptions to support the recurring-commute passenger/captain experience, real maps and a refreshed brand. Read [RECURRING_COMMUTE_VNEXT_20261121.md](product/RECURRING_COMMUTE_VNEXT_20261121.md) FIRST. Its explicit changes override conflicting v3.1 UX requirements; unresolved payment/subscription/privacy decisions remain blocked and must not be guessed. All material below is retained as legacy v3.1 reference until implementation and policy migration is approved. **No production release is implied.**
+
+---
+
 # Product Requirements Document (PRD)
 
 ## سِكّة | seKKa
