@@ -13,6 +13,7 @@ import LiveRouteSearch from "./LiveRouteSearch";
 import NearbyRides from "./NearbyRides";
 import RiderSearchV3 from "./RiderSearchV3";
 import RiderResultsHero from "./RiderResultsHero";
+import RiderTripDetailsV3 from "./RiderTripDetailsV3";
 import GeoPlaceInput from "./GeoPlaceInput";
 import {geoRequestAvailable} from "./geoPlace";
 import type {PlaceChoice} from "./geoPlace";
@@ -1223,7 +1224,30 @@ export default function Discovery(p: DiscoveryProps) {
             {searched && !filtered.length && <button className="d-text-action" onClick={() => nav(15)}>{tr("اطلب رحلة")}</button>}
           </>
         )}
-        {screen === 12 &&
+        {screen===12&&p.production&&selected&&<RiderTripDetailsV3
+          line={selected} stops={detailStops} pickup={chosenPickup} dropoff={chosenDropoff}
+          pickupPosition={pickupPosition} lastDropoffPosition={lastDropoffPosition}
+          validDropoff={validDropoff} onPickupChange={changePickup}
+          onDropoffChange={changeDropoff} onBack={()=>nav(11)}
+          onProceed={()=>{
+           try{
+            const selectedStops=selectStops(detailStops,chosenPickup,chosenDropoff,
+              current.direction==="round_trip"?current.returnStops||[]:undefined);
+            p.onBook({...current,selectedStops});
+           }catch{
+            setMessage(language==='en'
+              ?'Select valid pickup and drop-off stops. Round trips require return-compatible stops.'
+              :'اختار نقطتي ركوب ونزول صالحتين، ولازم محطات العودة تدعم اتجاهها الصحيح.');
+           }
+          }}
+        />}
+        {screen===12&&p.production&&!selected&&<div className="d-empty" role="status">
+          <p>{language==='en'?'No published ride is selected. Return to search results.':'مفيش رحلة منشورة مختارة دلوقتي. ارجع للنتائج.'}</p>
+          <button type="button" className="d-primary" onClick={()=>nav(11)}>
+           {language==='en'?'Back to results':'ارجع للنتائج'}
+          </button>
+        </div>}
+        {screen === 12 && !p.production &&
           (selected ? (
             <>
               <section className="d-box d-detail-journey">
