@@ -127,6 +127,8 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  await expect(entry.locator('.cj-easy-results').getByRole('option',{name:/Maadi Grand Mall/})).toBeVisible();
  await entry.locator('.cj-easy-results').getByRole('option',{name:/Maadi Grand Mall/}).click();
  await expect(entry.locator('.cj-easy-selected-stops>li')).toHaveCount(1);
+ await expect(place).toHaveValue('');
+ await expect(entry.getByText('Choose stop service area')).toHaveCount(0);
  await expect(page.getByRole('dialog',{name:'Choose point on map'})).toHaveCount(0);
  const destination=entry.getByRole('combobox',{name:'Search for a stop'});
  await destination.fill('Nasr City Square');
