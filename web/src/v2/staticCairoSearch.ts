@@ -58,8 +58,9 @@ function aliasScore(item:ShardEntry,query:string){
 /** CDN-hosted subset of approved OSM place data. Only the relevant hash shard is downloaded. */
 export async function searchStaticCairo(query:string,en:boolean,area:ServiceArea|undefined,
  signal:AbortSignal):Promise<MapPlace[]>{
- const q=normalizedPlace(query),effective=lookupKey(q);
- if(effective.length<4||unavailable)return [];
+ const canonical=canonicalNamedQuery(query);
+ const q=normalizedPlace(canonical??query),effective=lookupKey(q);
+ if((effective.length<4&&!canonical)||unavailable)return [];
  const bucket=bucketFor(effective);
  let records=shardCache.get(bucket)?.rows;
  if(!records||shardCache.get(bucket)!.until<Date.now()){
