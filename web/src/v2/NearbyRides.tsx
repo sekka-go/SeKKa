@@ -15,7 +15,8 @@ type RouteRow=NearbyRoute&{
 };
 type StopRow=Omit<NearbyStop,'latitude'|'longitude'>&{latitude:number|string|null;longitude:number|string|null};
 type Pick=NearbyCandidate&{route:RouteRow;remaining:number;pickupPoint:GeoPoint|null};
-const RADIUS_OPTIONS=[1,3,5,10] as const;
+// Automatically search within the existing maximum supported nearby range.
+const NEARBY_MAX_KM=10;
 
 /** Discovery mounts this panel when the Rider opens nearby search. GPS stays
  * in memory and is used only for local matching against published stops. */
@@ -30,7 +31,6 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
  const [loading,setLoading]=useState(false);
  const [error,setError]=useState('');
  const [candidates,setCandidates]=useState<Pick[]>([]);
- const [radius,setRadius]=useState<number>(5);
  const [retry,setRetry]=useState(0);
  const [opening,setOpening]=useState<string|null>(null);
  const [mapStopId,setMapStopId]=useState<string|null>(null);
@@ -114,7 +114,7 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
      ...raw,latitude:raw.latitude===null?NaN:Number(raw.latitude),
      longitude:raw.longitude===null?NaN:Number(raw.longitude)
     }));
-    const matched=nearbyPublishedStops(point,rows,stops,radius).slice(0,12);
+    const matched=nearbyPublishedStops(point,rows,stops,NEARBY_MAX_KM).slice(0,12);
     // Availability remains a server-owned aggregate, never inferred from
     // hidden bookings. Only show actual capacity-confirmed route offers.
     const results=await Promise.all(matched.map(async candidate=>{
@@ -130,7 +130,7 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
    finally{if(active)setLoading(false);}
   })();
   return()=>{active=false;};
- },[point?.latitude,point?.longitude,radius,retry]);
+ },[point?.latitude,point?.longitude,retry]);
  const mappedPick=candidates.find(pick=>pick.pickupStopId===mapStopId&&pick.pickupPoint)||
    candidates.find(pick=>pick.pickupPoint)||null;
  const open=async(pick:Pick)=>{
@@ -185,14 +185,7 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
   {error&&!permissionDenied&&<p className="np4__notice np4__notice--error" role="alert">{error}</p>}
   {point&&<>
    <div className="np4__results-bar">
-    <div>
-     <span className="np4__eyebrow">{t('نطاق البحث','SEARCH RADIUS')}</span>
-     <strong>{loading?t('بنبحث…','Searching…'):t('نقط الركوب حولك','Pickup spots around you')}</strong>
-    </div>
-    <div className="np4__radius" role="group" aria-label={t('المسافة القصوى لنقطة الركوب','Maximum pickup distance')}>
-     {RADIUS_OPTIONS.map(km=><button key={km} type="button" onClick={()=>setRadius(km)}
-      aria-pressed={radius===km}>{km} {t('كم','km')}</button>)}
-    </div>
+    <strong>{loading?t('بندور حواليك…','Searching nearby…'):t('أقرب نقط ركوب ليك','Nearby pickup spots')}</strong>
    </div>
    {accuracy!==null&&accuracy>250&&<p className="np4__accuracy" role="status">
     {t('دقة موقعك تقريبًا ','Your location accuracy is about ')}
@@ -211,11 +204,8 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
      </svg>
     </span>
     <h3>{t('لسه مفيش ركوبة قريبة هنا','No pickups nearby yet')}</h3>
-    <p>{t('مش هنظهرلك نقط وهمية. جرّب توسّع المسافة أو دوّر بالمنطقة والوجهة.',
-      'We only show published stops. Widen the range or search by area and destination.')}</p>
-    {radius<10&&<button type="button" onClick={()=>setRadius(10)}>
-     {t('وسّع البحث لـ ١٠ كم','Search within 10 km')}
-    </button>}
+    <p>{t('جرّب تبحث باسم المنطقة والوجهة، أو حدّث موقعك.',
+      'Try searching by area and destination, or update your location.')}</p>
    </div>}
    {!loading&&!error&&candidates.length>0&&<div className="np4__results">
     <p className="np4__results-caption">{t('مرتبة حسب أقصر مسافة مباشرة لنقطة الركوب · المشي تقديري',
