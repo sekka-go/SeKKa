@@ -62,17 +62,18 @@ test('MOCKED: already-published vehicle is blocked before price, existing route 
  await page.goto('/?tab=routes&view=43');
  const form=page.locator('.sekka-captain-route-wizard');
  await expect(form).toBeVisible();
- await form.getByRole('button',{name:'Maadi'}).click();
- await form.getByRole('button',{name:'Find Maadi Grand Mall'}).click();
- await expect(form.locator('.cj-easy-selected-stops>li')).toHaveCount(0);
+ await expect(form.getByText('Choose stop service area')).toHaveCount(0);
+ const search=form.getByRole('combobox',{name:'Search for a stop'});
+ await search.fill('Maadi Grand Mall');
+ await expect(form.locator('.cj-easy-results').getByRole('option',{name:/Maadi Grand Mall/})).toBeVisible();
  await form.locator('.cj-easy-results').getByRole('option',{name:/Maadi Grand Mall/}).click();
  await expect(form.locator('.cj-easy-selected-stops>li')).toHaveCount(1);
- await form.getByRole('button',{name:'Nasr City'}).click();
- await form.getByRole('combobox',{name:'Search street or landmark'}).fill('Nasr City Square');
- // Owner-approved autocomplete: the real option must appear without a Find button.
+ await expect(form.getByText('Choose stop service area')).toHaveCount(0);
+ await search.fill('Nasr City Square');
  await expect(form.getByRole('button',{name:'Find',exact:true})).toHaveCount(0);
  await expect(form.locator('.cj-easy-results').getByRole('option',{name:/Nasr City Square/})).toBeVisible();
  await form.locator('.cj-easy-results').getByRole('option',{name:/Nasr City Square/}).click();
+ await expect(form.locator('.cj-easy-selected-stops>li')).toHaveCount(2);
  await form.getByRole('button',{name:'Continue'}).click();
  await expect(form.getByRole('combobox',{name:'Approved vehicle'})).toBeVisible();
  await expect(form.getByText(/already has a published or paused route/)).toBeVisible();
