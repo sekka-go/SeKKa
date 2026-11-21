@@ -76,7 +76,7 @@ for(const language of ['ar','en'] as const){
  });
 }
 
-test('production light mode uses legible location icons while preserving seKKa brand yellow',async({page})=>{
+test('production light mode uses current coral/magenta brand palette',async({page})=>{
  await page.addInitScript(()=>{
   localStorage.setItem('language_preference','ar');
   localStorage.setItem('theme_preference','light');
@@ -85,11 +85,11 @@ test('production light mode uses legible location icons while preserving seKKa b
  const stage=page.locator('.sekka-mobile .discovery-stage.light');
  await expect(stage).toBeVisible();
  const icon=stage.locator('.d-place > .discovery-icon').first();
- await expect(icon).toHaveCSS('color','rgb(194, 65, 12)');
+ await expect(icon).toHaveCSS('color','rgb(247, 53, 135)');
  const origin=stage.locator('.d-origin-dot').first();
- await expect(origin).toHaveCSS('border-top-color','rgb(194, 65, 12)');
+ await expect(origin).toHaveCSS('border-top-color','rgb(247, 53, 135)');
  const brand=await page.locator('.sekka-mobile').evaluate(node=>getComputedStyle(node).getPropertyValue('--sekka-brand').trim());
- expect(brand).toBe('#ffc400');
+ expect(brand).toBe('#FF663D');
  await expect(page.locator('.sekka-bottom-nav')).toHaveCount(0);
  await expect(page.locator('.sekka-mobile-header .sekka-approved-logo')).toHaveCount(0);
 });
@@ -101,8 +101,8 @@ test('explicit Rider selection clears stale Captain intent before Google sign-in
   sessionStorage.setItem('sekka.postAuthPath','/?tab=captain-onboarding&view=35');
  });
  await page.goto('/?tab=login&view=3');
- await page.getByRole('radio',{name:/Rider/}).click();
- await expect(page.getByRole('radio',{name:/Rider/})).toHaveAttribute('aria-checked','true');
+ await page.getByRole('radio',{name:/Passenger/}).click();
+ await expect(page.getByRole('radio',{name:/Passenger/})).toHaveAttribute('aria-checked','true');
  await page.getByRole('button',{name:/Continue/}).click();
  await expect(page).toHaveURL(/tab=login&view=4/);
  const selection=await page.evaluate(()=>({
