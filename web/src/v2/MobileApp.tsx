@@ -15,6 +15,7 @@ const CaptainOnboarding=lazy(()=>import('./CaptainOnboarding'));
 import {internalScreen,publicScreen} from './screenMap';
 import LiveProfile from './LiveProfile';
 import LiveBookings from './LiveBookings';
+import RiderJourneyHome from './RiderJourneyHome';
 import LiveTripRequests from './LiveTripRequests';
 import LiveNotifications from './LiveNotifications';
 const AdminDashboard=lazy(()=>import('./AdminDashboard'));
@@ -469,7 +470,7 @@ export default function MobileApp(){
    {error&&<div className="sekka-mobile-alert" role="alert">{error}
      {sessionLookupError&&<button type="button" onClick={()=>{setError('');setAuthCheckRevision(v=>v+1)}}>{t('إعادة التحقق من الجلسة','Retry session')}</button>}
      <button type="button" onClick={()=>{setError('');setSessionLookupError(false)}}>{t('إغلاق','Dismiss')}</button></div>}
-   {tab==='home'&&ready&&!blockedRiderTab&&(userId?approvedDiscovery(8):<Onboarding production screen={2} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={setSelectedRole}/>)}
+   {tab==='home'&&ready&&!blockedRiderTab&&(userId?<RiderJourneyHome riderId={userId} serviceAreas={areas} onNavigate={discoveryGo} onSelect={chooseRoute}/>:<Onboarding production screen={2} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={setSelectedRole}/>)}
    {ready&&tab==='login'&&!blockedRiderTab&&<Onboarding production screen={userId?6:!ready?4:onboardingScreen} theme={p.theme} onTheme={p.setThemePreference} go={onboardingGo} role={selectedRole} onRole={selectRole}/>}
    {ready&&tab==='profile'&&(userId?<section className="sekka-mobile-card"><LiveProfile/>{ready&&admin&&<button type="button" className="sekka-action" onClick={openAdmin}>
      {t('فتح لوحة الإدارة','Open Admin dashboard')}</button>}
