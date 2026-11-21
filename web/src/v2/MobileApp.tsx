@@ -343,7 +343,7 @@ export default function MobileApp(){
   if([9,10,11,12].includes(id))navigate({tab:'search',view:id as 9|10|11|12});
   else if(id===4)signInFor(mobileRouteHref({tab:'search',view:discoveryScreen}));
   else if(id===33)navigate({tab:'notifications'});
-  else if(id===29)navigate({tab:'bookings'});
+  else if(id===29){setBookingsSection('bookings');navigate({tab:'bookings'});}
   else navigate({tab:'home'});
  };
  const chooseRoute=(s:LiveSelection)=>{
