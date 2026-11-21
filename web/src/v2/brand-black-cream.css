@@ -1,0 +1,212 @@
+/* seKKa GO — sitewide real-app visual identity.
+   Cream canvas, almost-black panels, and mauve interaction.
+   Palette only: leave routes, Google auth, admin privileges, statuses and
+   touch geometry intact. This file intentionally excludes /dev/screens. */
+:root {
+ --sekka-cream:#F7F0E5;
+ --sekka-cream-card:#FFFAF2;
+ --sekka-black:#171318;
+ --sekka-black-card:#242027;
+ --sekka-mauve:#8050AF;
+ --sekka-mauve-dark:#70429F;
+ --sekka-mauve-soft:#EADCF3;
+ --sekka-cream-border:#DFD0C5;
+}
+.sekka-mobile {
+ --brand-purple:var(--sekka-mauve);
+ --brand-coral:var(--sekka-mauve);
+ --brand-sun:#B48CCC;
+ --accent:var(--sekka-mauve);
+ --yellow:#AC83C7;
+ --line:#DFD0C5;
+ --ink:#171318;
+ --bg:var(--sekka-cream);
+ --card:var(--sekka-cream-card);
+ --elevated:#EEE4D7;
+ --muted:#655968;
+ background:var(--sekka-cream);
+ color:var(--sekka-black);
+}
+html[data-theme="dark"] .sekka-mobile {
+ --line:#544C55;
+ --ink:#F7F0E5;
+ --bg:#171318;
+ --card:#282329;
+ --elevated:#352C37;
+ --muted:#D0C4CC;
+ background:#171318;
+ color:#F7F0E5;
+}
+.sekka-mobile-header,
+.sekka-mobile .sekka-side-drawer__header {
+ background:var(--sekka-black)!important;
+ color:var(--sekka-cream)!important;
+ border-color:#514654!important;
+}
+.sekka-mobile-header :is(button,span,svg), .sekka-mobile-header .rh-shell-title {
+ color:var(--sekka-cream)!important;
+}
+.sekka-mobile-header .sekka-theme,
+.sekka-mobile-header .sekka-shell-menu,
+.sekka-mobile-header .sekka-captain-head-action {
+ background:transparent!important;border-color:#5B4C60!important;
+}
+.sekka-mobile .sekka-bottom-nav,
+.sekka-mobile .rh-tabbar {
+ background:var(--sekka-black)!important;
+ border-color:#514654!important;
+}
+.sekka-mobile .sekka-bottom-nav button,
+.sekka-mobile .rh-tabbar button {
+ color:#E0D7DF!important;
+}
+.sekka-mobile .sekka-bottom-nav button[aria-current="page"],
+.sekka-mobile .rh-tabbar button[aria-current="page"] {
+ color:#FFFAF2!important;
+}
+.sekka-mobile .sekka-bottom-nav button[aria-current="page"]>span {
+ background:var(--sekka-mauve)!important;
+ color:#FFF9F2!important;
+}
+.sekka-mobile .sekka-action,
+.sekka-mobile .cj-primary,
+.sekka-mobile .cj-home-main-action,
+.sekka-mobile .rs3__submit,
+.sekka-mobile .rh-button--primary,
+.sekka-mobile .rh-picker__confirm,
+.sekka-mobile .phase-primary,
+.sekka-mobile .np4__actions button[type="submit"],
+.sekka-mobile .sekka-entry__primary {
+ background:var(--sekka-mauve)!important;
+ border-color:var(--sekka-mauve)!important;
+ color:#FFFAF2!important;
+ box-shadow:0 7px 17px #38224222;
+}
+.sekka-mobile :is(button,input,select,textarea,a):focus-visible {
+ outline:3px solid #B58ED4!important;
+ outline-offset:3px!important;
+}
+.sekka-mobile .rs3 {
+ --rs-bg:var(--sekka-cream);
+ --rs-paper:var(--sekka-cream-card);
+ --rs-ink:var(--sekka-black);
+ --rs-muted:#665B69;
+ --rs-line:var(--sekka-cream-border);
+ --rs-purple:var(--sekka-mauve);
+ --rs-coral:var(--sekka-mauve);
+ --rs-yellow:#A078C5;
+ background:var(--rs-bg)!important;color:var(--rs-ink)!important;
+}
+.sekka-mobile .rs3 .rs3__head {
+ background:linear-gradient(135deg,#181419 0%,#292129 100%)!important;
+ color:var(--sekka-cream)!important;
+}
+.sekka-mobile .rs3 .rs3__head :is(h2,p),.sekka-mobile .rs3__eyebrow {
+ color:var(--sekka-cream)!important;
+}
+.sekka-mobile .rs3__head:after {border-color:#F6EDE41F!important}
+.sekka-mobile .rs3__form {background:var(--sekka-cream-card)!important;border-color:var(--sekka-cream-border)!important}
+.sekka-mobile .rs3__number {background:var(--sekka-mauve-soft)!important;color:#392342!important}
+.sekka-mobile .rs3__optional-map-toggle {color:#60515D!important;border-color:#9B849A!important}
+.sekka-mobile .rs3__optional-map-actions button{background:var(--sekka-cream-card)!important;color:var(--sekka-black)!important}
+.sekka-mobile .rh-home {
+ --rh-bg:var(--sekka-cream);
+ --rh-card:var(--sekka-cream-card);
+ --rh-ink:var(--sekka-black);
+ --rh-muted:#685A67;
+ --rh-line:var(--sekka-cream-border);
+ --rh-purple:var(--sekka-mauve);
+ background:var(--rh-bg)!important;color:var(--rh-ink)!important;
+}
+.sekka-mobile .rh-hero {
+ background:linear-gradient(150deg,#FFFAF2 0%,#EFE3D7 100%)!important;
+}
+.sekka-mobile .rh-hero:before{background:var(--sekka-black)!important}
+.sekka-mobile .rh-hero__map-lines{opacity:.26}
+.sekka-mobile .rh-button--primary{background:var(--sekka-mauve)!important}
+.sekka-mobile .rh-picker__confirm{background:var(--sekka-mauve)!important}
+.sekka-mobile .captain-routes-canvas {
+ --cj-accent:var(--sekka-mauve);
+ --cj-accent-strong:var(--sekka-black);
+ --cj-border:var(--sekka-cream-border);
+ --cj-surface:var(--sekka-cream-card);
+ --cj-muted:#665A68;
+ color:var(--sekka-black)!important;
+}
+.sekka-mobile .captain-routes-canvas .cj-hero {
+ background:var(--sekka-black)!important;
+ color:var(--sekka-cream)!important;
+ border-color:#564758!important;
+}
+.sekka-mobile .captain-routes-canvas .cj-hero :is(h2,p,small){
+ color:var(--sekka-cream)!important;
+}
+.sekka-mobile .captain-routes-canvas .cj-hero button{
+ background:var(--sekka-mauve)!important;color:#FFFAF2!important;border-color:var(--sekka-mauve)!important;
+}
+.sekka-mobile .captain-routes-canvas .cj-remove-route-danger{
+ background:#A32F49!important;color:#FFFAF2!important;border-color:#A32F49!important;
+}
+/* Splash belongs to the app's opening, not to an arbitrary light/dark toggle. */
+.sekka-mobile .phase-one-stage.sekka-entry-stage {
+ --se-bg:var(--sekka-cream)!important;
+ --se-ink:var(--sekka-black)!important;
+ --se-muted:#655969!important;
+ --se-card:var(--sekka-cream-card)!important;
+ --se-line:var(--sekka-cream-border)!important;
+ --se-primary:var(--sekka-mauve)!important;
+ --se-yellow:#AC83C7!important;
+}
+.sekka-mobile .sekka-entry button.sekka-entry__primary,
+.sekka-mobile .sekka-entry-login .phase-google-auth button.phase-primary,
+.sekka-mobile .sekka-entry-login .sekka-entry-login__profile>.phase-primary{
+ background:var(--sekka-mauve)!important;
+ color:#FFFAF2!important;border-color:var(--sekka-mauve)!important;
+}
+.sekka-mobile .sekka-entry button.sekka-entry__role.is-selected{
+ background:var(--sekka-mauve-soft)!important;border-color:var(--sekka-mauve)!important;
+}
+.sekka-mobile .sekka-entry__role-icon{
+ background:#E9DCE9!important;color:var(--sekka-black)!important;
+}
+.sekka-mobile .sekka-entry__details li>span{
+ background:var(--sekka-mauve-soft)!important;color:var(--sekka-black)!important;
+}
+.sekka-mobile .sekka-entry-login .phase-google-auth .sekka-entry-login__secure>span{
+ background:var(--sekka-mauve-soft)!important;color:var(--sekka-mauve)!important;
+}
+/* Modern curved-black reference on the auth welcome/login pages. */
+.sekka-mobile .sekka-entry-login {
+ background:var(--sekka-cream)!important;
+}
+.sekka-mobile .sekka-entry-login:before {
+ content:"";position:absolute;top:-4px;inset-inline:0;height:145px;
+ background:var(--sekka-black);border-radius:0 0 55% 25%;
+ pointer-events:none;
+}
+.sekka-mobile .sekka-entry-login>* {position:relative}
+.sekka-mobile .sekka-entry-login .phase-back{
+ z-index:1;background:var(--sekka-black-card)!important;
+ color:var(--sekka-cream)!important;border-color:#65536C!important;
+}
+/* Core route discovery and result pages use black surfaces over cream. */
+.sekka-mobile .discovery-stage {
+ --d-gold:#A07BC4;--d-strong-gold:#9466B8;--d-line:#8F8491;
+}
+.sekka-mobile .discovery-stage.light{--d-gold:#8050AF;--d-strong-gold:#8050AF;--d-line:#D6C7D3}
+.sekka-mobile .discovery-stage .d-canvas{
+ background:#171318!important;
+}
+.sekka-mobile .discovery-stage.light .d-canvas{
+ background:var(--sekka-cream)!important;
+}
+/* Preserve safety colors for errors, successes and status indicators;
+   replace decorative orange/yellow buttons only. */
+.sekka-mobile .sekka-mobile-alert button:not([disabled]),
+.sekka-mobile .sekka-admin-entry {
+ background:var(--sekka-mauve)!important;color:var(--sekka-cream)!important;
+ border-color:var(--sekka-mauve)!important;
+}
+@media(prefers-reduced-motion:reduce) {
+ .sekka-mobile * {scroll-behavior:auto!important}
+}
