@@ -123,7 +123,8 @@ test('map search remains usable without GPS and real stops remain server-matched
  // Owner-approved autocomplete: a Photon result appears without a Search button.
  await expect(page.getByRole('option',{name:/City Stars/})).toBeVisible();
  await page.getByRole('option',{name:/City Stars/}).click();
- await expect(page.getByText(/Selected location/)).toBeVisible();
+ await expect(page.getByRole('combobox',{name:'Starting point'})).toHaveValue('City Stars');
+ await expect(page.getByRole('dialog',{name:'Choose point on map'})).toHaveCount(0);
  await page.getByRole('combobox',{name:'Destination'}).fill('Maadi');
  await page.getByRole('group',{name:'Place search suggestions'}).getByRole('option',{name:/Maadi/}).first().click();
  await page.locator('.rs3__submit').click();
@@ -156,15 +157,14 @@ test('Greater Cairo search rejects external results, preserves neighborhood cont
  await expect(page.getByText(/outside seKKa's current service area/)).toBeVisible();
  await expect(page.getByRole('option',{name:/Fayoum/})).toHaveCount(0);
  await input.fill('التجمع 5');
- await input.press('Enter');
- const context=page.locator('.sekka-location-context');
- await expect(context).toContainText('Fifth Settlement');
- await expect(page.getByRole('option',{name:/Fifth Settlement/})).toHaveCount(0);
+ // The exact named settlement is now an independent location choice. It
+ // must not silently turn into the whole New Cairo service area.
+ const settlement=page.getByRole('option',{name:/Fifth Settlement/}).first();
+ await expect(settlement).toBeVisible();
+ await settlement.click();
+ await expect(input).toHaveValue('Fifth Settlement');
+ await expect(page.getByRole('dialog',{name:'Choose point on map'})).toHaveCount(0);
  await expect(page.getByText(/Registered service area/)).toHaveCount(0);
- await input.press('ArrowDown');
- await expect(page.getByRole('option',{name:/New Cairo/})).toHaveAttribute('aria-selected','true');
- await input.press('Enter');
- await expect(page.getByText(/Registered service area/)).toBeVisible();
 });
 
 test('verified Hosary context remains available during a Photon outage without adding a stop',async({page})=>{
@@ -177,13 +177,16 @@ test('verified Hosary context remains available during a Photon outage without a
  await page.goto('/?tab=search&view=9');
  const input=page.getByRole('combobox',{name:'Starting point'});
  await input.fill('الحصرى');
- const context=page.locator('.sekka-location-context');
- await expect(context.locator('li').first()).toContainText('Hosary Square');
- await expect(context.locator('li').nth(1)).toContainText('Hosary Mosque');
+ const square=page.getByRole('option',{name:/Hosary Square/}).first();
+ const mosque=page.getByRole('option',{name:/Hosary Mosque/}).first();
+ await expect(square).toBeVisible();
+ await expect(mosque).toBeVisible();
  await expect(page.getByText('Map search is temporarily unavailable. Try again.')).toBeVisible();
- await expect(page.getByRole('option',{name:/Hosary/})).toHaveCount(0);
- await input.press('Enter');
- await expect(input).toHaveValue('الحصرى');
+ // Even without Photon, select the sourced place without needing the map.
+ await square.click();
+ await expect(input).toHaveValue('Hosary Square');
+ await expect(page.getByRole('dialog',{name:'Choose point on map'})).toHaveCount(0);
+ await input.fill('6 October');
  await page.getByRole('option',{name:'6th of October Search the whole service area',exact:true}).click();
  await expect(input).toHaveValue('6th of October');
  await expect(page.getByText(/Registered service area/)).toBeVisible();
