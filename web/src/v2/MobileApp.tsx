@@ -15,6 +15,7 @@ const CaptainOnboarding=lazy(()=>import('./CaptainOnboarding'));
 import {internalScreen,publicScreen} from './screenMap';
 import LiveProfile from './LiveProfile';
 import RiderBookingsV3 from './RiderBookingsV3';
+import './rider-extras-v3.css';
 import RiderJourneyHome from './RiderJourneyHome';
 import RiderTabBar from './RiderTabBar';
 import type {RiderTab} from './RiderTabBar';
