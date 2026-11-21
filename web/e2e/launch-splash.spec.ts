@@ -122,5 +122,5 @@ test("dark preference changes the app to black and cream while preserving mauve 
  const ink=await root.evaluate(el=>getComputedStyle(el).getPropertyValue("--ink").trim());
  expect(ink).toBe("#F7F0E5");
  const mauve=await root.evaluate(el=>getComputedStyle(el).getPropertyValue("--accent").trim());
- expect(mauve).toBe("var(--sekka-mauve)");
+ expect(mauve).toBe("#8050AF");
 });
