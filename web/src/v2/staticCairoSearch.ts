@@ -1,5 +1,6 @@
 import {isInsideOperationalRegion} from './greaterCairoBoundary.ts';
 import {normalizedPlace,placeMatchesArea} from './geoPlace.ts';
+import {localPlaceCatalog} from './locationCatalog.ts';
 import type {MapPlace,ServiceArea} from './geoPlace';
 
 type ShardEntry={i:string;n:string;a:string|null;e:string|null;c:string;k:string;
@@ -29,6 +30,13 @@ function tokenSequence(alias:string,query:string){
   start=found+part.length;
  }
  return true;
+}
+function trustedLandmarkBoost(item:ShardEntry,query:string):number {
+ const suffix=item.i.replace(/^osm:/,'').replace(/^node:/,'N:').replace(/^way:/,'W:').replace(/^relation:/,'R:');
+ const q=normalizedPlace(query);
+ const matched=localPlaceCatalog.filter(entry=>entry.reference?.osmId===suffix&&
+  [entry.ar,entry.en,...entry.aliases].some(name=>normalizedPlace(name)===q));
+ return matched.length?510+Math.max(...matched.map(entry=>entry.popularity??0))*10:0;
 }
 function aliasScore(item:ShardEntry,query:string){
  const effective=lookupKey(query);
@@ -67,7 +75,7 @@ export async function searchStaticCairo(query:string,en:boolean,area:ServiceArea
  }
  if(signal.aborted)return [];
  const candidate=records.map(row=>{
-  const relevance=aliasScore(row,q);
+  const relevance=Math.max(aliasScore(row,q),trustedLandmarkBoost(row,q));
   if(!relevance||!/^osm:(node|way|relation):\d+$/.test(row.i))return null;
   const latitude=Number(row.p?.[0]),longitude=Number(row.p?.[1]);
   if(!Number.isFinite(latitude)||!Number.isFinite(longitude)||
