@@ -16,7 +16,8 @@ test('explicit Captain selection survives route history and prepares its own OAu
   localStorage.setItem('theme_preference','light');
  });
  await page.goto('/');
- await page.locator('.phase-screen-2 .phase-start').click();
+ // Updated owner-approved entry: Welcome → how it works → trip details → Role.
+ for(let i=0;i<3;i++)await page.locator('.phase-screen-2 .phase-start').click();
  const captain=page.getByRole('radio',{name:/Captain/});
  await captain.click();
  await page.locator('.phase-screen-3 .phase-role-next').click();
