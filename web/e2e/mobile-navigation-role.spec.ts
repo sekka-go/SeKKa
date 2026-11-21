@@ -179,7 +179,7 @@ test(`pending Captain profile stays in Passenger journey until explicit entry at
  });
 
  await page.goto('/');
- await expect(page.locator('.d-screen-8')).toBeVisible();
+ await expect(page.locator('.sekka-rider-home')).toBeVisible();
  await expect(page).not.toHaveURL(/tab=captain-onboarding|tab=routes/);
  await page.screenshot({path:`test-results/mock-pending-captain-passenger-home-${width}.png`,fullPage:true,animations:'disabled'});
  await expect(page.getByRole('button',{name:'Open menu'})).toBeVisible();
