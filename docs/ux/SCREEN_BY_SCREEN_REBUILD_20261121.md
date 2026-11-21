@@ -18,11 +18,11 @@ Scope: Mobile-first Arabic passenger experience, then Captain. No changes to bus
 | Priority | Production screen | User action | Evidence before accepted | Status |
 | --- | --- | --- | --- | --- |
 | P0 | Rider home (root) | Enter commute once / rerun saved commute; find nearby stops | 320/390px screenshots, nav + real RPC handoff, dark/light | **Rebuilt on PR #185; verification pending** |
-| P0 | Search S009 | Pick origin/destination, time, no wrong locality assumptions | Verified point selection, swap, saved draft/back, loading/error | Next |
-| P0 | Results S011 | Choose a published ride by nearby pickup and time | Real database rows, empty, nearest-match honesty, filters | Planned |
-| P0 | Details S012 | Understand pickup, direction, price, available seats | Stop-order + capacity revalidation, back to matching results | Planned |
-| P0 | Booking flow | Review → confirm once → see pending state | Atomic server reservation, no fake payment confirmation, errors | Planned |
-| P1 | My bookings / requests | See next action and status; clear cancellations/requests | State machine and server-owned actions | Planned |
+| P0 | Search S009 | Pick origin/destination, time, no wrong locality assumptions | Verified point selection, swap, saved draft/back, loading/error | Rebuilt; verification pending |
+| P0 | Results S011 | Choose a published ride by nearby pickup and time | Real database rows, empty, nearest-match honesty, filters | Rebuilt; verification pending |
+| P0 | Details S012 | Understand pickup, direction, price, available seats | Stop-order + capacity revalidation, back to matching results | Rebuilt; verification pending |
+| P0 | Booking flow | Review → confirm once → see pending state | Atomic server reservation, no fake payment confirmation, errors | Restyled existing verified flow; verification pending |
+| P1 | My bookings / requests | See next action and status; clear cancellations/requests | State machine and server-owned actions | Bookings rebuilt, requests retained; verification pending |
 | P1 | Notifications / account | Finish account and manage essentials | Settings, Google-only auth, privacy, sign-out | Planned |
 | P1 | Captain entry and home | Publish / reuse usual route in a few steps | Approved captain role, no fake demand badges | Planned |
 | P1 | Captain route creation + stop map | Publish a truthful recurring route | Stop order/geocoordinates, distance source, server validations | Planned |
@@ -48,6 +48,20 @@ Implemented as **actual React components** in `RiderJourneyHome.tsx`, `rider-hom
 **Data integrity deviations from the mock**: «المعادي → التجمع» and 7:30 AM are only displayed when that is the returning Rider's own stored search. For fresh users, fields prompt for information rather than fabricating a ride. The SavedCommute record holds weekly/monthly period but no specific weekday list, so the Days row explains availability is learned from published trip details and does not claim Sunday–Thursday as a confirmed itinerary. Nearby-point results remain actual Supabase-backed data and location requires permission.
 
 Main CTA goes to existing real search/results, Edit opens origin/destination/time, Nearby toggles real nearby discovery, My Rides goes to authenticated bookings; bottom tabs remain real route navigation. Browser validation needs screenshot comparison at 320px and 390px, Arabic and English, light/dark, first-visit empty state, returning saved state, all four actions, back navigation and full keyboard focus. **No production merge.**
+
+## Rider core journey V3 — 2026-11-21
+
+The **production-facing** Rider flow now uses a coherent route-first UI across:
+- **Search S009:** new `RiderSearchV3` with genuine service area + OpenStreetMap place picker, swap, optional departure/return time, weekday preferences, a single "Show available rides" action and optional nearby-stop discovery. First visit no longer seeds a fake 07:30/17:00 time. The 73-screen gallery remains untouched.
+- **Results S011:** `RiderResultsHero` shows the selected origin, destination and requested times with one-click edit. `LiveRouteSearch` still uses the existing protected RPC and real seats/price/stop data. Cards now prioritize pickup name, time, seat price and explicit selection; sorting and zero-match request pathway remain.
+- **Trip details S012:** `RiderTripDetailsV3` shows the server-provided route, pricing, remaining seats, direction and *actual stop order*, with controlled pickup/drop-off selection. It hands the validated stop pair to the existing booking flow and does not claim an unapproved fixed Sunday–Thursday timetable.
+- **Booking review:** the existing `V31BookingJourney` retains its server atomic seat reservation, read-after-write verification and status separation; a scoped `rider-booking-v3.css` facelift improves layout. Pending cancellations now require a second explicit confirmation click.
+- **My rides:** `RiderBookingsV3` reads current Rider-owned `v31_bookings` records, optionally resolves publicly visible route titles, separates current/previous bookings, and supports protected cancellation confirmation. Captain booking screens were not replaced.
+- **The requests and filters sections** still preserve their existing backend workflows; they are not yet fully redesigned. Existing live notifications, profile and Captain flows remain as before.
+
+**Do not overclaim:** Weekdays saved by the Rider do **not** yet filter the v31 search RPC. The UI openly states this, and users should verify a ride's operating days before booking. Pricing shown before booking is indicative, not payment. No new Supabase migration, production writes, paid maps, OTP, or payment handling.
+
+**Automated checks:** `web/e2e/rider-redesign-v3.spec.ts` exercises mock-authenticated Rider Search → Results → Details → Booking (without fake confirmation), including 320/390px layouts, plus active Rider bookings and cancel confirmation. `v31-rider-no-match-request-mocked.spec.ts` remains a regression for the request flow, updated to the new place labels; original Gallery filters geometry remains separately tested. Await CI and actual authenticated staging walkthrough before marking accepted.
 
 ## Release rules
 
