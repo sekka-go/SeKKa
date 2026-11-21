@@ -160,3 +160,21 @@ test('Greater Cairo search rejects external results, preserves neighborhood cont
  await input.press('Enter');
  await expect(page.getByText(/Registered service area/)).toBeVisible();
 });
+
+test('verified Hosary context remains available during a Photon outage without adding a stop',async({page})=>{
+ await page.setViewportSize({width:360,height:800});
+ await page.addInitScript(()=>localStorage.setItem('language_preference','en'));
+ await page.route('https://photon.komoot.io/api/**',request=>request.fulfill({status:503,json:{}}));
+ await page.route(endpoint+'/**',request=>request.fulfill({json:
+  new URL(request.request().url()).pathname==='/rest/v1/v31_service_areas'?areas:[]}));
+ await page.goto('/?tab=search&view=9');
+ const input=page.getByRole('combobox',{name:'Starting point'});
+ await input.fill('الحصرى');
+ const context=page.locator('.sekka-location-context');
+ await expect(context.locator('li').first()).toContainText('Hosary Square');
+ await expect(context.locator('li').nth(1)).toContainText('Hosary Mosque');
+ await expect(page.getByText('Map search is temporarily unavailable. Try again.')).toBeVisible();
+ await expect(page.getByRole('option',{name:/Hosary/})).toHaveCount(0);
+ await input.press('Enter');
+ await expect(input).toHaveValue('الحصرى');
+});

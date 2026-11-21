@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {greaterCairoGeometry} from './greaterCairoGeometry.ts';
 import {readFileSync,readdirSync} from 'node:fs';
-import {mapPlacesFromPhoton,serviceMatches,placeMatchesArea,stopNearPoint,geoRequestAvailable,inLaunchRegion,normalizedPlace,catalogMatches,rankMapPlaces,selectOperationalMapPlace,inspectPhoton} from './geoPlace.ts';
+import {mapPlacesFromPhoton,serviceMatches,placeMatchesArea,stopNearPoint,geoRequestAvailable,inLaunchRegion,normalizedPlace,catalogMatches,locationContext,rankMapPlaces,selectOperationalMapPlace,inspectPhoton} from './geoPlace.ts';
 
 const areas=[
  {id:1,name_ar:'المعادي',name_en:'Maadi'},
@@ -103,6 +103,14 @@ test('a road or a mapped square representative point is never selected as an exa
  const points=rankMapPlaces(mapPlacesFromPhoton({features:[square]}),'El Hosary');
  assert.equal(points[0]?.name,'ميدان الحصري');
  assert.equal(selectOperationalMapPlace(points[0]),false);
+});
+
+test('verified Hosary catalog remains available offline as non-selectable context',()=>{
+ const context=locationContext('الحصرى',[],false);
+ assert.deepEqual(context.map(p=>p.name),['ميدان الحصري','مسجد الحصري']);
+ assert.deepEqual(context.map(p=>p.id),['W:1393055714','R:15576635']);
+ assert.ok(context.every(p=>inLaunchRegion(p)&&!selectOperationalMapPlace(p)));
+ assert.equal(locationContext('التجمع 5',[],false)[0]?.kind,'area');
 });
 
 test('browser polygon and PostGIS use the same source geometry and cover outer edges',()=>{

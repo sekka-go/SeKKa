@@ -1,7 +1,7 @@
 import {useEffect,useState} from 'react';
 import {greaterCairoAttribution} from './greaterCairoBoundary';
 import {usePreferences} from './preferences';
-import {catalogMatches,noMatchingLocation,outsideCoverageMessage,PHOTON_ATTRIBUTION,selectOperationalMapPlace,serviceMatches} from './geoPlace';
+import {catalogMatches,locationContext,noMatchingLocation,outsideCoverageMessage,PHOTON_ATTRIBUTION,selectOperationalMapPlace,serviceMatches} from './geoPlace';
 import {useLocationOptions,useLocationSearch} from './locationSearch';
 import type {PlaceChoice,ServiceArea} from './geoPlace';
 import './location-search.css';
@@ -20,9 +20,9 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
  const menu=open&&!disabled&&!choice&&Boolean(query.trim());
  const result=useLocationSearch(query.trim(),menu,searchArea,en,immediate);
  const local=menu?serviceMatches(areas,query):[];
- const hints=menu?catalogMatches(query,searchArea).filter(hint=>areas.some(area=>area.name_en.toLowerCase()===hint.area)):[];
+ const hints=menu?catalogMatches(query,searchArea).filter(hint=>!hint.reference&&areas.some(area=>area.name_en.toLowerCase()===hint.area)):[];
  const points=result.places.filter(selectOperationalMapPlace);
- const broad=result.places.filter(place=>!selectOperationalMapPlace(place));
+ const broad=menu?locationContext(query,result.places,en,searchArea):[];
  const broadArea=broad.some(place=>place.kind==='area')?
   catalogMatches(query,searchArea).find(item=>item.kind==='area')?.area:undefined;
  const parent=areas.find(area=>area.name_en.toLowerCase()===broadArea);

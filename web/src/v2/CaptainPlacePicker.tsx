@@ -1,7 +1,7 @@
 import {useEffect,useState} from 'react';
 import {greaterCairoAttribution} from './greaterCairoBoundary';
 import {usePreferences} from './preferences';
-import {catalogMatches,noMatchingLocation,outsideCoverageMessage,PHOTON_ATTRIBUTION,placeMatchesArea,selectOperationalMapPlace} from './geoPlace';
+import {catalogMatches,locationContext,noMatchingLocation,outsideCoverageMessage,PHOTON_ATTRIBUTION,placeMatchesArea,selectOperationalMapPlace} from './geoPlace';
 import {popularPlacesForArea} from './popularCaptainPlaces';
 import {useLocationOptions,useLocationSearch} from './locationSearch';
 import type {PlaceChoice,MapPlace,ServiceArea} from './geoPlace';
@@ -26,11 +26,11 @@ export default function CaptainPlacePicker({label,value,choice,onPick,onVerified
  const menu=Boolean(open&&!choice&&!disabled&&searchArea);
  const result=useLocationSearch(query,menu,searchArea,en,immediate);
  const points=result.places.filter(selectOperationalMapPlace);
- const broad=result.places.filter(place=>!selectOperationalMapPlace(place));
+ const broad=menu?locationContext(query,result.places,en,searchArea):[];
  const popularPriority:Record<PopularPlace['type'],number>={square:1,mall:2,university:3,gathering:4,neighborhood:5,mosque:6};
  const suggestions=searchArea?[...popularPlacesForArea(searchArea.name_en)].sort((a,b)=>popularPriority[a.type]-popularPriority[b.type]):[];
  const visible=showAll?suggestions:suggestions.slice(0,5);
- const catalog=menu&&query&&!result.places.length?catalogMatches(query,searchArea):[];
+ const catalog=menu&&query&&!result.places.length?catalogMatches(query,searchArea).filter(item=>!item.reference):[];
  const choose=(index:number)=>{
   const place=points[index];
   if(!place||!searchArea||!selectOperationalMapPlace(place)||!placeMatchesArea(place,searchArea))return;
@@ -44,7 +44,7 @@ export default function CaptainPlacePicker({label,value,choice,onPick,onVerified
  };
  const error=result.status==='error'
   ?t('البحث مش متاح دلوقتي. جرّب تاني.','Location search is unavailable. Try again.')
-  :result.status==='done'&&!result.places.length
+  :result.status==='done'&&!result.places.length&&!broad.length
     ?result.outside?t(outsideCoverageMessage.ar,outsideCoverageMessage.en):t(noMatchingLocation.ar,noMatchingLocation.en)
     :'';
  return <section className="cj-easy-place" aria-label={label}>
