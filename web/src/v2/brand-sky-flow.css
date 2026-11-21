@@ -191,3 +191,33 @@
  animation-duration:.01ms!important;transition-duration:.01ms!important;
  }
 }
+
+/* Brand names are live selectable text, not a decorative cropped reference logo. */
+.sekka-mobile .sekka-live-wordmark,
+.sekka-mobile .phase-wordmark.sekka-live-wordmark{
+ display:inline-flex!important;justify-content:center;align-items:center;
+ aspect-ratio:auto!important;height:auto;min-height:42px;overflow:visible!important;
+ font:900 clamp(31px,8vw,61px)/1.6 Tajawal,'Noto Sans Arabic',Tahoma,sans-serif!important;
+ color:var(--sekka-sky)!important;letter-spacing:-.035em;white-space:nowrap;
+ text-decoration:none;text-shadow:none;mix-blend-mode:normal!important;
+}
+.sekka-mobile .sekka-entry__brand--text{
+ display:inline-flex!important;align-items:center;justify-content:center;
+ width:auto!important;min-width:83px;height:auto!important;min-height:55px;
+ padding:0 8px;border:0;border-radius:15px;
+ background:#E5FAFD!important;color:#087DAF!important;
+ font:900 29px/1.5 Tajawal,'Noto Sans Arabic',Tahoma,sans-serif!important;
+ box-shadow:none;white-space:nowrap;
+}
+.sekka-mobile.sekka-guest-welcome .sekka-entry,
+.sekka-mobile .sekka-entry-login{--se-primary:var(--sekka-teal)!important;
+ --se-bg:var(--sekka-paper)!important;--se-ink:var(--sekka-navy)!important;
+ --se-yellow:var(--sekka-sun)!important}
+.sekka-mobile .sekka-entry__primary,
+.sekka-mobile .sekka-entry-login .phase-google-auth button.phase-primary{
+ background:linear-gradient(110deg,#10CBDC,#069AE8)!important;
+ border-color:transparent!important;color:#FFFFFF!important;
+}
+.sekka-mobile .sekka-entry__role.is-selected{
+ background:#E4F8FF!important;border-color:var(--sekka-teal)!important;
+}
