@@ -15,7 +15,7 @@ import GeoPlaceInput from "./GeoPlaceInput";
 import {geoRequestAvailable} from "./geoPlace";
 import type {PlaceChoice} from "./geoPlace";
 import type {LiveSelection} from "./LiveRouteSearch";
-import {saveCommute} from './riderCommute';
+import {saveCommute,isWeekdays} from './riderCommute';
 import {riderHomeCopy} from './riderHomeCopy';
 import './rider-journey.css';
 
@@ -463,6 +463,7 @@ type RiderDraft = {
   period?: string; categories?: string[]; selectedId?: string; favoriteDetail?: Line | null;
   searched?: boolean; pickup?: string; dropoff?: string; filterDirection?: string;
   filterPrice?: string; onlyAvailable?: boolean; appliedFilters?: boolean;
+  weekdays?:number[];
 };
 
 /* Per-Google-account local search shortcuts: no fake route inventory, and no
@@ -605,16 +606,17 @@ export default function Discovery(p: DiscoveryProps) {
   };
   const [filterDirection, setFilterDirection] = useState(restored.filterDirection ?? "");
   const [filterPrice, setFilterPrice] = useState(restored.filterPrice ?? "");
+  const [preferredWeekdays]=useState<number[]>(()=>isWeekdays(restored.weekdays)?restored.weekdays:[]);
   const [onlyAvailable, setOnlyAvailable] = useState(restored.onlyAvailable ?? false);
   const [appliedFilters, setAppliedFilters] = useState(restored.appliedFilters ?? false);
   useEffect(() => {
     const draft: RiderDraft = {origin,destination,originPlace,destinationPlace,outbound,returnTime,period,categories,selectedId,
       favoriteDetail:demo ? favoriteDetail : null,searched,pickup,dropoff,filterDirection,
-      filterPrice,onlyAvailable,appliedFilters};
+      filterPrice,onlyAvailable,appliedFilters,weekdays:preferredWeekdays};
     try { sessionStorage.setItem(riderDraftKey, JSON.stringify(draft)); }
     catch { /* Keep the active screen usable when session storage is unavailable. */ }
   }, [origin,destination,originPlace,destinationPlace,outbound,returnTime,period,categories,selectedId,favoriteDetail,
-      demo,searched,pickup,dropoff,filterDirection,filterPrice,onlyAvailable,appliedFilters]);
+      demo,searched,pickup,dropoff,filterDirection,filterPrice,onlyAvailable,appliedFilters,preferredWeekdays]);
   const filtered = lines.filter(
     (l) =>
       (!searched || (matchesStops(l.stops || [], origin, destination) && (!outbound || l.outbound === outbound) && (!returnTime || l.returnTime === returnTime))) &&
@@ -681,7 +683,8 @@ export default function Discovery(p: DiscoveryProps) {
       saveCommute(p.riderId,{
        origin,destination,originPlace,destinationPlace,
        outbound,returnTime,period:period==='weekly'?'weekly':'monthly',
-       direction:filterDirection==='round_trip'||filterDirection==='return'?filterDirection:'outbound'
+       direction:filterDirection==='round_trip'||filterDirection==='return'?filterDirection:'outbound',
+       weekdays:preferredWeekdays
       });
       persistSavedAreas({...savedAreas,recent:[
        {origin,destination},...savedRecent.filter(item=>item.origin!==origin||item.destination!==destination)
@@ -1109,6 +1112,11 @@ export default function Discovery(p: DiscoveryProps) {
             </div>}
           </section>
         )}
+        {screen === 11 && p.production && preferredWeekdays.length>0 && <p className="sekka-weekdays-disclaimer" role="note">
+         {language==='en'
+          ?'Your '+preferredWeekdays.length+' preferred days are saved. Current search matches routes by place and time, not by weekdays yet; check the trip schedule before booking.'
+          :'حفظنا تفضيلك لـ'+new Intl.NumberFormat('ar-EG').format(preferredWeekdays.length)+' أيام. البحث الحالي بيطابق المكان والميعاد، مش أيام الأسبوع تلقائيًا؛ راجع أيام الرحلة قبل الحجز.'}
+        </p>}
         {screen === 11 && !demo && <LiveRouteSearch origin={origin} destination={destination}
          originPoint={originPlace?.kind==='map'?originPlace.place:null}
          destinationPoint={destinationPlace?.kind==='map'?destinationPlace.place:null}
