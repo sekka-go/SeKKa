@@ -928,34 +928,6 @@ export default function Discovery(p: DiscoveryProps) {
                <summary><span aria-hidden="true">📍 </span>{language==='en'?'Find rides near my location':'اكتشف الرحلات القريبة من موقعي'}</summary>
                {nearbyOpen&&<NearbyRides onSelect={p.onLiveSelect}/>}
               </details>}
-              {p.production&&p.signedIn&&p.riderId&&<div className="sekka-search-shortcuts" aria-label={tr("اختصارات المناطق المحفوظة")}>
-                <div className="sekka-search-shortcuts__actions">
-                  <button type="button" disabled={!origin||!storedAreaNames.has(origin)}
-                   onClick={()=>persistSavedAreas({...savedAreas,home:origin})}>
-                    {savedHome===origin?tr("✓ البيت محفوظ"):tr("احفظ البداية كبيت")}
-                  </button>
-                  <button type="button" disabled={!destination||!storedAreaNames.has(destination)}
-                   onClick={()=>persistSavedAreas({...savedAreas,work:destination})}>
-                    {savedWork===destination?tr("✓ الشغل محفوظ"):tr("احفظ الوصول كشغل")}
-                  </button>
-                </div>
-                {savedHome&&savedWork&&savedHome!==savedWork&&<div className="sekka-search-shortcuts__actions">
-                  <button type="button" onClick={()=>{setOrigin(savedHome);setDestination(savedWork);setOriginPlace(null);setDestinationPlace(null);}}>
-                   {tr("البيت ← الشغل")}
-                  </button>
-                  <button type="button" onClick={()=>{setOrigin(savedWork);setDestination(savedHome);setOriginPlace(null);setDestinationPlace(null);}}>
-                   {tr("الشغل ← البيت")}
-                  </button>
-                </div>}
-                {savedRecent.length>0&&<div className="sekka-search-shortcuts__recent">
-                  <span>{tr("آخر عمليات البحث")}</span>
-                  {savedRecent.map((item,index)=><button type="button" key={item.origin+':'+item.destination+':'+index}
-                   onClick={()=>{setOrigin(item.origin);setDestination(item.destination);setOriginPlace(null);setDestinationPlace(null);}}
-                   aria-label={tr("إعادة البحث عن ")+areaDisplay(item.origin)+' - '+areaDisplay(item.destination)}>
-                    {areaDisplay(item.origin)} ← {areaDisplay(item.destination)}
-                  </button>)}
-                </div>}
-              </div>}
               <div className="d-box d-time-picker">
                 <label>
                   <DiscoveryIcon name="calendar" />
@@ -998,6 +970,34 @@ export default function Discovery(p: DiscoveryProps) {
            setOriginPlace(destinationPlace);setDestinationPlace(originPlace);}}
           onOutbound={setOutbound}
           onReturn={value=>{setReturnTime(value);setFilterDirection(value?'round_trip':'');}}
+          shortcuts={p.signedIn&&p.riderId&&<details className="rs3__saved"><summary>{language==='en'?'Saved places & recent searches':'أماكنك وآخر مشاويرك'}</summary><div className="sekka-search-shortcuts" aria-label={tr("اختصارات المناطق المحفوظة")}>
+                <div className="sekka-search-shortcuts__actions">
+                  <button type="button" disabled={!origin||!storedAreaNames.has(origin)}
+                   onClick={()=>persistSavedAreas({...savedAreas,home:origin})}>
+                    {savedHome===origin?tr("✓ البيت محفوظ"):tr("احفظ البداية كبيت")}
+                  </button>
+                  <button type="button" disabled={!destination||!storedAreaNames.has(destination)}
+                   onClick={()=>persistSavedAreas({...savedAreas,work:destination})}>
+                    {savedWork===destination?tr("✓ الشغل محفوظ"):tr("احفظ الوصول كشغل")}
+                  </button>
+                </div>
+                {savedHome&&savedWork&&savedHome!==savedWork&&<div className="sekka-search-shortcuts__actions">
+                  <button type="button" onClick={()=>{setOrigin(savedHome);setDestination(savedWork);setOriginPlace(null);setDestinationPlace(null);}}>
+                   {tr("البيت ← الشغل")}
+                  </button>
+                  <button type="button" onClick={()=>{setOrigin(savedWork);setDestination(savedHome);setOriginPlace(null);setDestinationPlace(null);}}>
+                   {tr("الشغل ← البيت")}
+                  </button>
+                </div>}
+                {savedRecent.length>0&&<div className="sekka-search-shortcuts__recent">
+                  <span>{tr("آخر عمليات البحث")}</span>
+                  {savedRecent.map((item,index)=><button type="button" key={item.origin+':'+item.destination+':'+index}
+                   onClick={()=>{setOrigin(item.origin);setDestination(item.destination);setOriginPlace(null);setDestinationPlace(null);}}
+                   aria-label={tr("إعادة البحث عن ")+areaDisplay(item.origin)+' - '+areaDisplay(item.destination)}>
+                    {areaDisplay(item.origin)} ← {areaDisplay(item.destination)}
+                  </button>)}
+                </div>}
+              </div></details>}
           onWeekdays={setPreferredWeekdays} onSearch={search}
           onLiveSelect={p.onLiveSelect}
         />}
