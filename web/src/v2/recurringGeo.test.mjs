@@ -1,10 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {formatDistanceMeters,approximateWalkMinutes,orderStopsFarthestFirst,findDuplicateStop,coverageDistanceMetres,walkingEstimate,greatCircleDistanceMeters} from './recurringGeo.ts';
+import {formatDistanceMeters,formatDistanceForLocale,approximateWalkMinutes,orderStopsFarthestFirst,findDuplicateStop,coverageDistanceMetres,walkingEstimate,greatCircleDistanceMeters} from './recurringGeo.ts';
 const p=(lat,lng,id='p')=>({lat,lng,id});
 test('PostGIS-metre formatting rounds metres by 10, kilometres by 0.1',()=>{
  assert.equal(formatDistanceMeters(321),'320 م');
  assert.equal(formatDistanceMeters(995),'1000 م');
+ assert.equal(formatDistanceForLocale(321,true),'320 m');
+ assert.equal(formatDistanceForLocale(1401,true),'1.4 km');
  assert.equal(formatDistanceMeters(1401),'1.4 كم');
  assert.throws(()=>formatDistanceMeters(-1),RangeError);
  assert.throws(()=>formatDistanceMeters(NaN),RangeError);
