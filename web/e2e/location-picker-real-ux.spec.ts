@@ -19,18 +19,20 @@ test('tapping a named street fills the origin without opening a map',async({page
  const choice=page.getByRole('option',{name:new RegExp(street)}).first();
  await expect(choice).toBeVisible();
  await expect(choice).not.toContainText('حدد نقطة على الخريطة');
+ // Suggestion list must never expose the map shortcut while typing.
+ await expect(page.locator('.rs3 .sekka-place-lookup').first().getByRole('button',{name:/اختيار من الخريطة/})).toHaveCount(0);
  await choice.click();
  await expect(start).toHaveValue(street);
- await expect(page.getByText('✓ هنبحث عن أقرب نقاط الكباتن')).toBeVisible();
+ await expect(page.getByText('✓ هنبحث عن أقرب نقاط الكباتن')).toHaveCount(0);
  await expect(page.getByRole('dialog',{name:'حدد نقطة على الخريطة'})).toHaveCount(0);
  // Opening the map is always optional and a different action.
- await page.locator('.rs3').getByRole('button',{name:/حدد نقطة على الخريطة/}).first().click();
+ await page.locator('.rs3').getByRole('button',{name:/اختيار من الخريطة/}).first().click();
  await expect(page.getByRole('dialog',{name:'حدد نقطة على الخريطة'})).toBeVisible();
 });
 
 test('searching inside map navigates to a real place before explicit pin confirmation',async({page})=>{
  await page.goto('/?tab=search&view=9');
- await page.locator('.rs3').getByRole('button',{name:/حدد نقطة على الخريطة/}).first().click();
+ await page.locator('.rs3').getByRole('button',{name:/اختيار من الخريطة/}).first().click();
  const dialog=page.getByRole('dialog',{name:'حدد نقطة على الخريطة'});
  const lookup=dialog.getByRole('combobox',{name:'ابحث داخل الخريطة'});
  await lookup.fill(street);
@@ -48,7 +50,7 @@ test('current location control requests device GPS and selects actual location, 
  await context.grantPermissions(['geolocation']);
  await context.setGeolocation({latitude:29.9724456,longitude:30.9448074,accuracy:18});
  await page.goto('/?tab=search&view=9');
- await page.locator('.rs3').getByRole('button',{name:/حدد نقطة على الخريطة/}).first().click();
+ await page.locator('.rs3').getByRole('button',{name:/اختيار من الخريطة/}).first().click();
  const dialog=page.getByRole('dialog',{name:'حدد نقطة على الخريطة'});
  await dialog.getByRole('button',{name:'موقعي الحالي'}).click();
  await expect(dialog.getByText(/تم تحديد موقعك/)).toBeVisible();
@@ -65,9 +67,32 @@ test('denied GPS shows a usable permission message rather than silently centerin
   }});
  });
  await page.goto('/?tab=search&view=9');
- await page.locator('.rs3').getByRole('button',{name:/حدد نقطة على الخريطة/}).first().click();
+ await page.locator('.rs3').getByRole('button',{name:/اختيار من الخريطة/}).first().click();
  const dialog=page.getByRole('dialog',{name:'حدد نقطة على الخريطة'});
  await dialog.getByRole('button',{name:'موقعي الحالي'}).click();
  await expect(dialog.getByText(/اسمح بالوصول للموقع/)).toBeVisible();
  await expect(dialog.getByRole('button',{name:'تأكيد النقطة'})).toBeDisabled();
+});
+
+test('real touch tap on an autocomplete row cannot retarget to the map button',async({page})=>{
+ await page.goto('/?tab=search&view=9');
+ const first=page.locator('.rs3 .sekka-place-lookup').first();
+ const from=first.getByRole('combobox',{name:'نقطة الانطلاق'});
+ await from.fill(street);
+ await expect(first.getByRole('option',{name:new RegExp(street)}).first()).toBeVisible();
+ await expect(first.getByRole('button',{name:/اختيار من الخريطة/})).toHaveCount(0);
+ await first.getByRole('option',{name:new RegExp(street)}).first().tap();
+ await expect(from).toHaveValue(street);
+ await expect(first.getByRole('button',{name:/اختيار من الخريطة/})).toBeVisible();
+ await expect(page.getByRole('dialog',{name:'حدد نقطة على الخريطة'})).toHaveCount(0);
+});
+
+test('reflow or accidental click on map CTA never opens map without an originating pointerdown',async({page})=>{
+ await page.goto('/?tab=search&view=9');
+ const map=page.locator('.rs3 .sekka-place-lookup').first().getByRole('button',{name:/اختيار من الخريطة/});
+ await expect(map).toBeVisible();
+ await map.dispatchEvent('click',{detail:1});
+ await expect(page.getByRole('dialog',{name:'حدد نقطة على الخريطة'})).toHaveCount(0);
+ await map.click();
+ await expect(page.getByRole('dialog',{name:'حدد نقطة على الخريطة'})).toBeVisible();
 });
