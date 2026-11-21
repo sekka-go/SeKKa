@@ -4,7 +4,7 @@ import {useEffect,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
 import type {GeoPoint} from './nearbyRoutes';
-import {formatDistanceMeters,approximateWalkMinutes} from './recurringGeo';
+import {formatDistanceForLocale,approximateWalkMinutes} from './recurringGeo';
 import {sortRealRides} from './riderRank';
 
 export type Route={id:string;title:string;category:string;seat_capacity:number;period:string;direction:string;outbound_time:string|null;return_time:string|null;seat_price_egp:number;return_supported:boolean};
@@ -96,7 +96,7 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
  },[queryKey,origin,destination,originLat,originLon,destinationLat,destinationLon,
   outbound,returnTime,period,direction,categoryKey]);
  const numberFormat=new Intl.NumberFormat(en?'en-EG':'ar-EG',{maximumFractionDigits:1});
- const pickupDistanceLabel=(distanceKm:number)=>formatDistanceMeters(distanceKm*1000);
+ const pickupDistanceLabel=(distanceKm:number)=>formatDistanceForLocale(distanceKm*1000,en);
  const walkingLabel=(distanceKm:number)=>numberFormat.format(approximateWalkMinutes(distanceKm*1000));
  return <section className="d-live-search">
    {!client&&<p role="status">{t('البحث الحقيقي محتاج ربط إعدادات Supabase العامة.','Live search requires public Supabase configuration.')}</p>}
