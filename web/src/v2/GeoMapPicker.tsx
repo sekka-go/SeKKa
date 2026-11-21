@@ -1,4 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
+import {createPortal} from 'react-dom';
 import type {PointerEvent,WheelEvent,KeyboardEvent} from 'react';
 import {usePreferences} from './preferences';
 import {isInsideOperationalRegion,persistableOperationalPoint} from './greaterCairoBoundary';
@@ -120,7 +121,7 @@ export default function GeoMapPicker({initial,area,onCancel,onConfirm}:MapPicker
  const marker=projected?{left:dimensions.width/2+projected.x-focus.x,
   top:dimensions.height/2+projected.y-focus.y}:null;
  const allowed=Boolean(pin&&isInsideOperationalRegion(pin));
- return <div className="sekka-map-picker" role="dialog" aria-modal="true"
+ return createPortal(<div className="sekka-map-picker" role="dialog" aria-modal="true"
   aria-label={t('حدد نقطة على الخريطة','Choose point on map')}>
   <div className="sekka-map-picker__header">
    <button type="button" onClick={onCancel} disabled={busy} aria-label={t('إغلاق الخريطة','Close map')}>✕</button>
@@ -159,5 +160,5 @@ export default function GeoMapPicker({initial,area,onCancel,onConfirm}:MapPicker
     {busy?t('جاري التأكيد...','Confirming...'):t('تأكيد النقطة','Confirm point')}
    </button>
   </div>
- </div>;
+ </div>,document.body);
 }
