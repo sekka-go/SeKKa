@@ -251,10 +251,10 @@
  box-shadow:0 8px 26px #078CF41C!important;
 }
 .sekka-mobile .sekka-entry__art svg [fill="#6412B1"],
-.sekka-mobile .sekka-entry__art svg [fill="#7526B4"]{fill:#079FE8}
+.sekka-mobile .sekka-entry__art svg [fill="#7526B4"]{fill:#FFCC24}
 .sekka-mobile .sekka-entry__art svg [fill="#F73587"],
 .sekka-mobile .sekka-entry__art svg [fill="#FFCD38"]{fill:#FFCC24}
-.sekka-mobile .sekka-entry__art svg [stroke="#6412B1"]{stroke:#069CE5}
+.sekka-mobile .sekka-entry__art svg [stroke="#6412B1"]{stroke:#FFCC24}
 .sekka-mobile .sekka-entry__art svg [fill="#35134F"]{fill:#11374D}
 .sekka-mobile .sekka-live-result{
  animation:sekka-results-enter 480ms cubic-bezier(.2,.8,.2,1) both;

@@ -2,18 +2,18 @@
 .sekka-mobile .discovery-stage .d-screen-9,
 .sekka-mobile .discovery-stage .d-screen-11,
 .sekka-mobile .discovery-stage .d-screen-12{
- --rj-bg:#FFF9F5;--rj-ink:#35134F;--rj-muted:#725A78;
- --rj-card:#FFF;--rj-line:#E6D6E5;--rj-primary:#6412B1;
+ --rj-bg:#FFF9F5;--rj-ink:#111111;--rj-muted:#111111;
+ --rj-card:#FFF;--rj-line:#FFF1B8;--rj-primary:#FFCC24;
  background:var(--rj-bg);color:var(--rj-ink);overflow:visible;padding-bottom:38px
 }
 .sekka-mobile .discovery-stage :is(.d-screen-9,.d-screen-11,.d-screen-12)::before,
 .sekka-mobile .discovery-stage :is(.d-screen-9,.d-screen-11,.d-screen-12)::after{display:none!important}
 .sekka-mobile .discovery-stage .d-screen-9 .d-road{display:none}
 .sekka-mobile .sekka-rider-journey-heading{margin:10px 16px 15px;padding:16px 17px 18px!important;
- border-radius:21px;background:linear-gradient(120deg,#6412B1,#8A36C0);color:#fff;display:block;position:relative;z-index:1}
+ border-radius:21px;background:linear-gradient(120deg,#FFCC24,#FFCC24);color:#fff;display:block;position:relative;z-index:1}
 .sekka-mobile .sekka-rider-journey-heading>span{font:800 13px/1.5 Tajawal,Tahoma,sans-serif;color:#FFDE83}
 .sekka-mobile .sekka-rider-journey-heading h2{font:900 clamp(21px,5.5vw,27px)/1.4 Tajawal,Tahoma,sans-serif;color:#fff;margin:5px 0!important;text-align:start}
-.sekka-mobile .sekka-rider-journey-heading p{font-size:13px;line-height:1.55;color:#FCF0FF;margin:6px 0 0}
+.sekka-mobile .sekka-rider-journey-heading p{font-size:13px;line-height:1.55;color:#FFFFFF;margin:6px 0 0}
 .sekka-mobile .d-screen-9>.d-header{min-height:52px}
 .sekka-mobile .d-screen-9 .d-planner{margin:0 16px 30px!important;padding:16px;background:var(--rj-card);
  border:1px solid var(--rj-line);border-radius:22px}
@@ -28,7 +28,7 @@
 .sekka-mobile .d-screen-9 .d-planner-places>.d-swap{
  position:static!important;inset:auto!important;align-self:center;flex:none;
  min-width:46px;width:46px;height:46px;min-height:46px;margin:-6px 0;
- border-radius:14px;border:1px solid var(--rj-line);background:#FFF;color:#6412B1;padding:9px;
+ border-radius:14px;border:1px solid var(--rj-line);background:#FFF;color:#111111;padding:9px;
  z-index:2;display:flex;align-items:center;justify-content:center
 }
 .sekka-mobile .d-screen-9 .d-planner-places>.d-swap .discovery-icon{width:24px;height:24px}
@@ -43,7 +43,7 @@
 .sekka-mobile .d-screen-9 .d-planner>.d-primary{
  position:static;display:flex;align-items:center;justify-content:center;gap:12px;
  width:100%!important;min-height:54px!important;margin:14px 0 0!important;
- border-radius:15px;background:#6412B1!important;color:#fff!important;
+ border-radius:15px;background:#FFCC24!important;color:#fff!important;
  font:900 17px/1.35 Tajawal,Tahoma,sans-serif;border:0
 }
 .sekka-mobile .d-screen-9 .sekka-gps-inline{margin:12px 0!important;background:var(--rj-bg);
@@ -57,23 +57,23 @@
 }
 .sekka-mobile .d-screen-11 .sekka-live-result::before{display:none}
 .sekka-mobile .sekka-rider-recommended{display:inline-flex;align-items:center;padding:5px 10px;
- border-radius:999px;background:#FFCD38;color:#35134F;font-weight:900;font-size:12px;margin-bottom:8px}
-.sekka-mobile .d-screen-11 .sekka-live-result .d-offer-select{border:0;background:#6412B1;
+ border-radius:999px;background:#FFCD38;color:#111111;font-weight:900;font-size:12px;margin-bottom:8px}
+.sekka-mobile .d-screen-11 .sekka-live-result .d-offer-select{border:0;background:#FFCC24;
  color:#fff;font-weight:900;border-radius:14px;min-height:48px}
 .sekka-mobile :is(.d-screen-9,.d-screen-11,.d-screen-12) button:focus-visible,
-.sekka-mobile :is(.d-screen-9,.d-screen-11,.d-screen-12) input:focus-visible{outline:3px solid #AA6EF3;outline-offset:3px}
+.sekka-mobile :is(.d-screen-9,.d-screen-11,.d-screen-12) input:focus-visible{outline:3px solid #E8D77A;outline-offset:3px}
 @media(max-width:360px){
  .sekka-mobile .sekka-rider-journey-heading{margin-inline:12px}
  .sekka-mobile .d-screen-9 .d-planner{margin-inline:12px!important;padding:12px}
 }
 html[data-theme="dark"] .sekka-mobile .discovery-stage :is(.d-screen-9,.d-screen-11,.d-screen-12){
- --rj-bg:#1E0B32;--rj-ink:#FFF9FC;--rj-muted:#E0C9EB;--rj-card:#321A4C;--rj-line:#614376;--rj-primary:#FFCD38
+ --rj-bg:#193449;--rj-ink:#FFFFFF;--rj-muted:#FFFFFF;--rj-card:#193449;--rj-line:#FFCC24;--rj-primary:#FFCD38
 }
 html[data-theme="dark"] .sekka-mobile .d-screen-9 .d-planner>.d-primary,
 html[data-theme="dark"] .sekka-mobile .d-screen-11 .sekka-live-result .d-offer-select{
- background:#FFCD38!important;color:#35134F!important
+ background:#FFCD38!important;color:#111111!important
 }
-html[data-theme="dark"] .sekka-mobile .d-screen-9 .d-planner-places>.d-swap{background:#452960;color:#FFDE83}
+html[data-theme="dark"] .sekka-mobile .d-screen-9 .d-planner-places>.d-swap{background:#FFCC24;color:#FFDE83}
 @media(prefers-reduced-motion:reduce){.sekka-mobile :is(.d-screen-9,.d-screen-11,.d-screen-12) *{transition:none!important;animation:none!important}}
 
 .sekka-mobile .sekka-weekdays-disclaimer{
