@@ -1,6 +1,6 @@
 export const copy = {
-  brand: "سِكّة",
-  tagline: "معاك في السِكّة",
+  brand: "سِكَّة",
+  tagline: "معاك في السِكَّة",
   browse: "دوّر على خط",
   empty: "لسه مفيش خط مناسب.",
   retry: "جرّب تاني",

@@ -846,4 +846,7 @@ export const english: Readonly<Record<string,string>> = {
   "أهلًا بيك، أنا معاك لو محتاج تسأل عن الخط.": "Hi, feel free to ask me about the route.",
   "الحالة:": "Status:"
 };
-export function translate(text:string,language:"ar"|"en"){return language==="en" ? english[text] ?? text : text;}
+export function translate(text:string,language:"ar"|"en"){
+ const normalized=text.replaceAll("سِكّة","سِكَّة");
+ return language==="en" ? english[text] ?? english[text.replaceAll("سِكَّة","سِكّة")] ?? text : normalized;
+}

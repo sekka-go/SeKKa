@@ -632,7 +632,7 @@ export default function AccountFlow(p: {
             )}
           </>
         )}
-        <p className="w-footnote">{tr("معاك في السِكّة")}</p>
+        <p className="w-footnote">{tr("معاك في السِكَّة")}</p>
       </main>
     </div>
   );

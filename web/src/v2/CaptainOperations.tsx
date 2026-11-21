@@ -371,7 +371,7 @@ const money = (v: unknown) =>
           <Wordmark />
         </header>
         <div className="b-stage-label">
-          <span>{tr("الكابتن · معاك في السِكّة")}</span>
+          <span>{tr("الكابتن · معاك في السِكَّة")}</span>
           <span>{n - 50} / 12</span>
         </div>
         <h1 className="b-title">{screenTitle(p.screen,language)}</h1>
@@ -833,7 +833,7 @@ const money = (v: unknown) =>
                 <Box>
                   <h2>{tr("سجل إقرارات الاستلام")}</h2>
                   <p>
-                    {tr("المبالغ دي مدفوعة مباشرة ليك من الركاب؛ مش رصيد في محفظة سِكّة.")}</p>
+                    {tr("المبالغ دي مدفوعة مباشرة ليك من الركاب؛ مش رصيد في محفظة سِكَّة.")}</p>
                 </Box>
                 {d.bookings
                   .filter((b) => b.captain_received_at)
@@ -974,7 +974,7 @@ const money = (v: unknown) =>
             )}
           </>
         )}
-        <p className="w-footnote">{tr("معاك في السِكّة")}</p>
+        <p className="w-footnote">{tr("معاك في السِكَّة")}</p>
       </main>
     </div>
   );

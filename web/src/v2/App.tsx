@@ -303,7 +303,7 @@ export default function SubscriptionApp() {
     return () => removeEventListener("popstate", h);
   }, []);
   useEffect(() => {
-    document.title = `${screenTitle(screen, language)} | سِكّة`;
+    document.title = `${screenTitle(screen, language)} | سِكَّة`;
   }, [screen, language]);
   // Client-side navigation never reloads the document. Put keyboard/screen-reader
   // focus on the new page heading after navigation (including browser Back).
@@ -711,7 +711,7 @@ export default function SubscriptionApp() {
     if ([1, 2].includes(screen))
       return (
         <Panel className="hero">
-          <img src="/brand/sekka-mark.png" alt="شعار سِكّة" />
+          <img src="/brand/sekka-mark.png" alt="شعار سِكَّة" />
           <p className="eyebrow">{copy.tagline}</p>
           <h1>
             {screen === 37
@@ -834,7 +834,7 @@ export default function SubscriptionApp() {
       return (
         <>
           <div className="intro">
-            <p className="eyebrow">خط شغلك؟ دوّر عليه في سِكّة.</p>
+            <p className="eyebrow">خط شغلك؟ دوّر عليه في سِكَّة.</p>
             <h1>
               مشوارك اليومي
               <br />
@@ -1563,7 +1563,7 @@ export default function SubscriptionApp() {
             <>
               <p>الفئة بتتحدد من العربية المعتمدة.</p>
               <Field
-                label="المقاعد اللي هتتيحها على سِكّة"
+                label="المقاعد اللي هتتيحها على سِكَّة"
                 type="number"
                 min="1"
                 max="13"
@@ -2119,7 +2119,7 @@ export default function SubscriptionApp() {
             </p>
           )}
           {content()}
-          <footer>سِكّة · معاك في السِكّة</footer>
+          <footer>سِكَّة · معاك في السِكَّة</footer>
         </main>
       </div>
       <nav className="bottom-nav" aria-label="التنقل الرئيسي">
