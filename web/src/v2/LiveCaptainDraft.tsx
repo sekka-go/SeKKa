@@ -175,10 +175,16 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
    outboundStopTime:'',returnStopTime:'',...verifiedPoint}]);
   setPlaceLabel('');setPlaceChoice(null);
  };
+ // Distinct stops are defined by coordinates, never by internal area buckets.
+ const hasDistinctEndpoints=stops.length>=2&&
+  stops[0].latitude!==null&&stops[0].longitude!==null&&
+  stops[stops.length-1].latitude!==null&&stops[stops.length-1].longitude!==null&&
+  straightLineKm({latitude:stops[0].latitude,longitude:stops[0].longitude},
+   {latitude:stops[stops.length-1].latitude!,longitude:stops[stops.length-1].longitude!})>=0.05;
  const save=async()=>{
    if(!client||!uid||saving.current)return;
    setMessage('');setError('');
-   if(title.length<3||title.length>120||stops.length<2||stops[0].areaId===stops.at(-1)?.areaId||
+   if(title.length<3||title.length>120||!hasDistinctEndpoints||
       !validStopSchedule(stops)||
       stops.some(stop=>stop.latitude===null||stop.longitude===null||
        !inLaunchRegion({latitude:stop.latitude,longitude:stop.longitude}))||
@@ -188,7 +194,7 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
       (direction!=='return'&&!/^([01]\d|2[0-3]):[0-5]\d$/.test(departure))||
       (direction!=='outbound'&&!/^([01]\d|2[0-3]):[0-5]\d$/.test(arrival))||
       (direction==='round_trip'&&!returnSupported)){
-     setError(t('راجع المركبة والفئة والعنوان والسعر؛ يلزم نقطتان في منطقتين مختلفتين.','Check vehicle, category, title, price and at least two stops in distinct areas.'));return;
+     setError(t('راجع المركبة والفئة والعنوان والسعر؛ يلزم نقطتا بداية ونهاية مختلفتان على الأقل.','Check vehicle, category, title, price and at least two distinct origin and destination locations.'));return;
    }
    saving.current=true;
    setBusy(true);
@@ -263,8 +269,7 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
    return next;
   });
  };
- const canContinueRoute=stops.length>=2&&stops.length<=30&&
-  stops[0].areaId!==stops[stops.length-1].areaId;
+ const canContinueRoute=hasDistinctEndpoints&&stops.length<=30;
  const canContinueVehicle=Boolean(vehicleId)&&Boolean(category)&&eligibleCategories.includes(category as Category)&&vehicleCheck==='clear';
  const canContinueSchedule=(direction==='outbound'||direction==='return'||direction==='round_trip')&&
   (direction==='return'||Boolean(departure))&&
@@ -275,7 +280,7 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
   setError('');
   if(canContinue&&step<4)setStep((step+1) as 1|2|3|4);
  };
- const draftReady=stops.length>=2&&stops[0].areaId!==stops.at(-1)?.areaId&&
+ const draftReady=hasDistinctEndpoints&&
   title.length>=3&&title.length<=120&&Boolean(vehicleId)&&Boolean(category)&&
   eligibleCategories.includes(category as Category)&&vehicleCheck==='clear'&&/^\d{1,7}$/.test(price)&&Number(price)>0&&
   (direction!=='round_trip'||returnSupported)&&validStopSchedule(stops);
