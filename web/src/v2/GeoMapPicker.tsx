@@ -32,8 +32,7 @@ export default function GeoMapPicker({initial,area,onCancel,onConfirm}:MapPicker
  const mapRef=useRef<HTMLDivElement|null>(null);
  const centerRef=useRef(center);
  const active=useRef(new Map<number,{x:number;y:number;startX:number;startY:number;travel:number}>());
- const priorPin=useRef(initial);
- useEffect(()=>{centerRef.current=center;},[center]);
+  useEffect(()=>{centerRef.current=center;},[center]);
  useEffect(()=>{
   const element=mapRef.current;
   if(!element)return;
@@ -93,7 +92,7 @@ export default function GeoMapPicker({initial,area,onCancel,onConfirm}:MapPicker
   const place:MapPlace={id:'manual:'+normalized.latitude.toFixed(6)+','+normalized.longitude.toFixed(6),
    source:'manual_map_pin',name:t('نقطة محددة على الخريطة','Selected map point'),
    detail:coord,kind:'point',latitude:normalized.latitude,longitude:normalized.longitude,
-   locality:area?[area.name_ar,area.name_en]:[]};
+   locality:[]};
   setBusy(true);
   try{
    const accepted=await onConfirm(place);
