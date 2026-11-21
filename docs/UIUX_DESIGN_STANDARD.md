@@ -4,7 +4,7 @@ Status: **implementation guideline**, not independent visual acceptance. Applies
 
 ## Design principles
 - World-class quality means legibility, predictable behavior, accessibility, consistency and truthful states, **not** extra animation or cosmetic decoration.
-- Mobile-first hierarchy; keep brand assets, Tajawal typography, yellow accent and established onboarding screens 1–7 intact unless explicitly approved.
+- Mobile-first hierarchy; preserve the **original Arabic app icon shape** (palette-only recolor), bundled Tajawal typography, and accessibility. Owner explicitly approved replacing black/yellow colors with the warm purple/coral/yellow palette on 2026-11-21. Screens 1–7 may be recolored as part of the renewed onboarding UX.
 - Consistent spacing scale: 4 / 8 / **12** / 16 / 24 / 32 px. Separate adjacent independent interactive buttons by **at least 12px** wherever presented as a group; prefer a two-column grid for rider-home shortcuts at mobile widths.
 - Minimum interactive target: **44 × 44 CSS px**, with a visible focus state; never communicate selection by color alone. Wrap long English and Arabic labels rather than letting them overlap.
 - Prefer logical CSS properties (`inline-start`, `inline-end`) and verify RTL/LTR. Dates, currency, time, empty and validation copy must be localized in the rendered screen, not merely present in a catalog.
