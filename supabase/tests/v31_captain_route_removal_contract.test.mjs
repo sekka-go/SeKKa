@@ -27,5 +27,7 @@ test('published routes archive through existing server booking guard, never hard
  assert.match(ui,/v31_remove_captain_route/);
  assert.match(ui,/pendingRemoval/);
  assert.match(ui,/tab==='archived'/);
- assert.match(ui,/getByRole/===null?/not possible/:/Confirm/);
+ assert.match(ui,/cj-remove-route-confirm/);
+ assert.match(ui,/removeRoute\(route\)/);
+ assert.match(ui,/active bookings/);
 });
