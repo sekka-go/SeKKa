@@ -3,7 +3,6 @@ import {usePreferences} from './preferences';
 import {catalogMatches,locationContext,locationContextIcon,outsideCatalogMatch,noMatchingLocation,outsideCoverageMessage,isSearchableMapPlace,serviceMatches} from './geoPlace';
 import {useLocationOptions,useLocationSearch} from './locationSearch';
 import type {PlaceChoice,ServiceArea,MapPlace} from './geoPlace';
-import GeoMapPicker from './GeoMapPicker';
 import './location-search.css';
 
 export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=false,searchArea}:{
@@ -15,12 +14,9 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
  const [query,setQuery]=useState(value);
  const [open,setOpen]=useState(false);
  const [immediate,setImmediate]=useState(0);
- const [mapOpen,setMapOpen]=useState(false);
- const [mapFocus,setMapFocus]=useState<{latitude:number;longitude:number}|null>(null);
  const options=useLocationOptions();
  const inputRef=useRef<HTMLInputElement|null>(null);
  const shellRef=useRef<HTMLDivElement|null>(null);
- const deliberateMapPress=useRef(false);
  // Touch can blur the input before its suggestion button receives a click.
  // Outside-pointer and outside-focus dismissal preserves the original touch
  // target instead of collapsing the menu onto the optional map button.
@@ -65,7 +61,7 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
   if(!next)return;
   const name=next.kind==='service'?next.area.name_ar:next.place.name;
   inputRef.current?.blur();
-  setQuery(name);onPick(name,next);setMapOpen(false);setOpen(false);setImmediate(0);options.reset();
+  setQuery(name);onPick(name,next);setOpen(false);setImmediate(0);options.reset();
  };
  const search=()=>{setOpen(true);setImmediate(i=>i+1);};
  const msg=menu&&outsideCatalogMatch(query,searchArea)&&!picks.length
@@ -114,28 +110,6 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
    {result.busy&&<p role="status">{t('بنجيب الأماكن من OpenStreetMap…','Looking up places on OpenStreetMap…')}</p>}
    {msg&&<p role="status" className="cj-place-error">{msg}</p>}
   </div>}
-  {/* Map mode is separate and strictly opt-in. Hide its trigger while
-      suggestions are open, so Android touch/click retargeting cannot open it. */}
-  {!menu&&<button type="button" className="sekka-place-lookup__map-search"
-   disabled={disabled}
-   onPointerDown={()=>{deliberateMapPress.current=true;}}
-   onPointerCancel={()=>{deliberateMapPress.current=false;}}
-   onKeyDown={event=>{
-    if(event.key==='Enter'||event.key===' ')deliberateMapPress.current=true;
-   }}
-   onClick={event=>{
-    // detail=0 permits keyboard/screen-reader activation. Mouse/touch must
-    // start on this very button, never on a disappearing suggestion row.
-    if(!deliberateMapPress.current&&event.detail!==0)return;
-    deliberateMapPress.current=false;
-    inputRef.current?.blur();setMapFocus(choice?.kind==='search'?choice.place:foundPlaces[0]??null);
-    setMapOpen(true);setOpen(false);
-   }}>
-   <span aria-hidden="true">⌖</span>{t('اختيار من الخريطة (اختياري)','Choose on map (optional)')}
-  </button>}
-  {mapOpen&&<GeoMapPicker area={searchArea} focus={mapFocus} focusLabel={query}
-   initial={choice?.kind==='map'?choice.place:null} onCancel={()=>setMapOpen(false)}
-   onConfirm={place=>{const selected={kind:'map' as const,place};
-    setQuery(place.name);onPick(place.name,selected);setMapOpen(false);setOpen(false);return true;}}/>}
+
  </div>;
 }
