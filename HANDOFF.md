@@ -34,6 +34,18 @@ Status: **PARTIAL; NOT ACCEPTED FOR PRODUCTION.** Never merge to `main` as a sub
 - **Manual acceptance:** Sign in with authorized Rider Google account on staging; first visit → search area or OSM map result → valid origin/destination/time → Search → check server-returned results/empty → Home → the saved route appears → tap once to rerun real search → edit and repeat → open a route → verify capacity/prerequisites with real booking only after server confirmation. Test location denial/manual search, 320/360/390/480 widths, Arabic/English, light/dark and back navigation.
 - **Still blocked:** full Leaflet pin/distance-ring map, verified weekday recurrence/search RPC, backend saved-demand aggregation `demand_by_*`, authoritative PostGIS data migration, walking-route service, and unresolved subscription/payment policy. No production or staging database writes in this phase.
 
+## Rider Home interactive form update — 2026-11-21
+
+- Owner explicitly confirmed that **all four rows** in the new Rider Home must be editable: origin, destination, departure/return time and number of travel days. None should be decorative.
+- Tapping From/To opens the real service-area / OpenStreetMap picker, and an unconfirmed free-text place cannot proceed to search.
+- Tapping Time opens the outbound time and optional return time editor; leaving the time blank allows a broad search.
+- Tapping Days opens a Saturday–Friday picker. The count of distinct selected weekdays is computed from selected days, and weekly/monthly preference can be chosen. Old saved searches without a weekdays array remain valid.
+- Selected values survive tab changes as a validated *session-only, Google-account-scoped* draft; a search stores the selected commute for that same account on-device.
+- Main button is consistently **«ابحث» / Search**. It sends only verified places and real times to the published-routes search RPC, rather than guessing any inventory.
+- **Important limitation:** current v31 Supabase route-search RPC does **not** accept a weekdays parameter. We persist the Rider's preferred weekdays and show an explicit note on the results page; results do **not** claim to be filtered by those days. Supporting real weekday matching requires separate server schema/RPC work and operational approval.
+- Added weekday validation/unit tests and browser tests for choosing outbound/return time and 3 distinct weekdays, preserving the form through Home ↔ Search navigation and reaching the search RPC.
+- Neither OTP/payment policy nor Captain/Admin access nor the installed seKKa road icon was changed.
+
 ## Not implemented / blocked
 - Staging project `zgcvumykzivsvnlflbyp` was inspected **read-only**: PostGIS is NOT currently installed. There have been NO staging schema writes or migrations in this iteration; Production was not accessed.
 - No new `places`, recurring templates, saved-search or demand data model has been deployed yet. No nearby_rides/demand_by_* RPC exists from this change.
