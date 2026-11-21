@@ -67,8 +67,9 @@ export default function RiderBookingsV3({onFindRide,onOpenBooking}:{
  return <section className="rb3" aria-labelledby="rb3-title">
   <header className="rb3__hero">
    <span>{t('كل مشاويرك في مكان واحد','YOUR RIDES')}</span>
-   <h1 id="rb3-title">{t('رحلاتي','My rides')}</h1>
-   <p>{t('حجوزاتك الحقيقية وحالتها، من غير ما تدور عليها.','Your real seat reservations and their current status.')}</p>
+   <h1 id="rb3-title">{t('حجوزاتي','My bookings')}</h1>
+   <p>{t('تابع كل مقعد حجزته وحالته الحقيقية.','Track your real reservations and their status.')}</p>
+   <span className="rb3__hero-route" aria-hidden="true"><i/><i/><i/></span>
   </header>
   <div className="rb3__filters" role="group" aria-label={t('تصفية الحجوزات','Booking filters')}>
    {(['active','past','all'] as const).map(value=><button type="button" key={value}
@@ -97,7 +98,8 @@ export default function RiderBookingsV3({onFindRide,onOpenBooking}:{
      <span className={'rb3__status rb3__status--'+b.status}>{status(b.status)}</span>
      <small>{new Date(b.created_at).toLocaleDateString(en?'en-GB':'ar-EG',{day:'numeric',month:'short',year:'numeric'})}</small>
     </div>
-    <h2 dir="auto">{titles[b.route_id]||t('حجز رحلة مشتركة','Shared-ride booking')}</h2>
+    <div className="rb3__ticket-route"><span aria-hidden="true">●</span>
+     <h2 dir="auto">{titles[b.route_id]||t('حجز رحلة مشتركة','Shared-ride booking')}</h2></div>
     <div className="rb3__meta">
      <span>{t('المقاعد','Seats')} <strong>{new Intl.NumberFormat(en?'en-EG':'ar-EG').format(b.seats)}</strong></span>
      <span>{t('مرجع الحجز','Reference')} <bdi>{b.id.slice(0,8)}</bdi></span>

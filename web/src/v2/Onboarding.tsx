@@ -279,8 +279,8 @@ export default function Onboarding({
       <main className={"phase-canvas phase-screen-"+id+" sekka-entry-login"} dir={language==="en"?"ltr":"rtl"}>
         <button type="button" className="phase-back" onClick={()=>go(id===4?3:8)}
           aria-label={copy.back}>{language==="en"?"‹":"›"}</button>
-        <img src="/brand/sekka-go-road-192.png" className="sekka-entry-login__brand"
-          width="96" height="96" alt={copy.brand}/>
+        <span className="sekka-entry-login__brand sekka-entry-login__wordmark"
+          role="img" aria-label={copy.brand}>{copy.brand}</span>
         {id===4
           ? <div className="phase-google-auth sekka-entry-login__form">
             <h1 className="phase-title">{copy.signInTitle}</h1>

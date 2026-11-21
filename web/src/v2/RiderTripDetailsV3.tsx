@@ -19,11 +19,16 @@ export default function RiderTripDetailsV3({line,stops,pickup,dropoff,pickupPosi
  const outbound=line.outbound||'',returned=line.returnTime||'';
  return <section className="rd3" aria-labelledby="rd3-title">
   <header className="rd3__hero">
-   <span className="rd3__step">{t('الخطوة ٣ من ٣','STEP 3 OF 3')}</span>
+   <span className="rd3__step">{t('سِكَّة / تفاصيل الرحلة','seKKa / Route details')}</span>
    <h2 id="rd3-title">{t('تفاصيل رحلتك','Review your ride')}</h2>
    <p>{t('كل التفاصيل المهمة قبل ما تكمّل الحجز.','Check the pickup, drop-off and seats before you continue.')}</p>
+   <div className="rd3__hero-progress" aria-label={t('الخطوة الثالثة: التفاصيل','Step three: details')}>
+    <span className="is-done">01</span><i/><span className="is-done">02</span><i/><span className="is-current">03</span>
+   </div>
   </header>
   <section className="rd3__route" aria-label={t('مسار الرحلة','Ride route')}>
+   <div className="rd3__ticket-cut rd3__ticket-cut--first" aria-hidden="true"/>
+   <div className="rd3__ticket-cut rd3__ticket-cut--second" aria-hidden="true"/>
    <div className="rd3__route-line" aria-hidden="true"><span/><i/><span/></div>
    <div className="rd3__route-stops">
     <div><small>{t('من','From')}</small><strong dir="auto">{line.origin}</strong></div>
@@ -83,7 +88,7 @@ export default function RiderTripDetailsV3({line,stops,pickup,dropoff,pickupPosi
   </p>}
   <button type="button" className="rd3__primary"
    disabled={line.amount===null||line.available<1||!pickup||!validDropoff}
-   onClick={onProceed}>{t('كمّل للحجز','Continue to booking')}</button>
+   onClick={onProceed}>{t('كمّل للحجز','Continue to booking')} <span aria-hidden="true">←</span></button>
   <button type="button" className="rd3__back" onClick={onBack}>{t('رجوع','Back')}</button>
  </section>;
 }

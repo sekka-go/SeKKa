@@ -180,7 +180,7 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
      ?t('المتاح','Available')+' '+numberFormat.format(selection.remaining)+' / '+numberFormat.format(route.seat_capacity)
      :t('المقاعد خلصت','Sold out')}</p>
    </div>
-   {onSelect&&<button type="button" className="d-offer-select" onClick={()=>onSelect(selection)}>{t('عرض تفاصيل الخط','View route details')}</button>}
+   {onSelect&&<button type="button" className="d-offer-select" onClick={()=>onSelect(selection)}>{t('شوف تفاصيل الرحلة','View ride details')} <span aria-hidden="true">←</span></button>}
    {!onSelect&&<>
    <label>{t('المقاعد المطلوبة','Seats to reserve')} <input type="number" min={1} max={Math.min(MAX_SEATS_PER_RIDER,selection.remaining)} value={seatCounts[route.id]||1} onChange={e=>setSeatCounts(v=>({...v,[route.id]:Number(e.target.value)}))}/></label>
    <button type="button" disabled={bookingBusy!==null||!Number.isInteger(seatCounts[route.id]||1)||(seatCounts[route.id]||1)<1||(seatCounts[route.id]||1)>MAX_SEATS_PER_RIDER||(seatCounts[route.id]||1)>selection.remaining} onClick={()=>void book(route.id,from.id,to.id,reverse)}>{bookingBusy===route.id?t('جارٍ حجز المقاعد…','Reserving seats…'):t('احجز مقاعد حقيقية','Reserve seats')}</button>
