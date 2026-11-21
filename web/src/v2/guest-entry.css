@@ -1,8 +1,8 @@
 /* User-selected Poparide-like interaction sequence, custom seKKa visual identity.
    Only production entry; /dev/screens remains independent. */
 .phase-one-stage.sekka-entry-stage{
- --se-bg:#FFFFFF;--se-ink:#28143E;--se-muted:#645570;--se-card:#FFF7F3;
- --se-line:#E8DCE8;--se-primary:#6412B1;--se-yellow:#FFCD38;
+ --se-bg:#FFFFFF;--se-ink:#111111;--se-muted:#111111;--se-card:#FFF7F3;
+ --se-line:#FFF1B8;--se-primary:#FFCC24;--se-yellow:#FFCD38;
  display:block!important;min-height:100dvh;padding:0!important;background:var(--se-bg)!important;
  color:var(--se-ink);width:100%!important;max-width:100%!important;height:auto!important;margin:0!important
 }
@@ -92,7 +92,7 @@
 .sekka-entry__details li{display:flex;align-items:center;gap:15px;min-height:65px;background:var(--se-card);
  border:1px solid var(--se-line);border-radius:17px;padding:11px 14px;color:var(--se-ink)}
 .sekka-entry__details li>span{display:grid;place-items:center;width:36px;height:36px;flex:none;border-radius:13px;
- background:#FFCD38;color:#35134F;font-size:17px;font-weight:900}
+ background:#FFCD38;color:#111111;font-size:17px;font-weight:900}
 .sekka-entry__details li strong{font-size:clamp(13px,3.6vw,16px);line-height:1.5;font-weight:800}
 .sekka-entry__roles{display:flex;flex-direction:column;gap:13px;margin-top:20px}
 .sekka-entry button.sekka-entry__role.phase-role-card{
@@ -103,7 +103,7 @@
  color:var(--se-ink)!important;box-shadow:none!important;overflow:visible!important
 }
 .sekka-entry button.sekka-entry__role.is-selected{
- border-color:var(--se-primary)!important;background:#F3EAFC!important
+ border-color:var(--se-primary)!important;background:#FFF9E9!important
 }
 .sekka-entry__role-icon{display:grid;place-items:center;flex:none;width:60px;height:60px;border-radius:18px;background:#FFE6D8}
 .sekka-entry__role-icon svg{width:47px;height:47px}
@@ -168,17 +168,17 @@
  .sekka-entry__content,.sekka-entry__float{animation:none!important;transform:none!important}
 }
 html[data-theme="dark"] .phase-one-stage.sekka-entry-stage{
- --se-bg:#1E0B32;--se-ink:#FFF8FC;--se-muted:#E0CDE7;--se-card:#32184C;--se-line:#60436F;--se-primary:#B881FF;
+ --se-bg:#193449;--se-ink:#FFFFFF;--se-muted:#FFFFFF;--se-card:#193449;--se-line:#193449;--se-primary:#FFF1B8;
 }
 html[data-theme="dark"] .sekka-entry button.sekka-entry__primary,
 html[data-theme="dark"] .sekka-entry-login .phase-google-auth button.phase-primary{
- background:#FFCD38!important;border-color:#FFCD38!important;color:#35134F!important
+ background:#FFCD38!important;border-color:#FFCD38!important;color:#F5FBFF!important
 }
 html[data-theme="dark"] .sekka-entry button.sekka-entry__role.is-selected{
- background:#4B266A!important;border-color:#FFCD38!important
+ background:#193449!important;border-color:#FFCD38!important
 }
 html[data-theme="dark"] .sekka-entry__check{border-color:#FFCD38}
-html[data-theme="dark"] .is-selected .sekka-entry__check{background:#FFCD38;color:#35134F}
+html[data-theme="dark"] .is-selected .sekka-entry__check{background:#FFCD38;color:#F5FBFF}
 
 /* Authenticated profile step keeps the existing verified Supabase form and
    never invents upload/notifications support to imitate the reference. */
@@ -211,5 +211,5 @@ html[data-theme="dark"] .is-selected .sekka-entry__check{background:#FFCD38;colo
  color:#FFFFFF!important;font:900 16px/1.5 Tajawal,sans-serif!important
 }
 html[data-theme="dark"] .sekka-entry-login .sekka-entry-login__profile>.phase-primary{
- background:#FFCD38!important;color:#35134F!important
+ background:#FFCD38!important;color:#F5FBFF!important
 }
