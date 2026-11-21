@@ -1,5 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
 import {entryCopy} from './guestEntryCopy';
+import {approvedSplashSceneUri} from './approvedSplashScene';
 import './guest-entry.css';
 
 type Role='rider'|'captain';
@@ -130,7 +131,10 @@ export default function GuestEntry({screen,language,role,onRole,go}:Props){
        ?<ul className="sekka-entry__details">
         {[tr.detailOne,tr.detailTwo,tr.detailThree].map((text,index)=><li key={text}><span>{index+1}</span><strong>{text}</strong></li>)}
        </ul>
-       :<div className="sekka-entry__art"><RideIllustration variant={step}/></div>}
+       :<div className="sekka-entry__art">{step===0||step===1
+         ?<img className="sekka-entry__approved-scene" src={approvedSplashSceneUri}
+           alt="" draggable={false} aria-hidden="true"/>
+         :<RideIllustration variant={step}/>}</div>}
    </div>
    <div className="sekka-entry__footer">
     <button type="button" className={"sekka-entry__primary"+(!roleScreen?' phase-start':' phase-role-next')}
