@@ -284,3 +284,36 @@
  .sekka-mobile .sekka-live-result,
  .sekka-mobile .sekka-request-yellow-cta{animation:none!important}
 }
+
+/* Premium entry pages: the owner-approved SUV replaces the outdated orange van. */
+.sekka-mobile .sekka-entry__header{
+ position:relative;z-index:1;min-height:105px;
+ background:linear-gradient(125deg,#20D9E9,#0A9AF3 75%,#087EEB)!important;
+ border-radius:0 0 30% 10%;
+}
+.sekka-mobile .sekka-entry__brand--text{
+ background:transparent!important;color:#FFFFFF!important;
+ font-size:34px!important;text-shadow:0 2px 8px #036CB127;
+}
+.sekka-mobile .sekka-entry__skip,
+.sekka-mobile .sekka-entry__back{color:#FFFFFF!important}
+.sekka-mobile .sekka-entry__progress{margin-top:13px!important}
+.sekka-mobile .sekka-entry__approved-scene{
+ display:block;width:min(96%,420px);height:auto;max-height:365px;
+ aspect-ratio:1.25/1;object-fit:cover;object-position:center 46%;
+ border-radius:32px;
+ box-shadow:0 17px 39px #06688D23;
+ border:1px solid #D0F3F7;
+}
+.sekka-mobile .sekka-entry__art:has(.sekka-entry__approved-scene){
+ display:grid;place-items:center;min-height:190px;max-height:385px;
+ padding:6px 12px;margin:12px auto 0;width:100%;
+}
+.sekka-mobile .sekka-entry__header-actions>*{transition:transform 200ms ease}
+.sekka-mobile .sekka-entry__header-actions>*:active{transform:scale(.96)}
+@media(max-height:730px){
+ .sekka-mobile .sekka-entry__approved-scene{max-height:245px}
+ .sekka-mobile .sekka-entry__art:has(.sekka-entry__approved-scene){
+  min-height:155px;max-height:258px;margin-top:3px;
+ }
+}
