@@ -1,7 +1,7 @@
 export const riderHomeCopy={
  ar:{
-  kicker:'للمشاوير اللي بتتكرر',title:'رايح فين النهارده؟',
-  subtitle:'اختار خطك المعتاد أو دور على رحلة مناسبة من غير خطوات زيادة.',
+  kicker:'سِكّة.. مشاوير أذكى',title:'جاهز لمشوارك؟',
+  subtitle:'دور على رحلة في طريقك، واختار نقطة الركوب اللي تناسبك.',
   savedLabel:'مشوارك المعتاد',pickup:'من',dropoff:'إلى',departure:'الذهاب',arrival:'العودة',
   weekly:'أسبوعي',monthly:'شهري',outbound:'ذهاب',return:'عودة',round_trip:'ذهاب وعودة',
   searchSaved:'شوف الرحلات على خطّي',change:'غيّر المكان أو الميعاد',find:'دور على رحلة',
@@ -16,12 +16,13 @@ export const riderHomeCopy={
   localFailure:'مش قادرين نفتح البحث المحفوظ. افتح البحث وعدّل التفاصيل.',
   mapHint:'البحث القريب اختياري ويستخدم الموقع بعد موافقتك.',
   progress:'1. اختر الطريق   2. قارن الرحلات   3. راجع واحجز',
+  homeCaption:'طريقك على سِكّة',changeShort:'تعديل',originPrompt:'حدد نقطة انطلاقك',destinationPrompt:'حدد وجهتك',nextHeading:'إيه كمان تقدر تعمل؟',nextHint:'كل حاجة في مكانها',nearbyShort:'شوف أقرب نقاط ركوب منشورة',bookingsShort:'تابع حجوزاتك وطلباتك',footerMessage:'مش هنقولك رحلة متاحة غير لما تكون منشورة فعلًا.',
   searchStep:'الخطوة 1 من 3',searchTitle:'ظبّط مشوارك',searchHelp:'حدد نقطة البداية والوجهة والميعاد. البحث هيعرض الخطوط المنشورة فعلًا.',
   resultsStep:'الخطوة 2 من 3',resultsTitle:'اختار الرحلة الأنسب',detailsStep:'الخطوة 3 من 3',detailsTitle:'راجع التفاصيل قبل الحجز'
  },
  en:{
-  kicker:'For recurring commutes',title:'Where are you going today?',
-  subtitle:'Reuse your usual commute or find a ride without extra steps.',
+  kicker:'seKKa · Smarter shared rides',title:'Ready for your ride?',
+  subtitle:'Find published trips going your way and choose a convenient pickup.',
   savedLabel:'Your usual commute',pickup:'From',dropoff:'To',departure:'Outbound',arrival:'Return',
   weekly:'Weekly',monthly:'Monthly',outbound:'Outbound',return:'Return',round_trip:'Round trip',
   searchSaved:'Find rides on my route',change:'Change route or time',find:'Find a ride',
@@ -36,6 +37,7 @@ export const riderHomeCopy={
   localFailure:"Couldn't restore your saved search. Open search to edit the details.",
   mapHint:'Nearby discovery is optional and uses location only with your permission.',
   progress:'1. Choose a route   2. Compare rides   3. Review and book',
+  homeCaption:'Your seKKa route',changeShort:'Edit',originPrompt:'Choose pickup area',destinationPrompt:'Choose destination',nextHeading:'What else can you do?',nextHint:'All in one place',nearbyShort:'Explore nearby published pickup points',bookingsShort:'Track bookings and requests',footerMessage:'We only show trips that are actually published.',
   searchStep:'Step 1 of 3',searchTitle:'Set your commute',searchHelp:'Choose your pickup, destination and time. Only genuinely published routes are shown.',
   resultsStep:'Step 2 of 3',resultsTitle:'Pick a suitable ride',detailsStep:'Step 3 of 3',detailsTitle:'Review before booking'
  }
