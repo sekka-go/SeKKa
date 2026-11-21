@@ -92,7 +92,8 @@ export function outsideCatalogMatch(query:string,area?:ServiceArea):boolean {
 
 export function placeMatchesArea(place:MapPlace,area:ServiceArea):boolean{
  const aliases=[...knownAreaNames(area),...(localityAliases[normalizedPlace(area.name_en)]??[])].map(normalizedPlace);
- const labels=place.locality??place.detail.split('·');
+ const labels=(place.locality?.length?place.locality:place.detail.split('·'))
+  .flatMap(label=>label.split(/\s*[·،,|]\s*|\s+-\s+/g)).filter(Boolean);
  return labels.some(label=>aliases.includes(normalizedPlace(label)));
 }
 
