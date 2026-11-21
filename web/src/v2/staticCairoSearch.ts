@@ -1,4 +1,5 @@
-import {isInsideOperationalRegion} from './greaterCairoBoundary.ts';
+import {isInsideCairoDiscovery} from './discoveryCairo.ts';
+import {canonicalNamedQuery} from './priorityPlaceQueries.ts';
 import {normalizedPlace,placeMatchesArea} from './geoPlace.ts';
 import {localPlaceCatalog} from './locationCatalog.ts';
 import type {MapPlace,ServiceArea} from './geoPlace';
@@ -79,15 +80,15 @@ export async function searchStaticCairo(query:string,en:boolean,area:ServiceArea
   if(!relevance||!/^osm:(node|way|relation):\d+$/.test(row.i))return null;
   const latitude=Number(row.p?.[0]),longitude=Number(row.p?.[1]);
   if(!Number.isFinite(latitude)||!Number.isFinite(longitude)||
-   !isInsideOperationalRegion({latitude,longitude}))return null;
+   !isInsideCairoDiscovery({latitude,longitude}))return null;
   const kind:MapPlace['kind']=row.x&&row.os==='node'?'point':
    ['city','town','village','suburb','district','neighbourhood','neighborhood','quarter','borough','locality'].includes(row.k)?'area':
    row.k==='road'?'road':'feature';
   const place:MapPlace={id:row.os[0].toUpperCase()+':'+row.i.split(':')[2],
    name:(en?row.e||row.n:row.a||row.n),detail:row.c,kind,source:'map',
-   latitude,longitude,locality:row.c?row.c.split(' · ').map(t=>t.trim()):[]};
+   latitude,longitude,osmValue:row.k,locality:row.c?row.c.split(' · ').map(t=>t.trim()):[]};
   if(area&&!placeMatchesArea(place,area))return null;
-  const typeRank=kind==='area'?4:kind==='point'?3:kind==='feature'?2:1;
+  const typeRank=['mall','school','kindergarten','childcare','university','college','office','commercial'].includes(row.k)?6:kind==='area'?4:kind==='point'?3:kind==='feature'?2:1;
   return {place,score:relevance,typeRank};
  }).filter((row):row is {place:MapPlace;score:number;typeRank:number}=>Boolean(row));
  candidate.sort((a,b)=>b.score-a.score||b.typeRank-a.typeRank||
