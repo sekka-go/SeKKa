@@ -190,3 +190,116 @@ html[data-theme="dark"] .sekka-mobile :is(
 @media(prefers-reduced-motion:reduce){
  .sekka-mobile *{scroll-behavior:auto!important}
 }
+
+
+/* Header action geometry: constant 46px touch targets, 20px yellow symbols.
+   Physical placement makes menu/notifications correct in both RTL and LTR. */
+.sekka-mobile > .sekka-mobile-header > :is(.sekka-shell-menu,.rh-shell-notifications){
+ box-sizing:border-box!important;
+ position:absolute!important;
+ display:grid!important;
+ place-items:center!important;
+ align-items:center!important;
+ justify-items:center!important;
+ align-content:center!important;
+ justify-content:center!important;
+ top:50%!important;
+ transform:translateY(-50%)!important;
+ width:46px!important;height:46px!important;
+ min-width:46px!important;min-height:46px!important;
+ max-width:46px!important;max-height:46px!important;
+ padding:0!important;margin:0!important;
+ border-radius:15px!important;
+ border:1px solid rgba(255,255,255,.33)!important;
+ background:rgba(255,255,255,.12)!important;
+ color:#FFCC24!important;
+ z-index:3!important;
+ font-size:0!important;
+ line-height:1!important;
+ direction:ltr!important;
+ overflow:hidden!important;
+ backdrop-filter:blur(4px);
+}
+.sekka-mobile > .sekka-mobile-header > :is(.sekka-shell-menu,.rh-shell-notifications) svg,
+.sekka-mobile .sekka-captain-head-action svg{
+ display:block!important;width:20px!important;height:20px!important;
+ min-width:20px!important;min-height:20px!important;
+ max-width:20px!important;max-height:20px!important;
+ padding:0!important;margin:0 auto!important;
+ color:#FFCC24!important;
+ stroke:#FFCC24!important;
+ fill:none!important;
+ flex:none!important;
+ transform:none!important;
+}
+.sekka-mobile[dir="rtl"] > .sekka-mobile-header > .sekka-shell-menu{
+ left:auto!important;right:max(12px,env(safe-area-inset-right,0px))!important;
+ inset-inline-start:auto!important;inset-inline-end:auto!important;
+}
+.sekka-mobile[dir="rtl"] > .sekka-mobile-header > .rh-shell-notifications{
+ right:auto!important;left:max(12px,env(safe-area-inset-left,0px))!important;
+ inset-inline-start:auto!important;inset-inline-end:auto!important;
+}
+.sekka-mobile[dir="ltr"] > .sekka-mobile-header > .sekka-shell-menu{
+ right:auto!important;left:max(12px,env(safe-area-inset-left,0px))!important;
+ inset-inline-start:auto!important;inset-inline-end:auto!important;
+}
+.sekka-mobile[dir="ltr"] > .sekka-mobile-header > .rh-shell-notifications{
+ left:auto!important;right:max(12px,env(safe-area-inset-right,0px))!important;
+ inset-inline-start:auto!important;inset-inline-end:auto!important;
+}
+.sekka-mobile > .sekka-mobile-header > :is(.sekka-shell-menu,.rh-shell-notifications):active{
+ transform:translateY(-50%) scale(.96)!important;
+}
+/* The captain header uses the same icon sizing and correct logical grid order. */
+.sekka-mobile .sekka-captain-header{direction:inherit!important;}
+.sekka-mobile .sekka-captain-header > .sekka-captain-head-action{
+ display:grid!important;place-items:center!important;
+ padding:0!important;margin:0!important;
+ width:46px!important;height:46px!important;
+ min-height:46px!important;min-width:46px!important;
+ border:1px solid rgba(255,255,255,.33)!important;
+ border-radius:15px!important;
+ background:rgba(255,255,255,.12)!important;
+ color:#FFCC24!important;
+ line-height:1!important;font-size:0!important;
+}
+.sekka-mobile .sekka-captain-header > .sekka-captain-head-action:active{
+ transform:scale(.96)!important;
+}
+/* Persistent preference selectors. Native selects retain keyboard/AT support. */
+.sekka-mobile .sekka-side-drawer .sekka-preference-controls{
+ display:grid;gap:12px;margin:7px 0 20px;
+ padding:14px;border:1px solid #D8EEF5;border-radius:18px;
+ background:#F4FBFF;
+}
+.sekka-mobile .sekka-side-drawer .sekka-preference-controls label{
+ display:grid;gap:7px;color:#111111!important;
+ font:900 13px/1.5 Tajawal,Tahoma,sans-serif;
+}
+.sekka-mobile .sekka-side-drawer .sekka-preference-controls select{
+ box-sizing:border-box;width:100%;min-width:0;min-height:48px;
+ border-radius:13px;border:1px solid #CCE4EE;
+ background:#FFFFFF;color:#111111!important;
+ font:800 14px/1.5 Tajawal,Tahoma,sans-serif;
+ padding:10px 12px;cursor:pointer;
+}
+.sekka-mobile .sekka-side-drawer .sekka-preference-controls p{
+ margin:0;color:#353535!important;font-size:12px;line-height:1.7;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-side-drawer .sekka-preference-controls{
+ background:#19384D;border-color:#385E73;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-side-drawer .sekka-preference-controls label,
+html[data-theme="dark"] .sekka-mobile .sekka-side-drawer .sekka-preference-controls p{
+ color:#F1FAFF!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-side-drawer .sekka-preference-controls select{
+ background:#244A60;border-color:#527587;color:#FFFFFF!important;
+}
+@media(max-width:359px){
+ .sekka-mobile[dir="rtl"] > .sekka-mobile-header > .sekka-shell-menu{right:8px!important}
+ .sekka-mobile[dir="rtl"] > .sekka-mobile-header > .rh-shell-notifications{left:8px!important}
+ .sekka-mobile[dir="ltr"] > .sekka-mobile-header > .sekka-shell-menu{left:8px!important}
+ .sekka-mobile[dir="ltr"] > .sekka-mobile-header > .rh-shell-notifications{right:8px!important}
+}
