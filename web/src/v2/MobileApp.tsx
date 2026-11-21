@@ -29,6 +29,7 @@ import './mobile-app.css';
 import './flow-navigation.css';
 import './brand-sky-flow.css';
 import './sekka-flow-redesign.css';
+import './brand-yellow-black.css';
 
 export default function MobileApp(){
  const p=usePreferences(),en=p.language==='en',t=(ar:string,english:string)=>en?english:ar;
