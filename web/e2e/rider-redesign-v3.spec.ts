@@ -91,6 +91,18 @@ for(const variant of [
   await expect(page.locator('.sekka-live-result')).toHaveCount(1);
   await expect(page.locator('.sekka-live-price')).toContainText(variant.language==='ar'?'١٣٠':'130');
   await expect(page.locator('.sekka-weekdays-disclaimer')).toBeVisible();
+  // Refine results in the new dedicated filter page and preserve the same route.
+  await page.locator('.sekka-live-results-toolbar .d-outline').click();
+  await expect(page).toHaveURL(/tab=search&view=10/);
+  const filters=page.locator('.rf3');
+  await expect(filters).toBeVisible();
+  const weekly=filters.getByRole('group',{name:variant.language==='ar'?'مدة الاشتراك':'Subscription period'})
+   .getByRole('button',{name:variant.language==='ar'?'أسبوعي':'Weekly'});
+  await weekly.click();
+  await expect(weekly).toHaveAttribute('aria-pressed','true');
+  await filters.locator('.rf3__apply').click();
+  await expect(page).toHaveURL(/tab=search&view=11/);
+  await expect(page.locator('.sekka-live-result')).toHaveCount(1);
   await page.screenshot({path:'test-results/rider-v3-results-'+variant.language+'.png',fullPage:true,animations:'disabled'});
   expect(count()).toBeGreaterThan(0);
   await page.locator('.sekka-live-result .d-offer-select').click();
