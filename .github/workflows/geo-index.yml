@@ -56,6 +56,7 @@ jobs:
       - name: Build active-region CDN search shards
         run: |
           set -euo pipefail
+          rm -rf web/public/geo-index
           node --experimental-strip-types scripts/geo/make-static-shards.mjs \
             geo-index web/public/geo-index
           cat web/public/geo-index/manifest.json
