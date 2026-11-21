@@ -689,3 +689,24 @@
 .sekka-mobile .captain-routes-canvas .cj-captain-route-map-preview{margin:12px 0;max-width:100%;min-width:0}
 .sekka-mobile .captain-routes-canvas .cj-captain-route-map-preview>summary{min-height:44px;display:list-item;cursor:pointer;font-size:.83rem;font-weight:750;padding:10px;border:1px dashed #c9b6d6;border-radius:12px}
 .sekka-mobile .captain-routes-canvas .cj-captain-route-map-preview[open]>summary{margin-bottom:10px}
+
+/* Safe Captain trip removal: secondary destructive action + inline confirmation. */
+.sekka-mobile .captain-routes-canvas .cj-remove-route-trigger{
+ min-height:44px;padding:9px 12px;border:1px solid currentColor;border-radius:12px;
+ background:transparent;color:inherit;font-weight:750;white-space:normal}
+.sekka-mobile .captain-routes-canvas .cj-remove-route-confirm{
+ margin:12px 0;padding:14px;border:1px solid #bb6e72;border-radius:14px;
+ background:rgba(172,65,78,.08);display:grid;gap:12px;min-width:0}
+.sekka-mobile .captain-routes-canvas .cj-remove-route-confirm p{
+ margin:0;line-height:1.65;font-size:.9rem;overflow-wrap:anywhere}
+.sekka-mobile .captain-routes-canvas .cj-remove-route-confirm-actions{
+ display:flex;flex-wrap:wrap;gap:8px;align-items:stretch}
+.sekka-mobile .captain-routes-canvas .cj-remove-route-confirm-actions button{
+ min-height:44px;min-width:min(100%,130px);flex:1 1 130px;padding:9px;border-radius:12px;
+ border:1px solid currentColor;font:inherit;font-weight:750}
+.sekka-mobile .captain-routes-canvas .cj-remove-route-danger{
+ background:#a32239;color:white;border-color:#a32239}
+.sekka-mobile .captain-routes-canvas .cj-remove-route-danger:disabled{opacity:.45;cursor:not-allowed}
+.sekka-mobile .captain-routes-canvas .cj-remove-route-confirm-actions button:focus-visible,
+.sekka-mobile .captain-routes-canvas .cj-remove-route-trigger:focus-visible{
+ outline:3px solid #f7be53;outline-offset:2px}
