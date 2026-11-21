@@ -15,6 +15,7 @@ import GeoPlaceInput from "./GeoPlaceInput";
 import {geoRequestAvailable} from "./geoPlace";
 import type {PlaceChoice} from "./geoPlace";
 import type {LiveSelection} from "./LiveRouteSearch";
+import {saveCommute} from './riderCommute';
 
 export const discoveryScreens = [8, 9, 10, 11, 12, 14];
 const titles: Record<number, string> = {
@@ -672,6 +673,14 @@ export default function Discovery(p: DiscoveryProps) {
       return;
     }
     if(p.production&&p.riderId){
+      // Save only a rider-confirmed search, not tentative keystrokes or mock fixtures.
+      // Scoped to this Google account on the current device; server search still
+      // rechecks live publication and capacity for every real result.
+      saveCommute(p.riderId,{
+       origin,destination,originPlace,destinationPlace,
+       outbound,returnTime,period:period==='weekly'?'weekly':'monthly',
+       direction:filterDirection==='round_trip'||filterDirection==='return'?filterDirection:'outbound'
+      });
       persistSavedAreas({...savedAreas,recent:[
        {origin,destination},...savedRecent.filter(item=>item.origin!==origin||item.destination!==destination)
       ].slice(0,3)});
