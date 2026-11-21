@@ -7,12 +7,19 @@ type ShardEntry={i:string;n:string;a:string|null;e:string|null;c:string;k:string
 type Shard={version:string;results:ShardEntry[]};
 const shardCache=new Map<number,{until:number;rows:ShardEntry[]}>();
 let unavailable=false;
+const generic=new Set(['شارع','حاره','عطفه','طريق','ميدان','محطه','مسجد','جامع',
+ 'جامعه','موقف','مول','street','st','road','rd','square','station','mosque','avenue']);
+function lookupKey(q:string){
+ const terms=q.split(' ');
+ while(terms.length&&generic.has(terms[0]))terms.shift();
+ return terms.join(' ');
+}
 function bucketFor(q:string){
  let h=2166136261;
- for(const char of [...q].slice(0,3)){
+ for(const char of [...q].slice(0,4)){
   const code=char.charCodeAt(0);h^=code;h=Math.imul(h,16777619);
  }
- return (h>>>0)%256;
+ return (h>>>0)%512;
 }
 function tokenSequence(alias:string,query:string){
  let start=0;
@@ -24,9 +31,13 @@ function tokenSequence(alias:string,query:string){
  return true;
 }
 function aliasScore(item:ShardEntry,query:string){
+ const effective=lookupKey(query);
  let score=0;
  for(const alias of item.v){
+  const reduced=lookupKey(alias);
   if(alias===query)score=Math.max(score,500);
+  else if(reduced===effective)score=Math.max(score,470);
+  else if(reduced.startsWith(effective+' '))score=Math.max(score,420);
   else if(alias.startsWith(query+' '))score=Math.max(score,450);
   else if(alias.startsWith(query))score=Math.max(score,350);
   else if((' '+alias+' ').includes(' '+query+' '))score=Math.max(score,260);
@@ -38,9 +49,9 @@ function aliasScore(item:ShardEntry,query:string){
 /** CDN-hosted subset of approved OSM place data. Only the relevant hash shard is downloaded. */
 export async function searchStaticCairo(query:string,en:boolean,area:ServiceArea|undefined,
  signal:AbortSignal):Promise<MapPlace[]>{
- const q=normalizedPlace(query);
- if(q.length<3||unavailable)return [];
- const bucket=bucketFor(q);
+ const q=normalizedPlace(query),effective=lookupKey(q);
+ if(effective.length<4||unavailable)return [];
+ const bucket=bucketFor(effective);
  let records=shardCache.get(bucket)?.rows;
  if(!records||shardCache.get(bucket)!.until<Date.now()){
   try{
