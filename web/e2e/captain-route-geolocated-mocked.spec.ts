@@ -11,6 +11,7 @@ const user={
  created_at:'2026-01-01T00:00:00Z',email_confirmed_at:'2026-01-01T00:00:00Z'
 };
 test('MOCKED approved Captain creates geocoded route with automatic name and no re-enrollment',async({page})=>{
+ await page.route('**/geo-index/*.json',route=>route.fulfill({json:{results:[]}}));
  await page.setViewportSize({width:360,height:800});
  await page.addInitScript(({endpoint,user})=>{
   const key='sb-'+new URL(endpoint).hostname.split('.')[0]+'-auth-token';
@@ -39,7 +40,7 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
   const newCairo=q.toLowerCase().includes('cairo festival city');
   await route.fulfill({contentType:'application/json',body:JSON.stringify({features:[{
    geometry:{coordinates:newCairo?[31.4082,30.0279]:maadi?[31.25,29.96]:[31.34,30.06]},
-   properties:{osm_id:newCairo?103:maadi?101:102,osm_type:'N',name:newCairo?'Cairo Festival City Mall':maadi?(mall?'Maadi Grand Mall':'Maadi Market'):'Nasr City Square',
+   properties:{osm_id:newCairo?103:maadi?101:102,osm_type:'N',name:newCairo?'Cairo Festival City entrance':maadi?(mall?'Maadi Grand Mall':'Maadi Market'):'Nasr City Square',
     district:newCairo?'New Cairo':maadi?'Maadi':'Nasr City',city:'Cairo',countrycode:'EG'}
   }]})});
  });
@@ -137,12 +138,12 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  await expect(entry.locator('.cj-easy-selected-stops>li')).toHaveCount(2);
  // A third waypoint is inserted by name only; its removal must not
  // change the already selected first two stops or force the map.
- await destination.fill('Cairo Festival City Mall');
- await expect(entry.locator('.cj-easy-results').getByRole('option',{name:/Cairo Festival City Mall/})).toBeVisible();
- await entry.locator('.cj-easy-results').getByRole('option',{name:/Cairo Festival City Mall/}).click();
+ await destination.fill('Cairo Festival City entrance');
+ await expect(entry.locator('.cj-easy-results').getByRole('option',{name:/Cairo Festival City entrance/})).toBeVisible();
+ await entry.locator('.cj-easy-results').getByRole('option',{name:/Cairo Festival City entrance/}).click();
  await expect(entry.locator('.cj-easy-selected-stops>li')).toHaveCount(3);
  await expect(page.getByRole('dialog',{name:'Choose point on map'})).toHaveCount(0);
- await entry.getByRole('button',{name:'Remove Cairo Festival City Mall'}).click();
+ await entry.getByRole('button',{name:'Remove Cairo Festival City entrance'}).click();
  await expect(entry.locator('.cj-easy-selected-stops>li')).toHaveCount(2);
  await entry.getByText('Preview route on map (optional)').click();
  await expect(entry.getByTitle('OpenStreetMap route stop map')).toBeVisible();

@@ -97,7 +97,7 @@ test('Trip with active bookings cannot be deleted or archived from Captain UI',a
  const state=await setup(page,2);
  const card=page.locator('.live-route-list>ul>li').filter({hasText:'Published commute'});
  await card.getByRole('button',{name:'Remove trip'}).click();
- await expect(card.getByText(/active bookings/)).toBeVisible();
+ await expect(card.getByRole('status')).toHaveText('This trip has active bookings. Pause it instead of removing it.');
  await expect(card.getByRole('button',{name:'Confirm archive'})).toBeDisabled();
  expect(state.getCalls()).toBe(0);
  await expect(page.getByText('Published commute',{exact:true})).toBeVisible();

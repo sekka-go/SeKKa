@@ -492,9 +492,9 @@ function readRiderSavedAreas(riderId?:string|null):RiderSavedAreas{
  }catch{return {};}
 }
 
-function readRiderDraft(): RiderDraft {
+function readRiderDraft(key:string): RiderDraft {
   try {
-    const value: unknown = JSON.parse(sessionStorage.getItem(riderDraftKey) || "null");
+    const value: unknown = JSON.parse(sessionStorage.getItem(key) || "null");
     if (!value || typeof value !== "object" || Array.isArray(value)) return {};
     const draft=value as RiderDraft;
     if(draft.originPlace?.kind==='map'&&(!draft.originPlace.place||!selectOperationalMapPlace(draft.originPlace.place))){
@@ -517,7 +517,8 @@ export default function Discovery(p: DiscoveryProps) {
   const {language}=usePreferences();
   const tr=(text:string)=>translate(text,language);
   const demo = !p.production && new URLSearchParams(location.search).get("preview") === "phase2";
-  const restored = useMemo(readRiderDraft, []);
+  const storageKey=p.production?riderDraftKey:'sekka.preview.discoveryDraft.v31';
+  const restored = useMemo(()=>readRiderDraft(storageKey),[storageKey]);
   const [nearbyOpen,setNearbyOpen]=useState(false);
   const [savedAreas,setSavedAreas]=useState<RiderSavedAreas>(()=>readRiderSavedAreas(p.riderId));
   useEffect(()=>{setSavedAreas(readRiderSavedAreas(p.riderId));},[p.riderId]);
@@ -634,10 +635,10 @@ export default function Discovery(p: DiscoveryProps) {
     const draft: RiderDraft = {origin,destination,originPlace,destinationPlace,outbound,returnTime,period,categories,selectedId,
       favoriteDetail:demo ? favoriteDetail : null,searched,pickup,dropoff,filterDirection,
       filterPrice,filterPeriod,onlyAvailable,appliedFilters,weekdays:preferredWeekdays};
-    try { sessionStorage.setItem(riderDraftKey, JSON.stringify(draft)); }
+    try { sessionStorage.setItem(storageKey, JSON.stringify(draft)); }
     catch { /* Keep the active screen usable when session storage is unavailable. */ }
   }, [origin,destination,originPlace,destinationPlace,outbound,returnTime,period,categories,selectedId,favoriteDetail,
-      demo,searched,pickup,dropoff,filterDirection,filterPrice,filterPeriod,onlyAvailable,appliedFilters,preferredWeekdays]);
+      storageKey,demo,searched,pickup,dropoff,filterDirection,filterPrice,filterPeriod,onlyAvailable,appliedFilters,preferredWeekdays]);
   const filtered = lines.filter(
     (l) =>
       (!searched || (matchesStops(l.stops || [], origin, destination) && (!outbound || l.outbound === outbound) && (!returnTime || l.returnTime === returnTime))) &&

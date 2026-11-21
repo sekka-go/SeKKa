@@ -75,6 +75,7 @@ jobs:
               e2e/captain-plate-segments.spec.ts
               e2e/captain-document-upload-mocked.spec.ts
               e2e/captain-route-geolocated-mocked.spec.ts
+              e2e/captain-route-removal-mocked.spec.ts
               e2e/captain-home-mocked.spec.ts
               e2e/captain-publish-conflict-mocked.spec.ts
           - group: Rider search

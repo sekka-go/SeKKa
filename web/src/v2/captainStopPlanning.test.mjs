@@ -24,14 +24,16 @@ test('optional Captain stop times accept blanks, validate clock and overnight se
   {outboundStopTime:'00:20',returnStopTime:''}]),false);
 });
 
-test('a known Cairo place is added directly even if Photon omits its district',()=>{
+test('only a sourced place identity can supply catalog locality when district is missing',()=>{
  const hosary={...origin,name:'ميدان الحصري',detail:'Giza',locality:['Giza']};
  assert.equal(inferCaptainArea(hosary,areas),null);
- assert.equal(resolveCaptainRoutingArea(hosary,areas)?.id,8);
+ assert.equal(resolveCaptainRoutingArea(hosary,areas),null);
+ assert.equal(resolveCaptainRoutingArea({...hosary,id:'W:1393055714'},areas)?.id,8);
  const cfc={...origin,name:'Cairo Festival City Mall',
   latitude:30.028,longitude:31.408,detail:'Cairo',locality:['Cairo']};
  assert.equal(inferCaptainArea(cfc,areas),null);
- assert.equal(resolveCaptainRoutingArea(cfc,areas)?.id,2);
+ assert.equal(resolveCaptainRoutingArea(cfc,areas),null);
+ assert.equal(resolveCaptainRoutingArea({...cfc,id:'W:253593226'},areas)?.id,2);
 });
 test('verified locality wins over nearest routing anchor and no unsupported area is invented',()=>{
  assert.equal(resolveCaptainRoutingArea({...origin,locality:['New Cairo'],detail:'New Cairo'},areas)?.id,2);

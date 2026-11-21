@@ -18,6 +18,7 @@ export default defineConfig({
       '**/rider-journey-vnext.spec.ts',
       '**/rider-redesign-v3.spec.ts',
       '**/captain-route-geolocated-mocked.spec.ts',
+      '**/captain-route-removal-mocked.spec.ts',
       '**/captain-home-mocked.spec.ts',
       '**/captain-publish-conflict-mocked.spec.ts'
     ],

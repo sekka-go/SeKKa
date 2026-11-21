@@ -3,6 +3,7 @@
 // ODbL 1.0 data; NEVER export Google Maps content. Not bundled into app JS.
 import {readFileSync,mkdirSync,writeFileSync} from 'node:fs';
 import path from 'node:path';
+import {buildMunicipalAreas} from './build-municipal-areas.mjs';
 import {isInsideCairoDiscovery} from '../../web/src/v2/discoveryCairo.ts';
 
 const root=process.argv[2]||'geo-index';
@@ -94,4 +95,5 @@ writeFileSync(path.join(output,'manifest.json'),JSON.stringify(summary,null,2)+'
 writeFileSync(path.join(output,'ATTRIBUTION.txt'),
  'Contains OpenStreetMap data © OpenStreetMap contributors, ODbL 1.0.\nSource: '+
  input.source_url+'\nSnapshot SHA-256: '+input.snapshot+'\nSee https://www.openstreetmap.org/copyright\n');
+buildMunicipalAreas(output);
 console.log(JSON.stringify(summary));

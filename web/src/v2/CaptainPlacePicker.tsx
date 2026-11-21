@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
 import {usePreferences} from './preferences';
-import {catalogMatches,locationContext,locationContextIcon,noMatchingLocation,mapPlacesFromPhoton,isSearchableMapPlace} from './geoPlace';
+import {catalogMatches,locationContext,locationContextIcon,noMatchingLocation,mapPlacesFromPhoton,selectOperationalMapPlace,isSearchableMapPlace} from './geoPlace';
 import {useLocationOptions,useLocationSearch,photonEndpoint} from './locationSearch';
 import {straightLineKm} from './nearbyRoutes';
 import GeoMapPicker from './GeoMapPicker';
@@ -10,7 +10,7 @@ import './location-search.css';
 export default function CaptainPlacePicker({label,value,choice,onPick,onVerified,disabled=false}:{
  label:string;value:string;choice:PlaceChoice|null;
  onPick:(value:string,choice:PlaceChoice|null)=>void;
- onVerified?:(place:MapPlace)=>void;
+ onVerified?:(place:MapPlace)=>boolean;
  disabled?:boolean;
 }){
  const {language}=usePreferences(),en=language==='en';
@@ -46,7 +46,10 @@ export default function CaptainPlacePicker({label,value,choice,onPick,onVerified
   if(onVerified){
    // The selected stop is immediately appended by the parent. Clear the
    // local combobox directly: parent updates may batch back to the same value.
-   setQuery('');onVerified(place);
+   if(!selectOperationalMapPlace(place)){
+    setQuery(place.name);onPick(place.name,{kind:'search',place});return;
+   }
+   if(onVerified(place))setQuery('');
   }else{
    setQuery(place.name);onPick(place.name,{kind:'search',place});
   }
@@ -63,7 +66,7 @@ export default function CaptainPlacePicker({label,value,choice,onPick,onVerified
     straightLineKm(candidate,place)<=0.35);
    if(!nearby)return false;
    const verified={...place,name:t('نقطة قرب ','Point near ')+nearby.name,detail:nearby.detail,locality:nearby.locality};
-   if(onVerified){setQuery('');onVerified(verified);}
+   if(onVerified){if(!onVerified(verified))return false;setQuery('');}
    else {setQuery(verified.name);onPick(verified.name,{kind:'map',place:verified});}
    setMapOpen(false);setOpen(false);return true;
   }catch{return false;}
@@ -77,6 +80,7 @@ export default function CaptainPlacePicker({label,value,choice,onPick,onVerified
   :menu&&result.status==='done'&&!points.length
   ?t(noMatchingLocation.ar,noMatchingLocation.en):'';
  return <section ref={shellRef} className="cj-easy-place" aria-label={label}>
+  {choice?.kind==='search'&&<p role="status">{t('اختار مدخل أو نقطة ركوب محددة على الخريطة.','Choose an entrance or an exact boarding point on the map.')}</p>}
   {!menu&&<button type="button" className="cj-easy-map-button"
    disabled={disabled} onClick={()=>{inputRef.current?.blur();setMapOpen(true);setOpen(false);}}>
    <span aria-hidden="true">⌖</span>{t('اختيار على الخريطة (اختياري)','Choose on map (optional)')}

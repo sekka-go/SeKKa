@@ -37,3 +37,17 @@ test('index never selects unverified roads/areas or an external point',()=>{
  assert.equal(list.length,1);
  assert.equal(list[0].kind,'road');
 });
+
+test('municipality-qualified district names resolve from the packaged OSM data in both languages',async()=>{
+ const {readFile}=await import('node:fs/promises');
+ const original=globalThis.fetch;
+ globalThis.fetch=async path=>new Response(await readFile(new URL('../../public'+path,import.meta.url)));
+ try{
+  for(const query of ['الحي الاول اكتوبر','First District 6 October','الحي الأول السادس من أكتوبر']){
+   const [place]=await searchStaticCairo(query,true,undefined,new AbortController().signal);
+   assert.equal(place?.id,'N:1160384365');
+   assert.equal(place.kind,'area');
+   assert.match(place.detail,/6th of October/);
+  }
+ }finally{globalThis.fetch=original;}
+});

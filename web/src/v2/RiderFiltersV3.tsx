@@ -16,7 +16,6 @@ export default function RiderFiltersV3({available,categories,period,direction,ma
   categories.filter(category=>category!==name):[...categories,name]);
  return <section className="rf3" aria-labelledby="rf3-title">
   <header className="rf3__hero">
-   <span>{t('خلّي النتائج على مزاجك','REFINE YOUR RESULTS')}</span>
    <h2 id="rf3-title">{t('اختار اللي يناسبك','Find your best fit')}</h2>
    <p>{t('فلتر الرحلات من غير ما تعيد بحثك من الأول.','Refine the published rides without starting over.')}</p>
   </header>

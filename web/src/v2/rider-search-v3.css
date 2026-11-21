@@ -8,7 +8,7 @@
 .sekka-mobile .rs3 button,.sekka-mobile .rs3 input{font-family:inherit}
 .sekka-mobile .rs3 button{cursor:pointer;min-height:44px}
 .sekka-mobile .rs3 :is(button,input):focus-visible{outline:3px solid var(--rs-yellow);outline-offset:3px}
-.sekka-mobile .rs3__head{background:linear-gradient(125deg,#6312A5,#9434BE);
+.sekka-mobile .rs3 .rs3__head{display:block;text-align:start;background:linear-gradient(125deg,#6312A5,#9434BE);
  border-radius:24px;margin:8px 0 13px;padding:21px;color:#FFF;position:relative;overflow:hidden}
 .sekka-mobile .rs3__head:after{content:"";position:absolute;width:150px;height:150px;border:18px solid #FFFFFF16;
  border-radius:50%;left:-58px;top:-55px;pointer-events:none}

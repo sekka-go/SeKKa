@@ -75,8 +75,8 @@ export default function RiderSearchV3({origin,destination,originPlace,destinatio
      aria-expanded={mapMenuOpen} aria-controls="rs3-map-actions"
      onClick={()=>{setMapMenuOpen(value=>!value);}}>
      <span aria-hidden="true">⌖</span>
-     {t('عايز تحدد نقطة بنفسك على الخريطة؟ (اختياري)',
-        'Want to choose an exact point on the map? (optional)')}
+     {t('حدّد نقطة على الخريطة',
+        'Choose a point on the map')}
     </button>
     {mapMenuOpen&&<div id="rs3-map-actions" className="rs3__optional-map-actions"
       role="group" aria-label={t('اختيار نقطة من الخريطة','Choose point from map')}>
@@ -141,8 +141,6 @@ export default function RiderSearchV3({origin,destination,originPlace,destinatio
      <path d="M5 12h14m-6-6 6 6-6 6"/>
     </svg>
    </button>
-   <p className="rs3__truth">{t('هنعرض رحلات منشورة فعلًا؛ مش مجرد نتائج تجريبية.',
-    'We only show genuinely published rides, never demo availability.')}</p>
   </form>
   <div className="rs3__pickup-link">
    <button type="button" onClick={()=>setNearby(true)}

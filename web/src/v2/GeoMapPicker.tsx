@@ -5,7 +5,7 @@ import {usePreferences} from './preferences';
 import {isInsideOperationalRegion,persistableOperationalPoint} from './greaterCairoBoundary';
 import {localPlaceCatalog} from './locationCatalog';
 import {isInsideCairoDiscovery} from './discoveryCairo';
-import {useLocationSearch} from './locationSearch';
+import {useLocationSearch,useLocationOptions} from './locationSearch';
 import {straightLineKm} from './nearbyRoutes';
 import {mapProject,mapUnproject,mapMove,mapZoom,visibleTiles} from './geoMapMath';
 import type {MapCoordinate} from './geoMapMath';
@@ -38,6 +38,9 @@ export default function GeoMapPicker({initial,focus,focusLabel,area,onCancel,onC
  const [busy,setBusy]=useState(false),[message,setMessage]=useState('');
  const [mapSearch,setMapSearch]=useState(focusLabel??'');
  const [searchOpen,setSearchOpen]=useState(false);
+ const options=useLocationOptions();
+ const dialogRef=useRef<HTMLDialogElement>(null);
+ const wasPinch=useRef(false);
  const search=useLocationSearch(mapSearch,searchOpen,area,en,0);
  const [placeName,setPlaceName]=useState(focusLabel??'');
  const [placePoint,setPlacePoint]=useState<MapCoordinate|null>(focus??null);
@@ -58,10 +61,10 @@ export default function GeoMapPicker({initial,focus,focusLabel,area,onCancel,onC
   return ()=>observer.disconnect();
  },[]);
  useEffect(()=>{
-  const escape=(event:globalThis.KeyboardEvent)=>{if(event.key==='Escape'&&!busy)onCancel();};
-  document.addEventListener('keydown',escape);
-  return ()=>document.removeEventListener('keydown',escape);
- },[onCancel,busy]);
+  const node=dialogRef.current;
+  node?.showModal();
+  return ()=>node?.close();
+ },[]);
  const move=(dx:number,dy:number)=>setCenter(previous=>{
   const result=mapMove(previous,dx,dy,zoom);
   centerRef.current=result;
@@ -71,7 +74,9 @@ export default function GeoMapPicker({initial,focus,focusLabel,area,onCancel,onC
   if(event.button!==0||(event.target instanceof Element&&event.target.closest('button,a')))return;
   event.currentTarget.setPointerCapture(event.pointerId);
   active.current.set(event.pointerId,{x:event.clientX,y:event.clientY,startX:event.clientX,startY:event.clientY,travel:0});
+  if(active.current.size===1)wasPinch.current=false;
   if(active.current.size===2){
+   wasPinch.current=true;
    const pair=[...active.current.values()];
    lastPinch.current=Math.hypot(pair[0].x-pair[1].x,pair[0].y-pair[1].y);
   }
@@ -97,7 +102,7 @@ export default function GeoMapPicker({initial,focus,focusLabel,area,onCancel,onC
   if(!current)return;
   active.current.delete(event.pointerId);
   if(active.current.size<2)lastPinch.current=null;
-  if(current.travel>12||active.current.size>0)return;
+  if(wasPinch.current||current.travel>12||active.current.size>0)return;
   const box=event.currentTarget.getBoundingClientRect();
   const target=mapProject(centerRef.current,zoom);
   const point=mapUnproject(target.x+(event.clientX-box.left-box.width/2),
@@ -109,6 +114,7 @@ export default function GeoMapPicker({initial,focus,focusLabel,area,onCancel,onC
   setZoom(current=>mapZoom(current+(event.deltaY<0?1:-1)));
  };
  const keyboard=(event:KeyboardEvent<HTMLDivElement>)=>{
+  if(event.target!==event.currentTarget)return;
   const offsets:Record<string,[number,number]>={ArrowUp:[0,60],ArrowDown:[0,-60],ArrowRight:[-60,0],ArrowLeft:[60,0]};
   if(offsets[event.key]){event.preventDefault();move(...offsets[event.key]);}
   if(event.key==='Enter'){event.preventDefault();setPin(centerRef.current);setGpsPin(false);setMessage('');}
@@ -164,8 +170,9 @@ export default function GeoMapPicker({initial,focus,focusLabel,area,onCancel,onC
  const projected=pin?mapProject(pin,zoom):null,projectedCenter=mapProject(center,zoom);
  const marker=projected?{left:dimensions.width/2+projected.x-projectedCenter.x,
   top:dimensions.height/2+projected.y-projectedCenter.y}:null;
- const allowed=Boolean(pin&&isInsideOperationalRegion(pin));
- return createPortal(<div className="sekka-map-picker" role="dialog" aria-modal="true"
+ const allowed=Boolean(pin&&persistableOperationalPoint(pin));
+ return createPortal(<dialog ref={dialogRef} className="sekka-map-picker" dir={en?'ltr':'rtl'} aria-modal="true"
+  onCancel={e=>{e.preventDefault();if(searchOpen)setSearchOpen(false);else if(!busy)onCancel();}}
   aria-label={t('حدد نقطة على الخريطة','Choose point on map')}>
   <div className="sekka-map-picker__header">
    <button type="button" onClick={onCancel} disabled={busy} aria-label={t('إغلاق الخريطة','Close map')}>✕</button>
@@ -177,15 +184,18 @@ export default function GeoMapPicker({initial,focus,focusLabel,area,onCancel,onC
    <input id="sekka-map-place-search" type="search" role="combobox"
     aria-label={t('ابحث داخل الخريطة','Search within map')} aria-autocomplete="list"
     aria-expanded={searchOpen&&search.places.length>0}
+    aria-controls={searchOpen&&search.places.length?options.id:undefined}
+    aria-activedescendant={searchOpen&&options.highlight>=0?options.optionId(options.highlight):undefined}
     placeholder={t('شارع، مول، مدرسة…','Street, mall, school…')} value={mapSearch}
-    onFocus={()=>setSearchOpen(true)} onChange={e=>{setMapSearch(e.target.value);setSearchOpen(true);}}
-    onKeyDown={e=>{if(e.key==='Escape')setSearchOpen(false);
-     if(e.key==='Enter'&&search.places.length){e.preventDefault();focusPlace(search.places[0]);}}}/>
+    onFocus={()=>setSearchOpen(true)} onChange={e=>{setMapSearch(e.target.value);setSearchOpen(true);options.reset();}}
+    onKeyDown={e=>options.keys(e,searchOpen,searchOpen?Math.min(6,search.places.length):0,i=>{
+     focusPlace(search.places[i]);options.reset();
+    },()=>setSearchOpen(false),()=>setSearchOpen(true))}/>
    {searchOpen&&<div className="sekka-map-picker__search-results">
     {search.busy&&<p role="status">{t('بنبحث عن المكان…','Searching…')}</p>}
-    {search.places.length>0&&<div role="listbox" aria-label={t('نتائج البحث داخل الخريطة','Map search results')}>
-     {search.places.slice(0,6).map(place=><button key={place.id} type="button" role="option"
-      aria-selected={false} onMouseDown={e=>e.preventDefault()} onClick={()=>focusPlace(place)}>
+    {search.places.length>0&&<div id={options.id} role="listbox" aria-label={t('نتائج البحث داخل الخريطة','Map search results')}>
+     {search.places.slice(0,6).map((place,i)=><button key={place.id} id={options.optionId(i)} type="button" role="option"
+      aria-selected={options.highlight===i} onMouseDown={e=>e.preventDefault()} onClick={()=>focusPlace(place)}>
       <strong dir="auto">{place.name}</strong><small dir="auto">{place.detail}</small>
      </button>)}
     </div>}
@@ -226,5 +236,5 @@ export default function GeoMapPicker({initial,focus,focusLabel,area,onCancel,onC
     {busy?t('جاري التأكيد...','Confirming...'):t('تأكيد النقطة','Confirm point')}
    </button>
   </div>
- </div>,document.body);
+ </dialog>,document.body);
 }

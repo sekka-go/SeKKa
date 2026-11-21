@@ -11,6 +11,7 @@ const user={id:actor,aud:'authenticated',role:'authenticated',
  email_confirmed_at:'2026-01-01T00:00:00Z'};
 test('MOCKED: already-published vehicle is blocked before price, existing route remains available',async({page})=>{
  let booked=2;
+ await page.route('**/geo-index/*.json',route=>route.fulfill({json:{results:[]}}));
  await page.setViewportSize({width:360,height:800});
  await page.addInitScript(({endpoint,user})=>{
   const key='sb-'+new URL(endpoint).hostname.split('.')[0]+'-auth-token';

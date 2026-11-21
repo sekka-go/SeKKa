@@ -1,0 +1,146 @@
+﻿query,expected_geographic_context,intent,expected_behavior,notes,fixture_status
+الحصري,"6th of October, Giza",landmark,"Hosary Square/Mosque ranked and disambiguated, not random POI",Exact mosque query puts mosque first,source_verified_in_repo
+الحصرى,"6th of October, Giza",landmark,"Hosary Square/Mosque ranked and disambiguated, not random POI",Exact mosque query puts mosque first,source_verified_in_repo
+Hosary,"6th of October, Giza",landmark,"Hosary Square/Mosque ranked and disambiguated, not random POI",Exact mosque query puts mosque first,source_verified_in_repo
+El Hosary,"6th of October, Giza",landmark,"Hosary Square/Mosque ranked and disambiguated, not random POI",Exact mosque query puts mosque first,source_verified_in_repo
+Al Hosary,"6th of October, Giza",landmark,"Hosary Square/Mosque ranked and disambiguated, not random POI",Exact mosque query puts mosque first,source_verified_in_repo
+ميدان الحصري,"6th of October, Giza",landmark,"Hosary Square/Mosque ranked and disambiguated, not random POI",Exact mosque query puts mosque first,source_verified_in_repo
+مسجد الحصري,"6th of October, Giza",landmark,"Hosary Square/Mosque ranked and disambiguated, not random POI",Exact mosque query puts mosque first,source_verified_in_repo
+جامع الحصري,"6th of October, Giza",landmark,"Hosary Square/Mosque ranked and disambiguated, not random POI",Exact mosque query puts mosque first,source_verified_in_repo
+التجمع,"New Cairo, Cairo",area,Correct New Cairo area results with labels; no arbitrary business in October,Ambiguous تجمع requires explicit choice,source_verified_in_repo
+التجمع 5,"New Cairo, Cairo",area,Correct New Cairo area results with labels; no arbitrary business in October,Ambiguous تجمع requires explicit choice,source_verified_in_repo
+التجمع الخامس,"New Cairo, Cairo",area,Correct New Cairo area results with labels; no arbitrary business in October,Ambiguous تجمع requires explicit choice,source_verified_in_repo
+Fifth Settlement,"New Cairo, Cairo",area,Correct New Cairo area results with labels; no arbitrary business in October,Ambiguous تجمع requires explicit choice,source_verified_in_repo
+5th Settlement,"New Cairo, Cairo",area,Correct New Cairo area results with labels; no arbitrary business in October,Ambiguous تجمع requires explicit choice,source_verified_in_repo
+القاهره الجديده,"New Cairo, Cairo",area,Correct New Cairo area results with labels; no arbitrary business in October,Ambiguous تجمع requires explicit choice,source_verified_in_repo
+القاهرة الجديدة,"New Cairo, Cairo",area,Correct New Cairo area results with labels; no arbitrary business in October,Ambiguous تجمع requires explicit choice,source_verified_in_repo
+New Cairo,"New Cairo, Cairo",area,Correct New Cairo area results with labels; no arbitrary business in October,Ambiguous تجمع requires explicit choice,source_verified_in_repo
+التجمع الاول,"New Cairo, Cairo",area,Correct New Cairo area results with labels; no arbitrary business in October,Ambiguous تجمع requires explicit choice,source_verified_in_repo
+التجمع الأول,"New Cairo, Cairo",area,Correct New Cairo area results with labels; no arbitrary business in October,Ambiguous تجمع requires explicit choice,source_verified_in_repo
+التجمع الثالث,"New Cairo, Cairo",area,Correct New Cairo area results with labels; no arbitrary business in October,Ambiguous تجمع requires explicit choice,source_verified_in_repo
+التجمع ٣,"New Cairo, Cairo",area,Correct New Cairo area results with labels; no arbitrary business in October,Ambiguous تجمع requires explicit choice,source_verified_in_repo
+أكتوبر,"6th of October, Giza",district/area,"List indexed matching areas, disambiguate الحي الأول by parent, never pretend unknown coordinates are exact",Enumerated district names must be tested against actual OSM source before asserted,candidate_requires_source_verification
+اكتوبر,"6th of October, Giza",district/area,"List indexed matching areas, disambiguate الحي الأول by parent, never pretend unknown coordinates are exact",Enumerated district names must be tested against actual OSM source before asserted,candidate_requires_source_verification
+٦ أكتوبر,"6th of October, Giza",district/area,"List indexed matching areas, disambiguate الحي الأول by parent, never pretend unknown coordinates are exact",Enumerated district names must be tested against actual OSM source before asserted,candidate_requires_source_verification
+6 اكتوبر,"6th of October, Giza",district/area,"List indexed matching areas, disambiguate الحي الأول by parent, never pretend unknown coordinates are exact",Enumerated district names must be tested against actual OSM source before asserted,candidate_requires_source_verification
+6th of October,"6th of October, Giza",district/area,"List indexed matching areas, disambiguate الحي الأول by parent, never pretend unknown coordinates are exact",Enumerated district names must be tested against actual OSM source before asserted,candidate_requires_source_verification
+مدينة 6 أكتوبر,"6th of October, Giza",district/area,"List indexed matching areas, disambiguate الحي الأول by parent, never pretend unknown coordinates are exact",Enumerated district names must be tested against actual OSM source before asserted,candidate_requires_source_verification
+الحي الأول,"6th of October, Giza",district/area,"List indexed matching areas, disambiguate الحي الأول by parent, never pretend unknown coordinates are exact",Enumerated district names must be tested against actual OSM source before asserted,candidate_requires_source_verification
+الحي الاول اكتوبر,"6th of October, Giza",district/area,"List indexed matching areas, disambiguate الحي الأول by parent, never pretend unknown coordinates are exact",Enumerated district names must be tested against actual OSM source before asserted,candidate_requires_source_verification
+الحي الأول أكتوبر,"6th of October, Giza",district/area,"List indexed matching areas, disambiguate الحي الأول by parent, never pretend unknown coordinates are exact",Enumerated district names must be tested against actual OSM source before asserted,candidate_requires_source_verification
+First District 6 October,"6th of October, Giza",district/area,"List indexed matching areas, disambiguate الحي الأول by parent, never pretend unknown coordinates are exact",Enumerated district names must be tested against actual OSM source before asserted,candidate_requires_source_verification
+الحي الثاني أكتوبر,"6th of October, Giza",district/area,"List indexed matching areas, disambiguate الحي الأول by parent, never pretend unknown coordinates are exact",Enumerated district names must be tested against actual OSM source before asserted,candidate_requires_source_verification
+الحي الثالث أكتوبر,"6th of October, Giza",district/area,"List indexed matching areas, disambiguate الحي الأول by parent, never pretend unknown coordinates are exact",Enumerated district names must be tested against actual OSM source before asserted,candidate_requires_source_verification
+الحي الرابع أكتوبر,"6th of October, Giza",district/area,"List indexed matching areas, disambiguate الحي الأول by parent, never pretend unknown coordinates are exact",Enumerated district names must be tested against actual OSM source before asserted,candidate_requires_source_verification
+الحي الخامس أكتوبر,"6th of October, Giza",district/area,"List indexed matching areas, disambiguate الحي الأول by parent, never pretend unknown coordinates are exact",Enumerated district names must be tested against actual OSM source before asserted,candidate_requires_source_verification
+الحي السادس أكتوبر,"6th of October, Giza",district/area,"List indexed matching areas, disambiguate الحي الأول by parent, never pretend unknown coordinates are exact",Enumerated district names must be tested against actual OSM source before asserted,candidate_requires_source_verification
+الحي السابع أكتوبر,"6th of October, Giza",district/area,"List indexed matching areas, disambiguate الحي الأول by parent, never pretend unknown coordinates are exact",Enumerated district names must be tested against actual OSM source before asserted,candidate_requires_source_verification
+الحي الثامن أكتوبر,"6th of October, Giza",district/area,"List indexed matching areas, disambiguate الحي الأول by parent, never pretend unknown coordinates are exact",Enumerated district names must be tested against actual OSM source before asserted,candidate_requires_source_verification
+الحي التاسع أكتوبر,"6th of October, Giza",district/area,"List indexed matching areas, disambiguate الحي الأول by parent, never pretend unknown coordinates are exact",Enumerated district names must be tested against actual OSM source before asserted,candidate_requires_source_verification
+الحي العاشر أكتوبر,"6th of October, Giza",district/area,"List indexed matching areas, disambiguate الحي الأول by parent, never pretend unknown coordinates are exact",Enumerated district names must be tested against actual OSM source before asserted,candidate_requires_source_verification
+الحي الحادي عشر أكتوبر,"6th of October, Giza",district/area,"List indexed matching areas, disambiguate الحي الأول by parent, never pretend unknown coordinates are exact",Enumerated district names must be tested against actual OSM source before asserted,candidate_requires_source_verification
+الحي الثاني عشر أكتوبر,"6th of October, Giza",district/area,"List indexed matching areas, disambiguate الحي الأول by parent, never pretend unknown coordinates are exact",Enumerated district names must be tested against actual OSM source before asserted,candidate_requires_source_verification
+مول العرب,"October region, Giza",mall/area,Record as sourced coverage candidate; do not silently authorize selection,Currently outside active geofence in audited snapshot,source_verified_in_repo
+Mall of Arabia,"October region, Giza",mall/area,Record as sourced coverage candidate; do not silently authorize selection,Currently outside active geofence in audited snapshot,source_verified_in_repo
+مول مصر,"October region, Giza",mall/area,Record as sourced coverage candidate; do not silently authorize selection,Currently outside active geofence in audited snapshot,source_verified_in_repo
+Mall of Egypt,"October region, Giza",mall/area,Record as sourced coverage candidate; do not silently authorize selection,Currently outside active geofence in audited snapshot,source_verified_in_repo
+حدائق أكتوبر,"October region, Giza",mall/area,Record as sourced coverage candidate; do not silently authorize selection,Currently outside active geofence in audited snapshot,source_verified_in_repo
+Hadayek October,"October region, Giza",mall/area,Record as sourced coverage candidate; do not silently authorize selection,Currently outside active geofence in audited snapshot,source_verified_in_repo
+مدينة الفردوس,"October region, Giza",mall/area,Record as sourced coverage candidate; do not silently authorize selection,Currently outside active geofence in audited snapshot,source_verified_in_repo
+Ferdous City,"October region, Giza",mall/area,Record as sourced coverage candidate; do not silently authorize selection,Currently outside active geofence in audited snapshot,source_verified_in_repo
+الشيخ زايد,"Sheikh Zayed, Giza",area/landmark,"Correct parent location and accurate type, no fake point",,candidate_requires_source_verification
+زايد,"Sheikh Zayed, Giza",area/landmark,"Correct parent location and accurate type, no fake point",,candidate_requires_source_verification
+Sheikh Zayed,"Sheikh Zayed, Giza",area/landmark,"Correct parent location and accurate type, no fake point",,candidate_requires_source_verification
+أركان,"Sheikh Zayed, Giza",area/landmark,"Correct parent location and accurate type, no fake point",,candidate_requires_source_verification
+أركان بلازا,"Sheikh Zayed, Giza",area/landmark,"Correct parent location and accurate type, no fake point",,candidate_requires_source_verification
+Arkan Plaza,"Sheikh Zayed, Giza",area/landmark,"Correct parent location and accurate type, no fake point",,candidate_requires_source_verification
+هايبر وان,"Sheikh Zayed, Giza",area/landmark,"Correct parent location and accurate type, no fake point",,candidate_requires_source_verification
+Hyper One,"Sheikh Zayed, Giza",area/landmark,"Correct parent location and accurate type, no fake point",,candidate_requires_source_verification
+مدينة نصر,Nasr City / explicit query hierarchy,district/road,"Correct location, namesakes distinguished, no forced wrong parent",,candidate_requires_source_verification
+Nasr City,Nasr City / explicit query hierarchy,district/road,"Correct location, namesakes distinguished, no forced wrong parent",,candidate_requires_source_verification
+عباس العقاد,Nasr City / explicit query hierarchy,district/road,"Correct location, namesakes distinguished, no forced wrong parent",,candidate_requires_source_verification
+مكرم عبيد,Nasr City / explicit query hierarchy,district/road,"Correct location, namesakes distinguished, no forced wrong parent",,candidate_requires_source_verification
+رابعة,Nasr City / explicit query hierarchy,district/road,"Correct location, namesakes distinguished, no forced wrong parent",,candidate_requires_source_verification
+التجمع الخامس مدينة نصر,Nasr City / explicit query hierarchy,district/road,"Correct location, namesakes distinguished, no forced wrong parent",,candidate_requires_source_verification
+مصر الجديدة,"Heliopolis, Cairo",area/landmark,Relevant administrative / transit hierarchy,,candidate_requires_source_verification
+Heliopolis,"Heliopolis, Cairo",area/landmark,Relevant administrative / transit hierarchy,,candidate_requires_source_verification
+روكسي,"Heliopolis, Cairo",area/landmark,Relevant administrative / transit hierarchy,,candidate_requires_source_verification
+الكوربة,"Heliopolis, Cairo",area/landmark,Relevant administrative / transit hierarchy,,candidate_requires_source_verification
+مترو هليوبوليس,"Heliopolis, Cairo",area/landmark,Relevant administrative / transit hierarchy,,candidate_requires_source_verification
+المعادي,"Maadi, Cairo",area/station,Correct Maadi context; verify real geographic sources,,candidate_requires_source_verification
+المعادى,"Maadi, Cairo",area/station,Correct Maadi context; verify real geographic sources,,candidate_requires_source_verification
+Maadi,"Maadi, Cairo",area/station,Correct Maadi context; verify real geographic sources,,candidate_requires_source_verification
+مترو المعادي,"Maadi, Cairo",area/station,Correct Maadi context; verify real geographic sources,,candidate_requires_source_verification
+دجلة المعادي,"Maadi, Cairo",area/station,Correct Maadi context; verify real geographic sources,,candidate_requires_source_verification
+المعادي الجديدة,"Maadi, Cairo",area/station,Correct Maadi context; verify real geographic sources,,candidate_requires_source_verification
+الدقي,Giza / Cairo as applicable,district/square,Correct city/governorate and exact-query relevance,,candidate_requires_source_verification
+الدقى,Giza / Cairo as applicable,district/square,Correct city/governorate and exact-query relevance,,candidate_requires_source_verification
+Dokki,Giza / Cairo as applicable,district/square,Correct city/governorate and exact-query relevance,,candidate_requires_source_verification
+المهندسين,Giza / Cairo as applicable,district/square,Correct city/governorate and exact-query relevance,,candidate_requires_source_verification
+Mohandessin,Giza / Cairo as applicable,district/square,Correct city/governorate and exact-query relevance,,candidate_requires_source_verification
+ميدان لبنان,Giza / Cairo as applicable,district/square,Correct city/governorate and exact-query relevance,,candidate_requires_source_verification
+مصطفى محمود,Giza / Cairo as applicable,district/square,Correct city/governorate and exact-query relevance,,candidate_requires_source_verification
+الزمالك,Giza / Cairo as applicable,district/square,Correct city/governorate and exact-query relevance,,candidate_requires_source_verification
+Zamalek,Giza / Cairo as applicable,district/square,Correct city/governorate and exact-query relevance,,candidate_requires_source_verification
+العبور,East Greater Cairo candidate satellites,area,Show candidate vs active geofence vs registered Captain service area honestly,Business approval required for expansion if outside active boundary,candidate_requires_source_verification
+Obour,East Greater Cairo candidate satellites,area,Show candidate vs active geofence vs registered Captain service area honestly,Business approval required for expansion if outside active boundary,candidate_requires_source_verification
+العبور الجديدة,East Greater Cairo candidate satellites,area,Show candidate vs active geofence vs registered Captain service area honestly,Business approval required for expansion if outside active boundary,candidate_requires_source_verification
+New Obour,East Greater Cairo candidate satellites,area,Show candidate vs active geofence vs registered Captain service area honestly,Business approval required for expansion if outside active boundary,candidate_requires_source_verification
+الشروق,East Greater Cairo candidate satellites,area,Show candidate vs active geofence vs registered Captain service area honestly,Business approval required for expansion if outside active boundary,candidate_requires_source_verification
+Shorouk,East Greater Cairo candidate satellites,area,Show candidate vs active geofence vs registered Captain service area honestly,Business approval required for expansion if outside active boundary,candidate_requires_source_verification
+مدينة الشروق,East Greater Cairo candidate satellites,area,Show candidate vs active geofence vs registered Captain service area honestly,Business approval required for expansion if outside active boundary,candidate_requires_source_verification
+بدر,East Greater Cairo candidate satellites,area,Show candidate vs active geofence vs registered Captain service area honestly,Business approval required for expansion if outside active boundary,candidate_requires_source_verification
+Badr,East Greater Cairo candidate satellites,area,Show candidate vs active geofence vs registered Captain service area honestly,Business approval required for expansion if outside active boundary,candidate_requires_source_verification
+العاشر من رمضان,East Greater Cairo candidate satellites,area,Show candidate vs active geofence vs registered Captain service area honestly,Business approval required for expansion if outside active boundary,candidate_requires_source_verification
+10th of Ramadan,East Greater Cairo candidate satellites,area,Show candidate vs active geofence vs registered Captain service area honestly,Business approval required for expansion if outside active boundary,candidate_requires_source_verification
+العاصمة الإدارية الجديدة,East Greater Cairo candidate satellites,area,Show candidate vs active geofence vs registered Captain service area honestly,Business approval required for expansion if outside active boundary,candidate_requires_source_verification
+الهرم,Greater Cairo core,area/street/transit,"Correct parent, type and exact OSM identity if present",,candidate_requires_source_verification
+فيصل,Greater Cairo core,area/street/transit,"Correct parent, type and exact OSM identity if present",,candidate_requires_source_verification
+شارع الملك فيصل,Greater Cairo core,area/street/transit,"Correct parent, type and exact OSM identity if present",,candidate_requires_source_verification
+Haram,Greater Cairo core,area/street/transit,"Correct parent, type and exact OSM identity if present",,candidate_requires_source_verification
+Faisal,Greater Cairo core,area/street/transit,"Correct parent, type and exact OSM identity if present",,candidate_requires_source_verification
+شبرا الخيمة,Greater Cairo core,area/street/transit,"Correct parent, type and exact OSM identity if present",,candidate_requires_source_verification
+Shubra El Kheima,Greater Cairo core,area/street/transit,"Correct parent, type and exact OSM identity if present",,candidate_requires_source_verification
+رمسيس,Greater Cairo core,area/street/transit,"Correct parent, type and exact OSM identity if present",,candidate_requires_source_verification
+Ramses Station,Greater Cairo core,area/street/transit,"Correct parent, type and exact OSM identity if present",,candidate_requires_source_verification
+العتبة,Greater Cairo core,area/street/transit,"Correct parent, type and exact OSM identity if present",,candidate_requires_source_verification
+ميدان التحرير,Greater Cairo core,area/street/transit,"Correct parent, type and exact OSM identity if present",,candidate_requires_source_verification
+Tahrir Square,Greater Cairo core,area/street/transit,"Correct parent, type and exact OSM identity if present",,candidate_requires_source_verification
+الفيوم,outside Greater Cairo,excluded_location,"Never selectable; not eligible; if independent geographic evidence is absent, do not claim confirmed outside merely from no-result",Hard negative geographic fixture,candidate_requires_source_verification
+Fayoum,outside Greater Cairo,excluded_location,"Never selectable; not eligible; if independent geographic evidence is absent, do not claim confirmed outside merely from no-result",Hard negative geographic fixture,candidate_requires_source_verification
+الإسكندرية,outside Greater Cairo,excluded_location,"Never selectable; not eligible; if independent geographic evidence is absent, do not claim confirmed outside merely from no-result",Hard negative geographic fixture,candidate_requires_source_verification
+Alexandria,outside Greater Cairo,excluded_location,"Never selectable; not eligible; if independent geographic evidence is absent, do not claim confirmed outside merely from no-result",Hard negative geographic fixture,candidate_requires_source_verification
+المنيا,outside Greater Cairo,excluded_location,"Never selectable; not eligible; if independent geographic evidence is absent, do not claim confirmed outside merely from no-result",Hard negative geographic fixture,candidate_requires_source_verification
+Minya,outside Greater Cairo,excluded_location,"Never selectable; not eligible; if independent geographic evidence is absent, do not claim confirmed outside merely from no-result",Hard negative geographic fixture,candidate_requires_source_verification
+أسيوط,outside Greater Cairo,excluded_location,"Never selectable; not eligible; if independent geographic evidence is absent, do not claim confirmed outside merely from no-result",Hard negative geographic fixture,candidate_requires_source_verification
+Assiut,outside Greater Cairo,excluded_location,"Never selectable; not eligible; if independent geographic evidence is absent, do not claim confirmed outside merely from no-result",Hard negative geographic fixture,candidate_requires_source_verification
+سوهاج,outside Greater Cairo,excluded_location,"Never selectable; not eligible; if independent geographic evidence is absent, do not claim confirmed outside merely from no-result",Hard negative geographic fixture,candidate_requires_source_verification
+Sohag,outside Greater Cairo,excluded_location,"Never selectable; not eligible; if independent geographic evidence is absent, do not claim confirmed outside merely from no-result",Hard negative geographic fixture,candidate_requires_source_verification
+الأقصر,outside Greater Cairo,excluded_location,"Never selectable; not eligible; if independent geographic evidence is absent, do not claim confirmed outside merely from no-result",Hard negative geographic fixture,candidate_requires_source_verification
+Luxor,outside Greater Cairo,excluded_location,"Never selectable; not eligible; if independent geographic evidence is absent, do not claim confirmed outside merely from no-result",Hard negative geographic fixture,candidate_requires_source_verification
+أسوان,outside Greater Cairo,excluded_location,"Never selectable; not eligible; if independent geographic evidence is absent, do not claim confirmed outside merely from no-result",Hard negative geographic fixture,candidate_requires_source_verification
+Aswan,outside Greater Cairo,excluded_location,"Never selectable; not eligible; if independent geographic evidence is absent, do not claim confirmed outside merely from no-result",Hard negative geographic fixture,candidate_requires_source_verification
+الغردقة,outside Greater Cairo,excluded_location,"Never selectable; not eligible; if independent geographic evidence is absent, do not claim confirmed outside merely from no-result",Hard negative geographic fixture,candidate_requires_source_verification
+Hurghada,outside Greater Cairo,excluded_location,"Never selectable; not eligible; if independent geographic evidence is absent, do not claim confirmed outside merely from no-result",Hard negative geographic fixture,candidate_requires_source_verification
+الرياض,outside Greater Cairo,excluded_location,"Never selectable; not eligible; if independent geographic evidence is absent, do not claim confirmed outside merely from no-result",Hard negative geographic fixture,candidate_requires_source_verification
+Riyadh,outside Greater Cairo,excluded_location,"Never selectable; not eligible; if independent geographic evidence is absent, do not claim confirmed outside merely from no-result",Hard negative geographic fixture,candidate_requires_source_verification
+دبي,outside Greater Cairo,excluded_location,"Never selectable; not eligible; if independent geographic evidence is absent, do not claim confirmed outside merely from no-result",Hard negative geographic fixture,candidate_requires_source_verification
+Dubai,outside Greater Cairo,excluded_location,"Never selectable; not eligible; if independent geographic evidence is absent, do not claim confirmed outside merely from no-result",Hard negative geographic fixture,candidate_requires_source_verification
+طريق الفيوم,Greater Cairo; road segment depends on point,road/landmark,"Roads/polygons are context, explicit precise map pin required when needed",,candidate_requires_source_verification
+طريق اسكندرية الصحراوي,Greater Cairo; road segment depends on point,road/landmark,"Roads/polygons are context, explicit precise map pin required when needed",,candidate_requires_source_verification
+شارع التسعين,Greater Cairo; road segment depends on point,road/landmark,"Roads/polygons are context, explicit precise map pin required when needed",,candidate_requires_source_verification
+التسعين الشمالي,Greater Cairo; road segment depends on point,road/landmark,"Roads/polygons are context, explicit precise map pin required when needed",,candidate_requires_source_verification
+التسعين الجنوبي,Greater Cairo; road segment depends on point,road/landmark,"Roads/polygons are context, explicit precise map pin required when needed",,candidate_requires_source_verification
+90th Street,Greater Cairo; road segment depends on point,road/landmark,"Roads/polygons are context, explicit precise map pin required when needed",,candidate_requires_source_verification
+الجامعة الأمريكية,Greater Cairo; road segment depends on point,road/landmark,"Roads/polygons are context, explicit precise map pin required when needed",,candidate_requires_source_verification
+AUC,Greater Cairo; road segment depends on point,road/landmark,"Roads/polygons are context, explicit precise map pin required when needed",,candidate_requires_source_verification
+كايرو فيستيفال,Greater Cairo; road segment depends on point,road/landmark,"Roads/polygons are context, explicit precise map pin required when needed",,candidate_requires_source_verification
+Cairo Festival City,Greater Cairo; road segment depends on point,road/landmark,"Roads/polygons are context, explicit precise map pin required when needed",,candidate_requires_source_verification
+empty query,UI/server action,behavior_contract,Map picker opens without typed input,"Synthetic behavior test, not a real geocode",synthetic_behavior
+quick input reversal,UI/server action,behavior_contract,Stale network response does not overwrite new results,"Synthetic behavior test, not a real geocode",synthetic_behavior
+Photon outage,UI/server action,behavior_contract,Local indexed suggestions still appear,"Synthetic behavior test, not a real geocode",synthetic_behavior
+outside map tap,UI/server action,behavior_contract,Geofence blocks confirmation,"Synthetic behavior test, not a real geocode",synthetic_behavior
+inside map tap,UI/server action,behavior_contract,Valid source=manual_map_pin returned; no fake OSM id,"Synthetic behavior test, not a real geocode",synthetic_behavior
+outside coordinate direct RPC,UI/server action,behavior_contract,Server rejects write,"Synthetic behavior test, not a real geocode",synthetic_behavior
+inside approved but nonregistered Captain area,UI/server action,behavior_contract,Do not authorize publish,"Synthetic behavior test, not a real geocode",synthetic_behavior
+area vs pin,UI/server action,behavior_contract,An area center is never persisted as exact pickup,"Synthetic behavior test, not a real geocode",synthetic_behavior

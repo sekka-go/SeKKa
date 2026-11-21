@@ -6,7 +6,7 @@ import {photonEndpoint} from './locationSearch';
 import CaptainRouteMap from './CaptainRouteMap';
 import {captainRouteError} from './captainRouteErrors';
 import {draftPriceGuidance,outsideDraftPriceGuidance} from './draftPriceGuidance';
-import {inLaunchRegion,mapPlacesFromPhoton,outsideCoverageMessage} from './geoPlace';
+import {inLaunchRegion,mapPlacesFromPhoton,outsideCoverageMessage,selectOperationalMapPlace} from './geoPlace';
 import {resolveCaptainRoutingArea,validStopSchedule} from './captainStopPlanning';
 import type {MapPlace} from './geoPlace';
 import type {PlaceChoice} from './geoPlace';
@@ -139,7 +139,8 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
       straightLineKm(place,point)*1000<=Math.max(position.coords.accuracy,40));
      if(!match){setError(t('موقعك اتحدد لكن اسمه مش متوفر. ابحث عن شارع أو معلم قريب بالاسم.',
        'GPS found you, but no verified place name is available. Search for a nearby landmark.'));return;}
-     addVerifiedStop({...match,latitude:point.latitude,longitude:point.longitude});
+     addVerifiedStop({...match,...point,source:'manual_map_pin',kind:'point',catalogKind:undefined,
+      id:'manual:'+point.latitude.toFixed(6)+','+point.longitude.toFixed(6)});
     }catch{setError(t('تعذّر تحديد اسم موقعك. ابحث عن مكان قريب بالاسم.',
      'Could not identify your location name. Search by nearby place name.'));}
     finally{setLocatingStop(false);}
@@ -152,28 +153,28 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
  const addVerifiedStop=(place:MapPlace)=>{
   setError('');setMessage('');
   const verifiedPoint=persistableOperationalPoint(place);
-  if(!verifiedPoint){
-   setError(t(outsideCoverageMessage.ar,outsideCoverageMessage.en));return;
+  if(!verifiedPoint||!selectOperationalMapPlace(place)){
+   setError(t(outsideCoverageMessage.ar,outsideCoverageMessage.en));return false;
   }
   // Legacy zone is resolved internally for the required FK; the actual stop
   // is the selected place name + coordinates and must never be silently changed.
   const targetArea=resolveCaptainRoutingArea(place,areas);
   if(!targetArea){
-   setError(t('تعذّر حفظ المنطقة الداخلية للمكان. جرّب تحديث الصفحة.',
-    'Unable to resolve this place for route storage. Refresh and retry.'));return;
+   setError(t('مش قادرين نأكد منطقة خدمة النقطة دي. اختار محطة معروفة في منطقة مدعومة.',
+    'We could not verify the service area. Choose a mapped stop in a supported area.'));return false;
   }
   const name=place.name.trim();
-  if(name.length<3||name.length>100){setError(t('اختار مكان باسم واضح.','Choose a named place.'));return;}
-  if(stops.length>=30){setError(t('وصلت لأقصى عدد نقاط.','Maximum stops reached.'));return;}
+  if(name.length<3||name.length>100){setError(t('اختار مكان باسم واضح.','Choose a named place.'));return false;}
+  if(stops.length>=30){setError(t('وصلت لأقصى عدد نقاط.','Maximum stops reached.'));return false;}
   if(stops.some(s=>
     (s.name.toLocaleLowerCase()===name.toLocaleLowerCase()&&s.areaId===targetArea.id)||
     s.latitude!==null&&s.longitude!==null&&
     straightLineKm({latitude:s.latitude,longitude:s.longitude},verifiedPoint)<0.03)){
-   setError(t('المكان ده اتضاف بالفعل.','Stop is already added.'));return;
+   setError(t('المكان ده اتضاف بالفعل.','Stop is already added.'));return false;
   }
   setStops(next=>[...next,{areaId:targetArea.id,name,pickup:true,dropoff:true,
    outboundStopTime:'',returnStopTime:'',...verifiedPoint}]);
-  setPlaceLabel('');setPlaceChoice(null);
+  setPlaceLabel('');setPlaceChoice(null);return true;
  };
  // Distinct stops are defined by coordinates, never by internal area buckets.
  const hasDistinctEndpoints=stops.length>=2&&

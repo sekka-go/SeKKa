@@ -1,0 +1,171 @@
+screen,name,surface,language,theme,width,height,document_overflow_px,controls,controls_below_44px_height,smallest_control_height,smallest_control_label,css_corner_radius,staging_path
+1,Splash,design gallery,ar,light,320,700,0,1,0,126,ابدأ مع سِكّة,13px,/dev/screens?screen=1&inspect=1
+2,Welcome,design gallery,ar,light,320,700,0,2,2,18,سجل الدخول,13px,/dev/screens?screen=2&inspect=1
+3,Account Type,design gallery,ar,light,320,700,0,4,2,29,رجوع,8.64px,/dev/screens?screen=3&inspect=1
+4,Phone Number,design gallery,ar,light,320,700,0,4,4,29,رجوع,8.64px,/dev/screens?screen=4&inspect=1
+5,OTP,design gallery,ar,light,320,700,0,9,4,16,أعد إرسال الكود,13px,/dev/screens?screen=5&inspect=1
+6,Complete Profile,design gallery,ar,light,320,700,0,4,1,35,رجوع,8.64px,/dev/screens?screen=6&inspect=1
+7,Permissions,design gallery,ar,light,320,700,0,2,1,29,رجوع,8.64px,/dev/screens?screen=7&inspect=1
+8,Rider Home,design gallery,ar,light,320,700,0,11,5,27,وقت الذهاب,8.96px,/dev/screens?screen=8&preview=phase2
+9,Route Search,design gallery,ar,light,320,700,0,7,5,27,وقت الذهاب,8.96px,/dev/screens?screen=9&preview=phase2
+10,Filters,design gallery,ar,light,320,700,0,12,3,28,رجوع,7.68px,/dev/screens?screen=10&preview=phase2
+11,Search Results / No Results,design gallery,ar,light,320,700,0,5,4,28,رجوع,7.68px,/dev/screens?screen=11&preview=phase2
+12,Offer Details & Route Stops,design gallery,ar,light,320,700,0,5,4,20,حفظ في المفضلة,13px,/dev/screens?screen=12&preview=phase2
+13,Favorites,design gallery,ar,light,320,700,0,7,1,28,رجوع,7.68px,/dev/screens?screen=13&preview=phase2
+14,Route Request Review & Confirmation,design gallery,ar,light,320,700,0,2,1,28,رجوع,7.68px,/dev/screens?screen=14&preview=phase2
+15,Booking Summary,design gallery,ar,light,320,700,0,2,1,28,رجوع,7.68px,/dev/screens?screen=15&preview=phase3
+16,Booking Security,design gallery,ar,light,320,700,0,2,1,28,رجوع,7.68px,/dev/screens?screen=16&preview=phase3
+17,Booking Confirmation,design gallery,ar,light,320,700,0,2,1,28,رجوع,7.68px,/dev/screens?screen=17&preview=phase3
+18,Subscription Details & Captain/Vehicle Information,design gallery,ar,light,320,700,0,3,2,27,إدارة الاشتراك,99px,/dev/screens?screen=18&preview=phase3
+19,Rider Payment Confirmation,design gallery,ar,light,320,700,0,3,2,27,,0px,/dev/screens?screen=19&preview=phase3
+20,Captain Receipt Confirmation / Security Status,design gallery,ar,light,320,700,0,3,2,27,محتاج مساعدة في الاشتراك؟,99px,/dev/screens?screen=20&preview=phase3
+21,Subscription Management & Renewal,design gallery,ar,light,320,700,0,5,4,28,رجوع,7.68px,/dev/screens?screen=21&preview=phase3
+22,Wallet,design gallery,ar,light,320,700,0,5,1,28,رجوع,7.68px,/dev/screens?screen=22&preview=phase4
+23,Top Up,design gallery,ar,light,320,700,0,7,2,28,رجوع,7.68px,/dev/screens?screen=23&preview=phase4
+24,Top-Up Result,design gallery,ar,light,320,700,0,2,1,28,رجوع,7.68px,/dev/screens?screen=24&preview=phase4
+25,Withdraw,design gallery,ar,light,320,700,0,3,1,28,رجوع,7.68px,/dev/screens?screen=25&preview=phase4
+26,Transactions,design gallery,ar,light,320,700,0,6,2,28,رجوع,7.68px,/dev/screens?screen=26&preview=phase4
+27,My Subscriptions,design gallery,ar,light,320,700,0,4,1,28,رجوع,7.68px,/dev/screens?screen=27&preview=phase4
+28,Past Subscriptions,design gallery,ar,light,320,700,0,4,1,28,رجوع,7.68px,/dev/screens?screen=28&preview=phase4
+29,Chats,design gallery,ar,light,320,700,0,4,2,28,رجوع,7.68px,/dev/screens?screen=29&preview=phase4
+30,Captain Chat,design gallery,ar,light,320,700,0,2,1,28,رجوع,7.68px,/dev/screens?screen=30&preview=phase4
+31,Notifications,design gallery,ar,light,320,700,0,4,1,28,رجوع,7.68px,/dev/screens?screen=31&preview=phase4
+32,My Account & Settings,design gallery,ar,light,320,700,0,10,3,27,theme_preference,8.96px,/dev/screens?screen=32&preview=phase4
+33,Edit Profile,design gallery,ar,light,320,700,0,4,2,28,رجوع,7.68px,/dev/screens?screen=33&preview=phase4
+34,Help & Support,design gallery,ar,light,320,700,0,2,1,28,رجوع,7.68px,/dev/screens?screen=34&preview=phase4
+35,Captain Registration,design gallery,ar,light,320,700,0,2,1,28,رجوع,7.68px,/dev/screens?screen=35&preview=phase5
+36,Personal Details,design gallery,ar,light,320,700,0,5,4,28,رجوع,7.68px,/dev/screens?screen=36&preview=phase5
+37,Vehicle & Category,design gallery,ar,light,320,700,0,8,7,28,رجوع,7.68px,/dev/screens?screen=37&preview=phase5
+38,Documents,design gallery,ar,light,320,700,0,6,5,28,رجوع,7.68px,/dev/screens?screen=38&preview=phase5
+39,Review Submission,design gallery,ar,light,320,700,0,7,2,27,,0px,/dev/screens?screen=39&preview=phase5
+40,Approval Status,design gallery,ar,light,320,700,0,2,1,28,رجوع,7.68px,/dev/screens?screen=40&preview=phase5
+41,Activation,design gallery,ar,light,320,700,0,2,1,28,رجوع,7.68px,/dev/screens?screen=41&preview=phase5
+42,My Routes,design gallery,ar,light,320,700,0,1,0,44,إنشاء خط جديد,11.2px,/dev/screens?screen=42&preview=phase6
+43,Create Route,design gallery,ar,light,320,700,0,3,0,44,,8.96px,/dev/screens?screen=43&preview=phase6
+44,"Origin, Destination & Stops",design gallery,ar,light,320,700,0,5,1,27,المنطقة,8.96px,/dev/screens?screen=44&preview=phase6
+45,Outbound/Return Schedule,design gallery,ar,light,320,700,0,4,0,44,,8.96px,/dev/screens?screen=45&preview=phase6
+46,Direction & Duration,design gallery,ar,light,320,700,0,5,3,27,"أسبوعي
+شهري",8.96px,/dev/screens?screen=46&preview=phase6
+47,Price & Capacity,design gallery,ar,light,320,700,0,5,1,27,"PRIME
+SAVER
+SPACE
+MAX",8.96px,/dev/screens?screen=47&preview=phase6
+48,Review & Publish,design gallery,ar,light,320,700,0,3,1,27,,0px,/dev/screens?screen=48&preview=phase6
+49,Edit/Pause/Manage Route,design gallery,ar,light,320,700,0,1,0,44,خطوطي,13px,/dev/screens?screen=49&preview=phase6
+50,Captain Home,design gallery,ar,light,320,700,0,11,1,28,رجوع,7.68px,/dev/screens?screen=50&preview=phase7
+51,New Bookings,design gallery,ar,light,320,700,0,5,2,28,رجوع,7.68px,/dev/screens?screen=51&preview=phase7
+52,Subscribers,design gallery,ar,light,320,700,0,5,2,28,رجوع,7.68px,/dev/screens?screen=52&preview=phase7
+53,Subscription Details,design gallery,ar,light,320,700,0,2,1,28,رجوع,7.68px,/dev/screens?screen=53&preview=phase7
+54,Daily Operations,design gallery,ar,light,320,700,0,2,1,28,رجوع,7.68px,/dev/screens?screen=54&preview=phase7
+55,Confirm Payment Received,design gallery,ar,light,320,700,0,2,1,28,رجوع,7.68px,/dev/screens?screen=55&preview=phase7
+56,Chats,design gallery,ar,light,320,700,0,2,1,28,رجوع,7.68px,/dev/screens?screen=56&preview=phase7
+57,Rider Chat,design gallery,ar,light,320,700,0,2,1,28,رجوع,7.68px,/dev/screens?screen=57&preview=phase7
+58,Notifications,design gallery,ar,light,320,700,0,5,1,28,رجوع,7.68px,/dev/screens?screen=58&preview=phase7
+59,Payment Acknowledgment Records,design gallery,ar,light,320,700,0,2,1,28,رجوع,7.68px,/dev/screens?screen=59&preview=phase7
+60,Captain Profile & Settings,design gallery,ar,light,320,700,0,4,3,27,theme_preference,8.96px,/dev/screens?screen=60&preview=phase7
+61,Support,design gallery,ar,light,320,700,0,3,1,28,رجوع,7.68px,/dev/screens?screen=61&preview=phase7
+62,Admin Dashboard,design gallery,ar,light,320,700,0,9,1,20,,0px,/dev/screens?screen=62&preview=phase8
+63,Users,design gallery,ar,light,320,700,0,6,1,20,,0px,/dev/screens?screen=63&preview=phase8
+64,Captains,design gallery,ar,light,320,700,0,6,1,20,,0px,/dev/screens?screen=64&preview=phase8
+65,Document Review,design gallery,ar,light,320,700,0,6,1,20,,0px,/dev/screens?screen=65&preview=phase8
+66,Vehicles & Categories,design gallery,ar,light,320,700,0,6,1,20,,0px,/dev/screens?screen=66&preview=phase8
+67,Routes,design gallery,ar,light,320,700,0,6,1,20,,0px,/dev/screens?screen=67&preview=phase8
+68,Bookings,design gallery,ar,light,320,700,0,6,1,20,,0px,/dev/screens?screen=68&preview=phase8
+69,Wallets & Security,design gallery,ar,light,320,700,0,6,1,20,,0px,/dev/screens?screen=69&preview=phase8
+70,Financial Transactions,design gallery,ar,light,320,700,0,6,1,20,,0px,/dev/screens?screen=70&preview=phase8
+71,Complaints & Support,design gallery,ar,light,320,700,0,6,1,20,,0px,/dev/screens?screen=71&preview=phase8
+72,Announcements,design gallery,ar,light,320,700,0,6,1,20,,0px,/dev/screens?screen=72&preview=phase8
+73,Settings & Permissions,design gallery,ar,light,320,700,0,6,1,20,,0px,/dev/screens?screen=73&preview=phase8
+live0,"مشوارك بيتكرر؟
+خلّيه أسهل.",guest app,ar,light,320,700,0,3,0,44,تخطي التعريف,13px,/
+live1,البحث عن خط,guest app,ar,light,320,700,0,10,2,43,نقطة الانطلاق,12px,/?tab=search&view=9
+live2,تصفية البحث,guest app,ar,light,320,700,0,16,2,27,,0px,/?tab=search&view=10
+live3,نتائج البحث,guest app,ar,light,320,700,0,3,1,42,رجوع,7.68px,/?tab=search&view=11
+live4,حسابي,guest app,ar,light,320,700,0,1,0,48,تسجيل الدخول بجوجل,14px,/?tab=profile
+live5,خطوط الكابتن,guest app,ar,light,320,700,0,0,0,,,,/?tab=routes&view=43
+live6,غير مسموح,guest app,ar,light,320,700,0,1,0,48,العودة,13px,/?tab=admin
+1,Splash,design gallery,en,dark,390,844,0,1,0,153,Start with seKKa,13px,/dev/screens?screen=1&inspect=1
+2,Welcome,design gallery,en,dark,390,844,0,2,2,22,Sign in,13px,/dev/screens?screen=2&inspect=1
+3,Account Type,design gallery,en,dark,390,844,0,4,1,35,Back,10.53px,/dev/screens?screen=3&inspect=1
+4,Phone Number,design gallery,en,dark,390,844,0,4,3,35,Back,10.53px,/dev/screens?screen=4&inspect=1
+5,OTP,design gallery,en,dark,390,844,0,9,3,20,Resend code,13px,/dev/screens?screen=5&inspect=1
+6,Complete Profile,design gallery,en,dark,390,844,0,4,1,41,Back,10.53px,/dev/screens?screen=6&inspect=1
+7,Permissions,design gallery,en,dark,390,844,0,2,1,35,Back,10.53px,/dev/screens?screen=7&inspect=1
+8,Rider Home,design gallery,en,dark,390,844,0,11,3,33,Departure time,10.92px,/dev/screens?screen=8&preview=phase2
+9,Route Search,design gallery,en,dark,390,844,0,7,3,33,Departure time,10.92px,/dev/screens?screen=9&preview=phase2
+10,Filters,design gallery,en,dark,390,844,0,12,3,34,Back,9.36px,/dev/screens?screen=10&preview=phase2
+11,Search Results / No Results,design gallery,en,dark,390,844,0,5,4,34,Back,9.36px,/dev/screens?screen=11&preview=phase2
+12,Offer Details & Route Stops,design gallery,en,dark,390,844,0,5,4,24,Save to favorites,13px,/dev/screens?screen=12&preview=phase2
+13,Favorites,design gallery,en,dark,390,844,0,7,1,34,Back,9.36px,/dev/screens?screen=13&preview=phase2
+14,Route Request Review & Confirmation,design gallery,en,dark,390,844,0,2,1,34,Back,9.36px,/dev/screens?screen=14&preview=phase2
+15,Booking Summary,design gallery,en,dark,390,844,0,2,1,34,Back,9.36px,/dev/screens?screen=15&preview=phase3
+16,Booking Security,design gallery,en,dark,390,844,0,2,1,34,Back,9.36px,/dev/screens?screen=16&preview=phase3
+17,Booking Confirmation,design gallery,en,dark,390,844,0,2,1,34,Back,9.36px,/dev/screens?screen=17&preview=phase3
+18,Subscription Details & Captain/Vehicle Information,design gallery,en,dark,390,844,0,3,2,33,Manage subscription,99px,/dev/screens?screen=18&preview=phase3
+19,Rider Payment Confirmation,design gallery,en,dark,390,844,0,3,2,33,,0px,/dev/screens?screen=19&preview=phase3
+20,Captain Receipt Confirmation / Security Status,design gallery,en,dark,390,844,0,3,2,33,Need help with this subscription?,99px,/dev/screens?screen=20&preview=phase3
+21,Subscription Management & Renewal,design gallery,en,dark,390,844,0,5,4,34,Back,9.36px,/dev/screens?screen=21&preview=phase3
+22,Wallet,design gallery,en,dark,390,844,0,5,1,34,Back,9.36px,/dev/screens?screen=22&preview=phase4
+23,Top Up,design gallery,en,dark,390,844,0,7,2,34,Back,9.36px,/dev/screens?screen=23&preview=phase4
+24,Top-Up Result,design gallery,en,dark,390,844,0,2,1,34,Back,9.36px,/dev/screens?screen=24&preview=phase4
+25,Withdraw,design gallery,en,dark,390,844,0,3,1,34,Back,9.36px,/dev/screens?screen=25&preview=phase4
+26,Transactions,design gallery,en,dark,390,844,0,6,2,34,Back,9.36px,/dev/screens?screen=26&preview=phase4
+27,My Subscriptions,design gallery,en,dark,390,844,0,4,1,34,Back,9.36px,/dev/screens?screen=27&preview=phase4
+28,Past Subscriptions,design gallery,en,dark,390,844,0,4,1,34,Back,9.36px,/dev/screens?screen=28&preview=phase4
+29,Chats,design gallery,en,dark,390,844,0,4,2,34,Back,9.36px,/dev/screens?screen=29&preview=phase4
+30,Captain Chat,design gallery,en,dark,390,844,0,2,1,34,Back,9.36px,/dev/screens?screen=30&preview=phase4
+31,Notifications,design gallery,en,dark,390,844,0,4,1,34,Back,9.36px,/dev/screens?screen=31&preview=phase4
+32,My Account & Settings,design gallery,en,dark,390,844,0,10,3,33,theme_preference,10.92px,/dev/screens?screen=32&preview=phase4
+33,Edit Profile,design gallery,en,dark,390,844,0,4,2,34,Back,9.36px,/dev/screens?screen=33&preview=phase4
+34,Help & Support,design gallery,en,dark,390,844,0,2,1,34,Back,9.36px,/dev/screens?screen=34&preview=phase4
+35,Captain Registration,design gallery,en,dark,390,844,0,2,1,34,Back,9.36px,/dev/screens?screen=35&preview=phase5
+36,Personal Details,design gallery,en,dark,390,844,0,5,4,34,Back,9.36px,/dev/screens?screen=36&preview=phase5
+37,Vehicle & Category,design gallery,en,dark,390,844,0,8,7,34,Back,9.36px,/dev/screens?screen=37&preview=phase5
+38,Documents,design gallery,en,dark,390,844,0,6,1,34,Back,9.36px,/dev/screens?screen=38&preview=phase5
+39,Review Submission,design gallery,en,dark,390,844,0,7,2,33,,0px,/dev/screens?screen=39&preview=phase5
+40,Approval Status,design gallery,en,dark,390,844,0,2,1,34,Back,9.36px,/dev/screens?screen=40&preview=phase5
+41,Activation,design gallery,en,dark,390,844,0,2,1,34,Back,9.36px,/dev/screens?screen=41&preview=phase5
+42,My Routes,design gallery,en,dark,390,844,0,1,0,44,Create route,13.65px,/dev/screens?screen=42&preview=phase6
+43,Create Route,design gallery,en,dark,390,844,0,3,0,44,,10.92px,/dev/screens?screen=43&preview=phase6
+44,"Origin, Destination & Stops",design gallery,en,dark,390,844,0,5,1,33,Area,10.92px,/dev/screens?screen=44&preview=phase6
+45,Outbound/Return Schedule,design gallery,en,dark,390,844,0,4,0,44,,10.92px,/dev/screens?screen=45&preview=phase6
+46,Direction & Duration,design gallery,en,dark,390,844,0,5,3,33,"Weekly
+Monthly",10.92px,/dev/screens?screen=46&preview=phase6
+47,Price & Capacity,design gallery,en,dark,390,844,0,5,1,33,"PRIME
+SAVER
+SPACE
+MAX",10.92px,/dev/screens?screen=47&preview=phase6
+48,Review & Publish,design gallery,en,dark,390,844,0,3,1,33,,0px,/dev/screens?screen=48&preview=phase6
+49,Edit/Pause/Manage Route,design gallery,en,dark,390,844,0,1,0,45,My routes,13px,/dev/screens?screen=49&preview=phase6
+50,Captain Home,design gallery,en,dark,390,844,0,11,1,34,Back,9.36px,/dev/screens?screen=50&preview=phase7
+51,New Bookings,design gallery,en,dark,390,844,0,5,2,34,Back,9.36px,/dev/screens?screen=51&preview=phase7
+52,Subscribers,design gallery,en,dark,390,844,0,5,2,34,Back,9.36px,/dev/screens?screen=52&preview=phase7
+53,Subscription Details,design gallery,en,dark,390,844,0,2,1,34,Back,9.36px,/dev/screens?screen=53&preview=phase7
+54,Daily Operations,design gallery,en,dark,390,844,0,2,1,34,Back,9.36px,/dev/screens?screen=54&preview=phase7
+55,Confirm Payment Received,design gallery,en,dark,390,844,0,2,1,34,Back,9.36px,/dev/screens?screen=55&preview=phase7
+56,Chats,design gallery,en,dark,390,844,0,2,1,34,Back,9.36px,/dev/screens?screen=56&preview=phase7
+57,Rider Chat,design gallery,en,dark,390,844,0,2,1,34,Back,9.36px,/dev/screens?screen=57&preview=phase7
+58,Notifications,design gallery,en,dark,390,844,0,5,1,34,Back,9.36px,/dev/screens?screen=58&preview=phase7
+59,Payment Acknowledgment Records,design gallery,en,dark,390,844,0,2,1,34,Back,9.36px,/dev/screens?screen=59&preview=phase7
+60,Captain Profile & Settings,design gallery,en,dark,390,844,0,4,3,33,theme_preference,10.92px,/dev/screens?screen=60&preview=phase7
+61,Support,design gallery,en,dark,390,844,0,3,1,34,Back,9.36px,/dev/screens?screen=61&preview=phase7
+62,Admin Dashboard,design gallery,en,dark,390,844,0,9,1,20,,0px,/dev/screens?screen=62&preview=phase8
+63,Users,design gallery,en,dark,390,844,0,6,1,20,,0px,/dev/screens?screen=63&preview=phase8
+64,Captains,design gallery,en,dark,390,844,0,6,1,20,,0px,/dev/screens?screen=64&preview=phase8
+65,Document Review,design gallery,en,dark,390,844,0,6,1,20,,0px,/dev/screens?screen=65&preview=phase8
+66,Vehicles & Categories,design gallery,en,dark,390,844,0,6,1,20,,0px,/dev/screens?screen=66&preview=phase8
+67,Routes,design gallery,en,dark,390,844,0,6,1,20,,0px,/dev/screens?screen=67&preview=phase8
+68,Bookings,design gallery,en,dark,390,844,0,6,1,20,,0px,/dev/screens?screen=68&preview=phase8
+69,Wallets & Security,design gallery,en,dark,390,844,0,6,1,20,,0px,/dev/screens?screen=69&preview=phase8
+70,Financial Transactions,design gallery,en,dark,390,844,0,6,1,20,,0px,/dev/screens?screen=70&preview=phase8
+71,Complaints & Support,design gallery,en,dark,390,844,0,6,1,20,,0px,/dev/screens?screen=71&preview=phase8
+72,Announcements,design gallery,en,dark,390,844,0,6,1,20,,0px,/dev/screens?screen=72&preview=phase8
+73,Settings & Permissions,design gallery,en,dark,390,844,0,6,1,20,,0px,/dev/screens?screen=73&preview=phase8
+live0,"Same commute?
+Make it easier.",guest app,en,dark,390,844,0,3,0,44,Skip intro,13px,/
+live1,Find a route,guest app,en,dark,390,844,0,10,2,43,Starting point,12px,/?tab=search&view=9
+live2,Search filters,guest app,en,dark,390,844,0,16,2,33,,0px,/?tab=search&view=10
+live3,Search results,guest app,en,dark,390,844,0,3,1,42,Back,9.36px,/?tab=search&view=11
+live4,My profile,guest app,en,dark,390,844,0,1,0,48,Sign in with Google,14px,/?tab=profile
+live5,Captain routes,guest app,en,dark,390,844,0,0,0,,,,/?tab=routes&view=43
+live6,Access restricted,guest app,en,dark,390,844,0,1,0,48,Back,13px,/?tab=admin

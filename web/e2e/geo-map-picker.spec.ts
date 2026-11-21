@@ -39,3 +39,23 @@ test('A guest may close the map without replacing the current text',async({page}
  await expect(dialog).toHaveCount(0);
  await expect(from).toHaveValue('الحي الأول');
 });
+
+test('English map keeps keyboard navigation in the dialog and waits for a deliberate search choice',async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('language_preference','en'));
+ await page.goto('/?tab=search&view=9');
+ await page.locator('.rs3__optional-map-toggle').click();
+ await page.locator('.rs3__optional-map-actions button').first().click();
+ const dialog=page.getByRole('dialog',{name:'Choose point on map'});
+ await expect(dialog).toHaveAttribute('dir','ltr');
+ const input=dialog.getByRole('combobox');
+ await input.fill('First District 6 October');
+ const option=dialog.getByRole('option').first();
+ await expect(option).toContainText('1st District');
+ await input.press('Enter');
+ await expect(option).toBeVisible();
+ await input.press('ArrowDown');
+ await expect(option).toHaveAttribute('aria-selected','true');
+ await input.press('Enter');
+ await expect(dialog.getByRole('listbox')).toHaveCount(0);
+ await expect(dialog.getByRole('button',{name:'Confirm point'})).toBeDisabled();
+});

@@ -5,7 +5,7 @@
 .sekka-mobile .rf3 h2,.sekka-mobile .rf3 h3,.sekka-mobile .rf3 p{margin:0}
 .sekka-mobile .rf3 button{font:inherit;cursor:pointer;min-height:44px}
 .sekka-mobile .rf3 :is(button,input):focus-visible{outline:3px solid #FFCB3C;outline-offset:3px}
-.sekka-mobile .rf3__hero{margin:7px 0 13px;padding:22px 19px;
+.sekka-mobile .rf3 .rf3__hero{display:block;text-align:start;margin:7px 0 13px;padding:22px 19px;
  border-radius:22px;background:linear-gradient(125deg,#6313A5,#9638C2);color:#FFF}
 .sekka-mobile .rf3__hero>span{font-size:12px;font-weight:900;color:#FFDF85}
 .sekka-mobile .rf3__hero h2{font-size:24px;font-weight:900;line-height:1.3;margin:7px 0}
@@ -48,7 +48,7 @@ html[data-theme="dark"] .sekka-mobile .rf3__categories button[aria-pressed="true
 html[data-theme="dark"] .sekka-mobile .rf3__apply{background:#FFCB3C;color:#35134F}
 html[data-theme="dark"] .sekka-mobile .rf3__reset{color:#FFDF8E}
 html[data-theme="dark"] .sekka-mobile .rf3__availability small{color:#DBCAE6}
-@media(max-width:350px){.sekka-mobile .rf3{padding-inline:10px}.sekka-mobile .rf3__hero{padding:16px}
+@media(max-width:350px){.sekka-mobile .rf3{padding-inline:10px}.sekka-mobile .rf3 .rf3__hero{display:block;text-align:start;padding:16px}
  .sekka-mobile .rf3__panel{padding:13px 11px}
  .sekka-mobile .rf3__choices button{min-width:58px;padding-inline:6px}}
 @media(prefers-reduced-motion:reduce){.sekka-mobile .rf3 *{animation:none!important;transition:none!important}}

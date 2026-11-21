@@ -1,3 +1,5 @@
+import {qualifiedPlace,districtName} from './municipalSearch.ts';
+import {isInsideOperationalRegion} from './greaterCairoBoundary.ts';
 import {isInsideCairoDiscovery} from './discoveryCairo.ts';
 import {canonicalNamedQuery} from './priorityPlaceQueries.ts';
 import {normalizedPlace,placeMatchesArea} from './geoPlace.ts';
@@ -7,8 +9,8 @@ import type {MapPlace,ServiceArea} from './geoPlace';
 type ShardEntry={i:string;n:string;a:string|null;e:string|null;c:string;k:string;
  p:[number,number];x:boolean;os:string;v:string[]};
 type Shard={version:string;results:ShardEntry[]};
-const shardCache=new Map<number,{until:number;rows:ShardEntry[]}>();
-let unavailable=false;
+const shardCache=new Map<string,{until:number;rows:ShardEntry[]}>();
+
 const generic=new Set(['شارع','حاره','عطفه','طريق','ميدان','محطه','مسجد','جامع',
  'جامعه','موقف','مول','street','st','road','rd','square','station','mosque','avenue']);
 function lookupKey(q:string){
@@ -57,36 +59,39 @@ function aliasScore(item:ShardEntry,query:string){
 }
 /** CDN-hosted subset of approved OSM place data. Only the relevant hash shard is downloaded. */
 export async function searchStaticCairo(query:string,en:boolean,area:ServiceArea|undefined,
- signal:AbortSignal):Promise<MapPlace[]>{
+ signal:AbortSignal,qualify=true):Promise<MapPlace[]>{
  const canonical=canonicalNamedQuery(query);
- const q=normalizedPlace(canonical??query),effective=lookupKey(q);
- if((effective.length<4&&!canonical)||unavailable)return [];
- const bucket=bucketFor(effective);
- let records=shardCache.get(bucket)?.rows;
- if(!records||shardCache.get(bucket)!.until<Date.now()){
+ const whole=normalizedPlace(canonical??query);
+ const parent=qualify?qualifiedPlace(whole):null;
+ const q=parent?districtName(parent.term):whole,effective=lookupKey(q);
+ if(!effective||(effective.length<4&&!canonical&&!parent))return [];
+ const key=parent?'areas-'+parent.city.key:String(bucketFor(effective)).padStart(3,'0');
+ let records=shardCache.get(key)?.rows;
+ if(!records||shardCache.get(key)!.until<Date.now()){
   try{
-   const response=await fetch('/geo-index/'+String(bucket).padStart(3,'0')+'.json',{signal});
-   if(response.status===404){unavailable=true;return [];}
-   if(!response.ok)throw Error('SHARD_UNAVAILABLE');
+   const response=await fetch('/geo-index/'+key+'.json',{signal});
+   if(!response.ok)return [];
    const data=await response.json() as Shard;
    if(!data||!Array.isArray(data.results))return [];
    records=data.results;
    if(shardCache.size>=18){const first=shardCache.keys().next().value;if(first!==undefined)shardCache.delete(first);}
-   shardCache.set(bucket,{rows:records,until:Date.now()+600_000});
+   shardCache.set(key,{rows:records,until:Date.now()+600_000});
   }catch{return [];}
  }
  if(signal.aborted)return [];
  const candidate=records.map(row=>{
-  const relevance=Math.max(aliasScore(row,q),trustedLandmarkBoost(row,q));
+  const score=aliasScore(row,q);
+  const named=parent&&[row.a,row.e,row.n].some(n=>n&&districtName(n)===q);
+  const relevance=Math.max(score,named?510:0,trustedLandmarkBoost(row,q));
   if(!relevance||!/^osm:(node|way|relation):\d+$/.test(row.i))return null;
   const latitude=Number(row.p?.[0]),longitude=Number(row.p?.[1]);
   if(!Number.isFinite(latitude)||!Number.isFinite(longitude)||
-   !isInsideCairoDiscovery({latitude,longitude}))return null;
+   !isInsideCairoDiscovery({latitude,longitude})||(parent&&!isInsideOperationalRegion({latitude,longitude})))return null;
   const kind:MapPlace['kind']=row.x&&row.os==='node'?'point':
    ['city','town','village','suburb','district','neighbourhood','neighborhood','quarter','borough','locality'].includes(row.k)?'area':
    row.k==='road'?'road':'feature';
   const place:MapPlace={id:row.os[0].toUpperCase()+':'+row.i.split(':')[2],
-   name:(en?row.e||row.n:row.a||row.n),detail:row.c,kind,source:'map',
+   name:(en?row.e||row.n:row.a||row.n),detail:[parent&&(en?parent.city.en:parent.city.ar),row.c].filter(Boolean).join(' · '),kind,source:'map',
    latitude,longitude,osmValue:row.k,locality:row.c?row.c.split(' · ').map(t=>t.trim()):[]};
   if(area&&!placeMatchesArea(place,area))return null;
   const typeRank=['mall','school','kindergarten','childcare','university','college','office','commercial'].includes(row.k)?6:kind==='area'?4:kind==='point'?3:kind==='feature'?2:1;
@@ -94,5 +99,6 @@ export async function searchStaticCairo(query:string,en:boolean,area:ServiceArea
  }).filter((row):row is {place:MapPlace;score:number;typeRank:number}=>Boolean(row));
  candidate.sort((a,b)=>b.score-a.score||b.typeRank-a.typeRank||
   a.place.id.localeCompare(b.place.id));
+ if(parent&&!candidate.length)return searchStaticCairo(query,en,area,signal,false);
  return candidate.slice(0,9).map(x=>x.place);
 }

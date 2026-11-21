@@ -108,6 +108,7 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
     }}>{t('ابحث عن ','Search for ')}{t(item.ar,item.en)}</button>)}
    </div>}
    {result.busy&&<p role="status">{t('بنجيب الأماكن من OpenStreetMap…','Looking up places on OpenStreetMap…')}</p>}
+   {picks.length>0&&<small><a href="/geo-index/ATTRIBUTION.txt" target="_blank" rel="noopener noreferrer">{t('مصادر بيانات الأماكن','Place data credits')}</a></small>}
    {msg&&<p role="status" className="cj-place-error">{msg}</p>}
   </div>}
 

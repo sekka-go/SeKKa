@@ -38,3 +38,11 @@ test('separate developer gallery retains its original screen 9 and 10',async({pa
  await expect(page.locator('.d-screen-10 .d-filter-section').first()).toBeVisible();
  await expect(page.locator('.rs3,.rf3')).toHaveCount(0);
 });
+
+test('previewing a sample commute cannot populate the live search form',async({page})=>{
+ await page.goto('/dev/screens?screen=9&preview=phase2');
+ await expect(page.locator('.d-screen-9 .d-planner')).toBeVisible();
+ await page.goto('/?tab=search&view=9');
+ await expect(page.locator('.rs3 input[role="combobox"]').first()).toHaveValue('');
+ await expect(page.locator('.rs3 input[role="combobox"]').last()).toHaveValue('');
+});

@@ -61,6 +61,7 @@ jobs:
             geo-index web/public/geo-index
           cat web/public/geo-index/manifest.json
       - name: Commit licensed static index to existing PR branch only
+        if: github.event_name == 'workflow_dispatch'
         run: |
           set -euo pipefail
           test "$GITHUB_REF_NAME" = "feat/real-app-google-auth-foundation-20261115"
@@ -70,13 +71,13 @@ jobs:
           if git diff --cached --quiet; then
             echo "Static Cairo index has not changed."
           else
-            git commit -m "data(geo): publish licensed OSM search shards on PR 185"
+            git commit -m "[CF-Pages-Skip] data(geo): publish licensed OSM search shards on PR 185"
             git fetch origin "$GITHUB_REF_NAME"
             git rebase "origin/$GITHUB_REF_NAME"
             git push origin "HEAD:$GITHUB_REF_NAME"
           fi
       - name: Staging-only guarded import when authorized DSN is configured
-        if: env.STAGING_DATABASE_URL != ''
+        if: github.event_name == 'workflow_dispatch' && env.STAGING_DATABASE_URL != ''
         run: |
           set -euo pipefail
           case "$STAGING_DATABASE_URL" in

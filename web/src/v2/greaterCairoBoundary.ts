@@ -19,12 +19,14 @@ function ringPosition(x: number, y: number, ring: number[][]): 'edge' | 'inside'
  return inside?'inside':'outside';
 }
 
+export function polygonCovers(lon:number,lat:number,[outer,...holes]:number[][][]):boolean {
+ return ringPosition(lon,lat,outer)!=='outside'&&holes.every(ring=>ringPosition(lon,lat,ring)!=='inside');
+}
+
 export function isInsideOperationalRegion(point: GeoPoint): boolean {
  if (!validCoordinates(point)) return false;
  const {latitude,longitude}=point;
- return greaterCairoGeometry.coordinates.some(([outer,...holes]) =>
-  ringPosition(longitude,latitude,outer)!=='outside' &&
-  holes.every(ring=>ringPosition(longitude,latitude,ring)!=='inside'));
+ return greaterCairoGeometry.coordinates.some(polygon=>polygonCovers(longitude,latitude,polygon));
 }
 
 export function persistableOperationalPoint(point:GeoPoint|null|undefined):GeoPoint|null {

@@ -13,6 +13,14 @@ type SearchResult={places:MapPlace[];outside:boolean};
 type SearchState=SearchResult&{key:string;status:'done'|'error'};
 const cache=new Map<string,{expires:number;data:SearchResult}>();
 
+function remember(key:string,data:SearchResult){
+ if(!cache.has(key)&&cache.size>=64){
+  const oldest=cache.keys().next().value;
+  if(oldest!==undefined)cache.delete(oldest);
+ }
+ cache.set(key,{expires:Date.now()+300_000,data});
+}
+
 async function indexedLookup(query:string,area:ServiceArea|undefined,en:boolean,signal:AbortSignal){
  if(!client)return [] as MapPlace[];
  try{
@@ -45,7 +53,7 @@ export async function lookupLocations(query:string,area:ServiceArea|undefined,en
  const staticResults=await searchStaticCairo(query,en,area,signal);
  if(staticResults.length>0){
   const data={places:staticResults.slice(0,8),outside:false};
-  cache.set(key,{expires:Date.now()+300_000,data});
+  remember(key,data);
   return data;
  }
  const serverResults=await indexedLookup(query,area,en,signal);
@@ -53,7 +61,7 @@ export async function lookupLocations(query:string,area:ServiceArea|undefined,en
  const indexed=[...staticResults,...serverResults.filter(place=>!seenIndex.has(place.id))];
  if(indexed.length>=5){
   const data={places:indexed.slice(0,8),outside:false};
-  cache.set(key,{expires:Date.now()+300_000,data});
+  remember(key,data);
   return data;
  }
  const catalog=exactCatalogMatches(query,area);
@@ -90,8 +98,7 @@ export async function lookupLocations(query:string,area:ServiceArea|undefined,en
  const data={places:[...indexed,...photon].slice(0,8),outside};
  // A partial outage should not cache incomplete ambiguity resolution.
  if(!lastError&&data.places.length){
-  if(cache.size>=64){const oldest=cache.keys().next().value;if(oldest)cache.delete(oldest);}
-  cache.set(key,{expires:Date.now()+300_000,data});
+  remember(key,data);
  }
  return data;
 }
