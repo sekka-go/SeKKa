@@ -108,6 +108,19 @@ for(const variant of [
   await page.locator('.sekka-live-result .d-offer-select').click();
   await expect(page).toHaveURL(/tab=search&view=12/);
   await expect(page.locator('.rd3')).toBeVisible();
+  // The current stop selection must survive internal navigation and browser Back.
+  await expect(page).toHaveURL(/route=11111111-1111-4111-8111-111111111111/);
+  await expect(page).toHaveURL(/pickup=22222222-2222-4222-8222-222222222221/);
+  await expect(page).toHaveURL(/dropoff=22222222-2222-4222-8222-222222222222/);
+  const detailUrl=page.url();
+  await page.getByRole('button',{name:variant.language==='ar'?'فتح القائمة':'Open menu'}).click();
+  await page.getByRole('dialog',{name:variant.language==='ar'?'القائمة الرئيسية':'Main menu'})
+    .getByRole('button',{name:variant.language==='ar'?'الإشعارات':'Notifications'}).click();
+  await expect(page.locator('.live-notifications')).toBeVisible();
+  await expect(page.locator('.rh-tabs')).toBeVisible();
+  await page.getByRole('button',{name:variant.language==='ar'?'رجوع للصفحة السابقة':'Back to previous page'}).click();
+  await expect(page).toHaveURL(detailUrl);
+  await expect(page.locator('.rd3')).toBeVisible();
   await expect(page.locator('.rd3__stops select')).toHaveCount(2);
   await expect(page.locator('.rd3__primary')).toBeEnabled();
   await page.screenshot({path:'test-results/rider-v3-details-'+variant.language+'.png',fullPage:true,animations:'disabled'});
