@@ -45,7 +45,8 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
   :result.status==='error'
   ?t('البحث على الخريطة مش متاح دلوقتي. جرّب تاني.','Map search is temporarily unavailable. Try again.')
   :result.status==='done'&&!picks.length&&!broad.length
-    ?t(noMatchingLocation.ar,noMatchingLocation.en):'';
+    ?result.outside?t(outsideCoverageMessage.ar,outsideCoverageMessage.en):
+     t(noMatchingLocation.ar,noMatchingLocation.en):'';
  return <div className="sekka-place-lookup" onBlur={e=>{
   if(!e.currentTarget.contains(e.relatedTarget)){setOpen(false);options.reset();}
  }}>
