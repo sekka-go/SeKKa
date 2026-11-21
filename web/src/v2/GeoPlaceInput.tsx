@@ -1,6 +1,6 @@
 import {useEffect,useState} from 'react';
 import {usePreferences} from './preferences';
-import {catalogMatches,exactCatalogMatches,locationContext,locationContextIcon,outsideCatalogMatch,noMatchingLocation,outsideCoverageMessage,selectOperationalMapPlace,serviceMatches} from './geoPlace';
+import {catalogMatches,exactCatalogMatches,locationContext,locationContextIcon,outsideCatalogMatch,noMatchingLocation,outsideCoverageMessage,selectOperationalMapPlace,serviceMatches,placeMatchesArea} from './geoPlace';
 import {useLocationOptions,useLocationSearch} from './locationSearch';
 import type {PlaceChoice,ServiceArea} from './geoPlace';
 import GeoMapPicker from './GeoMapPicker';
@@ -63,7 +63,7 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
     onKeyDown={e=>options.keys(e,menu,menu?picks.length:0,pick,()=>setOpen(false),search)}/>
   </label>
   {choice&&<span className="sekka-place-lookup__selected">{choice.kind==='map'?
-    t('✓ موقع محدد من OpenStreetMap','✓ OpenStreetMap location selected'):
+    choice.place.source==='manual_map_pin'?t('✓ نقطة محددة على الخريطة','✓ Selected map point'):t('✓ موقع محدد','✓ Selected location'):
     t('✓ منطقة خدمة مسجلة','✓ Registered service area')}</span>}
   {menu&&<div className="sekka-place-lookup__suggestions" role="group"
     aria-label={t('نتائج البحث عن المكان','Place search suggestions')}>
@@ -83,8 +83,25 @@ export default function GeoPlaceInput({label,value,choice,areas,onPick,disabled=
     }}>{t('ابحث عن ','Search for ')}{t(item.ar,item.en)}</button>)}
    </div>}
    {broad.length>0&&<ul className="sekka-location-context">
-    {broad.map(place=><li key={place.id}><strong dir="auto"><span aria-hidden="true">{locationContextIcon(place)} </span>{place.name}</strong><small dir="auto">{place.detail}</small></li>)}
-    <li>{t('اكتب اسم معلم محدد قريب لاختيار نقطة على الخريطة.','Enter a nearby landmark to choose a precise map point.')}</li>
+    {broad.map(place=>{
+     const matches=areas.filter(area=>placeMatchesArea(place,area));
+     const registered=matches.length===1?matches[0]:null;
+     return <li key={place.id}>
+      {registered?<button type="button" className="sekka-location-context__select"
+       onMouseDown={event=>event.preventDefault()} onClick={()=>{
+        setQuery(registered.name_ar);onPick(registered.name_ar,{kind:'service',area:registered});
+        setOpen(false);options.reset();
+       }}>
+       <strong dir="auto"><span aria-hidden="true">{locationContextIcon(place)} </span>{place.name}</strong>
+       <small dir="auto">{place.detail}</small>
+       <small>{t('بحث عن رحلات في '+registered.name_ar,'Search trips in '+registered.name_en)}</small>
+      </button>:<>
+       <strong dir="auto"><span aria-hidden="true">{locationContextIcon(place)} </span>{place.name}</strong>
+       <small dir="auto">{place.detail}</small>
+       <small>{t('حدد نقطة دقيقة على الخريطة للبحث هنا','Choose an exact map point to search here')}</small>
+      </>}
+     </li>;
+    })}
    </ul>}
    {result.busy&&<p role="status">{t('بنجيب الأماكن من OpenStreetMap…','Looking up places on OpenStreetMap…')}</p>}
    {msg&&<p role="status" className="cj-place-error">{msg}</p>}
