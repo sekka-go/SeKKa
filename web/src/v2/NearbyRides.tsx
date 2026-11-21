@@ -2,6 +2,7 @@ import {useEffect,useId,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
 import RiderStopMap from './RiderStopMap';
+import './nearby-pickup-v4.css';
 import {formatDistanceForLocale,approximateWalkMinutes} from './recurringGeo';
 import {fetchPublishedSelection} from './LiveRouteSearch';
 import type {LiveSelection} from './LiveRouteSearch';
@@ -146,65 +147,130 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
     'The route changed or seats sold out. Refresh nearby routes and retry.'));
   }finally{setOpening(null);}
  };
- return <section className="d-box sekka-nearby" aria-labelledby={headingId}>
-  <div className="sekka-nearby__heading">
-   <h2 id={headingId}>{t('رحلات قريبة مني','Routes near me')}</h2>
-   <button type="button" className="sekka-nearby__locate" disabled={permissionBusy}
-    onClick={findMe}>{permissionBusy?t('بنحدد موقعك…','Locating…'):point?t('تحديث GPS','Update GPS'):t('📍 تفعيل الموقع','📍 Enable GPS')}</button>
-  </div>
-  {!point&&!permissionBusy&&!permissionDenied&&<p className="sekka-nearby__intro">{t('وافق على إذن الموقع لعرض أقرب نقط ركوب. مش بنحتفظ بمكانك.',
-   'Allow location to find nearby pickup points. We never store your position.')}</p>}
-  {permissionDenied&&<div className="sekka-nearby__permission" role="status">
-   <strong>{t('إذن الموقع محظور في المتصفح','Location is blocked in your browser')}</strong>
-   <p>{t('Chrome مش بيسمح للموقع إنه يفتح طلب السماح تاني بعد الحظر. افتح رمز القفل أو الإعدادات جنب عنوان سِكّة، وبعدها أذونات الموقع ← سماح، وارجع هنا.',
-    'Chrome will not show the Allow popup again after you block the site. Tap the site controls next to the address, choose Permissions → Location → Allow, then return here.')}</p>
-   <p>{t('اتأكد كمان إن «الموقع» مفتوح في إعدادات الموبايل، وإن Chrome مسموح له يستخدمه.',
-    'Also turn on Location on your phone and allow location access for Chrome.')}</p>
-   <button type="button" disabled={permissionBusy} onClick={findMe}>{t('جرّب تفعيل الموقع تاني','Retry location permission')}</button>
-  </div>}
-  {deviceLocationUnavailable&&<p role="status">{t('شغّل الموقع (Location) من اختصارات الموبايل، وبعدها اضغط زر GPS تاني.',
-   'Enable Location in your phone’s Quick Settings, then try GPS again.')}</p>}
-  {point&&<details className="sekka-nearby__filters">
-   <summary>{t('نطاق البحث','Search radius')}: {radius} {t('كم','km')} · {t('تغيير','Change')}</summary>
-   <div className="sekka-nearby__controls">
-    <label>{t('أقصى مسافة لنقطة الركوب','Maximum pickup distance')}
-     <select value={radius} onChange={event=>setRadius(Number(event.target.value))}>
-      {RADIUS_OPTIONS.map(value=><option key={value} value={value}>{value} {t('كم','km')}</option>)}
-     </select>
-    </label>
-    <button type="button" disabled={loading} onClick={()=>setRetry(v=>v+1)}>{t('تحديث الرحلات','Refresh routes')}</button>
+ return <section className="sekka-nearby np4" aria-labelledby={headingId}>
+  <div className="np4__hero">
+   <div className="np4__hero-top">
+    <span className="np4__eyebrow">{t('اختار نقطة ركوبك','YOUR PICKUP SPOT')}</span>
+    <span className="np4__mini-route" aria-hidden="true"><i/><i/><i/></span>
    </div>
-  </details>}
-  {point&&candidates.length>0&&<p className="sekka-nearby__hint">{t('المسافة خط مستقيم تقريبية، مش وقت مشي أو مسافة طريق.',
-   'Distances are approximate straight-line values, not walking times or road distances.')}
-   {accuracy!==null&&accuracy>250&&' · '+t('دقة GPS حوالي ','GPS accuracy about ')+Math.round(accuracy)+' '+t('متر','m')}</p>}
-  {point&&!loading&&mappedPick?.pickupPoint&&
-    <RiderStopMap pickup={mappedPick.pickupPoint} name={mappedPick.pickupName}/>}
-  {loading&&<p role="status">{t('بندور على أقرب نقط ركوب منشورة…','Finding nearby published pickup points…')}</p>}
-  {error&&<div role="alert"><p>{error}</p></div>}
-  {point&&!loading&&!error&&candidates.length===0&&<p role="status">{t(
-   'مفيش رحلات قريبة متاحة حاليًا. تقدر توسّع النطاق أو تبحث بالمنطقة.',
-   'No nearby rides are available yet. Widen the radius or search by area.')}</p>}
-  {point&&!loading&&candidates.length>0&&<div className="sekka-nearby__results">
-   <p>{t('مرتبة من أقرب نقطة ركوب للأبعد','Sorted by nearest eligible pickup point')}</p>
-   <ul>{candidates.map((pick,index)=><li key={pick.routeId+pick.pickupStopId+String(pick.reverse)}>
-    {index===0&&<span className="sekka-rider-recommended">{t('الأقرب لنقطة ركوبك','Nearest pickup option')}</span>}
-    <strong>{pick.route.title}</strong>
-    <span>{pick.pickupName} ← {pick.dropoffName}</span>
-    <span>{formatDistanceForLocale(pick.distanceKm*1000,en)} {t('بخط مستقيم من موقعك','straight-line from your location')}
-     {' · '}{t('مشي حوالي','Walking about')} {approximateWalkMinutes(pick.distanceKm*1000)} {t('دقيقة تقريبًا','minutes approx.')}
-     {' · '}{pick.route.category}</span>
-    <span>{(pick.reverse?pick.route.return_time:pick.route.outbound_time)?.slice(0,5)||'—'}
-     {' · '}{pick.route.period==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')}
-     {' · '}{pick.remaining} {t('مقاعد متاحة','seats available')}</span>
-    {pick.pickupPoint&&<button type="button" aria-pressed={mappedPick?.pickupStopId===pick.pickupStopId}
-     onClick={()=>setMapStopId(pick.pickupStopId)}>
-      {t('شوف نقطة الركوب على الخريطة','Show pickup on map')}
-    </button>}
-    <button type="button" disabled={!onSelect||opening!==null} onClick={()=>void open(pick)}>
-     {opening===pick.routeId+String(pick.reverse)?t('بنفتح الخط…','Opening…'):t('عرض تفاصيل الخط','View route details')}
-    </button>
-   </li>)}</ul>
+   <h2 id={headingId}>{t('أقرب ركوبة ليك؟','Your nearest pickup?')}</h2>
+   <p>{t('هنشوف نقط الركوب اللي الكباتن نشروها فعلًا حوالينك، من غير ما نحفظ مكانك.',
+    'Find real published pickup stops around you, without saving your location.')}</p>
+   <button type="button" className="sekka-nearby__locate np4__locate" disabled={permissionBusy}
+    onClick={findMe}>
+    <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none"
+     stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+     <circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2"/>
+     <path d="M12 1v4m0 14v4M1 12h4m14 0h4"/>
+    </svg>
+    {permissionBusy?t('بنحدد مكانك…','Getting your location…'):
+     point?t('حدّث موقعي','Update my location'):t('استخدم موقعي الحالي','Use my location')}
+   </button>
+   {point&&<div className="np4__gps-status" role="status">
+    <span className="np4__live-dot" aria-hidden="true"/>
+    {t('موقعك جاهز — النتائج حسب نقاط الركوب المنشورة','Location ready — matching published pickup stops')}
+   </div>}
+  </div>
+  {permissionDenied&&<div className="sekka-nearby__permission np4__notice" role="alert">
+   <strong>{t('الموقع مقفول من المتصفح','Location is blocked')}</strong>
+   <p>{t('افتح أذونات الموقع لسِكّة من إعدادات المتصفح، أو كمّل بحثك بالمكان والوجهة من غير GPS.',
+    'Allow location in your browser settings, or search by your origin and destination without GPS.')}</p>
+   <button type="button" onClick={findMe} disabled={permissionBusy}>
+    {t('جرّب الموقع تاني','Try location again')}
+   </button>
   </div>}
+  {deviceLocationUnavailable&&!permissionDenied&&<p className="np4__notice" role="status">
+   {t('شغّل تحديد الموقع من إعدادات الموبايل وجرّب تاني.', 'Turn on your phone location and try again.')}
+  </p>}
+  {error&&!permissionDenied&&<p className="np4__notice np4__notice--error" role="alert">{error}</p>}
+  {point&&<>
+   <div className="np4__results-bar">
+    <div>
+     <span className="np4__eyebrow">{t('نطاق البحث','SEARCH RADIUS')}</span>
+     <strong>{loading?t('بنبحث…','Searching…'):t('نقط الركوب حولك','Pickup spots around you')}</strong>
+    </div>
+    <div className="np4__radius" role="group" aria-label={t('المسافة القصوى لنقطة الركوب','Maximum pickup distance')}>
+     {RADIUS_OPTIONS.map(km=><button key={km} type="button" onClick={()=>setRadius(km)}
+      aria-pressed={radius===km}>{km} {t('كم','km')}</button>)}
+    </div>
+   </div>
+   {accuracy!==null&&accuracy>250&&<p className="np4__accuracy" role="status">
+    {t('دقة موقعك تقريبًا ','Your location accuracy is about ')}
+    {formatDistanceForLocale(accuracy,en)}
+   </p>}
+   {loading&&<div className="np4__loading" role="status">
+    <div className="np4__skeleton"/><div className="np4__skeleton"/>
+    <p>{t('بنجمع أقرب الرحلات المنشورة…','Finding nearby published rides…')}</p>
+   </div>}
+   {!loading&&!error&&candidates.length===0&&<div className="np4__empty" role="status">
+    <span className="np4__empty-illustration" aria-hidden="true">
+     <svg viewBox="0 0 88 76" fill="none" width="88" height="76">
+      <circle cx="45" cy="35" r="31" stroke="#E5D0EB" strokeWidth="3" strokeDasharray="4 5"/>
+      <path d="M45 11c-11 0-19 9-19 19 0 14 19 34 19 34s19-20 19-34c0-10-8-19-19-19Z" fill="#FF704B"/>
+      <circle cx="45" cy="30" r="8" fill="#FFF4D7"/>
+     </svg>
+    </span>
+    <h3>{t('لسه مفيش ركوبة قريبة هنا','No pickups nearby yet')}</h3>
+    <p>{t('مش هنظهرلك نقط وهمية. جرّب توسّع المسافة أو دوّر بالمنطقة والوجهة.',
+      'We only show published stops. Widen the range or search by area and destination.')}</p>
+    {radius<10&&<button type="button" onClick={()=>setRadius(10)}>
+     {t('وسّع البحث لـ ١٠ كم','Search within 10 km')}
+    </button>}
+   </div>}
+   {!loading&&!error&&candidates.length>0&&<div className="np4__results">
+    <p className="np4__results-caption">{t('مرتبة حسب أقصر مسافة مباشرة لنقطة الركوب · المشي تقديري',
+      'Ordered by straight-line distance to pickup · walking time is estimated')}</p>
+    <ol className="np4__list">{candidates.map((pick,index)=>{
+     const isMapped=mappedPick?.pickupStopId===pick.pickupStopId&&
+      mappedPick.routeId===pick.routeId&&mappedPick.reverse===pick.reverse;
+     return <li key={pick.routeId+pick.pickupStopId+String(pick.reverse)}
+      className={'np4__card'+(index===0?' np4__card--first':'')}>
+      <div className="np4__card-top">
+       <div className="np4__card-badges">
+        {index===0&&<span className="np4__featured">{t('الأقرب ليك','NEAREST PICKUP')}</span>}
+        <span className="np4__category">{pick.route.category}</span>
+       </div>
+       <strong className="np4__price">{new Intl.NumberFormat(en?'en-EG':'ar-EG').format(pick.route.seat_price_egp)}
+        <small>{t('جنيه / مقعد','EGP / seat')}</small>
+       </strong>
+      </div>
+      <h3 dir="auto">{pick.route.title}</h3>
+      <div className="np4__timeline">
+       <div><span className="np4__route-dot" aria-hidden="true"/>
+        <small>{t('هتركب من','Pickup')}</small><strong dir="auto">{pick.pickupName}</strong>
+       </div>
+       <div><span className="np4__route-dot np4__route-dot--end" aria-hidden="true"/>
+        <small>{t('هتنزل في','Drop-off')}</small><strong dir="auto">{pick.dropoffName}</strong>
+       </div>
+      </div>
+      <div className="np4__metrics">
+       <span><b>{formatDistanceForLocale(pick.distanceKm*1000,en)}</b>
+        {t('مسافة مباشرة','straight line')}</span>
+       <span><b>{new Intl.NumberFormat(en?'en-EG':'ar-EG').format(approximateWalkMinutes(pick.distanceKm*1000))}
+        {t(' د',' min')}</b>{t('مشي تقديري','estimated walk')}</span>
+       <span><b dir="ltr">{(pick.reverse?pick.route.return_time:pick.route.outbound_time)?.slice(0,5)||'—'}</b>
+        {t('الميعاد','departure')}</span>
+       <span><b>{new Intl.NumberFormat(en?'en-EG':'ar-EG').format(pick.remaining)}</b>
+        {t('مقاعد فاضية','seats left')}</span>
+      </div>
+      <div className="np4__actions">
+       {onSelect&&<button className="np4__open" type="button"
+        disabled={opening!==null} onClick={()=>void open(pick)}>
+        {opening===pick.routeId+String(pick.reverse)?t('بنفتح الرحلة…','Opening ride…'):t('شوف تفاصيل الرحلة','View ride details')}
+       </button>}
+       {pick.pickupPoint&&<button type="button" className="np4__map-button"
+        aria-expanded={isMapped&&mapStopId!==null} onClick={()=>setMapStopId(isMapped&&mapStopId!==null?null:pick.pickupStopId)}>
+        {t('الخريطة','Map')}
+       </button>}
+      </div>
+      {pick.pickupPoint&&mapStopId!==null&&isMapped&&<div className="np4__inline-map">
+       <RiderStopMap pickup={pick.pickupPoint} name={pick.pickupName}/>
+      </div>}
+     </li>;
+    })}</ol>
+   </div>}
+  </>}
+  <p className="np4__privacy">{t('مكانك بيُستخدم على جهازك للمقارنة مع نقاط الركوب العامة، مش بيتحفظ في حسابك.',
+   'Your position is compared on this device with public pickup points and is not saved to your account.')}</p>
  </section>;
 }
