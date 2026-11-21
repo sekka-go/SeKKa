@@ -18,7 +18,8 @@ export default function RiderJourneyHome({riderId,serviceAreas,onNavigate,onSele
  const [error,setError]=useState('');
  useEffect(()=>{setSaved(readSavedCommute(riderId));setError('');},[riderId]);
  const registered=(name:string)=>serviceAreas.some(a=>a.name_ar===name||a.name_en===name);
- const valid=Boolean(saved&&registered(saved.origin)&&registered(saved.destination));
+ const valid=Boolean(saved&&(saved.originPlace?.kind==='map'||registered(saved.origin))&&
+   (saved.destinationPlace?.kind==='map'||registered(saved.destination)));
  const display=(name:string)=>language==='en'?(serviceAreas.find(a=>a.name_ar===name)?.name_en||name):name;
  const startSaved=()=>{
   if(!saved||!valid){onNavigate(9);return;}
