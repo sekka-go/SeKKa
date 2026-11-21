@@ -47,7 +47,7 @@ async function setup(page:Page,fixture:Fixture,language:'ar'|'en',theme:'light'|
   await route.fulfill({status,contentType:'application/json',body:JSON.stringify(result)});
  });
 }
-async function pickSearchArea(page:Page,field:'From where?'|'Where to?',name:string){
+async function pickSearchArea(page:Page,field:'Starting point'|'Destination',name:string){
  await page.getByRole('combobox',{name:field}).fill(name);
  await page.getByRole('group',{name:'Place search suggestions'})
   .getByRole('button',{name:name+' Service area',exact:true}).click();
@@ -197,7 +197,7 @@ test('MOCKED profile gate waits for verified session without showing guest Googl
  try{
   await page.goto('/?tab=profile');
   await expect(page.locator('.sekka-launch')).toHaveCount(0);
-  await expect(page.getByRole('status').filter({hasText:'Preparing your account…'})).toBeVisible();
+  await expect(page.locator('.sekka-session-loader[role="status"]')).toBeVisible();
   await expect(page.getByRole('button',{name:'Sign in with Google'})).toHaveCount(0);
  }finally{releaseUser();}
  await expect(page.getByRole('button',{name:'Sign out'})).toBeVisible();
@@ -310,19 +310,19 @@ test('MOCKED rider menu separates trip requests from saved seat bookings and sur
  await setup(page,{isAdmin:false},'en','light');
  await page.setViewportSize({width:390,height:844});
  await page.goto('/?tab=bookings');
- await expect(page.locator('.live-bookings')).toBeVisible();
+ await expect(page.locator('.rb3')).toBeVisible();
  await page.getByRole('button',{name:'Open menu'}).click();
  const drawer=page.getByRole('dialog',{name:'Main menu'});
  await expect(drawer.getByRole('button',{name:'My trip requests'})).toBeVisible();
  await drawer.getByRole('button',{name:'My trip requests'}).click();
  await expect(drawer).toHaveCount(0);
  await expect(page.locator('.live-trip-requests')).toBeVisible();
- await expect(page.locator('.live-bookings')).toHaveCount(0);
+ await expect(page.locator('.rb3')).toHaveCount(0);
  await expect(page.getByRole('navigation',{name:'Bookings and requests'}).getByRole('button',{name:'My trip requests'})).toHaveAttribute('aria-pressed','true');
  await page.reload();
  await expect(page.locator('.live-trip-requests')).toBeVisible();
  await page.getByRole('navigation',{name:'Bookings and requests'}).getByRole('button',{name:'My seat bookings'}).click();
- await expect(page.locator('.live-bookings')).toBeVisible();
+ await expect(page.locator('.rb3')).toBeVisible();
  await expect(page.locator('.live-trip-requests')).toHaveCount(0);
 });
 
@@ -338,11 +338,12 @@ test('MOCKED signed-in rider saves validated Home/Work shortcuts and recent sear
  }));
  await page.goto('/?tab=search&view=9');
  const shortcuts=page.locator('.sekka-search-shortcuts');
+ await page.locator('.rs3__saved>summary').click();
  await expect(shortcuts).toBeVisible();
- const from=page.getByRole('combobox',{name:'From where?'});
- const to=page.getByRole('combobox',{name:'Where to?'});
- await pickSearchArea(page,'From where?','Maadi');
- await pickSearchArea(page,'Where to?','New Cairo');
+ const from=page.getByRole('combobox',{name:'Starting point'});
+ const to=page.getByRole('combobox',{name:'Destination'});
+ await pickSearchArea(page,'Starting point','Maadi');
+ await pickSearchArea(page,'Destination','New Cairo');
  await shortcuts.getByRole('button',{name:'Save origin as Home'}).click();
  await shortcuts.getByRole('button',{name:'Save destination as Work'}).click();
  await expect(shortcuts.getByRole('button',{name:'Home to Work'})).toBeVisible();
@@ -350,8 +351,9 @@ test('MOCKED signed-in rider saves validated Home/Work shortcuts and recent sear
  await shortcuts.getByRole('button',{name:'Work to Home'}).click();
  await expect(from).toHaveValue('التجمع');
  await expect(to).toHaveValue('المعادي');
- await page.getByRole('button',{name:'Search for routes'}).click();
+ await page.getByRole('button',{name:'See available rides'}).click();
  await page.goto('/?tab=search&view=9');
+ await page.locator('.rs3__saved>summary').click();
  await expect(shortcuts.getByText('Recent searches')).toBeVisible();
  await expect(shortcuts.getByRole('button',{name:'Reuse route New Cairo - Maadi'})).toBeVisible();
  const key='sekka.rider.savedAreas.v1.'+userId;
@@ -360,6 +362,7 @@ test('MOCKED signed-in rider saves validated Home/Work shortcuts and recent sear
  expect(stored.work).toBe('التجمع');
  expect(stored.recent[0]).toEqual({origin:'التجمع',destination:'المعادي'});
  await page.reload();
+ await page.locator('.rs3__saved>summary').click();
  await expect(shortcuts.getByRole('button',{name:'Home to Work'})).toBeVisible();
  await shortcuts.getByRole('button',{name:'Home to Work'}).click();
  await expect(from).toHaveValue('المعادي');
@@ -407,16 +410,19 @@ test('MOCKED published search delegates round-trip filters and sorts projected p
   await route.fulfill({contentType:'application/json',body:JSON.stringify(result)});
  });
  await page.goto('/?tab=search&view=9');
- await pickSearchArea(page,'From where?','Maadi');
- await pickSearchArea(page,'Where to?','New Cairo');
- await page.getByRole('button',{name:'Search for routes'}).click();
+ await pickSearchArea(page,'Starting point','Maadi');
+ await pickSearchArea(page,'Destination','New Cairo');
+ await page.locator('.rs3 input[type=time]').first().fill('07:30');
+ await page.locator('.rs3__return-toggle').click();
+ await page.locator('.rs3 input[type=time]').last().fill('17:00');
+ await page.getByRole('button',{name:'See available rides'}).click();
  const list=page.locator('.d-live-search article.d-result');
  await expect(list).toHaveCount(4);
  await page.getByRole('combobox',{name:'Sort routes by'}).selectOption('price');
  await expect(list.first().getByRole('heading',{name:'Wrong return time'})).toBeVisible();
  await page.goto('/?tab=search&view=10');
- await page.locator('.d-screen-10 select').selectOption('round_trip');
- await page.getByRole('button',{name:'Show results'}).click();
+ await page.locator('.rf3').getByRole('button',{name:'Round trip',exact:true}).click();
+ await page.getByRole('button',{name:'Show rides'}).click();
  await expect(list).toHaveCount(2);
  await expect(page.getByText('Round A',{exact:true})).toBeVisible();
  await expect(page.getByText('Round C',{exact:true})).toBeVisible();
@@ -430,20 +436,20 @@ test('MOCKED published search delegates round-trip filters and sorts projected p
   p_direction:'round_trip',p_outbound:'07:30',p_return:'17:00'
  }));
  await page.getByRole('button',{name:'Edit filters'}).click();
- await page.getByLabel('Maximum price per seat (EGP)').fill('800');
- await page.getByRole('button',{name:'Show results'}).click();
+ await page.getByLabel('Max seat price (EGP)').fill('800');
+ await page.getByRole('button',{name:'Show rides'}).click();
  await expect(list).toHaveCount(0);
  await expect(page.getByText('Routes serve your selected places.',{exact:false})).toBeVisible();
  await expect(page.getByRole('button',{name:/Request a trip using this search|Sign in to request this trip/})).toHaveCount(0);
  await page.getByRole('button',{name:'Edit filters'}).click();
- await page.getByLabel('Maximum price per seat (EGP)').fill('950');
- await page.getByRole('button',{name:'Show results'}).click();
+ await page.getByLabel('Max seat price (EGP)').fill('950');
+ await page.getByRole('button',{name:'Show rides'}).click();
  await expect(list).toHaveCount(1);
  await expect(list.getByRole('heading',{name:'Round C'})).toBeVisible();
  await expect(list.getByText('Sold out')).toBeVisible();
  await page.getByRole('button',{name:'Edit filters'}).click();
- await page.getByRole('button',{name:'Available seats only'}).click();
- await page.getByRole('button',{name:'Show results'}).click();
+ await page.getByRole('checkbox',{name:/Only rides with seats/}).check();
+ await page.getByRole('button',{name:'Show rides'}).click();
  await expect(list).toHaveCount(0);
  await expect(page.getByText('Routes serve your selected places.',{exact:false})).toBeVisible();
 });
@@ -491,19 +497,19 @@ test('MOCKED genuine round-trip offer reaches transparent one-or-two person book
   await request.fulfill({contentType:'application/json',body:JSON.stringify(result)});
  });
  await page.goto('/?tab=search&view=9');
- await pickSearchArea(page,'From where?','Maadi');
- await pickSearchArea(page,'Where to?','New Cairo');
- await page.getByRole('button',{name:'Search for routes'}).click();
+ await pickSearchArea(page,'Starting point','Maadi');
+ await pickSearchArea(page,'Destination','New Cairo');
+ await page.getByRole('button',{name:'See available rides'}).click();
  await expect(page.getByRole('heading',{name:'Verified Round Trip'})).toBeVisible();
  await page.getByRole('button',{name:'View route details'}).click();
  await expect(page.getByText('Verified Round Trip',{exact:true})).toHaveCount(0);
  await expect(page.locator('.d-screen-12')).toBeVisible();
- const pickup=page.getByRole('combobox',{name:'Pickup stop'});
+ const pickup=page.getByRole('combobox',{name:'Pickup point'});
  await expect(pickup).toHaveValue(fromStop);
- await expect(page.getByRole('combobox',{name:'Drop-off stop'})).toHaveValue(toStop);
- await expect(page.getByText('Available seats now',{exact:true})).toBeVisible();
+ await expect(page.getByRole('combobox',{name:'Drop-off point'})).toHaveValue(toStop);
+ await expect(page.getByText('Seats available now',{exact:true})).toBeVisible();
  await expect(pickup.locator('option[value="'+toStop+'"]')).toHaveCount(0);
- await page.getByRole('button',{name:'Book subscription'}).click();
+ await page.getByRole('button',{name:'Continue to booking'}).click();
  await expect(page).toHaveURL(/tab=booking/);
  await expect(page.locator('.booking-stage')).toBeVisible();
  await expect(page.getByText('Round trip',{exact:false}).first()).toBeVisible();
