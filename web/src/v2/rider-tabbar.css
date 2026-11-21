@@ -21,3 +21,39 @@ html[data-theme="dark"] .rh-tabs button[aria-current="page"]{color:#FFD875}
 html[data-theme="dark"] .rh-tabs button[aria-current="page"] .rh-tabs__icon{background:#53316D;color:#FFD875}
 @media(max-width:349px){.rh-tabs__name{font-size:11px}.rh-tabs button{min-height:57px}}
 @media(prefers-reduced-motion:reduce){.rh-tabs *{animation:none!important;transition:none!important}}
+
+/* Friendly, calm home toolbar: menu retains advanced/settings access;
+   clear app-name text and a real notifications destination. */
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home > .sekka-mobile-header{
+ position:relative;top:auto;display:flex!important;
+ height:64px;min-height:64px;background:#FFF9F5;border:0;
+ padding:8px 68px;z-index:20
+}
+.sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header>.sekka-shell-menu{
+ position:absolute;inset-inline-start:12px;left:auto;right:auto;top:9px;
+ width:46px;height:46px;min-height:46px;min-width:46px;
+ border-radius:15px;border:1px solid #EADCEB;background:#FFF;
+ font-size:22px;color:#35134F
+}
+.sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header>.rh-shell-title{
+ position:absolute;display:block!important;left:70px;right:70px;top:14px;
+ text-align:center;font:900 24px/1.55 Tajawal,Tahoma,sans-serif;
+ color:#521394;white-space:nowrap;max-width:none;overflow:visible
+}
+.sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header>.rh-shell-notifications{
+ position:absolute;top:9px;inset-inline-end:12px;
+ display:grid;place-items:center;width:46px;height:46px;min-height:46px;
+ border-radius:15px;border:1px solid #EADCEB;background:#FFF;
+ color:#35134F;cursor:pointer
+}
+.sekka-rider-navigation.sekka-tab-home>.sekka-mobile-content{
+ padding-top:0;max-width:510px
+}
+.sekka-rider-navigation.sekka-tab-home .rh-home{padding-bottom:28px}
+html[data-theme="dark"] .sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header{background:#1E0B32}
+html[data-theme="dark"] .sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header>
+:is(.sekka-shell-menu,.rh-shell-notifications){background:#341D4D;border-color:#644275;color:#FFE4FC}
+html[data-theme="dark"] .sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header>.rh-shell-title{color:#FFDD80}
+@media(min-width:481px){
+ .rh-tabs{left:50%;right:auto;transform:translateX(-50%);width:480px;border-radius:24px 24px 0 0}
+}
