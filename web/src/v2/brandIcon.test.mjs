@@ -58,5 +58,5 @@ test('manifest and favicon retain owner-selected icon while splash uses the new 
  assert.match(splash,/HiaceArtwork/);
  assert.match(splash,/sekka-launch__black-wipe/);
  assert.match(splash,/sekka-launch__hiace/);
- assert.doesNotMatch(splash,/sekka-go-road-512\\.png/);
+ assert.equal(splash.includes('sekka-go-road-512.png'),false);
 });
