@@ -25,7 +25,7 @@ for(const width of [320,390]){
   }
   const active=drawer.getByRole('button',{name:'حسابي'});
   await expect(active).toHaveAttribute('aria-current','page');
-  await expect(active.locator('.sekka-menu-row__icon')).toHaveCSS('color','rgb(184, 235, 255)');
+  await expect(active.locator('.sekka-menu-row__icon')).toHaveCSS('color','rgb(215, 248, 255)');
   await expect(active.locator('.sekka-menu-row__label')).toHaveCSS('color','rgb(247, 252, 255)');
   await expect(drawer.locator('.sekka-side-drawer__close')).toHaveCSS('background-color','rgba(205, 238, 255, 0.15)');
   await page.waitForTimeout(650); // Capture after the drawer entrance finishes.
@@ -103,8 +103,8 @@ test('light drawer fades from white to ice blue with icon-free secondary control
  await page.screenshot({path:'../docs/audit/menu-white-ice-390.png',fullPage:true,animations:'disabled'});
  const background=await drawer.evaluate(element=>getComputedStyle(element).backgroundImage);
  expect(background).toContain('linear-gradient');
- expect(background).toContain('rgb(255, 255, 255) 0%');
- expect(background).toContain('rgb(234, 243, 255) 100%');
+ expect(background).toContain('rgba(255, 255, 255, 0.76) 0%');
+ expect(background).toContain('rgba(234, 243, 255, 0.72) 100%');
  await expect(drawer.locator('.sekka-preference-row--appearance')).toHaveCount(0);
  await expect(drawer.locator('#sekka-appearance-pref')).toHaveCount(0);
  await expect(drawer.getByText('مظهر التطبيق')).toHaveCount(0);
