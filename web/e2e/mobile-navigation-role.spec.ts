@@ -203,6 +203,18 @@ test(`pending Captain profile stays in Passenger journey until explicit entry at
  const dock=page.locator('.rh-tabs');
  await expect(dock).toBeVisible();
  await expect(dock.locator('button')).toHaveCount(5);
+ // Five consistent touch targets in one actual row, even at the narrowest viewport.
+ const dockLayout=await dock.locator('.rh-tabs__inner').evaluate(element=>{
+  const buttons=[...element.querySelectorAll<HTMLButtonElement>('button')];
+  const rows=buttons.map(button=>Math.round(button.getBoundingClientRect().top));
+  const widths=buttons.map(button=>Math.round(button.getBoundingClientRect().width));
+  return {gridColumns:getComputedStyle(element).gridTemplateColumns.split(/\\s+/).length,
+   rows,widths,overflow:document.documentElement.scrollWidth-innerWidth};
+ });
+ expect(dockLayout.gridColumns).toBe(5);
+ expect(new Set(dockLayout.rows).size).toBe(1);
+ expect(dockLayout.widths.every(width=>width>=44)).toBe(true);
+ expect(dockLayout.overflow).toBeLessThanOrEqual(1);
  // The center Search action blooms the navigation dock without changing its
  // five real buttons or role-gated destinations. This tests actual CSS.
  const dockMotion=await dock.locator('.rh-tabs__inner').evaluate(element=>{
@@ -228,13 +240,13 @@ test(`pending Captain profile stays in Passenger journey until explicit entry at
   expect(dockMotion.seedAnimation).toContain('sekkaDockSeedRise');
   expect(dockMotion.haloAnimation).toContain('sekkaDockHalo');
  }
- await page.waitForTimeout(950);
+ await expect(page.locator('.sekka-launch')).toHaveCount(0,{timeout:8000});
+ await page.waitForTimeout(140);
  await page.screenshot({path:`test-results/dock-bloom-expanded-${width}.png`,fullPage:true,animations:'disabled'});
 
  await expect(dock.getByRole('button',{name:'Requests'})).toBeVisible();
  await expect(dock.getByRole('button',{name:'Alerts'})).toHaveCount(0);
  await expect(dock.locator('.rh-tabs__primary svg path[d="M8 11h6"]')).toHaveCount(0);
- await expect(page.locator('.sekka-launch')).toHaveCount(0,{timeout:8000});
  const header=await page.locator('.sekka-floating-actions').boundingBox();
  const eyebrow=await page.locator('.rh-hero__eyebrow').boundingBox();
  expect(header).not.toBeNull();

@@ -152,7 +152,7 @@ html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation .rh-tabs__primary .
   }
   .sekka-mobile.sekka-rider-navigation > .sekka-sliver-pin{top:calc(17px + env(safe-area-inset-top,0px))!important}
   .sekka-mobile.sekka-rider-navigation .rh-tabs__inner{padding-inline:2px!important}
-  .sekka-mobile.sekka-rider-navigation .rh-tabs__name{font-size:10px!important}
+  .sekka-mobile.sekka-rider-navigation .rh-tabs__name{font-size:11px!important}
   .sekka-mobile.sekka-rider-navigation .rh-tabs .rh-tabs__primary .rh-tabs__icon,
   .sekka-mobile.sekka-rider-navigation .rh-tabs .rh-tabs__primary[aria-current="page"] .rh-tabs__icon{
     width:60px!important;height:60px!important;min-width:60px!important;
