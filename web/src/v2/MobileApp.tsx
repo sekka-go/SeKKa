@@ -573,7 +573,12 @@ export default function MobileApp(){
     aria-label={t('القائمة الرئيسية','Main menu')} dir={en?'ltr':'rtl'}>
     <header className="sekka-side-drawer__header"><strong>{t('القائمة','Menu')}</strong>
      <button type="button" className="sekka-side-drawer__close" onClick={closeMenu}
-      aria-label={t('إغلاق القائمة','Close menu')}>×</button></header>
+      aria-label={t('إغلاق القائمة','Close menu')}>
+       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none"
+        stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+        <path d="M6 6l12 12M18 6L6 18"/>
+       </svg>
+      </button></header>
     <nav aria-label={t('الأقسام','Sections')}>
      <h2>{t('التنقل','Navigation')}</h2>
      {!isCaptainAccount&&<>
@@ -608,7 +613,6 @@ export default function MobileApp(){
         <option value="dark">{t('غامق','Dark')}</option>
        </select>
       </label>
-      <p>{t('اختياراتك بتتحفظ على جهازك، وهيفضل التطبيق يفتح بيها لحد ما تغيّرها.','Your preferences are saved on this device until you change them.')}</p>
      </div>
      {ready&&userId&&<><h2>{t('الحساب','Account')}</h2>
       <button type="button" onClick={()=>void signOut()}>{t('تسجيل الخروج','Sign out')}</button></>}
