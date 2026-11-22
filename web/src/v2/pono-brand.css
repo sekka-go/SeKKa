@@ -142,3 +142,15 @@ html[data-theme="dark"] .sekka-mobile .rf3__panel :is(button,input):focus-visibl
   margin:8px auto 36px!important;
  }
 }
+
+/* Real Rider toolbar uses the owner's typography artwork, not a generic PoNo font. */
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home>.sekka-sliver-pin .sekka-sliver-wordmark{
+ display:block;width:min(108px,100%)!important;height:auto;max-height:40px;
+ aspect-ratio:1250/455;object-fit:contain;
+ border-radius:6px;background:#053FF6;
+}
+@media(max-width:340px){
+ .sekka-mobile.sekka-rider-navigation.sekka-tab-home>.sekka-sliver-pin .sekka-sliver-wordmark{
+  width:min(94px,100%)!important;
+ }
+}

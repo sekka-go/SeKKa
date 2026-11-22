@@ -547,7 +547,9 @@ export default function MobileApp(){
  </button>;
  return <div className={`sekka-mobile sekka-tab-${tab}${fullScreenSearchFilters?' sekka-search-filters':''}${fullScreenAuth?' sekka-fullscreen-auth':''}${fullScreenSearch?' sekka-fullscreen-search':''}${userId&&tab==='captain-onboarding'?' sekka-captain-logged-in':''}${!userId&&tab==='home'?' sekka-guest-welcome':''}${captainLanding?' sekka-captain-home-shell':''}${showRiderTabs?' sekka-rider-navigation':''}`} dir={en?'ltr':'rtl'}>
   <a className="sekka-skip" href="#sekka-content">{t('تخطي للمحتوى','Skip to content')}</a>
-  {showFloatingActions&&<div className="sekka-sliver-pin" aria-hidden="true"><span>{sliverTitle}</span></div>}
+  {showFloatingActions&&<div className="sekka-sliver-pin" aria-hidden="true">
+   {tab==='home'?<img className="sekka-sliver-wordmark" src="/brand/pono-wordmark.svg" alt=""/>:<span>{sliverTitle}</span>}
+  </div>}
   {showFloatingActions&&<nav className="sekka-floating-actions" aria-label={t('اختصارات PoNo','PoNo shortcuts')}>
    {menuButton}
    <button type="button" className="sekka-fab-bell" onClick={()=>navigate({tab:'notifications'})}

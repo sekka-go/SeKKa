@@ -198,7 +198,7 @@ test(`pending Captain profile stays in Passenger journey until explicit entry at
  await expect(page.locator('.rh-showcase-routes')).toBeVisible();
  // Mocked backend returns no offers; never insert visual placeholder trips.
  await expect(page.locator('.rh-showcase-routes__list .rh-showcase-ride')).toHaveCount(0);
- await expect(page.locator('.sekka-sliver-pin')).toContainText('PoNo');
+ await expect(page.locator('.sekka-sliver-pin img.sekka-sliver-wordmark')).toHaveAttribute('src','/brand/pono-wordmark.svg');
  // Rider shell regression at each supported small width (synthetic auth only).
  const dock=page.locator('.rh-tabs');
  await expect(dock).toBeVisible();

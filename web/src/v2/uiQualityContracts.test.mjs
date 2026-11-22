@@ -121,3 +121,10 @@ test('passenger dock and glass menu share one icon system',()=>{
  assert.match(glyph,/name==='bookings'/);
  assert.match(read('./pono-brand.css'),/sekka-menu-tour--text-only/);
 });
+
+test('Rider home renders the owner-approved PoNo wordmark, not a substitute system font',()=>{
+ const mobile=read('./MobileApp.tsx');
+ const brand=read('./pono-brand.css');
+ assert.match(mobile,/className="sekka-sliver-wordmark" src="\/brand\/pono-wordmark\.svg"/);
+ assert.match(brand,/sekka-sliver-wordmark/);
+});
