@@ -55,6 +55,7 @@ export default function LaunchWheelMotion(){
   let raf=0;
   let startTime:number|null=null;
   let sprites:WheelSprite[]=[];
+  let initialized=false;
   let width=0,height=0,ratio=1;
   const source=new Image();
   const resize=()=>{
@@ -87,7 +88,8 @@ export default function LaunchWheelMotion(){
    raf=window.requestAnimationFrame(render);
   };
   const onImage=()=>{
-   if(!alive||!source.naturalWidth)return;
+   if(!alive||initialized||!source.naturalWidth)return;
+   initialized=true;
    sprites=RIMS.map(wheel=>makeSprite(source,wheel));
    resize();
    raf=window.requestAnimationFrame(render);
