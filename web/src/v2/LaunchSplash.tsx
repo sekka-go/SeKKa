@@ -14,7 +14,6 @@ export function shouldPlayLaunchSplash(){
  try{
   const key="sekka.launch.seen.v1";
   if(sessionStorage.getItem(key)==="1")return false;
-  if(!entry||entry.type==="navigate")sessionStorage.setItem(key,"1");
  }catch{/* Private browsing still permits the initial launch. */}
  return !entry||entry.type==="navigate";
 }
@@ -22,6 +21,7 @@ export default function LaunchSplash({children}:{children:ReactNode}){
  const [visible,setVisible]=useState(shouldPlayLaunchSplash);
  useEffect(()=>{
   if(!visible)return;
+  try{sessionStorage.setItem("sekka.launch.seen.v1","1");}catch{/* Session storage is optional. */}
   const reduced=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches??false;
   const id=window.setTimeout(()=>setVisible(false),reduced?180:LAUNCH_SEQUENCE_MS);
   return()=>window.clearTimeout(id);
