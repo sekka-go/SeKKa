@@ -2,6 +2,7 @@ import {useEffect,useRef,useState} from 'react';
 import {client} from './api';
 import {captainRouteError} from './captainRouteErrors';
 import {usePreferences} from './preferences';
+import {useStaggeredReveal} from './staggerMotion';
 
 type RouteRow={id:string;title:string;category:string;status:string;price_egp:number|null;seat_capacity:number;direction:string;period:string;outbound_time:string|null;return_time:string|null};
 type CapacityRow={route_id:string;capacity:number;booked:number;remaining:number;is_full:boolean};
@@ -13,6 +14,7 @@ type Tab='all'|'published'|'draft'|'archived';
 export default function LiveCaptainRouteList({initialReviewId=null}:{initialReviewId?:string|null}={}){
  const {language}=usePreferences(),en=language==='en';
  const t=(ar:string,english:string)=>en?english:ar;
+ const revealCaptainRoute=useStaggeredReveal();
  const [uid,setUid]=useState<string|null>(null);
  const [approval,setApproval]=useState('pending');
  const [routes,setRoutes]=useState<RouteRow[]>([]);
@@ -160,7 +162,7 @@ export default function LiveCaptainRouteList({initialReviewId=null}:{initialRevi
    const full=counts?.is_full===true;
    const isDraft=route.status==='draft';
    const stopsInTravelOrder=route.direction==='return'?[...routeStops].reverse():routeStops;
-   return <li key={route.id}>
+   return <li ref={revealCaptainRoute} key={route.id}>
     <div className="cj-card-head"><strong>{route.title}</strong>
      <span className={'cj-status'+(route.status==='draft'?' is-draft':route.status==='paused'?' is-paused':'')}>{statusName(route.status)}</span></div>
     <div className="cj-route-meta">
