@@ -185,6 +185,14 @@ test(`pending Captain profile stays in Passenger journey until explicit entry at
  // Approved design uses real CSS/SVG waves and a working discovery action.
  await expect(page.locator('.rh-showcase-hero__top-wave')).toBeVisible();
  await expect(page.locator('.rh-showcase-hero__bottom-wave')).toBeVisible();
+ // The Owner's actual reference uses icy #F0F5FE, an electric-blue
+ // hero and a glowing aqua wave; the old greener palette must not return.
+ await expect(page.locator('.rh-home')).toHaveCSS('background-color','rgb(240, 245, 254)');
+ await expect(page.locator('.rh-showcase-hero__top-wave path').nth(1)).toHaveAttribute('fill','#0CEEF3');
+ await expect(page.locator('.rh-showcase-hero__bottom-wave path').last()).toHaveAttribute('fill','#F0F5FE');
+ const electricGradient=await page.locator('.rh-showcase-hero').evaluate(el=>getComputedStyle(el).backgroundImage);
+ expect(electricGradient).toContain('rgb(2, 154, 247)');
+
  await expect(page.locator('.rh-showcase-search__card')).toBeVisible();
  await expect(page.locator('.rh-showcase-search__card')).toContainText('Find a ride');
  await expect(page.locator('.rh-showcase-routes')).toBeVisible();
