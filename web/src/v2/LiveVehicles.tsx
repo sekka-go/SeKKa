@@ -2,6 +2,7 @@ import AppSkeleton from './AppSkeleton';
 import {useEffect,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
+import {displayVehicleCategory} from './vehicleCategory';
 
 type Vehicle={
  id:string;model:string;plate_number:string;category:string;seats:number;status:string;
@@ -41,7 +42,7 @@ export default function LiveVehicles(){
    {vehicle.vehicle_type&&<span> · {vehicle.vehicle_type==='private_car'?t('ملاكي','Private car'):t('هايس','Hiace')}</span>}
    {vehicle.manufacture_year&&<span> · {vehicle.manufacture_year}</span>}
    <ul>{(vehicle.enabled_categories||[]).map(category=><li key={category}>
-    {category} · {capacities[category]||'—'} {t('مقاعد ركاب ثابتة','fixed passenger seats')}
+    {displayVehicleCategory(category)} · {capacities[category]||'—'} {t('مقاعد ركاب ثابتة','fixed passenger seats')}
    </li>)}</ul>
    <span>{t('الحالة:','Status:')} {vehicle.status}</span>
   </li>)}</ul>
