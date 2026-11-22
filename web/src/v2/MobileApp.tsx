@@ -506,7 +506,7 @@ export default function MobileApp(){
  const fullScreenAuth=(tab==='login'&&(onboardingScreen===3||onboardingScreen===4))||(tab==='captain-onboarding'&&!userId);
  const fullScreenSearch=tab==='search'&&discoveryScreen===9;
  const showFloatingActions=ready&&!(tab==='home'&&!userId)&&tab!=='login'&&tab!=='captain-onboarding';
- const sliverTitle=tab==='home'?t('سِكَّة','seKKa'):
+ const sliverTitle=tab==='home'?'سِكَّة':
   tab==='search'?(discoveryScreen===9?t('دور على رحلة','Find a ride'):
    discoveryScreen===10?t('الفلاتر','Filters'):
    discoveryScreen===11?t('نتائج البحث','Search results'):t('تفاصيل الرحلة','Trip details')):
