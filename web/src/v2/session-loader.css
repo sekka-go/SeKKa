@@ -1,51 +1,36 @@
-/* Tiny roaming word for session checks: no huge spinner / splash, no forced delay. */
+/* Account session verification is a genuine async state. Keep a steady
+ * Shimmer surface until Supabase confirms or displays retry. No fake wait. */
 .sekka-mobile .sekka-session-loader{
  position:fixed!important;inset:0!important;z-index:110!important;
- width:100%;min-height:100dvh!important;margin:0!important;padding:0!important;
- background:#FFF9F5!important;color:#111111;overflow:hidden;display:block!important;
- pointer-events:auto;
+ box-sizing:border-box;width:100%;min-height:100dvh!important;
+ display:flex!important;flex-direction:column;
+ align-items:center;justify-content:center;
+ margin:0!important;padding:24px 16px!important;
+ background:#F5FBFF!important;color:#111111!important;
+ overflow-y:auto;
 }
-.sekka-session-loader__word{
- position:absolute;left:50%;top:49%;
- display:block;white-space:nowrap;opacity:0;
- font:900 clamp(20px,5.8vw,27px)/1.25 Tajawal,'Noto Sans Arabic',Tahoma,sans-serif;
- letter-spacing:-.025em;color:#111111;text-shadow:0 2px 2px #47106012;
- transform:translate(-50%,-50%);
- animation:sekka-word-wander 4.6s steps(1,end) infinite;
+.sekka-mobile .sekka-session-loader__content{
+ width:min(360px,100%);margin:auto 0;max-width:100%;
 }
-@keyframes sekka-word-wander{
- 0%,8%{left:17%;top:22%;opacity:0}
- 2%,6%{left:17%;top:22%;opacity:1}
- 12%,19%{left:79%;top:35%;opacity:0}
- 14%,18%{left:79%;top:35%;opacity:1}
- 25%,32%{left:39%;top:68%;opacity:0}
- 27%,31%{left:39%;top:68%;opacity:1}
- 38%,46%{left:68%;top:78%;opacity:0}
- 40%,44%{left:68%;top:78%;opacity:1}
- 52%,60%{left:26%;top:45%;opacity:0}
- 54%,58%{left:26%;top:45%;opacity:1}
- 65%,73%{left:75%;top:17%;opacity:0}
- 67%,71%{left:75%;top:17%;opacity:1}
- 79%,87%{left:43%;top:35%;opacity:0}
- 81%,85%{left:43%;top:35%;opacity:1}
- 92%,100%{left:50%;top:50%;opacity:0}
- 94%,98%{left:50%;top:50%;opacity:1}
+.sekka-mobile .sekka-session-loader__slow{
+ box-sizing:border-box;width:min(360px,100%);display:grid;gap:10px;
+ margin:16px auto 0;padding:15px;
+ border:1px solid #D5E7F0;border-radius:16px;
+ background:#FFFFFF;color:#111111;box-shadow:0 7px 22px #0A365012;
+ text-align:center;font:700 13px/1.65 Tajawal,Tahoma,sans-serif;
 }
-.sekka-session-loader__slow{
- position:absolute;left:50%;bottom:max(12%,calc(34px + env(safe-area-inset-bottom)));
- transform:translateX(-50%);width:min(320px,calc(100% - 36px));
- display:grid;gap:10px;padding:15px;border:1px solid #E8D77A;
- border-radius:16px;background:#FFF;box-shadow:0 7px 22px #36144A12;
- text-align:center;color:#111111;font:700 13px/1.65 Tajawal,Tahoma,sans-serif
+.sekka-mobile .sekka-session-loader__slow p{margin:0;max-width:none}
+.sekka-mobile .sekka-session-loader__slow button{
+ width:100%;min-height:46px;
+ border:0;border-radius:12px;background:#FFCC24;color:#111111;
+ padding:10px;font:900 14px/1.2 Tajawal,Tahoma,sans-serif;
 }
-.sekka-session-loader__slow p{margin:0;max-width:none}
-.sekka-session-loader__slow button{width:100%;min-height:46px;
- border:0;border-radius:12px;background:#FFCC24;color:#FFF;
- padding:10px;font:900 14px/1.2 Tajawal,Tahoma,sans-serif}
-.sekka-session-loader__slow button:focus-visible{outline:3px solid #FFCD3D;outline-offset:3px}
-html[data-theme="dark"] .sekka-mobile .sekka-session-loader{background:#193449!important}
-html[data-theme="dark"] .sekka-session-loader__word{color:#FFE5A1}
-html[data-theme="dark"] .sekka-session-loader__slow{background:#193449;color:#FFF;border-color:#E8D77A}
-@media(prefers-reduced-motion:reduce){
- .sekka-session-loader__word{animation:none!important;opacity:1!important;left:50%!important;top:45%!important}
+.sekka-mobile .sekka-session-loader__slow button:focus-visible{
+ outline:3px solid #078EE9;outline-offset:3px;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-session-loader{
+ background:#102A3C!important;color:#FFFFFF!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-session-loader__slow{
+ background:#183449!important;color:#F5FBFF!important;border-color:#345A70;
 }
