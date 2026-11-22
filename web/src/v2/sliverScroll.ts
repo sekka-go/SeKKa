@@ -39,8 +39,7 @@ export function useSekkaSliverScroll(pageKey:string,enabled:boolean){
   let initialScroll=0;
   let startTouchY:number|null=null;
   let lastScroll=0;
-  let enableScroll=false;
-  let observer:MutationObserver|null=null;
+   let observer:MutationObserver|null=null;
   const reset=()=>{
    if(hero)hero.removeAttribute('data-sekka-scroll-hero');
    hero=null;
