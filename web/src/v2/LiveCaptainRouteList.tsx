@@ -1,3 +1,4 @@
+import AppSkeleton from './AppSkeleton';
 import {useEffect,useRef,useState} from 'react';
 import {client} from './api';
 import {captainRouteError} from './captainRouteErrors';
@@ -151,7 +152,7 @@ export default function LiveCaptainRouteList({initialReviewId=null}:{initialRevi
    {([['all',t('الكل','All')],['published',t('المنشورة','Published')],['draft',t('المسودات','Drafts')],['archived',t('الأرشيف','Archive')]] as [Tab,string][]).map(([key,label])=>
     <button key={key} type="button" aria-pressed={tab===key} onClick={()=>{setTab(key);setPendingRemoval(null);setExpanded(null)}}>{label}</button>)}
   </div>
-  {loading&&<p role="status">{t('بنحمّل الرحلات...','Loading routes...')}</p>}
+  {loading&&<AppSkeleton kind="routes" count={3} label={t('بنحمّل الرحلات...','Loading routes...')}/>}
   {!loading&&!error&&visible.length===0&&<div className="cj-empty">{tab==='all'
    ?t('لسه مفيش خطوط محفوظة. ابدأ بإنشاء أول رحلة من الزر اللي فوق.','No routes saved yet. Create your first trip above.')
    :t('مفيش رحلات في القسم ده حاليًا.','No trips in this section yet.')}</div>}
@@ -212,7 +213,7 @@ export default function LiveCaptainRouteList({initialReviewId=null}:{initialRevi
       {route.direction!=='return'&&<div><dt>{t('موعد الذهاب','Outbound time')}</dt><dd><bdi>{clock(route.outbound_time)}</bdi></dd></div>}
       {route.direction!=='outbound'&&<div><dt>{t('موعد العودة','Return time')}</dt><dd><bdi>{clock(route.return_time)}</bdi></dd></div>}
      </dl>}
-     {stopsBusy&&<p role="status">{t('بنحمّل المحطات...','Loading stops...')}</p>}
+     {stopsBusy&&<AppSkeleton kind="stops" compact label={t('بنحمّل المحطات...','Loading stops...')}/>}
      {currentStops?.failed&&<div role="alert" className="cj-feedback">
       <p>{t('المحطات ما اتحمّلتش. حاول تاني قبل النشر.','Could not load the stops. Try again before publishing.')}</p>
       <button type="button" onClick={()=>setRevision(value=>value+1)}>{t('إعادة المحاولة','Retry loading stops')}</button>
