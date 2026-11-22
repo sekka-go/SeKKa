@@ -44,6 +44,7 @@ import './wave-home-showcase.css';
 import './black-ice-navigation.css';
 import './glassy-sidebar.css';
 import './rider-dock-bloom.css';
+import './ui-quality-hardening.css';
 
 export default function MobileApp(){
  const p=usePreferences(),en=p.language==='en',t=(ar:string,english:string)=>en?english:ar;
