@@ -1,3 +1,4 @@
+import AppSkeleton from './AppSkeleton';
 import {useEffect,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
@@ -32,7 +33,7 @@ export default function LiveVehicles(){
  },[revision,language]);
  return <section className="d-box live-vehicles">
   <h2>{t('مركباتي المعتمدة','My approved vehicles')}</h2>
-  {loading&&<p role="status">{t('بنحمّل المركبات…','Loading vehicles…')}</p>}
+  {loading&&<AppSkeleton kind="vehicles" count={2} label={t('بنحمّل المركبات…','Loading vehicles…')}/>}
   {error&&<p role="alert">{error}</p>}
   {!loading&&!error&&items.length===0&&<p role="status">{t('لا توجد مركبات معتمدة حتى الآن.','No approved vehicles yet.')}</p>}
   <ul>{items.map(vehicle=><li key={vehicle.id}>
