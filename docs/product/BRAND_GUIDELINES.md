@@ -1,24 +1,54 @@
-# سِكّة / Sekka Go — Owner approved refresh (2026-11-21)
+# سِكَّة / Sekka Go — current visual system (22 November 2026)
 
-**App Store / installed title:** Sekka Go. **In-app title:** سِكّة.
+## Names
+Installed PWA name: **Sekka Go**. In-app Arabic wordmark: **سِكَّة**
+(exact diacritics). English in-app brand: **seKKa**.
+Slogan: «معاك في السِكَّة».
 
-**Approved installed icon (owner-provided 2026-11-21):** white `seKKa` wordmark with yellow road underline on purple square. Its mobile-export PNG assets are `web/public/brand/sekka-go-road-192.png` and `sekka-go-road-512.png`. This **replaces** the earlier palette-only Arabic icon direction; older PNGs remain archived and must not be used in the PWA manifest, favicons or splash. Keep in-app copy «سِكّة», and installed name Sekka Go.
+## Palette and tokens
+The current owner direction is sky blue / cyan / white / bright yellow.
+Older purple/coral descriptions were historical and must not control the
+production UI.
 
-## Current palette
-| Token | Color | Use |
+| Semantic role | Color | Use |
 |---|---|---|
-| Primary purple | `#6412B1` | Focus, anchors, brand |
-| Hot coral | `#FF663D` | Main interface actions (not the selected icon) |
-| Magenta | `#F73587` | Supporting icon and marketing accents |
-| Sunny yellow | `#FFCD38` | Highlights and selection indicators |
-| Teal | `#00BEAD` | Minor highlights only |
-| Soft white | `#FFF9F5` | Light background |
-| Dark purple | `#1E0B32` | Dark interface background |
-| Light ink | `#35134F` | Text on light surfaces |
+| Electric blue | `#078CF4` | Logo artwork, accents and navigation |
+| Cyan | `#20D8E6` | Waves and decorative illustrations |
+| Sunny yellow | `#FFCC24` | Contextual actions, selected state |
+| Dark ink | `#10344F` | On yellow, white and ice surfaces |
+| Light paper | `#F4FBFF` | Light page |
+| Light raised | `#FFFFFF` | Cards and popovers |
+| Dark canvas | `#102A3C` | Dark page |
+| Dark raised | `#19384E` | Dark cards |
+| Text-safe blue | `#075687` | White-text headers and primary surfaces |
 
-Treat contrast, focus visibility, and semantic success/error as non-negotiable. Do not use saturated gradient text for long paragraphs. No false urgency or fake metrics. **Tajawal** remains the bundled Arabic UI font; use RTL and mobile safe areas.
+Source-controlled semantic fixes: `web/src/v2/ui-quality-hardening.css`.
+The earlier stylesheets remain temporarily for integration compatibility
+until screenshot QA allows deleting redundant rules.
 
-## Design direction
-Energetic, friendly, youthful and practical. Every content block answers what the rider/captain can do now; avoid filler slogans. Map interactions, real supply/demand, specific prices/distances only when sourced from authorized data. Preserve prefers-reduced-motion and real keyboard and screen-reader affordances.
+## Icons
+The 192px and 512px installed icons preserve the original seKKa/yellow-road
+geometry and apply the currently approved sky-blue palette only.
 
-Historical brand rules (yellow/black, protected old launch wordmark and palette-only Arabic icon) were superseded by the owner's selected purple road icon. The new product/UX authority is [the vNext amendment](RECURRING_COMMUTE_VNEXT_20261121.md). Production merge still requires owner approval.
+- `web/public/brand/sekka-go-sky-road-192.png`
+- `web/public/brand/sekka-go-sky-road-512.png`
+
+Manifest, favicon and Apple touch icon must use those matching assets.
+The prior purple versions are kept only as archived originals.
+Splash remains the previously approved SUV/city scene.
+
+## Typography and accessibility
+Arabic: locally bundled Tajawal. Use title 800–900, section 700–800,
+body 400–500, control 700–800. Bottom-navigation labels ≥12 CSS px;
+primary touch targets ≥44×44 CSS px. Text contrast ≥4.5:1, large text
+and UI boundaries ≥3:1; clear focus indicator; RTL and LTR; reduced
+motion; safe-area-aware layout.
+
+## Truthful interface states
+Do not fabricate available trips, fees, map distances, pickup stops,
+periods, payment success or OTP. Weekday selection is a saved
+preference, not a verified server filter or trip-request field yet.
+A ride request requires valid server-supported departure/return times.
+Preserve current Supabase RLS and approved server-owned booking flows.
+
+This is implementation guidance on Draft PR #185, not Production approval.
