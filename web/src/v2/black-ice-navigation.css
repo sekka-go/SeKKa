@@ -298,6 +298,19 @@ html[data-theme="dark"] .sekka-mobile .sekka-side-drawer .sekka-preference-row__
 html[data-theme="dark"] .sekka-mobile .sekka-side-drawer .sekka-preference-row__details select{
  color:#A9E8FF!important;background:transparent!important;
 }
+/* Specific dark-dialog contrast guard: legacy button text rules can win
+ * after a live theme switch unless the label itself is explicitly themed. */
+html[data-theme="dark"] .sekka-mobile .sekka-side-drawer nav button.sekka-menu-row[aria-current="page"] .sekka-menu-row__label{
+ color:#F7FCFF!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-side-drawer .sekka-side-drawer__header > button.sekka-side-drawer__close{
+ background:#171F2B!important;
+ border-color:#39485A!important;
+ color:#D0F4FF!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-side-drawer .sekka-side-drawer__header > button.sekka-side-drawer__close svg{
+ stroke:#D0F4FF!important;
+}
 html[data-theme="dark"] .sekka-mobile .sekka-side-drawer__header .sekka-side-drawer__wordmark{color:#B9EEFF!important}
 html[data-theme="dark"] .sekka-mobile .sekka-side-drawer__close{
  background:#171F2B!important;color:#D0F4FF!important;border-color:#39485A!important;
