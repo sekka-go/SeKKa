@@ -1,3 +1,4 @@
+import AppSkeleton from './AppSkeleton';
 import {useEffect,useState} from 'react';
 import {client} from './api';
 import {cancelPendingBooking} from './reservations';
@@ -79,9 +80,7 @@ export default function RiderBookingsV3({onFindRide,onOpenBooking}:{
     {value==='active'?t('الحالية','Current'):value==='past'?t('السابقة','Past'):t('الكل','All')}
    </button>)}
   </div>
-  {loading&&<div role="status" className="rb3__loading">
-   <div aria-hidden="true"/><div aria-hidden="true"/><span>{t('بنجيب حجوزاتك…','Loading your bookings…')}</span>
-  </div>}
+  {loading&&<AppSkeleton kind="bookings" count={3} label={t('بنجيب حجوزاتك…','Loading your bookings…')}/>} 
   {error&&<div role="alert" className="rb3__error">
    <p>{t('مش قادرين نحمّل الحجوزات أو نكمل العملية. جرّب تاني.','Could not load bookings or complete the action. Try again.')}</p>
    <small dir="auto">{error}</small>
