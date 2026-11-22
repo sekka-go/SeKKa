@@ -20,6 +20,7 @@ import RiderBookingsV3 from './RiderBookingsV3';
 import './rider-extras-v3.css';
 import RiderJourneyHome from './RiderJourneyHome';
 import RiderTabBar from './RiderTabBar';
+import SekkaMenuIcon,{menuGlyphForTab} from './SekkaMenuIcon';
 import type {RiderTab} from './RiderTabBar';
 import LiveTripRequests from './LiveTripRequests';
 import LiveNotifications from './LiveNotifications';
@@ -480,8 +481,12 @@ export default function MobileApp(){
   }
  };
 
- const menuLink=(label:string,next:MobileRoute)=><button type="button" onClick={()=>{if(next.tab==='bookings')setBookingsSection('bookings');navigate(next)}}
-  aria-current={tab===next.tab?'page':undefined}>{label}</button>;
+ const menuLink=(label:string,next:MobileRoute)=><button type="button" className="sekka-menu-row"
+  onClick={()=>{if(next.tab==='bookings')setBookingsSection('bookings');navigate(next)}}
+  aria-current={tab===next.tab&&(next.tab!=='bookings'||bookingsSection==='bookings')?'page':undefined}>
+  <span className="sekka-menu-row__icon"><SekkaMenuIcon name={menuGlyphForTab(next.tab)}/></span>
+  <span className="sekka-menu-row__label">{label}</span>
+ </button>;
  const isCaptainAccount=ready&&Boolean(userId)&&accountRole==='captain'&&captainApproved&&!admin;
  const blockedRiderTab=isCaptainAccount&&['home','search','bookings','booking','login','captain-onboarding'].includes(tab);
  const captainLanding=isCaptainAccount&&tab==='routes'&&captainScreen===42;
@@ -619,7 +624,10 @@ export default function MobileApp(){
    <button type="button" className="sekka-menu-backdrop" aria-label={t('إغلاق القائمة','Close menu')} onClick={closeMenu}/>
    <dialog open id="sekka-side-menu" className="sekka-side-drawer" aria-modal="true"
     aria-label={t('القائمة الرئيسية','Main menu')} dir={en?'ltr':'rtl'}>
-    <header className="sekka-side-drawer__header"><strong>{t('القائمة','Menu')}</strong>
+    <header className="sekka-side-drawer__header"><div className="sekka-side-drawer__heading">
+      <span className="sekka-side-drawer__wordmark">سِكَّة</span>
+      <strong>{t('القائمة','Menu')}</strong>
+     </div>
      <button type="button" className="sekka-side-drawer__close" onClick={closeMenu}
       aria-label={t('إغلاق القائمة','Close menu')}>
        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none"
@@ -633,40 +641,60 @@ export default function MobileApp(){
       {menuLink(t('الرئيسية','Home'),{tab:'home'})}
       {menuLink(t('البحث عن خط','Find a route'),{tab:'search',view:9})}
       {menuLink(t('حجوزاتي','My bookings'),{tab:'bookings'})}
-      {ready&&userId&&<button type="button" aria-current={tab==='bookings'&&bookingsSection==='requests'?'page':undefined}
-        onClick={()=>{navigate({tab:'bookings'});setBookingsSection('requests');}}>{t('طلبات رحلاتي','My trip requests')}</button>}
+      {ready&&userId&&<button type="button" className="sekka-menu-row"
+        aria-current={tab==='bookings'&&bookingsSection==='requests'?'page':undefined}
+        onClick={()=>{setBookingsSection('requests');navigate({tab:'bookings'});}}>
+         <span className="sekka-menu-row__icon"><SekkaMenuIcon name="requests"/></span>
+         <span className="sekka-menu-row__label">{t('طلبات رحلاتي','My trip requests')}</span>
+        </button>}
      </>}
      {menuLink(t('الإشعارات','Notifications'),{tab:'notifications'})}
      {menuLink(t('حسابي','My profile'),{tab:'profile'})}
      {ready&&userId&&captain&&accountRole==='captain'&&<><h2>{t('الكابتن','Captain')}</h2>
-      {!captainApproved&&<button type="button" onClick={startCaptainJourney}>{t('متابعة طلب الاعتماد','Review Captain application')}</button>}</>}
+      {!captainApproved&&<button type="button" className="sekka-menu-row" onClick={startCaptainJourney}>
+       <span className="sekka-menu-row__icon"><SekkaMenuIcon name="captain"/></span>
+       <span className="sekka-menu-row__label">{t('متابعة طلب الاعتماد','Review Captain application')}</span>
+      </button>}</>}
      {ready&&captain&&accountRole==='captain'&&captainApproved&&menuLink(t('خطوطي','My routes'),{tab:'routes',view:42})}
      {ready&&admin&&<><h2>{t('الإدارة','Administration')}</h2>
       {menuLink(t('لوحة الإدارة','Admin dashboard'),{tab:'admin',view:62})}</>}
-     {ready&&<button type="button" className="sekka-menu-tour" onClick={()=>{
+     {ready&&<button type="button" className="sekka-menu-row sekka-menu-tour" onClick={()=>{
       setMenuOpen(false);setTourReplayToken(value=>value+1);
-     }}>{t('اشرحلي الشاشة دي','Guide me through this screen')}</button>}
+     }}><span className="sekka-menu-row__icon"><SekkaMenuIcon name="guide"/></span>
+       <span className="sekka-menu-row__label">{t('اشرحلي الشاشة دي','Guide me through this screen')}</span>
+     </button>}
      <h2>{t('اللغة والمظهر','Language & appearance')}</h2>
      <div className="sekka-preference-controls">
-      <label htmlFor="sekka-language-pref">{t('لغة التطبيق','App language')}
-       <select id="sekka-language-pref" value={p.languagePreference}
+      <label htmlFor="sekka-language-pref" className="sekka-preference-row">
+       <span className="sekka-menu-row__icon"><SekkaMenuIcon name="language"/></span>
+       <span className="sekka-preference-row__details">
+        <strong>{t('لغة التطبيق','App language')}</strong>
+        <select id="sekka-language-pref" value={p.languagePreference}
         onChange={event=>p.setLanguagePreference(event.target.value as 'system'|'ar'|'en')}>
         <option value="system">{t('تلقائي حسب لغة الموبايل','Follow phone language')}</option>
         <option value="ar">{t('العربية','Arabic')}</option>
         <option value="en">{t('الإنجليزية','English')}</option>
-       </select>
+        </select>
+       </span>
       </label>
-      <label htmlFor="sekka-appearance-pref">{t('مظهر التطبيق','App appearance')}
-       <select id="sekka-appearance-pref" value={p.themePreference}
+      <label htmlFor="sekka-appearance-pref" className="sekka-preference-row">
+       <span className="sekka-menu-row__icon"><SekkaMenuIcon name="appearance"/></span>
+       <span className="sekka-preference-row__details">
+        <strong>{t('مظهر التطبيق','App appearance')}</strong>
+        <select id="sekka-appearance-pref" value={p.themePreference}
         onChange={event=>p.setThemePreference(event.target.value as 'system'|'light'|'dark')}>
         <option value="system">{t('تلقائي حسب الموبايل','Follow phone appearance')}</option>
         <option value="light">{t('فاتح','Light')}</option>
         <option value="dark">{t('غامق','Dark')}</option>
-       </select>
+        </select>
+       </span>
       </label>
      </div>
      {ready&&userId&&<><h2>{t('الحساب','Account')}</h2>
-      <button type="button" onClick={()=>void signOut()}>{t('تسجيل الخروج','Sign out')}</button></>}
+      <button type="button" className="sekka-menu-row sekka-menu-row--signout" onClick={()=>void signOut()}>
+        <span className="sekka-menu-row__icon"><SekkaMenuIcon name="signout"/></span>
+        <span className="sekka-menu-row__label">{t('تسجيل الخروج','Sign out')}</span>
+       </button></>}
     </nav>
    </dialog>
   </div>}
