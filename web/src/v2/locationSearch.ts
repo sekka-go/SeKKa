@@ -1,4 +1,5 @@
 import {useEffect,useId,useState} from 'react';
+import {requestSharedPublic} from './sharedPublicRequests';
 import type {KeyboardEvent} from 'react';
 import {cairoDiscoveryPhotonBbox,isInsideCairoDiscovery} from './discoveryCairo';
 import {client} from './api';
@@ -47,9 +48,17 @@ function confirmedOutsideSettlement(raw:unknown,query:string):boolean {
  });
 }
 export async function lookupLocations(query:string,area:ServiceArea|undefined,en:boolean,signal:AbortSignal):Promise<SearchResult>{
- const key=JSON.stringify([query,area?.name_en,en]);
+ const key=JSON.stringify([query,area?.id,area?.name_ar,area?.name_en,en]);
+ if(signal.aborted)throw new DOMException('Request cancelled','AbortError');
  const cached=cache.get(key);
  if(cached&&cached.expires>Date.now())return cached.data;
+ // No duplicate Photon/DB requests if two location inputs or multiple renders
+ // ask for the same public location suggestions at once. Aborting one input
+ // cannot cancel the other. The caller's query stays only in memory.
+ return requestSharedPublic('geo:'+key,signal,
+  upstream=>resolveLocations(query,area,en,upstream,key));
+}
+async function resolveLocations(query:string,area:ServiceArea|undefined,en:boolean,signal:AbortSignal,key:string):Promise<SearchResult>{
  const staticResults=await searchStaticCairo(query,en,area,signal);
  if(staticResults.length>0){
   const data={places:staticResults.slice(0,8),outside:false};
@@ -106,7 +115,9 @@ export async function lookupLocations(query:string,area:ServiceArea|undefined,en
 export function useLocationSearch(query:string,enabled:boolean,area:ServiceArea|undefined,en:boolean,immediate:number){
  const q=query.trim();
  const active=enabled&&normalizedPlace(q).length>=3&&q.length<=120;
- const key=JSON.stringify([q,area,en,immediate]);
+ // Stable scalar key: React can recreate the area object or re-render when
+ // opening a keyboard without re-triggering the remote request.
+ const key=JSON.stringify([q,area?.id,area?.name_ar,area?.name_en,en,immediate]);
  const [state,setState]=useState<SearchState>();
  useEffect(()=>{
   if(!active)return;
@@ -118,7 +129,7 @@ export function useLocationSearch(query:string,enabled:boolean,area:ServiceArea|
    );
   },immediate?0:300);
   return ()=>{clearTimeout(timer);abort.abort();};
- },[q,active,area,en,immediate,key]);
+ },[active,key]);
  const result=active&&state?.key===key?state:null;
  return {places:result?.places??[],outside:result?.outside??false,busy:active&&!result,status:result?.status};
 }
