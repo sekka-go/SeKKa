@@ -269,8 +269,8 @@ export default function Onboarding({
   }
   const back = () => go(id === 6 ? 5 : id === 7 ? 6 : Math.max(1, id - 1));
   const heading = {
-    1: t("معاك في السِكّة"),
-    2: t("معاك في السِكّة"),
+    1: t("معاك في السِكَّة"),
+    2: t("معاك في السِكَّة"),
     3: t("اختر نوع حسابك"),
     4: t("أدخل رقم موبايلك"),
     5: t("أدخل كود التحقق"),
@@ -397,7 +397,7 @@ export default function Onboarding({
             <button
               className="phase-splash-brand"
               onClick={() => go(2)}
-              aria-label={t("ابدأ مع سِكّة")}
+              aria-label={t("ابدأ مع سِكَّة")}
             >
               {!production&&<Wordmark />}
               <h1>{heading}</h1>
@@ -427,7 +427,7 @@ export default function Onboarding({
               theme={theme}
               crop={[54, 310, 662, 326]}
               className="phase-welcome-art"
-              label={t("راكب مستعد لمشواره اليومي بجوار خط سِكّة")}
+              label={t("راكب مستعد لمشواره اليومي بجوار خط سِكَّة")}
             />
             <div className="phase-benefits">
               {[
