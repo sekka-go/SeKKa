@@ -1,3 +1,4 @@
+import AppSkeleton from './AppSkeleton';
 import {useEffect,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
@@ -23,7 +24,7 @@ export default function LiveAdminOverview(){
  return <main className="live-admin-overview" dir={en?'ltr':'rtl'} style={{maxWidth:920,margin:'auto',padding:'28px 18px'}}>
   <h1>{t('لوحة سِكّة — البيانات الحقيقية','seKKa Admin — live data')}</h1>
   <p>{t('الأرقام دي بتتقرأ من قاعدة البيانات بعد التحقق من صلاحيات الأدمن على السيرفر.','Counts are read from Supabase after server-side admin authorization.')}</p>
-  {loading&&<p role="status">{t('جارٍ تحميل البيانات…','Loading live data…')}</p>}
+  {loading&&<AppSkeleton kind="stats" count={4} label={t('جارٍ تحميل البيانات…','Loading live data…')}/>}
   {error&&<div role="alert"><p>{error}</p><button type="button" onClick={()=>{setError('');setLoading(true);setRevision(x=>x+1);}}>{t('إعادة المحاولة','Retry')}</button></div>}
   {stats&&<div className="ad-metrics" style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:14}}>
    {items.map(([key,ar,english])=><section key={key} className="ad-card" style={{padding:18}}><h2 style={{fontSize:15}}>{t(ar,english)}</h2><strong style={{fontSize:30}}>{stats[key]}</strong></section>)}
