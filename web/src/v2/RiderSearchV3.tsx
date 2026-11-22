@@ -105,6 +105,7 @@ export default function RiderSearchV3({origin,destination,originPlace,destinatio
      setMapTarget(null);setMapMenuOpen(false);
      return true;
     }}/>}
+   {(originPlace?.kind==='map'||originPlace?.kind==='search'||destinationPlace?.kind==='map'||destinationPlace?.kind==='search')&&<p className="sekka-geo-request-disclaimer" role="note">{t('تقدر تبحث بنقطة على الخريطة، لكن طلب مشوار جديد حاليًا محتاج منطقتين خدمة مسجلتين.','You can search using map points, but a new ride request currently requires two registered service areas.')}</p>}
    {shortcuts}
    <div className="rs3__section-label rs3__section-label--space"><span className="rs3__number">02</span>
     <h3>{t('الوقت اللي يناسبك','Your preferred time')}</h3></div>
