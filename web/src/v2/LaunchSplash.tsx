@@ -10,7 +10,13 @@ export function shouldPlayLaunchSplash(){
  if(current.pathname.startsWith("/dev/screens")||current.searchParams.has("code")||
     current.searchParams.has("error")||current.hash.includes("access_token="))return false;
  const entry=performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming|undefined;
- return !entry||entry.type==="navigate"||entry.type==="reload";
+ if(entry?.type==="reload")return false;
+ try{
+  const key="sekka.launch.seen.v1";
+  if(sessionStorage.getItem(key)==="1")return false;
+  if(!entry||entry.type==="navigate")sessionStorage.setItem(key,"1");
+ }catch{/* Private browsing still permits the initial launch. */}
+ return !entry||entry.type==="navigate";
 }
 export default function LaunchSplash({children}:{children:ReactNode}){
  const [visible,setVisible]=useState(shouldPlayLaunchSplash);
