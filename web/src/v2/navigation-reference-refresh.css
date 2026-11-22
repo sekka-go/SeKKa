@@ -161,3 +161,96 @@ html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation .rh-tabs__primary .
 @media(prefers-reduced-motion:reduce){
   .sekka-mobile.sekka-rider-navigation .rh-tabs *{transition:none!important}
 }
+
+/* 2026-11-22 visual repair pass. The rail floats over content; reserve real
+   space for it, then make each screen's bottom reachable behind the dock. */
+.sekka-mobile.sekka-rider-navigation{
+  --sekka-content-safe-top:calc(91px + env(safe-area-inset-top,0px));
+  --sekka-sticky-offset:calc(87px + env(safe-area-inset-top,0px));
+  padding-bottom:calc(130px + env(safe-area-inset-bottom,0px))!important;
+}
+.sekka-mobile.sekka-rider-navigation:not(.sekka-search-filters) > .sekka-mobile-content{
+  padding-bottom:calc(150px + env(safe-area-inset-bottom,0px))!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-hero{
+  min-height:390px!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-hero__copy{
+  padding-block-start:calc(102px + env(safe-area-inset-top,0px))!important;
+}
+/* Secondary pages keep their return action beneath—not behind—the header. */
+.sekka-mobile.sekka-rider-navigation .sekka-screen-back{
+  margin-block-start:12px!important;margin-block-end:12px!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-notifications > .sekka-mobile-content{
+  background:var(--sekka-paper,#F4FBFF)!important;
+  min-height:calc(100dvh - 80px)!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-notifications .sekka-screen-back button{
+  color:var(--sekka-nav-ink)!important;
+  background:#FFFFFF!important;
+  border-color:var(--sekka-nav-line)!important;
+}
+/* Yellow controls always need dark lettering. */
+.sekka-mobile :is(
+  .live-profile .d-primary,
+  .live-notifications .d-outline,
+  .rb3__details,
+  .rb3__empty button,
+  .rb3__error button,
+  .rb3__confirm button:first-child
+){
+  color:#111111!important;
+}
+.sekka-mobile.sekka-rider-navigation .rh-tabs button[aria-current="page"]:not(.rh-tabs__primary){
+  color:#007EA6!important;font-weight:900!important;
+}
+.sekka-mobile.sekka-rider-navigation .rh-tabs button[aria-current="page"]:not(.rh-tabs__primary) .rh-tabs__name{
+  font-weight:900!important;
+}
+/* Compact the large booking-banner copy without hiding any status or data. */
+.sekka-mobile.sekka-rider-navigation .rb3__hero{
+  min-height:0!important;
+  padding:calc(96px + env(safe-area-inset-top,0px)) 20px 20px!important;
+  margin-block-start:0!important;
+  margin-block-end:12px!important;
+  border-radius:0 0 25px 25px!important;
+}
+.sekka-mobile.sekka-rider-navigation .rb3__hero > span:first-child,
+.sekka-mobile.sekka-rider-navigation .rb3__hero h1,
+.sekka-mobile.sekka-rider-navigation .rb3__hero p{
+  max-width:100%;overflow-wrap:break-word;
+  white-space:normal!important;
+}
+.sekka-mobile.sekka-rider-navigation .rb3__hero h1{
+  margin-block:4px!important;font-size:clamp(24px,7vw,30px)!important;
+}
+.sekka-mobile.sekka-rider-navigation .rb3__hero p{
+  line-height:1.6!important;font-size:13px!important;
+}
+.sekka-mobile.sekka-rider-navigation .sekka-bookings-workspace{
+  background:var(--sekka-paper,#F4FBFF)!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation.sekka-tab-notifications > .sekka-mobile-content,
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation .sekka-bookings-workspace{
+  background:#193449!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation.sekka-tab-notifications .sekka-screen-back button{
+  background:#20475D!important;color:#F4FBFF!important;border-color:#527487!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation .rh-tabs button[aria-current="page"]:not(.rh-tabs__primary){
+  color:#FFDB68!important;
+}
+/* The fullscreen search filters intentionally omit the bottom dock. */
+.sekka-mobile.sekka-rider-navigation.sekka-search-filters > .sekka-mobile-content{
+  padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))!important;
+}
+@media(max-width:359px){
+  .sekka-mobile.sekka-rider-navigation{--sekka-content-safe-top:calc(87px + env(safe-area-inset-top,0px))}
+  .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-hero{
+    min-height:385px!important;
+  }
+  .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-hero__copy{
+    padding-block-start:calc(96px + env(safe-area-inset-top,0px))!important;
+  }
+}
