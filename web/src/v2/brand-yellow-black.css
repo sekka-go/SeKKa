@@ -406,3 +406,192 @@ html[data-theme="dark"] .sekka-mobile > .sekka-floating-actions > :is(.sekka-fab
  border-left:0!important;border-right:1px solid var(--flow-line,#DCEEF7)!important;
  box-shadow:10px 0 27px rgba(4,28,44,.23)!important;
 }
+
+
+/* EDGE-TO-EDGE MOBILE SHELL, 2026-11-22.
+   The old masthead was removed: eliminate its 72px shell spacer AND
+   the 44px legacy phase-stage spacer. Do not create a second white toolbar. */
+.sekka-mobile{
+ --sekka-fab-size:46px;
+ --sekka-fab-top:calc(8px + env(safe-area-inset-top,0px));
+ --sekka-content-safe-top:calc(63px + env(safe-area-inset-top,0px));
+}
+.sekka-mobile > .sekka-mobile-content{
+ padding-block-start:0!important;
+ padding-top:0!important;
+ margin-block-start:0!important;
+ border-block-start:0!important;
+ box-shadow:none!important;
+}
+/* Allow each full-bleed scene to paint right up to the top edge. */
+.sekka-mobile:not(.sekka-guest-welcome):not(.sekka-tab-login):not(.sekka-tab-captain-onboarding)
+ > .sekka-mobile-content > .phase-one-stage{
+ padding-block-start:0!important;
+ padding-top:0!important;
+ margin-block-start:0!important;
+ border-top:0!important;
+}
+.sekka-mobile > .sekka-mobile-content > .phase-one-stage.discovery-stage{
+ padding-block-start:0!important;
+ padding-top:0!important;
+}
+.sekka-mobile .discovery-stage > .d-canvas{
+ margin-block-start:0!important;
+ padding-block-start:0!important;
+ border-block-start:0!important;
+}
+/* A painted hero owns the top region; the dock sits above it, never in a
+   separate strip. 64px reserves the hit targets plus a small breathing gap. */
+.sekka-mobile .rs3,
+.sekka-mobile .rf3,
+.sekka-mobile .rd3{
+ margin-block-start:0!important;
+ padding-block-start:0!important;
+}
+.sekka-mobile .rs3 > .rs3__head,
+.sekka-mobile .rf3 > .rf3__hero,
+.sekka-mobile .rd3 > .rd3__hero{
+ margin-block-start:0!important;
+ margin-top:0!important;
+ padding-block-start:var(--sekka-content-safe-top)!important;
+}
+.sekka-mobile .rr3-hero{
+ margin-block-start:0!important;
+ margin-top:0!important;
+ padding-block-start:var(--sekka-content-safe-top)!important;
+}
+.sekka-mobile .rb3{
+ margin-block-start:0!important;padding-block-start:0!important;
+}
+.sekka-mobile .rb3 > .rb3__hero{
+ margin-block-start:0!important;
+ padding-block-start:var(--sekka-content-safe-top)!important;
+}
+.sekka-mobile .sekka-rider-booking-v3{
+ margin-block-start:0!important;padding-block-start:0!important;
+}
+.sekka-mobile .sekka-rider-booking-v3 .rbk3-hero{
+ margin-block-start:0!important;
+ padding-block-start:var(--sekka-content-safe-top)!important;
+}
+.sekka-mobile.sekka-tab-home.sekka-rider-navigation .rh-hero{
+ margin-block-start:0!important;
+}
+.sekka-mobile.sekka-tab-home.sekka-rider-navigation .rh-hero__copy{
+ padding-block-start:var(--sekka-content-safe-top)!important;
+}
+/* Captain's real home gets the same treatment. */
+.sekka-mobile .captain-routes-canvas .cj-home-welcome,
+.sekka-mobile .captain-routes-canvas .cj-hero{
+ margin-block-start:0!important;
+ padding-block-start:var(--sekka-content-safe-top)!important;
+}
+/* Pages without a painted hero: keep a compact safe region under the
+   floating shortcuts, but never insert a horizontal header/separator. */
+.sekka-mobile:is(.sekka-tab-profile,.sekka-tab-notifications,.sekka-tab-bookings,
+ .sekka-tab-routes,.sekka-tab-admin)
+ > .sekka-mobile-content:not(:has(> .phase-one-stage)){
+ padding-block-start:var(--sekka-content-safe-top)!important;
+}
+/* Bookings has a painted hero nested under section tabs: take back the
+   gap within the bookings workspace without hiding controls. */
+.sekka-mobile.sekka-tab-bookings > .sekka-mobile-content > .sekka-bookings-workspace{
+ margin-top:0!important;
+}
+/* Page-specific backgrounds are seamless with their scene header. */
+.sekka-mobile .d-canvas.d-screen-9,
+.sekka-mobile .d-canvas.d-screen-10,
+.sekka-mobile .d-canvas.d-screen-11,
+.sekka-mobile .d-canvas.d-screen-12{
+ background:var(--flow-soft,#F5FBFF)!important;
+}
+html[data-theme="dark"] .sekka-mobile .d-canvas:is(.d-screen-9,.d-screen-10,.d-screen-11,.d-screen-12){
+ background:var(--flow-soft,#102A3C)!important;
+}
+/* Keep corner actions pinned in the exact same place across every screen. */
+.sekka-mobile > .sekka-floating-actions > :is(.sekka-fab-menu,.sekka-fab-bell){
+ top:var(--sekka-fab-top)!important;
+ display:grid!important;
+ grid-template-columns:1fr!important;
+ grid-template-rows:1fr!important;
+ place-items:center!important;
+ place-content:center!important;
+ width:var(--sekka-fab-size)!important;
+ height:var(--sekka-fab-size)!important;
+ padding:0!important;
+}
+.sekka-mobile > .sekka-floating-actions > :is(.sekka-fab-menu,.sekka-fab-bell) > svg{
+ display:block!important;
+ width:20px!important;height:20px!important;
+ justify-self:center!important;align-self:center!important;
+ margin:0!important;padding:0!important;
+ vertical-align:middle!important;
+}
+/* The swap arrows MUST be exactly centered inside their circular yellow hit
+   target; don't let generic button padding or line-height displace the SVG. */
+.sekka-mobile .rs3__swap{
+ display:grid!important;
+ grid-template-columns:minmax(0,1fr)!important;
+ grid-template-rows:minmax(0,1fr)!important;
+ place-items:center!important;
+ place-content:center!important;
+ flex:0 0 48px!important;
+ box-sizing:border-box!important;
+ width:48px!important;height:48px!important;
+ min-width:48px!important;max-width:48px!important;
+ min-height:48px!important;max-height:48px!important;
+ padding:0!important;
+ font-size:0!important;
+ line-height:0!important;
+ text-indent:0!important;
+ border-radius:50%!important;
+ color:#111111!important;
+}
+.sekka-mobile .rs3__swap svg{
+ display:block!important;
+ width:23px!important;height:23px!important;
+ min-width:23px!important;min-height:23px!important;
+ max-width:23px!important;max-height:23px!important;
+ padding:0!important;margin:0!important;
+ justify-self:center!important;align-self:center!important;
+ flex:none!important;
+ stroke:currentColor!important;
+ transform:none!important;
+}
+.sekka-mobile .rs3__swap:active svg{transform:none!important;}
+/* One centering rule for purposeful icon holders; don't globally force all
+   button children into a grid (which would break long Arabic button labels). */
+.sekka-mobile :is(
+ .rh-journey__field-icon,.rh-pickup-actions__symbol,
+ .rh-pickup-actions__ticket,.rh-button__orbit,
+ .rh-tabs__icon,.rs3__number,.rd3__section-icon,
+ .rb3__empty-icon,.rb3__ticket-route>span,
+ .sekka-bottom-nav button>span
+){
+ display:grid!important;
+ place-items:center!important;
+ align-items:center!important;
+ justify-items:center!important;
+ flex-shrink:0!important;
+ line-height:1!important;
+ padding:0!important;
+}
+.sekka-mobile :is(
+ .rh-journey__field-icon,.rh-pickup-actions__symbol,
+ .rh-pickup-actions__ticket,.rh-button__orbit,
+ .rh-tabs__icon,.rs3__number,.rd3__section-icon,
+ .rb3__empty-icon,.rb3__ticket-route>span,
+ .sekka-bottom-nav button>span
+) > svg{
+ display:block!important;
+ margin:0 auto!important;
+ align-self:center!important;justify-self:center!important;
+ flex:none!important;
+}
+@media(max-width:359px){
+ .sekka-mobile{--sekka-content-safe-top:calc(61px + env(safe-area-inset-top,0px));}
+}
+@media(prefers-reduced-motion:reduce){
+ .sekka-mobile .rs3__swap,
+ .sekka-mobile .rs3__swap svg{transition:none!important}
+}
