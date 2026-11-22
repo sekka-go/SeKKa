@@ -24,6 +24,9 @@ function ReferenceArt({
   label?: string;
 }) {
   const [x, y, w, h] = crop;
+  const src = `/references/phase-1/${String(source).padStart(2, "0")}.png`;
+  const [imageState,setImageState]=useState<{src:string;status:'ready'|'error'}|null>(null);
+  const status=imageState?.src===src?imageState.status:'loading';
   const style: CSSProperties = {
     aspectRatio: `${w}/${h}`,
     "--source-width": `${(1536 / w) * 100}%`,
@@ -37,11 +40,16 @@ function ReferenceArt({
       role={label ? "img" : undefined}
       aria-label={label}
       aria-hidden={label ? undefined : true}
+      data-image-state={status}
     >
       <img
-        src={`/references/phase-1/${String(source).padStart(2, "0")}.png`}
+        src={src}
         alt=""
+        loading="lazy"
+        decoding="async"
         draggable={false}
+        onLoad={()=>setImageState({src,status:'ready'})}
+        onError={()=>setImageState({src,status:'error'})}
       />
     </span>
   );
