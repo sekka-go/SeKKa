@@ -140,3 +140,26 @@
   transition:none!important;
  }
 }
+
+
+/* Discoverable manual replay, for every role, without reintroducing a logo bar. */
+.sekka-mobile .sekka-side-drawer nav > .sekka-menu-tour{
+ position:relative;
+ display:flex!important;align-items:center!important;justify-content:space-between!important;
+ width:100%!important;min-height:50px!important;
+ padding:11px 15px!important;
+ margin:9px 0 8px!important;
+ background:#FFF3C8!important;border:1px solid #FFCC24!important;
+ color:#111111!important;border-radius:16px!important;
+ font-weight:900!important;box-shadow:none!important;
+}
+.sekka-mobile .sekka-side-drawer nav > .sekka-menu-tour:after{
+ content:"؟";display:grid;place-items:center;
+ width:26px;height:26px;border-radius:50%;
+ background:#FFCC24;color:#111111;
+ font:900 17px/1 Tajawal,Tahoma,sans-serif;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-side-drawer nav > .sekka-menu-tour{
+ background:#4F4725!important;color:#FFFFFF!important;
+ border-color:#FFCC24!important;
+}
