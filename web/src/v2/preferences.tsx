@@ -28,7 +28,7 @@ export function PreferencesProvider({children}: {children:ReactNode}) {
     document.documentElement.lang=language;
     document.documentElement.dir=language==='ar'?'rtl':'ltr';
     document.documentElement.style.colorScheme=theme;
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content',theme==='dark'?'#102A3C':'#078CF4');
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content',theme==='dark'?'#05070B':'#078CF4');
     try{localStorage.setItem('theme_preference',themePreference);localStorage.setItem('language_preference',languagePreference);}catch{/* Memory-only when storage unavailable. */}
     // OAuth callback parameters are one-time transport, not permanent preference overrides.
     // Remove them after preferences have been adopted so a later manual change survives reload.
