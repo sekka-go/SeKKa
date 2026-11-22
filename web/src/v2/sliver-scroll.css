@@ -11,8 +11,7 @@
  --sekka-stretch-scale:1;
  --sekka-sticky-offset:calc(62px + env(safe-area-inset-top,0px));
  scroll-padding-block-start:var(--sekka-sticky-offset);
- overscroll-behavior-x:none;
-}
+ }
 /* The application keeps one real document scroll, not nested competing
  * 100dvh scrollers. Inertial scrolling is delegated to the OS. */
 .sekka-mobile .sekka-mobile-content{
