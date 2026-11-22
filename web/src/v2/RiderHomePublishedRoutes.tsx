@@ -25,18 +25,22 @@ export default function RiderHomePublishedRoutes({onSelect,onSearch}:{onSelect:(
    try{
     const response=await api.from('v31_public_route_offers')
      .select('id,title,category,seat_capacity,period,direction,outbound_time,return_time,seat_price_egp,return_supported')
-     .eq('status','published').limit(8).abortSignal(controller.signal);
+     .eq('status','published').limit(4).abortSignal(controller.signal);
     if(response.error)throw response.error;
     const rows=(response.data||[]) as Offer[];
     // The server is authoritative for *remaining* seats, never use vehicle capacity.
+    let failedAvailability=false;
     const checked=await Promise.all(rows.map(async route=>{
      const seats=await api.rpc('v31_published_route_available_seats',{p_route:route.id}).abortSignal(controller.signal);
-     return !seats.error&&typeof seats.data==='number'&&seats.data>0?
-      {...route,remaining:seats.data} as Available:null;
+     if(seats.error||typeof seats.data!=='number'){
+      failedAvailability=true;
+      return null;
+     }
+     return seats.data>0?{...route,remaining:seats.data} as Available:null;
     }));
     if(!controller.signal.aborted){
      const rides=checked.filter((row):row is Available=>row!==null).slice(0,2);
-     setState({status:rides.length?'ready':'empty',rides});
+     setState({status:rides.length?'ready':failedAvailability?'error':'empty',rides});
     }
    }catch{
     if(!controller.signal.aborted)setState({status:'error',rides:[]});
