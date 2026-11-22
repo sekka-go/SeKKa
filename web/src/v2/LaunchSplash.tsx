@@ -51,7 +51,7 @@ export default function LaunchSplash({children}:{children:ReactNode}){
      {/* The near side retreats toward lower left, following its actual
          curved lane. The far markings move slower with perspective. */}
      <g clipPath="url(#sk-near-lane)" className="sekka-launch__road-cues">
-      <path d="M220 585 C344 552 442 504 540 451"
+      <path d="M225 550 C344 534 442 496 540 451"
        className="sekka-launch__lane-cue sekka-launch__lane-cue--near"
        fill="none" stroke="url(#sk-road-glint)" strokeWidth="8"
        strokeLinecap="round" strokeDasharray="18 82"/>
