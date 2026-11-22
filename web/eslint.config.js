@@ -5,8 +5,12 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ["**/*.test.mjs"],
-    languageOptions: { globals: { URL: "readonly", AbortController: "readonly" } },
+    files: ["**/publicImageCache.test.mjs"],
+    languageOptions: { globals: { URL: "readonly" } },
+  },
+  {
+    files: ["**/sharedPublicRequests.test.mjs"],
+    languageOptions: { globals: { AbortController: "readonly" } },
   },
   {
     files: ["**/*.ts", "**/*.tsx"],
