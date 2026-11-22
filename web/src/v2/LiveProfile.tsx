@@ -1,3 +1,4 @@
+import AppSkeleton from './AppSkeleton';
 import {useEffect,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
@@ -39,7 +40,7 @@ export default function LiveProfile(){
  if(!client)return null;
  return <section className="d-box live-profile">
   <h2>{t('بيانات حسابي','My profile')}</h2>
-  {!loaded&&!error&&<p role="status">{t('بنحمّل بياناتك…','Loading your profile…')}</p>}
+  {!loaded&&!error&&<AppSkeleton kind="profile" label={t('بنحمّل بياناتك…','Loading your profile…')}/>}
   {error&&<><p role="alert">{error}</p>{!loaded&&<button type="button" onClick={()=>setReload(n=>n+1)}>{t('إعادة المحاولة','Retry')}</button>}</>}{notice&&<p role="status">{notice}</p>}
   {loaded&&<><label>{t('الاسم','Name')}<input maxLength={100} value={name} onChange={e=>setName(e.target.value)}/></label>
    <label>{t('رقم الموبايل (اختياري)','Phone (optional)')}<input type="tel" inputMode="tel" value={phone} onChange={e=>setPhone(e.target.value)}/></label>
