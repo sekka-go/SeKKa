@@ -42,12 +42,15 @@ import './auth-contrast.css';
 import './guest-booking-header.css';
 import './wave-home-showcase.css';
 import './black-ice-navigation.css';
+import './glassy-sidebar.css';
 
 export default function MobileApp(){
  const p=usePreferences(),en=p.language==='en',t=(ar:string,english:string)=>en?english:ar;
  const [route,setRoute]=useState<MobileRoute>(()=>readMobileRoute());
  const [tourReplayToken,setTourReplayToken]=useState(0);
  const [menuOpen,setMenuOpen]=useState(false);
+ const [menuCollapsed,setMenuCollapsed]=useState(false);
+ const [menuQuery,setMenuQuery]=useState('');
  const [bookingsSection,setBookingsSection]=useState<'bookings'|'requests'>(()=>{try{return sessionStorage.getItem('sekka.bookingsSection')==='requests'?'requests':'bookings';}catch{return 'bookings';}});
  useEffect(()=>{try{sessionStorage.setItem('sekka.bookingsSection',bookingsSection);}catch{/* Private browsing still works. */}},[bookingsSection]);
  const menuTrigger=useRef<HTMLButtonElement>(null);
@@ -482,7 +485,8 @@ export default function MobileApp(){
   }
  };
 
- const menuLink=(label:string,next:MobileRoute)=><button type="button" className="sekka-menu-row"
+ const menuVisible=(label:string)=>!menuQuery.trim()||label.toLocaleLowerCase().includes(menuQuery.trim().toLocaleLowerCase());
+ const menuLink=(label:string,next:MobileRoute)=>menuVisible(label)&&<button type="button" className="sekka-menu-row" title={label}
   onClick={()=>{if(next.tab==='bookings')setBookingsSection('bookings');navigate(next)}}
   aria-current={tab===next.tab&&(next.tab!=='bookings'||bookingsSection==='bookings')?'page':undefined}>
   <span className="sekka-menu-row__icon"><SekkaMenuIcon name={menuGlyphForTab(next.tab)}/></span>
@@ -526,7 +530,7 @@ export default function MobileApp(){
   tab==='captain-onboarding'?t('انضم ككابتن','Become a Captain'):t('سِكَّة','seKKa');
  const menuButton=<button type="button" ref={menuTrigger} className="sekka-fab-menu"
   aria-label={t('فتح القائمة','Open menu')} aria-expanded={menuOpen}
-  aria-controls="sekka-side-menu" onClick={()=>setMenuOpen(true)}>
+  aria-controls="sekka-side-menu" onClick={()=>{setMenuQuery('');setMenuCollapsed(false);setMenuOpen(true);}}>
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
    strokeLinecap="round" aria-hidden="true" focusable="false">
    <path d="M5 6h14M5 12h14M5 18h14"/>
@@ -621,14 +625,24 @@ export default function MobileApp(){
   {showRiderTabs&&<RiderTabBar
    active={tab==='search'?'search':tab==='bookings'?(bookingsSection==='requests'?'requests':'bookings'):tab==='booking'?'bookings':tab==='profile'?'profile':tab==='home'?'home':null}
    onNavigate={onRiderTab}/>}
-  {menuOpen&&<div className="sekka-menu-layer">
+  {menuOpen&&<div className="sekka-menu-layer sekka-glass-layer">
    <button type="button" className="sekka-menu-backdrop" aria-label={t('إغلاق القائمة','Close menu')} onClick={closeMenu}/>
-   <dialog open id="sekka-side-menu" className="sekka-side-drawer" aria-modal="true"
+   <dialog open id="sekka-side-menu" className={`sekka-side-drawer sekka-glass-panel${menuCollapsed?' sekka-glass-panel--collapsed':''}`} aria-modal="true"
     aria-label={t('القائمة الرئيسية','Main menu')} dir={en?'ltr':'rtl'}>
-    <header className="sekka-side-drawer__header"><div className="sekka-side-drawer__heading">
+    <header className="sekka-side-drawer__header">
+     <span className="sekka-glass-mark" aria-hidden="true"><SekkaMenuIcon name="home"/></span>
+     <div className="sekka-side-drawer__heading">
       <span className="sekka-side-drawer__wordmark">سِكَّة</span>
       <strong>{t('القائمة','Menu')}</strong>
      </div>
+     <button type="button" className="sekka-glass-rail-toggle"
+      aria-label={menuCollapsed?t('توسيع القائمة','Expand menu'):t('تصغير القائمة','Collapse menu')}
+      aria-expanded={!menuCollapsed} onClick={()=>setMenuCollapsed(value=>!value)}>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+       strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+       <path d="m15 6-6 6 6 6"/>
+      </svg>
+     </button>
      <button type="button" className="sekka-side-drawer__close" onClick={closeMenu}
       aria-label={t('إغلاق القائمة','Close menu')}>
        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none"
@@ -636,13 +650,19 @@ export default function MobileApp(){
         <path d="M6 6l12 12M18 6L6 18"/>
        </svg>
       </button></header>
+    <label className="sekka-glass-search">
+     <SekkaMenuIcon name="search"/>
+     <input type="search" value={menuQuery} onChange={event=>setMenuQuery(event.target.value)}
+      placeholder={t('ابحث في القائمة','Search pages')}
+      aria-label={t('ابحث في القائمة','Search pages')}/>
+    </label>
     <nav aria-label={t('الأقسام','Sections')}>
      <h2>{t('التنقل','Navigation')}</h2>
      {!isCaptainAccount&&<>
       {menuLink(t('الرئيسية','Home'),{tab:'home'})}
       {menuLink(t('البحث عن خط','Find a route'),{tab:'search',view:9})}
       {menuLink(t('حجوزاتي','My bookings'),{tab:'bookings'})}
-      {ready&&userId&&<button type="button" className="sekka-menu-row"
+      {ready&&userId&&menuVisible(t('طلبات رحلاتي','My trip requests'))&&<button type="button" className="sekka-menu-row"
         aria-current={tab==='bookings'&&bookingsSection==='requests'?'page':undefined}
         onClick={()=>{navigate({tab:'bookings'});setBookingsSection('requests');}}>
          <span className="sekka-menu-row__icon"><SekkaMenuIcon name="requests"/></span>
@@ -652,14 +672,14 @@ export default function MobileApp(){
      {menuLink(t('الإشعارات','Notifications'),{tab:'notifications'})}
      {menuLink(t('حسابي','My profile'),{tab:'profile'})}
      {ready&&userId&&captain&&accountRole==='captain'&&<><h2>{t('الكابتن','Captain')}</h2>
-      {!captainApproved&&<button type="button" className="sekka-menu-row" onClick={startCaptainJourney}>
+      {!captainApproved&&menuVisible(t('متابعة طلب الاعتماد','Review Captain application'))&&<button type="button" className="sekka-menu-row" onClick={startCaptainJourney}>
        <span className="sekka-menu-row__icon"><SekkaMenuIcon name="captain"/></span>
        <span className="sekka-menu-row__label">{t('متابعة طلب الاعتماد','Review Captain application')}</span>
       </button>}</>}
      {ready&&captain&&accountRole==='captain'&&captainApproved&&menuLink(t('خطوطي','My routes'),{tab:'routes',view:42})}
      {ready&&admin&&<><h2>{t('الإدارة','Administration')}</h2>
       {menuLink(t('لوحة الإدارة','Admin dashboard'),{tab:'admin',view:62})}</>}
-     {ready&&<button type="button" className="sekka-menu-row sekka-menu-tour sekka-menu-tour--text-only" onClick={()=>{
+     {ready&&menuVisible(t('اشرحلي الشاشة دي','Guide me through this screen'))&&<button type="button" className="sekka-menu-row sekka-menu-tour sekka-menu-tour--text-only" onClick={()=>{
       setMenuOpen(false);setTourReplayToken(value=>value+1);
      }}><span className="sekka-menu-row__label">{t('اشرحلي الشاشة دي','Guide me through this screen')}</span>
      </button>}
@@ -697,6 +717,14 @@ export default function MobileApp(){
         <span className="sekka-menu-row__label">{t('تسجيل الخروج','Sign out')}</span>
        </button></>}
     </nav>
+    <footer className="sekka-glass-footer">
+     <span className="sekka-glass-footer__symbol" aria-hidden="true"><SekkaMenuIcon name="profile"/></span>
+     <span className="sekka-glass-footer__copy">
+      <strong>{t('سِكَّة','seKKa')}</strong>
+      <small>{t('معاك في السِكَّة','Along your way')}</small>
+     </span>
+     <span className="sekka-glass-footer__status" aria-hidden="true"/>
+    </footer>
    </dialog>
   </div>}
  </div>;
