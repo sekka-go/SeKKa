@@ -1,0 +1,344 @@
+/*
+ * seKKa glass sidebar based on the user-supplied Glassy SideBar V5 video:
+ * a narrow icon rail unfolds into a frosted floating panel; fine-line icons,
+ * translucent active pill, gradual item reveal, anchored account footer.
+ * Uses approved seKKa ice-blue/teal/yellow accents; NO video orange theme.
+ * Imported after black-ice-navigation.css, intentionally scoped to the drawer.
+ */
+.sekka-glass-layer{
+ z-index:105!important;
+}
+.sekka-glass-layer .sekka-menu-backdrop{
+ background:rgba(2,9,19,.37)!important;
+ backdrop-filter:blur(7px) saturate(.95);
+ -webkit-backdrop-filter:blur(7px) saturate(.95);
+ animation:sekkaGlassBackdropIn .34s ease both;
+}
+.sekka-mobile .sekka-side-drawer.sekka-glass-panel{
+ position:fixed!important;
+ top:calc(11px + env(safe-area-inset-top,0px))!important;
+ bottom:calc(11px + env(safe-area-inset-bottom,0px))!important;
+ inset-inline-start:11px!important;
+ inset-inline-end:auto!important;
+ left:auto!important;right:auto!important;
+ margin:0!important;
+ height:auto!important;max-height:none!important;
+ width:min(calc(100vw - 22px),338px);
+ max-width:calc(100vw - 22px)!important;
+ padding:15px 13px 13px!important;
+ display:flex!important;flex-direction:column!important;
+ gap:9px!important;overflow-x:hidden!important;overflow-y:hidden!important;
+ border:1px solid rgba(255,255,255,.76)!important;
+ border-radius:31px!important;
+ background:
+  radial-gradient(ellipse 100% 64% at 7% 104%,rgba(60,174,227,.16),transparent 80%),
+  linear-gradient(180deg,#FFFFFF 0%,#F9FCFF 30%,#F1F8FF 66%,#EAF3FF 100%)!important;
+ backdrop-filter:blur(28px) saturate(1.42)!important;
+ -webkit-backdrop-filter:blur(28px) saturate(1.42)!important;
+ color:#153850!important;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.94),
+   inset 1px 0 0 rgba(255,255,255,.52),
+   0 20px 56px rgba(3,38,65,.26)!important;
+ transform-origin:inline-start center;
+ animation:sekkaGlassUnfold .58s cubic-bezier(.19,1.08,.29,1) both;
+ transition:width .48s cubic-bezier(.19,1.07,.27,1),
+  border-radius .36s ease,box-shadow .36s ease;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-side-drawer.sekka-glass-panel{
+ color:#ECF9FF!important;
+ border-color:rgba(197,237,255,.35)!important;
+ background:
+  radial-gradient(ellipse 110% 58% at 55% 108%,rgba(39,150,207,.29) 0%,rgba(30,83,124,.18) 48%,transparent 90%),
+  radial-gradient(ellipse 75% 44% at 5% -8%,rgba(156,218,248,.14) 0%,transparent 100%),
+  linear-gradient(166deg,rgba(9,16,27,.94) 0%,rgba(7,15,26,.94) 44%,rgba(12,34,53,.90) 77%,rgba(18,54,83,.86) 100%)!important;
+ backdrop-filter:blur(30px) saturate(1.26)!important;
+ -webkit-backdrop-filter:blur(30px) saturate(1.26)!important;
+ box-shadow:inset 0 1px 0 rgba(229,248,255,.28),
+  inset 1px 0 0 rgba(201,239,255,.11),
+  0 26px 75px rgba(0,0,0,.64)!important;
+}
+.sekka-mobile .sekka-glass-panel .sekka-side-drawer__header{
+ display:flex!important;flex-direction:row!important;align-items:center!important;
+ gap:8px!important;flex:none!important;
+ padding:0 3px 12px!important;
+ min-height:50px!important;margin:0!important;
+ border-bottom:1px solid rgba(84,151,185,.15)!important;
+ background:transparent!important;
+}
+.sekka-mobile .sekka-glass-mark{
+ flex:0 0 34px;width:34px;height:34px;
+ display:grid;place-items:center;
+ border-radius:50%;color:#FFFFFF;
+ background:linear-gradient(135deg,#078CF4,#02C9E4);
+ box-shadow:0 4px 12px rgba(0,129,199,.25),inset 0 1px 0 #FFFFFF72;
+}
+.sekka-mobile .sekka-glass-mark svg{width:19px;height:19px}
+.sekka-mobile .sekka-glass-panel .sekka-side-drawer__heading{
+ flex:1;min-width:0;gap:2px!important;align-items:flex-start;
+}
+.sekka-mobile .sekka-glass-panel .sekka-side-drawer__wordmark{
+ font:900 17px/1.2 Tajawal,Tahoma,sans-serif!important;
+ color:#047BAA!important;white-space:nowrap;
+}
+.sekka-mobile .sekka-glass-panel .sekka-side-drawer__heading>strong{
+ font:700 11px/1.1 Tajawal,Tahoma,sans-serif!important;
+ color:#65869B!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-glass-panel .sekka-side-drawer__wordmark{color:#D7F5FF!important}
+html[data-theme="dark"] .sekka-mobile .sekka-glass-panel .sekka-side-drawer__heading>strong{color:#A1C3D7!important}
+.sekka-mobile .sekka-glass-panel .sekka-glass-rail-toggle,
+.sekka-mobile .sekka-glass-panel .sekka-side-drawer__close{
+ flex:0 0 31px!important;
+ display:grid!important;place-items:center!important;
+ width:31px!important;height:31px!important;min-height:31px!important;
+ padding:0!important;border-radius:50%!important;
+ background:rgba(255,255,255,.84)!important;
+ border:1px solid rgba(119,190,223,.46)!important;
+ color:#126A91!important;
+ box-shadow:0 2px 8px rgba(0,78,125,.11)!important;
+ cursor:pointer;
+}
+.sekka-mobile .sekka-glass-panel .sekka-glass-rail-toggle svg{
+ transition:transform .42s cubic-bezier(.2,1.1,.3,1);
+}
+.sekka-mobile .sekka-glass-panel .sekka-side-drawer__close svg{
+ width:17px!important;height:17px!important;stroke:currentColor!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-glass-panel .sekka-glass-rail-toggle,
+html[data-theme="dark"] .sekka-mobile .sekka-glass-panel .sekka-side-drawer__close{
+ background:rgba(205,238,255,.15)!important;
+ border-color:rgba(195,232,255,.35)!important;
+ color:#E6F8FF!important;
+}
+.sekka-mobile .sekka-glass-search{
+ display:flex;align-items:center;gap:10px;flex:none;
+ padding:0 12px;height:42px!important;min-height:42px;
+ background:rgba(180,219,241,.26);
+ border:1px solid rgba(128,184,216,.20);
+ border-radius:13px;
+ color:#56839C;
+}
+.sekka-mobile .sekka-glass-search svg{flex:0 0 18px;width:18px;height:18px;stroke-width:1.8}
+.sekka-mobile .sekka-glass-search input,
+html[data-theme="dark"] .sekka-mobile .sekka-glass-search input{
+ min-width:0;flex:1;width:100%;border:none!important;outline:none!important;
+ background:transparent!important;box-shadow:none!important;
+ padding:4px 0!important;color:inherit!important;
+ font:750 13px/1.25 Tajawal,Tahoma,sans-serif!important;
+}
+.sekka-mobile .sekka-glass-search input::placeholder{color:#678BA1;opacity:1}
+html[data-theme="dark"] .sekka-mobile .sekka-glass-search{
+ color:#D4ECF9;background:rgba(215,241,255,.075)!important;
+ border-color:rgba(215,241,255,.12)!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-glass-search input::placeholder{color:#A2C4D4}
+.sekka-mobile .sekka-glass-panel nav{
+ flex:1 1 auto;min-height:0!important;overflow-y:auto!important;overflow-x:hidden!important;
+ scrollbar-width:thin;scrollbar-color:rgba(85,167,211,.4) transparent;
+ display:flex;flex-direction:column;gap:3px!important;
+ padding:0 1px 8px!important;
+}
+.sekka-mobile .sekka-glass-panel nav>h2{
+ margin:12px 9px 3px!important;
+ font:900 10px/1.4 Tajawal,Tahoma,sans-serif!important;
+ letter-spacing:.09em;text-transform:uppercase;
+ color:#7893A6!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-glass-panel nav>h2{color:#93AEBD!important}
+.sekka-mobile .sekka-glass-panel nav button.sekka-menu-row{
+ flex:0 0 auto;min-height:43px!important;height:auto!important;
+ padding:8px 10px!important;gap:10px!important;
+ background:transparent!important;
+ border:1px solid transparent!important;border-radius:16px!important;
+ box-shadow:none!important;
+ color:#264A62!important;font:850 13px/1.28 Tajawal,Tahoma,sans-serif!important;
+ transition:background-color .2s ease,box-shadow .2s ease,border-color .2s ease,transform .22s ease;
+}
+.sekka-mobile .sekka-glass-panel nav button.sekka-menu-row:hover{
+ background:rgba(255,255,255,.46)!important;
+ border-color:rgba(141,206,235,.24)!important;
+ transform:translateY(-1px);
+}
+.sekka-mobile .sekka-glass-panel nav button.sekka-menu-row[aria-current="page"]{
+ background:linear-gradient(120deg,rgba(255,255,255,.82),rgba(202,236,251,.51))!important;
+ border:1px solid rgba(134,199,232,.76)!important;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.92),
+   0 4px 12px rgba(17,106,160,.13)!important;
+ color:#096890!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-glass-panel nav button.sekka-menu-row{
+ color:#D7E9F5!important;background:transparent!important;
+ border-color:transparent!important;box-shadow:none!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-glass-panel nav button.sekka-menu-row:hover{
+ background:rgba(209,239,255,.11)!important;
+ border-color:rgba(184,226,249,.18)!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-glass-panel nav button.sekka-menu-row[aria-current="page"]{
+ background:linear-gradient(112deg,rgba(213,240,255,.19),rgba(122,195,231,.13))!important;
+ border:1px solid rgba(219,246,255,.70)!important;
+ color:#F7FCFF!important;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.25),
+  0 0 15px rgba(103,209,255,.14)!important;
+}
+.sekka-mobile .sekka-glass-panel .sekka-menu-row__icon,
+.sekka-mobile .sekka-glass-panel .sekka-preference-row .sekka-menu-row__icon,
+.sekka-mobile .sekka-glass-panel .sekka-theme-quick-row .sekka-menu-row__icon{
+ flex:0 0 24px!important;width:24px!important;height:26px!important;
+ display:grid;place-items:center;
+ background:transparent!important;border:none!important;
+ color:#0C84B2!important;border-radius:0!important;
+ box-shadow:none!important;
+}
+.sekka-mobile .sekka-glass-panel .sekka-menu-row__icon svg{
+ width:19px!important;height:19px!important;
+ stroke:currentColor!important;stroke-width:1.85!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-glass-panel .sekka-menu-row__icon,
+html[data-theme="dark"] .sekka-mobile .sekka-glass-panel nav button.sekka-menu-row[aria-current="page"] .sekka-menu-row__icon{
+ background:transparent!important;border:none!important;color:#B8EBFF!important;
+}
+.sekka-mobile .sekka-glass-panel nav button.sekka-menu-row[aria-current="page"] .sekka-menu-row__icon{
+ background:transparent!important;border:none!important;color:#058CC0!important;
+}
+.sekka-mobile .sekka-glass-panel nav button.sekka-menu-row::after{display:none!important;content:none!important}
+.sekka-mobile .sekka-glass-panel .sekka-menu-row__label{
+ color:inherit!important;font:inherit!important;white-space:normal;
+}
+.sekka-mobile .sekka-glass-panel nav button.sekka-menu-tour--text-only{
+ min-height:39px!important;margin:5px 0!important;padding:8px 13px!important;
+ background:rgba(179,218,238,.12)!important;
+ border:1px solid rgba(146,205,233,.16)!important;
+ border-radius:12px!important;color:#317492!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-glass-panel nav button.sekka-menu-tour--text-only{
+ background:rgba(188,227,246,.05)!important;
+ border-color:rgba(199,230,245,.13)!important;color:#BDEAFF!important;
+}
+.sekka-mobile .sekka-glass-panel .sekka-preference-controls{
+ margin:0 0 6px!important;padding:0 1px!important;gap:3px!important;
+ display:grid!important;flex:0 0 auto;
+}
+.sekka-mobile .sekka-glass-panel .sekka-theme-quick-row,
+.sekka-mobile .sekka-glass-panel .sekka-preference-controls label.sekka-preference-row{
+ min-height:48px!important;padding:7px 9px!important;gap:10px!important;
+ background:transparent!important;border:1px solid transparent!important;
+ border-radius:15px!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-glass-panel .sekka-theme-quick-row,
+html[data-theme="dark"] .sekka-mobile .sekka-glass-panel .sekka-preference-controls label.sekka-preference-row{
+ background:transparent!important;border-color:transparent!important;
+}
+.sekka-mobile .sekka-glass-panel .sekka-theme-quick-row__copy{
+ gap:2px!important;
+}
+.sekka-mobile .sekka-glass-panel .sekka-theme-quick-row__copy strong,
+.sekka-mobile .sekka-glass-panel .sekka-preference-row__details strong{
+ font:850 12px/1.3 Tajawal,Tahoma,sans-serif!important;
+ color:#224D66!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-glass-panel .sekka-theme-quick-row__copy strong,
+html[data-theme="dark"] .sekka-mobile .sekka-glass-panel .sekka-preference-row__details strong{
+ color:#EAF6FF!important;
+}
+.sekka-mobile .sekka-glass-panel .sekka-theme-quick-row__copy small{
+ font:700 10px/1.3 Tajawal,Tahoma,sans-serif!important;
+ color:#688A9C!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-glass-panel .sekka-theme-quick-row__copy small{color:#9AB7C7!important}
+.sekka-mobile .sekka-glass-panel .sekka-preference-row__details select{
+ min-height:30px!important;height:30px!important;color:#1288BA!important;font-size:11px!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-glass-panel .sekka-preference-row__details select{color:#A9E8FF!important}
+.sekka-mobile .sekka-glass-panel nav button.sekka-theme-quick-switch{
+ flex:0 0 43px!important;width:43px!important;min-width:43px!important;
+ height:24px!important;min-height:24px!important;
+ background:rgba(156,194,217,.54)!important;
+ border:1px solid rgba(137,178,204,.44)!important;box-shadow:none!important;
+}
+.sekka-mobile .sekka-glass-panel .sekka-theme-quick-switch__thumb{
+ width:18px!important;height:18px!important;inset-block-start:2px!important;inset-inline-start:2px!important;
+}
+.sekka-mobile .sekka-glass-panel .sekka-theme-quick-switch[aria-checked="true"] .sekka-theme-quick-switch__thumb{
+ inset-inline-start:21px!important;
+}
+.sekka-mobile .sekka-glass-panel .sekka-theme-quick-switch[aria-checked="true"] .sekka-theme-quick-switch__thumb::after{
+ font-size:14px!important;line-height:18px!important;
+}
+.sekka-mobile .sekka-glass-footer{
+ flex:0 0 auto;min-height:49px;padding:9px 3px 1px;
+ display:flex;align-items:center;gap:9px;
+ border-top:1px solid rgba(137,193,223,.22);
+}
+.sekka-mobile .sekka-glass-footer__symbol{
+ display:grid;place-items:center;flex:0 0 32px;width:32px;height:32px;
+ border-radius:50%;background:linear-gradient(130deg,#B0E8FC,#DDF8FF);
+ color:#157DA8;border:1px solid rgba(255,255,255,.6);
+}
+.sekka-mobile .sekka-glass-footer__symbol svg{width:19px;height:19px}
+.sekka-mobile .sekka-glass-footer__copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:2px}
+.sekka-mobile .sekka-glass-footer__copy strong{font:900 12px/1.3 Tajawal,Tahoma,sans-serif}
+.sekka-mobile .sekka-glass-footer__copy small{font:650 10px/1.2 Tajawal,Tahoma,sans-serif;color:#62879D}
+.sekka-mobile .sekka-glass-footer__status{
+ width:9px;height:9px;flex:0 0 9px;border:2px solid rgba(255,255,255,.85);
+ border-radius:50%;background:#08B79D;
+ box-shadow:0 0 0 2px rgba(12,171,159,.10);
+}
+html[data-theme="dark"] .sekka-mobile .sekka-glass-footer{
+ border-top-color:rgba(188,230,248,.20);
+}
+html[data-theme="dark"] .sekka-mobile .sekka-glass-footer__symbol{
+ background:linear-gradient(140deg,#174B65,#276F90);
+ color:#E2F9FF;border-color:rgba(180,225,246,.25);
+}
+html[data-theme="dark"] .sekka-mobile .sekka-glass-footer__copy small{color:#A9CAD9}
+.sekka-mobile .sekka-glass-panel--collapsed{
+ width:70px!important;padding-inline:10px!important;
+ border-radius:26px!important;animation:none!important;
+}
+.sekka-mobile .sekka-glass-panel--collapsed .sekka-side-drawer__header{
+ flex-direction:column!important;min-height:88px!important;
+ gap:8px!important;padding-bottom:11px!important;
+}
+.sekka-mobile .sekka-glass-panel--collapsed .sekka-side-drawer__heading,
+.sekka-mobile .sekka-glass-panel--collapsed .sekka-side-drawer__close,
+.sekka-mobile .sekka-glass-panel--collapsed .sekka-glass-search,
+.sekka-mobile .sekka-glass-panel--collapsed nav>h2,
+.sekka-mobile .sekka-glass-panel--collapsed .sekka-menu-tour,
+.sekka-mobile .sekka-glass-panel--collapsed .sekka-preference-controls,
+.sekka-mobile .sekka-glass-panel--collapsed .sekka-glass-footer__copy,
+.sekka-mobile .sekka-glass-panel--collapsed .sekka-glass-footer__status{
+ display:none!important;
+}
+.sekka-mobile .sekka-glass-panel--collapsed .sekka-glass-rail-toggle{flex:0 0 28px!important;width:28px!important;height:28px!important}
+.sekka-mobile .sekka-glass-panel--collapsed .sekka-glass-rail-toggle svg{transform:rotate(180deg)}
+.sekka-mobile .sekka-glass-panel--collapsed nav{gap:5px!important;align-items:center!important}
+.sekka-mobile .sekka-glass-panel--collapsed nav button.sekka-menu-row{
+ width:47px!important;min-height:45px!important;padding:8px!important;
+ justify-content:center!important;
+}
+.sekka-mobile .sekka-glass-panel--collapsed .sekka-menu-row__label{
+ position:absolute!important;width:1px!important;height:1px!important;
+ clip-path:inset(50%);overflow:hidden;white-space:nowrap;
+}
+.sekka-mobile .sekka-glass-panel--collapsed .sekka-glass-footer{justify-content:center}
+.sekka-mobile .sekka-glass-panel--collapsed .sekka-glass-footer__symbol{flex-basis:32px}
+@keyframes sekkaGlassBackdropIn{from{opacity:0}to{opacity:1}}
+@keyframes sekkaGlassUnfold{
+ 0%{width:70px;opacity:.82}
+ 56%{width:min(calc(100vw - 22px),346px);opacity:1}
+ 78%{width:min(calc(100vw - 22px),332px)}
+ 100%{width:min(calc(100vw - 22px),338px);opacity:1}
+}
+@media(max-width:359px){
+ .sekka-mobile .sekka-glass-panel .sekka-side-drawer__close{flex-basis:28px!important;width:28px!important}
+ .sekka-mobile .sekka-glass-panel .sekka-glass-rail-toggle{flex-basis:28px!important;width:28px!important}
+ .sekka-mobile .sekka-glass-panel .sekka-menu-row__icon{flex-basis:20px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .sekka-mobile .sekka-side-drawer.sekka-glass-panel,
+ .sekka-glass-layer .sekka-menu-backdrop{
+  animation:none!important;transition:none!important;
+ }
+ .sekka-mobile .sekka-glass-panel *{transition:none!important}
+}
