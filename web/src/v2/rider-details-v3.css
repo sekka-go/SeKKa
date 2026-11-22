@@ -16,7 +16,7 @@
 .sekka-mobile .rd3__route-line{display:flex;flex-direction:column;align-items:center;
  gap:5px;padding:12px 0;width:16px;flex:none}
 .sekka-mobile .rd3__route-line span{width:13px;height:13px;flex:none;border-radius:50%;
- background:#FF774E;box-shadow:0 0 0 3px #FFE9DC}
+ background:#FFCC24;box-shadow:0 0 0 3px #FFE9DC}
 .sekka-mobile .rd3__route-line span:last-child{background:#FFCC24;box-shadow:0 0 0 3px #B39C55}
 .sekka-mobile .rd3__route-line i{min-height:25px;flex:1;border-inline-start:2px dashed #E8D77A}
 .sekka-mobile .rd3__route-stops{display:flex;flex-direction:column;justify-content:space-between;gap:19px;flex:1;min-width:0}
