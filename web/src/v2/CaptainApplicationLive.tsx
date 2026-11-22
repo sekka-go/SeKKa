@@ -1,3 +1,4 @@
+import AppSkeleton from './AppSkeleton';
 import {useEffect,useMemo,useState} from 'react';
 import {client} from './api';
 import {enrollCaptain} from './captainEnrollment';
@@ -462,7 +463,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
  const documentProgress=documentKinds.filter(([kind])=>docs.some(doc=>doc.kind===kind)).length;
  const yearOptions=availableYears.map(value=><option key={value} value={value}>{value}</option>);
  return <section className="c-approval-live" dir={en?'ltr':'rtl'} aria-label={t('تسجيل الكابتن','Captain registration')}>
-  {loading&&<p role="status">{t('بنحمّل طلب التسجيل…','Loading your registration…')}</p>}
+  {loading&&<AppSkeleton kind="form" label={t('بنحمّل طلب التسجيل…','Loading your registration…')}/>}
   {error&&<p role="alert">{error}</p>}
   {loadError&&!loading&&<button type="button" className="d-primary" onClick={()=>setRevision(n=>n+1)}>
    {t('إعادة المحاولة','Retry')}
