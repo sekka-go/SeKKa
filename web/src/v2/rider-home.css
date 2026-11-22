@@ -75,7 +75,7 @@
  display:grid;place-items:center;flex:none;width:38px;height:38px;
  border-radius:13px;color:#111111;background:#FFF9E9;
 }
-.rh-journey__field-icon--to{color:#FB623D;background:#FFE7D9}
+.rh-journey__field-icon--to{color:#FFCC24;background:#FFE7D9}
 .rh-journey__field-copy{
  display:flex;flex-direction:row;gap:5px;align-items:baseline;
  min-width:0;flex:1;text-align:start;
@@ -158,9 +158,9 @@ html[data-theme="dark"] .rh-hero__copy{background:linear-gradient(90deg,transpar
 html[data-theme="dark"] .rh-hero h1,html[data-theme="dark"] .rh-hero__copy p{color:#FFFFFF}
 html[data-theme="dark"] .rh-journey__field{border-color:#E8D77A}
 html[data-theme="dark"] .rh-journey__field-icon{background:#193449;color:#FFFFFF}
-html[data-theme="dark"] .rh-journey__field-icon--to{background:#193449;color:#FFB78B}
+html[data-theme="dark"] .rh-journey__field-icon--to{background:#193449;color:#FFCC24}
 html[data-theme="dark"] .rh-journey__edit{color:#FFDF89}
-html[data-theme="dark"] .rh-journey__notice{background:#573E3D;color:#FFE8D6}
+html[data-theme="dark"] .rh-journey__notice{background:#573E3D;color:#FFF6DE}
 html[data-theme="dark"] .rh-shortcut{color:#F5FBFF}
 html[data-theme="dark"] .rh-button.rh-button--primary{background:#FFCD38;color:#F5FBFF}
 html[data-theme="dark"] .rh-button.rh-button--primary svg{color:#F5FBFF}
@@ -259,10 +259,10 @@ html[data-theme="dark"] .rh-picker__hint{background:#193449;color:#FFFFFF!import
 .rh-pickup-actions{display:grid;grid-template-columns:minmax(0,1fr) 98px;gap:10px;margin:2px 0 12px}
 .rh-pickup-actions button{min-height:82px!important;border-radius:20px;border:1px solid #E8D77A;
  display:flex;align-items:center;gap:10px;font-family:inherit;cursor:pointer;text-align:start}
-.rh-pickup-actions__explore{padding:12px 10px;background:linear-gradient(112deg,#FFDFD0,#FFEDE5);
+.rh-pickup-actions__explore{padding:12px 10px;background:linear-gradient(112deg,#FFF3CD,#FFEDE5);
  color:#111111;box-shadow:0 6px 16px #6E214D12}
 .rh-pickup-actions__symbol{display:grid;place-items:center;width:42px;height:42px;flex:none;
- background:#FFF8F3;border-radius:14px;color:#FF6E46}
+ background:#FFF8F3;border-radius:14px;color:#FFCC24}
 .rh-pickup-actions__copy{display:grid;gap:4px;min-width:0;flex:1}
 .rh-pickup-actions__copy strong{font-size:14px;line-height:1.3;font-weight:900}
 .rh-pickup-actions__copy small{font-size:11px;line-height:1.5;font-weight:750;color:#111111}
