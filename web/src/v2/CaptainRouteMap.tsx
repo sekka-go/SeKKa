@@ -1,5 +1,5 @@
 import AppSkeleton from './AppSkeleton';
-import {useState} from 'react';
+import {useEffect,useState} from 'react';
 import {usePreferences} from './preferences';
 
 type MapStop={name:string;latitude:number|null;longitude:number|null};
@@ -24,10 +24,12 @@ export default function CaptainRouteMap({stops}:{stops:MapStop[]}){
  map.searchParams.set('bbox',bounds.map(value=>value.toFixed(5)).join(','));
  map.searchParams.set('layer','mapnik');
  if(marker)map.searchParams.set('marker',marker.latitude+','+marker.longitude);
+ const mapUrl=map.toString();
+ useEffect(()=>{setMapLoaded(false);},[mapUrl]);
 
  return <section className="sekka-route-map-card" aria-label={t('خريطة محطات الخط','Route stop map')}>
   {!mapLoaded&&<div className="sekka-map-shimmer"><AppSkeleton kind="map" label={t('بنحمّل خريطة المحطات…','Loading route stops map…')}/>}</div>}
-  <iframe className="sekka-route-map-card__frame" src={map.toString()} loading="lazy"
+  <iframe className="sekka-route-map-card__frame" src={mapUrl} loading="lazy"
    onLoad={()=>setMapLoaded(true)}
    style={{visibility:mapLoaded?'visible':'hidden'}}
    title={t('خريطة OpenStreetMap لمحطات الخط','OpenStreetMap route stop map')}
