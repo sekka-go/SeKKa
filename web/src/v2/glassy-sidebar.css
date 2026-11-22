@@ -57,6 +57,14 @@ html[data-theme="dark"] .sekka-mobile .sekka-side-drawer.sekka-glass-panel{
   inset 1px 0 0 rgba(201,239,255,.11),
   0 26px 75px rgba(0,0,0,.64)!important;
 }
+/* Physical fallback avoids conflicting logical insets in older Android WebView.
+ * The rail anchors to the reading edge (right in Arabic, left in English). */
+.sekka-mobile[dir="rtl"] .sekka-side-drawer.sekka-glass-panel{
+ right:11px!important;left:auto!important;inset-inline-start:11px!important;
+}
+.sekka-mobile[dir="ltr"] .sekka-side-drawer.sekka-glass-panel{
+ left:11px!important;right:auto!important;inset-inline-start:11px!important;
+}
 .sekka-mobile .sekka-glass-panel .sekka-side-drawer__header{
  display:flex!important;flex-direction:row!important;align-items:center!important;
  gap:8px!important;flex:none!important;
