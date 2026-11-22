@@ -31,18 +31,18 @@ test('urban headers and yellow contextual action pass WCAG body text contrast',(
  assert.match(css,/sekka-no-match-action.*sekka-request-yellow-cta/s);
 });
 
-test('the installed icon, favicon and Apple icon use the same S monogram family',()=>{
+test('PoNo installed icon, favicon and Apple icon share owner-approved P mark',()=>{
  const pngs=manifest.icons.map(icon=>icon.src);
  assert.deepEqual(pngs,[
-  '/brand/sekka-s-icon-192.png',
-  '/brand/sekka-s-icon-512.png',
-  '/brand/sekka-s-icon.svg'
+  '/brand/pono-icon-192.png',
+  '/brand/pono-icon-512.png',
+  '/brand/pono-icon.svg'
  ]);
  for(const src of pngs){
   assert.ok(existsSync(new URL('../../public'+src,import.meta.url)));
  }
- assert.match(html,/rel="icon" type="image\/png" sizes="192x192" href="\/brand\/sekka-s-icon-192\.png"/);
- assert.match(html,/apple-touch-icon" href="\/brand\/sekka-s-icon-192\.png"/);
+ assert.match(html,/rel="icon" type="image\/png" sizes="192x192" href="\/brand\/pono-icon-192\.png"/);
+ assert.match(html,/apple-touch-icon" href="\/brand\/pono-icon-192\.png"/);
 });
 
 test('no-match request never invents time, and discloses unsupported weekday details',()=>{
@@ -69,7 +69,7 @@ test('small-screen bottom navigation and drawer controls have legible hit area',
  assert.match(css,/min-height:44px!important;min-width:44px!important/);
 });
 
-test('Urban Mobility replaces aqua decoration without changing the installed S brand',()=>{
+test('Urban Mobility palette is retained while approved PoNo P becomes the identity',()=>{
  assert.match(urban,/--urban-blue:#1753E8/);
  assert.match(urban,/--urban-navy:#17253A/);
  assert.match(urban,/--urban-paper:#F5F3ED/);
@@ -79,7 +79,24 @@ test('Urban Mobility replaces aqua decoration without changing the installed S b
  assert.match(urban,/rh-showcase-hero__top-wave/);
  assert.match(urban,/display:none!important/);
  assert.match(read('./MobileApp.tsx'),/import '\.\/urban-mobility-palette\.css'/);
- assert.match(read('../../public/brand/sekka-s-icon.svg'),/stop-color="#1753E8"/);
- assert.equal(manifest.theme_color,'#17253A');
- assert.match(html,/selectedTheme === 'dark' \? '#101827' : '#17253A'/);
+ assert.match(read('../../public/brand/pono-icon.svg'),/fill-rule="evenodd"/);
+ assert.equal(manifest.theme_color,'#0648F5');
+ assert.match(html,/selectedTheme === 'dark' \? '#101827' : '#0648F5'/);
+});
+
+test('PoNo is installed in the actual PWA entry, never the 73-screen developer gallery',()=>{
+ const entry=read('../main.tsx');
+ const splash=read('./LaunchSplash.tsx');
+ const onboarding=read('./Onboarding.tsx');
+ const guest=read('./GuestEntry.tsx');
+ assert.match(entry,/<LaunchSplash><MobileApp\/><\/LaunchSplash>/);
+ assert.match(entry,/\["\/dev\/screens", "\/dev\/screens\/"\]/);
+ assert.equal(manifest.name,'PoNo');
+ assert.equal(manifest.short_name,'PoNo');
+ assert.match(html,/<title>PoNo<\/title>/);
+ assert.match(splash,/pono-wordmark-white\.svg/);
+ assert.match(onboarding,/pono-wordmark\.svg/);
+ assert.match(guest,/pono-wordmark\.svg/);
+ assert.match(app,/pono-icon\.svg/);
+ assert.match(app,/pono-wordmark\.svg/);
 });
