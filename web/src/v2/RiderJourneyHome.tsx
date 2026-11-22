@@ -159,7 +159,7 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
    </svg>
   </section>
   <section className="rh-showcase-search" aria-labelledby="rh-home-title">
-   <h1 id="rh-home-title">{tr.title}</h1>
+   <h1 id="rh-home-title">{t('رايح فين؟','Where to?')}</h1>
    <button type="button" className="rh-showcase-search__card" onClick={()=>onNavigate(9)}>
     <span className="rh-showcase-search__icon" aria-hidden="true">
      <svg viewBox="0 0 66 66" fill="none"><circle cx="27" cy="27" r="19" stroke="currentColor" strokeWidth="6"/><path d="m42 42 16 16" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/></svg>
