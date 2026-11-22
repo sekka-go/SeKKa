@@ -1,3 +1,4 @@
+import AppSkeleton from './AppSkeleton';
 import {inLaunchRegion,outsideCoverageMessage} from './geoPlace';
 import {isInsideCairoDiscovery} from './discoveryCairo';
 import {useEffect,useId,useState} from 'react';
@@ -199,15 +200,12 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
     {t('دقة موقعك تقريبًا ','Your location accuracy is about ')}
     {formatDistanceForLocale(accuracy,en)}
    </p>}
-   {loading&&<div className="np4__loading" role="status">
-    <div className="np4__skeleton"/><div className="np4__skeleton"/>
-    <p>{t('بنجمع أقرب الرحلات المنشورة…','Finding nearby published rides…')}</p>
-   </div>}
+   {loading&&<AppSkeleton kind="routes" count={2} compact label={t('بنجمع أقرب الرحلات المنشورة…','Finding nearby published rides…')}/>} 
    {!loading&&!error&&candidates.length===0&&<div className="np4__empty" role="status">
     <span className="np4__empty-illustration" aria-hidden="true">
      <svg viewBox="0 0 88 76" fill="none" width="88" height="76">
-      <circle cx="45" cy="35" r="31" stroke="#E5D0EB" strokeWidth="3" strokeDasharray="4 5"/>
-      <path d="M45 11c-11 0-19 9-19 19 0 14 19 34 19 34s19-20 19-34c0-10-8-19-19-19Z" fill="#FF704B"/>
+      <circle cx="45" cy="35" r="31" stroke="#58D1E1" strokeWidth="3" strokeDasharray="4 5"/>
+      <path d="M45 11c-11 0-19 9-19 19 0 14 19 34 19 34s19-20 19-34c0-10-8-19-19-19Z" fill="#FFCC24"/>
       <circle cx="45" cy="30" r="8" fill="#FFF4D7"/>
      </svg>
     </span>
