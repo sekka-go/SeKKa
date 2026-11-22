@@ -685,3 +685,22 @@ html[data-theme="dark"] .sekka-mobile .d-canvas:is(.d-screen-9,.d-screen-10,.d-s
 html[data-theme="dark"] .sekka-mobile .sekka-side-drawer__header > .sekka-side-drawer__close{
  background:#FFFFFF!important;color:#111111!important;border-color:#C8E3ED!important;
 }
+
+
+/* Light mode: owner-approved white/black controls match the drawer's X close
+   button. Preserve existing size, centered SVG and RTL/LTR corner placement.
+   Dark mode retains its original dark tiles and yellow glyphs. */
+html[data-theme="light"] .sekka-mobile > .sekka-floating-actions > :is(.sekka-fab-menu,.sekka-fab-bell){
+ background:#FFFFFF!important;
+ border-color:#D4E7ED!important;
+ color:#111111!important;
+ box-shadow:0 2px 7px #01446618!important;
+}
+html[data-theme="light"] .sekka-mobile > .sekka-floating-actions > :is(.sekka-fab-menu,.sekka-fab-bell) > svg{
+ stroke:#111111!important;
+ color:#111111!important;
+ fill:none!important;
+}
+html[data-theme="light"] .sekka-mobile > .sekka-floating-actions > :is(.sekka-fab-menu,.sekka-fab-bell)[aria-current="page"]{
+ border-color:#D4E7ED!important;
+}
