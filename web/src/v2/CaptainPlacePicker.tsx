@@ -1,3 +1,4 @@
+import AppSkeleton from './AppSkeleton';
 import {useEffect,useRef,useState} from 'react';
 import {usePreferences} from './preferences';
 import {catalogMatches,locationContext,locationContextIcon,noMatchingLocation,mapPlacesFromPhoton,selectOperationalMapPlace,isSearchableMapPlace} from './geoPlace';
@@ -101,7 +102,7 @@ export default function CaptainPlacePicker({label,value,choice,onPick,onVerified
   </div>
   {catalog.length>0&&<div className="sekka-location-prompts">{catalog.map(item=>
    <button type="button" key={item.key} onClick={()=>search(t(item.ar,item.en))}>{t('ابحث عن ','Search for ')}{t(item.ar,item.en)}</button>)}</div>}
-  {result.busy&&<p className="cj-easy-feedback" role="status">{t('بنحدد المكان…','Looking up locations…')}</p>}
+  {result.busy&&<AppSkeleton kind="stops" compact label={t('بنحدد المكان…','Looking up locations…')}/>}
   {error&&<p className="cj-easy-feedback" role="status">{error}</p>}
   {points.length>0&&<div id={options.id} className="cj-easy-results sekka-location-options" role="listbox"
     aria-label={t('اقتراحات الأماكن','Place suggestions')}>
