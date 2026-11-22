@@ -69,7 +69,7 @@ for(const width of [320,360,390,412]){
 
 for(const language of ['ar','en'] as const){
  for(const width of [320,360,390,412]){
-  test('single drawer menu occupies physical left; header no duplicate logo '+width+'px '+language,async({page})=>{
+  test('single drawer menu follows RTL/LTR edge; header has no duplicate logo '+width+'px '+language,async({page})=>{
    await page.setViewportSize({width,height:width===320?700:844});
    await page.addInitScript(language=>{
     localStorage.setItem('language_preference',language);
@@ -82,7 +82,8 @@ for(const language of ['ar','en'] as const){
    const b=await trigger.boundingBox();
    expect(b).not.toBeNull();
    expect(b!.width).toBeGreaterThanOrEqual(44);
-   expect(b!.x+b!.width/2).toBeLessThan(width/2);
+   if(language==='ar')expect(b!.x+b!.width/2).toBeGreaterThan(width/2);
+   else expect(b!.x+b!.width/2).toBeLessThan(width/2);
    await trigger.click();
    const drawer=page.getByRole('dialog',{name:language==='ar'?'القائمة الرئيسية':'Main menu'});
    await expect(drawer.locator('.sekka-language')).toBeVisible();
