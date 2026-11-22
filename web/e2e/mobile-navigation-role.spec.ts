@@ -181,6 +181,25 @@ test(`pending Captain profile stays in Passenger journey until explicit entry at
  await page.goto('/');
  await expect(page.locator('.sekka-rider-home')).toBeVisible();
  await expect(page).not.toHaveURL(/tab=captain-onboarding|tab=routes/);
+ // Rider shell regression at each supported small width (synthetic auth only).
+ const dock=page.locator('.rh-tabs');
+ await expect(dock).toBeVisible();
+ await expect(dock.locator('button')).toHaveCount(5);
+ await expect(dock.getByRole('button',{name:'Requests'})).toBeVisible();
+ await expect(dock.getByRole('button',{name:'Alerts'})).toHaveCount(0);
+ await expect(dock.locator('.rh-tabs__primary svg path[d="M8 11h6"]')).toHaveCount(0);
+ await expect(page.locator('.sekka-launch')).toHaveCount(0,{timeout:8000});
+ const header=await page.locator('.sekka-floating-actions').boundingBox();
+ const eyebrow=await page.locator('.rh-hero__eyebrow').boundingBox();
+ expect(header).not.toBeNull();
+ expect(eyebrow).not.toBeNull();
+ expect(eyebrow!.y).toBeGreaterThanOrEqual(header!.y+header!.height-2);
+ await dock.getByRole('button',{name:'Requests'}).click();
+ await expect(page).toHaveURL(/tab=bookings/);
+ await expect(dock.getByRole('button',{name:'Requests'})).toHaveAttribute('aria-current','page');
+ await expect(page.locator('.sk-route-swoosh')).toHaveCount(0);
+ await dock.getByRole('button',{name:'Home'}).click();
+ await expect(page.locator('.sekka-rider-home')).toBeVisible();
  await page.screenshot({path:`test-results/mock-pending-captain-passenger-home-${width}.png`,fullPage:true,animations:'disabled'});
  await expect(page.getByRole('button',{name:'Open menu'})).toBeVisible();
  await expect(page.locator('.sekka-bottom-nav')).toHaveCount(0);
