@@ -28,6 +28,7 @@ for(const width of [320,390]){
   await expect(active.locator('.sekka-menu-row__icon')).toHaveCSS('border-top-color','rgb(146, 227, 250)');
   await expect(active.locator('.sekka-menu-row__label')).toHaveCSS('color','rgb(247, 252, 255)');
   await expect(drawer.locator('.sekka-side-drawer__close')).toHaveCSS('background-color','rgb(23, 31, 43)');
+  await page.waitForTimeout(650); // Capture after the drawer entrance finishes.
   await page.screenshot({path:'../docs/audit/menu-black-ice-'+width+'.png',fullPage:true,animations:'disabled'});
   await expect(drawer.locator('.sekka-preference-row')).toHaveCount(1);
   await expect(drawer.locator('#sekka-appearance-pref')).toHaveCount(0);
@@ -98,6 +99,7 @@ test('light drawer fades from white to ice blue with icon-free secondary control
  await page.getByRole('button',{name:'فتح القائمة'}).click();
  const drawer=page.getByRole('dialog',{name:'القائمة الرئيسية'});
  await expect(drawer).toBeVisible();
+ await page.waitForTimeout(650); // Avoid capturing a half-open drawer.
  await page.screenshot({path:'../docs/audit/menu-white-ice-390.png',fullPage:true,animations:'disabled'});
  const background=await drawer.evaluate(element=>getComputedStyle(element).backgroundImage);
  expect(background).toContain('linear-gradient');
