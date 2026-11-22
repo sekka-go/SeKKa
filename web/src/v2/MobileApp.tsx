@@ -666,6 +666,19 @@ export default function MobileApp(){
      </button>}
      <h2>{t('اللغة والمظهر','Language & appearance')}</h2>
      <div className="sekka-preference-controls">
+      <div className="sekka-theme-quick-row">
+       <span className="sekka-menu-row__icon"><SekkaMenuIcon name="appearance"/></span>
+       <span className="sekka-theme-quick-row__copy">
+        <strong>{t('الوضع الليلي','Dark mode')}</strong>
+        <small>{t('أسود وتدرجات بالأزرق الثلجي','Black surfaces and icy-blue gradients')}</small>
+       </span>
+       <button type="button" className="sekka-theme-quick-switch" role="switch"
+        aria-checked={p.theme==='dark'}
+        aria-label={t('تشغيل أو إيقاف الوضع الليلي','Toggle dark mode')}
+        onClick={()=>p.setThemePreference(p.theme==='dark'?'light':'dark')}>
+        <span className="sekka-theme-quick-switch__thumb" aria-hidden="true"/>
+       </button>
+      </div>
       <label htmlFor="sekka-language-pref" className="sekka-preference-row">
        <span className="sekka-menu-row__icon"><SekkaMenuIcon name="language"/></span>
        <span className="sekka-preference-row__details">
