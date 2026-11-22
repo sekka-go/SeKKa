@@ -142,6 +142,20 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
     <path d="M0 39C89 0 180 48 266 67S390 89 440 45V125H0Z" fill="#3FD6FB"/>
     <path d="M0 57C91 11 183 62 266 78S385 107 440 64V125H0Z" fill="#8EEBFE"/>
     <path d="M0 78C102 32 180 81 271 96S390 115 440 85V125H0Z" fill="#F0F5FE"/>
+    <defs>
+     <linearGradient id="sekka-dark-wave-upper" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stopColor="#6CAFC9"/><stop offset="42%" stopColor="#347391"/>
+      <stop offset="76%" stopColor="#16415B"/><stop offset="100%" stopColor="#05070B"/>
+     </linearGradient>
+     <linearGradient id="sekka-dark-wave-middle" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stopColor="#4F96B9"/><stop offset="36%" stopColor="#2C6686"/>
+      <stop offset="75%" stopColor="#15384D"/><stop offset="100%" stopColor="#05070B"/>
+     </linearGradient>
+     <linearGradient id="sekka-dark-wave-base" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stopColor="#2C6585"/><stop offset="37%" stopColor="#1B435E"/>
+      <stop offset="72%" stopColor="#0C2435"/><stop offset="100%" stopColor="#05070B"/>
+     </linearGradient>
+    </defs>
    </svg>
   </section>
   <section className="rh-showcase-search" aria-labelledby="rh-home-title">
