@@ -450,8 +450,9 @@ test('authenticated dark home waves fade from icy-blue to near-black with no har
  expect(greeting).not.toBeNull();
  expect(bottomWave).not.toBeNull();
  expect(greeting!.y+greeting!.height+6).toBeLessThan(bottomWave!.y);
- await page.evaluate(()=>localStorage.setItem('language_preference','en'));
- await page.reload();
+ await page.getByRole('button',{name:'فتح القائمة'}).click();
+ await page.locator('#sekka-language-pref').selectOption('en');
+ await page.locator('.sekka-side-drawer__close').click();
  await expect(page.locator('#rh-home-title')).toHaveText('Where to?');
  const englishText=await page.locator('.rh-showcase-hero .rh-hero__copy p').boundingBox();
  const englishWave=await page.locator('.rh-showcase-hero__bottom-wave').boundingBox();
