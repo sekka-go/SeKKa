@@ -14,7 +14,9 @@ for(const width of [320,360,390,412]){
      localStorage.setItem('theme_preference',theme);
     },{language,theme});
     await page.goto('/');
-    await expect(page.locator('.sekka-launch')).toBeHidden();
+    // The approved intro lasts 5.15s; allow startup jitter without
+    // changing its animation or blocking a real sign-in journey.
+    await expect(page.locator('.sekka-launch')).toBeHidden({timeout:8000});
     const intro=page.locator('.phase-screen-2.sekka-entry');
     await expect(intro.locator('.sekka-entry__title')).toBeVisible();
     await expect(page.locator('.sekka-mobile-header')).toBeHidden();
