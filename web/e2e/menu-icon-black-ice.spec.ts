@@ -25,9 +25,9 @@ for(const width of [320,390]){
   }
   const active=drawer.getByRole('button',{name:'حسابي'});
   await expect(active).toHaveAttribute('aria-current','page');
-  await expect(active.locator('.sekka-menu-row__icon')).toHaveCSS('border-top-color','rgb(146, 227, 250)');
+  await expect(active.locator('.sekka-menu-row__icon')).toHaveCSS('color','rgb(184, 235, 255)');
   await expect(active.locator('.sekka-menu-row__label')).toHaveCSS('color','rgb(247, 252, 255)');
-  await expect(drawer.locator('.sekka-side-drawer__close')).toHaveCSS('background-color','rgb(23, 31, 43)');
+  await expect(drawer.locator('.sekka-side-drawer__close')).toHaveCSS('background-color','rgba(205, 238, 255, 0.15)');
   await page.waitForTimeout(650); // Capture after the drawer entrance finishes.
   await page.screenshot({path:'../docs/audit/menu-black-ice-'+width+'.png',fullPage:true,animations:'disabled'});
   await expect(drawer.locator('.sekka-preference-row')).toHaveCount(1);
@@ -118,3 +118,63 @@ test('light drawer fades from white to ice blue with icon-free secondary control
  await expect(drawer).toHaveCount(0);
 });
 
+
+test('glass drawer unfolds from an icon rail and supports reversible collapse without losing navigation',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.addInitScript(()=>{
+  localStorage.setItem('language_preference','ar');
+  localStorage.setItem('theme_preference','dark');
+  sessionStorage.setItem('sekka.launch.seen.v1','1');
+ });
+ await page.goto('/?tab=profile');
+ await page.getByRole('button',{name:'فتح القائمة'}).click();
+ const panel=page.getByRole('dialog',{name:'القائمة الرئيسية'});
+ await expect(panel).toBeVisible();
+ await expect(panel).toHaveClass(/sekka-glass-panel/);
+ await expect(panel).not.toHaveClass(/sekka-glass-panel--collapsed/);
+ await expect(panel).toHaveCSS('border-top-left-radius','31px');
+ const blur=await panel.evaluate(el=>getComputedStyle(el).backdropFilter);
+ expect(blur).toContain('blur(30px)');
+ // A narrow collapsed rail retains icons, active destination and its controls.
+ await panel.getByRole('button',{name:'تصغير القائمة'}).click();
+ await expect(panel).toHaveClass(/sekka-glass-panel--collapsed/);
+ await expect(panel).toHaveCSS('width','70px');
+ await expect(panel.locator('.sekka-glass-search')).toBeHidden();
+ await expect(panel.getByRole('button',{name:'توسيع القائمة'})).toHaveAttribute('aria-expanded','false');
+ await expect(panel.locator('button.sekka-menu-row').first().locator('svg')).toBeVisible();
+ await panel.getByRole('button',{name:'توسيع القائمة'}).click();
+ await expect(panel).not.toHaveClass(/sekka-glass-panel--collapsed/);
+ await expect(panel.locator('.sekka-glass-search')).toBeVisible();
+ await expect(panel.locator('.sekka-glass-search input')).toHaveAttribute('type','search');
+ await panel.locator('.sekka-glass-search input').fill('الإشعارات');
+ await expect(panel.locator('nav > button.sekka-menu-row')).toHaveCount(1);
+ await panel.getByRole('button',{name:'الإشعارات',exact:true}).click();
+ await expect(page).toHaveURL(/tab=notifications/);
+ await expect(panel).toHaveCount(0);
+});
+
+test('glassy menu keeps the drawer at the right in Arabic and left in English',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.addInitScript(()=>{
+  localStorage.setItem('language_preference','ar');
+  localStorage.setItem('theme_preference','light');
+  sessionStorage.setItem('sekka.launch.seen.v1','1');
+ });
+ await page.goto('/?tab=profile');
+ await page.getByRole('button',{name:'فتح القائمة'}).click();
+ const panel=page.locator('.sekka-glass-panel');
+ await expect(panel).toBeVisible();
+ await page.waitForTimeout(700);
+ const arabicRect=await panel.boundingBox();
+ expect(arabicRect).not.toBeNull();
+ expect(arabicRect!.x).toBeGreaterThan(30);
+ await panel.locator('#sekka-language-pref').selectOption('en');
+ await expect(page.locator('html')).toHaveAttribute('dir','ltr');
+ const englishPanel=page.getByRole('dialog',{name:'Main menu'});
+ await expect(englishPanel).toBeVisible();
+ const englishRect=await englishPanel.boundingBox();
+ expect(englishRect).not.toBeNull();
+ expect(englishRect!.x).toBeLessThan(20);
+ await expect(englishPanel.locator('.sekka-glass-search input')).toHaveAttribute('placeholder','Search pages');
+ await expect(englishPanel.locator('#sekka-appearance-pref')).toHaveCount(0);
+});
