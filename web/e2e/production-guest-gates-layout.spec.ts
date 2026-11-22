@@ -56,6 +56,11 @@ for(const width of [360,390])for(const language of ['ar','en'] as const)for(cons
     expect(button).not.toBeNull();
     expect(button!.y).toBeGreaterThanOrEqual(header!.y+header!.height-2);
     expect(button!.height).toBeGreaterThanOrEqual(44);
+    // No-offer state must never paint white lettering over bright yellow.
+    const returnSearch=page.locator('.b-unavailable .b-primary');
+    await expect(returnSearch).toBeVisible();
+    await expect(returnSearch).toHaveCSS('background-color','rgb(255, 204, 36)');
+    await expect(returnSearch).toHaveCSS('color','rgb(16, 42, 60)');
    }
    await expect(page.locator('.sekka-bottom-nav')).toHaveCount(0);
    if(scene.tab==='admin'){
