@@ -450,6 +450,14 @@ test('authenticated dark home waves fade from icy-blue to near-black with no har
  expect(greeting).not.toBeNull();
  expect(bottomWave).not.toBeNull();
  expect(greeting!.y+greeting!.height+6).toBeLessThan(bottomWave!.y);
+ await page.evaluate(()=>localStorage.setItem('language_preference','en'));
+ await page.reload();
+ await expect(page.locator('#rh-home-title')).toHaveText('Where to?');
+ const englishText=await page.locator('.rh-showcase-hero .rh-hero__copy p').boundingBox();
+ const englishWave=await page.locator('.rh-showcase-hero__bottom-wave').boundingBox();
+ expect(englishText).not.toBeNull();
+ expect(englishWave).not.toBeNull();
+ expect(englishText!.y+englishText!.height+6).toBeLessThan(englishWave!.y);
  await page.waitForTimeout(450); // Settle the live header/wave before evidence capture.
  await page.screenshot({path:'../docs/audit/layout-after-dark-home-390-mocked.png',fullPage:true,animations:'disabled'});
 });
