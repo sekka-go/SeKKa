@@ -1,3 +1,4 @@
+import AppSkeleton from './AppSkeleton';
 import {useEffect,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
@@ -48,7 +49,7 @@ export default function LiveNotifications({mode='rider',onOpenRides}:{
  };
  return <section className="d-box live-notifications">
   <h2>{t('إشعاراتي','My notifications')}</h2>
-  {loading&&<p role="status">{t('بنحمّل إشعاراتك…','Loading notifications…')}</p>}
+  {loading&&<AppSkeleton kind="notifications" count={4} label={t('بنحمّل إشعاراتك…','Loading notifications…')}/>}
   {error&&<div role="alert"><p>{error}</p><button type="button" onClick={refresh}>
    {t('إعادة المحاولة','Retry')}</button></div>}
   {!loading&&!error&&items.length===0&&<p>{t('مفيش إشعارات حاليًا.','No notifications yet.')}</p>}
