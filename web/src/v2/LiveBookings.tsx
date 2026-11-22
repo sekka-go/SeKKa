@@ -1,3 +1,4 @@
+import AppSkeleton from './AppSkeleton';
 import {useEffect,useState} from 'react';
 import {client} from './api';
 import {cancelPendingBooking} from './reservations';
@@ -42,7 +43,7 @@ export default function LiveBookings({mode,onFindRide}:{
  const shown=mode==='captain'&&filter!=='all'?items.filter(b=>b.status===filter):items;
  return <section className="d-box live-bookings">
   <h2>{mode==='captain'?t('حجوزات خطوطك','Reservations on your routes'):t('حجوزاتي','My bookings')}</h2>
-  {loading&&<p role="status">{t('جارٍ التحميل…','Loading…')}</p>}
+  {loading&&<AppSkeleton kind="bookings" count={3} label={t('جارٍ التحميل…','Loading…')}/>}
   {error&&<div role="alert"><p>{error}</p><button onClick={()=>{setError('');setLoading(true);setRefresh(v=>v+1);}}>{t('إعادة المحاولة','Retry')}</button></div>}
   {mode==='captain'&&<div className="cj-filter-tabs" role="group" aria-label={t('تصفية الحجوزات','Booking filters')}>
    {(['all','pending','confirmed'] as const).map(value=><button key={value} type="button" aria-pressed={filter===value} onClick={()=>setFilter(value)}>{value==='all'?t('الكل','All'):value==='pending'?t('قيد الانتظار','Pending'):t('المؤكدة','Confirmed')}</button>)}
