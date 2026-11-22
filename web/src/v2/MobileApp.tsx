@@ -32,6 +32,8 @@ import './brand-sky-flow.css';
 import './sekka-flow-redesign.css';
 import './brand-yellow-black.css';
 import './stagger-motion.css';
+import {useSekkaSliverScroll} from './sliverScroll';
+import './sliver-scroll.css';
 
 export default function MobileApp(){
  const p=usePreferences(),en=p.language==='en',t=(ar:string,english:string)=>en?english:ar;
@@ -50,6 +52,8 @@ export default function MobileApp(){
   return()=>document.removeEventListener('keydown',onKey);
  },[menuOpen]);
  const tab=route.tab;
+ // Unified native scroll surface for Rider, Captain, and Admin routes.
+ useSekkaSliverScroll(`${route.tab}:${'view' in route?route.view:''}:${bookingsSection}`,true);
  const adminScreen=route.tab==='admin'?route.view:62;
  const [captainApproved,setCaptainApproved]=useState(false);
  const captainStep=route.tab==='captain-onboarding'?route.view:35;
@@ -488,6 +492,18 @@ export default function MobileApp(){
  const fullScreenAuth=(tab==='login'&&(onboardingScreen===3||onboardingScreen===4))||(tab==='captain-onboarding'&&!userId);
  const fullScreenSearch=tab==='search'&&discoveryScreen===9;
  const showFloatingActions=ready&&!(tab==='home'&&!userId)&&tab!=='login'&&tab!=='captain-onboarding';
+ const sliverTitle=tab==='home'?t('الرئيسية','Home'):
+  tab==='search'?(discoveryScreen===9?t('دور على رحلة','Find a ride'):
+   discoveryScreen===10?t('الفلاتر','Filters'):
+   discoveryScreen===11?t('نتائج البحث','Search results'):t('تفاصيل الرحلة','Trip details')):
+  tab==='bookings'?(bookingsSection==='requests'?t('طلبات مشاويري','My trip requests'):t('حجوزاتي','My bookings')):
+  tab==='booking'?t('إكمال الحجز','Booking'):
+  tab==='notifications'?t('الإشعارات','Notifications'):
+  tab==='profile'?t('حسابي','My profile'):
+  tab==='routes'?(captainScreen===42?t('الكابتن','Captain'):
+   captainScreen===43?t('إنشاء خط','Create route'):t('إدارة الخطوط','Route management')):
+  tab==='admin'?t('لوحة الإدارة','Admin dashboard'):
+  tab==='captain-onboarding'?t('انضم ككابتن','Become a Captain'):t('سِكَّة','seKKa');
  const menuButton=<button type="button" ref={menuTrigger} className="sekka-fab-menu"
   aria-label={t('فتح القائمة','Open menu')} aria-expanded={menuOpen}
   aria-controls="sekka-side-menu" onClick={()=>setMenuOpen(true)}>
@@ -498,6 +514,7 @@ export default function MobileApp(){
  </button>;
  return <div className={`sekka-mobile sekka-tab-${tab}${fullScreenSearchFilters?' sekka-search-filters':''}${fullScreenAuth?' sekka-fullscreen-auth':''}${fullScreenSearch?' sekka-fullscreen-search':''}${userId&&tab==='captain-onboarding'?' sekka-captain-logged-in':''}${!userId&&tab==='home'?' sekka-guest-welcome':''}${captainLanding?' sekka-captain-home-shell':''}${showRiderTabs?' sekka-rider-navigation':''}${motionStep?(motionStep%2?' sk-motion-odd':' sk-motion-even'):''}`} dir={en?'ltr':'rtl'}>
   <a className="sekka-skip" href="#sekka-content">{t('تخطي للمحتوى','Skip to content')}</a>
+  {showFloatingActions&&<div className="sekka-sliver-pin" aria-hidden="true"><span>{sliverTitle}</span></div>}
   {showFloatingActions&&<nav className="sekka-floating-actions" aria-label={t('اختصارات سِكَّة','seKKa shortcuts')}>
    {menuButton}
    <button type="button" className="sekka-fab-bell" onClick={()=>navigate({tab:'notifications'})}
