@@ -44,8 +44,8 @@ for(const width of [320,390]){
   });
   await page.goto('/');
   await expect(page.locator('.sekka-rider-home.rh-home')).toBeVisible();
-  // Approved first screen: hero illustration + four truthful commute rows + quick actions.
-  await expect(page.locator('.rh-hero__artwork')).toHaveAttribute('src','/brand/sekka-rider-hero-scene.svg');
+  // Approved Urban Mobility home: real search card, four commute fields and quick actions.
+   await expect(page.locator('.rh-showcase-search__card')).toBeVisible();
   await expect(page.locator('.rh-journey__field')).toHaveCount(4);
   await expect(page.locator('.rh-journey__ribbon')).toBeVisible();
   await expect(page.locator('.rh-journey__fields')).toContainText(variant.language==='en'?'Maadi':'المعادي');
