@@ -266,7 +266,7 @@ export default function CaptainOnboarding(p: {
           {!p.production&&<Wordmark />}
         </header>
         <div className="b-stage-label">
-          {tr("انضم لسِكَّة")}<span dir="ltr">{publicScreen(p.screen) - 35} / 7</span>
+          {tr("انضم لPoNo")}<span dir="ltr">{publicScreen(p.screen) - 35} / 7</span>
         </div>
         <h1 className="b-title">{screenTitle(p.screen,language)}</h1>
         {p.error && (
@@ -285,7 +285,7 @@ export default function CaptainOnboarding(p: {
         {p.screen === 37 ? (
           <>
             <section className="d-box b-box">
-              <h2>{tr("شغّل خطك مع سِكَّة")}</h2>
+              <h2>{tr("شغّل خطك مع PoNo")}</h2>
               <p>
                 {tr("قدّم بياناتك وبيانات عربيتك للمراجعة، وبعد الاعتماد تقدر تحدد خطك ومواعيدك وعروض الاشتراك.")}</p>
               <ol className="c-steps">
@@ -586,7 +586,7 @@ export default function CaptainOnboarding(p: {
             )}
           </section>
         )}
-        <p className="w-footnote">{tr("سِكَّة — معاك في السِكَّة")}</p>
+        <p className="w-footnote">{tr("PoNo — معاك في PoNo")}</p>
       </main>
     </div>
   );

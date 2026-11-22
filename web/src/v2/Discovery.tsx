@@ -860,7 +860,7 @@ export default function Discovery(p: DiscoveryProps) {
       {!p.production && <p className="phase-preview-note">
         {demo
           ? tr("معاينة المرحلة الثانية · كل الأسماء والأسعار والحجوزات بيانات توضيحية فقط.")
-          : tr("سِكَّة · القاهرة والجيزة")}
+          : tr("PoNo · القاهرة والجيزة")}
       </p>}
       <main className={`phase-canvas d-canvas d-screen-${screen}`}>
         <header className="d-header">
@@ -1150,7 +1150,7 @@ export default function Discovery(p: DiscoveryProps) {
         )}
         {screen === 8 && !p.production && (
           <section className="d-box">
-            <h2>{tr("أهلًا بيك في سِكَّة")}</h2>
+            <h2>{tr("أهلًا بيك في PoNo")}</h2>
             <p>{tr("مشوارك المنتظم يبدأ من هنا.")}</p>
             {!p.production&&<div className="d-period-options d-home-quick-actions">
               <button onClick={() => nav(29)}>{tr("اشتراكاتي")}</button>
@@ -1506,7 +1506,7 @@ export default function Discovery(p: DiscoveryProps) {
             aria-modal="true"
             aria-labelledby="d-modal-title"
           >
-            <h2 id="d-modal-title">{tr("معاينة سِكَّة")}</h2>
+            <h2 id="d-modal-title">{tr("معاينة PoNo")}</h2>
             <p>{modal}</p>
             <button
               autoFocus

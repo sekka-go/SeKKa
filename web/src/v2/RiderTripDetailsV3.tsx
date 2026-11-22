@@ -19,7 +19,7 @@ export default function RiderTripDetailsV3({line,stops,pickup,dropoff,pickupPosi
  const outbound=line.outbound||'',returned=line.returnTime||'';
  return <section className="rd3" aria-labelledby="rd3-title">
   <header className="rd3__hero">
-   <span className="rd3__step">{t('سِكَّة / تفاصيل الرحلة','seKKa / Route details')}</span>
+   <span className="rd3__step">{t('PoNo / تفاصيل الرحلة','PoNo / Route details')}</span>
    <h2 id="rd3-title">{t('تفاصيل رحلتك','Review your ride')}</h2>
    <p>{t('كل التفاصيل المهمة قبل ما تكمّل الحجز.','Check the pickup, drop-off and seats before you continue.')}</p>
    <div className="rd3__hero-progress" aria-label={t('الخطوة الثالثة: التفاصيل','Step three: details')}>

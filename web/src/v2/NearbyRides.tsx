@@ -182,7 +182,7 @@ export default function NearbyRides({onSelect}:{onSelect?:(selection:LiveSelecti
   </div>
   {permissionDenied&&<div className="sekka-nearby__permission np4__notice" role="alert">
    <strong>{t('الموقع مقفول من المتصفح','Location is blocked')}</strong>
-   <p>{t('افتح أذونات الموقع لسِكّة من إعدادات المتصفح، أو كمّل بحثك بالمكان والوجهة من غير GPS.',
+   <p>{t('افتح أذونات الموقع لPoNo من إعدادات المتصفح، أو كمّل بحثك بالمكان والوجهة من غير GPS.',
     'Allow location in your browser settings, or search by your origin and destination without GPS.')}</p>
    <button type="button" onClick={findMe} disabled={permissionBusy}>
     {t('جرّب الموقع تاني','Try location again')}

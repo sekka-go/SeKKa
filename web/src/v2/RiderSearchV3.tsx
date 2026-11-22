@@ -38,7 +38,7 @@ export default function RiderSearchV3({origin,destination,originPlace,destinatio
  const dayCount=weekdays.length;
  return <section className="rs3" aria-labelledby="rs3-title">
   <header className="rs3__head">
-   <span className="rs3__eyebrow">{t('سِكَّة / دور على رحلة','seKKa / Find a ride')}</span>
+   <span className="rs3__eyebrow">{t('PoNo / دور على رحلة','PoNo / Find a ride')}</span>
    <h2 id="rs3-title">{t('مشوارك يبدأ منين؟','Where does your ride begin?')}</h2>
    <p>{t('اختار مكانك ووجهتك، وهنعرض الخطوط المنشورة فعلًا.','Choose your places and see actual published routes.')}</p>
    <div className="rs3__progress" aria-label={t('الخطوة الأولى: البحث','Step one: search')}>

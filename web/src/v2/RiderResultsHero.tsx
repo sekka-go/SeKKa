@@ -6,7 +6,7 @@ export default function RiderResultsHero({origin,destination,outbound,returnTime
 }){
  const {language}=usePreferences(),en=language==='en',t=(ar:string,english:string)=>en?english:ar;
  return <section className="rr3-hero" aria-label={t('ملخص بحثك','Your search')}>
-  <div className="rr3-hero__heading"><span>{t('سِكَّة / نتائج البحث','seKKa / Search results')}</span>
+  <div className="rr3-hero__heading"><span>{t('PoNo / نتائج البحث','PoNo / Search results')}</span>
    <h2>{t('الرحلات اللي على طريقك','Rides along your route')}</h2>
   </div>
   <div className="rr3-hero__progress" aria-label={t('الخطوة الثانية: النتائج','Step two: results')}>
