@@ -2,6 +2,7 @@ import {useEffect,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
 import {MAX_SEATS_PER_RIDER} from './reservations';
+import {useStaggeredReveal} from './staggerMotion';
 type RequestDirection='outbound'|'return'|'round_trip';
 type RequestRow={id:string;rider_id:string;origin_area_id:number;destination_area_id:number;outbound_time:string|null;return_time:string|null;direction:RequestDirection;period:string;seats:number;status:string};
 type OfferRow={id:string;request_id:string;captain_id:string;route_id:string;status:string};
@@ -14,6 +15,7 @@ const validSeats=(count:number)=>Number.isInteger(count)&&count>=1&&count<=MAX_S
 
 export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{mode:'rider'|'captain';search?:Search;onSignIn?:()=>void;compact?:boolean}){
  const {language}=usePreferences(),en=language==='en',t=(ar:string,english:string)=>en?english:ar;
+ const revealRequest=useStaggeredReveal();
  const [uid,setUid]=useState(''),[requests,setRequests]=useState<RequestRow[]>([]),[offers,setOffers]=useState<OfferRow[]>([]),[areas,setAreas]=useState<Area[]>([]),[routes,setRoutes]=useState<RouteRow[]>([]);
  const [seats,setSeats]=useState(1),[routeSelection,setRouteSelection]=useState<Record<string,string>>({});
  const [editing,setEditing]=useState<RequestEdit|null>(null);
@@ -176,7 +178,7 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
  const visible=requests.filter(r=>mode==='captain'?r.status==='open':r.rider_id===uid);
  const active=visible.filter(r=>r.status==='open');
  const history=mode==='rider'?visible.filter(r=>r.status!=='open'):[];
- const requestList=(items:RequestRow[])=><ul className="sekka-request-list">{items.map(r=><li className="sekka-request-card" key={r.id}>
+ const requestList=(items:RequestRow[])=><ul className="sekka-request-list">{items.map(r=><li ref={revealRequest} className="sekka-request-card" key={r.id}>
    <strong className="sekka-request-card__route">{area(r.origin_area_id)} ← {area(r.destination_area_id)}</strong>
    {' · '}{r.direction==='round_trip'?t('ذهاب وعودة','Round trip'):r.direction==='return'?t('عودة فقط','Return only'):t('ذهاب فقط','Outbound only')}
    {r.outbound_time&&' · '+t('الذهاب ','Outbound ')+r.outbound_time.slice(0,5)}
