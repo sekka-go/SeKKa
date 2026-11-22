@@ -1,0 +1,55 @@
+import {expect,test} from '@playwright/test';
+
+// The reference is a settings/menu video, not a new authentication flow.
+// Check the actual public shell with its existing language/theme controls.
+for(const width of [320,390]){
+ test('video-style icon tiles and truly black menu in Arabic '+width+'px',async({page})=>{
+  await page.setViewportSize({width,height:width===320?700:844});
+  await page.addInitScript(()=>{
+   localStorage.setItem('language_preference','ar');
+   localStorage.setItem('theme_preference','dark');
+   sessionStorage.setItem('sekka.launch.seen.v1','1');
+  });
+  await page.goto('/?tab=profile');
+  await expect(page.locator('.sekka-mobile')).toHaveCSS('background-color','rgb(5, 7, 11)');
+  await expect(page.locator('.sekka-mobile-content')).toHaveCSS('background-color','rgb(5, 7, 11)');
+  await page.getByRole('button',{name:'فتح القائمة'}).click();
+  const drawer=page.getByRole('dialog',{name:'القائمة الرئيسية'});
+  await expect(drawer).toBeVisible();
+  await expect(drawer.locator('.sekka-side-drawer__wordmark')).toHaveText('سِكَّة');
+  const rows=drawer.locator('button.sekka-menu-row');
+  expect(await rows.count()).toBeGreaterThanOrEqual(5);
+  await expect(rows.first().locator('.sekka-menu-row__icon svg')).toBeVisible();
+  for(const label of ['الرئيسية','حسابي','الإشعارات']){
+   await expect(drawer.getByRole('button',{name:label,exact:true}).locator('.sekka-menu-row__icon svg')).toBeVisible();
+  }
+  const active=drawer.getByRole('button',{name:'حسابي'});
+  await expect(active).toHaveAttribute('aria-current','page');
+  await expect(active.locator('.sekka-menu-row__icon')).toHaveCSS('border-top-color','rgb(146, 227, 250)');
+  await expect(drawer.locator('.sekka-preference-row')).toHaveCount(2);
+  await expect(drawer.locator('.sekka-preference-row__details select')).toHaveCount(2);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
+ });
+}
+
+test('dark black theme can be changed to light without losing language or navigation',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.addInitScript(()=>{
+  localStorage.setItem('language_preference','ar');
+  localStorage.setItem('theme_preference','dark');
+  sessionStorage.setItem('sekka.launch.seen.v1','1');
+ });
+ await page.goto('/?tab=profile');
+ await page.getByRole('button',{name:'فتح القائمة'}).click();
+ const drawer=page.getByRole('dialog',{name:'القائمة الرئيسية'});
+ const appearance=drawer.locator('#sekka-appearance-pref');
+ await expect(appearance).toHaveValue('dark');
+ await appearance.selectOption('light');
+ await expect(page.locator('html')).toHaveAttribute('data-theme','light');
+ await expect(page.locator('html')).toHaveAttribute('dir','rtl');
+ await expect(page.locator('.sekka-mobile')).not.toHaveCSS('background-color','rgb(5, 7, 11)');
+ await drawer.locator('#sekka-language-pref').selectOption('en');
+ await expect(page.locator('html')).toHaveAttribute('dir','ltr');
+ await expect(drawer.getByRole('button',{name:'My profile'})).toBeVisible();
+ await expect(page.locator('.sekka-mobile .sekka-side-drawer .sekka-menu-row__icon').first()).toBeVisible();
+});
