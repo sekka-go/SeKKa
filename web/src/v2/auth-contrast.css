@@ -1,0 +1,33 @@
+/* Auth-screen contrast repair for the live mobile app only.
+   Use the approved seKKa cyan/sky/yellow palette with legible foreground.
+   Keep the developer gallery, OAuth handler and layout untouched. */
+.sekka-mobile .sekka-entry-login .phase-google-auth .sekka-entry-login__secure{
+ background:#EAF9FC!important;
+ border-color:#B6E7F2!important;
+ color:#102A43!important;
+}
+.sekka-mobile .sekka-entry-login .phase-google-auth .sekka-entry-login__secure>span{
+ background:#DFF9FC!important;
+ color:#086B91!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-entry-login .phase-google-auth .sekka-entry-login__secure{
+ background:#20465C!important;
+ border-color:#487284!important;
+ color:#F4FBFF!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-entry-login .phase-google-auth .sekka-entry-login__secure>span{
+ background:#DFF9FC!important;
+ color:#086B91!important;
+}
+html:not([data-theme="dark"]) .sekka-mobile .sekka-entry-login .phase-google-auth button.phase-primary{
+ background:linear-gradient(110deg,#10CBDC,#069AE8)!important;
+ color:#08283A!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-entry-login .phase-google-auth button.phase-primary{
+ background:#FFCD38!important;
+ color:#111111!important;
+}
+.sekka-mobile .sekka-entry-login .phase-google-auth button.phase-primary>svg{
+ color:inherit!important;
+ stroke:currentColor!important;
+}
