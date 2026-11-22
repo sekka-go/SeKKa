@@ -87,6 +87,12 @@ html[data-theme="dark"] .sekka-mobile .rf3__categories button:not([aria-pressed=
 .sekka-mobile .rf3__choices button[aria-pressed="true"]{
  background:#FFD02A!important;color:#17253A!important;border-color:#DBAE12!important;
 }
+/* Legacy dark selectors include html[data-theme] and otherwise beat the
+   shared rule above, leaving unreadable white lettering on yellow. */
+html[data-theme="dark"] .sekka-mobile .rf3__categories button[aria-pressed="true"],
+html[data-theme="dark"] .sekka-mobile .rf3__choices button[aria-pressed="true"]{
+ background:#FFD02A!important;color:#17253A!important;border-color:#DBAE12!important;
+}
 .sekka-mobile .rf3__categories button[aria-pressed="true"] span,
 html[data-theme="dark"] .sekka-mobile .rf3__categories button[aria-pressed="true"] span{
  color:#17253A!important;
