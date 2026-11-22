@@ -138,6 +138,10 @@ html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation .rh-tabs button:not
 html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation .rh-tabs .rh-tabs__primary .rh-tabs__icon{
   border-color:#193449!important;
 }
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation .rh-tabs__primary .rh-tabs__name{
+  color:#F4FBFF!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-search-filters{padding-bottom:0!important}
 .sekka-mobile.sekka-rider-navigation.sekka-search-filters .rh-tabs{display:none!important}
 @media(max-width:359px){
   .sekka-mobile.sekka-rider-navigation > .sekka-floating-actions{
