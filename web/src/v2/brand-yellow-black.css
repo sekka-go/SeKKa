@@ -595,3 +595,32 @@ html[data-theme="dark"] .sekka-mobile .d-canvas:is(.d-screen-9,.d-screen-10,.d-s
  .sekka-mobile .rs3__swap,
  .sekka-mobile .rs3__swap svg{transition:none!important}
 }
+
+
+/* Full-bleed production discovery screens: remove the old 4.4% phase-canvas
+   side margins; inner cards retain their own purposeful 14px spacing. */
+.sekka-mobile .discovery-stage > .d-canvas > :is(.rs3,.rf3,.rd3,.rr3-hero){
+ box-sizing:border-box!important;
+ margin-inline:0!important;
+ margin-left:0!important;
+ margin-right:0!important;
+ width:100%!important;
+ max-width:none!important;
+}
+/* Blue stage headers connect to the actual screen edge. */
+.sekka-mobile .discovery-stage > .d-canvas > :is(.rs3,.rf3,.rd3)
+ > :is(.rs3__head,.rf3__hero,.rd3__hero){
+ width:calc(100% + 28px)!important;
+ max-width:none!important;
+ margin-inline:-14px!important;
+ margin-block-start:0!important;
+ border-top-left-radius:0!important;
+ border-top-right-radius:0!important;
+}
+.sekka-mobile .discovery-stage > .d-canvas > .rr3-hero{
+ border-top-left-radius:0!important;border-top-right-radius:0!important;
+}
+.sekka-mobile .discovery-stage > .d-canvas:before,
+.sekka-mobile .discovery-stage > .d-canvas:after{
+ display:none!important;
+}
