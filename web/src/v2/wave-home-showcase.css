@@ -165,6 +165,31 @@ html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation.sekka-tab-home > .s
  border-radius:27px!important;padding:26px 15px 14px!important;
 }
 .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-home__steps{margin-top:12px!important}
+/* The reference uses cool grey inactive glyphs and a turquoise current
+   destination, not the older olive/blue-grey tab accents. The central yellow
+   Search action and the approved floating masthead KEEP their geometry. */
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-tabs button:not(.rh-tabs__primary){
+ color:#8793A8!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-tabs button[aria-current="page"]:not(.rh-tabs__primary){
+ color:#009CAF!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-tabs button[aria-current="page"]:not(.rh-tabs__primary) .rh-tabs__icon{
+ color:#009CAF!important;background:#E7F8FC!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-tabs .rh-tabs__primary .rh-tabs__icon,
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-tabs .rh-tabs__primary[aria-current="page"] .rh-tabs__icon{
+ background:var(--showcase-gold)!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-tabs button:not(.rh-tabs__primary){
+ color:#C0D9E6!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-tabs button[aria-current="page"]:not(.rh-tabs__primary){
+ color:#68DFEF!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-tabs button[aria-current="page"]:not(.rh-tabs__primary) .rh-tabs__icon{
+ color:#68DFEF!important;background:#20475D!important;
+}
 html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-home{
  background:#0D2334!important;color:#F5FBFF!important;
  --rh-bg:#0D2334!important;--rh-card:#17384D!important;
