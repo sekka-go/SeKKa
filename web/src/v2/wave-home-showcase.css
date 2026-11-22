@@ -1,0 +1,182 @@
+/* 2026-11-22: owner's cyan-wave reference applied to REAL Rider home.
+ * Decorative artwork is CSS/SVG only. Data, OAuth, booking, request flow and
+ * existing raised masthead / central Search dock stay functional and unchanged.
+ */
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-home{
+ --rh-ink:#10344F!important;--rh-muted:#627F90!important;
+ --rh-bg:#F4FBFF!important;--rh-card:#FFFFFF!important;
+ background:#F4FBFF!important;color:#10344F!important;
+ padding:0 14px calc(35px + env(safe-area-inset-bottom,0px))!important;
+ max-width:510px!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-hero.rh-showcase-hero{
+ min-height:349px!important;height:auto!important;margin:0 -14px!important;
+ position:relative!important;border-radius:0!important;isolation:isolate!important;
+ background:linear-gradient(127deg,#06CDEC 0%,#04BBF2 42%,#0786F3 100%)!important;
+ overflow:hidden!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-hero.rh-showcase-hero::before{
+ content:none!important;display:none!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-hero__top-wave{
+ position:absolute;top:0;left:0;width:100%;height:65%;z-index:0;
+ pointer-events:none;transform:scaleX(1.03);transform-origin:center;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-hero .rh-hero__copy{
+ position:relative!important;z-index:2!important;width:100%!important;
+ min-height:340px!important;
+ padding:calc(128px + env(safe-area-inset-top,0px)) 25px 65px!important;
+ margin:0!important;display:flex!important;flex-direction:column!important;
+ align-items:flex-start!important;justify-content:center!important;text-align:start!important;
+ background:transparent!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-hero .rh-hero__eyebrow{
+ display:block!important;width:100%!important;
+ font:800 13px/1.4 Tajawal,Tahoma,sans-serif!important;
+ color:#DBFCFF!important;margin:0 0 5px!important;
+ opacity:1!important;letter-spacing:0!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-hero h2{
+ font:900 clamp(30px,8.2vw,38px)/1.25 Tajawal,Tahoma,sans-serif!important;
+ color:#FFFFFF!important;text-shadow:0 2px 10px #045EAD33!important;
+ margin:0!important;text-wrap:balance;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-hero .rh-hero__copy p{
+ font:650 clamp(16px,4.3vw,20px)/1.5 Tajawal,Tahoma,sans-serif!important;
+ color:#FFFFFF!important;max-width:100%!important;
+ margin-top:5px!important;opacity:.96!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-hero__bottom-wave{
+ position:absolute!important;bottom:-1px!important;top:auto!important;left:0!important;
+ display:block!important;width:100%!important;height:102px!important;
+ z-index:3!important;pointer-events:none!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-search{
+ position:relative;z-index:2;margin:5px 0 12px;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-search h1{
+ font:900 clamp(30px,8.4vw,38px)/1.35 Tajawal,Tahoma,sans-serif!important;
+ color:#102E49!important;text-align:start!important;
+ margin:0 2px 13px!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-search__card{
+ appearance:none;display:flex;align-items:center;justify-content:space-between;
+ gap:17px;width:100%;height:auto;min-height:142px!important;
+ padding:18px 21px!important;
+ border:1px solid #E6F1F8!important;border-radius:32px!important;
+ background:#FFFFFF!important;box-shadow:0 13px 34px #0F63A41A!important;
+ color:#112A43!important;cursor:pointer;text-align:start;
+ transition:transform .2s ease,box-shadow .2s ease;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-search__card:active{
+ transform:translateY(2px);box-shadow:0 4px 14px #0F63A41B!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-search__icon{
+ position:relative;display:grid;place-items:center;
+ order:2;flex:none;width:100px;height:100px;
+ background:radial-gradient(circle at 40% 33%,#D9F9FF,#ACEDF7);
+ border-radius:999px;color:#039AC5;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-search__icon>svg{
+ display:block;width:67px;height:67px;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-search__arrow{
+ position:absolute;bottom:-8px;inset-inline-end:-8px;
+ display:grid;place-items:center;width:46px;height:46px;
+ border-radius:999px;background:#FFCC24;
+ color:#102A3F;box-shadow:0 3px 9px #0D629D23;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-search__label{
+ order:1;flex:1;min-width:0;
+ font:900 clamp(22px,6.2vw,28px)/1.35 Tajawal,Tahoma,sans-serif!important;
+ color:#102A43!important;text-align:start!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-routes{
+ margin:20px 0 19px!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-routes__heading{
+ display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+ margin:0 0 11px!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-routes__heading h2{
+ font:900 clamp(17px,4.7vw,20px)/1.3 Tajawal,Tahoma,sans-serif!important;
+ color:#102A43!important;min-width:0;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-routes__heading button{
+ border:0;background:transparent;color:#008AAC;
+ padding:6px 3px;font:850 12px Tajawal,Tahoma,sans-serif;white-space:nowrap;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-routes__list{
+ display:grid;gap:10px;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-ride{
+ display:flex;align-items:center;gap:10px;min-width:0;width:100%;
+ padding:12px 13px!important;border:1px solid #E5F1F8!important;
+ border-radius:23px!important;background:#FFFFFF!important;color:#112A43!important;
+ box-shadow:0 7px 18px #0F63A414!important;text-align:start;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-ride:disabled{
+ opacity:.66;cursor:progress;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-ride__vehicle{
+ flex:none;display:grid;place-items:center;width:59px;height:59px;
+ background:#D8F8FC;border-radius:17px;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-ride__vehicle svg{width:45px;height:40px}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-ride__details{
+ display:flex;flex-direction:column;gap:5px;flex:1;min-width:0;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-ride__details strong{
+ font:900 14px/1.35 Tajawal,Tahoma,sans-serif!important;
+ overflow-wrap:anywhere;max-width:100%;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-ride__details small{
+ font:700 11px/1.5 Tajawal,Tahoma,sans-serif!important;
+ color:#627D8D!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-ride__price{
+ flex:none;color:#0096B4!important;
+ font:900 clamp(13px,3.7vw,16px)/1.2 Tajawal,Tahoma,sans-serif!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-routes__message{
+ margin:0!important;padding:12px 15px;border:1px solid #E3EFF7;
+ border-radius:19px;background:#FFFFFF;
+ color:#62778A!important;font:750 13px/1.55 Tajawal,Tahoma,sans-serif;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-journey{
+ margin:17px 0 16px!important;
+ border-radius:27px!important;padding:26px 15px 14px!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-home__steps{margin-top:12px!important}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-home{
+ background:#0D2334!important;color:#F5FBFF!important;
+ --rh-bg:#0D2334!important;--rh-card:#17384D!important;
+ --rh-ink:#F5FBFF!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-hero__bottom-wave path:last-child{fill:#0D2334!important}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-search h1,
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-routes__heading h2{
+ color:#F5FBFF!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation.sekka-tab-home :is(.rh-showcase-search__card,.rh-showcase-ride,.rh-showcase-routes__message){
+ background:#193C52!important;border-color:#36617A!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation.sekka-tab-home :is(.rh-showcase-search__label,.rh-showcase-ride__details strong){
+ color:#F5FBFF!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-ride__details small{
+ color:#B5D8E8!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-routes__message{color:#D0E7F3!important}
+@media(max-width:359px){
+ .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-hero.rh-showcase-hero{min-height:334px!important}
+ .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-hero .rh-hero__copy{min-height:332px!important;padding-inline:19px!important}
+ .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-search__card{min-height:122px!important;padding:13px 17px!important}
+ .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-search__icon{width:80px;height:80px}
+ .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-search__icon>svg{width:55px;height:55px}
+ .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-search__label{font-size:21px!important}
+ .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-search__arrow{width:41px;height:41px}
+}
+@media(prefers-reduced-motion:reduce){
+ .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-search__card{transition:none!important}
+}
