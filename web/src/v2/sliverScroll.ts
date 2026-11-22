@@ -38,7 +38,6 @@ export function useSekkaSliverScroll(pageKey:string,enabled:boolean){
   let frame=0;
   let initialScroll=0;
   let startTouchY:number|null=null;
-  let lastScroll=0;
    let observer:MutationObserver|null=null;
   const reset=()=>{
    if(hero)hero.removeAttribute('data-sekka-scroll-hero');
@@ -83,9 +82,6 @@ export function useSekkaSliverScroll(pageKey:string,enabled:boolean){
    shell.style.setProperty('--sekka-scroll-scale',(1-.055*progress).toFixed(3));
    shell.dataset.sekkaSliverActive=hero?'true':'false';
    shell.dataset.sekkaScrolled=pinned?'true':'false';
-   const scrollingNow=source>lastScroll;
-   if(scrollingNow&&distance>4&&startTouchY===null)enableScroll=true;
-   lastScroll=source;
   };
   const schedule=()=>{
    if(!frame)frame=window.requestAnimationFrame(update);
