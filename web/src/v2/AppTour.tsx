@@ -109,7 +109,7 @@ export default function AppTour({page,role,actor,language,active,replayToken}:Pr
     const width=Math.min(360,Math.max(240,viewportW-24));
     const safeLeft=Math.min(Math.max(12,bounds.left+(bounds.width-width)/2),
      Math.max(12,viewportW-width-12));
-    const cardHeight=226;
+    const cardHeight=panel.current?.offsetHeight||270;
     const below=bounds.top+bounds.height+15;
     const above=bounds.top-cardHeight-15;
     const top=below+cardHeight<=viewportH-12?below:
@@ -134,10 +134,10 @@ export default function AppTour({page,role,actor,language,active,replayToken}:Pr
    window.removeEventListener('scroll',update,true);
    window.visualViewport?.removeEventListener('resize',update);
   };
- },[tour?.storageKey,tour?.index,current]);
+ },[tour?.storageKey,tour?.index,current,Boolean(rect)]);
  useEffect(()=>{
   if(tour&&panel.current)panel.current.focus({preventScroll:true});
- },[tour?.storageKey,tour?.index]);
+ },[tour?.storageKey,tour?.index,Boolean(rect)]);
  const finish=(disableAll=false)=>{
   if(!tour)return;
   writeStorage(tour.storageKey);
@@ -165,9 +165,9 @@ export default function AppTour({page,role,actor,language,active,replayToken}:Pr
     .filter(matchVisible);
    if(focusable.length<2)return;
    const first=focusable[0],last=focusable[focusable.length-1];
-   if(event.shiftKey&&document.activeElement===first){
+   if(event.shiftKey&&(document.activeElement===first||document.activeElement===panel.current)){
     event.preventDefault();last.focus();
-   }else if(!event.shiftKey&&document.activeElement===last){
+   }else if(!event.shiftKey&&(document.activeElement===last||document.activeElement===panel.current)){
     event.preventDefault();first.focus();
    }
   };
