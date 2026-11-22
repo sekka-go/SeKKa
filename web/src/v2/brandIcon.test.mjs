@@ -45,16 +45,27 @@ for(const size of [192,512]){
   assert.notDeepEqual(data,readFileSync(new URL(`../../public/brand/sekka-go-${size}.png`,import.meta.url)));
  });
 }
-test('PWA prefers new sky icon while legacy PNG icons remain compatibility fallbacks',()=>{
+test('PWA installs current Urban Mobility S mark while archived branding stays separate',()=>{
  const manifest=JSON.parse(readFileSync(new URL('../../public/manifest.webmanifest',import.meta.url),'utf8'));
  const index=readFileSync(new URL('../../index.html',import.meta.url),'utf8');
  const splash=readFileSync(new URL('./LaunchSplash.tsx',import.meta.url),'utf8');
  assert.equal(manifest.name,'Sekka Go');
  assert.deepEqual(manifest.icons.map(x=>x.src),[
-  '/brand/sekka-sky-mark.svg','/brand/sekka-go-road-192.png','/brand/sekka-go-road-512.png'
+  '/brand/sekka-s-icon-192.png','/brand/sekka-s-icon-512.png','/brand/sekka-s-icon.svg'
  ]);
- assert.match(index,/sekka-sky-mark\.svg/);
- assert.match(index,/sekka-go-road-192\.png/);
+ assert.match(index,/sekka-s-icon-192\.png/);
+ assert.doesNotMatch(index,/sekka-go-road-192\.png/);
+ assert.doesNotMatch(index,/sekka-sky-mark\.svg/);
+ assert.equal(manifest.theme_color,'#17253A');
+ const svg=readFileSync(new URL('../../public/brand/sekka-s-icon.svg',import.meta.url),'utf8');
+ assert.match(svg,/stop-color="#1753E8"/);
+ assert.match(svg,/stop-color="#17253A"/);
+ for(const size of [192,512]){
+  const bytes=readFileSync(new URL(`../../public/brand/sekka-s-icon-${size}.png`,import.meta.url));
+  assert.equal(bytes.toString('hex',0,8),'89504e470d0a1a0a');
+  assert.equal(bytes.readUInt32BE(16),size);
+  assert.equal(bytes.readUInt32BE(20),size);
+ }
  assert.match(splash,/approvedSplashSceneUri/);
  assert.match(splash,/sekka-launch__motion/);
  assert.match(splash,/sekka-launch__lane-cue--near/);
