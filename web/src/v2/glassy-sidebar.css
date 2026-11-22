@@ -65,6 +65,14 @@ html[data-theme="dark"] .sekka-mobile .sekka-side-drawer.sekka-glass-panel{
 .sekka-mobile[dir="ltr"] .sekka-side-drawer.sekka-glass-panel{
  left:11px!important;right:auto!important;inset-inline-start:11px!important;
 }
+/* Highest-specificity dark close control: old black-ice rules must not
+ * replace this glass circle with the legacy opaque square. */
+html[data-theme="dark"] .sekka-mobile .sekka-side-drawer.sekka-glass-panel .sekka-side-drawer__header > button.sekka-side-drawer__close{
+ background:rgba(205,238,255,.15)!important;
+ border-color:rgba(195,232,255,.35)!important;
+ color:#E6F8FF!important;
+ border-radius:50%!important;
+}
 .sekka-mobile .sekka-glass-panel .sekka-side-drawer__header{
  display:flex!important;flex-direction:row!important;align-items:center!important;
  gap:8px!important;flex:none!important;
