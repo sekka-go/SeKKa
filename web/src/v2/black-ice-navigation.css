@@ -283,6 +283,19 @@ html[data-theme="dark"] .sekka-mobile .sekka-side-drawer__close{
 }
 /* Search, filters and trip details use the same black foundation.
  * Only their painted hero receives ice-blue gradients; fields stay legible. */
+/* The logged-out landing and Google-entry canvases also use the black
+ * base; a user who has not signed in must not see the old navy/cream dark. */
+html[data-theme="dark"] .sekka-mobile:is(.sekka-guest-welcome,.sekka-tab-login) > .sekka-mobile-content > .phase-one-stage{
+ --phase-bg:#05070B!important;--phase-card:#121A26!important;
+ --phase-text:#F3FAFF!important;--phase-muted:#B8CBD8!important;
+ background:#05070B!important;color:#F3FAFF!important;
+}
+html[data-theme="dark"] .sekka-mobile:is(.sekka-guest-welcome,.sekka-tab-login) .phase-screen-2{
+ background:radial-gradient(ellipse at 100% 0%,#A4E8FF2B 0,transparent 42%),#05070B!important;
+}
+html[data-theme="dark"] .sekka-mobile:is(.sekka-guest-welcome,.sekka-tab-login) .phase-screen-2 .phase-top-wave{
+ background:linear-gradient(128deg,#0D2A40,#B2E9FB)!important;
+}
 html[data-theme="dark"] .sekka-mobile .discovery-stage > .d-canvas,
 html[data-theme="dark"] .sekka-mobile .d-canvas:is(.d-screen-9,.d-screen-10,.d-screen-11,.d-screen-12),
 html[data-theme="dark"] .sekka-mobile .rs3,
