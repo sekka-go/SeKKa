@@ -15,7 +15,7 @@
 /* The visible dock is its own composited layer so icons never stretch. */
 .sekka-mobile.sekka-rider-navigation .rh-tabs__inner::before {
  content:""!important;display:block!important;
- position:absolute;inset:0;z-index:-1;
+ position:absolute;inset:0;z-index:0;
  border-radius:30px!important;
  border:1px solid #DCECF5!important;
  background:linear-gradient(145deg,rgba(255,255,255,.97),rgba(247,252,255,.94))!important;
