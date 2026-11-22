@@ -135,6 +135,62 @@
  border-radius:14px!important;
  background:#FFFFFF!important;color:#0A7399!important;border-color:#D0E6F3!important;
 }
+/* Video-style moon switch; it is wired to the existing preference model,
+ * not an independent visual-only toggle. */
+.sekka-mobile .sekka-side-drawer .sekka-theme-quick-row{
+ display:flex;align-items:center;gap:11px;
+ min-height:71px;padding:10px 12px;
+ border:1px solid var(--sekka-menu-row-border)!important;
+ border-radius:17px;background:var(--sekka-menu-row-surface)!important;
+}
+.sekka-mobile .sekka-side-drawer .sekka-theme-quick-row__copy{
+ display:flex;flex:1;min-width:0;flex-direction:column;gap:4px;
+}
+.sekka-mobile .sekka-side-drawer .sekka-theme-quick-row__copy strong{
+ font:900 13px/1.3 Tajawal,Tahoma,sans-serif;color:var(--sekka-menu-row-text)!important;
+}
+.sekka-mobile .sekka-side-drawer .sekka-theme-quick-row__copy small{
+ font:700 11px/1.3 Tajawal,Tahoma,sans-serif;color:var(--sekka-menu-muted)!important;
+}
+.sekka-mobile .sekka-side-drawer nav button.sekka-theme-quick-switch{
+ position:relative;display:block!important;flex:0 0 59px;
+ box-sizing:border-box!important;width:59px!important;
+ min-width:59px!important;height:34px!important;min-height:34px!important;
+ padding:0!important;border:1px solid #AAC5D9!important;
+ border-radius:999px!important;background:#DCEAF4!important;
+ box-shadow:inset 0 1px 4px #17334A2C!important;
+ transition:background-color .2s ease,border-color .2s ease!important;
+}
+.sekka-mobile .sekka-side-drawer .sekka-theme-quick-switch__thumb{
+ position:absolute;inset-block-start:3px;inset-inline-start:3px;
+ width:26px;height:26px;border-radius:50%;
+ background:#FFFFFF!important;
+ box-shadow:0 2px 5px #0002;
+ transition:inset-inline-start .18s ease;
+}
+.sekka-mobile .sekka-side-drawer .sekka-theme-quick-switch[aria-checked="true"]{
+ border-color:#8DDDF9!important;
+ background:linear-gradient(90deg,#167CB9,#74BCE0)!important;
+}
+.sekka-mobile .sekka-side-drawer .sekka-theme-quick-switch[aria-checked="true"] .sekka-theme-quick-switch__thumb{
+ inset-inline-start:29px!important;
+}
+.sekka-mobile .sekka-side-drawer .sekka-theme-quick-switch[aria-checked="true"] .sekka-theme-quick-switch__thumb::after{
+ content:"☾";display:block;color:#187BA5;
+ font:900 20px/26px Tajawal,Tahoma,sans-serif;text-align:center;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-side-drawer .sekka-theme-quick-row{
+ background:#111722!important;border-color:#253345!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-side-drawer nav button.sekka-theme-quick-switch{
+ box-shadow:inset 0 0 6px #0005!important;
+}
+@media(prefers-reduced-motion:reduce){
+ .sekka-mobile .sekka-side-drawer .sekka-theme-quick-switch__thumb,
+ .sekka-mobile .sekka-side-drawer nav button.sekka-theme-quick-switch{
+  transition:none!important;
+ }
+}
 /* Bottom tabs copy the video icon treatment: regular line icons on tiny
  * inset rounded tiles, brighter outlined active tile; search stays seKKa
  * yellow and visually raised as approved previously. */
