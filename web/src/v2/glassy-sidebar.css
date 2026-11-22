@@ -31,8 +31,8 @@
  border:1px solid rgba(255,255,255,.76)!important;
  border-radius:31px!important;
  background:
-  radial-gradient(ellipse 100% 64% at 7% 104%,rgba(60,174,227,.16),transparent 80%),
-  linear-gradient(180deg,#FFFFFF 0%,#F9FCFF 30%,#F1F8FF 66%,#EAF3FF 100%)!important;
+  radial-gradient(ellipse 100% 64% at 7% 104%,rgba(60,174,227,.24),transparent 80%),
+  linear-gradient(180deg,rgba(255,255,255,.76) 0%,rgba(249,252,255,.79) 30%,rgba(241,248,255,.72) 66%,rgba(234,243,255,.72) 100%)!important;
  backdrop-filter:blur(28px) saturate(1.42)!important;
  -webkit-backdrop-filter:blur(28px) saturate(1.42)!important;
  color:#153850!important;
@@ -216,6 +216,15 @@ html[data-theme="dark"] .sekka-mobile .sekka-glass-panel nav button.sekka-menu-r
 }
 .sekka-mobile .sekka-glass-panel nav button.sekka-menu-row[aria-current="page"] .sekka-menu-row__icon{
  background:transparent!important;border:none!important;color:#058CC0!important;
+}
+/* Readable outline glyphs on the bright active pill in both themes. */
+.sekka-mobile .sekka-side-drawer.sekka-glass-panel nav button.sekka-menu-row[aria-current="page"] .sekka-menu-row__icon,
+.sekka-mobile .sekka-side-drawer.sekka-glass-panel nav button.sekka-menu-row[aria-current="page"] .sekka-menu-row__icon svg{
+ color:#057EA9!important;stroke:#057EA9!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-side-drawer.sekka-glass-panel nav button.sekka-menu-row[aria-current="page"] .sekka-menu-row__icon,
+html[data-theme="dark"] .sekka-mobile .sekka-side-drawer.sekka-glass-panel nav button.sekka-menu-row[aria-current="page"] .sekka-menu-row__icon svg{
+ color:#D7F8FF!important;stroke:#D7F8FF!important;
 }
 .sekka-mobile .sekka-glass-panel nav button.sekka-menu-row::after{display:none!important;content:none!important}
 .sekka-mobile .sekka-glass-panel .sekka-menu-row__label{
