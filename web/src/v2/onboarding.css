@@ -1134,3 +1134,37 @@
 }
 .phase-screen-4 .phase-google-secondary:focus-visible {outline:3px solid var(--phase-accent);outline-offset:2px;}
 .phase-screen-4 .phase-google-config-error {position:absolute;top:97%;left:5%;width:90%;font-size:2.5cqw;}
+
+
+/* Cached public onboarding imagery: only the crop window shimmers while
+   a genuinely uncached image downloads. The exact reference geometry stays. */
+.reference-art[data-image-state="loading"]::after{
+ content:"";position:absolute;inset:0;z-index:2;
+ border-radius:inherit;pointer-events:none;
+ background:linear-gradient(105deg,#BEE8F2 12%,#ECFAFF 39%,#BEE8F2 67%);
+ background-size:230% 100%;
+ animation:sk-public-image-shimmer 1.65s linear infinite;
+}
+.reference-art[data-image-state="error"]{
+ background:linear-gradient(145deg,#C5EAF3,#F3FBFE);
+}
+.reference-art[data-image-state="error"]>img{opacity:0}
+@keyframes sk-public-image-shimmer{
+ from{background-position:170% 0}
+ to{background-position:-105% 0}
+}
+html[data-theme="dark"] .reference-art[data-image-state="loading"]::after{
+ background:linear-gradient(105deg,#29485E 12%,#507185 39%,#29485E 67%);
+ background-size:230% 100%;
+}
+html[data-theme="dark"] .reference-art[data-image-state="error"]{
+ background:linear-gradient(145deg,#21394E,#304D61);
+}
+@media(prefers-reduced-motion:reduce){
+ .reference-art[data-image-state="loading"]::after{
+  animation:none!important;background:#D9EBF2!important;
+ }
+ html[data-theme="dark"] .reference-art[data-image-state="loading"]::after{
+  background:#36566B!important;
+ }
+}
