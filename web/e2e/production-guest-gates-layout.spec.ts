@@ -39,7 +39,7 @@ for(const width of [360,390])for(const language of ['ar','en'] as const)for(cons
    if(scene.tab==='search'||scene.tab==='booking'){
     // Guest header should share the approved Rider chrome, not the old pill.
     const shell=page.locator('.sekka-floating-actions');
-    await expect(shell).toHaveCSS('background-color',theme==='dark'?'rgb(25, 52, 73)':'rgb(255, 255, 255)');
+    await expect(shell).toHaveCSS('background-color',theme==='dark'?'rgb(12, 17, 26)':'rgb(255, 255, 255)');
     const title=page.locator('.sekka-sliver-pin');
     await expect(title).toBeVisible();
     await expect(title).toContainText(scene.tab==='booking'?(language==='ar'?'إكمال الحجز':'Booking'):(language==='ar'?'تفاصيل الرحلة':'Trip details'));
