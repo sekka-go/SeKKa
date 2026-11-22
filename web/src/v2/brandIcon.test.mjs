@@ -56,7 +56,15 @@ test('PWA prefers new sky icon while legacy PNG icons remain compatibility fallb
  assert.match(index,/sekka-sky-mark\.svg/);
  assert.match(index,/sekka-go-road-192\.png/);
  assert.match(splash,/approvedSplashSceneUri/);
- assert.match(splash,/sekka-launch__road-flow/);
+ assert.match(splash,/sekka-launch__motion/);
+ assert.match(splash,/sekka-launch__lane-cue--near/);
+ assert.match(splash,/<LaunchWheelMotion\/>/);
+ assert.doesNotMatch(splash,/sekka-launch__road-flow/);
+ const wheel=readFileSync(new URL('./LaunchWheelMotion.tsx',import.meta.url),'utf8');
+ assert.match(wheel,/approvedSplashSceneUri/);
+ assert.match(wheel,/getContext\('2d'/);
+ assert.match(wheel,/requestAnimationFrame\(render\)/);
+ assert.match(wheel,/prefers-reduced-motion/);
  assert.match(splash,/سِكَّة/);
  assert.doesNotMatch(splash,/HiaceArtwork|sekka-launch__black-wipe|sekka-launch__hiace/);
  assert.equal(splash.includes('sekka-go-road-512.png'),false);
