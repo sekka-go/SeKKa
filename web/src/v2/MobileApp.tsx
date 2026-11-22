@@ -690,17 +690,6 @@ export default function MobileApp(){
         </select>
        </span>
       </label>
-      <label htmlFor="sekka-appearance-pref" className="sekka-preference-row sekka-preference-row--appearance">
-       <span className="sekka-preference-row__details">
-        <strong>{t('مظهر التطبيق','App appearance')}</strong>
-        <select id="sekka-appearance-pref" value={p.themePreference}
-        onChange={event=>p.setThemePreference(event.target.value as 'system'|'light'|'dark')}>
-        <option value="system">{t('تلقائي حسب الموبايل','Follow phone appearance')}</option>
-        <option value="light">{t('فاتح','Light')}</option>
-        <option value="dark">{t('غامق','Dark')}</option>
-        </select>
-       </span>
-      </label>
      </div>
      {ready&&userId&&<><h2>{t('الحساب','Account')}</h2>
       <button type="button" className="sekka-menu-row sekka-menu-row--signout" onClick={()=>void signOut()}>
