@@ -134,7 +134,7 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
     <path d="M0 0H430V0C347 85 242 13 140 76C78 112 32 109 0 119Z" fill="#70F7F3" opacity=".45"/>
    </svg>
    <div className="rh-hero__copy">
-    <span className="rh-hero__eyebrow">{t('سِكَّة · معاك في السِكَّة','seKKa · Along your way')}</span>
+    <span className="rh-hero__eyebrow">{t('معاك في السِكَّة','Along your way')}</span>
     <h2>{t('أهلاً بيك','Welcome')}</h2>
     <p>{t('جاهز لمشوار جديد؟','Ready for your next ride?')}</p>
    </div>
