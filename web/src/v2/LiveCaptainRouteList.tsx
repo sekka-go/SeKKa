@@ -3,6 +3,7 @@ import {useEffect,useRef,useState} from 'react';
 import {client} from './api';
 import {captainRouteError} from './captainRouteErrors';
 import {usePreferences} from './preferences';
+import {displayVehicleCategory} from './vehicleCategory';
 import {useStaggeredReveal} from './staggerMotion';
 
 type RouteRow={id:string;title:string;category:string;status:string;price_egp:number|null;seat_capacity:number;direction:string;period:string;outbound_time:string|null;return_time:string|null};
@@ -167,7 +168,7 @@ export default function LiveCaptainRouteList({initialReviewId=null}:{initialRevi
     <div className="cj-card-head"><strong>{route.title}</strong>
      <span className={'cj-status'+(route.status==='draft'?' is-draft':route.status==='paused'?' is-paused':'')}>{statusName(route.status)}</span></div>
     <div className="cj-route-meta">
-     <span>{route.category}</span>
+     <span>{displayVehicleCategory(route.category)}</span>
      <span>{route.seat_capacity} {t('مقاعد','seats')}</span>
      <span>{t('مركبة كاملة','Full vehicle')}: {route.price_egp===null?t('غير متاح','Unavailable'):route.price_egp.toLocaleString(en?'en-GB':'ar-EG')+' '+t('جنيه','EGP')}</span>
     </div>
