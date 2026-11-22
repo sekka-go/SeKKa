@@ -22,6 +22,16 @@ for(const width of [360,390]){
     await expect(root.locator('.phase-logo')).toHaveCount(0);
     await expect(primary).toBeVisible();
     await expect(root.locator('.phase-google-auth .phase-title')).toBeVisible();
+    // Dark mode used to render white text on a white notice and white text
+    // on a bright yellow Google CTA. Assert both foreground/background pairs.
+    const notice=root.locator('.sekka-entry-login__secure');
+    await expect(notice).toHaveCSS('background-color',
+      theme==='dark'?'rgb(32, 70, 92)':'rgb(234, 249, 252)');
+    await expect(notice).toHaveCSS('color',
+      theme==='dark'?'rgb(244, 251, 255)':'rgb(16, 42, 67)');
+    await expect(primary).toHaveCSS('color',
+      theme==='dark'?'rgb(17, 17, 17)':'rgb(8, 40, 58)');
+
     // Approved onboarding is a standalone canvas, not a screen inside the
     // five-tab shell. The old test incorrectly required the nav to be visible.
     await expect(page.locator('.sekka-bottom-nav')).toBeHidden();
