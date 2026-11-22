@@ -195,6 +195,7 @@ test(`pending Captain profile stays in Passenger journey until explicit entry at
 
  await expect(page.locator('.rh-showcase-search__card')).toBeVisible();
  await expect(page.locator('.rh-showcase-search__card')).toContainText('Find a ride');
+ await expect(page.locator('#rh-home-title')).toHaveText('Where to?');
  await expect(page.locator('.rh-showcase-routes')).toBeVisible();
  // Mocked backend returns no offers; never insert visual placeholder trips.
  await expect(page.locator('.rh-showcase-routes__list .rh-showcase-ride')).toHaveCount(0);
@@ -443,7 +444,7 @@ test('authenticated dark home waves fade from icy-blue to near-black with no har
   expect(fill).toContain(id);
   await expect(page.locator('#'+id+' stop').last()).toHaveAttribute('stop-color','#05070B');
  }
- await expect(page.locator('.rh-showcase-hero__bottom-wave')).toHaveCSS('height','172px');
+ await expect(page.locator('.rh-showcase-hero__bottom-wave')).toHaveCSS('height','100px');
  await page.waitForTimeout(450); // Settle the live header/wave before evidence capture.
  await page.screenshot({path:'../docs/audit/layout-after-dark-home-390-mocked.png',fullPage:true,animations:'disabled'});
 });
