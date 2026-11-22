@@ -13,8 +13,8 @@
  overflow:visible!important;
 }
 /* The visible dock is its own composited layer so icons never stretch. */
-.sekka-mobile.sekka-rider-navigation .rh-tabs__inner::before {
- content:""!important;display:block!important;
+.sekka-mobile.sekka-rider-navigation .rh-tabs__glass {
+ display:block!important;
  position:absolute;inset:0;z-index:0;
  border-radius:30px!important;
  border:1px solid #DCECF5!important;
@@ -26,7 +26,7 @@
  animation:sekkaDockBloom 740ms cubic-bezier(.22,.97,.29,1.06) both;
  pointer-events:none;
 }
-html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation .rh-tabs__inner::before {
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation .rh-tabs__glass {
  background:linear-gradient(130deg,rgba(12,17,26,.97),rgba(20,35,53,.96))!important;
  border-color:#304B61!important;
  box-shadow:0 10px 34px rgba(0,0,0,.46),inset 0 1px 0 rgba(178,234,255,.10)!important;
@@ -91,7 +91,7 @@ html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation .rh-tabs__inner::be
 /* Screens with filters should not reveal a dock they intentionally hide. */
 .sekka-mobile.sekka-rider-navigation.sekka-search-filters .rh-tabs{display:none!important}
 @media(prefers-reduced-motion:reduce){
- .sekka-mobile.sekka-rider-navigation .rh-tabs__inner::before,
+ .sekka-mobile.sekka-rider-navigation .rh-tabs__glass,
  .sekka-mobile.sekka-rider-navigation .rh-tabs__inner > button,
  .sekka-mobile.sekka-rider-navigation .rh-tabs__primary .rh-tabs__icon::after{
   animation:none!important;opacity:1!important;transform:none!important;
