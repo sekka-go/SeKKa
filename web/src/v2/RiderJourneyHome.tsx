@@ -70,6 +70,7 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
  const [nearbyOpen,setNearbyOpen]=useState(false);
  const [error,setError]=useState('');
  const editorTitle=useRef<HTMLHeadingElement>(null);
+ const editorPanel=useRef<HTMLElement>(null);
  useEffect(()=>{
   if(stored.owner===riderId)saveHomeDraft(riderId,stored.values);
  },[riderId,stored]);
@@ -80,10 +81,24 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
  },[riderId]);
  useEffect(()=>{
   if(!editor)return;
+  const returnFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;
   editorTitle.current?.focus();
-  const escape=(event:KeyboardEvent)=>{if(event.key==='Escape'&&!event.defaultPrevented)setEditor(null);};
-  window.addEventListener('keydown',escape);
-  return()=>window.removeEventListener('keydown',escape);
+  const onKey=(event:KeyboardEvent)=>{
+   if(event.key==='Escape'&&!event.defaultPrevented){event.preventDefault();setEditor(null);return;}
+   if(event.key!=='Tab')return;
+   const panel=editorPanel.current;
+   if(!panel)return;
+   const controls=Array.from(panel.querySelectorAll<HTMLElement>('button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),a[href]'))
+    .filter(element=>element.getClientRects().length>0);
+   if(!controls.length){event.preventDefault();editorTitle.current?.focus();return;}
+   const first=controls[0],last=controls[controls.length-1];
+   if(event.shiftKey&&(document.activeElement===first||document.activeElement===editorTitle.current)){
+    event.preventDefault();last.focus();
+   }else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+   else if(!panel.contains(document.activeElement)){event.preventDefault();first.focus();}
+  };
+  window.addEventListener('keydown',onKey);
+  return()=>{window.removeEventListener('keydown',onKey);returnFocus?.focus();};
  },[editor]);
  const registered=(name:string)=>serviceAreas.some(a=>a.name_ar===name||a.name_en===name);
  const selectable=(name:string,choice:PlaceChoice|null)=>choice?.kind==='map'?selectOperationalMapPlace(choice.place):
@@ -218,7 +233,7 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
    onManualSearch={()=>{setNearbyOpen(false);onNavigate(9);}}
    onSelect={selection=>{setNearbyOpen(false);onSelect(selection);}}/>}
    {editor&&<div className="rh-picker-backdrop" onClick={()=>setEditor(null)}>
-   <section className="rh-picker" role="dialog" aria-modal="true" aria-labelledby="rh-picker-title"
+   <section ref={editorPanel} className="rh-picker" role="dialog" aria-modal="true" aria-labelledby="rh-picker-title"
     onClick={event=>event.stopPropagation()}>
     <div className="rh-picker__head">
      <h2 id="rh-picker-title" tabIndex={-1} ref={editorTitle}>{title}</h2>
