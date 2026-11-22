@@ -28,7 +28,7 @@ export default function CaptainRouteMap({stops}:{stops:MapStop[]}){
  useEffect(()=>{setMapLoaded(false);},[mapUrl]);
 
  return <section className="sekka-route-map-card" aria-label={t('خريطة محطات الخط','Route stop map')}>
-  {!mapLoaded&&<div className="sekka-map-shimmer"><AppSkeleton kind="map" label={t('بنحمّل خريطة المحطات…','Loading route stops map…')}/>}</div>}
+  {!mapLoaded&&<div className="sekka-map-shimmer"><AppSkeleton kind="map" label={t('بنحمّل خريطة المحطات…','Loading route stops map…')}/></div>}
   <iframe className="sekka-route-map-card__frame" src={mapUrl} loading="lazy"
    onLoad={()=>setMapLoaded(true)}
    style={{visibility:mapLoaded?'visible':'hidden'}}
