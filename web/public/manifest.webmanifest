@@ -5,8 +5,8 @@
   "display": "standalone",
   "dir": "rtl",
   "lang": "ar",
-  "background_color": "#078CF4",
-  "theme_color": "#078CF4",
+  "background_color": "#17253A",
+  "theme_color": "#17253A",
   "icons": [
     {
       "src": "/brand/sekka-s-icon-192.png",

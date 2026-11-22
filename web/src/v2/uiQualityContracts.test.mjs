@@ -9,6 +9,7 @@ const discovery=read('./Discovery.tsx');
 const app=read('./MobileApp.tsx');
 const home=read('./RiderJourneyHome.tsx');
 const css=read('./ui-quality-hardening.css');
+const urban=read('./urban-mobility-palette.css');
 const manifest=JSON.parse(read('../../public/manifest.webmanifest'));
 const html=read('../../index.html');
 
@@ -22,9 +23,10 @@ const contrast=(a,b)=>{
  return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);
 };
 
-test('new header and contextual yellow action pass body-text contrast on declared colors',()=>{
- assert.ok(contrast('#075687','#FFFFFF')>=4.5);
- assert.ok(contrast('#FFCC24','#10344F')>=4.5);
+test('urban headers and yellow contextual action pass WCAG body text contrast',()=>{
+ assert.ok(contrast('#1753E8','#FFFFFF')>=4.5);
+ assert.ok(contrast('#17253A','#FFFFFF')>=4.5);
+ assert.ok(contrast('#FFD02A','#17253A')>=4.5);
  assert.match(css,/sekka-no-match-action.*sekka-request-yellow-cta/s);
 });
 
@@ -64,4 +66,17 @@ test('small-screen bottom navigation and drawer controls have legible hit area',
  assert.match(css,/rh-tabs \.rh-tabs__name\{[\s\S]*font-size:12px!important/);
  assert.match(css,/sekka-side-drawer\.sekka-glass-panel \.sekka-glass-rail-toggle/);
  assert.match(css,/min-height:44px!important;min-width:44px!important/);
+});
+
+test('Urban Mobility replaces aqua decoration without changing the installed S brand',()=>{
+ assert.match(urban,/--urban-blue:#1753E8/);
+ assert.match(urban,/--urban-navy:#17253A/);
+ assert.match(urban,/--urban-paper:#F5F3ED/);
+ assert.match(urban,/--urban-yellow:#FFD02A/);
+ assert.match(urban,/rh-showcase-hero__top-wave/);
+ assert.match(urban,/display:none!important/);
+ assert.match(read('./MobileApp.tsx'),/import '\.\/urban-mobility-palette\.css'/);
+ assert.match(read('../../public/brand/sekka-s-icon.svg'),/stop-color="#1753E8"/);
+ assert.equal(manifest.theme_color,'#17253A');
+ assert.match(html,/selectedTheme === 'dark' \? '#101827' : '#17253A'/);
 });

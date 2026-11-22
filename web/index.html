@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#078CF4" />
+    <meta name="theme-color" content="#17253A" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <style>html,body{margin:0;background:#F4FBFF}html[data-theme="dark"],html[data-theme="dark"] body{background:#102A3C}</style>
+    <style>html,body{margin:0;background:#F5F3ED}html[data-theme="dark"],html[data-theme="dark"] body{background:#101827}</style>
     <script>
       // Apply the phone preference or a previously saved manual choice before React paints.
       (() => {
@@ -30,7 +30,7 @@
         root.dir = selectedLanguage === 'ar' ? 'rtl' : 'ltr';
         root.style.colorScheme = selectedTheme;
         const meta = document.querySelector('meta[name="theme-color"]');
-        if (meta) meta.setAttribute('content',selectedTheme === 'dark' ? '#102A3C' : '#078CF4');
+        if (meta) meta.setAttribute('content',selectedTheme === 'dark' ? '#101827' : '#17253A');
       })();
     </script>
     <meta name="description" content="سِكَّة — شارك طريقك وابحث عن رحلتك المعتادة." />

@@ -99,3 +99,15 @@
  .sekka-launch__wheel-motion{display:none!important}
  .sekka-launch__wave-wipe{display:none}
 }
+
+/* 2026-11-22: urban-road color refresh; SUV artwork/sequence preserved. */
+.sekka-launch{background:#17253A!important}
+.sekka-launch__stage{
+ background:linear-gradient(125deg,#17253A 0%,#263E67 53%,#1753E8 100%)!important;
+}
+.sekka-launch__wave,.sekka-launch__ribbon,.sekka-launch__sky-to-road-wave{
+ display:none!important;
+}
+.sekka-launch__wave-wipe{
+ background:linear-gradient(165deg,#111A2A,#17253A)!important;
+}

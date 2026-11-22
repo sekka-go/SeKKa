@@ -1,9 +1,9 @@
-/* سِكَّة — approved sky-blue / cyan / yellow real-app identity.
+/* سِكَّة — prior sky palette; current production colors are Urban Mobility.
    Loaded AFTER legacy theme overrides; excludes /dev/screens. */
 :root{
- --sekka-sky:#078CF4;--sekka-cyan:#20D8E6;--sekka-teal:#00B9CA;
- --sekka-sun:#FFCC24;--sekka-sun-ink:#143449;
- --sekka-paper:#F4FBFF;--sekka-navy:#10344F;--sekka-hairline:#D7EFF6;
+ --sekka-sky:#1753E8;--sekka-cyan:#6A86DD;--sekka-teal:#1753E8;
+ --sekka-sun:#FFD02A;--sekka-sun-ink:#17253A;
+ --sekka-paper:#F5F3ED;--sekka-navy:#17253A;--sekka-hairline:#DBDEE3;
 }
 .sekka-mobile{
  --brand-purple:var(--sekka-teal);--brand-coral:var(--sekka-teal);
