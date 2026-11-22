@@ -1,3 +1,4 @@
+import AppSkeleton from './AppSkeleton';
 import LiveNotifications from './LiveNotifications';
 import LiveTripRequests from './LiveTripRequests';
 import LiveProfile from './LiveProfile';
@@ -58,7 +59,7 @@ export default function LiveHome({onNavigate}:{onNavigate:(screen:number)=>void}
    <div className="live-home__road" aria-hidden="true"><span/><span/><span/></div>
   </section>
   <section className="live-home__body" aria-label={t('البدء في التطبيق','Get started')}>
-   {busy&&<div className="live-home__panel" role="status">{t('بنجهّز بيانات حسابك…','Getting your account ready…')}</div>}
+   {busy&&<AppSkeleton kind="session" label={t('بنجهّز بيانات حسابك…','Getting your account ready…')}/>}
    {!busy&&!identity&&<section className="live-home__panel">
     <div className="live-home__panel-icon" aria-hidden="true">↗</div>
     {error&&<div className="live-home__inline-alert" role="alert"><span>{error}</span><button type="button" onClick={retry}>{t('إعادة المحاولة','Retry')}</button></div>}
