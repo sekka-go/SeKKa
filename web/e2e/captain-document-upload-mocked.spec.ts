@@ -116,7 +116,7 @@ test('MOCKED Android-width private document upload: denied, retry, verified pers
  await page.evaluate(()=>sessionStorage.setItem('sekka.captain.pendingPicker','identity:'+Date.now()));
  await page.reload();
  await expect(page.getByTestId('captain-picker-interrupted')).toContainText(
-  'The phone reopened seKKa before file selection finished');
+  'The phone reopened PoNo before file selection finished');
  await expect(page.getByText('0/4 required documents complete')).toBeVisible();
  await page.getByTestId('captain-picker-interrupted').getByRole('button',{name:'Got it'}).click();
  await expect(page.getByTestId('captain-picker-interrupted')).toHaveCount(0);

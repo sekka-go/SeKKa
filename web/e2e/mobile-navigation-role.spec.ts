@@ -434,7 +434,7 @@ for(const language of ['ar','en'] as const){
  });
 }
 
-test('authenticated dark home waves fade from icy-blue to near-black with no hard seam',async({page})=>{
+test('authenticated dark home retains urban navy-to-blue hero without marine waves',async({page})=>{
  const endpoint='https://sekka-auth-e2e.supabase.co';
  const user={
   id:'00000000-0000-4000-8000-0000000000b1',aud:'authenticated',role:'authenticated',
@@ -460,32 +460,19 @@ test('authenticated dark home waves fade from icy-blue to near-black with no har
  });
  await page.goto('/');
  await expect(page.locator('.sekka-rider-home')).toBeVisible();
- await expect(page.locator('.rh-home')).toHaveCSS('background-color','rgb(5, 7, 11)');
+ await expect(page.locator('.rh-home')).toHaveCSS('background-color','rgb(16, 24, 39)');
  const hero=await page.locator('.rh-showcase-hero').evaluate(el=>getComputedStyle(el).backgroundImage);
- expect(hero).toContain('rgb(55, 122, 154)');
- expect(hero).toContain('rgb(5, 7, 11) 100%');
- const paths=page.locator('.rh-showcase-hero__bottom-wave > path');
- await expect(paths).toHaveCount(3);
- for(const [index,id] of ['sekka-dark-wave-upper','sekka-dark-wave-middle','sekka-dark-wave-base'].entries()){
-  const fill=await paths.nth(index).evaluate(el=>getComputedStyle(el).fill);
-  expect(fill).toContain(id);
-  await expect(page.locator('#'+id+' stop').last()).toHaveAttribute('stop-color','#05070B');
- }
- await expect(page.locator('.rh-showcase-hero__bottom-wave')).toHaveCSS('height','100px');
- const greeting=await page.locator('.rh-showcase-hero .rh-hero__copy p').boundingBox();
- const bottomWave=await page.locator('.rh-showcase-hero__bottom-wave').boundingBox();
- expect(greeting).not.toBeNull();
- expect(bottomWave).not.toBeNull();
- expect(greeting!.y+greeting!.height+6).toBeLessThan(bottomWave!.y);
+ expect(hero).toContain('rgb(17, 29, 48)');
+ expect(hero).toContain('rgb(43, 77, 145)');
+ await expect(page.locator('.rh-showcase-hero__bottom-wave')).toBeHidden();
+ const greeting=page.locator('.rh-showcase-hero .rh-hero__copy p');
+ await expect(greeting).toBeVisible();
  await page.getByRole('button',{name:'فتح القائمة'}).click();
+ await page.getByRole('button',{name:'توسيع القائمة'}).click();
  await page.locator('#sekka-language-pref').selectOption('en');
  await page.locator('.sekka-side-drawer__close').click();
  await expect(page.locator('#rh-home-title')).toHaveText('Where to?');
- const englishText=await page.locator('.rh-showcase-hero .rh-hero__copy p').boundingBox();
- const englishWave=await page.locator('.rh-showcase-hero__bottom-wave').boundingBox();
- expect(englishText).not.toBeNull();
- expect(englishWave).not.toBeNull();
- expect(englishText!.y+englishText!.height+6).toBeLessThan(englishWave!.y);
+ await expect(page.locator('.rh-showcase-hero .rh-hero__copy p')).toBeVisible();
  await page.waitForTimeout(450); // Settle the live header/wave before evidence capture.
  await page.screenshot({path:'../docs/audit/layout-after-dark-home-390-mocked.png',fullPage:true,animations:'disabled'});
 });
