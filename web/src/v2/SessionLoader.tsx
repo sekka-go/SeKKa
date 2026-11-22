@@ -1,3 +1,4 @@
+import AppSkeleton from './AppSkeleton';
 import {usePreferences} from './preferences';
 import './session-loader.css';
 
@@ -11,8 +12,9 @@ export default function SessionLoader({slow,onRetry}:{
  const {language}=usePreferences(),en=language==='en',t=(ar:string,english:string)=>en?english:ar;
  return <section className="sekka-account-loading sekka-session-loader" role="status"
    aria-label={t('جارٍ التحقق من الحساب','Verifying your account')} aria-live="polite">
-   <span className="sekka-session-loader__word" aria-hidden="true">{t('سِكّة','seKKa')}</span>
-   <span className="sr-only">{t('بنتأكد من تسجيل دخولك','Checking your sign-in')}</span>
+   <div className="sekka-session-loader__content">
+    <AppSkeleton kind="session" label={t('بنتأكد من تسجيل دخولك','Checking your sign-in')}/>
+   </div>
    {slow&&<div className="sekka-session-loader__slow" role="alert">
     <p>{t('اتأخرنا في التحقق من الدخول. تقدر تحاول تاني من غير ما نغير صفحتك.',
      'Sign-in verification is taking longer than usual. Retry without losing your place.')}</p>
