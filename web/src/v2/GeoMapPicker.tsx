@@ -212,6 +212,9 @@ export default function GeoMapPicker({initial,focus,focusLabel,area,onCancel,onC
    onWheel={wheel} onKeyDown={keyboard}>
    {visibleTiles(center,zoom,dimensions.width,dimensions.height).map(tile=>
     <img key={tile.id} src={tile.url} alt="" draggable={false}
+     className="sekka-map-picker__tile" loading="eager" decoding="async"
+     onLoad={event=>{event.currentTarget.dataset.ready='true';}}
+     onError={event=>{event.currentTarget.dataset.ready='failed';}}
      style={{position:'absolute',left:tile.left,top:tile.top,width:256,height:256,pointerEvents:'none'}}/>
    )}
    {marker&&<div className="sekka-map-picker__pin" aria-hidden="true"
