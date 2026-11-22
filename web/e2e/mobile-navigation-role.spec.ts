@@ -207,11 +207,11 @@ test(`pending Captain profile stays in Passenger journey until explicit entry at
  // The center Search action blooms the navigation dock without changing its
  // five real buttons or role-gated destinations. This tests actual CSS.
  const dockMotion=await dock.locator('.rh-tabs__inner').evaluate(element=>{
-  const glass=getComputedStyle(element,'::before');
+  const glass=getComputedStyle(element.querySelector('.rh-tabs__glass')!);
   const seed=element.querySelector('.rh-tabs__primary');
   const halo=getComputedStyle(seed!.querySelector('.rh-tabs__icon')!,'::after');
   return {
-   surface:glass.content,
+   surface:element.querySelector('.rh-tabs__glass')?.tagName,
    glassAnimation:glass.animationName,
    seedAnimation:getComputedStyle(seed!).animationName,
    haloAnimation:halo.animationName,
@@ -219,9 +219,9 @@ test(`pending Captain profile stays in Passenger journey until explicit entry at
    reduced:matchMedia('(prefers-reduced-motion: reduce)').matches
   };
  });
- expect(dockMotion.surface).not.toBe('none');
+ expect(dockMotion.surface).toBe('SPAN');
  // Glass must be painted ABOVE the tab container, not hidden behind it.
- const glassZ=await dock.locator('.rh-tabs__inner').evaluate(el=>getComputedStyle(el,'::before').zIndex);
+ const glassZ=await dock.locator('.rh-tabs__glass').evaluate(el=>getComputedStyle(el).zIndex);
  expect(glassZ).toBe('0');
  expect(dockMotion.bg).toContain('linear-gradient');
  if(!dockMotion.reduced){
@@ -230,7 +230,7 @@ test(`pending Captain profile stays in Passenger journey until explicit entry at
   expect(dockMotion.haloAnimation).toContain('sekkaDockHalo');
  }
  await page.waitForTimeout(950);
- await dock.screenshot({path:`test-results/dock-bloom-expanded-${width}.png`,animations:'disabled'});
+ await page.screenshot({path:`test-results/dock-bloom-expanded-${width}.png`,fullPage:true,animations:'disabled'});
 
  await expect(dock.getByRole('button',{name:'Requests'})).toBeVisible();
  await expect(dock.getByRole('button',{name:'Alerts'})).toHaveCount(0);
