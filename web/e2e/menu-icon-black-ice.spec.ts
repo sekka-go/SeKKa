@@ -78,3 +78,30 @@ test('dark search has a black canvas with an icy-blue hero',async({page})=>{
  expect(hero).toContain('rgb(8, 11, 18)');
  await expect(page.locator('.sekka-mobile')).toHaveCSS('background-color','rgb(5, 7, 11)');
 });
+
+test('light drawer fades from white to ice blue with icon-free secondary controls',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.addInitScript(()=>{
+  localStorage.setItem('language_preference','ar');
+  localStorage.setItem('theme_preference','light');
+  sessionStorage.setItem('sekka.launch.seen.v1','1');
+ });
+ await page.goto('/?tab=profile');
+ await page.getByRole('button',{name:'فتح القائمة'}).click();
+ const drawer=page.getByRole('dialog',{name:'القائمة الرئيسية'});
+ await expect(drawer).toBeVisible();
+ const background=await drawer.evaluate(element=>getComputedStyle(element).backgroundImage);
+ expect(background).toContain('linear-gradient');
+ expect(background).toContain('rgb(255, 255, 255) 0%');
+ expect(background).toContain('rgb(234, 243, 255) 100%');
+ const appearance=drawer.locator('.sekka-preference-row--appearance');
+ await expect(appearance.locator('.sekka-menu-row__icon')).toHaveCount(0);
+ await expect(appearance.locator('#sekka-appearance-pref')).toBeVisible();
+ const guide=drawer.getByRole('button',{name:'اشرحلي الشاشة دي'});
+ await expect(guide.locator('.sekka-menu-row__icon')).toHaveCount(0);
+ await expect(guide).toBeEnabled();
+ // The separate quick dark-mode switch keeps its useful moon symbol.
+ await expect(drawer.locator('.sekka-theme-quick-row .sekka-menu-row__icon')).toBeVisible();
+ await guide.click();
+ await expect(drawer).toHaveCount(0);
+});
