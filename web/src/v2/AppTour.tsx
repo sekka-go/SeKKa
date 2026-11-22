@@ -7,7 +7,7 @@ type TourState={storageKey:string;steps:Resolved[];index:number};
 type Rect={top:number;left:number;width:number;height:number};
 type Props={
  page:TourPage;role:GuidedRole;actor:string;language:'ar'|'en';
- active:boolean;replayToken:number;
+ active:boolean;replayToken:number;autoStart:boolean;
 };
 const VISIT_PREFIX='sekka.tour.v1';
 const matchVisible=(node:HTMLElement)=>{
@@ -58,7 +58,7 @@ const readAutoDisabled=(actor:string)=>{
  try{return window.localStorage.getItem('sekka.tour.disable-auto.'+actor)==='1';}
  catch{return false;}
 };
-export default function AppTour({page,role,actor,language,active,replayToken}:Props){
+export default function AppTour({page,role,actor,language,active,replayToken,autoStart}:Props){
  const en=language==='en';
  const [tour,setTour]=useState<TourState|null>(null);
  const [autoPlay,setAutoPlay]=useState(false);
@@ -73,7 +73,9 @@ export default function AppTour({page,role,actor,language,active,replayToken}:Pr
   if(!active){setTour(null);setRect(null);return;}
   const forced=replayToken!==replaySeen.current;
   replaySeen.current=replayToken;
-  if(!forced&&(readStorage(storageKey)||readAutoDisabled(actor))){
+  // Secondary routes should never be blocked by a first-visit modal.
+  // The manual guide in the drawer still works on every page.
+  if(!forced&&(!autoStart||readStorage(storageKey)||readAutoDisabled(actor))){
    setTour(null);setRect(null);return;
   }
   let live=true;
@@ -93,7 +95,7 @@ export default function AppTour({page,role,actor,language,active,replayToken}:Pr
   setTour(null);setRect(null);
   task=window.setTimeout(()=>launch(0),370);
   return()=>{live=false;if(task!==null)window.clearTimeout(task);};
- },[active,pageKey,role,actor,storageKey,replayToken]);
+ },[active,pageKey,role,actor,storageKey,replayToken,autoStart]);
  const current=tour?.steps[tour.index]??null;
  useEffect(()=>{
   if(!tour||!current){setRect(null);return;}
