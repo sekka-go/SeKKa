@@ -36,6 +36,22 @@ for(const width of [360,390])for(const language of ['ar','en'] as const)for(cons
     expect(bounds!.width).toBeGreaterThanOrEqual(44);
     expect(bounds!.height).toBeGreaterThanOrEqual(44);
    }
+   if(scene.tab==='booking'){
+    // The booking review must not paint a second decorative brand over
+    // the central app title or stack its Back control on the menu.
+    await expect(page.locator('.sekka-rider-booking-v3 .d-header .sekka-live-wordmark')).toHaveCount(0);
+    const title=page.locator('.sekka-sliver-pin');
+    await expect(title).toBeVisible();
+    await expect(title).toContainText(language==='ar'?'إكمال الحجز':'Booking');
+    const back=page.locator('.sekka-rider-booking-v3 .d-header .phase-back');
+    await expect(back).toBeVisible();
+    const header=await page.locator('.sekka-floating-actions').boundingBox();
+    const button=await back.boundingBox();
+    expect(header).not.toBeNull();
+    expect(button).not.toBeNull();
+    expect(button!.y).toBeGreaterThanOrEqual(header!.y+header!.height-2);
+    expect(button!.height).toBeGreaterThanOrEqual(44);
+   }
    await expect(page.locator('.sekka-bottom-nav')).toHaveCount(0);
    if(scene.tab==='admin'){
     await expect(page.locator('.admin-stage')).toHaveCount(0);
