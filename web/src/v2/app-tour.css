@@ -163,3 +163,22 @@ html[data-theme="dark"] .sekka-mobile .sekka-side-drawer nav > .sekka-menu-tour{
  background:#4F4725!important;color:#FFFFFF!important;
  border-color:#FFCC24!important;
 }
+
+
+.sekka-mobile .sekka-app-tour__autoplay{
+ appearance:none;display:inline-flex!important;align-items:center!important;
+ justify-content:flex-start!important;gap:7px!important;
+ min-height:35px;margin:0 0 9px!important;
+ padding:5px 9px!important;border:1px solid #CAE7EE!important;
+ border-radius:11px!important;background:#EFFAFF!important;
+ color:#24586C!important;font:850 12px/1.1 Tajawal,Tahoma,sans-serif!important;
+ cursor:pointer;box-shadow:none!important;
+}
+.sekka-mobile .sekka-app-tour__autoplay[aria-pressed="true"]{
+ background:#FFF2BB!important;border-color:#FFCC24!important;color:#111111!important;
+}
+.sekka-mobile .sekka-app-tour__autoplay span{
+ display:grid!important;place-items:center!important;
+ width:19px;height:19px;line-height:1!important;font-size:12px!important;
+ color:inherit!important;
+}
