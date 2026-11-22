@@ -1114,7 +1114,7 @@ export function V31BookingJourney({offer,routeId,pickupId,dropoffId,reverse,book
  };
  return <div className={`phase-one-stage discovery-stage booking-stage sekka-rider-booking-v3 ${theme}`}>
    <main className={`phase-canvas d-canvas b-canvas b-screen-${stored?'18':'16'}`}>
-     <header className="d-header"><button type="button" className="phase-back" aria-label={t('رجوع','Back')} onClick={onBack}><DiscoveryIcon name="back"/></button><Wordmark/></header>
+     <header className="d-header"><button type="button" className="phase-back" aria-label={t('رجوع','Back')} onClick={onBack}><DiscoveryIcon name="back"/></button></header>
      <div className="rbk3-hero">
       <span className="rbk3-step">{stored?t('حجزك من الخادم','SERVER BOOKING'):t('آخر خطوة قبل الحجز','FINAL STEP')}</span>
       <h1 className="b-title"><DiscoveryIcon name="calendar"/>{stored?t('تفاصيل الحجز','Booking details'):t('راجع حجزك','Review your booking')}</h1>
