@@ -49,13 +49,12 @@ test("back navigation, OAuth callback and developer gallery must never replay th
  await expect(page.locator(intro)).toHaveCount(0);
 });
 
-test("reload replays Hiace intro while retaining user's requested page",async ({page})=>{
+test("reload does not replay launch animation in the same tab session",async ({page})=>{
  await page.goto("/?tab=login&view=2");
  await expect(page.locator(intro)).toBeVisible();
  await expect(page.locator(intro)).toHaveCount(0,{timeout:6000});
  await page.reload();
- await expect(page.locator(intro)).toBeVisible();
- await expect(page.locator(intro)).toHaveCount(0,{timeout:6000});
+ await expect(page.locator(intro)).toHaveCount(0);
  await expect(page.locator(".phase-screen-2")).toBeVisible();
 });
 
