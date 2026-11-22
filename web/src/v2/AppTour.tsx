@@ -61,6 +61,7 @@ const readAutoDisabled=(actor:string)=>{
 export default function AppTour({page,role,actor,language,active,replayToken}:Props){
  const en=language==='en';
  const [tour,setTour]=useState<TourState|null>(null);
+ const [autoPlay,setAutoPlay]=useState(false);
  const [rect,setRect]=useState<Rect|null>(null);
  const [tooltip,setTooltip]=useState({top:14,left:12,width:336});
  const panel=useRef<HTMLDivElement>(null);
@@ -146,6 +147,15 @@ export default function AppTour({page,role,actor,language,active,replayToken}:Pr
   }
   setTour(null);setRect(null);
  };
+ useEffect(()=>{
+  if(!autoPlay||!tour)return;
+  const timer=window.setTimeout(()=>{
+   if(tour.index===tour.steps.length-1){
+    writeStorage(tour.storageKey);setTour(null);setRect(null);
+   }else setTour({...tour,index:tour.index+1});
+  },5000);
+  return()=>window.clearTimeout(timer);
+ },[autoPlay,tour?.storageKey,tour?.index]);
  const move=(delta:number)=>{
   if(!tour)return;
   const next=tour.index+delta;
@@ -198,6 +208,12 @@ export default function AppTour({page,role,actor,language,active,replayToken}:Pr
    <div className="sekka-app-tour__dots" aria-hidden="true">
     {tour.steps.map((step,index)=><span key={step.step.id+index} className={index===tour.index?'is-current':''}/>)}
    </div>
+   <button type="button" className="sekka-app-tour__autoplay"
+    aria-pressed={autoPlay} onClick={()=>setAutoPlay(value=>!value)}>
+    <span aria-hidden="true">{autoPlay?'Ⅱ':'▶'}</span>
+    {autoPlay?t('إيقاف التقدم التلقائي','Pause auto-play'):
+     t('تشغيل تلقائي: ٥ ثوانٍ','Auto-play: 5 seconds')}
+   </button>
    <div className="sekka-app-tour__actions">
     <button type="button" className="sekka-app-tour__skip" onClick={()=>finish()}>
      {t('تخطي','Skip')}
