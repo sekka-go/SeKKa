@@ -138,11 +138,15 @@ test('glass drawer unfolds from an icon rail and supports reversible collapse wi
  await expect(panel.locator('.sekka-glass-search')).toBeHidden();
  await expect(panel.getByRole('button',{name:'توسيع القائمة'})).toHaveAttribute('aria-expanded','false');
  await page.waitForTimeout(450);
+ const compactChevron=await panel.locator('.sekka-glass-rail-toggle svg').evaluate(el=>new DOMMatrixReadOnly(getComputedStyle(el).transform).a);
+ expect(compactChevron).toBeGreaterThan(.95); // left arrow when compact
  await page.screenshot({path:'../docs/audit/menu-glass-compact-390.png',fullPage:true,animations:'disabled'});
  await panel.getByRole('button',{name:'توسيع القائمة'}).click();
  await expect(panel).not.toHaveClass(/sekka-glass-panel--collapsed/);
  await expect(panel).toHaveCSS('border-top-left-radius','31px');
  await page.waitForTimeout(550);
+ const expandedChevron=await panel.locator('.sekka-glass-rail-toggle svg').evaluate(el=>new DOMMatrixReadOnly(getComputedStyle(el).transform).a);
+ expect(expandedChevron).toBeLessThan(-.95); // right arrow to collapse back
  await page.screenshot({path:'../docs/audit/menu-glass-expanded-390.png',fullPage:true,animations:'disabled'});
  const glass=await panel.evaluate(el=>({
   blur:getComputedStyle(el).backdropFilter,
