@@ -55,8 +55,14 @@
   position:relative!important;display:flex!important;
   align-items:center!important;justify-content:flex-start!important;
   min-height:54px!important;height:auto!important;
+  /* Move the booking-specific Back row below the floating app chrome. */
+  margin-block-start:calc(76px + env(safe-area-inset-top,0px))!important;
   padding:4px 16px 5px!important;
   background:transparent!important;
+}
+.sekka-mobile.sekka-tab-booking .sekka-rider-booking-v3 .rbk3-hero{
+  /* The Back row already reserves the header: no second 85px hero spacer. */
+  padding-block-start:19px!important;
 }
 .sekka-mobile.sekka-tab-booking .sekka-rider-booking-v3 .d-header .phase-back{
   position:static!important;inset:auto!important;transform:none!important;
