@@ -444,5 +444,6 @@ test('authenticated dark home waves fade from icy-blue to near-black with no har
   await expect(page.locator('#'+id+' stop').last()).toHaveAttribute('stop-color','#05070B');
  }
  await expect(page.locator('.rh-showcase-hero__bottom-wave')).toHaveCSS('height','172px');
+ await page.waitForTimeout(450); // Settle the live header/wave before evidence capture.
  await page.screenshot({path:'../docs/audit/layout-after-dark-home-390-mocked.png',fullPage:true,animations:'disabled'});
 });
