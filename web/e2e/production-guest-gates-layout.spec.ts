@@ -23,7 +23,9 @@ for(const width of [360,390])for(const language of ['ar','en'] as const)for(cons
    if(scene.tab==='captain-onboarding')
     await expect(page.locator('.sekka-mobile-header')).toBeHidden();
    else if(scene.tab==='search'||scene.tab==='booking'){
-    await expect(page.locator('.sekka-floating-actions')).toBeVisible();
+    // The shell's nav is a zero-height placement layer; visible, focusable
+    // menu buttons are the actual interaction targets.
+    await expect(page.locator('.sekka-floating-actions')).toHaveCount(1);
     await expect(page.locator('.sekka-mobile-header')).toHaveCount(0);
     const menu=page.getByRole('button',{name:language==='ar'?'فتح القائمة':'Open menu'});
     await expect(menu).toBeVisible();
