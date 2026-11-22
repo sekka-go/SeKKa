@@ -157,15 +157,15 @@ const seed: Record<number, Item[]> = {
   74: [],
 };
 const intro: Record<number, string> = {
-  63: "صورة واضحة لتشغيل سِكَّة، من توثيق الكباتن لحد متابعة الاشتراكات.",
+  63: "صورة واضحة لتشغيل PoNo، من توثيق الكباتن لحد متابعة الاشتراكات.",
   64: "إدارة حسابات الركاب ومراجعة حالتهم.",
   65: "متابعة التوثيق والعربيات والخطوط المرتبطة بكل كابتن.",
   66: "راجع التطابق والوضوح قبل اتخاذ قرار التوثيق.",
-  67: "الفئة والسعة لازم يتوافقوا مع قواعد سِكَّة.",
+  67: "الفئة والسعة لازم يتوافقوا مع قواعد PoNo.",
   68: "متابعة العروض المنشورة؛ إيقاف العرض يمنع الحجوزات الجديدة فقط.",
   69: "تابع الحجز وإقرارات الدفع مع الحفاظ على السعر المثبت.",
   70: "الرصيد المتاح منفصل عن تأمين جدية الحجز المسترد.",
-  71: "حركة محفظة سِكَّة؛ مدفوعات الكباتن المباشرة مش إيداعات هنا.",
+  71: "حركة محفظة PoNo؛ مدفوعات الكباتن المباشرة مش إيداعات هنا.",
   72: "متابعة التذاكر وتصعيد نزاعات الدفع بسجل واضح.",
   73: "جهّز الرسالة وراجع الجمهور قبل أي إرسال.",
   74: "إدارة صلاحيات الفريق وإعدادات التشغيل وسجل التدقيق.",
@@ -318,7 +318,7 @@ export default function AdminDashboard(p: {
       </aside>
       {n===63?<main className="ad-content">
         <div className="ad-heading">
-          <div><span className="ad-eyebrow">{tr("سِكَّة / الإدارة /")}{publicScreen(p.screen)}</span>
+          <div><span className="ad-eyebrow">{tr("PoNo / الإدارة /")}{publicScreen(p.screen)}</span>
             <h1>{screenTitle(p.screen,language)}</h1>
           </div>
         </div>
@@ -385,7 +385,7 @@ export default function AdminDashboard(p: {
             <main className="ad-content">
               <div className="ad-heading">
                 <div>
-                  <span className="ad-eyebrow">{tr("سِكَّة / الإدارة /")}{publicScreen(p.screen)}</span>
+                  <span className="ad-eyebrow">{tr("PoNo / الإدارة /")}{publicScreen(p.screen)}</span>
                   <h1>{screenTitle(p.screen,language)}</h1>
                   <p>{tr(intro[n])}</p>
                 </div>
@@ -794,7 +794,7 @@ export default function AdminDashboard(p: {
                   )}
                 </>
               )}
-              <footer>{tr("سِكَّة — معاك في السِكَّة")}</footer>
+              <footer>{tr("PoNo — معاك في PoNo")}</footer>
             </main>
           </div>
         </>

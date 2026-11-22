@@ -22,7 +22,7 @@ export default function LiveAdminOverview(){
   ['captain_offers','عروض الكباتن المفتوحة','Open captain offers'],['notifications','الإشعارات','Notifications']
  ];
  return <main className="live-admin-overview" dir={en?'ltr':'rtl'} style={{maxWidth:920,margin:'auto',padding:'28px 18px'}}>
-  <h1>{t('لوحة سِكّة — البيانات الحقيقية','seKKa Admin — live data')}</h1>
+  <h1>{t('لوحة PoNo — البيانات الحقيقية','PoNo Admin — live data')}</h1>
   <p>{t('الأرقام دي بتتقرأ من قاعدة البيانات بعد التحقق من صلاحيات الأدمن على السيرفر.','Counts are read from Supabase after server-side admin authorization.')}</p>
   {loading&&<AppSkeleton kind="stats" count={4} label={t('جارٍ تحميل البيانات…','Loading live data…')}/>}
   {error&&<div role="alert"><p>{error}</p><button type="button" onClick={()=>{setError('');setLoading(true);setRevision(x=>x+1);}}>{t('إعادة المحاولة','Retry')}</button></div>}

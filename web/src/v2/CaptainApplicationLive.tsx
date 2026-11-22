@@ -702,8 +702,8 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
     </div>;
    })}
    {pickerInterrupted&&<div role="alert" data-testid="captain-picker-interrupted" className="c-document-upload-error">
-    <p>{t('الموبايل رجّع سِكّة قبل ما اختيار الملف يكتمل. مفيش مستند اتحفظ. اختار ملف تاني واضغط فتح من تطبيق الملفات، وجرب فتح سِكّة من Chrome مباشرة.',
-     'The phone reopened seKKa before file selection finished. Nothing was saved. Choose a file again and tap Open in Files; try opening seKKa directly in Chrome.')}</p>
+    <p>{t('الموبايل رجّع PoNo قبل ما اختيار الملف يكتمل. مفيش مستند اتحفظ. اختار ملف تاني واضغط فتح من تطبيق الملفات، وجرب فتح PoNo من Chrome مباشرة.',
+     'The phone reopened PoNo before file selection finished. Nothing was saved. Choose a file again and tap Open in Files; try opening PoNo directly in Chrome.')}</p>
     <button type="button" onClick={()=>setPickerInterrupted(false)}>{t('فهمت','Got it')}</button>
    </div>}
    <p role="status">{documentProgress}/4 {t('مستندات مطلوبة مكتملة','required documents complete')}</p>
@@ -712,7 +712,7 @@ export default function CaptainApplicationLive({screen,onNext,onEnrolled}:{
     <p data-testid="captain-upload-stage" className="c-form-hint">
      {t('حالة اختيار/رفع الملف: ','File selection/upload stage: ')}
      <code dir="ltr">{uploadDiagnostic}</code>
-     {deployedSha&&<span data-testid="captain-upload-build" dir="ltr"> · seKKa {deployedSha}</span>}
+     {deployedSha&&<span data-testid="captain-upload-build" dir="ltr"> · PoNo {deployedSha}</span>}
      {runtimeSha&&<span data-testid="captain-runtime-build" dir="ltr"> · {t('نسخة الجهاز','Running app')} {runtimeSha}</span>}
     </p>
    </details>

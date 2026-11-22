@@ -516,7 +516,7 @@ const dateText = (v: string) =>
       <p className="phase-preview-note">
         {demo
           ? tr("معاينة المرحلة الثالثة · البيانات والأحداث توضيحية. لا حجز ولا دفع ولا تغيير رصيد فعلي.")
-          : tr("سِكَّة · حجزك واشتراكك")}
+          : tr("PoNo · حجزك واشتراكك")}
       </p>
       {demo && !interactivePreview && [17, 21].includes(screen) && (
         <aside className="b-scenario" aria-label={tr("حالات المعاينة")}>
@@ -739,7 +739,7 @@ const dateText = (v: string) =>
                 {demo ? tr("نموذج حجز مؤكد — معاينة") : tr("حجزك اتسجل.")}
               </div>
               <p className="b-subtitle">
-                {tr("مكانك في السِكَّة جاهز. راجع موعد البداية وتعليمات الدفع.")}</p>
+                {tr("مكانك في PoNo جاهز. راجع موعد البداية وتعليمات الدفع.")}</p>
               <Box className="b-start">
                 <span>{tr("اشتراكك يبدأ")}</span>
                 <strong>{snapshotStart ? dateText(snapshotStart) : "—"}</strong>
