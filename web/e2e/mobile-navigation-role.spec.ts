@@ -208,7 +208,7 @@ test(`pending Captain profile stays in Passenger journey until explicit entry at
   const buttons=[...element.querySelectorAll<HTMLButtonElement>('button')];
   const rows=buttons.map(button=>Math.round(button.getBoundingClientRect().top));
   const widths=buttons.map(button=>Math.round(button.getBoundingClientRect().width));
-  return {gridColumns:getComputedStyle(element).gridTemplateColumns.split(/\\s+/).length,
+  return {gridColumns:getComputedStyle(element).gridTemplateColumns.split(/\s+/).length,
    rows,widths,overflow:document.documentElement.scrollWidth-innerWidth};
  });
  expect(dockLayout.gridColumns).toBe(5);
