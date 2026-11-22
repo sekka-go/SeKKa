@@ -1,3 +1,4 @@
+import AppSkeleton from './AppSkeleton';
 import {useEffect,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
@@ -158,7 +159,7 @@ export default function AdminApprovalLive({screen,onGo}: {screen:number;onGo:(sc
 
  return <section className="ad-content" aria-label={t('إدارة طلبات الكباتن','Captain application review')}>
   <h2>{screen===64?t('طلبات اعتماد الكباتن','Captain applications'):t('مراجعة مستندات الكباتن','Captain documents')}</h2>
-  {loading&&<p role="status">{t('جارٍ تحميل الطلبات…','Loading applications…')}</p>}
+  {loading&&<AppSkeleton kind="requests" count={3} label={t('جارٍ تحميل الطلبات…','Loading applications…')}/>}
   {authorized===false&&<p role="alert">{t('الصلاحية الإدارية غير متاحة.','Admin access denied.')}</p>}
   {error&&<div role="alert" className="ad-card"><p>{error}</p><button onClick={()=>setRevision(value=>value+1)}>{t('إعادة المحاولة','Retry')}</button></div>}
   {notice&&<p role="status">{notice}</p>}
