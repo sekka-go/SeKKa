@@ -1,0 +1,21 @@
+/* PoNo: approved white-on-blue wordmark in the real mobile app only.
+   Existing sekka-* internal selectors remain unchanged for compatibility. */
+.sekka-mobile .sekka-entry__brand--text,
+.sekka-mobile .sekka-entry-login__wordmark{
+ display:block!important;width:clamp(154px,47vw,248px)!important;
+ height:auto!important;max-height:100px!important;aspect-ratio:1250/455;
+ object-fit:contain!important;border-radius:10px;
+ background:#053FF6!important;box-shadow:none!important;
+}
+.sekka-mobile .sekka-entry-login__brand{margin-inline:auto!important;}
+.sekka-mobile .sekka-glass-mark{background:#0648F5!important;overflow:hidden!important;}
+.sekka-mobile .sekka-glass-mark img{display:block!important;width:100%!important;height:100%!important;object-fit:cover!important;}
+.sekka-mobile .sekka-side-drawer__wordmark{
+ display:block!important;width:115px!important;height:auto!important;
+ max-height:46px!important;aspect-ratio:1250/455;object-fit:contain;
+ background:#053FF6!important;border-radius:5px;
+}
+.sekka-mobile .sekka-live-wordmark{
+ display:block;max-width:250px;width:65vw;height:auto;aspect-ratio:1250/455;
+ object-fit:contain;border-radius:10px;background:#053FF6;
+}

@@ -46,6 +46,7 @@ import './glassy-sidebar.css';
 import './rider-dock-bloom.css';
 import './ui-quality-hardening.css';
 import './urban-mobility-palette.css';
+import './pono-brand.css';
 
 export default function MobileApp(){
  const p=usePreferences(),en=p.language==='en',t=(ar:string,english:string)=>en?english:ar;
@@ -524,7 +525,7 @@ export default function MobileApp(){
  const fullScreenAuth=(tab==='login'&&(onboardingScreen===3||onboardingScreen===4))||(tab==='captain-onboarding'&&!userId);
  const fullScreenSearch=tab==='search'&&discoveryScreen===9;
  const showFloatingActions=ready&&!(tab==='home'&&!userId)&&tab!=='login'&&tab!=='captain-onboarding';
- const sliverTitle=tab==='home'?'سِكَّة':
+ const sliverTitle=tab==='home'?'PoNo':
   tab==='search'?(discoveryScreen===9?t('دور على رحلة','Find a ride'):
    discoveryScreen===10?t('الفلاتر','Filters'):
    discoveryScreen===11?t('نتائج البحث','Search results'):t('تفاصيل الرحلة','Trip details')):
@@ -535,7 +536,7 @@ export default function MobileApp(){
   tab==='routes'?(captainScreen===42?t('الكابتن','Captain'):
    captainScreen===43?t('إنشاء خط','Create route'):t('إدارة الخطوط','Route management')):
   tab==='admin'?t('لوحة الإدارة','Admin dashboard'):
-  tab==='captain-onboarding'?t('انضم ككابتن','Become a Captain'):t('سِكَّة','seKKa');
+  tab==='captain-onboarding'?t('انضم ككابتن','Become a Captain'):t('PoNo','PoNo');
  const menuButton=<button type="button" ref={menuTrigger} className="sekka-fab-menu"
   aria-label={t('فتح القائمة','Open menu')} aria-expanded={menuOpen}
   aria-controls="sekka-side-menu" onClick={()=>{setMenuQuery('');setMenuCollapsed(true);setMenuOpen(true);}}>
@@ -547,7 +548,7 @@ export default function MobileApp(){
  return <div className={`sekka-mobile sekka-tab-${tab}${fullScreenSearchFilters?' sekka-search-filters':''}${fullScreenAuth?' sekka-fullscreen-auth':''}${fullScreenSearch?' sekka-fullscreen-search':''}${userId&&tab==='captain-onboarding'?' sekka-captain-logged-in':''}${!userId&&tab==='home'?' sekka-guest-welcome':''}${captainLanding?' sekka-captain-home-shell':''}${showRiderTabs?' sekka-rider-navigation':''}`} dir={en?'ltr':'rtl'}>
   <a className="sekka-skip" href="#sekka-content">{t('تخطي للمحتوى','Skip to content')}</a>
   {showFloatingActions&&<div className="sekka-sliver-pin" aria-hidden="true"><span>{sliverTitle}</span></div>}
-  {showFloatingActions&&<nav className="sekka-floating-actions" aria-label={t('اختصارات سِكَّة','seKKa shortcuts')}>
+  {showFloatingActions&&<nav className="sekka-floating-actions" aria-label={t('اختصارات PoNo','PoNo shortcuts')}>
    {menuButton}
    <button type="button" className="sekka-fab-bell" onClick={()=>navigate({tab:'notifications'})}
     aria-label={t('الإشعارات','Notifications')} aria-current={tab==='notifications'?'page':undefined}>
@@ -640,9 +641,9 @@ export default function MobileApp(){
      if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)closeMenu();}} className={`sekka-side-drawer sekka-glass-panel${menuCollapsed?' sekka-glass-panel--collapsed':''}`} aria-modal="true"
     aria-label={t('القائمة الرئيسية','Main menu')} dir={en?'ltr':'rtl'}>
     <header className="sekka-side-drawer__header">
-     <span className="sekka-glass-mark" aria-hidden="true"><SekkaMenuIcon name="home"/></span>
+     <span className="sekka-glass-mark" aria-hidden="true"><img src="/brand/pono-icon.svg" alt=""/></span>
      <div className="sekka-side-drawer__heading">
-      <span className="sekka-side-drawer__wordmark">سِكَّة</span>
+      <img className="sekka-side-drawer__wordmark" src="/brand/pono-wordmark.svg" alt="PoNo"/>
       <strong>{t('القائمة','Menu')}</strong>
      </div>
      <button type="button" className="sekka-glass-rail-toggle"
@@ -732,8 +733,8 @@ export default function MobileApp(){
     <footer className="sekka-glass-footer">
      <span className="sekka-glass-footer__symbol" aria-hidden="true"><SekkaMenuIcon name="profile"/></span>
      <span className="sekka-glass-footer__copy">
-      <strong>{t('سِكَّة','seKKa')}</strong>
-      <small>{t('معاك في السِكَّة','Along your way')}</small>
+      <strong>{t('PoNo','PoNo')}</strong>
+      <small>{t('معاك في PoNo','Along your way')}</small>
      </span>
      <span className="sekka-glass-footer__status" aria-hidden="true"/>
     </footer>

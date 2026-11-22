@@ -27,7 +27,7 @@ export default function LaunchSplash({children}:{children:ReactNode}){
   return()=>window.clearTimeout(id);
  },[visible]);
  return <>{children}{visible&&<div className="sekka-launch" role="status"
-  aria-label={document.documentElement.lang==="en"?"Opening seKKa":"جاري فتح سِكَّة"} aria-live="off">
+  aria-label={document.documentElement.lang==="en"?"Opening PoNo":"جاري فتح PoNo"} aria-live="off">
    <div className="sekka-launch__stage">
     <div className="sekka-launch__wave sekka-launch__wave--top" aria-hidden="true"/>
     <svg className="sekka-launch__ribbon" viewBox="0 0 440 140" preserveAspectRatio="none" aria-hidden="true">
@@ -35,9 +35,8 @@ export default function LaunchSplash({children}:{children:ReactNode}){
      <path d="M0 0H440V0C322 106 216 19 99 77C44 107 21 110 0 112Z" fill="#0DEEF5" opacity=".92"/>
      <path d="M0 0H440V0C315 71 214 9 104 56C57 77 24 88 0 94Z" fill="#82FAF7" opacity=".52"/>
     </svg>
-    <div className="sekka-launch__brand" dir="rtl">
-     <strong className="sekka-launch__brand-name">سِكَّة</strong>
-     <p className="sekka-launch__tagline">معاك في <b>السِكَّة</b></p>
+    <div className="sekka-launch__brand">
+     <img className="sekka-launch__brand-name" src="/brand/pono-wordmark-white.svg" alt="PoNo" />
     </div>
     <svg className="sekka-launch__sky-to-road-wave" viewBox="0 0 440 125" preserveAspectRatio="none" aria-hidden="true">
      <path d="M0 35C98 4 186 52 271 64S395 92 440 49V125H0Z" fill="#45DCFA"/>

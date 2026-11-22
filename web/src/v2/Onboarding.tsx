@@ -57,13 +57,12 @@ function ReferenceArt({
 export function Wordmark({ className = "" }: { className?: string }) {
   // Keep the original visual reference in the developer gallery only.
   if (window.location.pathname.startsWith("/dev/screens")) {
-    return <span className={`phase-wordmark ${className}`} role="img" aria-label="سِكَّة">
+    return <span className={`phase-wordmark ${className}`} role="img" aria-label="PoNo">
       <ReferenceArt source={1} crop={[185,280,445,225]} theme="dark" className="wordmark-dark"/>
       <ReferenceArt source={1} crop={[185,280,445,225]} theme="light" className="wordmark-light"/>
     </span>;
   }
-  return <span className={`phase-wordmark sekka-live-wordmark ${className}`} role="img"
-    aria-label="سِكَّة" dir="rtl">سِكَّة</span>;
+  return <img className={`phase-wordmark sekka-live-wordmark ${className}`} src="/brand/pono-wordmark.svg" alt="PoNo"/>;
 }
 function SvgIcon({ name }: { name: string }) {
   const p = {
@@ -269,8 +268,8 @@ export default function Onboarding({
   }
   const back = () => go(id === 6 ? 5 : id === 7 ? 6 : Math.max(1, id - 1));
   const heading = {
-    1: t("معاك في السِكَّة"),
-    2: t("معاك في السِكَّة"),
+    1: t("معاك في PoNo"),
+    2: t("معاك في PoNo"),
     3: t("اختر نوع حسابك"),
     4: t("أدخل رقم موبايلك"),
     5: t("أدخل كود التحقق"),
@@ -287,8 +286,8 @@ export default function Onboarding({
       <main className={"phase-canvas phase-screen-"+id+" sekka-entry-login"} dir={language==="en"?"ltr":"rtl"}>
         <button type="button" className="phase-back" onClick={()=>go(id===4?3:8)}
           aria-label={copy.back}>{language==="en"?"‹":"›"}</button>
-        <span className="sekka-entry-login__brand sekka-entry-login__wordmark"
-          role="img" aria-label={copy.brand}>{copy.brand}</span>
+        <img className="sekka-entry-login__brand sekka-entry-login__wordmark"
+          src="/brand/pono-wordmark.svg" alt="PoNo"/>
         {id===4
           ? <div className="phase-google-auth sekka-entry-login__form">
             <h1 className="phase-title">{copy.signInTitle}</h1>
@@ -397,7 +396,7 @@ export default function Onboarding({
             <button
               className="phase-splash-brand"
               onClick={() => go(2)}
-              aria-label={t("ابدأ مع سِكَّة")}
+              aria-label={t("ابدأ مع PoNo")}
             >
               {!production&&<Wordmark />}
               <h1>{heading}</h1>
@@ -427,7 +426,7 @@ export default function Onboarding({
               theme={theme}
               crop={[54, 310, 662, 326]}
               className="phase-welcome-art"
-              label={t("راكب مستعد لمشواره اليومي بجوار خط سِكَّة")}
+              label={t("راكب مستعد لمشواره اليومي بجوار خط PoNo")}
             />
             <div className="phase-benefits">
               {[
@@ -460,7 +459,7 @@ export default function Onboarding({
         ) : id === 3 ? (
           <>
             <h1 className="phase-title">{heading}</h1>
-            <p className="phase-subtitle">{t("قولنا هتستخدم سكة كراكب ولا كابتن؟")}</p>
+            <p className="phase-subtitle">{t("قولنا هتستخدم PoNo كراكب ولا كابتن؟")}</p>
             <div
               className="phase-roles"
               role="radiogroup"
