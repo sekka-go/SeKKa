@@ -47,7 +47,7 @@ export function specsForPage(page:TourPage,role:GuidedRole):TourSpec[]{
    all.push(step('extras',['.rh-pickup-actions'],'نقط الركوب والحجوزات','Pickup spots and bookings',
     'استكشف أماكن الركوب أو ارجع لحجوزاتك.','Explore pickup spots or open your bookings.'));
   }
-  all.push(riderTabs(),menu());
+  if(role!=='captain')all.push(riderTabs());
  }else if(tab==='search'&&view===9){
   all.push(step('places',['.rs3__places'],'حدّد مشوارك','Build your route',
    'اختار الانطلاق والوصول، والسهم الأصفر بيعكس الاتجاه.','Set your start and destination. The yellow arrow swaps them.'));
