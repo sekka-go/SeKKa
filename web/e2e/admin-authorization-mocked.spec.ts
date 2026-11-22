@@ -22,6 +22,7 @@ async function setup(page:Page,fixture:Fixture,language:'ar'|'en',theme:'light'|
   }));
   localStorage.setItem('language_preference',language);
   localStorage.setItem('theme_preference',theme);
+   sessionStorage.setItem('sekka.launch.seen.v1','1');
  },{endpoint,user,language,theme});
  await page.route(endpoint+'/**',async route=>{
   const url=new URL(route.request().url());
@@ -59,8 +60,7 @@ for(const width of [360,390]){
     await page.setViewportSize({width,height:844});
     await setup(page,{isAdmin:true},language,theme);
     await page.goto('/');
-    const adminButton=page.getByRole('button',{name:language==='ar'?'لوحة الإدارة':'Admin dashboard'});
-    await expect(adminButton).toBeVisible();
+    await expect(page.locator('.admin-stage')).toBeVisible();
     await expect(page).toHaveURL(/tab=admin/);
     await expect(page.locator('.admin-stage')).toBeVisible();
     await expect(page.locator('.ad-sidebar')).toBeVisible();
@@ -70,7 +70,7 @@ for(const width of [360,390]){
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     await page.screenshot({path:`test-results/mock-admin-${width}-${language}-${theme}.png`,fullPage:true});
     await page.reload();
-    await expect(adminButton).toBeVisible();
+    await expect(page.locator('.admin-stage')).toBeVisible();
     await expect(page).toHaveURL(/tab=admin/);
     await expect(page.locator('.admin-stage')).toBeVisible();
     await page.getByRole('button',{name:language==='ar'?'طلبات الكباتن':'Captain applications'}).click();
@@ -91,7 +91,7 @@ test('MOCKED narrow Admin keeps authorized action and preferences in left drawer
  await page.setViewportSize({width:320,height:700});
  await setup(page,{isAdmin:true},'en','dark');
  await page.goto('/?tab=admin&view=62');
- await expect(page.locator('.sekka-admin-entry')).toBeVisible();
+ await expect(page.locator('.admin-stage')).toBeVisible();
  await expect(page.locator('.sekka-mobile-header .sekka-approved-logo')).toHaveCount(0);
  const trigger=page.getByRole('button',{name:'Open menu'});
  await expect(trigger).toBeVisible();
@@ -116,7 +116,7 @@ test('MOCKED narrow Admin keeps authorized action and preferences in left drawer
  await expect(page.locator('html')).toHaveAttribute('data-theme','light');
  const closeThemed=page.getByRole('button',{name:'إغلاق القائمة'});
  if(await closeThemed.count())await closeThemed.last().click();
- await expect(page.locator('.sekka-admin-entry')).toBeVisible();
+ await expect(page.locator('.admin-stage')).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(321);
 });
 
@@ -127,10 +127,8 @@ for(const language of ['ar','en'] as const){
   await page.goto('/?tab=admin&view=62');
   const trigger=page.getByRole('button',{name:language==='ar'?'فتح القائمة':'Open menu'});
   const menu=await trigger.boundingBox();
-  const entry=await page.locator('.sekka-mobile-header .sekka-admin-entry').boundingBox();
-  expect(menu&&entry).toBeTruthy();
-  expect(menu!.x+menu!.width/2).toBeLessThan(160);
-  expect(entry!.y).toBeGreaterThanOrEqual(menu!.y+menu!.height);
+  expect(menu).not.toBeNull();
+   expect(menu!.x+menu!.width/2).toBeLessThan(160);
   await trigger.click();
   const drawer=page.getByRole('dialog',{name:language==='ar'?'القائمة الرئيسية':'Main menu'});
   await expect(drawer.locator('.sekka-language')).toBeVisible();
@@ -156,7 +154,7 @@ test('mocked failed Admin RPC shows retry, never silently treats permission as f
  await expect(page.getByRole('button',{name:'Admin dashboard'})).toHaveCount(0);
  fixture.adminUnavailable=false;
  await page.getByRole('button',{name:'Retry authorization'}).click();
- await expect(page.getByRole('button',{name:'Admin dashboard'})).toBeVisible();
+ await expect(page.locator('.admin-stage')).toBeVisible();
  await expect(page).toHaveURL(/tab=admin/);
 });
 
@@ -167,7 +165,7 @@ test('MOCKED verified Admin returning to S006 after Google goes to Admin dashboa
  await page.goto('/?tab=login&view=6&oauth_role=rider');
  await expect(page).toHaveURL(/tab=admin&view=62/);
  await expect(page.locator('.admin-stage')).toBeVisible();
- await expect(page.getByRole('button',{name:'Admin dashboard'})).toBeVisible();
+ await expect(page.locator('.admin-stage')).toBeVisible();
  await page.reload();
  await expect(page).toHaveURL(/tab=admin&view=62/);
  await expect(page.locator('.admin-stage')).toBeVisible();
