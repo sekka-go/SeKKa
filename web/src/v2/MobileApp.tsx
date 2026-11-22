@@ -55,12 +55,17 @@ export default function MobileApp(){
  const [bookingsSection,setBookingsSection]=useState<'bookings'|'requests'>(()=>{try{return sessionStorage.getItem('sekka.bookingsSection')==='requests'?'requests':'bookings';}catch{return 'bookings';}});
  useEffect(()=>{try{sessionStorage.setItem('sekka.bookingsSection',bookingsSection);}catch{/* Private browsing still works. */}},[bookingsSection]);
  const menuTrigger=useRef<HTMLButtonElement>(null);
+ const menuDialogRef=useRef<HTMLDialogElement>(null);
  const closeMenu=()=>{setMenuOpen(false);menuTrigger.current?.focus();};
  useEffect(()=>{
   if(!menuOpen)return;
-  const onKey=(event:KeyboardEvent)=>{if(event.key==='Escape')closeMenu();};
-  document.addEventListener('keydown',onKey);
-  return()=>document.removeEventListener('keydown',onKey);
+  const dialog=menuDialogRef.current;
+  if(!dialog)return;
+  // Native modal dialog makes background content inert, traps focus, and
+  // handles accessibility semantics rather than simulating a modal with `open`.
+  if(!dialog.open)dialog.showModal();
+  dialog.querySelector<HTMLButtonElement>('.sekka-glass-rail-toggle')?.focus();
+  return()=>{if(dialog.open)dialog.close();};
  },[menuOpen]);
  const tab=route.tab;
  // Unified native scroll surface for Rider, Captain, and Admin routes.
@@ -627,8 +632,10 @@ export default function MobileApp(){
    active={tab==='search'?'search':tab==='bookings'?(bookingsSection==='requests'?'requests':'bookings'):tab==='booking'?'bookings':tab==='profile'?'profile':tab==='home'?'home':null}
    onNavigate={onRiderTab}/>}
   {menuOpen&&<div className="sekka-menu-layer sekka-glass-layer">
-   <button type="button" className="sekka-menu-backdrop" aria-label={t('إغلاق القائمة','Close menu')} onClick={closeMenu}/>
-   <dialog open id="sekka-side-menu" className={`sekka-side-drawer sekka-glass-panel${menuCollapsed?' sekka-glass-panel--collapsed':''}`} aria-modal="true"
+   <dialog ref={menuDialogRef} id="sekka-side-menu" onCancel={event=>{event.preventDefault();closeMenu();}}
+    onClick={event=>{if(event.target!==event.currentTarget)return;
+     const r=event.currentTarget.getBoundingClientRect();
+     if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)closeMenu();}} className={`sekka-side-drawer sekka-glass-panel${menuCollapsed?' sekka-glass-panel--collapsed':''}`} aria-modal="true"
     aria-label={t('القائمة الرئيسية','Main menu')} dir={en?'ltr':'rtl'}>
     <header className="sekka-side-drawer__header">
      <span className="sekka-glass-mark" aria-hidden="true"><SekkaMenuIcon name="home"/></span>
