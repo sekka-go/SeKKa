@@ -108,6 +108,17 @@ html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation.sekka-tab-home > .s
  font:900 clamp(22px,6.2vw,28px)/1.35 Tajawal,Tahoma,sans-serif!important;
  color:var(--showcase-ink)!important;text-align:start!important;
 }
+/* The fixed tab dock used to let the following section heading peek through
+ * behind its upper edge. Fade only that 36px junction without blocking taps or
+ * removing any real section: scrolling still reveals every route and action. */
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-tabs::before{
+ content:"";position:absolute;inset-inline:0;top:-36px;height:37px;
+ pointer-events:none;
+ background:linear-gradient(180deg,rgba(240,245,254,0),rgba(240,245,254,.88) 74%,#F0F5FE);
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-tabs::before{
+ background:linear-gradient(180deg,rgba(5,7,11,0),rgba(5,7,11,.9) 74%,#05070B);
+}
 .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-routes{
  margin:20px 0 19px!important;
 }
