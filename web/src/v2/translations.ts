@@ -848,5 +848,9 @@ export const english: Readonly<Record<string,string>> = {
 };
 export function translate(text:string,language:"ar"|"en"){
  const normalized=text.replaceAll("سِكّة","سِكَّة");
- return language==="en" ? english[text] ?? english[text.replaceAll("سِكَّة","سِكّة")] ?? text : normalized;
+ if(language!=="en")return normalized;
+ // Keep approved archive/gallery strings translatable while PoNo is the live brand.
+ const legacy=["سِكّة","سِكَّة","السِكّة","السِكَّة"];
+ const candidate=english[text] ?? legacy.map(name=>english[text.replaceAll("PoNo",name)]).find(Boolean);
+ return (candidate??text).replaceAll("seKKa","PoNo").replaceAll("Sekka Go","PoNo");
 }

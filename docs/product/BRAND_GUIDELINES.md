@@ -1,56 +1,31 @@
-# سِكَّة / Sekka Go — current visual system (22 November 2026)
+# PoNo — approved visual identity (22 November 2026)
 
-## Names
-Installed PWA name: **Sekka Go**. In-app Arabic wordmark: **سِكَّة**
-(exact diacritics). English in-app brand: **seKKa**.
-Slogan: «معاك في السِكَّة».
+The official app name and capitalization are **PoNo** (Arabic pronunciation: بونو).
+The installed app icon is the **white abstract P on blue** approved by the owner
+in image `1000645975.webp`. The English **PoNo wordmark**, white with a
+custom P and integrated white underline against cobalt blue, was approved in
+image `1000645986.webp`. Do not substitute older seKKa or S-monogram assets.
 
-## Urban Mobility — current palette (22 November 2026)
-The sea-like aqua/cyan gradients are superseded by an urban transport identity.
-Use deep/navy structure, electric blue navigation, neutral ivory canvas and
-yellow for essential actions. No ocean waves as decorative background.
+## Assets
+- `web/public/brand/pono-icon.svg`: vectorized from the approved icon
+- `web/public/brand/pono-icon-192.png` and `pono-icon-512.png`: PWA and iOS/Android icon sizes
+- `web/public/brand/pono-wordmark.svg`: original white-on-blue lockup
+- `web/public/brand/pono-wordmark-white.svg`: transparent wordmark for splash overlay
+- `web/src/v2/pono-brand.css`: scoped brand treatment
 
-| Semantic role | Hex | Usage |
-|---|---|---|
-| Mobility blue | `#1753E8` | Brand blue, selection, road graphics |
-| Urban navy | `#17253A` | Header anchor, dark text, chrome |
-| Warm ivory | `#F5F3ED` | Main light canvas |
-| Action yellow | `#FFD02A` | Important CTA with dark ink |
-| White | `#FFFFFF` | Cards and high-contrast text on blue |
-| Dark canvas | `#101827` | Dark mode |
-| Dark raised | `#1B2638` | Dark card surfaces |
-| Dark readable blue | `#8BA8FF` | Selected navigation in dark mode |
+The live mobile app, guest onboarding, account login, side menu, splash,
+browser title, PWA manifest and icon links use PoNo. The visual reference
+gallery under `/dev/screens` remains archival, not the public app.
 
-Production CSS: `web/src/v2/urban-mobility-palette.css` loaded last.
-Existing style layers remain temporarily for compatibility. The new tokens
-override legacy sky/aqua values without changing gallery screen layout.
-Splash retains the approved SUV and timing but removes sea-wave decoration.
+## No-breaking-change rename policy
+Do not rename existing `sekka-*` CSS selectors, PWA internal manifest ID,
+Supabase tables or RPCs, user data, OAuth app configuration, storage keys,
+Cloudflare project, or repository paths as part of this visual rename.
+Those are stable technical references and may require a separate migration.
 
-## Installed app icon — S monogram
-The app icon installed on the phone is the standalone Latin **S** symbol:
-a continuous white roadway ribbon over a sky-blue/cyan rounded square.
-It contains **no wordmark** or Arabic logotype and does not change the
-in-app «سِكَّة» identity or the existing animated Splash.
+Core app UI uses the earlier approved Urban Mobility palette until a
+different interface palette is explicitly chosen; the PoNo brand mark
+has its owner-approved vivid cobalt-blue background. Brand identity is
+not proof of trademark clearance.
 
-- `web/public/brand/sekka-s-icon.svg`
-- `web/public/brand/sekka-s-icon-192.png`
-- `web/public/brand/sekka-s-icon-512.png`
-
-The manifest, browser favicon, and Apple touch icon use the same S family.
-Previous seKKa-road install icons are historical assets only.
-
-## Typography and accessibility
-Arabic: locally bundled Tajawal. Use title 800–900, section 700–800,
-body 400–500, control 700–800. Bottom-navigation labels ≥12 CSS px;
-primary touch targets ≥44×44 CSS px. Text contrast ≥4.5:1, large text
-and UI boundaries ≥3:1; clear focus indicator; RTL and LTR; reduced
-motion; safe-area-aware layout.
-
-## Truthful interface states
-Do not fabricate available trips, fees, map distances, pickup stops,
-periods, payment success or OTP. Weekday selection is a saved
-preference, not a verified server filter or trip-request field yet.
-A ride request requires valid server-supported departure/return times.
-Preserve current Supabase RLS and approved server-owned booking flows.
-
-This is implementation guidance on Draft PR #185, not Production approval.
+Production and database must stay unchanged; stage only on PR #185.

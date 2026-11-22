@@ -6,7 +6,7 @@
  * OpenStreetMap tile policy: do NOT override the provider's own HTTP cache,
  * prefetch/bulk download tiles, or intercept cross-origin tile responses.
  */
-const CACHE='sekka-static-v12-public-image-cache';
+const CACHE='sekka-static-v13-pono-public-image-cache';
 const referenceImage=/^\/references\/phase-1\/\d{2}\.png$/;
 const isStatic=url=>url.pathname.startsWith('/assets/')||
  url.pathname.startsWith('/brand/')||referenceImage.test(url.pathname);

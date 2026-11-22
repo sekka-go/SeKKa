@@ -32,13 +32,13 @@ export function specsForPage(page:TourPage,role:GuidedRole):TourSpec[]{
  if(tab==='home'){
   if(role==='captain'){
    all.push(step('welcome',['.cj-home-welcome','#cj-home-greeting'],'أهلًا يا كابتن','Welcome Captain',
-    'ده ملخص رحلة الكابتن في سِكَّة.','Your Captain journey starts here.'));
+    'ده ملخص رحلة الكابتن في PoNo.','Your Captain journey starts here.'));
    all.push(step('create',['.cj-home-main-action'],'انشر رحلة','Publish a trip',
     'ابدأ تعريف مشوارك وخط السير من الزر ده.','Start setting up your route here.'));
    all.push(step('activity',['.cj-home-metrics','.cj-home-how'],'ملخص نشاطك','Your activity',
     'تابع خطوطك وحجوزاتك وتعليمات البدء.','Check your routes, bookings and getting-started guide.'));
   }else{
-   all.push(step('welcome',['.rh-hero__copy','.rh-hero'],'أهلًا بيك في سِكَّة','Welcome to seKKa',
+   all.push(step('welcome',['.rh-hero__copy','.rh-hero'],'أهلًا بيك في PoNo','Welcome to PoNo',
     'هنا بتبدأ مشوارك من غير تعقيد.','Your journey begins here.'));
    all.push(step('journey',['.rh-journey__fields'],'منين ولفين؟','Start and destination',
     'حدّد مكانك ووجهتك، واختار الوقت المناسب.','Choose your start, destination and preferred time.'));

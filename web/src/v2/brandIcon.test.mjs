@@ -36,7 +36,7 @@ const SELECTED_ICON_SHA256={
  512:'95c7e6799aca806db1a48db6e32416fbaa7ba4168d8015f302cf3cda2553d6e0'
 };
 for(const size of [192,512]){
- test(`owner-selected seKKa white wordmark/yellow road icon is installed at ${size}px`,()=>{
+ test(`archived seKKa road asset remains intact at ${size}px`,()=>{
   const data=readFileSync(new URL(`../../public/brand/sekka-go-road-${size}.png`,import.meta.url));
   assert.equal(data.toString('hex',0,8),'89504e470d0a1a0a');
   assert.equal(data.readUInt32BE(16),size);
@@ -45,23 +45,24 @@ for(const size of [192,512]){
   assert.notDeepEqual(data,readFileSync(new URL(`../../public/brand/sekka-go-${size}.png`,import.meta.url)));
  });
 }
-test('PWA installs current Urban Mobility S mark while archived branding stays separate',()=>{
+test('PWA installs owner-approved PoNo P mark and keeps historical seKKa assets separate',()=>{
  const manifest=JSON.parse(readFileSync(new URL('../../public/manifest.webmanifest',import.meta.url),'utf8'));
  const index=readFileSync(new URL('../../index.html',import.meta.url),'utf8');
  const splash=readFileSync(new URL('./LaunchSplash.tsx',import.meta.url),'utf8');
- assert.equal(manifest.name,'Sekka Go');
+ assert.equal(manifest.name,'PoNo');
+ assert.equal(manifest.short_name,'PoNo');
  assert.deepEqual(manifest.icons.map(x=>x.src),[
-  '/brand/sekka-s-icon-192.png','/brand/sekka-s-icon-512.png','/brand/sekka-s-icon.svg'
+  '/brand/pono-icon-192.png','/brand/pono-icon-512.png','/brand/pono-icon.svg'
  ]);
- assert.match(index,/sekka-s-icon-192\.png/);
+ assert.match(index,/pono-icon-192\.png/);
  assert.doesNotMatch(index,/sekka-go-road-192\.png/);
  assert.doesNotMatch(index,/sekka-sky-mark\.svg/);
- assert.equal(manifest.theme_color,'#17253A');
- const svg=readFileSync(new URL('../../public/brand/sekka-s-icon.svg',import.meta.url),'utf8');
- assert.match(svg,/stop-color="#1753E8"/);
- assert.match(svg,/stop-color="#17253A"/);
+ assert.equal(manifest.theme_color,'#0648F5');
+ const svg=readFileSync(new URL('../../public/brand/pono-icon.svg',import.meta.url),'utf8');
+ assert.match(svg,/fill-rule="evenodd"/);
+ assert.match(svg,/linearGradient id="p"/);
  for(const size of [192,512]){
-  const bytes=readFileSync(new URL(`../../public/brand/sekka-s-icon-${size}.png`,import.meta.url));
+  const bytes=readFileSync(new URL(`../../public/brand/pono-icon-${size}.png`,import.meta.url));
   assert.equal(bytes.toString('hex',0,8),'89504e470d0a1a0a');
   assert.equal(bytes.readUInt32BE(16),size);
   assert.equal(bytes.readUInt32BE(20),size);
@@ -76,7 +77,8 @@ test('PWA installs current Urban Mobility S mark while archived branding stays s
  assert.match(wheel,/getContext\('2d'/);
  assert.match(wheel,/requestAnimationFrame\(render\)/);
  assert.match(wheel,/prefers-reduced-motion/);
- assert.match(splash,/سِكَّة/);
+ assert.match(splash,/pono-wordmark-white\.svg/);
+ assert.match(readFileSync(new URL('../../public/brand/pono-wordmark.svg',import.meta.url),'utf8'),/viewBox="145 285 1250 455"/);
  assert.doesNotMatch(splash,/HiaceArtwork|sekka-launch__black-wipe|sekka-launch__hiace/);
  assert.equal(splash.includes('sekka-go-road-512.png'),false);
 });

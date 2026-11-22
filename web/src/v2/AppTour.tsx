@@ -200,7 +200,7 @@ export default function AppTour({page,role,actor,language,active,replayToken,aut
    ref={panel} tabIndex={-1}
    style={{top:tooltip.top,left:tooltip.left,width:tooltip.width}}>
    <div className="sekka-app-tour__topline">
-    <span className="sekka-app-tour__name">{t('دليلك في سِكَّة','Your seKKa guide')}</span>
+    <span className="sekka-app-tour__name">{t('دليلك في PoNo','Your PoNo guide')}</span>
     <span className="sekka-app-tour__counter" aria-label={t('الخطوة','Step')+' '+(tour.index+1)+' / '+tour.steps.length}>
      {tour.index+1} / {tour.steps.length}
     </span>
