@@ -1,3 +1,4 @@
+import AppSkeleton from './AppSkeleton';
 import {inLaunchRegion,outsideCoverageMessage} from './geoPlace';
 import {isInsideCairoDiscovery} from './discoveryCairo';
 import LiveTripRequests from './LiveTripRequests';
@@ -110,7 +111,7 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
  if(outside)return <p role="status">{t(outsideCoverageMessage.ar,outsideCoverageMessage.en)}</p>;
  return <section className="d-live-search">
    {!client&&<p role="status">{t('البحث الحقيقي محتاج ربط إعدادات Supabase العامة.','Live search requires public Supabase configuration.')}</p>}
-  {loading&&<p role="status">{t('بنبحث عن خطوط مطابقة…','Searching published routes…')}</p>}
+  {loading&&<AppSkeleton kind="routes" count={3} label={t('بنبحث عن خطوط مطابقة…','Searching published routes…')}/>}
   {error&&<div role="alert"><p>{t('تعذر تحميل الخطوط.','Unable to load routes.')}</p><button onClick={()=>setRetry(v=>v+1)}>{t('حاول تاني','Retry')}</button></div>}
   {current&&!error&&items.length===0&&<div className="sekka-no-match" role="group" aria-label={t('نتيجة البحث','Search result')}>
    <p role="status">{t('مفيش رحلة مناسبة لبحثك حاليًا.','No matching trip available right now.')}</p>
