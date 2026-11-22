@@ -3,6 +3,7 @@ import {client} from './api';
 import {cancelPendingBooking} from './reservations';
 import {usePreferences} from './preferences';
 import './rider-bookings-v3.css';
+import {useStaggeredReveal} from './staggerMotion';
 
 type RiderBooking={id:string;route_id:string;seats:number;status:string;created_at:string};
 type Filter='active'|'past'|'all';
@@ -11,6 +12,7 @@ export default function RiderBookingsV3({onFindRide,onOpenBooking}:{
  onFindRide:()=>void;onOpenBooking:(id:string)=>void;
 }){
  const {language}=usePreferences(),en=language==='en',t=(ar:string,english:string)=>en?english:ar;
+ const revealBooking=useStaggeredReveal();
  const [items,setItems]=useState<RiderBooking[]>([]);
  const [titles,setTitles]=useState<Record<string,string>>({});
  const [filter,setFilter]=useState<Filter>('active');
@@ -93,7 +95,7 @@ export default function RiderBookingsV3({onFindRide,onOpenBooking}:{
    <button type="button" onClick={onFindRide}>{t('دور على رحلة','Find a ride')}</button>
   </section>}
   {!loading&&!error&&shown.length>0&&<ul className="rb3__list">
-   {shown.map(b=><li key={b.id} className="rb3__card">
+   {shown.map(b=><li key={b.id} ref={revealBooking} className="rb3__card">
     <div className="rb3__card-top">
      <span className={'rb3__status rb3__status--'+b.status}>{status(b.status)}</span>
      <small>{new Date(b.created_at).toLocaleDateString(en?'en-GB':'ar-EG',{day:'numeric',month:'short',year:'numeric'})}</small>
