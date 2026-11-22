@@ -30,10 +30,19 @@ export default function LaunchSplash({children}:{children:ReactNode}){
   aria-label="جاري فتح سِكَّة" aria-live="off">
    <div className="sekka-launch__stage">
     <div className="sekka-launch__wave sekka-launch__wave--top" aria-hidden="true"/>
+    <svg className="sekka-launch__ribbon" viewBox="0 0 440 140" preserveAspectRatio="none" aria-hidden="true">
+     <path d="M0 0H440V16C329 135 207 19 105 109C56 151 18 130 0 134Z" fill="#057FE5"/>
+     <path d="M0 0H440V0C322 106 216 19 99 77C44 107 21 110 0 112Z" fill="#22E3ED" opacity=".92"/>
+     <path d="M0 0H440V0C315 71 214 9 104 56C57 77 24 88 0 94Z" fill="#92F7F5" opacity=".52"/>
+    </svg>
     <div className="sekka-launch__brand" dir="rtl">
      <strong className="sekka-launch__brand-name">سِكَّة</strong>
      <p className="sekka-launch__tagline">معاك في <b>السِكَّة</b></p>
     </div>
+    <svg className="sekka-launch__sky-to-road-wave" viewBox="0 0 440 125" preserveAspectRatio="none" aria-hidden="true">
+     <path d="M0 35C98 4 186 52 271 64S395 92 440 49V125H0Z" fill="#50E9F5"/>
+     <path d="M0 56C100 22 178 73 269 84S383 111 440 69V125H0Z" fill="#B8F6FE"/>
+    </svg>
     <img className="sekka-launch__approved-scene" src={approvedSplashSceneUri} alt=""
      draggable={false} aria-hidden="true"/>
     {/* The road glints follow the painted lanes at the approved scene's
