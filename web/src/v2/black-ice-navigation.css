@@ -281,6 +281,25 @@ html[data-theme="dark"] .sekka-mobile .sekka-side-drawer__header .sekka-side-dra
 html[data-theme="dark"] .sekka-mobile .sekka-side-drawer__close{
  background:#171F2B!important;color:#D0F4FF!important;border-color:#39485A!important;
 }
+/* Search, filters and trip details use the same black foundation.
+ * Only their painted hero receives ice-blue gradients; fields stay legible. */
+html[data-theme="dark"] .sekka-mobile .discovery-stage > .d-canvas,
+html[data-theme="dark"] .sekka-mobile .d-canvas:is(.d-screen-9,.d-screen-10,.d-screen-11,.d-screen-12),
+html[data-theme="dark"] .sekka-mobile .rs3,
+html[data-theme="dark"] .sekka-mobile .rf3,
+html[data-theme="dark"] .sekka-mobile .rd3{
+ --rs-bg:#05070B!important;--rs-paper:#111923!important;
+ background:#05070B!important;color:#F2F9FF!important;
+}
+html[data-theme="dark"] .sekka-mobile .rs3 > .rs3__head,
+html[data-theme="dark"] .sekka-mobile .rf3 > .rf3__hero,
+html[data-theme="dark"] .sekka-mobile .rr3-hero,
+html[data-theme="dark"] .sekka-mobile .rd3__hero{
+ background:radial-gradient(ellipse at 91% 7%,#B7ECFF44 0,transparent 52%),linear-gradient(122deg,#080B12,#103148 60%,#367DAD 118%)!important;
+}
+html[data-theme="dark"] .sekka-mobile :is(.rs3__place,.rs3__time,.rs3__days-toggle,.rh-journey__field){
+ background:#131F2D!important;border-color:#31495A!important;color:#EFF9FF!important;
+}
 html[data-theme="dark"] .sekka-mobile .sekka-mobile-card,
 html[data-theme="dark"] .sekka-mobile .live-profile,
 html[data-theme="dark"] .sekka-mobile .live-notifications,
