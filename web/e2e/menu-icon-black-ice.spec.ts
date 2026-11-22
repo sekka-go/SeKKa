@@ -26,6 +26,8 @@ for(const width of [320,390]){
   const active=drawer.getByRole('button',{name:'حسابي'});
   await expect(active).toHaveAttribute('aria-current','page');
   await expect(active.locator('.sekka-menu-row__icon')).toHaveCSS('border-top-color','rgb(146, 227, 250)');
+  await expect(active.locator('.sekka-menu-row__label')).toHaveCSS('color','rgb(247, 252, 255)');
+  await expect(drawer.locator('.sekka-side-drawer__close')).toHaveCSS('background-color','rgb(23, 31, 43)');
   await page.screenshot({path:'../docs/audit/menu-black-ice-'+width+'.png',fullPage:true,animations:'disabled'});
   await expect(drawer.locator('.sekka-preference-row')).toHaveCount(2);
   await expect(drawer.locator('.sekka-preference-row__details select')).toHaveCount(2);
@@ -53,6 +55,7 @@ test('dark black theme can be changed to light without losing language or naviga
  await appearance.selectOption('dark');
  await expect(toggle).toHaveAttribute('aria-checked','true');
  await expect(page.locator('.sekka-mobile')).toHaveCSS('background-color','rgb(5, 7, 11)');
+ await expect(drawer.getByRole('button',{name:'حسابي'}).locator('.sekka-menu-row__label')).toHaveCSS('color','rgb(247, 252, 255)');
  await appearance.selectOption('light');
  await expect(page.locator('html')).toHaveAttribute('data-theme','light');
  await expect(page.locator('html')).toHaveAttribute('dir','rtl');
