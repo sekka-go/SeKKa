@@ -4,7 +4,7 @@ import {test,expect} from '@playwright/test';
 const themes=['light','dark'] as const;
 const widths=[320,390] as const;
 function rgbChannels(color:string):number[]{
- const values=color.match(/\\d+(?:\\.\\d+)?/g);
+ const values=color.match(/\d+(?:\.\d+)?/g);
  if(!values||values.length<3)throw new Error('No RGB color: '+color);
  return values.slice(0,3).map(Number);
 }
