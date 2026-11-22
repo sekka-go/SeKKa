@@ -148,3 +148,14 @@ html[data-theme="dark"] .sekka-mobile:not(.sekka-rider-navigation):is(.sekka-tab
     top:calc(17px + env(safe-area-inset-top,0px))!important;
   }
 }
+
+/* Route-unavailable fallback uses seKKa yellow: keep the label and arrow dark.
+   Other live booking CTAs retain their established blue/white semantics. */
+.sekka-mobile .sekka-rider-booking-v3 .b-unavailable .b-primary{
+  background:#FFCC24!important;
+  color:#102A3C!important;
+}
+.sekka-mobile .sekka-rider-booking-v3 .b-unavailable .b-primary svg{
+  stroke:#102A3C!important;
+  color:#102A3C!important;
+}
