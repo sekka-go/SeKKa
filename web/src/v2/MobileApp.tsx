@@ -41,7 +41,6 @@ import './navigation-reference-refresh.css';
 export default function MobileApp(){
  const p=usePreferences(),en=p.language==='en',t=(ar:string,english:string)=>en?english:ar;
  const [route,setRoute]=useState<MobileRoute>(()=>readMobileRoute());
- const [motionStep,setMotionStep]=useState(0);
  const [tourReplayToken,setTourReplayToken]=useState(0);
  const [menuOpen,setMenuOpen]=useState(false);
  const [bookingsSection,setBookingsSection]=useState<'bookings'|'requests'>(()=>{try{return sessionStorage.getItem('sekka.bookingsSection')==='requests'?'requests':'bookings';}catch{return 'bookings';}});
@@ -91,7 +90,7 @@ export default function MobileApp(){
  const [areasError,setAreasError]=useState('');
  const [areas,setAreas]=useState<{id:number;name_ar:string;name_en:string}[]>([]);
  const [areasLoaded,setAreasLoaded]=useState(false);
- useEffect(()=>{const back=()=>{setMotionStep(step=>step+1);setRoute(readMobileRoute());setBookingId(new URL(location.href).searchParams.get('booking'));setSelectionVersion(v=>v+1);};addEventListener('popstate',back);return()=>removeEventListener('popstate',back);},[]);
+ useEffect(()=>{const back=()=>{setRoute(readMobileRoute());setBookingId(new URL(location.href).searchParams.get('booking'));setSelectionVersion(v=>v+1);};addEventListener('popstate',back);return()=>removeEventListener('popstate',back);},[]);
  useEffect(()=>{
   const canonical=mobileRouteHref(route,location.href);
   const current=location.pathname+location.search+location.hash;
@@ -102,7 +101,6 @@ export default function MobileApp(){
   const href=mobileRouteHref(next,location.href,options.selection,options.bookingId);
   const current=location.pathname+location.search+location.hash;
   if(href===current){setRoute(next);return;}
-  setMotionStep(step=>step+1);
   const state={route:next,sekkaNavigation:true,from:route};
   if(options.replace)history.replaceState(state,'',href);
   else history.pushState(state,'',href);
@@ -488,11 +486,14 @@ export default function MobileApp(){
   (tab==='home'||tab==='bookings'||tab==='profile'||tab==='notifications'||
    tab==='booking'||tab==='search');
  const onRiderTab=(destination:RiderTab)=>{
-  if(destination==='search')navigate({tab:'search',view:9});
-  else{
-   if(destination==='bookings')setBookingsSection('bookings');
-   navigate({tab:destination});
+  if(destination==='search'){navigate({tab:'search',view:9});return;}
+  if(destination==='requests'){
+   setBookingsSection('requests');
+   navigate({tab:'bookings'});
+   return;
   }
+  if(destination==='bookings')setBookingsSection('bookings');
+  navigate({tab:destination});
  };
  useEffect(()=>{
   if(!blockedRiderTab)return;
@@ -522,7 +523,7 @@ export default function MobileApp(){
    <path d="M5 6h14M5 12h14M5 18h14"/>
   </svg>
  </button>;
- return <div className={`sekka-mobile sekka-tab-${tab}${fullScreenSearchFilters?' sekka-search-filters':''}${fullScreenAuth?' sekka-fullscreen-auth':''}${fullScreenSearch?' sekka-fullscreen-search':''}${userId&&tab==='captain-onboarding'?' sekka-captain-logged-in':''}${!userId&&tab==='home'?' sekka-guest-welcome':''}${captainLanding?' sekka-captain-home-shell':''}${showRiderTabs?' sekka-rider-navigation':''}${motionStep?(motionStep%2?' sk-motion-odd':' sk-motion-even'):''}`} dir={en?'ltr':'rtl'}>
+ return <div className={`sekka-mobile sekka-tab-${tab}${fullScreenSearchFilters?' sekka-search-filters':''}${fullScreenAuth?' sekka-fullscreen-auth':''}${fullScreenSearch?' sekka-fullscreen-search':''}${userId&&tab==='captain-onboarding'?' sekka-captain-logged-in':''}${!userId&&tab==='home'?' sekka-guest-welcome':''}${captainLanding?' sekka-captain-home-shell':''}${showRiderTabs?' sekka-rider-navigation':''}`} dir={en?'ltr':'rtl'}>
   <a className="sekka-skip" href="#sekka-content">{t('تخطي للمحتوى','Skip to content')}</a>
   {showFloatingActions&&<div className="sekka-sliver-pin" aria-hidden="true"><span>{sliverTitle}</span></div>}
   {showFloatingActions&&<nav className="sekka-floating-actions" aria-label={t('اختصارات سِكَّة','seKKa shortcuts')}>
@@ -607,9 +608,8 @@ export default function MobileApp(){
    active={!menuOpen&&!blockedRiderTab}
    replayToken={tourReplayToken}
   />}
-  {motionStep>0&&<div key={motionStep} className="sk-route-swoosh" aria-hidden="true"><i/><b/><span/></div>}
   {showRiderTabs&&<RiderTabBar
-   active={tab==='search'?'search':tab==='bookings'||tab==='booking'?'bookings':tab==='notifications'?'notifications':tab==='profile'?'profile':tab==='home'?'home':null}
+   active={tab==='search'?'search':tab==='bookings'?(bookingsSection==='requests'?'requests':'bookings'):tab==='booking'?'bookings':tab==='profile'?'profile':tab==='home'?'home':null}
    onNavigate={onRiderTab}/>}
   {menuOpen&&<div className="sekka-menu-layer">
    <button type="button" className="sekka-menu-backdrop" aria-label={t('إغلاق القائمة','Close menu')} onClick={closeMenu}/>
