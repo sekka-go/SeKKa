@@ -36,6 +36,7 @@ import './brand-yellow-black.css';
 import './stagger-motion.css';
 import {useSekkaSliverScroll} from './sliverScroll';
 import './sliver-scroll.css';
+import './navigation-reference-refresh.css';
 
 export default function MobileApp(){
  const p=usePreferences(),en=p.language==='en',t=(ar:string,english:string)=>en?english:ar;
@@ -501,7 +502,7 @@ export default function MobileApp(){
  const fullScreenAuth=(tab==='login'&&(onboardingScreen===3||onboardingScreen===4))||(tab==='captain-onboarding'&&!userId);
  const fullScreenSearch=tab==='search'&&discoveryScreen===9;
  const showFloatingActions=ready&&!(tab==='home'&&!userId)&&tab!=='login'&&tab!=='captain-onboarding';
- const sliverTitle=tab==='home'?t('الرئيسية','Home'):
+ const sliverTitle=tab==='home'?t('سِكَّة','seKKa'):
   tab==='search'?(discoveryScreen===9?t('دور على رحلة','Find a ride'):
    discoveryScreen===10?t('الفلاتر','Filters'):
    discoveryScreen===11?t('نتائج البحث','Search results'):t('تفاصيل الرحلة','Trip details')):
@@ -608,7 +609,7 @@ export default function MobileApp(){
   />}
   {motionStep>0&&<div key={motionStep} className="sk-route-swoosh" aria-hidden="true"><i/><b/><span/></div>}
   {showRiderTabs&&<RiderTabBar
-   active={tab==='search'?'search':tab==='bookings'||tab==='booking'?'bookings':tab==='profile'?'profile':tab==='home'?'home':null}
+   active={tab==='search'?'search':tab==='bookings'||tab==='booking'?'bookings':tab==='notifications'?'notifications':tab==='profile'?'profile':tab==='home'?'home':null}
    onNavigate={onRiderTab}/>}
   {menuOpen&&<div className="sekka-menu-layer">
    <button type="button" className="sekka-menu-backdrop" aria-label={t('إغلاق القائمة','Close menu')} onClick={closeMenu}/>
