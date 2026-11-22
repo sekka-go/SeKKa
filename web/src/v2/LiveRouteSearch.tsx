@@ -35,8 +35,8 @@ export async function fetchPublishedSelection(routeId:string,fromId:string,toId:
  if(typeof remaining!=='number'||remaining<0)throw Error('CAPACITY_UNAVAILABLE');
  return {route:route as Route,from,to,reverse,stops,remaining};
 }
-export default function LiveRouteSearch({origin,destination,originPoint=null,destinationPoint=null,canCreateRequest=true,outbound,returnTime,period,requestPeriod,direction,categories,maxSeatPrice=null,onlyAvailable=false,onEditFilters,onSelect,onSignIn}:{
- origin:string;destination:string;originPoint?:GeoPoint|null;destinationPoint?:GeoPoint|null;canCreateRequest?:boolean;outbound:string;returnTime:string;period:string;requestPeriod:string;direction:string;categories:string[];maxSeatPrice?:number|null;onlyAvailable?:boolean;onEditFilters?:()=>void;onSelect?:(selection:LiveSelection)=>void;onSignIn?:()=>void;
+export default function LiveRouteSearch({origin,destination,originPoint=null,destinationPoint=null,canCreateRequest=true,outbound,returnTime,period,requestPeriod,direction,categories,weekdays=[],maxSeatPrice=null,onlyAvailable=false,onEditFilters,onSelect,onSignIn}:{
+ origin:string;destination:string;originPoint?:GeoPoint|null;destinationPoint?:GeoPoint|null;canCreateRequest?:boolean;outbound:string;returnTime:string;period:string;requestPeriod:string;direction:string;categories:string[];weekdays?:number[];maxSeatPrice?:number|null;onlyAvailable?:boolean;onEditFilters?:()=>void;onSelect?:(selection:LiveSelection)=>void;onSignIn?:()=>void;
 }){
  const {language}=usePreferences(),en=language==='en';
  const t=(ar:string,english:string)=>en?english:ar;
@@ -116,7 +116,7 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
   {current&&!error&&items.length===0&&<div className="sekka-no-match" role="group" aria-label={t('نتيجة البحث','Search result')}>
    <p role="status">{t('مفيش رحلة مناسبة لبحثك حاليًا.','No matching trip available right now.')}</p>
    {origin&&destination&&canCreateRequest&&<LiveTripRequests mode="rider" compact search={{
-    origin,destination,outbound,returnTime,period:requestPeriod,
+    origin,destination,outbound,returnTime,period:requestPeriod,weekdays,
     direction:direction==='outbound'||direction==='return'||direction==='round_trip'?direction:(returnTime?'round_trip':'outbound')
    }} onSignIn={onSignIn}/>}
    {!canCreateRequest&&<p className="sekka-geo-request-hint" role="status">{t(
