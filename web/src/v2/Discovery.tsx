@@ -49,6 +49,8 @@ const areas = [
 ];
 // Only Cairo and Giza districts are available in this launch region.
 const servedAreas = areas.filter((a) => !["العبور", "الشروق"].includes(a));
+// Server category codes remain stable; DAILY is the owner-approved public label.
+const publicCategoryName=(name:string)=>name==='SAVER'?'DAILY':name;
 const categoryList = [
   { name: "PRIME", seats: 3 },
   { name: "SAVER", seats: 4 },
@@ -1061,7 +1063,7 @@ export default function Discovery(p: DiscoveryProps) {
                     className={categories.includes(c.name) ? "selected" : ""}
                   >
                     <DiscoveryIcon name={c.seats > 4 ? "bus" : "car"} />
-                    <b dir="ltr">{c.name}</b>
+                    <b dir="ltr">{publicCategoryName(c.name)}</b>
                     <span>
                       {c.seats} {c.seats === 13 ? tr("مقعدًا") : tr("مقاعد")}
                     </span>
@@ -1209,7 +1211,7 @@ export default function Discovery(p: DiscoveryProps) {
                   <button
                     className="d-offer-select"
                     onClick={() => openLine(l)}
-                    aria-label={`${language === "en" ? "View details" : "عرض تفاصيل"} ${l.category} ${tr(periodLabel(l.period))} ${tr(directionLabel(l.direction))}`}
+                    aria-label={`${language === "en" ? "View details" : "عرض تفاصيل"} ${publicCategoryName(l.category)} ${tr(periodLabel(l.period))} ${tr(directionLabel(l.direction))}`}
                   >
                     <span className="d-category-badge">
                       <DiscoveryIcon
@@ -1219,7 +1221,7 @@ export default function Discovery(p: DiscoveryProps) {
                             : "car"
                         }
                       />
-                      <b>{l.category}</b>
+                      <b>{publicCategoryName(l.category)}</b>
                     </span>
                     <span className="d-offer-direction">
                       <DiscoveryIcon
@@ -1292,7 +1294,7 @@ export default function Discovery(p: DiscoveryProps) {
                   {tr(periodLabel(current.period))}
                 </Meta>
                 <Meta label={tr("الفئة")} icon="seat">
-                  {current.category}
+                  {publicCategoryName(current.category)}
                 </Meta>
                 <Meta label={p.production?(language==='en'?'Available seats now':'المقاعد المتاحة الآن'):tr("المقاعد المتاحة")} icon="user">
                   {p.production?current.available.toLocaleString(language==='en'?'en-EG':'ar-EG'):`${current.available} ${tr("مقاعد")}`}
@@ -1377,7 +1379,7 @@ export default function Discovery(p: DiscoveryProps) {
                       label={tr("الفئة")}
                       icon={l.category === "SPACE" ? "bus" : "car"}
                     >
-                      {l.category}
+                      {publicCategoryName(l.category)}
                     </Meta>
                     <Meta label={tr("المقاعد المتاحة")} icon="seat">
                       {l.available} {tr("مقاعد")}</Meta>
@@ -1435,7 +1437,7 @@ export default function Discovery(p: DiscoveryProps) {
                       <Journey line={l} compact />
                       <div className="d-three-meta">
                         <Meta label={tr("الفئة")} icon={i ? "bus" : "car"}>
-                          {l.category}
+                          {publicCategoryName(l.category)}
                         </Meta>
                         <Meta label={tr("المقاعد")} icon="seat">
                           {i ? 6 : 3}

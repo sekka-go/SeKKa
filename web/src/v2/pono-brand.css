@@ -44,3 +44,77 @@ html[data-theme="dark"] .sekka-mobile .sekka-side-drawer.sekka-glass-panel nav b
 html[data-theme="dark"] .sekka-mobile .sekka-side-drawer.sekka-glass-panel nav button.sekka-menu-row[aria-current="page"] .sekka-menu-row__icon svg{
  color:#CAD8FF!important;stroke:currentColor!important;
 }
+
+
+/* PoNo visual QA: functional navigation and legible selections at 320–412px.
+   Scoped to the real mobile app; the legacy 73-screen gallery stays archival. */
+.sekka-mobile.sekka-rider-navigation .sekka-bookings-section-tabs{
+ display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:8px!important;min-width:0;padding:8px!important;
+ border:1px solid rgba(23,83,232,.16)!important;
+ border-radius:18px!important;background:var(--card)!important;
+}
+.sekka-mobile.sekka-rider-navigation .sekka-bookings-section-tabs button{
+ min-height:50px!important;min-width:0;white-space:normal!important;
+ overflow-wrap:anywhere;font-size:clamp(12px,3.45vw,14px)!important;
+ line-height:1.45!important;
+ color:var(--urban-ink,#17253A)!important;
+ background:var(--urban-paper,#F5F3ED)!important;
+ border:1px solid rgba(23,83,232,.18)!important;
+ border-radius:12px!important;
+}
+.sekka-mobile.sekka-rider-navigation .sekka-bookings-section-tabs button[aria-pressed="true"]{
+ background:#FFD02A!important;color:#17253A!important;
+ border-color:#DBAE12!important;box-shadow:inset 0 -2px rgba(23,37,58,.13)!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation .sekka-bookings-section-tabs{
+ background:#1B2638!important;border-color:#3A4760!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation .sekka-bookings-section-tabs button{
+ background:#24364C!important;color:#F3F3F6!important;border-color:#43556F!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation .sekka-bookings-section-tabs button[aria-pressed="true"]{
+ background:#FFD02A!important;color:#17253A!important;border-color:#FFD02A!important;
+}
+/* Old filter CSS rendered tiny charcoal seat counts on dark teal cards. */
+.sekka-mobile .rf3__categories button span{
+ color:#43566B!important;font-size:13px!important;line-height:1.5!important;
+}
+html[data-theme="dark"] .sekka-mobile .rf3__categories button:not([aria-pressed="true"]) span{
+ color:#E2EAF5!important;
+}
+.sekka-mobile .rf3__categories button[aria-pressed="true"],
+.sekka-mobile .rf3__choices button[aria-pressed="true"]{
+ background:#FFD02A!important;color:#17253A!important;border-color:#DBAE12!important;
+}
+.sekka-mobile .rf3__categories button[aria-pressed="true"] span,
+html[data-theme="dark"] .sekka-mobile .rf3__categories button[aria-pressed="true"] span{
+ color:#17253A!important;
+}
+.sekka-mobile .rf3__apply,
+html[data-theme="dark"] .sekka-mobile .rf3__apply{
+ color:#17253A!important;background:#FFD02A!important;
+}
+.sekka-mobile .rf3__availability small{
+ font-size:12px!important;line-height:1.55!important;
+}
+html[data-theme="dark"] .sekka-mobile .rf3__availability small{color:#C5D1E1!important;}
+/* No empty button shapes in the collapsed icon-only rail. */
+.sekka-mobile .sekka-glass-panel--collapsed .sekka-menu-tour--text-only{
+ display:none!important;
+}
+.sekka-mobile .sekka-glass-panel .sekka-side-drawer__heading .sekka-side-drawer__wordmark{
+ min-width:100px!important;width:116px!important;
+}
+.sekka-mobile .sekka-bookings-section-tabs button:focus-visible,
+.sekka-mobile .rf3__panel :is(button,input):focus-visible{
+ outline:3px solid #1753E8!important;outline-offset:2px!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-bookings-section-tabs button:focus-visible,
+html[data-theme="dark"] .sekka-mobile .rf3__panel :is(button,input):focus-visible{
+ outline-color:#FFD02A!important;
+}
+@media(prefers-reduced-motion:reduce){
+ .sekka-mobile .rf3 :is(button,input),.sekka-mobile .sekka-bookings-section-tabs button,
+ .sekka-mobile .sekka-glass-panel{animation:none!important;transition:none!important;}
+}

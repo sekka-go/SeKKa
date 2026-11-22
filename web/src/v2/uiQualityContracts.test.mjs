@@ -100,3 +100,24 @@ test('PoNo is installed in the actual PWA entry, never the 73-screen developer g
  assert.match(app,/pono-icon\.svg/);
  assert.match(app,/pono-wordmark\.svg/);
 });
+
+test('seat bookings and trip requests remain separate and visible on every Rider theme',()=>{
+ const app=read('./MobileApp.tsx');
+ const quality=read('./ui-quality-hardening.css');
+ const brand=read('./pono-brand.css');
+ assert.match(app,/className="sekka-bookings-section-tabs"/);
+ assert.match(app,/aria-pressed=\{bookingsSection==='bookings'\}/);
+ assert.match(app,/aria-pressed=\{bookingsSection==='requests'\}/);
+ assert.doesNotMatch(quality,/sekka-bookings-section-tabs\s*\{\s*display:none!important/);
+ assert.match(brand,/sekka-bookings-section-tabs\s*\{[\s\S]*display:grid!important/);
+ assert.match(brand,/\.rf3__categories button span\s*\{/);
+ assert.match(brand,/\.rf3__apply,[\s\S]*color:#17253A!important/);
+});
+test('passenger dock and glass menu share one icon system',()=>{
+ const dock=read('./RiderTabBar.tsx');
+ const glyph=read('./SekkaMenuIcon.tsx');
+ assert.match(dock,/import SekkaMenuIcon from/);
+ assert.match(dock,/<SekkaMenuIcon name=\{tab\}\/>/);
+ assert.match(glyph,/name==='bookings'/);
+ assert.match(read('./pono-brand.css'),/sekka-menu-tour--text-only/);
+});

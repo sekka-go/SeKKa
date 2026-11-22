@@ -152,7 +152,7 @@ html[data-theme="dark"] .sekka-mobile .sekka-side-drawer.sekka-glass-panel{
  font-size:18px!important;line-height:1.4!important;
 }
 /* Bookings and Requests already have their own persistent dock tabs. */
-.sekka-mobile.sekka-rider-navigation .sekka-bookings-section-tabs{display:none!important}
+/* Both booking/request sections are accessible; never conceal functional tabs. */
 .sekka-mobile .sekka-request-missing-time{
  display:flex;flex-direction:column;gap:8px;margin:10px 0;
  color:var(--ui-ink)!important;font:700 14px/1.45 Tajawal,Tahoma,sans-serif;

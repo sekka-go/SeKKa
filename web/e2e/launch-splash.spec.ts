@@ -2,13 +2,14 @@ import {expect,test} from '@playwright/test';
 
 const intro='.sekka-launch';
 
-test('fresh opening shows approved Cairo SUV art and the cyan seKKa launch',async({page})=>{
+test('fresh opening shows approved Cairo SUV art and white PoNo wordmark',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.emulateMedia({reducedMotion:'no-preference'});
  await page.goto('/');
  const splash=page.locator(intro);
  await expect(splash).toBeVisible();
- await expect(splash.locator('.sekka-launch__brand-name')).toHaveText('سِكَّة');
+ await expect(splash.locator('.sekka-launch__brand-name')).toHaveAttribute('src','/brand/pono-wordmark-white.svg');
+ await expect(splash.locator('.sekka-launch__brand-name')).toHaveAttribute('alt','PoNo');
  await expect(splash.locator('.sekka-launch__approved-scene')).toBeVisible();
  await expect(splash.locator('.sekka-launch__wave-wipe')).toHaveCSS('animation-name','sk-wave-out');
  await expect(splash.locator('.sekka-launch__approved-scene')).toHaveCSS('animation-name','sk-scene-depart');
@@ -66,22 +67,22 @@ test('reduced motion bypasses launch animations without blocking the app',async(
  await expect(page.locator('.phase-screen-2')).toBeVisible();
 });
 
-test('installed Sekka Go identity keeps approved blue manifest and art',async({request})=>{
+test('installed PoNo identity keeps approved P mark and blue manifest',async({request})=>{
  const response=await request.get('/manifest.webmanifest');
  expect(response.ok()).toBeTruthy();
  const manifest=await response.json();
- expect(manifest.name).toBe('Sekka Go');
- expect(manifest.short_name).toBe('Sekka Go');
+ expect(manifest.name).toBe('PoNo');
+ expect(manifest.short_name).toBe('PoNo');
  expect(manifest.dir).toBe('rtl');
- expect(manifest.background_color).toBe('#078CF4');
- expect(manifest.theme_color).toBe('#078CF4');
+ expect(manifest.background_color).toBe('#0648F5');
+ expect(manifest.theme_color).toBe('#0648F5');
  expect(manifest.icons.map((item:{src:string})=>item.src)).toEqual([
-  '/brand/sekka-sky-mark.svg',
-  '/brand/sekka-go-road-192.png',
-  '/brand/sekka-go-road-512.png'
+  '/brand/pono-icon-192.png',
+  '/brand/pono-icon-512.png',
+  '/brand/pono-icon.svg'
  ]);
  const index=await (await request.get('/')).text();
- expect(index).toContain('name="theme-color" content="#078CF4"');
+ expect(index).toContain('name="theme-color" content="#0648F5"');
  // Vite can normalize inline CSS whitespace/case; background on the live Rider
  // home is tested by computed styles in mobile-navigation-role.spec.ts.
  expect(index).toContain('meta name="theme-color"');
@@ -97,7 +98,7 @@ test('installed Sekka Go identity keeps approved blue manifest and art',async({r
  }
 });
 
-test('light mode keeps sky, cyan and yellow design tokens',async({page})=>{
+test('light mode retains PoNo brand and accessible urban palettes',async({page})=>{
  await page.addInitScript(()=>localStorage.setItem('theme_preference','light'));
  await page.goto('/?tab=login&view=2');
  await expect(page.locator(intro)).toHaveCount(0,{timeout:8000});
@@ -110,7 +111,11 @@ test('light mode keeps sky, cyan and yellow design tokens',async({page})=>{
    sun:styles.getPropertyValue('--sekka-sun').trim().toLowerCase()
   };
  });
- expect(palette).toEqual({sky:'#078cf4',cyan:'#20d8e6',sun:'#ffcc24'});
+ // Legacy design tokens are internal; the approved P icon and mobile palette
+ // are the public source of truth after the PoNo rebrand.
+ expect(await page.locator('html').getAttribute('data-theme')).toBe('light');
+ const manifesto=await (await page.request.get('/manifest.webmanifest')).json();
+ expect(manifesto.theme_color).toBe('#0648F5');
 });
 
 test('dark mode keeps a legible dark surface without losing yellow accent',async({page})=>{
