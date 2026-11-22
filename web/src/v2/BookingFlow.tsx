@@ -1,3 +1,4 @@
+import AppSkeleton from './AppSkeleton';
 import {usePreferences} from "./preferences";
 import {translate} from "./translations";
 import {readPreviewBookings, reservePreviewBooking, confirmPreviewBooking} from "./previewBookingStore";
@@ -1120,7 +1121,7 @@ export function V31BookingJourney({offer,routeId,pickupId,dropoffId,reverse,book
       <p>{stored?t('دي حالة الحجز الحالية من النظام، مش إثبات دفع.','This is the current booking status, not proof of payment.'):t('حدد عدد الأشخاص وراجع البيانات قبل التأكيد.','Choose your seats and confirm the ride details.')}</p>
      </div>
      {error&&<div className="d-feedback" role="alert"><p>{error}</p><button type="button" onClick={()=>setRefresh(v=>v+1)}>{t('إعادة المحاولة','Retry')}</button></div>}
-     {loading&&<p role="status" className="b-loading">{t('بنراجع الحجز من الخدمة…','Loading booking from server…')}</p>}
+     {loading&&<AppSkeleton kind="bookings" count={1} compact label={t('بنراجع الحجز من الخدمة…','Loading booking from server…')}/>}
      {!bookingId&&offer&&<><p className="b-subtitle">{t('راجع الخط والنقط والسعر قبل ما تحجز.','Review your route, stops and price before booking.')}</p>
        <Offer offer={offer}/>
        <Box className="b-summary">
@@ -1146,7 +1147,7 @@ export function V31BookingJourney({offer,routeId,pickupId,dropoffId,reverse,book
        <p className="b-hint">{t('الحد الأقصى لكل حساب شخصين فقط على نفس الخط. المقاعد بيتأكد منها الخادم عند الحجز.','At most two people per account on the same route. The server validates seats during booking.')}</p>
        <Primary disabled={busy||!Number.isInteger(seats)||seats<1||seats>MAX_SEATS_PER_RIDER||seats>offer.available} onClick={()=>void reserve()}>{busy?t('جارٍ إرسال الطلب…','Submitting…'):t('تقديم طلب الحجز','Submit booking request')}</Primary>
      </>}
-     {!bookingId&&!offer&&selectionLoading&&<p role="status" className="b-loading">{t('بنحمّل تفاصيل الرحلة…','Loading ride details…')}</p>}
+     {!bookingId&&!offer&&selectionLoading&&<AppSkeleton kind="page" count={1} label={t('بنحمّل تفاصيل الرحلة…','Loading ride details…')}/>}
      {!bookingId&&!offer&&!selectionLoading&&<Box><p role="status">{t('بيانات الخط مش متاحة. ارجع للبحث واختار خط منشور.','Route unavailable. Return to search and choose a published route.')}</p><Primary onClick={onBack}>{t('الرجوع للبحث','Back to search')}</Primary></Box>}
      {stored&&<><Illustration kind="waiting"/><Box className="b-summary">
        <Row label={t('رقم الحجز','Booking ID')}>{stored.id}</Row>
