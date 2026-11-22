@@ -8,6 +8,7 @@ import {usePreferences} from './preferences';
 import type {GeoPoint} from './nearbyRoutes';
 import {formatDistanceForLocale,approximateWalkMinutes} from './recurringGeo';
 import {sortRealRides} from './riderRank';
+import {useStaggeredReveal} from './staggerMotion';
 
 export type Route={id:string;title:string;category:string;seat_capacity:number;period:string;direction:string;outbound_time:string|null;return_time:string|null;seat_price_egp:number;return_supported:boolean};
 export type Stop={id:string;route_id:string;area_id:number;position:number;name:string;pickup_allowed:boolean;dropoff_allowed:boolean;latitude?:number|string|null;longitude?:number|string|null;outbound_stop_time?:string|null;return_stop_time?:string|null};
@@ -38,6 +39,7 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
 }){
  const {language}=usePreferences(),en=language==='en';
  const t=(ar:string,english:string)=>en?english:ar;
+ const revealRide=useStaggeredReveal();
  const [retry,setRetry]=useState(0);
  // Named locations are search anchors (not pickup pins). Only the Captain's
  // published stops must satisfy the operational geofence on the server.
@@ -145,7 +147,7 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
    const {route,from,to,reverse}=selection;
    const primaryTime=reverse?route.return_time:route.outbound_time;
    const otherTime=reverse?route.outbound_time:route.return_time;
-   return <article className="d-box d-result sekka-live-result" key={route.id+String(reverse)+from.id+to.id}>
+   return <article ref={revealRide} className="d-box d-result sekka-live-result" key={route.id+String(reverse)+from.id+to.id}>
    <header className="sekka-live-result-head">
     <div>
      {index===0&&sortBy==='recommended'&&selection.pickupDistanceKm!==null&&
