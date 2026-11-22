@@ -659,10 +659,9 @@ export default function MobileApp(){
      {ready&&captain&&accountRole==='captain'&&captainApproved&&menuLink(t('خطوطي','My routes'),{tab:'routes',view:42})}
      {ready&&admin&&<><h2>{t('الإدارة','Administration')}</h2>
       {menuLink(t('لوحة الإدارة','Admin dashboard'),{tab:'admin',view:62})}</>}
-     {ready&&<button type="button" className="sekka-menu-row sekka-menu-tour" onClick={()=>{
+     {ready&&<button type="button" className="sekka-menu-row sekka-menu-tour sekka-menu-tour--text-only" onClick={()=>{
       setMenuOpen(false);setTourReplayToken(value=>value+1);
-     }}><span className="sekka-menu-row__icon"><SekkaMenuIcon name="guide"/></span>
-       <span className="sekka-menu-row__label">{t('اشرحلي الشاشة دي','Guide me through this screen')}</span>
+     }}><span className="sekka-menu-row__label">{t('اشرحلي الشاشة دي','Guide me through this screen')}</span>
      </button>}
      <h2>{t('اللغة والمظهر','Language & appearance')}</h2>
      <div className="sekka-preference-controls">
@@ -691,8 +690,7 @@ export default function MobileApp(){
         </select>
        </span>
       </label>
-      <label htmlFor="sekka-appearance-pref" className="sekka-preference-row">
-       <span className="sekka-menu-row__icon"><SekkaMenuIcon name="appearance"/></span>
+      <label htmlFor="sekka-appearance-pref" className="sekka-preference-row sekka-preference-row--appearance">
        <span className="sekka-preference-row__details">
         <strong>{t('مظهر التطبيق','App appearance')}</strong>
         <select id="sekka-appearance-pref" value={p.themePreference}
