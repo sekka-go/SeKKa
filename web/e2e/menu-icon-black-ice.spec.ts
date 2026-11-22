@@ -29,8 +29,9 @@ for(const width of [320,390]){
   await expect(active.locator('.sekka-menu-row__label')).toHaveCSS('color','rgb(247, 252, 255)');
   await expect(drawer.locator('.sekka-side-drawer__close')).toHaveCSS('background-color','rgb(23, 31, 43)');
   await page.screenshot({path:'../docs/audit/menu-black-ice-'+width+'.png',fullPage:true,animations:'disabled'});
-  await expect(drawer.locator('.sekka-preference-row')).toHaveCount(2);
-  await expect(drawer.locator('.sekka-preference-row__details select')).toHaveCount(2);
+  await expect(drawer.locator('.sekka-preference-row')).toHaveCount(1);
+  await expect(drawer.locator('#sekka-appearance-pref')).toHaveCount(0);
+  await expect(drawer.locator('.sekka-preference-row__details select')).toHaveCount(1);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
  });
 }
@@ -45,18 +46,17 @@ test('dark black theme can be changed to light without losing language or naviga
  await page.goto('/?tab=profile');
  await page.getByRole('button',{name:'فتح القائمة'}).click();
  const drawer=page.getByRole('dialog',{name:'القائمة الرئيسية'});
- const appearance=drawer.locator('#sekka-appearance-pref');
+ await expect(drawer.locator('#sekka-appearance-pref')).toHaveCount(0);
  const toggle=drawer.getByRole('switch',{name:'تشغيل أو إيقاف الوضع الليلي'});
  await expect(toggle).toHaveAttribute('aria-checked','true');
- await expect(appearance).toHaveValue('dark');
  await toggle.click();
  await expect(toggle).toHaveAttribute('aria-checked','false');
  await expect(page.locator('html')).toHaveAttribute('data-theme','light');
- await appearance.selectOption('dark');
+ await toggle.click();
  await expect(toggle).toHaveAttribute('aria-checked','true');
  await expect(page.locator('.sekka-mobile')).toHaveCSS('background-color','rgb(5, 7, 11)');
  await expect(drawer.getByRole('button',{name:'حسابي'}).locator('.sekka-menu-row__label')).toHaveCSS('color','rgb(247, 252, 255)');
- await appearance.selectOption('light');
+ await toggle.click();
  await expect(page.locator('html')).toHaveAttribute('data-theme','light');
  await expect(page.locator('html')).toHaveAttribute('dir','rtl');
  await expect(page.locator('.sekka-mobile')).not.toHaveCSS('background-color','rgb(5, 7, 11)');
@@ -103,9 +103,10 @@ test('light drawer fades from white to ice blue with icon-free secondary control
  expect(background).toContain('linear-gradient');
  expect(background).toContain('rgb(255, 255, 255) 0%');
  expect(background).toContain('rgb(234, 243, 255) 100%');
- const appearance=drawer.locator('.sekka-preference-row--appearance');
- await expect(appearance.locator('.sekka-menu-row__icon')).toHaveCount(0);
- await expect(appearance.locator('#sekka-appearance-pref')).toBeVisible();
+ await expect(drawer.locator('.sekka-preference-row--appearance')).toHaveCount(0);
+ await expect(drawer.locator('#sekka-appearance-pref')).toHaveCount(0);
+ await expect(drawer.getByText('مظهر التطبيق')).toHaveCount(0);
+ await expect(drawer.locator('.sekka-preference-row')).toHaveCount(1);
  const guide=drawer.getByRole('button',{name:'اشرحلي الشاشة دي'});
  await expect(guide.locator('.sekka-menu-row__icon')).toHaveCount(0);
  await expect(guide).toBeEnabled();
