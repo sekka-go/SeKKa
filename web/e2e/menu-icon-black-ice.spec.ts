@@ -43,7 +43,15 @@ test('dark black theme can be changed to light without losing language or naviga
  await page.getByRole('button',{name:'فتح القائمة'}).click();
  const drawer=page.getByRole('dialog',{name:'القائمة الرئيسية'});
  const appearance=drawer.locator('#sekka-appearance-pref');
+ const toggle=drawer.getByRole('switch',{name:'تشغيل أو إيقاف الوضع الليلي'});
+ await expect(toggle).toHaveAttribute('aria-checked','true');
  await expect(appearance).toHaveValue('dark');
+ await toggle.click();
+ await expect(toggle).toHaveAttribute('aria-checked','false');
+ await expect(page.locator('html')).toHaveAttribute('data-theme','light');
+ await appearance.selectOption('dark');
+ await expect(toggle).toHaveAttribute('aria-checked','true');
+ await expect(page.locator('.sekka-mobile')).toHaveCSS('background-color','rgb(5, 7, 11)');
  await appearance.selectOption('light');
  await expect(page.locator('html')).toHaveAttribute('data-theme','light');
  await expect(page.locator('html')).toHaveAttribute('dir','rtl');
