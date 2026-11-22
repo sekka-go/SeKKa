@@ -57,3 +57,40 @@ for(const width of widths){
   });
  }
 }
+
+for(const width of widths){
+ for(const theme of themes){
+  test('PoNo Google sign-in: branded contrast, keyboard-safe CTA and error state '+width+'px '+theme,async({page})=>{
+   await page.setViewportSize({width,height:800});
+   await page.addInitScript(value=>{
+    localStorage.setItem('language_preference','ar');
+    localStorage.setItem('theme_preference',value);
+    sessionStorage.setItem('sekka.launch.seen.v1','1');
+   },theme);
+   await page.goto('/?tab=login&view=4');
+   const login=page.locator('.sekka-entry-login');
+   await expect(login).toBeVisible();
+   await expect(login.locator('.sekka-entry-login__wordmark')).toHaveAttribute('src','/brand/pono-wordmark.svg');
+   const button=login.locator('.phase-google-auth button.phase-primary');
+   await expect(button).toBeVisible();
+   const buttonStyle=await button.evaluate(el=>{
+    const style=getComputedStyle(el),r=el.getBoundingClientRect();
+    return {fg:style.color,bg:style.backgroundColor,top:r.top,left:r.left,right:r.right,height:r.height};
+   });
+   expect(ratio(buttonStyle.fg,buttonStyle.bg),'OAuth CTA contrast').toBeGreaterThanOrEqual(4.5);
+   expect(buttonStyle.height).toBeGreaterThanOrEqual(48);
+   expect(buttonStyle.left).toBeGreaterThanOrEqual(0);
+   expect(buttonStyle.right).toBeLessThanOrEqual(width+1);
+   const unavailable=login.locator('.phase-google-auth [role="alert"]').first();
+   if(await unavailable.count()){
+    const colors=await unavailable.evaluate(el=>{
+     const style=getComputedStyle(el);
+     return {fg:style.color,bg:style.backgroundColor,border:style.borderTopStyle};
+    });
+    expect(ratio(colors.fg,colors.bg),'Login error contrast').toBeGreaterThanOrEqual(4.5);
+    expect(colors.border).not.toBe('none');
+   }
+   await page.screenshot({path:`../docs/audit/pono-google-contrast-${width}-${theme}.png`,animations:'disabled'});
+  });
+ }
+}
