@@ -16,6 +16,14 @@
  border-radius:54% 44% 0 0;transform:rotate(-5deg);
  background:linear-gradient(90deg,#1AF0E6 8%,#06C6E8 67%,#01A9E8 95%);
  border-top:6px solid #FFCC24;z-index:8}
+.sekka-launch__ribbon{
+ position:absolute;top:0;left:0;width:100%;height:30%;z-index:3;
+ pointer-events:none;transform:scaleX(1.04);
+}
+.sekka-launch__sky-to-road-wave{
+ position:absolute;top:39%;left:0;width:100%;height:17%;z-index:3;
+ pointer-events:none;
+}
 .sekka-launch__brand{position:absolute;top:14%;left:4%;right:4%;z-index:9;
  display:flex;flex-direction:column;align-items:center;justify-content:center;
  text-align:center;gap:2px;color:#FFFFFF;text-shadow:0 3px 9px #0568B044}
@@ -59,23 +67,35 @@
  mask-image:linear-gradient(to bottom,transparent 0%,#000 13%);
 }
 .sekka-launch__wave-wipe{position:absolute;inset:0;z-index:10;
- background:linear-gradient(155deg,#26DBF0,#0999EB);
+ background:linear-gradient(165deg,#030A11,#101B29);
  clip-path:ellipse(0% 0% at 100% 100%);
  animation:sk-wave-out 5.15s cubic-bezier(.65,0,.26,1) both}
 @keyframes sk-wave-out{
- 0%,67%{clip-path:ellipse(0% 0% at 100% 100%);opacity:0}
- 70%{opacity:1}
- 87%{clip-path:ellipse(145% 130% at 100% 100%);opacity:1}
- 100%{clip-path:ellipse(145% 130% at 100% 100%);opacity:0}
+ 0%,70%{clip-path:ellipse(0% 0% at 100% 100%);opacity:0}
+ 73%{opacity:1}
+ 91%{clip-path:ellipse(145% 145% at 100% 100%);opacity:1}
+ 100%{clip-path:ellipse(145% 145% at 100% 100%);opacity:0}
 }
-@keyframes sk-stage-finish{0%,85%{opacity:1}100%{opacity:0}}
+/* A gentle departure reads as forward motion while the original wheel-rim
+   animation remains aligned with the Cairo SUV illustration. The dark wipe
+   then takes the final ~1.5 seconds of the approved 5.15-second sequence. */
+.sekka-launch__approved-scene,.sekka-launch__motion,.sekka-launch__wheel-motion{
+ animation:sk-scene-depart 5.15s cubic-bezier(.4,0,.2,1) both;
+ transform-origin:50% 100%;
+}
+@keyframes sk-scene-depart{
+ 0%,61%{transform:translate3d(0,0,0) scale(1)}
+ 73%{transform:translate3d(0,-1.4%,0) scale(1.025)}
+ 100%{transform:translate3d(0,-6%,0) scale(1.10)}
+}
+@keyframes sk-stage-finish{0%,88%{opacity:1}100%{opacity:0}}
 @media(max-height:680px){.sekka-launch__brand{top:9%}
  .sekka-launch__brand-name{font-size:clamp(64px,18vh,115px)}
  .sekka-launch__approved-scene,.sekka-launch__motion,.sekka-launch__wheel-motion{height:54%}}
 @media(min-width:620px){.sekka-launch__stage{max-width:540px;left:50%;
  transform:translateX(-50%)}}
 @media(prefers-reduced-motion:reduce){
- .sekka-launch__stage,.sekka-launch__lane-cue,.sekka-launch__wave-wipe{animation:none!important}
+ .sekka-launch__stage,.sekka-launch__lane-cue,.sekka-launch__wave-wipe,.sekka-launch__approved-scene,.sekka-launch__motion{animation:none!important}
  .sekka-launch__wheel-motion{display:none!important}
  .sekka-launch__wave-wipe{display:none}
 }
