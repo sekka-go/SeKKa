@@ -12,7 +12,11 @@ const HERO_SELECTORS=[
  '.rb3__hero','.rbk3-hero','.cj-home-welcome','.cj-hero',
  '.captain-onboarding-header','.ad-heading','.ad-top',
  '.live-home__hero','.sekka-route-intro','.sekka-entry__header',
- '.phase-screen-2 .phase-hero','.phase-screen-3 .phase-hero'
+ '.phase-screen-2 .phase-hero','.phase-screen-3 .phase-hero',
+ '.cj-home','.live-route-list>h2','.live-trip-requests>h2',
+ '.live-notifications>h2','.live-profile>h2',
+ '.sekka-mobile-card h1','.d-canvas > .d-header',
+ '.b-canvas>.b-title','.ad-content>h1'
 ];
 const visible=(el:HTMLElement)=>{
  const box=el.getBoundingClientRect();
