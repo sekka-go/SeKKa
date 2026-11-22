@@ -3,6 +3,7 @@ import type {Session} from '@supabase/supabase-js';
 import {lazy,Suspense,useEffect,useRef,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
+import {requestSharedPublic} from './sharedPublicRequests';
 import Onboarding from './Onboarding';
 import Discovery from './Discovery';
 import type {Line} from './Discovery';
@@ -324,20 +325,27 @@ export default function MobileApp(){
  useEffect(()=>{
   let active=true;
   if(!client){setAreasLoaded(true);return;}
+  const controller=new AbortController();
   void(async()=>{
    try{
-    const {data,error:e}=await client.from('v31_service_areas')
-     .select('id,name_ar,name_en').eq('active',true).order('id');
-    if(!active)return;
-    if(e)setAreasError(e.message);
-    else{setAreas(data||[]);setAreasError('');}
+    // Non-sensitive public area catalog shared across every role. Changes on
+    // the server are revalidated after two minutes or an explicit reload.
+    const list=await requestSharedPublic(
+     'service-areas:public:v31',controller.signal,async upstream=>{
+      const {data,error:readError}=await client!.from('v31_service_areas')
+       .select('id,name_ar,name_en').eq('active',true).order('id')
+       .abortSignal(upstream);
+      if(readError)throw readError;
+      return (data||[]) as {id:number;name_ar:string;name_en:string}[];
+     },120_000);
+    if(active){setAreas(list);setAreasError('');}
    }catch{
     if(active)setAreasError(t('تعذّر تحميل مناطق الخدمة.','Unable to load service areas.'));
    }finally{
     if(active)setAreasLoaded(true);
    }
   })();
-  return()=>{active=false;};
+  return()=>{active=false;controller.abort();};
  },[]);
  useEffect(()=>{
   if(tab!=='captain-onboarding'||!ready||userId)return;
