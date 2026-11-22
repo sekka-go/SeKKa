@@ -1,0 +1,159 @@
+/* Reference-inspired navigation chrome for the REAL Rider app only.
+   Keep seKKa's existing sky/cyan/yellow palette and route behavior.
+   This file is deliberately loaded after legacy motion/theme layers. */
+.sekka-mobile.sekka-rider-navigation{
+  --sekka-nav-blue:var(--sekka-sky,#078CF4);
+  --sekka-nav-cyan:var(--sekka-cyan,#20D8E6);
+  --sekka-nav-yellow:var(--sekka-sun,#FFCC24);
+  --sekka-nav-ink:var(--sekka-navy,#10344F);
+  --sekka-nav-line:var(--sekka-hairline,#D7EFF6);
+  padding-bottom:calc(116px + env(safe-area-inset-bottom,0px))!important;
+}
+/* A single rounded, elevated masthead replaces disconnected header controls. */
+.sekka-mobile.sekka-rider-navigation > .sekka-floating-actions{
+  top:calc(7px + env(safe-area-inset-top,0px))!important;
+  left:50%!important;right:auto!important;
+  width:min(calc(100% - 20px),510px)!important;
+  height:64px!important;
+  transform:translateX(-50%)!important;
+  border-radius:24px!important;
+  border:1px solid var(--sekka-nav-line)!important;
+  background:#FFFFFF!important;
+  box-shadow:0 9px 28px rgba(6,103,153,.16)!important;
+  pointer-events:none!important;
+}
+.sekka-mobile.sekka-rider-navigation > .sekka-floating-actions::before{
+  content:"";position:absolute;inset-inline:26px;top:0;height:3px;
+  border-radius:0 0 12px 12px;
+  background:linear-gradient(90deg,var(--sekka-nav-cyan),var(--sekka-nav-blue),var(--sekka-nav-yellow));
+}
+.sekka-mobile.sekka-rider-navigation > .sekka-floating-actions > :is(.sekka-fab-menu,.sekka-fab-bell){
+  top:9px!important;width:46px!important;height:46px!important;
+  border-radius:16px!important;border:1px solid var(--sekka-nav-line)!important;
+  background:#F0FBFF!important;color:var(--sekka-nav-ink)!important;
+  box-shadow:0 2px 4px rgba(7,108,164,.06)!important;
+}
+.sekka-mobile.sekka-rider-navigation > .sekka-floating-actions > :is(.sekka-fab-menu,.sekka-fab-bell) svg,
+html[data-theme="light"] .sekka-mobile.sekka-rider-navigation > .sekka-floating-actions > :is(.sekka-fab-menu,.sekka-fab-bell) svg{
+  stroke:var(--sekka-nav-ink)!important;color:var(--sekka-nav-ink)!important;
+}
+.sekka-mobile.sekka-rider-navigation[dir="rtl"] > .sekka-floating-actions > .sekka-fab-menu{
+  right:9px!important;left:auto!important;
+}
+.sekka-mobile.sekka-rider-navigation[dir="rtl"] > .sekka-floating-actions > .sekka-fab-bell{
+  left:9px!important;right:auto!important;
+}
+.sekka-mobile.sekka-rider-navigation[dir="ltr"] > .sekka-floating-actions > .sekka-fab-menu{
+  left:9px!important;right:auto!important;
+}
+.sekka-mobile.sekka-rider-navigation[dir="ltr"] > .sekka-floating-actions > .sekka-fab-bell{
+  right:9px!important;left:auto!important;
+}
+/* The center title remains readable BEFORE scrolling; scroll never duplicates it. */
+.sekka-mobile.sekka-rider-navigation > .sekka-sliver-pin,
+.sekka-mobile.sekka-rider-navigation[data-sekka-scrolled="true"] > .sekka-sliver-pin{
+  top:calc(19px + env(safe-area-inset-top,0px))!important;
+  z-index:81!important;
+  display:flex!important;visibility:visible!important;opacity:1!important;
+  transform:translate3d(-50%,0,0)!important;
+  width:min(calc(100vw - 156px),310px)!important;
+  max-width:310px!important;min-height:40px!important;
+  background:transparent!important;border:0!important;box-shadow:none!important;
+  backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+}
+.sekka-mobile.sekka-rider-navigation > .sekka-sliver-pin > span{
+  color:var(--sekka-nav-ink)!important;
+  font:900 clamp(15px,4.5vw,20px)/1.2 Tajawal,Tahoma,sans-serif!important;
+}
+/* Center-action FAB and four peripheral destinations: no extra request CTA. */
+.sekka-mobile.sekka-rider-navigation .rh-tabs{
+  background:transparent!important;border:0!important;
+  box-shadow:none!important;
+  padding:0 max(10px,env(safe-area-inset-right,0px))
+    calc(8px + env(safe-area-inset-bottom,0px))
+    max(10px,env(safe-area-inset-left,0px))!important;
+}
+.sekka-mobile.sekka-rider-navigation .rh-tabs__inner{
+  display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  gap:0!important;align-items:end!important;
+  max-width:510px!important;min-height:80px!important;
+  padding:7px 5px 5px!important;
+  border-radius:30px!important;border:1px solid var(--sekka-nav-line)!important;
+  background:#FFFFFF!important;box-shadow:0 10px 34px rgba(8,82,124,.18)!important;
+  overflow:visible!important;
+}
+.sekka-mobile.sekka-rider-navigation .rh-tabs__inner::before{display:none!important}
+.sekka-mobile.sekka-rider-navigation .rh-tabs button{
+  min-width:0!important;min-height:63px!important;padding:3px 0!important;
+  border-radius:18px!important;color:#607B8A!important;
+  font-size:12px!important;gap:2px!important;
+}
+.sekka-mobile.sekka-rider-navigation .rh-tabs button[aria-current="page"]{
+  color:#007EA6!important;
+}
+.sekka-mobile.sekka-rider-navigation .rh-tabs button .rh-tabs__icon{
+  width:40px;height:35px;border-radius:15px!important;
+}
+.sekka-mobile.sekka-rider-navigation .rh-tabs button[aria-current="page"]:not(.rh-tabs__primary) .rh-tabs__icon{
+  background:#FFF1BC!important;color:var(--sekka-nav-ink)!important;
+  transform:translateY(-2px)!important;box-shadow:none!important;
+}
+.sekka-mobile.sekka-rider-navigation .rh-tabs button.rh-tabs__primary{
+  min-height:80px!important;
+  transform:translateY(-15px)!important;
+  justify-content:flex-start!important;
+  overflow:visible!important;
+  color:var(--sekka-nav-ink)!important;
+}
+.sekka-mobile.sekka-rider-navigation .rh-tabs .rh-tabs__primary .rh-tabs__icon,
+.sekka-mobile.sekka-rider-navigation .rh-tabs .rh-tabs__primary[aria-current="page"] .rh-tabs__icon{
+  width:66px!important;height:66px!important;min-width:66px!important;
+  border:5px solid #FFFFFF!important;border-radius:999px!important;
+  background:var(--sekka-nav-yellow)!important;
+  color:var(--sekka-nav-ink)!important;
+  box-shadow:0 9px 19px rgba(7,102,143,.22)!important;
+  transform:none!important;
+}
+.sekka-mobile.sekka-rider-navigation .rh-tabs__primary .rh-tabs__icon svg{
+  width:27px!important;height:27px!important;
+}
+.sekka-mobile.sekka-rider-navigation .rh-tabs__primary .rh-tabs__name{
+  color:var(--sekka-nav-ink)!important;font-weight:900!important;
+}
+.sekka-mobile.sekka-rider-navigation .rh-tabs button:active .rh-tabs__icon{filter:brightness(.95)}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation > .sekka-floating-actions,
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation .rh-tabs__inner{
+  background:#193449!important;border-color:#3E687C!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation > .sekka-floating-actions > :is(.sekka-fab-menu,.sekka-fab-bell){
+  background:#20475D!important;border-color:#3E687C!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation > .sekka-floating-actions > :is(.sekka-fab-menu,.sekka-fab-bell) svg,
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation > .sekka-sliver-pin > span{
+  stroke:#F4FBFF!important;color:#F4FBFF!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation .rh-tabs button:not(.rh-tabs__primary){
+  color:#C0D9E6!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation .rh-tabs .rh-tabs__primary .rh-tabs__icon{
+  border-color:#193449!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-search-filters .rh-tabs{display:none!important}
+@media(max-width:359px){
+  .sekka-mobile.sekka-rider-navigation > .sekka-floating-actions{
+    width:calc(100% - 12px)!important;height:60px!important;border-radius:20px!important;
+  }
+  .sekka-mobile.sekka-rider-navigation > .sekka-floating-actions > :is(.sekka-fab-menu,.sekka-fab-bell){
+    width:44px!important;height:44px!important;top:8px!important;
+  }
+  .sekka-mobile.sekka-rider-navigation > .sekka-sliver-pin{top:calc(17px + env(safe-area-inset-top,0px))!important}
+  .sekka-mobile.sekka-rider-navigation .rh-tabs__inner{padding-inline:2px!important}
+  .sekka-mobile.sekka-rider-navigation .rh-tabs__name{font-size:10px!important}
+  .sekka-mobile.sekka-rider-navigation .rh-tabs .rh-tabs__primary .rh-tabs__icon,
+  .sekka-mobile.sekka-rider-navigation .rh-tabs .rh-tabs__primary[aria-current="page"] .rh-tabs__icon{
+    width:60px!important;height:60px!important;min-width:60px!important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .sekka-mobile.sekka-rider-navigation .rh-tabs *{transition:none!important}
+}
