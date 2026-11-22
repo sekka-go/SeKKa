@@ -21,6 +21,7 @@ import RiderTabBar from './RiderTabBar';
 import type {RiderTab} from './RiderTabBar';
 import LiveTripRequests from './LiveTripRequests';
 import LiveNotifications from './LiveNotifications';
+import AppTour from './AppTour';
 import SessionLoader from './SessionLoader';
 const AdminDashboard=lazy(()=>import('./AdminDashboard'));
 import {mobileRouteHref,readMobileRoute} from './mobileNavigation';
@@ -36,6 +37,7 @@ export default function MobileApp(){
  const p=usePreferences(),en=p.language==='en',t=(ar:string,english:string)=>en?english:ar;
  const [route,setRoute]=useState<MobileRoute>(()=>readMobileRoute());
  const [motionStep,setMotionStep]=useState(0);
+ const [tourReplayToken,setTourReplayToken]=useState(0);
  const [menuOpen,setMenuOpen]=useState(false);
  const [bookingsSection,setBookingsSection]=useState<'bookings'|'requests'>(()=>{try{return sessionStorage.getItem('sekka.bookingsSection')==='requests'?'requests':'bookings';}catch{return 'bookings';}});
  useEffect(()=>{try{sessionStorage.setItem('sekka.bookingsSection',bookingsSection);}catch{/* Private browsing still works. */}},[bookingsSection]);
@@ -564,6 +566,20 @@ export default function MobileApp(){
    {adminLookupError&&<button type="button" onClick={()=>setAuthCheckRevision(v=>v+1)}>{t('إعادة فحص الصلاحيات','Retry authorization')}</button>}
    <button onClick={()=>navigate({tab:'home'})}>{t('العودة','Back')}</button></section>)}
   </main>
+  {ready&&tab!=='login'&&!(tab==='home'&&!userId)&&<AppTour
+   page={{
+    tab,
+    view:tab==='search'?discoveryScreen:tab==='routes'?captainScreen:
+     tab==='captain-onboarding'?captainStep:tab==='admin'?adminScreen:0,
+    section:tab==='bookings'?bookingsSection:undefined
+   }}
+   actor={userId||'guest'}
+   role={tab==='admin'&&admin?'admin':
+    (accountRole==='captain'||tab==='captain-onboarding')?'captain':'rider'}
+   language={p.language}
+   active={!menuOpen&&!blockedRiderTab}
+   replayToken={tourReplayToken}
+  />}
   {motionStep>0&&<div key={motionStep} className="sk-route-swoosh" aria-hidden="true"><i/><b/><span/></div>}
   {showRiderTabs&&<RiderTabBar
    active={tab==='search'?'search':tab==='bookings'||tab==='booking'?'bookings':tab==='profile'?'profile':tab==='home'?'home':null}
@@ -596,6 +612,9 @@ export default function MobileApp(){
      {ready&&captain&&accountRole==='captain'&&captainApproved&&menuLink(t('خطوطي','My routes'),{tab:'routes',view:42})}
      {ready&&admin&&<><h2>{t('الإدارة','Administration')}</h2>
       {menuLink(t('لوحة الإدارة','Admin dashboard'),{tab:'admin',view:62})}</>}
+     {ready&&<button type="button" className="sekka-menu-tour" onClick={()=>{
+      setMenuOpen(false);setTourReplayToken(value=>value+1);
+     }}>{t('اشرحلي الشاشة دي','Guide me through this screen')}</button>}
      <h2>{t('اللغة والمظهر','Language & appearance')}</h2>
      <div className="sekka-preference-controls">
       <label htmlFor="sekka-language-pref">{t('لغة التطبيق','App language')}
