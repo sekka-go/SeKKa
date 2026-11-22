@@ -5,6 +5,10 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    files: ["**/*.test.mjs"],
+    languageOptions: { globals: { URL: "readonly", AbortController: "readonly" } },
+  },
+  {
     files: ["**/*.ts", "**/*.tsx"],
     rules: { "@typescript-eslint/no-explicit-any": "error" },
   },
