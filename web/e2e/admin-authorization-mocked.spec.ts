@@ -131,7 +131,9 @@ for(const language of ['ar','en'] as const){
   const trigger=page.getByRole('button',{name:language==='ar'?'فتح القائمة':'Open menu'});
   const menu=await trigger.boundingBox();
   expect(menu).not.toBeNull();
-  expect(menu!.x+menu!.width/2).toBeLessThan(160);
+  // Arabic uses the RTL edge; English uses the LTR edge.
+  if(language==='ar')expect(menu!.x+menu!.width/2).toBeGreaterThan(160);
+  else expect(menu!.x+menu!.width/2).toBeLessThan(160);
   await trigger.click();
   const drawer=page.getByRole('dialog',{name:language==='ar'?'القائمة الرئيسية':'Main menu'});
   await drawer.getByRole('button',{name:language==='ar'?'توسيع القائمة':'Expand menu'}).click();
@@ -508,7 +510,7 @@ test('MOCKED genuine round-trip offer reaches transparent one-or-two person book
  await pickSearchArea(page,'Destination','New Cairo');
  await page.getByRole('button',{name:'See available rides'}).click();
  await expect(page.getByRole('heading',{name:'Verified Round Trip'})).toBeVisible();
- await page.getByRole('button',{name:'View route details'}).click();
+ await page.getByRole('button',{name:/^View details/}).click();
  await expect(page.getByText('Verified Round Trip',{exact:true})).toHaveCount(0);
  await expect(page.locator('.d-screen-12')).toBeVisible();
  const pickup=page.getByRole('combobox',{name:'Pickup point'});

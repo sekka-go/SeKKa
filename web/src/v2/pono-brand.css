@@ -118,3 +118,27 @@ html[data-theme="dark"] .sekka-mobile .rf3__panel :is(button,input):focus-visibl
  .sekka-mobile .rf3 :is(button,input),.sekka-mobile .sekka-bookings-section-tabs button,
  .sekka-mobile .sekka-glass-panel{animation:none!important;transition:none!important;}
 }
+
+/* Restore logical LTR/RTL arrow direction on Google continuation. */
+.sekka-mobile .sekka-entry-login[dir="rtl"] .sekka-entry-login__form .phase-primary>svg{
+ transform:scaleX(-1)!important;
+}
+/* Strong legibility in both button states, including a still-explained disabled form. */
+.sekka-mobile .rs3__submit,
+.sekka-mobile .rs3__submit svg,
+.sekka-mobile .sekka-entry button.sekka-entry__primary{
+ color:#17253A!important;
+}
+.sekka-mobile .rs3__submit:disabled{opacity:.78!important;}
+/* Keep the sign-in wordmark and form as a deliberate single visual group. */
+.sekka-mobile .sekka-entry-login .sekka-entry-login__brand{
+ margin:clamp(22px,4vh,42px) auto clamp(60px,10vh,100px)!important;
+}
+.sekka-mobile .sekka-entry-login .phase-google-auth.sekka-entry-login__form{
+ margin:0 auto auto!important;
+}
+@media(max-height:680px){
+ .sekka-mobile .sekka-entry-login .sekka-entry-login__brand{
+  margin:8px auto 36px!important;
+ }
+}
