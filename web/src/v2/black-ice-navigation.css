@@ -14,7 +14,9 @@
  --sekka-menu-muted:#688496;
 }
 .sekka-mobile .sekka-side-drawer{
- background:var(--sekka-menu-surface)!important;
+ /* Starts pure white, moving gradually into seKKa ice-blue at the bottom.
+    Dark-mode rules later in this stylesheet remain black. */
+ background:linear-gradient(180deg,#FFFFFF 0%,#FCFDFF 18%,#F5F9FF 53%,#EAF3FF 100%)!important;
  color:var(--sekka-menu-row-text)!important;
  border-color:var(--sekka-menu-row-border)!important;
  box-shadow:0 22px 70px #0417242B!important;
@@ -93,11 +95,22 @@
 .sekka-mobile .sekka-side-drawer nav button.sekka-menu-row[aria-current="page"]::after{
  border-color:#008FBA;
 }
-.sekka-mobile .sekka-side-drawer nav button.sekka-menu-tour .sekka-menu-row__icon{
- background:#FFF6CC!important;border-color:#F5E29B!important;color:#AD8200!important;
-}
 .sekka-mobile .sekka-side-drawer nav button.sekka-menu-row--signout .sekka-menu-row__icon{
  color:#AD5165!important;background:#FFF0F2!important;border-color:#F5D6DD!important;
+}
+/* "Guide me" stays functional but is deliberately a quiet text action,
+   not a fifth icon-bearing navigation card. */
+.sekka-mobile .sekka-side-drawer nav button.sekka-menu-row.sekka-menu-tour--text-only{
+ min-height:46px!important;padding:10px 15px!important;margin-block:3px!important;
+ background:#F7FAFF!important;border:1px solid #D7EAF5!important;
+ border-radius:15px!important;box-shadow:none!important;
+ color:#216D8A!important;font-weight:800!important;
+}
+.sekka-mobile .sekka-side-drawer nav button.sekka-menu-tour--text-only::after{
+ display:none!important;content:none!important;
+}
+.sekka-mobile .sekka-side-drawer .sekka-menu-tour--text-only .sekka-menu-row__label{
+ text-align:start!important;
 }
 /* Keep the native accessible language/appearance selectors; present their
  * focus area as the icon-bearing settings rows from the reference video. */
@@ -113,6 +126,13 @@
  border-radius:17px!important;background:var(--sekka-menu-row-surface)!important;
  color:var(--sekka-menu-row-text)!important;
  font:850 14px/1.4 Tajawal,Tahoma,sans-serif!important;
+}
+/* "App appearance" keeps its native selector, without a redundant icon. */
+.sekka-mobile .sekka-side-drawer .sekka-preference-row--appearance{
+ padding-inline:16px!important;
+}
+.sekka-mobile .sekka-side-drawer .sekka-preference-row--appearance .sekka-preference-row__details{
+ flex:1;min-width:0;width:100%;
 }
 .sekka-mobile .sekka-side-drawer .sekka-preference-row__details{
  display:flex;flex:1;min-width:0;flex-direction:column;gap:3px;
@@ -248,6 +268,10 @@ html[data-theme="dark"] .sekka-mobile .sekka-side-drawer nav button.sekka-menu-r
  color:#F3F9FF!important;
  box-shadow:0 5px 15px #0004!important;
 }
+html[data-theme="dark"] .sekka-mobile .sekka-side-drawer nav button.sekka-menu-row.sekka-menu-tour--text-only{
+ background:#0D1722!important;color:#BDEAFF!important;
+ border-color:#284A61!important;box-shadow:none!important;
+}
 html[data-theme="dark"] .sekka-mobile .sekka-side-drawer nav button.sekka-menu-row[aria-current="page"]{
  background:linear-gradient(115deg,#152C3E,#183B55)!important;
  border-color:#8BDCF7!important;
@@ -264,9 +288,6 @@ html[data-theme="dark"] .sekka-mobile .sekka-side-drawer nav button.sekka-menu-r
 }
 html[data-theme="dark"] .sekka-mobile .sekka-side-drawer .sekka-menu-row--signout .sekka-menu-row__icon{
  color:#FFC1C9!important;background:#3A232E!important;border-color:#704452!important;
-}
-html[data-theme="dark"] .sekka-mobile .sekka-side-drawer .sekka-menu-tour .sekka-menu-row__icon{
- background:#493C19!important;border-color:#887537!important;color:#FFDF75!important;
 }
 html[data-theme="dark"] .sekka-mobile .sekka-side-drawer .sekka-preference-controls label.sekka-preference-row{
  background:#111722!important;border-color:#253345!important;color:#F3F9FF!important;
