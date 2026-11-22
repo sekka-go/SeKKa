@@ -11,6 +11,10 @@ test('fresh opening shows approved Cairo SUV art and the cyan seKKa launch',asyn
  await expect(splash.locator('.sekka-launch__brand-name')).toHaveText('سِكَّة');
  await expect(splash.locator('.sekka-launch__approved-scene')).toBeVisible();
  await expect(splash.locator('.sekka-launch__wave-wipe')).toHaveCSS('animation-name','sk-wave-out');
+ await expect(splash.locator('.sekka-launch__approved-scene')).toHaveCSS('animation-name','sk-scene-depart');
+ await expect(splash.locator('.sekka-launch__wheel-motion')).toHaveCSS('animation-name','sk-scene-depart');
+ await expect(splash.locator('.sekka-launch__ribbon')).toBeVisible();
+ await expect(splash.locator('.sekka-launch__sky-to-road-wave')).toBeVisible();
  await expect(splash.locator('.sekka-launch__stage')).toHaveCSS('animation-name','sk-stage-finish');
  await expect(splash.locator('.sekka-launch__wheel-motion')).toBeVisible();
  const rect=await splash.boundingBox();
