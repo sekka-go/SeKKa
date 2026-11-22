@@ -6,6 +6,7 @@ import type {LiveSelection} from './LiveRouteSearch';
 import type {PlaceChoice,ServiceArea} from './geoPlace';
 import {usePreferences} from './preferences';
 import './rider-search-v3.css';
+import {useStaggeredReveal} from './staggerMotion';
 
 const names={
  ar:['السبت','الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة'],
@@ -23,6 +24,7 @@ export default function RiderSearchV3({origin,destination,originPlace,destinatio
  onSearch:()=>void;onLiveSelect?:(selection:LiveSelection)=>void;shortcuts?:ReactNode;
 }){
  const {language}=usePreferences(),en=language==='en',t=(ar:string,english:string)=>en?english:ar;
+ const revealSection=useStaggeredReveal();
  const [nearby,setNearby]=useState(false);
  const [mapMenuOpen,setMapMenuOpen]=useState(false);
  const [mapTarget,setMapTarget]=useState<'origin'|'destination'|null>(null);
@@ -47,7 +49,7 @@ export default function RiderSearchV3({origin,destination,originPlace,destinatio
   <form className="rs3__form" onSubmit={submit}>
    <div className="rs3__section-label"><span className="rs3__number">01</span>
     <h3>{t('مشوارك منين لفين؟','Where are you travelling?')}</h3></div>
-   <div className="rs3__places"><span className="rs3__places-rail" aria-hidden="true"><i/></span>
+   <div ref={revealSection} className="rs3__places"><span className="rs3__places-rail" aria-hidden="true"><i/></span>
     <div className="rs3__place">
      <span className="rs3__marker rs3__marker--start" aria-hidden="true"/>
      <div className="rs3__place-content">
@@ -74,7 +76,7 @@ export default function RiderSearchV3({origin,destination,originPlace,destinatio
    </div>
    {/* Map is not a field autocomplete behavior. It requires two separate
        explicit user actions and is never mounted during ordinary typing. */}
-   <div className="rs3__optional-map">
+   <div ref={revealSection} className="rs3__optional-map">
     <button type="button" className="rs3__optional-map-toggle"
      aria-expanded={mapMenuOpen} aria-controls="rs3-map-actions"
      onClick={()=>{setMapMenuOpen(value=>!value);}}>
@@ -106,7 +108,7 @@ export default function RiderSearchV3({origin,destination,originPlace,destinatio
    {shortcuts}
    <div className="rs3__section-label rs3__section-label--space"><span className="rs3__number">02</span>
     <h3>{t('الوقت اللي يناسبك','Your preferred time')}</h3></div>
-   <div className="rs3__times">
+   <div ref={revealSection} className="rs3__times">
     <label className="rs3__time">
      <span>{t('ميعاد الذهاب','Departure')}</span>
      <input type="time" value={outbound} onChange={event=>onOutbound(event.target.value)}/>
@@ -146,7 +148,7 @@ export default function RiderSearchV3({origin,destination,originPlace,destinatio
     </svg>
    </button>
   </form>
-  <div className="rs3__pickup-link">
+  <div ref={revealSection} className="rs3__pickup-link">
    <button type="button" onClick={()=>setNearby(true)}
     aria-haspopup="dialog" aria-expanded={nearby}>
     <span className="rs3__pickup-icon" aria-hidden="true">
