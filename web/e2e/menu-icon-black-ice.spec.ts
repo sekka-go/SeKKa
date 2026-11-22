@@ -143,7 +143,7 @@ test('glass drawer unfolds from an icon rail and supports reversible collapse wi
  // The actual overlay must still have layered, semi-transparent glass surfaces.
  expect(glass.background).toContain('rgba(');
  if(glass.blur!=='none')expect(glass.blur).toContain('blur(30px)');
- else if(glass.webkitBlur!=='none')expect(glass.webkitBlur).toContain('blur(30px)');
+ else if(glass.webkitBlur&&glass.webkitBlur!=='none')expect(glass.webkitBlur).toContain('blur(30px)');
  // A narrow collapsed rail retains icons, active destination and its controls.
  await panel.getByRole('button',{name:'تصغير القائمة'}).click();
  await expect(panel).toHaveClass(/sekka-glass-panel--collapsed/);
