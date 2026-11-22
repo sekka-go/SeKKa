@@ -132,6 +132,7 @@ export default function RiderSearchV3({origin,destination,originPlace,destinatio
     <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none"
      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m7 10 5 5 5-5"/></svg>
    </button>
+   {dayCount>0&&!daysOpen&&<p className="sekka-weekdays-disclaimer" role="note">{t("الأيام اللي اخترتها محفوظة كتفضيل، لكن النتائج مش بتتفلتر حسب الأيام لسه.","Your preferred days are saved but search results are not filtered by weekday yet.")}</p>}
    {daysOpen&&<div id="rs3-weekdays" className="rs3__days-panel">
     <div className="rs3__days" role="group" aria-label={t('أيام الأسبوع','Weekdays')}>
      {names[language].map((name,index)=><button type="button" key={index}
