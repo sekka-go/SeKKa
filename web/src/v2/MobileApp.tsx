@@ -607,6 +607,7 @@ export default function MobileApp(){
    language={p.language}
    active={!menuOpen&&!blockedRiderTab}
    replayToken={tourReplayToken}
+   autoStart={tab==='home'&&Boolean(userId)}
   />}
   {showRiderTabs&&<RiderTabBar
    active={tab==='search'?'search':tab==='bookings'?(bookingsSection==='requests'?'requests':'bookings'):tab==='booking'?'bookings':tab==='profile'?'profile':tab==='home'?'home':null}
