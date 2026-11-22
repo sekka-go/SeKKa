@@ -77,14 +77,15 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
   if(!validSeats(seats)){
    setError(t('الحد الأقصى لطلب الرحلة شخصين فقط.','You can request a trip for at most two people.'));return;
   }
-  // A broad search does not require a clock. Preserve empty optional times as SQL NULL.
-  const outbound=requestDirection==='return'?null:(requestTime.trim()||null);
-  const inbound=requestDirection==='outbound'?null:(requestReturnTime.trim()||null);
+  // Search can be broad, but the existing request table requires a concrete
+  // departure/return clock. Ask only for missing times; never fabricate a time.
+  const outbound=requestDirection==='return'?null:requestTime.trim();
+  const inbound=requestDirection==='outbound'?null:requestReturnTime.trim();
   if(!from||!to||from.id===to.id||(outbound!==null&&!validClock(outbound))||
     (inbound!==null&&!validClock(inbound))||
     !['weekly','monthly'].includes(requestPeriod)||
     !['outbound','return','round_trip'].includes(requestDirection)){
-   setError(t('راجع المناطق واتجاه الرحلة ومواعيد الذهاب والعودة.','Check areas, journey direction and departure/return times.'));return;
+   setError(t('حدد ميعاد الذهاب أو العودة الناقص، وراجع مناطق الرحلة.','Choose any missing departure or return time and check the journey places.'));return;
   }
   await action(async()=>{
    // Friendly preflight. Database advisory-lock guard is the final authority
@@ -256,12 +257,14 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
    {!loading&&!loadFailed&&!notice&&uid&&<div className="sekka-request-summary">
     <p><strong><bdi>{areaLabel(search.origin)}</bdi> <span aria-hidden="true">·</span> <bdi>{areaLabel(search.destination)}</bdi></strong></p>
     <p>
-     {requestDirection!=='return'&&<span>{t('ذهاب','Outbound')} <bdi>{requestTime||t('أي ميعاد','Any time')}</bdi> · </span>}
-     {requestDirection!=='outbound'&&<span>{t('عودة','Return')} <bdi>{requestReturnTime||t('أي ميعاد','Any time')}</bdi> · </span>}
+     {requestDirection!=='return'&&<span>{t('ذهاب','Outbound')} <bdi>{requestTime||t('مطلوب تحديد الميعاد','Time required')}</bdi> · </span>}
+     {requestDirection!=='outbound'&&<span>{t('عودة','Return')} <bdi>{requestReturnTime||t('مطلوب تحديد الميعاد','Time required')}</bdi> · </span>}
      {requestPeriod==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')}
     </p>
     {Boolean(search.weekdays?.length)&&<p className="sekka-request-days-disclaimer" role="note">{t('أيامك المفضلة محفوظة للبحث فقط، ومش هتتسجل ضمن طلب المشوار ده حاليًا.','Your preferred weekdays are saved for search only and will not be included in this ride request yet.')}</p>}
    </div>}
+   {!loading&&!loadFailed&&!notice&&uid&&requestDirection!=='return'&&!validClock(requestTime)&&<label className="sekka-request-missing-time">{t('حدد ميعاد الذهاب علشان نقدر نحفظ الطلب','Choose a departure time to save your request')}<input type="time" value={requestTime} onChange={event=>setRequestTime(event.target.value)} required/></label>}
+   {!loading&&!loadFailed&&!notice&&uid&&requestDirection!=='outbound'&&!validClock(requestReturnTime)&&<label className="sekka-request-missing-time">{t('حدد ميعاد العودة علشان نقدر نحفظ الطلب','Choose a return time to save your request')}<input type="time" value={requestReturnTime} onChange={event=>setRequestReturnTime(event.target.value)} required/></label>}
    {!loading&&!loadFailed&&!notice&&<button type="button" className="d-primary sekka-request-yellow-cta"
     disabled={busy||!search.origin||!search.destination}
     onClick={()=>void create()}>{busy?t('بنحفظ طلب رحلتك…','Saving your trip request…'):
