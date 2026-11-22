@@ -14,6 +14,7 @@ for(const width of [320,390]){
   await expect(page.locator('.sekka-mobile')).toHaveCSS('background-color','rgb(5, 7, 11)');
   await expect(page.locator('.sekka-mobile-content')).toHaveCSS('background-color','rgb(5, 7, 11)');
   await page.getByRole('button',{name:'فتح القائمة'}).click();
+  await page.getByRole('button',{name:'توسيع القائمة'}).click();
   const drawer=page.getByRole('dialog',{name:'القائمة الرئيسية'});
   await expect(drawer).toBeVisible();
   await expect(drawer.locator('.sekka-side-drawer__wordmark')).toHaveText('سِكَّة');
@@ -46,6 +47,7 @@ test('dark black theme can be changed to light without losing language or naviga
  });
  await page.goto('/?tab=profile');
  await page.getByRole('button',{name:'فتح القائمة'}).click();
+ await page.getByRole('button',{name:'توسيع القائمة'}).click();
  const drawer=page.getByRole('dialog',{name:'القائمة الرئيسية'});
  await expect(drawer.locator('#sekka-appearance-pref')).toHaveCount(0);
  const toggle=drawer.getByRole('switch',{name:'تشغيل أو إيقاف الوضع الليلي'});
@@ -97,14 +99,15 @@ test('light drawer fades from white to ice blue with icon-free secondary control
  });
  await page.goto('/?tab=profile');
  await page.getByRole('button',{name:'فتح القائمة'}).click();
+ await page.getByRole('button',{name:'توسيع القائمة'}).click();
  const drawer=page.getByRole('dialog',{name:'القائمة الرئيسية'});
  await expect(drawer).toBeVisible();
  await page.waitForTimeout(650); // Avoid capturing a half-open drawer.
  await page.screenshot({path:'../docs/audit/menu-white-ice-390.png',fullPage:true,animations:'disabled'});
  const background=await drawer.evaluate(element=>getComputedStyle(element).backgroundImage);
  expect(background).toContain('linear-gradient');
- expect(background).toContain('rgba(255, 255, 255, 0.76) 0%');
- expect(background).toContain('rgba(234, 243, 255, 0.72) 100%');
+ expect(background).toContain('rgba(255, 255, 255, 0.93) 0%');
+ expect(background).toContain('rgba(234, 243, 255, 0.9) 100%');
  await expect(drawer.locator('.sekka-preference-row--appearance')).toHaveCount(0);
  await expect(drawer.locator('#sekka-appearance-pref')).toHaveCount(0);
  await expect(drawer.getByText('مظهر التطبيق')).toHaveCount(0);
@@ -130,9 +133,17 @@ test('glass drawer unfolds from an icon rail and supports reversible collapse wi
  await page.getByRole('button',{name:'فتح القائمة'}).click();
  const panel=page.getByRole('dialog',{name:'القائمة الرئيسية'});
  await expect(panel).toBeVisible();
- await expect(panel).toHaveClass(/sekka-glass-panel/);
+ await expect(panel).toHaveClass(/sekka-glass-panel--collapsed/);
+ await expect(panel).toHaveCSS('width','70px');
+ await expect(panel.locator('.sekka-glass-search')).toBeHidden();
+ await expect(panel.getByRole('button',{name:'توسيع القائمة'})).toHaveAttribute('aria-expanded','false');
+ await page.waitForTimeout(450);
+ await page.screenshot({path:'../docs/audit/menu-glass-compact-390.png',fullPage:true,animations:'disabled'});
+ await panel.getByRole('button',{name:'توسيع القائمة'}).click();
  await expect(panel).not.toHaveClass(/sekka-glass-panel--collapsed/);
  await expect(panel).toHaveCSS('border-top-left-radius','31px');
+ await page.waitForTimeout(550);
+ await page.screenshot({path:'../docs/audit/menu-glass-expanded-390.png',fullPage:true,animations:'disabled'});
  const glass=await panel.evaluate(el=>({
   blur:getComputedStyle(el).backdropFilter,
   webkitBlur:getComputedStyle(el).webkitBackdropFilter,
@@ -171,6 +182,7 @@ test('glassy menu keeps the drawer at the right in Arabic and left in English',a
  });
  await page.goto('/?tab=profile');
  await page.getByRole('button',{name:'فتح القائمة'}).click();
+ await page.getByRole('button',{name:'توسيع القائمة'}).click();
  const panel=page.locator('.sekka-glass-panel');
  await expect(panel).toBeVisible();
  await page.waitForTimeout(700);
