@@ -1,3 +1,4 @@
+import AppSkeleton from './AppSkeleton';
 import {useEffect,useRef,useState} from 'react';
 import {readSavedCommute,restoreCommuteDraft,saveCommute,readHomeDraft,saveHomeDraft,clearHomeDraft,WEEKDAY_IDS} from './riderCommute';
 import type {SavedCommute} from './riderCommute';
@@ -149,7 +150,7 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
    <div className="rh-journey__ribbon"><RiderIcon name="star" size={18}/>{draft.origin&&draft.destination?tr.savedLabel:t('ظبّط مشوارك','Plan your ride')}</div>
    <div className="rh-journey__heading"><strong>{t('مشوارك… على مزاجك','Your route, your choice')}</strong>
     <small>{t('اضغط على أي خانة علشان تختار','Tap any field to change it')}</small></div>
-   {!areasLoaded&&!areasFailed&&draft.origin&&<p className="rh-journey__area-loading" role="status">{tr.loadingAreas}</p>}
+   {!areasLoaded&&!areasFailed&&draft.origin&&<AppSkeleton kind="stops" compact label={tr.loadingAreas}/>}
    {areasFailed&&<p className="rh-journey__notice" role="status">{tr.noBackend}</p>}
    <div className="rh-journey__fields">
     {fields.map(field=><button ref={revealHome} type="button" key={field.id}
