@@ -45,10 +45,10 @@ for(const width of [320,360,390,412]){
   const trigger=page.getByRole('button',{name:'فتح القائمة'});
   await trigger.click();
   const drawer=page.getByRole('dialog',{name:'القائمة الرئيسية'});
-  const toggle=drawer.locator('.sekka-language');
-  await expect(toggle).toHaveAttribute('aria-label','التبديل إلى الإنجليزية');
-  await expect(toggle.locator('.sekka-drawer-pref-icon')).toHaveText('🌐');
-  await toggle.click();
+  await drawer.getByRole('button',{name:'توسيع القائمة'}).click();
+   const languagePref=drawer.locator('#sekka-language-pref');
+   await expect(languagePref).toBeVisible();
+   await languagePref.selectOption('en');
   await expect(page.locator('html')).toHaveAttribute('dir','ltr');
   await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
   expect(await page.evaluate(()=>localStorage.getItem('language_preference'))).toBe('en');
@@ -59,8 +59,9 @@ for(const width of [320,360,390,412]){
   await expect(page.getByRole('heading',{name:'My profile'})).toBeVisible();
   await page.reload();
   await page.getByRole('button',{name:'Open menu'}).click();
-  await expect(page.getByRole('dialog',{name:'Main menu'}).locator('.sekka-language')).toHaveAttribute('aria-label','Switch to Arabic');
-  await page.getByRole('dialog',{name:'Main menu'}).locator('.sekka-language').click();
+  const translatedDrawer=page.getByRole('dialog',{name:'Main menu'});
+   await translatedDrawer.getByRole('button',{name:'Expand menu'}).click();
+   await translatedDrawer.locator('#sekka-language-pref').selectOption('ar');
   await expect(page.locator('html')).toHaveAttribute('dir','rtl');
   await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
@@ -86,13 +87,15 @@ for(const language of ['ar','en'] as const){
    else expect(b!.x+b!.width/2).toBeLessThan(width/2);
    await trigger.click();
    const drawer=page.getByRole('dialog',{name:language==='ar'?'القائمة الرئيسية':'Main menu'});
-   await expect(drawer.locator('.sekka-language')).toBeVisible();
-   await expect(drawer.locator('.sekka-theme')).toBeVisible();
-   for(const pref of [drawer.locator('.sekka-language'),drawer.locator('.sekka-theme')]){
-    const rect=await pref.boundingBox();
-    expect(rect).not.toBeNull();
-    expect(rect!.height).toBeGreaterThanOrEqual(44);
-   }
+   await drawer.getByRole('button',{name:language==='ar'?'توسيع القائمة':'Expand menu'}).click();
+    const languageSelect=drawer.locator('#sekka-language-pref');
+    const appearanceSwitch=drawer.getByRole('switch',{name:language==='ar'?'تشغيل أو إيقاف الوضع الليلي':'Toggle dark mode'});
+    for(const pref of [languageSelect,appearanceSwitch]){
+     await expect(pref).toBeVisible();
+     const rect=await pref.boundingBox();
+     expect(rect).not.toBeNull();
+     expect(rect!.height).toBeGreaterThanOrEqual(44);
+    }
    expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
   });
  }
@@ -182,16 +185,12 @@ test(`pending Captain profile stays in Passenger journey until explicit entry at
  await page.goto('/');
  await expect(page.locator('.sekka-rider-home')).toBeVisible();
  await expect(page).not.toHaveURL(/tab=captain-onboarding|tab=routes/);
- // Approved design uses real CSS/SVG waves and a working discovery action.
- await expect(page.locator('.rh-showcase-hero__top-wave')).toBeVisible();
- await expect(page.locator('.rh-showcase-hero__bottom-wave')).toBeVisible();
- // The Owner's actual reference uses icy #F0F5FE, an electric-blue
- // hero and a glowing aqua wave; the old greener palette must not return.
- await expect(page.locator('.rh-home')).toHaveCSS('background-color','rgb(240, 245, 254)');
- await expect(page.locator('.rh-showcase-hero__top-wave path').nth(1)).toHaveAttribute('fill','#0CEEF3');
- await expect(page.locator('.rh-showcase-hero__bottom-wave path').last()).toHaveAttribute('fill','#F0F5FE');
- const electricGradient=await page.locator('.rh-showcase-hero').evaluate(el=>getComputedStyle(el).backgroundImage);
- expect(electricGradient).toContain('rgb(2, 154, 247)');
+ // Urban Mobility intentionally hides marine waves while retaining functional search.
+  await expect(page.locator('.rh-showcase-hero__top-wave')).toBeHidden();
+  await expect(page.locator('.rh-showcase-hero__bottom-wave')).toBeHidden();
+  await expect(page.locator('.rh-home')).toHaveCSS('background-color','rgb(245, 243, 237)');
+  const urbanGradient=await page.locator('.rh-showcase-hero').evaluate(el=>getComputedStyle(el).backgroundImage);
+  expect(urbanGradient).toContain('rgb(23, 37, 58)');
 
  await expect(page.locator('.rh-showcase-search__card')).toBeVisible();
  await expect(page.locator('.rh-showcase-search__card')).toContainText('Find a ride');
@@ -199,7 +198,7 @@ test(`pending Captain profile stays in Passenger journey until explicit entry at
  await expect(page.locator('.rh-showcase-routes')).toBeVisible();
  // Mocked backend returns no offers; never insert visual placeholder trips.
  await expect(page.locator('.rh-showcase-routes__list .rh-showcase-ride')).toHaveCount(0);
- await expect(page.locator('.sekka-sliver-pin')).toContainText('سِكَّة');
+ await expect(page.locator('.sekka-sliver-pin')).toContainText('PoNo');
  // Rider shell regression at each supported small width (synthetic auth only).
  const dock=page.locator('.rh-tabs');
  await expect(dock).toBeVisible();
