@@ -213,3 +213,30 @@ html[data-theme="dark"] .sekka-mobile .rb3__filters{
   backdrop-filter:none!important;
  }
 }
+
+
+/* Direct-heading fallback for the non-hero pages used by every role. */
+.sekka-mobile [data-sekka-scroll-hero]:is(h1,h2){
+ transform:translate3d(0,var(--sekka-scroll-shift),0) scale(var(--sekka-scroll-scale));
+ transform-origin:top right;
+}
+.sekka-mobile[dir="ltr"] [data-sekka-scroll-hero]:is(h1,h2){
+ transform-origin:top left;
+}
+/* The Captain route list uses the same adaptive SliverGrid treatment when the
+ * viewport is actually wide enough, never on a 360px phone. */
+@media(min-width:820px){
+ .sekka-mobile .live-route-list > ul{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+  align-items:start;
+  list-style:none;
+ }
+ .sekka-mobile .live-route-list > ul > li{min-width:0}
+ .sekka-mobile .cj-home-how-items{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+ .sekka-mobile .cj-home-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+}
+@media(prefers-reduced-motion:reduce){
+ .sekka-mobile [data-sekka-scroll-hero]:is(h1,h2){transform:none!important}
+}
