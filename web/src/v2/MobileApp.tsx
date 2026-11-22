@@ -41,6 +41,7 @@ import './navigation-reference-refresh.css';
 import './auth-contrast.css';
 import './guest-booking-header.css';
 import './wave-home-showcase.css';
+import './black-ice-navigation.css';
 
 export default function MobileApp(){
  const p=usePreferences(),en=p.language==='en',t=(ar:string,english:string)=>en?english:ar;
