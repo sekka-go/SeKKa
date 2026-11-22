@@ -1,4 +1,23 @@
 import {test,expect} from '@playwright/test';
+// Full-page screenshot evidence must reveal content across the scroll surface.
+// IntersectionObserver-staggered sections are otherwise transparent offscreen.
+async function revealFullPageForAudit(page:import('@playwright/test').Page){
+ await page.evaluate(async()=>{
+  const firstY=window.scrollY;
+  const doc=document.scrollingElement||document.documentElement;
+  const max=Math.max(0,doc.scrollHeight-window.innerHeight);
+  const step=Math.max(200,Math.floor(window.innerHeight*.65));
+  for(let y=0;y<max;y+=step){
+   window.scrollTo(0,Math.min(y,max));
+   await new Promise<void>(resolve=>window.setTimeout(resolve,90));
+  }
+  window.scrollTo(0,max);
+  await new Promise<void>(resolve=>window.setTimeout(resolve,170));
+  window.scrollTo(0,firstY);
+  await new Promise<void>(resolve=>window.setTimeout(resolve,120));
+ });
+}
+
 
 const endpoint='https://sekka-auth-e2e.supabase.co';
 const userId='00000000-0000-4000-8000-0000000000b1';
@@ -242,6 +261,7 @@ test(`pending Captain profile stays in Passenger journey until explicit entry at
  }
  await expect(page.locator('.sekka-launch')).toHaveCount(0,{timeout:8000});
  await page.waitForTimeout(140);
+ await revealFullPageForAudit(page);
  await page.screenshot({path:`test-results/dock-bloom-expanded-${width}.png`,fullPage:true,animations:'disabled'});
 
  await expect(dock.getByRole('button',{name:'Requests'})).toBeVisible();
@@ -258,6 +278,7 @@ test(`pending Captain profile stays in Passenger journey until explicit entry at
  await expect(page.locator('.sk-route-swoosh')).toHaveCount(0);
  await dock.getByRole('button',{name:'Home'}).click();
  await expect(page.locator('.sekka-rider-home')).toBeVisible();
+ await revealFullPageForAudit(page);
  await page.screenshot({path:`test-results/mock-pending-captain-passenger-home-${width}.png`,fullPage:true,animations:'disabled'});
  await expect(page.getByRole('button',{name:'Open menu'})).toBeVisible();
  await expect(page.locator('.sekka-bottom-nav')).toHaveCount(0);
