@@ -62,7 +62,11 @@ test('dark black theme can be changed to light without losing language or naviga
  await expect(page.locator('.sekka-mobile')).not.toHaveCSS('background-color','rgb(5, 7, 11)');
  await drawer.locator('#sekka-language-pref').selectOption('en');
  await expect(page.locator('html')).toHaveAttribute('dir','ltr');
- await expect(drawer.getByRole('button',{name:'My profile'})).toBeVisible();
+ // Changing language renames the dialog's accessible label from Arabic to
+ // English; query the re-localized dialog rather than the stale Arabic locator.
+ const englishDrawer=page.getByRole('dialog',{name:'Main menu'});
+ await expect(englishDrawer).toBeVisible();
+ await expect(englishDrawer.getByRole('button',{name:'My profile'})).toBeVisible();
  await expect(page.locator('.sekka-mobile .sekka-side-drawer .sekka-menu-row__icon').first()).toBeVisible();
 });
 
