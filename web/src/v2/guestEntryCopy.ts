@@ -1,7 +1,7 @@
 /* Live passenger/Captain entry copy. No fake supply counts, prices or promises. */
 export const entryCopy={
  ar:{
-  brand:"سِكَّة",step:"خطوة",of:"من",back:"رجوع",skip:"تخطي التعريف",
+  brand:"PoNo",step:"خطوة",of:"من",back:"رجوع",skip:"تخطي التعريف",
   welcomeTag:"رحلات مشتركة للمشاوير المتكررة",
   welcomeTitle:"مشوارك بيتكرر؟\nخلّيه أسهل.",
   welcomeDescription:"حدّد وجهتك وشوف الرحلات المنشورة في نفس اتجاهك. أو شارك خطك لو إنت الكابتن.",
@@ -26,8 +26,8 @@ export const entryCopy={
   chooseButton:"متابعة باستخدام جوجل",
   setupTitle:"كمّل بياناتك الأساسية",
   setupDescription:"ممكن تبدأ بالاسم ورقم للتواصل لو حبيت. باقي البيانات حسب استخدامك.",
-  setupSkip:"الذهاب لسِكَّة",
-  signInTitle:"أهلاً بيك في سِكَّة",
+  setupSkip:"الذهاب لPoNo",
+  signInTitle:"أهلاً بيك في PoNo",
   signInDescription:"استخدم حساب Google علشان نحفظ اختيارك ونفتح لك الرحلات الحقيقية.",
   signInSecure:"دخول واحد، حسابك محفوظ",
   signInLoading:"بنفتح جوجل…",
@@ -38,7 +38,7 @@ export const entryCopy={
   google:"Google"
  },
  en:{
-  brand:"seKKa",step:"Step",of:"of",back:"Back",skip:"Skip intro",
+  brand:"PoNo",step:"Step",of:"of",back:"Back",skip:"Skip intro",
   welcomeTag:"Shared rides for recurring commutes",
   welcomeTitle:"Same commute?\nMake it easier.",
   welcomeDescription:"Choose your destination and see published trips going your way. Or share your usual route as a Captain.",
@@ -57,14 +57,14 @@ export const entryCopy={
   detailsButton:"Choose your role",
   chooseTag:"One more thing",
   chooseTitle:"What brings you here?",
-  chooseDescription:"Choose how you want to use seKKa. We'll tailor the next steps.",
+  chooseDescription:"Choose how you want to use PoNo. We'll tailor the next steps.",
   rider:"Passenger",riderTitle:"Find a ride",riderDesc:"See routes near you and compare before booking.",
   captain:"Captain",captainTitle:"Share my route",captainDesc:"Set your usual route and schedule so suitable riders can find it.",
   chooseButton:"Continue with Google",
   setupTitle:"Complete your basic profile",
   setupDescription:"Add your name and an optional contact phone. Other details appear only when needed.",
-  setupSkip:"Go to seKKa",
-  signInTitle:"Welcome to seKKa",
+  setupSkip:"Go to PoNo",
+  signInTitle:"Welcome to PoNo",
   signInDescription:"Use your Google account to save your choice and access real trip listings.",
   signInSecure:"One sign-in, your account protected",
   signInLoading:"Opening Google…",

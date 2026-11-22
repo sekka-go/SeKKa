@@ -142,14 +142,14 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
  const title=editor==='from'?tr.originEditor:editor==='to'?tr.destinationEditor:
   editor==='time'?tr.timeEditor:tr.daysEditor;
  return <div className="rh-home sekka-rider-home" dir={en?'ltr':'rtl'}>
-  <section className="rh-hero rh-showcase-hero" aria-label={t('أهلاً بيك في سِكَّة','Welcome to seKKa')}>
+  <section className="rh-hero rh-showcase-hero" aria-label={t('أهلاً بيك في PoNo','Welcome to PoNo')}>
    <svg className="rh-showcase-hero__top-wave" viewBox="0 0 430 178" preserveAspectRatio="none" aria-hidden="true">
     <path d="M0 0H430V15C342 128 240 35 128 128C79 171 28 161 0 160Z" fill="#0187EE"/>
     <path d="M0 0H430V2C338 103 244 26 128 98C74 139 28 131 0 139Z" fill="#0CEEF3" opacity=".82"/>
     <path d="M0 0H430V0C347 85 242 13 140 76C78 112 32 109 0 119Z" fill="#63F7F3" opacity=".45"/>
    </svg>
    <div className="rh-hero__copy">
-    <span className="rh-hero__eyebrow">{t('معاك في السِكَّة','Along your way')}</span>
+    <span className="rh-hero__eyebrow">{t('معاك في PoNo','Along your way')}</span>
     <h2>{t('أهلاً بيك','Welcome')}</h2>
     <p>{t('جاهز لمشوار جديد؟','Ready for your next ride?')}</p>
    </div>

@@ -1,12 +1,12 @@
 export const riderHomeCopy={
  ar:{
-  kicker:'سِكَّة · معاك في السِكَّة',title:'رايح فين؟',
+  kicker:'PoNo · مشوارك أسهل',title:'رايح فين؟',
   subtitle:'دور على رحلة في طريقك، واختار نقطة الركوب اللي تناسبك.',
   searchButton:'دور على رحلة',originEditor:'اختار مكان الانطلاق',destinationEditor:'اختار وجهتك',timeEditor:'حدد مواعيدك',daysEditor:'اختار أيام المشوار',close:'إغلاق',done:'تم',placeHint:'اكتب مكانك واختاره من نتائج البحث الحقيقية.',outboundTime:'ميعاد الذهاب',returnTimeOptional:'ميعاد العودة (اختياري)',timeHint:'ممكن تسيب الميعاد فاضي وتشوف الرحلات في كل المواعيد.',daysHint:'اختار أيام الأسبوع اللي تناسبك؛ عدد الأيام بيتحسب تلقائيًا.',daysSearchHint:'الأيام المحفوظة تفضيل شخصي حاليًا؛ لازم تتأكد من أيام الرحلة قبل الحجز، لأن البحث الحالي مش بيفلتر بالأيام.',periodLabel:'نظام المشوار',samePlaceError:'لازم تختار مكان انطلاق ووصول مختلفين.',
   savedLabel:'مشوارك المعتاد',timeLabel:'الساعة',daysLabel:'الأيام',timePrompt:'حدد ميعادك',daysPrompt:'بتظهر مع الرحلة',editInitial:'حدّد أو غيّر مشوارك',quickActions:'اختصارات الراكب',nearbyShortTitle:'نقط قريبة منك',bookingsShortTitle:'رحلاتي',pickup:'من',dropoff:'إلى',departure:'الذهاب',arrival:'العودة',
   weekly:'أسبوعي',monthly:'شهري',outbound:'ذهاب',return:'عودة',round_trip:'ذهاب وعودة',
   searchSaved:'شوف الرحلات على خطّي',change:'غيّر المكان أو الميعاد',find:'دور على رحلة',
-  firstTitle:'أول مرة تستخدم سِكَّة؟',firstDesc:'حدّد نقطة البداية والوجهة والميعاد مرة واحدة. بعدها مشوارك هيبقى جاهز لإعادة البحث.',
+  firstTitle:'أول مرة تستخدم PoNo؟',firstDesc:'حدّد نقطة البداية والوجهة والميعاد مرة واحدة. بعدها مشوارك هيبقى جاهز لإعادة البحث.',
   begin:'حدّد مشوارك',nearbyTitle:'ممكن رحلة تعدّي من جنبك',
   nearbyDesc:'اعرف أقرب نقطة ركوب فعلية بعد السماح بالموقع. مش هنخمن مسافات أو أسعار.',
   nearbyAction:'اكتشف نقاط الركوب القريبة',nearbyClose:'إخفاء البحث القريب',
@@ -17,18 +17,18 @@ export const riderHomeCopy={
   localFailure:'مش قادرين نفتح البحث المحفوظ. افتح البحث وعدّل التفاصيل.',
   mapHint:'البحث القريب اختياري ويستخدم الموقع بعد موافقتك.',
   progress:'1. اختر الطريق   2. قارن الرحلات   3. راجع واحجز',
-  homeCaption:'معاك في السِكَّة',changeShort:'تعديل',originPrompt:'حدد نقطة انطلاقك',destinationPrompt:'حدد وجهتك',nextHeading:'إيه كمان تقدر تعمل؟',nextHint:'كل حاجة في مكانها',nearbyShort:'شوف أقرب نقاط ركوب منشورة',bookingsShort:'تابع حجوزاتك وطلباتك',footerMessage:'مش هنقولك رحلة متاحة غير لما تكون منشورة فعلًا.',
+  homeCaption:'مشوارك مع PoNo',changeShort:'تعديل',originPrompt:'حدد نقطة انطلاقك',destinationPrompt:'حدد وجهتك',nextHeading:'إيه كمان تقدر تعمل؟',nextHint:'كل حاجة في مكانها',nearbyShort:'شوف أقرب نقاط ركوب منشورة',bookingsShort:'تابع حجوزاتك وطلباتك',footerMessage:'مش هنقولك رحلة متاحة غير لما تكون منشورة فعلًا.',
   searchStep:'الخطوة 1 من 3',searchTitle:'ظبّط مشوارك',searchHelp:'حدد نقطة البداية والوجهة والميعاد. البحث هيعرض الخطوط المنشورة فعلًا.',
   resultsStep:'الخطوة 2 من 3',resultsTitle:'اختار الرحلة الأنسب',detailsStep:'الخطوة 3 من 3',detailsTitle:'راجع التفاصيل قبل الحجز'
  },
  en:{
-  kicker:'seKKa · Smarter shared rides',title:'Ready for your ride?',
+  kicker:'PoNo · Smarter shared rides',title:'Ready for your ride?',
   subtitle:'Find published trips going your way and choose a convenient pickup.',
   searchButton:'Search',originEditor:'Choose your starting point',destinationEditor:'Choose your destination',timeEditor:'Choose your times',daysEditor:'Choose your commute days',close:'Close',done:'Done',placeHint:'Find and select a real place from search results.',outboundTime:'Outbound time',returnTimeOptional:'Return time (optional)',timeHint:'You can leave the time blank to see rides at any time.',daysHint:'Choose the weekdays that suit you. The day count updates automatically.',daysSearchHint:'Saved days are preferences for now. Please confirm each ride’s actual operating days before booking; weekday filtering is not yet supported by search.',periodLabel:'Commute frequency',samePlaceError:'Please choose different start and destination places.',
   savedLabel:'Your usual commute',timeLabel:'Time',daysLabel:'Days',timePrompt:'Choose your departure time',daysPrompt:'Shown on available rides',editInitial:'Set or edit your commute',quickActions:'Quick actions',nearbyShortTitle:'Nearby pickup stops',bookingsShortTitle:'My rides',pickup:'From',dropoff:'To',departure:'Outbound',arrival:'Return',
   weekly:'Weekly',monthly:'Monthly',outbound:'Outbound',return:'Return',round_trip:'Round trip',
   searchSaved:'Find rides on my route',change:'Change route or time',find:'Find a ride',
-  firstTitle:'New to seKKa?',firstDesc:'Choose your pickup area, destination and time once. Your commute is then ready to search again.',
+  firstTitle:'New to PoNo?',firstDesc:'Choose your pickup area, destination and time once. Your commute is then ready to search again.',
   begin:'Set my commute',nearbyTitle:'A ride may pass close to you',
   nearbyDesc:'Find actual nearby pickup points with your permission. We never invent prices or distances.',
   nearbyAction:'Find nearby pickup stops',nearbyClose:'Hide nearby search',
@@ -39,7 +39,7 @@ export const riderHomeCopy={
   localFailure:"Couldn't restore your saved search. Open search to edit the details.",
   mapHint:'Nearby discovery is optional and uses location only with your permission.',
   progress:'1. Choose a route   2. Compare rides   3. Review and book',
-  homeCaption:'Your seKKa route',changeShort:'Edit',originPrompt:'Choose pickup area',destinationPrompt:'Choose destination',nextHeading:'What else can you do?',nextHint:'All in one place',nearbyShort:'Explore nearby published pickup points',bookingsShort:'Track bookings and requests',footerMessage:'We only show trips that are actually published.',
+  homeCaption:'Your PoNo route',changeShort:'Edit',originPrompt:'Choose pickup area',destinationPrompt:'Choose destination',nextHeading:'What else can you do?',nextHint:'All in one place',nearbyShort:'Explore nearby published pickup points',bookingsShort:'Track bookings and requests',footerMessage:'We only show trips that are actually published.',
   searchStep:'Step 1 of 3',searchTitle:'Set your commute',searchHelp:'Choose your pickup, destination and time. Only genuinely published routes are shown.',
   resultsStep:'Step 2 of 3',resultsTitle:'Pick a suitable ride',detailsStep:'Step 3 of 3',detailsTitle:'Review before booking'
  }

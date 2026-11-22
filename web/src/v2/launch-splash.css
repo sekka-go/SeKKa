@@ -111,3 +111,14 @@
 .sekka-launch__wave-wipe{
  background:linear-gradient(165deg,#111A2A,#17253A)!important;
 }
+
+/* PoNo: approved white wordmark on matching cobalt blue; SUV animation retained. */
+.sekka-launch{background:#0648F5!important}
+.sekka-launch__stage{background:linear-gradient(145deg,#0739DE 0%,#0648F5 58%,#0858FB 100%)!important}
+.sekka-launch__brand{top:11%;gap:0;text-shadow:none}
+.sekka-launch__brand-name{
+ display:block;width:min(88vw,430px);height:auto;max-width:100%;aspect-ratio:1250/455;
+ object-fit:contain;letter-spacing:normal
+}
+@media(max-height:680px){.sekka-launch__brand{top:7%}
+ .sekka-launch__brand-name{width:min(78vw,370px)}}
