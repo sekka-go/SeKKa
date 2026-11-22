@@ -1,0 +1,101 @@
+/*
+ * seKKa Dock Bloom — the center search button is the visual seed.
+ * A glass pill blooms from its center, followed by four wayfinding icons.
+ * This is presentational only: the search action and every tab retain their
+ * existing onNavigate handlers, URLs, focus order and access restrictions.
+ */
+.sekka-mobile.sekka-rider-navigation .rh-tabs__inner {
+ position:relative!important;
+ isolation:isolate;
+ background:transparent!important;
+ border-color:transparent!important;
+ box-shadow:none!important;
+ overflow:visible!important;
+}
+/* The visible dock is its own composited layer so icons never stretch. */
+.sekka-mobile.sekka-rider-navigation .rh-tabs__inner::before {
+ content:""!important;display:block!important;
+ position:absolute;inset:0;z-index:-1;
+ border-radius:30px!important;
+ border:1px solid #DCECF5!important;
+ background:linear-gradient(145deg,rgba(255,255,255,.97),rgba(247,252,255,.94))!important;
+ box-shadow:0 10px 34px rgba(8,82,124,.18),inset 0 1px 0 #FFFFFF!important;
+ -webkit-backdrop-filter:blur(18px);
+ backdrop-filter:blur(18px);
+ transform-origin:50% 50%;
+ animation:sekkaDockBloom 740ms cubic-bezier(.22,.97,.29,1.06) both;
+ pointer-events:none;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation .rh-tabs__inner::before {
+ background:linear-gradient(130deg,rgba(12,17,26,.97),rgba(20,35,53,.96))!important;
+ border-color:#304B61!important;
+ box-shadow:0 10px 34px rgba(0,0,0,.46),inset 0 1px 0 rgba(178,234,255,.10)!important;
+}
+/* The tab icons drift outward AFTER the glass opens, not with it. */
+.sekka-mobile.sekka-rider-navigation .rh-tabs__inner > button:not(.rh-tabs__primary) {
+ position:relative;z-index:1;
+ animation:sekkaDockTabReveal 450ms cubic-bezier(.2,1.35,.36,1) both;
+}
+.sekka-mobile.sekka-rider-navigation .rh-tabs__inner > button:nth-child(1){animation-delay:230ms}
+.sekka-mobile.sekka-rider-navigation .rh-tabs__inner > button:nth-child(2){animation-delay:300ms}
+.sekka-mobile.sekka-rider-navigation .rh-tabs__inner > button:nth-child(4){animation-delay:300ms}
+.sekka-mobile.sekka-rider-navigation .rh-tabs__inner > button:nth-child(5){animation-delay:230ms}
+/* Search orb is the original yellow seKKa action, not a new purple plus.
+ * Its ring moves without scaling SVG or shifting the live hit area. */
+.sekka-mobile.sekka-rider-navigation .rh-tabs__inner > button.rh-tabs__primary {
+ position:relative;z-index:2;
+ animation:sekkaDockSeedRise 600ms cubic-bezier(.18,1.2,.3,1) both;
+}
+.sekka-mobile.sekka-rider-navigation .rh-tabs__primary .rh-tabs__icon {
+ position:relative;
+ isolation:isolate;
+}
+.sekka-mobile.sekka-rider-navigation .rh-tabs__primary .rh-tabs__icon::after {
+ content:"";position:absolute;inset:-7px;z-index:-1;
+ border-radius:999px;
+ border:2px solid rgba(255,204,36,.7);
+ pointer-events:none;opacity:0;
+ animation:sekkaDockHalo 900ms 120ms ease-out both;
+}
+/* A small tactile press, with no delay to opening search. */
+.sekka-mobile.sekka-rider-navigation .rh-tabs__primary:active .rh-tabs__icon svg {
+ transform:scale(.87);
+}
+.sekka-mobile.sekka-rider-navigation .rh-tabs__primary .rh-tabs__icon svg {
+ transition:transform 160ms cubic-bezier(.2,.95,.3,1);
+}
+.sekka-mobile.sekka-rider-navigation .rh-tabs button:not(.rh-tabs__primary):active .rh-tabs__icon{
+ filter:brightness(1.08);
+}
+@keyframes sekkaDockBloom {
+ 0% {transform:scaleX(.18) scaleY(.57);opacity:.05;filter:blur(2px)}
+ 42% {transform:scaleX(.55) scaleY(.81);opacity:.82;filter:blur(0)}
+ 76% {transform:scaleX(1.025) scaleY(1.012);opacity:1}
+ 100% {transform:scaleX(1) scaleY(1);opacity:1}
+}
+@keyframes sekkaDockTabReveal {
+ 0% {opacity:0;transform:translateY(12px) scale(.84)}
+ 65% {opacity:1;transform:translateY(-2px) scale(1.035)}
+ 100% {opacity:1;transform:translateY(0) scale(1)}
+}
+@keyframes sekkaDockSeedRise {
+ 0% {opacity:.8;scale:.82}
+ 55% {opacity:1;scale:1.08}
+ 100% {opacity:1;scale:1}
+}
+@keyframes sekkaDockHalo {
+ 0% {opacity:.0;transform:scale(.62)}
+ 35% {opacity:.7;transform:scale(.9)}
+ 100% {opacity:0;transform:scale(1.45)}
+}
+/* Screens with filters should not reveal a dock they intentionally hide. */
+.sekka-mobile.sekka-rider-navigation.sekka-search-filters .rh-tabs{display:none!important}
+@media(prefers-reduced-motion:reduce){
+ .sekka-mobile.sekka-rider-navigation .rh-tabs__inner::before,
+ .sekka-mobile.sekka-rider-navigation .rh-tabs__inner > button,
+ .sekka-mobile.sekka-rider-navigation .rh-tabs__primary .rh-tabs__icon::after{
+  animation:none!important;opacity:1!important;transform:none!important;
+ }
+ .sekka-mobile.sekka-rider-navigation .rh-tabs__primary .rh-tabs__icon::after{opacity:0!important}
+ .sekka-mobile.sekka-rider-navigation .rh-tabs__primary .rh-tabs__icon svg{transition:none!important}
+}
