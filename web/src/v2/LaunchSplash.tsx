@@ -7,7 +7,7 @@ import "./launch-splash.css";
 export const LAUNCH_SEQUENCE_MS=5150;
 export function shouldPlayLaunchSplash(){
  const current=new URL(window.location.href);
- if(current.pathname.startsWith("/dev/screens")||current.searchParams.has("code")||
+ if((current.pathname==="/dev/screens"||current.pathname.startsWith("/dev/screens/"))||current.searchParams.has("code")||
     current.searchParams.has("error")||current.hash.includes("access_token="))return false;
  const entry=performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming|undefined;
  if(entry?.type==="reload")return false;
@@ -27,7 +27,7 @@ export default function LaunchSplash({children}:{children:ReactNode}){
   return()=>window.clearTimeout(id);
  },[visible]);
  return <>{children}{visible&&<div className="sekka-launch" role="status"
-  aria-label="جاري فتح سِكَّة" aria-live="off">
+  aria-label={document.documentElement.lang==="en"?"Opening seKKa":"جاري فتح سِكَّة"} aria-live="off">
    <div className="sekka-launch__stage">
     <div className="sekka-launch__wave sekka-launch__wave--top" aria-hidden="true"/>
     <svg className="sekka-launch__ribbon" viewBox="0 0 440 140" preserveAspectRatio="none" aria-hidden="true">
