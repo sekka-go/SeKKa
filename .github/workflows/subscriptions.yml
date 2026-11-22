@@ -31,6 +31,16 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Approved passenger staging-safe smoke (360/390 AR/EN light/dark)
         run: npx playwright test e2e/v31-approved-passenger-journey.spec.ts
+      - name: Verify actual Rider menu visual design (black/ice and white/ice)
+        run: npx playwright test e2e/menu-icon-black-ice.spec.ts --timeout=20000
+      - name: Save Rider menu screenshots even if other UI suites fail
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sekka-menu-black-white-ice
+          path: docs/audit/menu-*.png
+          if-no-files-found: warn
+          retention-days: 30
       - name: Validate original versus integrated geometry (S002/S003/S009/S010 and Google)
         run: npx playwright test e2e/production-shell-geometry.spec.ts e2e/production-google-login-layout.spec.ts e2e/production-guest-gates-layout.spec.ts --max-failures=1 --timeout=15000
       - name: Upload before/after geometry evidence, including on failure
