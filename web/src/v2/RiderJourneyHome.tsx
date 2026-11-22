@@ -129,9 +129,9 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
  return <div className="rh-home sekka-rider-home" dir={en?'ltr':'rtl'}>
   <section className="rh-hero rh-showcase-hero" aria-label={t('أهلاً بيك في سِكَّة','Welcome to seKKa')}>
    <svg className="rh-showcase-hero__top-wave" viewBox="0 0 430 178" preserveAspectRatio="none" aria-hidden="true">
-    <path d="M0 0H430V15C342 128 240 35 128 128C79 171 28 161 0 160Z" fill="#087FE9"/>
-    <path d="M0 0H430V2C338 103 244 26 128 98C74 139 28 131 0 139Z" fill="#18E1EA" opacity=".82"/>
-    <path d="M0 0H430V0C347 85 242 13 140 76C78 112 32 109 0 119Z" fill="#70F7F3" opacity=".45"/>
+    <path d="M0 0H430V15C342 128 240 35 128 128C79 171 28 161 0 160Z" fill="#0187EE"/>
+    <path d="M0 0H430V2C338 103 244 26 128 98C74 139 28 131 0 139Z" fill="#0CEEF3" opacity=".82"/>
+    <path d="M0 0H430V0C347 85 242 13 140 76C78 112 32 109 0 119Z" fill="#63F7F3" opacity=".45"/>
    </svg>
    <div className="rh-hero__copy">
     <span className="rh-hero__eyebrow">{t('معاك في السِكَّة','Along your way')}</span>
@@ -139,9 +139,9 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
     <p>{t('جاهز لمشوار جديد؟','Ready for your next ride?')}</p>
    </div>
    <svg className="rh-hero__wave rh-showcase-hero__bottom-wave" viewBox="0 0 440 125" preserveAspectRatio="none" aria-hidden="true">
-    <path d="M0 39C89 0 180 48 266 67S390 89 440 45V125H0Z" fill="#17D8E9"/>
-    <path d="M0 57C91 11 183 62 266 78S385 107 440 64V125H0Z" fill="#A5F2FC"/>
-    <path d="M0 78C102 32 180 81 271 96S390 115 440 85V125H0Z" fill="#F4FBFF"/>
+    <path d="M0 39C89 0 180 48 266 67S390 89 440 45V125H0Z" fill="#3FD6FB"/>
+    <path d="M0 57C91 11 183 62 266 78S385 107 440 64V125H0Z" fill="#8EEBFE"/>
+    <path d="M0 78C102 32 180 81 271 96S390 115 440 85V125H0Z" fill="#F0F5FE"/>
    </svg>
   </section>
   <section className="rh-showcase-search" aria-labelledby="rh-home-title">
