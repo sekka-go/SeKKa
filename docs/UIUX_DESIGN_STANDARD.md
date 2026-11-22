@@ -4,7 +4,7 @@ Status: **implementation guideline**, not independent visual acceptance. Applies
 
 ## Design principles
 - World-class quality means legibility, predictable behavior, accessibility, consistency and truthful states, **not** extra animation or cosmetic decoration.
-- Mobile-first hierarchy; use the **blue seKKa/white lettering/yellow road icon** for installed PWA and favicon, the approved sky-blue Splash, bundled Tajawal typography, and accessibility. The updated 2026-11-22 sky-blue/cyan/white/yellow direction supersedes the previous purple/coral UI palette; keep the original road-mark geometry.
+- Mobile-first hierarchy; use the white **S monogram** on urban blue/navy for the installed PWA icon, retain the Arabic «سِكَّة» wordmark within the app, and keep bundled Tajawal typography and accessibility. The 2026-11-22 **Urban Mobility** palette (#1753E8 blue, #17253A navy, #F5F3ED ivory, #FFD02A yellow) supersedes all former purple/coral and cyan/marine styles. Preserve the approved Cairo SUV splash motion while removing decorative sea waves.
 - Consistent spacing scale: 4 / 8 / **12** / 16 / 24 / 32 px. Separate adjacent independent interactive buttons by **at least 12px** wherever presented as a group; prefer a two-column grid for rider-home shortcuts at mobile widths.
 - Minimum interactive target: **44 × 44 CSS px**, with a visible focus state; never communicate selection by color alone. Wrap long English and Arabic labels rather than letting them overlap.
 - Prefer logical CSS properties (`inline-start`, `inline-end`) and verify RTL/LTR. Dates, currency, time, empty and validation copy must be localized in the rendered screen, not merely present in a catalog.

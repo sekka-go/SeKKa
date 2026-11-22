@@ -73,6 +73,8 @@ test('Urban Mobility replaces aqua decoration without changing the installed S b
  assert.match(urban,/--urban-navy:#17253A/);
  assert.match(urban,/--urban-paper:#F5F3ED/);
  assert.match(urban,/--urban-yellow:#FFD02A/);
+ assert.match(urban,/color:#17253A!important/);
+ assert.match(urban,/Dark mode retains dark lettering on high-visibility yellow actions/);
  assert.match(urban,/rh-showcase-hero__top-wave/);
  assert.match(urban,/display:none!important/);
  assert.match(read('./MobileApp.tsx'),/import '\.\/urban-mobility-palette\.css'/);

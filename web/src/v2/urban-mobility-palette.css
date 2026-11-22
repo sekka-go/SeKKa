@@ -344,3 +344,16 @@ html[data-theme="dark"] .sekka-mobile :is(.rh-button--primary,.rs3__submit,.rd3_
  transition:none!important;
  }
 }
+
+/* Dark mode retains dark lettering on high-visibility yellow actions. */
+.sekka-mobile :is(.rh-button--primary,.rs3__submit,.rd3__primary,.rf3__apply,.phase-primary,.sekka-entry__primary,.sekka-action,.cj-primary,.cj-home-main-action,.rh-picker__confirm,.sekka-request-yellow-cta) *,
+html[data-theme="dark"] .sekka-mobile :is(.rh-button--primary,.rs3__submit,.rd3__primary,.rf3__apply,.phase-primary,.sekka-entry__primary,.sekka-action,.cj-primary,.cj-home-main-action,.rh-picker__confirm,.sekka-request-yellow-cta) *,
+html[data-theme="dark"] .sekka-mobile .sekka-rider-booking-v3 .b-primary *,
+html[data-theme="dark"] .sekka-mobile .d-screen-11 .sekka-live-result .d-offer-select *,
+html[data-theme="dark"] .sekka-mobile :is(.rh-journey__ribbon,.rh-journey__ribbon *,.rs3__progress .is-current b,.rh-showcase-search__arrow){
+ color:#17253A!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation .rh-tabs .rh-tabs__primary .rh-tabs__icon,
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation .rh-tabs .rh-tabs__primary .rh-tabs__name{
+ color:#17253A!important;
+}
