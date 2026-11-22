@@ -1,0 +1,108 @@
+/* Real-data loading placeholders from the user's Shimmer reference.
+ * Match actual card / form silhouettes to avoid layout shifts. */
+.sekka-mobile .sk-shimmer{
+ --sk-base:#E5EDF1;--sk-mid:#F8FDFF;--sk-border:#D8E6ED;
+ --sk-paper:#FFFFFF;
+ box-sizing:border-box;display:block;position:relative;width:100%;
+ min-width:0;padding:8px 0 13px;direction:inherit;
+}
+.sekka-mobile .sk-shimmer__accessible{
+ position:absolute!important;width:1px;height:1px;
+ padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);
+ clip-path:inset(50%);white-space:nowrap;border:0;
+}
+.sekka-mobile .sk-shimmer__items{display:grid;gap:12px;min-width:0}
+.sekka-mobile .sk-shimmer__grid{
+ display:grid;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr));gap:12px;
+}
+.sekka-mobile .sk-shimmer :is(
+ .sk-shimmer__line,.sk-shimmer__metric,.sk-shimmer__thumb,
+ .sk-shimmer__bubble,.sk-shimmer__input,.sk-shimmer__button,
+ .sk-shimmer__session-logo,.sk-shimmer__session-row>span,
+ .sk-shimmer__map-pin,.sk-shimmer__point
+){
+ display:block;box-sizing:border-box;flex:none;min-width:0;
+ background:linear-gradient(105deg,
+  var(--sk-base) 12%,var(--sk-mid) 42%,var(--sk-base) 69%);
+ background-size:235% 100%;
+ animation:sekka-shimmer 1.9s linear infinite;
+}
+.sekka-mobile .sk-shimmer__line{height:10px;border-radius:7px}
+.sekka-mobile .sk-shimmer__line--long{width:86%;height:13px}
+.sekka-mobile .sk-shimmer__line--medium{width:69%}
+.sekka-mobile .sk-shimmer__line--short{width:43%}
+.sekka-mobile .sk-shimmer__line--tiny{width:26%;height:9px}
+.sekka-mobile .sk-shimmer__card,.sekka-mobile .sk-shimmer__notice,
+.sekka-mobile .sk-shimmer__stat,.sekka-mobile .sk-shimmer__form,
+.sekka-mobile .sk-shimmer__session-card,.sekka-mobile .sk-shimmer__stops,
+.sekka-mobile .sk-shimmer__map{
+ box-sizing:border-box;min-width:0;border:1px solid var(--sk-border);
+ border-radius:19px;background:var(--sk-paper);
+ box-shadow:0 4px 18px rgba(13,72,103,.055);
+ padding:15px;
+}
+.sekka-mobile .sk-shimmer__card-main{display:flex;gap:13px;align-items:center;min-height:70px}
+.sekka-mobile .sk-shimmer__thumb{width:61px;height:61px;border-radius:15px}
+.sekka-mobile .sk-shimmer__copy{flex:1;min-width:0;display:grid;gap:10px}
+.sekka-mobile .sk-shimmer__card-footer{
+ display:flex;gap:14px;align-items:center;justify-content:space-between;
+ border-top:1px solid var(--sk-border);margin-top:12px;padding-top:12px;
+}
+.sekka-mobile .sk-shimmer__notice{display:flex;align-items:start;gap:12px;padding:14px}
+.sekka-mobile .sk-shimmer__bubble{height:37px;width:37px;border-radius:13px}
+.sekka-mobile .sk-shimmer__notice-copy{flex:1;display:grid;gap:10px;padding-top:2px}
+.sekka-mobile .sk-shimmer__stat{min-height:112px;display:grid;gap:9px;align-content:center}
+.sekka-mobile .sk-shimmer__metric{width:48%;height:30px;border-radius:10px}
+.sekka-mobile .sk-shimmer__form{display:grid;gap:18px}
+.sekka-mobile .sk-shimmer__form-row{display:grid;gap:9px}
+.sekka-mobile .sk-shimmer__input{width:100%;height:52px;border-radius:13px}
+.sekka-mobile .sk-shimmer__button{width:62%;height:46px;border-radius:14px;margin-inline-start:auto}
+.sekka-mobile .sk-shimmer__session-card{min-height:230px;display:grid;gap:16px;justify-items:center;align-content:center}
+.sekka-mobile .sk-shimmer__session-card .sk-shimmer__line{margin:auto}
+.sekka-mobile .sk-shimmer__session-logo{width:110px;height:45px;border-radius:16px}
+.sekka-mobile .sk-shimmer__session-row{width:80%;display:flex;gap:9px}
+.sekka-mobile .sk-shimmer__session-row>span{height:48px;border-radius:13px;flex:1}
+.sekka-mobile .sk-shimmer__map{min-height:185px;display:grid;place-items:center;gap:8px}
+.sekka-mobile .sk-shimmer__map-pin{width:43px;height:52px;border-radius:45% 45% 55% 55%}
+.sekka-mobile .sk-shimmer__stops{display:grid;grid-template-columns:22px 1fr;gap:16px;align-items:center}
+.sekka-mobile .sk-shimmer__stops>div{display:grid;gap:11px}
+.sekka-mobile .sk-shimmer__point{width:19px;height:19px;border-radius:50%}
+.sekka-mobile .sk-shimmer__page-head{
+ display:grid;gap:12px;margin:0 0 17px;padding:22px 18px;
+ border-radius:0 0 25px 25px;
+ background:linear-gradient(120deg,#17C8DE,#078EE9);
+}
+.sekka-mobile .sk-shimmer__page-head .sk-shimmer__line{
+ --sk-base:rgba(255,255,255,.23);--sk-mid:rgba(255,255,255,.64);
+}
+.sekka-mobile .sk-shimmer--compact{padding:3px 0 7px}
+.sekka-mobile .sk-shimmer--compact .sk-shimmer__card{
+ padding:11px;border-radius:14px;box-shadow:none;
+}
+.sekka-mobile .sk-shimmer--compact .sk-shimmer__thumb{width:43px;height:43px}
+html[data-theme="dark"] .sekka-mobile .sk-shimmer{
+ --sk-base:#274257;--sk-mid:#4F697C;--sk-border:#3B596C;
+ --sk-paper:#183449;
+}
+html[data-theme="dark"] .sekka-mobile .sk-shimmer__page-head{
+ background:linear-gradient(120deg,#184E70,#0B2B46);
+}
+@keyframes sekka-shimmer{
+ from{background-position:165% 0}
+ to{background-position:-105% 0}
+}
+@media(min-width:800px){
+ .sekka-mobile .sk-shimmer--bookings .sk-shimmer__items,
+ .sekka-mobile .sk-shimmer--routes .sk-shimmer__items,
+ .sekka-mobile .sk-shimmer--requests .sk-shimmer__items{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ .sekka-mobile .sk-shimmer :is(
+  .sk-shimmer__line,.sk-shimmer__metric,.sk-shimmer__thumb,
+  .sk-shimmer__bubble,.sk-shimmer__input,.sk-shimmer__button,
+  .sk-shimmer__session-logo,.sk-shimmer__session-row>span,
+  .sk-shimmer__map-pin,.sk-shimmer__point
+ ){animation:none!important;background:var(--sk-base)!important;}
+}
