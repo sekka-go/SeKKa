@@ -4,6 +4,9 @@ on:
     branches: [main, 'rebuild/subscriptions-*']
   pull_request:
     branches: [main]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
@@ -26,7 +29,33 @@ jobs:
       - run: npm run test:structure
       - run: npm run build
       - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e
+      - name: Approved passenger staging-safe smoke (360/390 AR/EN light/dark)
+        run: npx playwright test e2e/v31-approved-passenger-journey.spec.ts
+      - name: Verify actual Rider menu visual design (black/ice and white/ice)
+        run: npx playwright test e2e/menu-icon-black-ice.spec.ts --timeout=20000
+      - name: Save Rider menu screenshots even if other UI suites fail
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sekka-menu-black-white-ice
+          path: docs/audit/menu-*.png
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Validate original versus integrated geometry (S002/S003/S009/S010 and Google)
+        run: npx playwright test e2e/production-shell-geometry.spec.ts e2e/production-google-login-layout.spec.ts e2e/production-guest-gates-layout.spec.ts --max-failures=1 --timeout=15000
+      - name: Upload before/after geometry evidence, including on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sekka-original-vs-integrated-layout
+          path: |
+            docs/audit/layout-reference-*.png
+            docs/audit/layout-after-*.png
+            docs/audit/layout-gated-*.png
+          if-no-files-found: warn
+          retention-days: 90
+      - name: Full Playwright E2E suite (fail fast on three actionable failures)
+        run: npm run test:e2e -- --max-failures=3 --timeout=20000
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -34,3 +63,62 @@ jobs:
           path: |
             docs/audit/*.png
             web/test-results/
+
+  # These fixtures intercept the fake endpoint in each browser context.
+  mocked-browser:
+    name: Mocked browser / ${{ matrix.group }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - group: Admin and profile
+            artifact: admin-profile
+            specs: e2e/admin-authorization-mocked.spec.ts
+          - group: Role navigation
+            artifact: role-navigation
+            specs: e2e/mobile-navigation-role.spec.ts
+          - group: Captain
+            artifact: captain
+            specs: >-
+              e2e/captain-onboarding-validation.spec.ts
+              e2e/captain-plate-segments.spec.ts
+              e2e/captain-document-upload-mocked.spec.ts
+              e2e/captain-route-geolocated-mocked.spec.ts
+              e2e/captain-route-removal-mocked.spec.ts
+              e2e/captain-home-mocked.spec.ts
+              e2e/captain-publish-conflict-mocked.spec.ts
+          - group: Rider search
+            artifact: rider-search
+            specs: e2e/v31-rider-no-match-request-mocked.spec.ts e2e/nearby-gps-mocked.spec.ts e2e/rider-redesign-v3.spec.ts e2e/rider-journey-vnext.spec.ts e2e/notification-flow-mocked.spec.ts
+    defaults:
+      run:
+        working-directory: web
+    env:
+      VITE_SUPABASE_URL: https://sekka-auth-e2e.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: e2e-synthetic-public-key
+      SEKKA_AUTH_UI_MOCKS: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - name: Run mocked browser group
+        env:
+          PLAYWRIGHT_SPECS: ${{ matrix.specs }}
+        run: |
+          read -r -a specs <<< "$PLAYWRIGHT_SPECS"
+          npx playwright test "${specs[@]}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mocked-browser-${{ matrix.artifact }}
+          path: |
+            docs/audit/layout-after-*-mocked.png
+            web/test-results/
+          if-no-files-found: ignore

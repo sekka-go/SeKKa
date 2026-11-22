@@ -1784,3 +1784,209 @@ html[dir="ltr"] .booking-stage .b-canvas .b-timeline > div:not(:last-child)::bef
     gap: 12px;
   }
 }
+
+/* Consent-only GPS discovery: natural scrolling on 320px–412px mobile, RTL/LTR. */
+.sekka-nearby {display:grid;gap:12px;min-width:0;margin-block:16px}
+.sekka-nearby h2 {margin:0;font-size:clamp(17px,4.5cqw,21px)}
+.sekka-nearby p {margin:0;line-height:1.55;overflow-wrap:anywhere}
+.sekka-nearby button,.sekka-nearby select {min-height:44px;max-width:100%}
+.sekka-nearby button {border-radius:12px;padding:9px 12px;cursor:pointer}
+.sekka-nearby .sekka-nearby__locate {font-weight:700;background:#ffbf00;color:#111b28;border:0}
+.sekka-nearby__controls {display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.sekka-nearby__controls label {display:grid;gap:5px;flex:1;min-width:150px}
+.sekka-nearby__controls select {width:100%;padding:7px}
+.sekka-nearby__hint {font-size:0.86em;opacity:0.86}
+.sekka-nearby__results ul {display:grid;gap:10px;list-style:none;padding:0;margin:0}
+.sekka-nearby__results li {display:grid;gap:6px;border:1px solid var(--d-line,#576474);padding:12px;border-radius:12px;overflow-wrap:anywhere}
+.sekka-nearby__results li span {font-size:0.92em}
+.sekka-nearby__results li button {justify-self:stretch}
+.sekka-captain-coordinates {display:grid;gap:10px;margin:10px 0}
+.sekka-captain-coordinates label {display:grid;gap:5px;min-width:0}
+.sekka-captain-coordinates input {width:100%;max-width:100%;min-height:44px}
+.sekka-captain-coordinates button {min-height:44px}
+
+/* Browser permission denial: keep actionable settings instructions legible. */
+.sekka-nearby__permission {display:grid;gap:9px;padding:12px;border:1px solid var(--d-line,#576474);border-radius:12px;min-width:0}
+.sekka-nearby__permission strong {font-size:1em}
+.sekka-nearby__permission button {justify-self:start;min-height:44px;max-width:100%;white-space:normal}
+
+/* Keep route origin/destination visible before the first phone scroll. */
+.sekka-nearby {gap:7px;margin-block:8px;padding:12px}
+.sekka-nearby__heading {display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.sekka-nearby__heading h2 {flex:1 1 132px;min-width:0}
+.sekka-nearby__heading .sekka-nearby__locate {flex:0 1 auto;min-height:44px;white-space:normal}
+.sekka-nearby__intro {font-size:.88em;opacity:.85;line-height:1.45}
+.sekka-nearby__filters summary {cursor:pointer;min-height:36px;padding:8px 0;font-size:.91em}
+.sekka-nearby__filters .sekka-nearby__controls {padding-top:8px}
+@media(max-width:360px){.sekka-nearby__heading h2 {font-size:17px}.sekka-nearby__heading .sekka-nearby__locate{padding:8px 10px}}
+
+
+/* A no-match result is one inline action, NOT another request form/panel. */
+.d-live-search .sekka-no-match {display:grid;gap:12px;margin:8px 0 16px;min-width:0}
+.d-live-search .sekka-no-match>p {margin:0;line-height:1.55}
+.d-live-search .sekka-no-match-action {display:grid;gap:10px;min-width:0}
+.d-live-search .sekka-no-match-action>button {width:100%;min-height:52px;max-width:100%;
+ display:flex;align-items:center;justify-content:center;text-align:center;
+ border:0;border-radius:14px;font-weight:900;padding:12px 14px;
+ color:#121c27;background:#ffc400;white-space:normal;line-height:1.4}
+.d-live-search .sekka-no-match-action>button:disabled {opacity:.6;cursor:wait}
+.d-live-search .sekka-no-match-action p {margin:0;line-height:1.55;overflow-wrap:anywhere}
+.d-live-search .sekka-request-summary {
+ display:grid;gap:4px;padding:12px;border:1px solid var(--line);
+ border-radius:12px;background:var(--card);color:var(--ink);
+}
+.d-live-search .sekka-no-match-action .d-outline {min-height:44px;margin-block-start:8px}
+
+
+/* Mobile production: remove reference-screen fixed height and giant empty
+ * area, retain native scrolling and all actual search content. */
+.sekka-mobile .discovery-stage .d-canvas{
+ min-height:0;height:auto;aspect-ratio:auto;overflow:visible;
+ padding-bottom:16px;font-size:16px
+}
+.sekka-mobile .discovery-stage .d-canvas::before,
+.sekka-mobile .discovery-stage .d-canvas::after{display:none}
+.sekka-mobile .discovery-stage .d-canvas>.d-header{
+ display:flex;justify-content:flex-start;align-items:center;
+ height:auto;min-height:44px;margin:0 12px 8px;padding:0
+}
+.sekka-mobile .discovery-stage .d-canvas>.d-header .phase-back{
+ position:static;inset:auto;transform:none;width:42px;height:42px;
+ min-height:42px;margin:0
+}
+.sekka-mobile .discovery-stage .d-screen-8>.d-header .phase-back,
+.sekka-mobile .discovery-stage .d-screen-9>.d-header .phase-back{display:none}
+.sekka-mobile .discovery-stage .d-canvas>.d-title{display:none}
+.sekka-mobile .discovery-stage .d-canvas>.d-subtitle{margin-block:0 10px}
+.sekka-mobile .discovery-stage .d-planner-places{
+ display:grid;grid-template-columns:minmax(0,1fr) 44px;align-items:center;
+ padding:0;margin:8px 12px 14px;gap:10px
+}
+.sekka-mobile .discovery-stage .d-place{grid-column:1;min-width:0}
+.sekka-mobile .discovery-stage .d-place select,
+.sekka-mobile .discovery-stage .d-place input{
+ width:100%;height:50px;min-height:50px;max-width:100%;
+ border-radius:13px;font-size:16px;line-height:1.4;
+ padding:10px 14px;text-align:start;direction:inherit
+}
+.sekka-mobile .discovery-stage .d-swap{
+ position:static;transform:none;grid-column:2;grid-row:1/3;
+ align-self:center;min-height:44px;width:44px;height:44px;
+ padding:8px;border-radius:12px
+}
+.sekka-mobile .discovery-stage .d-swap .discovery-icon{width:24px;height:24px;transform:none}
+.sekka-mobile .discovery-stage .d-origin-dot,
+.sekka-mobile .discovery-stage .d-place>.discovery-icon{display:none}
+.sekka-mobile .discovery-stage .d-time-picker{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:10px;margin:12px 12px 15px;padding:12px
+}
+.sekka-mobile .discovery-stage .d-time-picker>label{
+ display:flex;flex-direction:column;gap:8px;min-width:0;width:100%;
+ text-align:start;font-size:14px;border:0;padding:0
+}
+.sekka-mobile .discovery-stage .d-time-picker input{
+ width:100%;min-width:0;min-height:44px;font-size:15px;
+ padding:8px 4px;grid-column:auto;grid-row:auto
+}
+.sekka-mobile .discovery-stage .sekka-gps-inline{
+ margin:0 12px 12px;border:1px solid var(--d-line);
+ border-radius:12px;min-width:0;overflow:hidden
+}
+.sekka-mobile .sekka-gps-inline>summary{
+ cursor:pointer;padding:12px 14px;min-height:44px;
+ font-size:14px;font-weight:800;line-height:1.4
+}
+.sekka-mobile .sekka-gps-inline>.sekka-nearby{margin:0;padding:10px;background:transparent;border:0;box-shadow:none}
+.sekka-mobile .discovery-stage .d-live-search{margin:0 12px 16px}
+.sekka-mobile .discovery-stage .d-live-search>h2{font-size:17px;line-height:1.4}
+.sekka-mobile .discovery-stage .d-live-search>p{font-size:14px;line-height:1.55}
+@media(max-width:359px){
+ .sekka-mobile .discovery-stage .d-planner-places{margin-inline:10px;gap:7px}
+ .sekka-mobile .discovery-stage .d-time-picker{margin-inline:10px;gap:6px;padding:9px}
+}
+
+
+/* Type-first place discovery. Map matches use actual GPS stops, not names of
+ * guessed service areas. Buttons wrap naturally on a 320px viewport. */
+.sekka-mobile .discovery-stage .sekka-place-lookup{
+ position:relative;min-width:0;width:100%;display:grid;gap:5px
+}
+.sekka-mobile .discovery-stage .sekka-place-lookup__label{display:block;min-width:0}
+.sekka-mobile .discovery-stage .sekka-place-lookup__label>input{
+ box-sizing:border-box;width:100%;min-width:0;max-width:100%;
+ min-height:50px;padding:10px 12px;border-radius:13px;font-size:16px;
+ line-height:1.4;text-align:start;direction:inherit;
+ background:var(--bg,#0d151e);color:var(--ink,#fff)
+}
+.sekka-place-lookup__selected{font-size:11px;opacity:.88;font-weight:700}
+.sekka-mobile .discovery-stage .sekka-place-lookup__suggestions{
+ display:grid;gap:3px;margin:4px 0 0;padding:7px;min-width:0;
+ max-height:260px;overflow:auto;border-radius:12px;
+ border:1px solid var(--d-line,#67707b);
+ background:var(--bg,#111821);box-shadow:0 5px 12px #0002
+}
+.sekka-mobile .discovery-stage .sekka-place-lookup__suggestions>button{
+ display:flex;flex-direction:column;align-items:start;justify-content:center;
+ gap:3px;min-height:44px;width:100%;max-width:100%;padding:8px 10px;
+ border:1px solid transparent;border-radius:9px;
+ color:var(--ink,#fff);background:var(--card,#172331);
+ text-align:start;font-size:14px;line-height:1.4;
+ overflow-wrap:anywhere;white-space:normal
+}
+.sekka-mobile .discovery-stage .sekka-place-lookup__suggestions>button:focus-visible{
+ border-color:#ffc400;outline:2px solid #ffc400;outline-offset:1px
+}
+.sekka-place-lookup__suggestions>button small{font-size:11px;opacity:.8}
+.sekka-mobile .discovery-stage .sekka-place-lookup__suggestions>.sekka-place-lookup__map-search{
+ color:#171b22;background:#ffc400;border-color:#ffc400;font-weight:800
+}
+.sekka-place-lookup__hint,.sekka-place-lookup__attribution,
+.sekka-place-lookup__suggestions>p{font-size:11px;line-height:1.4;max-width:100%;overflow-wrap:anywhere}
+.sekka-mobile .discovery-stage .d-planner-places>.d-place{display:block;min-width:0}
+.sekka-mobile .sekka-geo-request-hint{font-size:13px;line-height:1.55}
+@media(max-width:359px){.sekka-mobile .discovery-stage .sekka-place-lookup__label>input{font-size:15px;padding-inline:9px}}
+
+.sekka-mobile .d-live-search .sekka-live-result {
+ display:grid;gap:12px;padding:14px 16px;min-width:0;
+}
+.sekka-live-result-head {
+ display:grid;grid-template-columns:minmax(0,1fr) minmax(0,auto);
+ align-items:start;gap:10px;
+}
+.sekka-live-result-head h2,.sekka-live-result p,.sekka-live-results-toolbar p {
+ margin:0;overflow-wrap:anywhere;
+}
+.sekka-live-result-head h2 {font-size:clamp(1rem,4.2vw,1.25rem);line-height:1.35}
+.sekka-live-price {display:grid;gap:2px;text-align:end;max-inline-size:9rem}
+.sekka-live-price strong {font-variant-numeric:tabular-nums;font-size:clamp(1rem,4.2vw,1.25rem)}
+.sekka-live-price span,.sekka-live-meta {font-size:.875rem;color:var(--phase-muted)}
+.sekka-live-stops {list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.sekka-live-stops li {
+ position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;
+ column-gap:8px;padding-inline-start:18px;overflow-wrap:anywhere;
+}
+.sekka-live-stops li::before {
+ content:"";position:absolute;inset-inline-start:1px;inset-block-start:.5rem;
+ width:8px;height:8px;border:2px solid #d29700;border-radius:50%;
+}
+.sekka-live-stops li+li::before {background:#ffc400}
+.sekka-live-stops li>span {grid-column:1/-1;font-size:.8rem;color:var(--phase-muted)}
+.sekka-live-stops li>small {align-self:center;color:var(--phase-muted);white-space:nowrap}
+.sekka-live-result-facts,.sekka-live-results-toolbar {
+ display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px 12px;
+}
+.sekka-live-results-toolbar {margin-block:4px 12px}
+.sekka-live-results-toolbar>div {display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.sekka-live-results-toolbar button,.sekka-live-sort select,.sekka-live-result .d-offer-select {min-block-size:44px}
+.sekka-live-sort {display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px}
+.sekka-live-filter-empty {margin-block:12px}
+.sekka-live-stop-picker {display:grid;gap:12px}
+.sekka-live-stop-picker h2,.sekka-live-stop-picker p {margin:0}
+.sekka-live-stop-picker label {display:grid;gap:6px}
+.sekka-live-stop-picker select {
+ min-block-size:48px;max-inline-size:100%;width:100%;padding:.5rem;
+ border:1px solid var(--phase-line,var(--line));border-radius:10px;
+ background:var(--phase-card,var(--card));color:inherit;font:inherit;
+}
+.sekka-live-stop-picker summary {min-block-size:44px;padding-block:10px;cursor:pointer}

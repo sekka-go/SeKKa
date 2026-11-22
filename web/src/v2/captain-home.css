@@ -1,0 +1,172 @@
+/* Owner-approved Captain home — white/yellow/black and the existing app font.
+   This sheet is isolated to the real Captain home, not the 73-screen gallery. */
+.sekka-mobile .captain-routes-canvas:has(.cj-home){
+ max-width:680px!important;
+ padding:0 0 24px!important;
+ overflow:visible;
+}
+.sekka-mobile .captain-routes-canvas .cj-home{
+ --cj-home-yellow:var(--yellow,#ffc400);
+ --cj-home-ink:var(--ink,#111);
+ --cj-home-card:var(--card,#fff);
+ --cj-home-line:var(--line,#e7e5e0);
+ --cj-home-muted:var(--muted,#666);
+ display:flex;flex-direction:column;gap:20px;
+ width:100%;max-width:540px;margin:0 auto;
+ padding:0 12px 26px;box-sizing:border-box;color:var(--cj-home-ink);
+ font-family:inherit;
+}
+.sekka-mobile .captain-routes-canvas .cj-home-welcome{
+ position:relative;min-height:295px;overflow:hidden;
+ isolation:isolate;display:flex;align-items:flex-start;
+ border-radius:0 0 30px 30px;
+ padding:39px 15px 34px 15px;
+ background:var(--cj-home-card);
+}
+.sekka-mobile .captain-routes-canvas .cj-home-welcome::before{
+ content:"";position:absolute;inset-inline-start:6%;inset-block-start:1px;
+ width:72%;height:25px;border-radius:0 0 100% 100%;
+ background:var(--cj-home-yellow);transform:rotate(-6deg);z-index:1;
+}
+.sekka-mobile .captain-routes-canvas .cj-home-welcome::after{
+ content:"";position:absolute;inset-inline-start:15%;bottom:7px;
+ width:85%;height:16px;border-radius:90% 10% 70% 0;
+ border-block-start:7px solid var(--cj-home-yellow);transform:rotate(-3deg);z-index:1;
+}
+.sekka-mobile .captain-routes-canvas .cj-home-welcome-copy{
+ display:grid;gap:10px;align-self:center;
+ position:relative;z-index:3;flex:0 0 51%;max-width:51%;min-width:0;
+ text-align:start;
+}
+.sekka-mobile .captain-routes-canvas .cj-home-welcome-kicker{
+ font-size:11px;font-weight:800;line-height:1.3;opacity:.65;
+}
+.sekka-mobile .captain-routes-canvas .cj-home-welcome h1{
+ font-size:clamp(26px,8.7vw,42px);font-weight:900;line-height:1.3;
+ letter-spacing:-.025em;margin:0;overflow-wrap:normal;
+}
+.sekka-mobile .captain-routes-canvas .cj-home-welcome h1 mark{
+ display:inline-block;background:var(--cj-home-yellow);color:#111;
+ border-radius:18px;padding:0 8px 2px;
+}
+.sekka-mobile .captain-routes-canvas .cj-home-welcome p{
+ font-size:clamp(14px,4.1vw,18px);font-weight:800;line-height:1.65;
+ margin:0;max-width:18ch;color:var(--cj-home-ink);
+}
+.sekka-mobile .captain-routes-canvas .cj-home-driver{
+ position:absolute;z-index:2;inset-inline-end:-10px;bottom:0;
+ width:56%;height:87%;object-fit:cover;object-position:center;
+ border-radius:54% 13% 15% 0;
+ opacity:1;pointer-events:none;
+ mask-image:linear-gradient(to right,#000 78%,transparent 100%);
+ -webkit-mask-image:linear-gradient(to right,#000 78%,transparent 100%);
+}
+.sekka-mobile .captain-routes-canvas .cj-home-how{
+ display:grid;gap:14px;padding:1px 0;
+}
+.sekka-mobile .captain-routes-canvas .cj-home-how h2{
+ margin:0;display:flex;align-items:center;justify-content:center;gap:12px;
+ line-height:1.4;font-size:22px;font-weight:900;text-align:center;
+}
+.sekka-mobile .captain-routes-canvas .cj-home-how h2::before,
+.sekka-mobile .captain-routes-canvas .cj-home-how h2::after{
+ content:"";height:3px;max-width:60px;background:var(--cj-home-yellow);
+ flex:1;border-radius:999px;
+}
+.sekka-mobile .captain-routes-canvas .cj-home-how h2 span{
+ border-radius:19px;padding:7px 17px;
+ background:var(--cj-home-yellow);color:#111;
+}
+.sekka-mobile .captain-routes-canvas .cj-home-how-items{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;
+}
+.sekka-mobile .captain-routes-canvas .cj-home-how-step{
+ display:flex;flex-direction:column;align-items:center;
+ gap:6px;min-width:0;text-align:center;
+}
+.sekka-mobile .captain-routes-canvas .cj-home-step-symbol{
+ position:relative;display:grid;place-items:center;
+ width:74px;height:68px;margin-block:2px 5px;
+ border-radius:20px;
+ background:color-mix(in srgb,var(--cj-home-yellow) 22%,var(--cj-home-card));
+ color:var(--cj-home-ink);
+}
+.sekka-mobile .captain-routes-canvas .cj-home-step-symbol svg{
+ width:42px;height:42px;display:block;
+}
+.sekka-mobile .captain-routes-canvas .cj-home-step-symbol b{
+ position:absolute;top:-9px;inset-inline-start:-8px;
+ background:var(--cj-home-yellow);color:#111;min-width:28px;height:28px;
+ padding:4px;display:grid;place-items:center;border-radius:50%;
+ font-size:16px;line-height:1;font-weight:900;
+}
+.sekka-mobile .captain-routes-canvas .cj-home-how-step>strong{
+ line-height:1.45;font-size:clamp(11px,3.45vw,15px);
+ font-weight:900;overflow-wrap:anywhere;
+}
+.sekka-mobile .captain-routes-canvas .cj-home-how-step>small{
+ font-size:clamp(10px,3vw,13px);line-height:1.5;
+ font-weight:600;color:var(--cj-home-muted);
+}
+.sekka-mobile .captain-routes-canvas .cj-home-main-action{
+ display:flex;align-items:center;justify-content:center;gap:13px;
+ min-height:65px;width:100%;margin:0;
+ padding:12px 15px;border:0;border-radius:22px;
+ background:var(--cj-home-yellow);color:#111;box-shadow:0 5px 0 #d7a30d26;
+ font:inherit;font-weight:900;font-size:clamp(18px,5.6vw,25px);
+}
+.sekka-mobile .captain-routes-canvas .cj-home-main-action strong{
+ flex:0 1 auto;line-height:1.3;
+}
+.sekka-mobile .captain-routes-canvas .cj-home-main-action svg{
+ flex:0 0 auto;width:27px;height:27px;
+}
+.sekka-mobile .captain-routes-canvas .cj-home-metrics{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;
+ margin-top:1px;
+}
+.sekka-mobile .captain-routes-canvas .cj-home-metric{
+ display:flex;flex-direction:column;align-items:center;justify-content:center;
+ gap:8px;min-width:0;min-height:125px;padding:12px 5px;
+ border:1px solid var(--cj-home-line);border-radius:22px;
+ background:var(--cj-home-card);color:var(--cj-home-ink);
+ box-shadow:0 4px 14px #0000000c;
+ text-align:center;font:inherit;cursor:default;
+}
+.sekka-mobile .captain-routes-canvas button.cj-home-metric{cursor:pointer}
+.sekka-mobile .captain-routes-canvas .cj-home-metric-icon{
+ display:grid;place-items:center;height:35px;color:var(--cj-home-yellow);
+}
+.sekka-mobile .captain-routes-canvas .cj-home-metric-icon svg{
+ width:35px;height:35px;
+}
+.sekka-mobile .captain-routes-canvas .cj-home-metric strong{
+ font-size:clamp(11px,3.35vw,15px);line-height:1.45;
+ font-weight:900;overflow-wrap:anywhere;
+}
+.sekka-mobile .captain-routes-canvas .cj-home-metric b{
+ font-weight:900;font-size:clamp(22px,7vw,31px);line-height:1.1;
+ font-variant-numeric:tabular-nums;
+}
+.sekka-mobile .captain-routes-canvas .cj-home-main-action:focus-visible,
+.sekka-mobile .captain-routes-canvas button.cj-home-metric:focus-visible{
+ outline:3px solid #f0b900;outline-offset:3px;
+}
+html[data-theme="dark"] .sekka-mobile .captain-routes-canvas .cj-home-welcome h1 mark{
+ background:var(--cj-home-yellow);color:#111;
+}
+@media(max-width:370px){
+ .sekka-mobile .captain-routes-canvas .cj-home{gap:17px;padding-inline:9px}
+ .sekka-mobile .captain-routes-canvas .cj-home-welcome{min-height:265px;padding-inline:10px}
+ .sekka-mobile .captain-routes-canvas .cj-home-welcome-copy{flex-basis:53%;max-width:53%}
+ .sekka-mobile .captain-routes-canvas .cj-home-driver{width:54%}
+ .sekka-mobile .captain-routes-canvas .cj-home-how-items{gap:5px}
+ .sekka-mobile .captain-routes-canvas .cj-home-step-symbol{width:62px;height:58px}
+ .sekka-mobile .captain-routes-canvas .cj-home-step-symbol svg{width:37px;height:37px}
+ .sekka-mobile .captain-routes-canvas .cj-home-main-action{min-height:60px}
+ .sekka-mobile .captain-routes-canvas .cj-home-metrics{gap:6px}
+ .sekka-mobile .captain-routes-canvas .cj-home-metric{min-height:111px;border-radius:18px}
+}
+@media(prefers-reduced-motion:reduce){
+ .sekka-mobile .captain-routes-canvas .cj-home *{transition:none!important}
+}

@@ -1,0 +1,83 @@
+/* Rider-owned booking dashboard, distinct from Captain booking list. */
+.sekka-mobile .rb3{font-family:Tajawal,'Noto Sans Arabic',Tahoma,Arial,sans-serif;
+ color:#111111;max-width:480px;min-width:0;margin:0 auto;padding:0 15px 30px}
+.sekka-mobile .rb3 *{box-sizing:border-box}
+.sekka-mobile .rb3 h1,.sekka-mobile .rb3 h2,.sekka-mobile .rb3 p{margin:0}
+.sekka-mobile .rb3 button{font-family:inherit;cursor:pointer;min-height:44px}
+.sekka-mobile .rb3 :is(a,button):focus-visible{outline:3px solid #FFCC3E;outline-offset:3px}
+.sekka-mobile .rb3__hero{padding:22px;margin:8px 0 13px;border-radius:23px;
+ background:linear-gradient(120deg,#FFCC24,#FFCC24);color:#FFF}
+.sekka-mobile .rb3__hero>span{font-size:12px;font-weight:900;color:#FFDF93}
+.sekka-mobile .rb3__hero h1{font-size:29px;font-weight:900;line-height:1.35;margin:7px 0}
+.sekka-mobile .rb3__hero p{font-size:13px;line-height:1.6;color:#FFFFFF;font-weight:700}
+.sekka-mobile .rb3__filters{display:flex;gap:8px;background:#FFF9E9;border-radius:15px;padding:6px;margin-bottom:16px}
+.sekka-mobile .rb3__filters>button{flex:1;border:0;min-height:44px;
+ background:transparent;color:#111111;border-radius:11px;font-size:13px;font-weight:900}
+.sekka-mobile .rb3__filters>button[aria-pressed="true"]{background:#FFF;color:#111111;box-shadow:0 4px 9px #3B17571C}
+.sekka-mobile .rb3__list{list-style:none;padding:0;display:grid;gap:11px;margin:0}
+.sekka-mobile .rb3__card{padding:17px 15px;background:#FFF;border:1px solid #E8D77A;
+ border-radius:21px;box-shadow:0 9px 18px #39104D0D}
+.sekka-mobile .rb3__card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.sekka-mobile .rb3__card-top small{font-size:12px;font-weight:700;color:#111111}
+.sekka-mobile .rb3__status{display:inline-flex;align-items:center;min-height:29px;
+ border-radius:999px;padding:5px 10px;background:#FFF9E9;color:#111111;font-size:11px;font-weight:900}
+.sekka-mobile .rb3__status--pending{background:#FFF0CB;color:#7B5B17}
+.sekka-mobile .rb3__status--confirmed{background:#DBF7E8;color:#16694F}
+.sekka-mobile .rb3__status--cancelled{background:#FFE2DD;color:#9F4F40}
+.sekka-mobile .rb3__status--completed{background:#E6E8FB;color:#4A4F91}
+.sekka-mobile .rb3__card h2{font-size:18px;font-weight:900;line-height:1.4;color:#111111;overflow-wrap:anywhere}
+.sekka-mobile .rb3__meta{display:flex;gap:10px;flex-wrap:wrap;margin:13px 0 14px}
+.sekka-mobile .rb3__meta>span{border:1px solid #E8D77A;background:#FFF9E9;border-radius:11px;
+ padding:8px 10px;font-size:12px;font-weight:700;color:#111111}
+.sekka-mobile .rb3__meta strong{font-weight:900;color:#111111}
+.sekka-mobile .rb3__details{display:flex;justify-content:center;align-items:center;
+ background:#FFCC24;color:#FFF;text-decoration:none;min-height:49px;border-radius:13px;
+ font-size:15px;font-weight:900;text-align:center;padding:9px 12px}
+.sekka-mobile .rb3__cancel-trigger{border:0;background:transparent;color:#111111;
+ font-size:12px;font-weight:800;text-decoration:underline;text-underline-offset:4px;padding:8px}
+.sekka-mobile .rb3__confirm{background:#FFF5F1;border:1px solid #F0D5D3;
+ padding:12px;border-radius:13px;margin-top:8px}
+.sekka-mobile .rb3__confirm p{font-size:13px;line-height:1.55;color:#111111}
+.sekka-mobile .rb3__confirm>div{display:flex;gap:9px;flex-wrap:wrap;margin-top:10px}
+.sekka-mobile .rb3__confirm button{flex:1;min-width:95px;background:#FFCC24;border:0;
+ border-radius:10px;color:#FFF;font-size:13px;font-weight:900;padding:9px}
+.sekka-mobile .rb3__confirm button+button{background:#FFF;border:1px solid #DCA8B2;color:#111111}
+.sekka-mobile .rb3__loading,.sekka-mobile .rb3__empty,.sekka-mobile .rb3__error{display:grid;gap:10px;
+ justify-items:center;padding:28px 18px;background:#FFF;border-radius:20px;
+ border:1px solid #E8D77A;text-align:center}
+.sekka-mobile .rb3__loading>div{width:100%;height:17px;border-radius:8px;background:#FFF9E9}
+.sekka-mobile .rb3__loading>div:nth-child(2){width:70%}
+.sekka-mobile .rb3__empty-icon{display:grid;place-items:center;width:70px;height:70px;
+ background:#FFF9E9;color:#111111;border-radius:22px;font-size:37px}
+.sekka-mobile .rb3__empty h2{font-size:19px;font-weight:900}
+.sekka-mobile .rb3__empty p,.sekka-mobile .rb3__error p{font-size:13px;color:#111111;line-height:1.6}
+.sekka-mobile .rb3__empty button,.sekka-mobile .rb3__error button{width:100%;min-height:50px;
+ color:#FFF;background:#FFCC24;border:0;border-radius:14px;font-weight:900;padding:10px}
+.sekka-mobile .rb3__error small{color:#111111;overflow-wrap:anywhere}
+.sekka-mobile .rb3__refresh{display:block;width:100%;margin-top:15px;min-height:48px;
+ color:#111111;background:#FFF9E9;border:1px solid #E8D77A;border-radius:13px;font-weight:900}
+.sekka-mobile .sekka-bookings-workspace{max-width:520px;margin:0 auto;background:#FFF9F5;min-height:55vh;padding:0 0 22px}
+.sekka-mobile .sekka-bookings-section-tabs{display:flex;gap:8px;padding:8px 15px;max-width:480px;margin:0 auto}
+.sekka-mobile .sekka-bookings-section-tabs>button{flex:1;min-width:0;min-height:47px;
+ border:1px solid #E8D77A;border-radius:13px;background:#FFF;color:#111111;
+ font:900 13px/1.4 Tajawal,Tahoma,sans-serif;padding:8px}
+.sekka-mobile .sekka-bookings-section-tabs>button[aria-pressed="true"]{background:#FFDE82;color:#111111;border-color:#F6D16B}
+html[data-theme="dark"] .sekka-mobile .rb3{color:#FFFFFF}
+html[data-theme="dark"] .sekka-mobile .rb3__card,
+html[data-theme="dark"] .sekka-mobile .rb3__empty,
+html[data-theme="dark"] .sekka-mobile .rb3__loading,
+html[data-theme="dark"] .sekka-mobile .rb3__error{background:#193449;border-color:#E8D77A}
+html[data-theme="dark"] .sekka-mobile .rb3__filters{background:#193449}
+html[data-theme="dark"] .sekka-mobile .rb3__filters>button{color:#FFFFFF}
+html[data-theme="dark"] .sekka-mobile .rb3__filters>button[aria-pressed="true"]{background:#FFCF43;color:#F5FBFF}
+html[data-theme="dark"] .sekka-mobile .rb3__card h2{color:#FFF}
+html[data-theme="dark"] .sekka-mobile .rb3__meta>span{background:#193449;border-color:#E8D77A;color:#FFFFFF}
+html[data-theme="dark"] .sekka-mobile .rb3__meta strong{color:#FFDF92}
+html[data-theme="dark"] .sekka-mobile .rb3__details{background:#FFCE3E;color:#F5FBFF}
+html[data-theme="dark"] .sekka-mobile .rb3__empty p{color:#FFFFFF}
+html[data-theme="dark"] .sekka-mobile .sekka-bookings-workspace{background:#193449}
+@media(max-width:350px){.sekka-mobile .rb3{padding-inline:10px}
+ .sekka-mobile .rb3__hero{padding:17px}
+ .sekka-mobile .rb3__card{padding:13px}
+ .sekka-mobile .sekka-bookings-section-tabs{padding-inline:10px}}
+@media(prefers-reduced-motion:reduce){.sekka-mobile .rb3 *{animation:none!important;transition:none!important}}

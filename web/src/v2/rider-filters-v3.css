@@ -1,0 +1,54 @@
+/* Filter panel matching the new Rider search UI rather than old gallery frame. */
+.sekka-mobile .rf3{max-width:480px;margin:0 auto;padding:0 15px 28px;
+ font-family:Tajawal,'Noto Sans Arabic',Tahoma,Arial,sans-serif;color:#111111;min-width:0}
+.sekka-mobile .rf3 *{box-sizing:border-box}
+.sekka-mobile .rf3 h2,.sekka-mobile .rf3 h3,.sekka-mobile .rf3 p{margin:0}
+.sekka-mobile .rf3 button{font:inherit;cursor:pointer;min-height:44px}
+.sekka-mobile .rf3 :is(button,input):focus-visible{outline:3px solid #FFCB3C;outline-offset:3px}
+.sekka-mobile .rf3 .rf3__hero{display:block;text-align:start;margin:7px 0 13px;padding:22px 19px;
+ border-radius:22px;background:linear-gradient(125deg,#FFCC24,#FFCC24);color:#FFF}
+.sekka-mobile .rf3__hero>span{font-size:12px;font-weight:900;color:#FFDF85}
+.sekka-mobile .rf3__hero h2{font-size:24px;font-weight:900;line-height:1.3;margin:7px 0}
+.sekka-mobile .rf3__hero p{font-size:13px;line-height:1.6;font-weight:700;color:#FFFFFF}
+.sekka-mobile .rf3__panel{padding:16px 15px;border-radius:20px;background:#FFF;
+ border:1px solid #E8D77A;box-shadow:0 6px 14px #36124C0A;margin-bottom:11px}
+.sekka-mobile .rf3__panel h3{font-size:17px;font-weight:900;margin-bottom:13px}
+.sekka-mobile .rf3__categories{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.sekka-mobile .rf3__categories button{display:flex;flex-direction:column;align-items:flex-start;gap:5px;
+ min-height:70px;border:1px solid #E8D77A;border-radius:14px;background:#FFF9E9;color:#111111;padding:13px}
+.sekka-mobile .rf3__categories button[aria-pressed="true"]{background:#FFF1CB;
+ border:2px solid #F6C75F;color:#111111}
+.sekka-mobile .rf3__categories strong{font-size:16px;font-weight:900}
+.sekka-mobile .rf3__categories span{font-size:12px;font-weight:700;color:#111111}
+.sekka-mobile .rf3__choices{display:flex;flex-wrap:wrap;gap:8px}
+.sekka-mobile .rf3__choices button{flex:1;min-width:70px;
+ min-height:47px;background:#FFF9E9;border:1px solid #E8D77A;
+ border-radius:13px;color:#111111;padding:10px 9px;font-size:13px;font-weight:900}
+.sekka-mobile .rf3__choices button[aria-pressed="true"]{background:#FFCC24;border-color:#E8D77A;color:#FFF}
+.sekka-mobile .rf3__price{display:grid;gap:10px;font-size:14px;font-weight:900}
+.sekka-mobile .rf3__price input{width:100%;min-height:51px;border:1px solid #E8D77A;
+ border-radius:13px;background:#FFF9E9;color:#111111;padding:10px 13px;
+ font:700 16px Tajawal,sans-serif}
+.sekka-mobile .rf3__availability{display:flex;align-items:center;gap:12px;justify-content:space-between;
+ margin-top:17px;border-top:1px solid #E8D77A;padding-top:17px;min-height:62px}
+.sekka-mobile .rf3__availability>span{display:grid;gap:5px;flex:1}
+.sekka-mobile .rf3__availability strong{font-size:14px;font-weight:900}
+.sekka-mobile .rf3__availability small{font-size:11px;color:#111111;line-height:1.4}
+.sekka-mobile .rf3__availability input{width:23px;height:23px;flex:none;accent-color:#FFCC24}
+.sekka-mobile .rf3__apply{width:100%;min-height:54px!important;background:#FFCC24;color:#FFF;
+ border:0;border-radius:15px;padding:12px;font-size:17px;font-weight:900}
+.sekka-mobile .rf3__reset{width:100%;min-height:48px;border:0;color:#111111;
+ background:transparent;font-weight:900;font-size:14px;margin-top:5px}
+html[data-theme="dark"] .sekka-mobile .rf3{color:#FFFFFF}
+html[data-theme="dark"] .sekka-mobile .rf3__panel{background:#193449;border-color:#E8D77A}
+html[data-theme="dark"] .sekka-mobile .rf3__categories button,
+html[data-theme="dark"] .sekka-mobile .rf3__choices button{background:#193449;color:#FFF;border-color:#E8D77A}
+html[data-theme="dark"] .sekka-mobile .rf3__choices button[aria-pressed="true"],
+html[data-theme="dark"] .sekka-mobile .rf3__categories button[aria-pressed="true"]{background:#FFCB3C;color:#F5FBFF;border-color:#FFCB3C}
+html[data-theme="dark"] .sekka-mobile .rf3__apply{background:#FFCB3C;color:#F5FBFF}
+html[data-theme="dark"] .sekka-mobile .rf3__reset{color:#FFDF8E}
+html[data-theme="dark"] .sekka-mobile .rf3__availability small{color:#FFFFFF}
+@media(max-width:350px){.sekka-mobile .rf3{padding-inline:10px}.sekka-mobile .rf3 .rf3__hero{display:block;text-align:start;padding:16px}
+ .sekka-mobile .rf3__panel{padding:13px 11px}
+ .sekka-mobile .rf3__choices button{min-width:58px;padding-inline:6px}}
+@media(prefers-reduced-motion:reduce){.sekka-mobile .rf3 *{animation:none!important;transition:none!important}}

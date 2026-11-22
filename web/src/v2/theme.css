@@ -1,34 +1,58 @@
 :root {
-  color-scheme: dark;
-  --yellow: #ffc400;
-  --black: #0b0b0d;
-  --charcoal: #15191f;
+  color-scheme: light;
+  --brand-purple: #6412B1;
+  --brand-coral: #FFCC24;
+  --brand-magenta: #F73587;
+  --brand-sun: #FFCD38;
+  --brand-teal: #00BEAD;
+  --yellow: var(--brand-sun);
+  --accent: var(--brand-coral);
+  --black: #241038;
+  --charcoal: #35134F;
   --white: #ffffff;
-  --gray: #8d929b;
-  --bg: var(--black);
-  --secondary: #101923;
-  --card: #1b2027;
-  --elevated: #252b33;
-  --border: #343b45;
-  --text: #ffffff;
-  --muted: #b9bec6;
+  --gray: #745C7B;
+  --bg: #FFF9F5;
+  --secondary: #FFF0EA;
+  --card: #ffffff;
+  --elevated: #FFE9E3;
+  --border: #E9D6E5;
+  --text: #35134F;
+  --muted: #674F72;
   --radius: 22px;
-  --error: #dc3545;
-  --success: #198754;
-  --warning: #d97706;
+  --error: #C52A49;
+  --success: #097E72;
+  --warning: #925400;
   font-family: Tajawal, "Noto Sans Arabic", Tahoma, Arial, sans-serif;
   background: var(--bg);
   color: var(--text);
 }
-:root[data-theme="light"] {
-  color-scheme: light;
-  --bg: #fafaf8;
-  --secondary: #f2f3f4;
-  --card: #ffffff;
-  --elevated: #f2f3f4;
-  --border: #dde0e4;
-  --text: #15191f;
-  --muted: #565d66;
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #1E0B32;
+  --secondary: #29143F;
+  --card: #301A4B;
+  --elevated: #42275E;
+  --border: #60436F;
+  --text: #FFF7FC;
+  --muted: #DBC9E5;
+  --error: #FF91A4;
+  --success: #5BE0CD;
+  --warning: #FFCD38;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #1E0B32;
+    --secondary: #29143F;
+    --card: #301A4B;
+    --elevated: #42275E;
+    --border: #60436F;
+    --text: #FFF7FC;
+    --muted: #DBC9E5;
+    --error: #FF91A4;
+    --success: #5BE0CD;
+    --warning: #FFCD38;
+  }
 }
 * {
   box-sizing: border-box;
@@ -55,7 +79,7 @@ button {
   border-radius: 13px;
   padding: 12px 20px;
   min-height: 46px;
-  background: var(--yellow);
+  background: var(--accent);
   color: var(--black);
   font-weight: 700;
   cursor: pointer;
@@ -81,7 +105,7 @@ a:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 3px solid var(--yellow);
+  outline: 3px solid var(--brand-purple);
   outline-offset: 4px;
 }
 a {
@@ -164,7 +188,7 @@ aside button {
 }
 aside .active,
 .bottom-nav .active {
-  background: var(--yellow);
+  background: var(--accent);
   color: var(--black);
 }
 .sidebar-note {
@@ -372,7 +396,7 @@ footer {
   top: -100px;
   right: 20px;
   z-index: 20;
-  background: var(--yellow);
+  background: var(--accent);
   color: var(--black);
   padding: 12px;
 }

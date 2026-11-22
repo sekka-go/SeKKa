@@ -1,0 +1,197 @@
+/*
+ * seKKa UI quality hardening — 2026-11-22
+ * Single, production-only correction layer. Keeps the owner-selected sky/ice/
+ * yellow identity and avoids touching developer-gallery screenshots.
+ * Legacy visual layers remain for now; consolidate them after screenshot QA.
+ */
+.sekka-mobile {
+ --ui-ink:#10344F;
+ --ui-ink-muted:#43677D;
+ --ui-surface:#F4FBFF;
+ --ui-raised:#FFFFFF;
+ --ui-hairline:#CCE6F1;
+ --ui-action:#FFCC24;
+ --ui-action-ink:#10344F;
+ --ui-dark-blue:#075B91;
+ --ui-radius-sm:12px;
+ --ui-radius-md:16px;
+ --ui-radius-lg:24px;
+ --ui-radius-xl:30px;
+ --ui-shadow-card:0 9px 26px rgba(7,81,121,.12);
+ --brand-purple:var(--ui-dark-blue);
+ --brand-coral:var(--ui-action);
+ --brand-sun:var(--ui-action);
+ --accent:var(--ui-dark-blue);
+}
+html[data-theme="dark"] .sekka-mobile {
+ --ui-ink:#F2FAFF;
+ --ui-ink-muted:#C2D9E8;
+ --ui-surface:#102A3C;
+ --ui-raised:#19384E;
+ --ui-hairline:#3F6276;
+ --ui-dark-blue:#7ED7F4;
+ --ui-shadow-card:0 10px 28px rgba(0,0,0,.26);
+}
+/* Keep light text over guaranteed dark color instead of light aqua (1.6:1). */
+.sekka-mobile .rs3 .rs3__head,
+.sekka-mobile .rr3-hero,
+.sekka-mobile .rd3__hero,
+.sekka-mobile .sekka-rider-booking-v3 .rbk3-hero,
+.sekka-mobile .np4__hero,
+.sekka-mobile .captain-routes-canvas .cj-hero,
+.sekka-mobile .sekka-entry__header {
+ background:linear-gradient(123deg,#075687 0%,#06689F 60%,#086DA6 100%)!important;
+ color:#FFFFFF!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home > .sekka-mobile-header {
+ background:linear-gradient(118deg,#075687,#066A9D 73%,#076FA6)!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-hero.rh-showcase-hero {
+ /* The artwork and aqua waves remain; the copy receives a dark readability bed. */
+ background:linear-gradient(118deg,#12C6E4,#0A9EED 60%,#0788ED)!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-hero .rh-hero__copy {
+ background:linear-gradient(to left,rgba(3,47,80,.93),rgba(3,53,91,.76) 55%,rgba(3,53,91,.11) 100%)!important;
+}
+.sekka-mobile[dir="ltr"].sekka-rider-navigation.sekka-tab-home .rh-showcase-hero .rh-hero__copy {
+ background:linear-gradient(to right,rgba(3,47,80,.93),rgba(3,53,91,.76) 55%,rgba(3,53,91,.11) 100%)!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-hero.rh-showcase-hero{
+ background:linear-gradient(128deg,#102B3D 0%,#143F59 58%,#1B5270 100%)!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-hero .rh-hero__copy{
+ background:linear-gradient(to left,rgba(5,16,27,.94),rgba(10,34,52,.75) 62%,rgba(12,41,59,.12) 100%)!important;
+}
+html[data-theme="dark"] .sekka-mobile[dir="ltr"].sekka-rider-navigation.sekka-tab-home .rh-showcase-hero .rh-hero__copy{
+ background:linear-gradient(to right,rgba(5,16,27,.94),rgba(10,34,52,.75) 62%,rgba(12,41,59,.12) 100%)!important;
+}
+/* One semantic yellow CTA: dark ink, never white-on-yellow. */
+.sekka-mobile .sekka-request-yellow-cta,
+.sekka-mobile .sekka-no-match-action .sekka-request-yellow-cta{
+ color:#10344F!important;background:#FFCC24!important;
+}
+.sekka-mobile .sekka-request-yellow-cta *{color:#10344F!important}
+/* Five rider destinations: legible labels and no ellipsis at 320px. */
+.sekka-mobile.sekka-rider-navigation .rh-tabs .rh-tabs__name{
+ font-size:12px!important;line-height:1.26!important;
+ white-space:normal!important;overflow:visible!important;text-overflow:clip!important;
+ overflow-wrap:normal!important;word-break:normal!important;
+ text-align:center;max-width:100%;
+}
+.sekka-mobile.sekka-rider-navigation .rh-tabs button{
+ min-height:68px!important;
+}
+.sekka-mobile.sekka-rider-navigation .rh-tabs .rh-tabs__primary .rh-tabs__name{
+ color:#10344F!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation .rh-tabs .rh-tabs__primary .rh-tabs__name{
+ color:#F2FAFF!important;
+}
+.sekka-mobile .sekka-glass-panel nav>h2{
+ font-size:12px!important;line-height:1.4!important;letter-spacing:0!important;
+}
+/* Actual interactive area is 44px; icon itself remains compact. */
+.sekka-mobile .sekka-side-drawer.sekka-glass-panel .sekka-glass-rail-toggle,
+.sekka-mobile .sekka-side-drawer.sekka-glass-panel .sekka-side-drawer__close{
+ flex:0 0 44px!important;width:44px!important;height:44px!important;
+ min-height:44px!important;min-width:44px!important;border-radius:50%!important;
+}
+.sekka-mobile .sekka-side-drawer.sekka-glass-panel.sekka-glass-panel--collapsed .sekka-glass-rail-toggle{
+ flex-basis:44px!important;width:44px!important;height:44px!important;
+}
+.sekka-mobile .sekka-side-drawer.sekka-glass-panel.sekka-glass-panel--collapsed .sekka-side-drawer__header{
+ min-height:104px!important;
+}
+.sekka-mobile .sekka-glass-panel .sekka-theme-quick-row__copy small,
+.sekka-mobile .sekka-glass-panel .sekka-side-drawer__heading>strong{
+ font-size:12px!important;line-height:1.45!important;
+}
+.sekka-mobile .sekka-glass-panel .sekka-preference-row__details select{
+ min-height:44px!important;height:44px!important;font-size:13px!important;
+}
+.sekka-mobile .sekka-glass-panel nav button.sekka-theme-quick-switch{
+ min-width:48px!important;width:48px!important;flex-basis:48px!important;
+ min-height:44px!important;height:44px!important;border-radius:24px!important;
+}
+.sekka-mobile .sekka-glass-panel .sekka-theme-quick-switch__thumb{
+ inset-block-start:12px!important;
+}
+.sekka-mobile .sekka-glass-panel .sekka-theme-quick-switch[aria-checked="true"] .sekka-theme-quick-switch__thumb{
+ inset-inline-start:24px!important;
+}
+.sekka-mobile.sekka-rider-navigation .rh-showcase-ride__details small,
+.sekka-mobile.sekka-rider-navigation .rh-pickup-actions__copy small{
+ font-size:12px!important;line-height:1.45!important;
+}
+.sekka-mobile .rh-picker__week button[aria-pressed="true"],
+.sekka-mobile .rh-picker__confirm,
+.sekka-mobile .rs3__days button[aria-pressed="true"]{
+ color:#10344F!important;
+}
+/* One visual language for the modal's native top-layer backdrop. */
+.sekka-side-drawer.sekka-glass-panel::backdrop{
+ background:rgba(4,20,35,.52);
+ -webkit-backdrop-filter:blur(8px);
+ backdrop-filter:blur(8px);
+}
+html[data-theme="dark"] .sekka-mobile .sekka-side-drawer.sekka-glass-panel{
+ background:linear-gradient(165deg,rgba(9,19,32,.97) 0%,rgba(13,30,46,.96) 38%,rgba(20,47,68,.94) 72%,rgba(29,66,89,.94) 100%)!important;
+}
+/* Reduce visual competition between the search teaser and editable journey. */
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-search__card{
+ min-height:86px!important;padding:12px 16px!important;border-radius:23px!important;
+ gap:12px!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-search__icon{
+ width:62px!important;height:62px!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-search__icon>svg{
+ width:40px!important;height:40px!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-search__label{
+ font-size:18px!important;line-height:1.4!important;
+}
+/* Bookings and Requests already have their own persistent dock tabs. */
+/* Both booking/request sections are accessible; never conceal functional tabs. */
+.sekka-mobile .sekka-request-missing-time{
+ display:flex;flex-direction:column;gap:8px;margin:10px 0;
+ color:var(--ui-ink)!important;font:700 14px/1.45 Tajawal,Tahoma,sans-serif;
+}
+.sekka-mobile .sekka-request-missing-time input{
+ width:100%;min-height:48px;padding:10px 12px;
+ border:1px solid var(--ui-hairline);border-radius:var(--ui-radius-sm);
+ background:var(--ui-raised);color:var(--ui-ink);
+ font:600 16px/1.4 Tajawal,Tahoma,sans-serif;
+}
+.sekka-mobile .sekka-geo-request-disclaimer{
+ margin:7px 0 13px;padding:9px 12px;border-inline-start:3px solid var(--ui-action);
+ color:var(--ui-ink-muted);font:500 13px/1.5 Tajawal,Tahoma,sans-serif;
+}
+/* The last card must scroll above the fixed navigation on short phones. */
+.sekka-mobile.sekka-rider-navigation > .sekka-mobile-content{
+ padding-bottom:calc(124px + env(safe-area-inset-bottom,0px))!important;
+}
+.sekka-mobile :is(button,input,select,textarea,a):focus-visible{
+ outline:3px solid #FFD43F!important;outline-offset:3px!important;
+}
+html:not([data-theme="dark"]) .sekka-mobile :is(button,input,select,textarea,a):focus-visible{
+ outline-color:#075687!important;
+}
+.sekka-mobile .sekka-weekdays-disclaimer,
+.sekka-mobile .sekka-request-days-disclaimer{
+ display:block;margin:10px 0!important;padding:10px 12px;
+ border:1px solid var(--ui-hairline);border-radius:var(--ui-radius-sm);
+ background:var(--ui-raised);color:var(--ui-ink)!important;
+ font:500 13px/1.6 Tajawal,Tahoma,sans-serif!important;
+}
+@media(max-width:359px){
+ .sekka-mobile.sekka-rider-navigation .rh-tabs .rh-tabs__name{
+  font-size:12px!important;line-height:1.3!important;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ .sekka-mobile .rh-tabs__glass,
+ .sekka-mobile .rh-tabs__primary .rh-tabs__icon::after{
+  animation:none!important;transition:none!important;
+ }
+}

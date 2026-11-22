@@ -999,3 +999,172 @@
 .phase-flow-content .phase-register-fields { gap: 3cqw; border: 1px solid var(--phase-line); border-radius: 3cqw; padding: 4cqw; }
 .phase-flow-content h2 { margin: 0; font-size: 4.5cqw; }
 .phase-flow-content .phase-register-fields p { font-size: 3.5cqw; text-align: right; }
+
+/* Live Google OAuth replaces the absolute-positioned preview phone controls.
+   Constrain its entire hit area inside the card on all seven-screen layouts. */
+.phase-canvas .phase-google-auth {
+  position: absolute;
+  inset-inline: 7%;
+  top: 18%;
+  width: 86%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4cqw;
+  z-index: 5;
+  text-align: center;
+}
+.phase-canvas .phase-google-auth .phase-title,
+.phase-canvas .phase-google-auth .phase-subtitle,
+.phase-canvas .phase-google-auth .phase-primary {
+  position: static;
+  inset: auto;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.phase-canvas .phase-google-auth .phase-primary {
+  min-height: 48px;
+  padding: 3cqw 4cqw !important;
+  cursor: pointer;
+}
+.phase-canvas .phase-google-auth .phase-title { font-size: clamp(19px, 6cqw, 36px); }
+.phase-canvas .phase-google-auth .phase-subtitle { font-size: clamp(13px, 3.5cqw, 20px); }
+.phase-canvas .phase-google-auth [role="status"],
+.phase-canvas .phase-google-error {
+  margin:12px 0 0;
+  color:var(--phase-text);
+  font-size:clamp(12px,3.2cqw,16px);
+  line-height:1.5;
+  overflow-wrap:anywhere;
+}
+.phase-canvas .phase-google-error p { margin:0 0 8px; }
+.phase-canvas .phase-google-retry {
+  min-height:44px;
+  padding:8px 14px;
+  border:1px solid var(--phase-line);
+  border-radius:12px;
+  background:var(--phase-card);
+  color:var(--phase-text);
+  font:inherit;
+  font-weight:800;
+}
+
+/* Prerequisite return belongs to page chrome, not to the image-backed card.
+   A generic .d-outline can inherit absolute wizard positioning and cover the logo. */
+.phase-one-stage > .phase-return-prerequisite {
+  position: relative;
+  inset: auto;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  width: fit-content;
+  max-width: calc(100% - 32px);
+  min-height: 44px;
+  margin: 0 auto 12px;
+  padding: 10px 18px;
+  border: 1px solid var(--phase-line);
+  border-radius: 14px;
+  background: var(--phase-card);
+  color: var(--phase-text);
+  font: 700 14px Tajawal, sans-serif;
+  overflow-wrap: anywhere;
+}
+.phase-one-stage > .phase-return-prerequisite:focus-visible {
+  outline: 3px solid var(--phase-accent); outline-offset: 2px;
+}
+
+/* Optional onboarding-only skip: below Verify, not over OTP artwork. */
+.phase-screen-5 .phase-skip-verification {
+  position:absolute;
+  top:89%;
+  left:8.5%;
+  width:83%;
+  min-height:6%;
+  border:1px solid var(--phase-line);
+  border-radius:999px;
+  background:var(--phase-card);
+  color:var(--phase-text);
+  font-size:clamp(12px,3.3cqw,18px);
+  font-weight:700;
+  padding:1.1cqw 2cqw;
+  white-space:normal;
+  z-index:4;
+}
+.phase-screen-5 .phase-skip-verification:focus-visible { outline:3px solid var(--phase-accent);outline-offset:2px; }
+
+/* Screen 4: retain the reference phone form and place OAuth directly below it. */
+.phase-screen-4 .phase-auth-or {
+  position:absolute;
+  top:84.3%;
+  left:9%;
+  width:82%;
+  display:flex;
+  align-items:center;
+  gap:3cqw;
+  color:var(--phase-muted);
+  font-size:3.5cqw;
+  font-weight:700;
+  z-index:4;
+}
+.phase-screen-4 .phase-auth-or::before,
+.phase-screen-4 .phase-auth-or::after {content:"";height:1px;flex:1;background:var(--phase-line);opacity:.6;}
+.phase-screen-4 .phase-google-secondary {
+  position:absolute;
+  top:89%;
+  left:6.6%;
+  width:87.2%;
+  height:8%;
+  min-height:0;
+  z-index:4;
+  border:1.5px solid var(--phase-line);
+  border-radius:999px;
+  background:var(--phase-card);
+  color:var(--phase-text);
+  font-family:inherit;
+  font-size:4.2cqw;
+  font-weight:800;
+  padding:1.8cqw 3cqw;
+  white-space:normal;
+}
+.phase-screen-4 .phase-google-secondary:focus-visible {outline:3px solid var(--phase-accent);outline-offset:2px;}
+.phase-screen-4 .phase-google-config-error {position:absolute;top:97%;left:5%;width:90%;font-size:2.5cqw;}
+
+
+/* Cached public onboarding imagery: only the crop window shimmers while
+   a genuinely uncached image downloads. The exact reference geometry stays. */
+.reference-art[data-image-state="loading"]::after{
+ content:"";position:absolute;inset:0;z-index:2;
+ border-radius:inherit;pointer-events:none;
+ background:linear-gradient(105deg,#BEE8F2 12%,#ECFAFF 39%,#BEE8F2 67%);
+ background-size:230% 100%;
+ animation:sk-public-image-shimmer 1.65s linear infinite;
+}
+.reference-art[data-image-state="error"]{
+ background:linear-gradient(145deg,#C5EAF3,#F3FBFE);
+}
+.reference-art[data-image-state="error"]>img{opacity:0}
+@keyframes sk-public-image-shimmer{
+ from{background-position:170% 0}
+ to{background-position:-105% 0}
+}
+html[data-theme="dark"] .reference-art[data-image-state="loading"]::after{
+ background:linear-gradient(105deg,#29485E 12%,#507185 39%,#29485E 67%);
+ background-size:230% 100%;
+}
+html[data-theme="dark"] .reference-art[data-image-state="error"]{
+ background:linear-gradient(145deg,#21394E,#304D61);
+}
+@media(prefers-reduced-motion:reduce){
+ .reference-art[data-image-state="loading"]::after{
+  animation:none!important;background:#D9EBF2!important;
+ }
+ html[data-theme="dark"] .reference-art[data-image-state="loading"]::after{
+  background:#36566B!important;
+ }
+}

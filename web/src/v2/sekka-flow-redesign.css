@@ -1,0 +1,985 @@
+/* SEKKA FLOW 2.0 — complete production-only interaction system.
+   Scoped to MobileApp; developer gallery remains untouched. Accessible motion,
+   real Supabase data and existing booking/auth mechanisms are preserved. */
+:root{
+ --flow-sky:#078EE9;--flow-blue:#0C9DF1;--flow-aqua:#12CDD9;
+ --flow-mint:#65E7E8;--flow-sun:#FFCC28;
+ --flow-ink:#193853;--flow-muted:#668398;--flow-soft:#F5FBFF;
+ --flow-paper:#FFFFFF;--flow-line:#DCEEF7;
+ --flow-shadow:0 13px 32px rgba(23,99,138,.13);
+ --flow-ease:cubic-bezier(.22,1,.36,1);
+}
+.sekka-mobile{
+ --sekka-cream:var(--flow-soft);--sekka-cream-card:#FFFFFF;
+ --sekka-black:var(--flow-ink);--sekka-mauve:var(--flow-blue);
+ --brand-purple:var(--flow-blue);--brand-coral:var(--flow-aqua);
+ --brand-sun:var(--flow-sun);--yellow:var(--flow-sun);
+ --bg:var(--flow-soft);--ink:var(--flow-ink);--text:var(--flow-ink);
+ --card:var(--flow-paper);--line:var(--flow-line);
+ --muted:var(--flow-muted);background:var(--flow-soft)!important;
+ color:var(--flow-ink);overscroll-behavior-x:none;
+}
+.sekka-mobile button,.sekka-mobile a{
+ -webkit-tap-highlight-color:transparent;
+ touch-action:manipulation;
+}
+.sekka-mobile :is(button,a,input,select,textarea):focus-visible{
+ outline:3px solid var(--flow-sun)!important;outline-offset:3px!important;
+}
+.sekka-mobile :is(.sekka-action,.rh-button--primary,.rs3__submit,.d-offer-select,
+ .rd3__primary,.phase-primary,.sekka-entry__primary):not(:disabled){
+ transition:transform .27s var(--flow-ease),box-shadow .27s var(--flow-ease),
+  filter .27s ease!important;
+}
+.sekka-mobile :is(.sekka-action,.rh-button--primary,.rs3__submit,.d-offer-select,
+ .rd3__primary,.phase-primary,.sekka-entry__primary):not(:disabled):active{
+ transform:scale(.965)!important;filter:brightness(1.05);
+}
+.sekka-mobile .sekka-mobile-header{
+ background:linear-gradient(112deg,#16CBDC 0%,#0694F2 74%,#077FE4)!important;
+ color:#fff!important;border-color:transparent!important;
+}
+.sekka-mobile .sekka-mobile-header .rh-shell-title{color:#fff!important}
+.sekka-mobile .sekka-mobile-content{background:var(--flow-soft);min-width:0}
+.sekka-mobile .sekka-side-drawer{
+ background:var(--flow-paper)!important;color:var(--flow-ink)!important;
+ border-color:var(--flow-line)!important;box-shadow:-18px 0 60px #0D597735!important;
+}
+.sekka-mobile .sekka-side-drawer__header{
+ background:linear-gradient(120deg,#1BD5E3,#078BE9)!important;color:#fff!important
+}
+.sekka-mobile .sekka-side-drawer nav button{
+ border-radius:15px!important;transition:transform .2s var(--flow-ease),background .2s ease;
+}
+.sekka-mobile .sekka-side-drawer nav button:active{transform:translateX(-4px)}
+.sekka-mobile .sekka-mobile-card{background:#FFF!important;
+ border:1px solid var(--flow-line)!important;box-shadow:var(--flow-shadow)!important;
+ border-radius:26px!important;color:var(--flow-ink)!important;
+}
+.sekka-mobile .sekka-mobile-card :is(h1,h2,strong){color:var(--flow-ink)}
+.sekka-mobile .sekka-action,.sekka-mobile .phase-primary,
+.sekka-mobile .cj-primary,.sekka-mobile .cj-home-main-action{
+ background:linear-gradient(108deg,#08BACC,#078CF0)!important;
+ color:white!important;border-color:transparent!important;border-radius:18px!important;
+}
+.sekka-mobile .sekka-screen-back button{
+ background:white!important;color:#047BA9!important;
+ border:1px solid var(--flow-line)!important;
+}
+.sekka-mobile .live-notifications,.sekka-mobile .live-trip-requests{
+ color:var(--flow-ink)!important;
+}
+.sekka-mobile .live-trip-requests .sekka-request-card,
+.sekka-mobile .live-notifications article{
+ background:#FFFFFF!important;border-radius:20px!important;
+ border:1px solid var(--flow-line)!important;
+}
+/* Motion: a wave of teal follows each real route state change, including Back.
+   It is a visual-only overlay, not a second application or fake navigation. */
+.sekka-mobile .sk-route-swoosh{
+ position:fixed;inset:0;z-index:110;pointer-events:none;
+ overflow:hidden;isolation:isolate;
+ animation:flow-wipe-exit .77s ease both;
+}
+.sekka-mobile .sk-route-swoosh i{
+ display:block;position:absolute;top:-15%;left:-55%;width:190%;height:140%;
+ border-radius:46% 60% 50% 60%;
+ transform-origin:100% 50%;
+ background:linear-gradient(130deg,#6EF1EA 3%,#00C8DD 52%,#078DE9 100%);
+ box-shadow:0 0 0 13px #B9F9FA;
+ animation:flow-sweep .77s cubic-bezier(.36,.04,.16,1) both;
+}
+.sekka-mobile .sk-route-swoosh b{
+ position:absolute;left:-8%;right:-8%;top:50%;height:6px;
+ background:repeating-linear-gradient(90deg,#FFF 0 32px,transparent 32px 63px);
+ transform:rotate(-16deg);opacity:.85;
+ animation:flow-streak .77s ease both;
+}
+.sekka-mobile .sk-route-swoosh span{
+ position:absolute;top:45%;left:45%;width:18px;height:18px;border-radius:50%;
+ background:var(--flow-sun);box-shadow:0 0 0 11px #FFCC2840;
+ animation:flow-dot .77s var(--flow-ease) both;
+}
+@keyframes flow-sweep{
+ 0%{transform:translate3d(110%,13%,0) rotate(8deg)}
+ 45%{transform:translate3d(29%,0,0) rotate(-6deg)}
+ 100%{transform:translate3d(-115%,-14%,0) rotate(-13deg)}
+}
+@keyframes flow-wipe-exit{0%,83%{opacity:.97}100%{opacity:0}}
+@keyframes flow-streak{0%,30%{opacity:0}40%{opacity:.7}70%,100%{opacity:0}}
+@keyframes flow-dot{0%,30%{opacity:0;transform:translate(200px,70px) scale(.4)}
+ 47%{opacity:1;transform:translate(0,0) scale(1)}
+ 80%,100%{opacity:0;transform:translate(-200px,-70px) scale(.4)}}
+.sekka-mobile.sk-motion-odd>.sekka-mobile-content{
+ animation:flow-page-odd .54s var(--flow-ease);
+}
+.sekka-mobile.sk-motion-even>.sekka-mobile-content{
+ animation:flow-page-even .54s var(--flow-ease);
+}
+@keyframes flow-page-odd{
+ from{opacity:.25;transform:translate3d(19px,17px,0) scale(.988);
+   filter:saturate(.7)}
+ to{opacity:1;transform:translate3d(0,0,0) scale(1);filter:saturate(1)}
+}
+@keyframes flow-page-even{
+ from{opacity:.25;transform:translate3d(-19px,17px,0) scale(.988);
+   filter:saturate(.7)}
+ to{opacity:1;transform:translate3d(0,0,0) scale(1);filter:saturate(1)}
+}
+/* Active section: floating capsule with a travelling yellow signal light. */
+.sekka-mobile .rh-tabs{
+ background:transparent!important;box-shadow:none!important;
+ border:0!important;padding:5px max(10px,env(safe-area-inset-right))
+ calc(8px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))!important;
+}
+.sekka-mobile .rh-tabs__inner{
+ border:1px solid #D9EEF7;background:#FFFFFF;
+ border-radius:25px;padding:7px 6px 5px;
+ box-shadow:0 11px 33px rgba(9,76,122,.20);
+}
+.sekka-mobile .rh-tabs__inner:before{
+ top:-3px!important;height:5px!important;width:35px!important;
+ background:var(--flow-sun)!important;
+ box-shadow:0 0 0 4px #FFCF3135;
+ transition:inset-inline-start .55s var(--flow-ease)!important;
+}
+.sekka-mobile .rh-tabs button{
+ min-height:61px!important;color:#6B859A!important;border-radius:18px!important;
+ font-size:11px!important;transition:color .28s ease!important;
+}
+.sekka-mobile .rh-tabs button[aria-current="page"]{color:#087CAC!important}
+.sekka-mobile .rh-tabs button .rh-tabs__icon{
+ transition:background .28s ease,color .28s ease,transform .45s var(--flow-ease)!important;
+ border-radius:16px!important;
+}
+.sekka-mobile .rh-tabs button[aria-current="page"] .rh-tabs__icon{
+ background:linear-gradient(130deg,#D8FAFC,#FFF1B2)!important;
+ color:#018BAC!important;transform:translateY(-5px) scale(1.06)!important;
+ box-shadow:0 5px 10px #0A96AF20;
+}
+.sekka-mobile .rh-tabs button:active .rh-tabs__icon{transform:scale(.88)}
+/* Home: fluid hero, no purple old car. The rail is populated only with
+   passenger-entered places; no fictional supply, price or time is shown. */
+.sekka-mobile .rh-home{
+ --rh-ink:var(--flow-ink)!important;--rh-muted:var(--flow-muted)!important;
+ --rh-card:#FFF!important;--rh-line:var(--flow-line)!important;
+ --rh-bg:var(--flow-soft)!important;--rh-purple:var(--flow-blue)!important;
+ background:var(--flow-soft)!important;color:var(--flow-ink)!important;
+ padding-bottom:calc(36px + env(safe-area-inset-bottom))!important;
+}
+.sekka-mobile .rh-home h1,.sekka-mobile .rh-home h2,
+.sekka-mobile .rh-home strong{color:var(--flow-ink)}
+.sekka-mobile .rh-hero{
+ margin:0 -14px!important;min-height:310px!important;border-radius:0 0 30px 30px!important;
+ background:linear-gradient(142deg,#15D7DC 0%,#0CAAEF 48%,#0785ED 100%)!important;
+ overflow:hidden!important;position:relative;isolation:isolate;
+}
+.sekka-mobile .rh-hero:before{display:none!important}
+.sekka-mobile .rh-hero__artwork{display:none!important}
+.sekka-mobile .rh-hero__map-lines{
+ opacity:.28!important;position:absolute;inset:0;
+ background-image:radial-gradient(circle,#D8FBFF 0 2px,transparent 3px)!important;
+ background-size:43px 43px!important;mask-image:none!important;
+ animation:flow-map-pan 23s linear infinite;
+}
+@keyframes flow-map-pan{to{background-position:80px -90px}}
+.sekka-mobile .rh-hero__orb{position:absolute;border-radius:50%;
+ border:1px solid #FFFFFF55;pointer-events:none}
+.sekka-mobile .rh-hero__orb--a{height:260px;width:260px;top:-95px;left:-105px;
+ box-shadow:0 0 0 38px #FFFFFF0A,0 0 0 78px #FFFFFF09;
+ animation:flow-orbit 9s ease-in-out infinite alternate}
+.sekka-mobile .rh-hero__orb--b{height:155px;width:155px;top:27px;right:-86px;
+ box-shadow:0 0 0 35px #FFFFFF0A}
+@keyframes flow-orbit{to{transform:translate3d(17px,21px,0)}}
+.sekka-mobile .rh-hero__copy{width:auto!important;max-width:100%;padding:31px 23px 8px!important;
+ min-height:0!important;background:none!important;gap:7px;position:relative;z-index:3}
+.sekka-mobile .rh-hero__eyebrow{color:#F7FFFF;font:850 12px/1.5 Tajawal,Tahoma,sans-serif;
+ letter-spacing:.1px;background:#FFFFFF20;border:1px solid #FFFFFF32;
+ padding:7px 12px;border-radius:999px}
+.sekka-mobile .rh-hero h1{
+ font-size:clamp(35px,10vw,48px)!important;letter-spacing:-1px;
+ line-height:1.3!important;color:#FFFFFF!important;
+ margin:0!important;text-shadow:0 3px 12px #0665A22D;
+}
+.sekka-mobile .rh-hero__underline{
+ width:58px!important;height:5px!important;background:var(--flow-sun)!important;
+ margin:0!important;border-radius:999px!important;transform:none!important;
+}
+.sekka-mobile .rh-hero__copy p{
+ font-size:13px!important;line-height:1.65!important;color:#FFFFFF!important;
+ max-width:270px!important;font-weight:800!important;
+}
+.sekka-mobile .rh-hero__route{display:flex;gap:10px;align-items:center;
+ position:relative;z-index:4;margin:10px 23px 0;padding:11px 13px;
+ max-width:350px;border:1px solid #FFFFFF62;border-radius:17px;
+ background:#FFFFFF24;backdrop-filter:blur(8px);color:#FFF;
+ font-size:12px;font-weight:900;min-height:51px}
+.sekka-mobile .rh-hero__route>span{max-width:45%;white-space:nowrap;
+ overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px}
+.sekka-mobile .rh-hero__route>span>i{height:10px;width:10px;border:2px solid white;
+ border-radius:50%;background:var(--flow-sun);flex:none}
+.sekka-mobile .rh-hero__route>span:last-child>i{background:#B8F8FB}
+.sekka-mobile .rh-hero__route-track{position:relative;flex:1;min-width:15px;
+ height:2px;background:#F2FFFF99}
+.sekka-mobile .rh-hero__route-track i{position:absolute;top:-3px;height:8px;width:8px;
+ border-radius:50%;background:#FFF;
+ animation:flow-track-drive 2.4s linear infinite}
+@keyframes flow-track-drive{from{inset-inline-start:0}to{inset-inline-start:calc(100% - 8px)}}
+.sekka-mobile .rh-hero__wave{position:absolute;bottom:-2px;left:0;width:100%;height:82px;z-index:2}
+.sekka-mobile .rh-journey{margin:-13px 1px 14px!important;position:relative;z-index:5;
+ padding:31px 14px 15px!important;border-radius:27px!important;
+ background:var(--flow-paper)!important;border:1px solid var(--flow-line)!important;
+ box-shadow:var(--flow-shadow)!important}
+.sekka-mobile .rh-journey__ribbon{
+ background:var(--flow-sun)!important;color:var(--flow-ink)!important;
+ border-radius:13px!important;padding:7px 13px!important;top:-16px!important;
+ box-shadow:0 4px 14px #FFCC2844;
+}
+.sekka-mobile .rh-journey__ribbon svg{color:var(--flow-ink)!important;fill:none!important}
+.sekka-mobile .rh-journey__heading{display:flex;justify-content:space-between;
+ align-items:start;flex-wrap:wrap;gap:3px 12px;padding:0 4px 9px;}
+.sekka-mobile .rh-journey__heading strong{font-size:16px;font-weight:900}
+.sekka-mobile .rh-journey__heading small{color:var(--flow-muted);font-size:11px;font-weight:750}
+.sekka-mobile .rh-journey__fields{position:relative;padding:0 0 8px!important}
+.sekka-mobile .rh-journey__fields:before{content:"";position:absolute;
+ inset-inline-start:18px;top:40px;bottom:40px;width:2px;
+ background:repeating-linear-gradient(to bottom,#98DAED 0 6px,transparent 6px 12px);
+ pointer-events:none}
+.sekka-mobile .rh-journey__field{
+ min-height:66px!important;padding:9px 9px!important;display:flex!important;
+ border:1px solid transparent!important;border-radius:14px!important;
+ background:transparent!important;
+ transition:transform .2s var(--flow-ease),background .2s ease!important;
+ text-align:start!important;width:100%;
+}
+.sekka-mobile .rh-journey__field+.rh-journey__field{margin-top:3px}
+.sekka-mobile .rh-journey__field:active{
+ background:#EAFBFF!important;transform:scale(.985)}
+.sekka-mobile .rh-journey__field-icon{
+ width:40px!important;height:40px!important;background:#E2F8FD!important;
+ border-radius:14px!important;color:#028EBD!important;
+ border:3px solid white;box-shadow:0 3px 14px #017BA819;
+}
+.sekka-mobile .rh-journey__field-icon--to{
+ background:#FFF1B7!important;color:#B17A03!important
+}
+.sekka-mobile .rh-journey__field-copy{display:grid!important;gap:0!important;
+ flex-direction:column!important;align-items:start!important}
+.sekka-mobile .rh-journey__field-copy>span{
+ color:var(--flow-muted)!important;font-size:11px!important;line-height:1.5
+}
+.sekka-mobile .rh-journey__field-copy>span:after{content:""}
+.sekka-mobile .rh-journey__field-copy>strong{
+ color:var(--flow-ink)!important;font-size:clamp(14px,4vw,17px)!important;
+ font-weight:900!important;line-height:1.5!important;
+}
+.sekka-mobile .rh-journey__field-affordance{color:#1595CB!important}
+.sekka-mobile .rh-button.rh-button--primary{
+ background:linear-gradient(109deg,#04BCCB,#088EED)!important;
+ min-height:58px!important;border-radius:18px!important;color:#FFFFFF!important;
+ font-size:17px!important;box-shadow:0 11px 24px #098ECA34!important;
+ position:relative;overflow:hidden}
+.sekka-mobile .rh-button.rh-button--primary:before{
+ content:"";position:absolute;top:-35%;left:-30%;width:25%;height:170%;
+ background:#FFFFFF33;transform:skewX(-23deg);
+ animation:flow-button-glint 6s ease-in-out infinite}
+@keyframes flow-button-glint{0%,64%{left:-45%}89%,100%{left:125%}}
+.sekka-mobile .rh-button__orbit{display:grid;place-items:center;
+ width:34px;height:34px;border-radius:50%;background:#FFFFFF30;
+ box-shadow:0 0 0 4px #FFFFFF14;color:#FFF}
+.sekka-mobile .rh-button--primary svg{color:#FFF!important}
+.sekka-mobile .rh-journey__advanced{display:flex;gap:6px;align-items:center;
+ margin:4px auto 0;background:transparent;border:0;color:#0B83B6;
+ font-size:12px;font-weight:850;padding:7px 10px}
+.sekka-mobile .rh-home__steps{display:flex;align-items:center;justify-content:space-around;
+ gap:6px;padding:5px 9px 15px;color:#4A7187}
+.sekka-mobile .rh-home__steps span{display:flex;align-items:center;gap:5px;
+ white-space:nowrap;font-size:11px;font-weight:850}
+.sekka-mobile .rh-home__steps b{width:24px;height:24px;border-radius:50%;
+ display:grid;place-items:center;font-size:12px;
+ background:#DBF7FC;color:#058AAF}
+.sekka-mobile .rh-home__steps span:last-child b{background:#FFF1B8;color:#966C00}
+.sekka-mobile .rh-home__steps>i{flex:1;height:1px;max-width:29px;
+ background:repeating-linear-gradient(90deg,#A8DDEA 0 4px,transparent 4px 8px)}
+.sekka-mobile .rh-home__actions-title{display:flex;justify-content:space-between;
+ align-items:baseline;margin:9px 3px 10px}
+.sekka-mobile .rh-home__actions-title h2{font-size:19px;font-weight:900}
+.sekka-mobile .rh-home__actions-title span{color:var(--flow-muted);font-size:11px;font-weight:750}
+.sekka-mobile .rh-pickup-actions{display:grid!important;
+ grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);
+ gap:9px!important;margin-bottom:7px}
+.sekka-mobile .rh-pickup-actions__explore,.sekka-mobile .rh-pickup-actions__bookings{
+ min-width:0!important;min-height:110px!important;position:relative;
+ border-radius:23px!important;padding:13px!important;
+ border:1px solid #C5EBF4!important;box-shadow:0 8px 25px #0477B210!important;
+ transition:transform .24s var(--flow-ease),box-shadow .24s ease!important}
+.sekka-mobile .rh-pickup-actions__explore{background:linear-gradient(130deg,#E1FBFF,#C5F4FB)!important}
+.sekka-mobile .rh-pickup-actions__bookings{background:linear-gradient(130deg,#FFF9DD,#FFEAA2)!important}
+.sekka-mobile .rh-pickup-actions__explore:active,
+.sekka-mobile .rh-pickup-actions__bookings:active{transform:translateY(-3px) scale(.98)}
+.sekka-mobile .rh-pickup-actions__copy strong{color:var(--flow-ink)!important}
+.sekka-mobile .rh-pickup-actions__copy small{color:#536F80!important}
+.sekka-mobile .rh-pickup-actions__symbol{color:#048FC0!important;background:#FFFFFFBB!important}
+.sekka-mobile .rh-pickup-actions__ticket{color:#A67400!important;background:#FFFFFFBB!important}
+.sekka-mobile .rh-picker-backdrop{backdrop-filter:blur(7px);
+ animation:flow-overlay-open .25s ease both}
+.sekka-mobile .rh-picker{border:1px solid #CEF0F7;
+ border-radius:32px 32px 0 0!important;box-shadow:0 -14px 40px #065F892D;
+ background:var(--flow-paper)!important;animation:flow-sheet-rise .48s var(--flow-ease) both}
+.sekka-mobile .rh-picker:before{content:"";display:block;height:5px;width:50px;
+ margin:7px auto 14px;border-radius:99px;background:#A4DDEA}
+.sekka-mobile .rh-picker__week button[aria-pressed="true"],
+.sekka-mobile .rh-picker__period button[aria-pressed="true"]{
+ background:var(--flow-sun)!important;border-color:var(--flow-sun)!important;
+ color:var(--flow-ink)!important;transform:scale(1.04)}
+.sekka-mobile .rh-picker__confirm{background:linear-gradient(120deg,#0CC6CE,#078DEA)!important;
+ color:white!important}
+@keyframes flow-overlay-open{from{opacity:0}to{opacity:1}}
+@keyframes flow-sheet-rise{from{transform:translateY(110%);opacity:.5}
+ to{transform:translateY(0);opacity:1}}
+/* Search as a route-builder rather than the old purple boxed form. */
+.sekka-mobile .rs3{
+ --rs-bg:var(--flow-soft)!important;--rs-paper:#FFFFFF!important;
+ --rs-ink:var(--flow-ink)!important;--rs-muted:var(--flow-muted)!important;
+ --rs-line:var(--flow-line)!important;--rs-purple:var(--flow-blue)!important;
+ --rs-coral:var(--flow-aqua)!important;--rs-yellow:var(--flow-sun)!important;
+ max-width:520px!important;padding:0 14px 27px!important;
+ background:var(--flow-soft)!important;color:var(--flow-ink)!important;
+}
+.sekka-mobile .rs3 .rs3__head{
+ position:relative;margin:0 -14px 13px!important;
+ padding:26px 23px 34px!important;
+ border-radius:0 0 33px 33px!important;
+ background:linear-gradient(125deg,#16D8DD,#069BED 67%,#087BEA)!important;
+ color:#FFFFFF!important;overflow:hidden;
+ box-shadow:0 11px 25px #078DE51B;
+}
+.sekka-mobile .rs3__head:after{content:"";display:block;position:absolute;
+ width:300px;height:155px;top:-110px;left:-55px;right:auto;
+ border:24px solid #FFFFFF14;border-radius:50%;transform:rotate(-17deg);
+ pointer-events:none}
+.sekka-mobile .rs3__head-orbit{position:absolute;bottom:-85px;
+ inset-inline-end:-80px;width:230px;height:230px;border:1px solid #FFFFFF44;
+ border-radius:50%;pointer-events:none}
+.sekka-mobile .rs3__head-orbit span{position:absolute;inset:26px;border:1px solid #FFFFFF35;
+ border-radius:50%}
+.sekka-mobile .rs3__head-orbit span:last-child{inset:58px}
+.sekka-mobile .rs3__eyebrow{color:#DFFFFE!important;font-size:11px!important}
+.sekka-mobile .rs3__head h2{color:#FFFFFF!important;
+ font-size:clamp(27px,7.5vw,37px)!important;font-weight:950!important;line-height:1.32!important}
+.sekka-mobile .rs3__head p{color:#FFFFFFE5!important;font-size:12px!important;
+ max-width:310px;line-height:1.8!important}
+.sekka-mobile .rs3__progress,.sekka-mobile .rr3-hero__progress,
+.sekka-mobile .rd3__hero-progress{display:flex;align-items:center;gap:7px;margin:16px 0 0;
+ position:relative;z-index:2}
+.sekka-mobile .rs3__progress span{display:flex;align-items:center;gap:6px;
+ font-size:10px;font-weight:900;color:#E6F9FFAA;white-space:nowrap}
+.sekka-mobile .rs3__progress span b{display:grid;place-items:center;
+ width:25px;height:25px;border:1px solid #FFFFFF66;border-radius:50%;
+ font:900 10px/1 Arial,sans-serif;color:#FFFFFF}
+.sekka-mobile .rs3__progress span.is-current b{background:var(--flow-sun);
+ border-color:var(--flow-sun);color:var(--flow-ink)}
+.sekka-mobile .rs3__progress span.is-current{color:#FFFFFF}
+.sekka-mobile .rs3__progress>i{flex:1;height:2px;min-width:5px;
+ background:repeating-linear-gradient(90deg,#FFFFFF66 0 6px,transparent 6px 11px)}
+.sekka-mobile .rs3__form{margin:-2px 0 0!important;border-radius:26px!important;
+ background:#FFFFFF!important;padding:20px 15px!important;
+ border:1px solid var(--flow-line)!important;box-shadow:var(--flow-shadow)!important;
+ position:relative;z-index:2}
+.sekka-mobile .rs3__number{background:#DFF8FB!important;color:#008FB3!important;
+ width:30px;height:30px;border-radius:10px!important}
+.sekka-mobile .rs3__section-label h3{color:var(--flow-ink)!important;font-size:16px!important}
+.sekka-mobile .rs3__places{gap:0!important}
+.sekka-mobile .rs3__places-rail{position:absolute;top:56px;bottom:56px;
+ inset-inline-start:30px;width:2px;z-index:0;
+ background:repeating-linear-gradient(to bottom,#81D9E8 0 7px,transparent 7px 13px)}
+.sekka-mobile .rs3__places-rail i{position:absolute;width:8px;height:8px;
+ border-radius:50%;top:0;left:-3px;background:var(--flow-sun);
+ animation:flow-place-rail 2.4s linear infinite}
+@keyframes flow-place-rail{to{top:100%}}
+.sekka-mobile .rs3__place{background:#F5FCFF!important;
+ border:1px solid #D9F0F8!important;border-radius:20px!important;
+ min-height:85px!important;transition:border .25s,transform .25s var(--flow-ease)}
+.sekka-mobile .rs3__place:focus-within{border-color:var(--flow-aqua)!important;
+ transform:translateY(-2px);box-shadow:0 10px 18px #05A5CE14}
+.sekka-mobile .rs3__marker{background:var(--flow-aqua)!important;
+ box-shadow:0 0 0 2px var(--flow-aqua)!important;position:relative;z-index:1}
+.sekka-mobile .rs3__marker--end{background:var(--flow-sun)!important;
+ box-shadow:0 0 0 2px var(--flow-sun)!important}
+.sekka-mobile .rs3__place .sekka-place-lookup__label input{
+ color:var(--flow-ink)!important;background:transparent!important}
+.sekka-mobile .rs3__place .sekka-place-lookup__suggestions{
+ background:#FFFFFF!important;color:var(--flow-ink)!important;
+ border-color:var(--flow-line)!important;box-shadow:0 12px 24px #0D789F18!important;
+}
+.sekka-mobile .rs3__swap{background:var(--flow-sun)!important;
+ color:var(--flow-ink)!important;border:3px solid #FFFFFF!important;
+ width:48px!important;height:48px;min-height:48px!important;
+ border-radius:50%!important;margin:-8px 0!important;
+ transition:transform .44s var(--flow-ease)!important;box-shadow:0 8px 13px #E8BF3454!important}
+.sekka-mobile .rs3__swap:active{transform:rotate(180deg) scale(.94)}
+.sekka-mobile .rs3__time,.sekka-mobile .rs3__days-toggle{
+ background:#F8FDFF!important;border:1px solid var(--flow-line)!important;
+ border-radius:17px!important;color:var(--flow-ink)!important}
+.sekka-mobile .rs3__time input{color:var(--flow-ink)!important;
+ border-color:var(--flow-line)!important;background:white!important}
+.sekka-mobile .rs3__return-toggle{background:#DFF8FC!important;color:#0879A4!important;
+ border:1px dashed #74D2E0!important;border-radius:14px!important}
+.sekka-mobile .rs3__days-panel{background:#F5FCFF!important;border-color:var(--flow-line)!important;
+ animation:flow-accordion .35s var(--flow-ease) both;transform-origin:top}
+@keyframes flow-accordion{from{opacity:0;transform:scaleY(.85) translateY(-8px)}
+ to{opacity:1;transform:scaleY(1) translateY(0)}}
+.sekka-mobile .rs3__days button{background:#FFFFFF!important;
+ color:#24556C!important;border-color:#DCEFF7!important}
+.sekka-mobile .rs3__days button[aria-pressed="true"]{background:var(--flow-sun)!important;
+ color:var(--flow-ink)!important;border-color:var(--flow-sun)!important;
+ transform:scale(1.045);box-shadow:0 6px 12px #F2CD5347}
+.sekka-mobile .rs3__optional-map-toggle{color:#0788B7!important}
+.sekka-mobile .rs3__optional-map-actions button{background:#E6F9FC!important;
+ border-color:var(--flow-line)!important;color:#076F9A!important}
+.sekka-mobile .rs3__submit{background:linear-gradient(110deg,#04BFCC,#078DEF)!important;
+ color:#FFFFFF!important;border:0!important;
+ border-radius:19px!important;min-height:60px!important;
+ box-shadow:0 11px 25px #098DD13D!important}
+.sekka-mobile .rs3__submit svg{color:#FFF!important}
+/* Results: price bubble, animated journey rail, route card expands under touch. */
+.sekka-mobile .rr3-hero{
+ margin:0 0 17px!important;padding:28px 22px 20px!important;
+ background:linear-gradient(125deg,#1DD4E4,#088FED)!important;
+ border-radius:0 0 30px 30px!important;color:#FFF!important;
+ box-shadow:0 10px 27px #0285D126!important;overflow:hidden;position:relative}
+.sekka-mobile .rr3-hero:before{content:"";position:absolute;
+ inset-inline-end:-90px;top:-105px;width:250px;height:250px;border-radius:50%;
+ border:23px solid #FFFFFF16;pointer-events:none}
+.sekka-mobile .rr3-hero__heading>span{color:#E3FDFF!important;font-size:11px!important}
+.sekka-mobile .rr3-hero__heading h2{color:#FFFFFF!important;
+ font-size:clamp(26px,7vw,33px)!important;margin:4px 0 13px!important}
+.sekka-mobile .rr3-hero__progress,.sekka-mobile .rd3__hero-progress{margin:2px 0 14px}
+.sekka-mobile .rr3-hero__progress span,.sekka-mobile .rd3__hero-progress span{
+ display:grid;place-items:center;width:29px;height:29px;border-radius:50%;
+ border:1px solid #FFFFFF80;color:#FFFFFFB9;font:800 11px Arial,sans-serif}
+.sekka-mobile .rr3-hero__progress span.is-current,
+.sekka-mobile .rd3__hero-progress span.is-current{background:var(--flow-sun);
+ color:var(--flow-ink);border-color:var(--flow-sun)}
+.sekka-mobile .rr3-hero__progress span.is-done,
+.sekka-mobile .rd3__hero-progress span.is-done{background:#FFFFFF40;color:#FFFFFF}
+.sekka-mobile .rr3-hero__progress i,.sekka-mobile .rd3__hero-progress i{
+ flex:1;min-width:12px;max-width:54px;height:2px;background:#FFFFFF85}
+.sekka-mobile .rr3-hero__route{background:#FFFFFF26!important;border:1px solid #FFFFFF60;
+ backdrop-filter:blur(6px);border-radius:18px!important;position:relative}
+.sekka-mobile .rr3-hero__dot{background:var(--flow-sun)!important;border-color:#FFF!important}
+.sekka-mobile .rr3-hero__dot--end{background:#92F0F3!important}
+.sekka-mobile .rr3-hero__bottom>span{color:#FFFFFF!important}
+.sekka-mobile .rr3-hero__bottom>button{
+ background:#FFFFFF!important;color:#087CA9!important;
+ border-radius:14px!important;font-size:12px!important}
+.sekka-mobile .d-screen-11 .d-live-search{margin:0 13px!important;max-width:none!important}
+.sekka-mobile .d-screen-11 .sekka-live-results-toolbar{
+ padding:2px 1px!important;gap:9px!important}
+.sekka-mobile .d-screen-11 .sekka-live-results-toolbar p{color:var(--flow-ink)!important}
+.sekka-mobile .d-screen-11 .sekka-live-sort{color:#537A91!important}
+.sekka-mobile .d-screen-11 .sekka-live-sort select{
+ background:#FFFFFF!important;border:1px solid var(--flow-line)!important;
+ color:var(--flow-ink)!important}
+.sekka-mobile .d-screen-11 .sekka-live-results-toolbar .d-outline{
+ background:#E3F9FB!important;color:#05799E!important;border-radius:12px!important}
+.sekka-mobile .d-screen-11 .sekka-live-result{
+ margin:13px 0!important;padding:19px 15px 16px!important;
+ border-radius:27px!important;border:1px solid #D6EBF4!important;
+ background:#FFFFFF!important;color:var(--flow-ink)!important;
+ box-shadow:var(--flow-shadow)!important;
+ transition:transform .27s var(--flow-ease),box-shadow .27s ease!important;
+ animation:flow-ticket-in .58s var(--flow-ease) both}
+.sekka-mobile .d-screen-11 .sekka-live-result:nth-of-type(2){animation-delay:.06s}
+.sekka-mobile .d-screen-11 .sekka-live-result:nth-of-type(3){animation-delay:.12s}
+@keyframes flow-ticket-in{from{opacity:0;transform:translateY(24px) scale(.965)}
+ to{opacity:1;transform:translateY(0) scale(1)}}
+.sekka-mobile .d-screen-11 .sekka-live-result:active{
+ transform:translateY(-3px)!important;box-shadow:0 17px 35px #0B75982E!important}
+.sekka-mobile .d-screen-11 .sekka-live-result:before{
+ background:linear-gradient(180deg,#15D0D9,#0A8FEB)!important;
+ inset-inline-start:0!important;top:30px!important;bottom:30px!important;
+ border-radius:10px!important;width:5px!important}
+.sekka-mobile .d-screen-11 .sekka-live-result-head h2{color:var(--flow-ink)!important}
+.sekka-mobile .d-screen-11 .sekka-live-meta{color:var(--flow-muted)!important}
+.sekka-mobile .d-screen-11 .sekka-live-price{
+ background:linear-gradient(125deg,#FFF5C5,#FFE99E)!important;
+ border-radius:19px!important;border:1px solid #FFE293;
+ align-items:center!important;padding:10px!important;
+ color:var(--flow-ink)!important}
+.sekka-mobile .d-screen-11 .sekka-live-price strong{color:#16506F!important;font-size:18px!important}
+.sekka-mobile .d-screen-11 .sekka-live-price span{color:#5E6770!important}
+.sekka-mobile .d-screen-11 .sekka-live-stops{
+ background:#E9F9FD!important;border-radius:18px!important;
+ border:1px solid #DCF2F8!important;position:relative}
+.sekka-mobile .d-screen-11 .sekka-live-stops li{
+ color:var(--flow-ink)!important;border-color:#CBE9F4!important}
+.sekka-mobile .d-screen-11 .sekka-live-stops li:before{
+ background:var(--flow-aqua)!important;box-shadow:0 0 0 2px var(--flow-aqua)!important}
+.sekka-mobile .d-screen-11 .sekka-live-stops li+li:before{
+ background:var(--flow-sun)!important;box-shadow:0 0 0 2px var(--flow-sun)!important}
+.sekka-mobile .d-screen-11 .sekka-live-stops li>strong{color:var(--flow-ink)!important}
+.sekka-mobile .d-screen-11 .sekka-live-stops li>span,
+.sekka-mobile .d-screen-11 .sekka-live-stops li>small{color:#537990!important}
+.sekka-mobile .d-screen-11 .sekka-live-result-facts{color:#4F758E!important}
+.sekka-mobile .d-screen-11 .sekka-live-result .d-offer-select{
+ background:linear-gradient(112deg,#0AC5CD,#078FF0)!important;
+ border-radius:17px!important;min-height:55px!important;
+ display:flex!important;align-items:center!important;gap:10px!important;
+ box-shadow:0 9px 18px #048CB430!important}
+.sekka-mobile .d-screen-11 .sekka-live-result .d-offer-select span{
+ display:grid;place-items:center;height:28px;width:28px;border-radius:50%;
+ background:#FFFFFF2A;font-size:20px}
+.sekka-mobile .d-screen-11 .sekka-rider-recommended{
+ background:var(--flow-sun)!important;color:var(--flow-ink)!important}
+.sekka-mobile .d-screen-11 .sekka-no-match{
+ border-radius:26px!important;background:#FFF!important;
+ border:1px solid var(--flow-line)!important;color:var(--flow-ink)!important;
+ box-shadow:var(--flow-shadow)!important;
+ padding:26px 18px!important;margin:17px 0!important}
+.sekka-mobile .d-screen-11 .sekka-no-match:before{
+ content:"⌁";display:grid;place-items:center;width:66px;height:66px;
+ border-radius:23px;margin:0 auto 12px;background:#D9F9FD;
+ color:#078FBB;font-size:47px}
+.sekka-mobile .d-screen-11 .sekka-no-match>p:first-child{text-align:center;color:var(--flow-ink)!important}
+.sekka-mobile .sekka-request-yellow-cta,
+.sekka-mobile .sekka-no-match-action .sekka-request-yellow-cta{
+ min-height:52px!important;min-width:185px!important;border-radius:17px!important;
+ background:var(--flow-sun)!important;color:var(--flow-ink)!important;
+ box-shadow:0 10px 22px #FFCC2845!important}
+.sekka-mobile .sekka-no-match-action .sekka-request-summary{background:#F3FCFF!important;
+ border-radius:19px!important;color:var(--flow-ink)!important}
+.sekka-mobile .sekka-weekdays-disclaimer{background:#FFF5D2!important;
+ color:#5E522E!important;border-radius:15px!important}
+/* Details become a boarding-pass ticket with a prominent action. */
+.sekka-mobile .rd3{
+ background:var(--flow-soft)!important;color:var(--flow-ink)!important;
+ max-width:520px!important;padding:0 14px 30px!important}
+.sekka-mobile .rd3__hero{
+ margin:0 -14px 17px!important;padding:28px 24px 26px!important;
+ border-radius:0 0 34px 34px!important;
+ background:linear-gradient(120deg,#16CFDD,#078FEA)!important;
+ color:#FFFFFF!important;position:relative;overflow:hidden}
+.sekka-mobile .rd3__hero:after{content:"";position:absolute;right:-35px;bottom:-95px;
+ width:200px;height:200px;border:18px solid #FFFFFF16;border-radius:50%;pointer-events:none}
+.sekka-mobile .rd3__hero :is(h2,p){color:#FFFFFF!important}
+.sekka-mobile .rd3__step{color:#E6FFFF!important}
+.sekka-mobile .rd3__hero h2{font-size:clamp(27px,7vw,34px)!important}
+.sekka-mobile .rd3__route{position:relative;border-radius:29px!important;
+ background:#FFFFFF!important;color:var(--flow-ink)!important;
+ border:1px solid var(--flow-line)!important;box-shadow:var(--flow-shadow)!important;
+ overflow:hidden;min-height:148px!important;gap:17px!important}
+.sekka-mobile .rd3__ticket-cut{position:absolute;width:27px;height:27px;top:50%;
+ border-radius:50%;background:var(--flow-soft);
+ box-shadow:inset 0 0 0 1px var(--flow-line);z-index:1;pointer-events:none}
+.sekka-mobile .rd3__ticket-cut--first{inset-inline-start:-15px}
+.sekka-mobile .rd3__ticket-cut--second{inset-inline-end:-15px}
+.sekka-mobile .rd3__route-line span{background:var(--flow-aqua)!important;
+ box-shadow:0 0 0 3px #D8F9FC!important}
+.sekka-mobile .rd3__route-line span:last-child{background:var(--flow-sun)!important;
+ box-shadow:0 0 0 3px #FFF2BD!important}
+.sekka-mobile .rd3__route-line i{border-color:#92D9E9!important;
+ animation:flow-route-dots 2.3s linear infinite}
+@keyframes flow-route-dots{50%{opacity:.35}}
+.sekka-mobile .rd3__route-stops strong{color:var(--flow-ink)!important}
+.sekka-mobile .rd3__route-stops small{color:var(--flow-muted)!important}
+.sekka-mobile .rd3__facts>div{background:#FFFFFF!important;
+ border:1px solid var(--flow-line)!important;border-radius:20px!important;
+ box-shadow:0 5px 16px #0B7CAB0C}
+.sekka-mobile .rd3__facts span{color:var(--flow-muted)!important}
+.sekka-mobile .rd3__facts strong{color:var(--flow-ink)!important}
+.sekka-mobile .rd3__stops{background:#FFFFFF!important;
+ border:1px solid var(--flow-line)!important;border-radius:25px!important}
+.sekka-mobile .rd3__section-icon{background:#E2F9FD!important;color:#0796BB!important}
+.sekka-mobile .rd3__section-title p{color:var(--flow-muted)!important}
+.sekka-mobile .rd3__stops select{color:var(--flow-ink)!important;background:#F5FCFF!important;
+ border:1px solid #CBE7F1!important;border-radius:14px!important}
+.sekka-mobile .rd3__stops select:focus{box-shadow:0 0 0 3px #75DBF532}
+.sekka-mobile .rd3__all-stops summary{color:#067EB2!important}
+.sekka-mobile .rd3__all-stops li>span:first-child{background:#DDF9FC!important;color:#087FAB!important}
+.sekka-mobile .rd3__return-stops{background:#E5F9FC!important;color:var(--flow-ink)!important}
+.sekka-mobile .rd3__price{background:linear-gradient(110deg,#FFF6D6,#FFEFA5)!important;
+ border:1px solid #FFE9A0;border-radius:24px!important;
+ padding:18px!important;position:relative;overflow:hidden}
+.sekka-mobile .rd3__price strong{color:#17506F!important;font-size:26px!important}
+.sekka-mobile .rd3__price small,.sekka-mobile .rd3__price>span{color:#68717B!important}
+.sekka-mobile .rd3__price:after{content:"✦";position:absolute;
+ inset-inline-end:10px;top:-9px;color:#F3BB1B88;font-size:74px;line-height:1}
+.sekka-mobile .rd3__notice{background:#FFFFFF!important;color:#56778B!important;
+ border:1px solid var(--flow-line)!important}
+.sekka-mobile .rd3__primary{display:flex;gap:10px;align-items:center;justify-content:center;
+ background:linear-gradient(110deg,#08C5D0,#078EEA)!important;
+ color:#FFFFFF!important;border-radius:19px!important;
+ min-height:62px!important;box-shadow:0 12px 23px #068FB339!important}
+.sekka-mobile .rd3__primary span{background:#FFFFFF30;padding:3px 11px;
+ border-radius:50%;font-size:20px}
+.sekka-mobile .rd3__primary:disabled{box-shadow:none!important}
+.sekka-mobile .rd3__back{color:#078AB9!important}
+/* Actual bookings are animated stubs/tickets, never preview data. */
+.sekka-mobile .rb3{background:var(--flow-soft)!important;color:var(--flow-ink)!important}
+.sekka-mobile .rb3__hero{background:linear-gradient(130deg,#20D4DF,#078EEE)!important;
+ color:#FFFFFF!important;border-radius:0 0 34px 34px!important;
+ position:relative;overflow:hidden}
+.sekka-mobile .rb3__hero :is(h1,p,span){color:#FFFFFF!important}
+.sekka-mobile .rb3__hero-route{display:flex;align-items:center;gap:8px;
+ position:absolute;inset-inline-end:-11px;bottom:-11px;opacity:.44;
+ transform:rotate(-14deg)}
+.sekka-mobile .rb3__hero-route i{width:50px;height:9px;background:#FFFFFF;
+ border-radius:4px}
+.sekka-mobile .rb3__filters button[aria-pressed="true"]{
+ background:var(--flow-sun)!important;color:var(--flow-ink)!important;
+ border-color:var(--flow-sun)!important;box-shadow:0 6px 13px #FFCC2838!important}
+.sekka-mobile .rb3__card{background:#FFFFFF!important;color:var(--flow-ink)!important;
+ border:1px solid var(--flow-line)!important;border-radius:25px!important;
+ box-shadow:var(--flow-shadow)!important;overflow:hidden;position:relative;
+ animation:flow-ticket-in .48s var(--flow-ease) both}
+.sekka-mobile .rb3__card:before{content:"";position:absolute;
+ inset-inline-start:0;top:34px;bottom:34px;width:5px;
+ border-radius:7px;background:linear-gradient(#0ED0D5,#078BE9)}
+.sekka-mobile .rb3__ticket-route{display:flex;align-items:center;gap:11px}
+.sekka-mobile .rb3__ticket-route>span{display:grid;place-items:center;
+ background:#DBF7FC;color:#059BC2;width:33px;height:33px;border-radius:13px}
+.sekka-mobile .rb3__ticket-route h2{color:var(--flow-ink)!important}
+.sekka-mobile .rb3__empty{background:#FFFFFF!important;color:var(--flow-ink)!important;
+ border:1px solid var(--flow-line)!important;border-radius:26px!important;
+ box-shadow:var(--flow-shadow)!important}
+.sekka-mobile .rb3__empty-icon{background:#DDF9FC!important;color:#0794B8!important;
+ animation:flow-orbit 4s ease-in-out infinite alternate}
+.sekka-mobile .rb3__details{background:linear-gradient(100deg,#08C6D1,#078BEB)!important;
+ color:white!important;border-radius:15px!important}
+.sekka-mobile .rb3__empty button{background:var(--flow-sun)!important;color:var(--flow-ink)!important}
+/* No second purple logo after the approved launch. */
+.sekka-mobile .phase-one-stage.sekka-entry-stage,
+.sekka-mobile .phase-one-stage.sekka-entry-stage>.sekka-entry,
+.sekka-mobile .phase-one-stage.sekka-entry-stage>.sekka-entry-login{
+ --se-bg:var(--flow-soft)!important;--se-card:#FFFFFF!important;
+ --se-ink:var(--flow-ink)!important;--se-muted:var(--flow-muted)!important;
+ --se-line:var(--flow-line)!important;--se-primary:var(--flow-blue)!important;
+ --se-yellow:var(--flow-sun)!important;
+ background:var(--flow-soft)!important;color:var(--flow-ink)!important;
+}
+.sekka-mobile .sekka-entry__header{
+ background:linear-gradient(115deg,#1CD6DC,#078BEA)!important;
+ border-radius:0 0 34px 34px!important;min-height:111px!important;
+}
+.sekka-mobile .sekka-entry__brand--text,
+.sekka-mobile .sekka-entry-login__wordmark{
+ background:transparent!important;color:#FFFFFF!important;
+ font:900 clamp(35px,12vw,60px)/1.55 Tajawal,'Noto Sans Arabic',Tahoma,sans-serif!important;
+ width:auto!important;height:auto!important;aspect-ratio:auto!important;
+ display:inline-flex;align-items:center;justify-content:center;
+ border:0!important;box-shadow:none!important;overflow:visible;
+ white-space:nowrap;letter-spacing:-2px}
+.sekka-mobile .sekka-entry__content{background:transparent!important;
+ animation:flow-onboard-sheet .55s var(--flow-ease) both}
+@keyframes flow-onboard-sheet{from{opacity:0;transform:translate3d(0,32px,0) scale(.98)}
+ to{opacity:1;transform:translate3d(0,0,0) scale(1)}}
+.sekka-mobile .sekka-entry__progress span{background:#C7E8F5!important}
+.sekka-mobile .sekka-entry__progress span.is-active{background:var(--flow-sun)!important}
+.sekka-mobile .sekka-entry h1{color:var(--flow-ink)!important}
+.sekka-mobile .sekka-entry__eyebrow{color:#087FB0!important}
+.sekka-mobile .sekka-entry__description{color:var(--flow-muted)!important}
+.sekka-mobile .sekka-entry__details li,.sekka-mobile .sekka-entry button.sekka-entry__role{
+ background:#FFFFFF!important;border-color:var(--flow-line)!important;
+ border-radius:23px!important;box-shadow:0 5px 18px #0B74B10B!important;
+ color:var(--flow-ink)!important}
+.sekka-mobile .sekka-entry__details li>span{background:var(--flow-sun)!important;color:var(--flow-ink)!important}
+.sekka-mobile .sekka-entry__role.is-selected{
+ background:#E4F9FE!important;border-color:#16BFDB!important;
+ box-shadow:0 9px 22px #10AAC125!important}
+.sekka-mobile .sekka-entry__role-text strong{color:var(--flow-ink)!important}
+.sekka-mobile .sekka-entry__role-icon{background:#E5F9FD!important}
+.sekka-mobile .sekka-entry__check{background:var(--flow-sun)!important;color:var(--flow-ink)!important}
+.sekka-mobile .sekka-entry button.sekka-entry__primary{
+ background:linear-gradient(108deg,#06BFCE,#078DEB)!important;
+ border:0!important;border-radius:20px!important;box-shadow:0 10px 20px #078DE633!important}
+.sekka-mobile .sekka-entry__footer{background:var(--flow-soft)!important;border-color:var(--flow-line)!important}
+.sekka-mobile .sekka-entry__approved-scene{border-radius:29px!important;
+ border:4px solid #FFFFFF!important;box-shadow:var(--flow-shadow)!important;
+ animation:flow-onboard-sheet .65s var(--flow-ease) both}
+.sekka-mobile .sekka-entry-login{padding-top:0!important}
+.sekka-mobile .sekka-entry-login:before{
+ background:linear-gradient(124deg,#1CD6DF,#068DEB)!important;
+ border-radius:0 0 49% 27%!important;min-height:176px!important}
+.sekka-mobile .sekka-entry-login__brand{
+ margin:10px auto 23px!important;position:relative!important;z-index:2;
+ color:var(--flow-ink)!important;white-space:nowrap}
+.sekka-mobile .sekka-entry-login__wordmark{
+ background:#DFF9FC!important;color:#078BBE!important;border-radius:23px!important;
+ padding:7px 22px!important;text-shadow:none!important;
+ box-shadow:0 8px 22px #078CE522!important}
+.sekka-mobile .sekka-entry-login .phase-google-auth button.phase-primary{
+ background:linear-gradient(105deg,#0CC6CF,#068EED)!important;color:#FFFFFF!important}
+.sekka-mobile .sekka-entry-login__secure>span{background:#DEFAFC!important;color:#078DB8!important}
+/* Never allow previous purple/dark surfaces to leak through theme preference.
+   Dark mode retains its own NAVY surface palette while preserving cyan brand. */
+html[data-theme="dark"] .sekka-mobile{
+ --flow-soft:#0D2334;--flow-paper:#143247;
+ --flow-ink:#F0FBFF;--flow-muted:#B1D5E3;--flow-line:#34596C;
+ --flow-shadow:0 13px 30px #03172458;
+ background:var(--flow-soft)!important;color:var(--flow-ink)!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-mobile-content,
+html[data-theme="dark"] .sekka-mobile .rs3,
+html[data-theme="dark"] .sekka-mobile .rh-home,
+html[data-theme="dark"] .sekka-mobile .rd3,
+html[data-theme="dark"] .sekka-mobile .rb3{background:var(--flow-soft)!important;
+ color:var(--flow-ink)!important}
+html[data-theme="dark"] .sekka-mobile :is(.rh-journey,.rs3__form,.rd3__route,.rd3__stops,
+ .rd3__facts>div,.sekka-mobile-card,.sekka-live-result,.rb3__card,.rb3__empty){
+ background:var(--flow-paper)!important;color:var(--flow-ink)!important;
+ border-color:var(--flow-line)!important}
+html[data-theme="dark"] .sekka-mobile :is(.rh-journey__field-copy>strong,
+ .rh-journey__heading>strong,.rd3__facts strong,.rd3__route-stops strong,
+ .sekka-live-result-head h2,.rb3__card h2){color:var(--flow-ink)!important}
+html[data-theme="dark"] .sekka-mobile .rh-tabs__inner{background:#15364C;
+ border-color:var(--flow-line)}
+html[data-theme="dark"] .sekka-mobile .rh-tabs button{color:#AACED9!important}
+html[data-theme="dark"] .sekka-mobile .rs3__place,
+html[data-theme="dark"] .sekka-mobile .rs3__time,
+html[data-theme="dark"] .sekka-mobile .rs3__days-toggle,
+html[data-theme="dark"] .sekka-mobile .rd3__stops select,
+html[data-theme="dark"] .sekka-mobile .rs3__days-panel,
+html[data-theme="dark"] .sekka-mobile .d-screen-11 .sekka-live-stops{
+ background:#204257!important;color:#F0FBFF!important;border-color:var(--flow-line)!important}
+html[data-theme="dark"] .sekka-mobile .d-screen-11 .sekka-live-stops li>strong,
+html[data-theme="dark"] .sekka-mobile .rs3__place .sekka-place-lookup__label input{
+ color:#F0FBFF!important}
+html[data-theme="dark"] .sekka-mobile .rh-hero__wave path:last-child{fill:#0D2334}
+html[data-theme="dark"] .sekka-mobile .rh-pickup-actions__copy strong{color:#173A53!important}
+/* Safe areas, small-screen geometry, motion sensitivity. */
+@media(max-width:360px){
+ .sekka-mobile .rh-hero{min-height:301px!important}
+ .sekka-mobile .rh-hero__copy{padding-inline:16px!important}
+ .sekka-mobile .rh-hero__route{margin-inline:16px}
+ .sekka-mobile .rh-journey__heading{flex-direction:column}
+ .sekka-mobile .rs3__progress{gap:3px}
+ .sekka-mobile .rs3__progress span{font-size:9px}
+ .sekka-mobile .rs3__form{padding:18px 11px!important}
+ .sekka-mobile .rd3__hero{padding:20px 17px!important}
+ .sekka-mobile .d-screen-11 .sekka-live-result-head{gap:6px}
+}
+@media(prefers-reduced-motion:reduce){
+ .sekka-mobile.sk-motion-odd>.sekka-mobile-content,
+ .sekka-mobile.sk-motion-even>.sekka-mobile-content,
+ .sekka-mobile .sk-route-swoosh,.sekka-mobile .sk-route-swoosh *,
+ .sekka-mobile .rh-hero__map-lines,.sekka-mobile .rh-hero__orb,
+ .sekka-mobile .rh-hero__route-track i,.sekka-mobile .rh-button--primary:before,
+ .sekka-mobile .rs3__places-rail i,.sekka-mobile .rh-picker,
+ .sekka-mobile .sekka-live-result,.sekka-mobile .rb3__card{
+ animation:none!important;transition:none!important}
+ .sekka-mobile .sk-route-swoosh{display:none!important}
+}
+
+
+/* FLOW 2.1 — complete the remaining real journeys with the same language. */
+/* Booking: live confirmed data, cyan header, tappable seat stepper, ticket price. */
+.sekka-mobile .sekka-rider-booking-v3{
+ --bk-ink:var(--flow-ink)!important;--bk-purple:var(--flow-blue)!important;
+ --bk-muted:var(--flow-muted)!important;--bk-line:var(--flow-line)!important;
+ --bk-surface:var(--flow-paper)!important;
+ background:var(--flow-soft)!important;
+}
+.sekka-mobile .sekka-rider-booking-v3>.b-canvas{
+ background:var(--flow-soft)!important;color:var(--flow-ink)!important;
+ padding-top:5px!important}
+.sekka-mobile .sekka-rider-booking-v3 .rbk3-hero{
+ background:linear-gradient(118deg,#17D5DD,#078CEB)!important;
+ color:#FFFFFF!important;border-radius:0 0 30px 30px!important;
+ padding:29px 21px!important;margin:-5px -15px 3px!important;
+ overflow:hidden;position:relative;box-shadow:0 11px 25px #0B8CD72D!important;
+}
+.sekka-mobile .sekka-rider-booking-v3 .rbk3-hero:after{
+ content:"";position:absolute;inset-inline-end:-72px;top:-94px;
+ width:210px;height:210px;border:20px solid #FFFFFF19;border-radius:50%}
+.sekka-mobile .sekka-rider-booking-v3 .rbk3-step{color:#E8FCFF!important}
+.sekka-mobile .sekka-rider-booking-v3 .rbk3-hero p{color:#FFFFFFE9!important}
+.sekka-mobile .sekka-rider-booking-v3 .b-box{
+ background:var(--flow-paper)!important;color:var(--flow-ink)!important;
+ border-color:var(--flow-line)!important;border-radius:25px!important;
+ box-shadow:var(--flow-shadow)!important;
+}
+.sekka-mobile .sekka-rider-booking-v3 .b-box :is(h2,strong){color:var(--flow-ink)!important}
+.sekka-mobile .sekka-rider-booking-v3 .b-offer .b-route{color:var(--flow-ink)!important}
+.sekka-mobile .sekka-rider-booking-v3 .b-stops{
+ background:#E5F9FD!important;color:#164360!important;border:1px solid #CCEDF6;
+ border-radius:17px!important}
+.sekka-mobile .sekka-rider-booking-v3 .b-row{border-color:#DDEEF6!important}
+.sekka-mobile .sekka-rider-booking-v3 .b-seat-chooser{
+ border-radius:19px!important;background:#FFF4C9!important;color:#1B3E54!important}
+.sekka-mobile .sekka-rider-booking-v3 .b-seat-controls>button{
+ background:var(--flow-sky)!important;color:white!important;border-radius:14px!important;
+ transition:transform .23s var(--flow-ease),box-shadow .23s ease}
+.sekka-mobile .sekka-rider-booking-v3 .b-seat-controls>button:active{
+ transform:scale(.84);box-shadow:0 0 0 7px #078EEB2B}
+.sekka-mobile .sekka-rider-booking-v3 .b-payment-explainer{
+ background:#EAF9FD!important;border-color:#D2EFF6!important;
+ border-radius:19px!important}
+.sekka-mobile .sekka-rider-booking-v3 .b-payment-explainer :is(h2,p){
+ color:#32556B!important}
+.sekka-mobile .sekka-rider-booking-v3 .b-primary{
+ background:linear-gradient(110deg,#0BC6D5,#078DEB)!important;
+ color:#FFFFFF!important;border:0!important;border-radius:19px!important;
+ min-height:61px!important;box-shadow:0 11px 24px #0699C13A!important;
+ transition:transform .25s var(--flow-ease)}
+.sekka-mobile .sekka-rider-booking-v3 .b-primary:not(:disabled):active{transform:scale(.96)}
+.sekka-mobile .sekka-rider-booking-v3 .d-outline{
+ background:#E5F9FC!important;color:#077CA9!important;
+ border-color:#BCE5F0!important;border-radius:16px!important}
+.sekka-mobile .sekka-rider-booking-v3 .d-header .phase-back{
+ color:#078EBA!important;border-color:var(--flow-line)!important;
+ background:#FFF!important;border-radius:15px!important}
+.sekka-mobile .sekka-rider-booking-v3 .b-hint{color:var(--flow-muted)!important}
+/* Filters become a stacked filter-sheet with elastic selected chips. */
+.sekka-mobile .rf3{background:var(--flow-soft)!important;color:var(--flow-ink)!important;
+ max-width:520px!important;padding:0 14px 28px!important}
+.sekka-mobile .rf3 .rf3__hero{
+ margin:0 -14px 16px!important;border-radius:0 0 32px 32px!important;
+ background:linear-gradient(125deg,#19D7E0,#078CEB)!important;
+ color:#FFFFFF!important;padding:28px 22px 32px!important}
+.sekka-mobile .rf3__hero :is(h2,p){color:#FFFFFF!important}
+.sekka-mobile .rf3__hero h2{font-size:29px!important}
+.sekka-mobile .rf3__panel{background:var(--flow-paper)!important;
+ border:1px solid var(--flow-line)!important;border-radius:23px!important;
+ padding:18px 15px!important;box-shadow:0 8px 21px #048BC412!important;
+ animation:flow-ticket-in .48s var(--flow-ease) both}
+.sekka-mobile .rf3__panel:nth-of-type(2){animation-delay:.07s}
+.sekka-mobile .rf3__panel:nth-of-type(3){animation-delay:.12s}
+.sekka-mobile .rf3__panel h3{color:var(--flow-ink)!important}
+.sekka-mobile .rf3__categories button{
+ background:#E9F9FD!important;border-color:#CDEAF6!important;
+ color:#1D617D!important;border-radius:17px!important;
+ transition:transform .27s var(--flow-ease),background .27s ease}
+.sekka-mobile .rf3__categories button[aria-pressed="true"]{
+ background:#FFF1B4!important;color:#164359!important;
+ border:2px solid var(--flow-sun)!important;transform:translateY(-3px)!important;
+ box-shadow:0 7px 17px #FFCC2837!important}
+.sekka-mobile .rf3__choices button{
+ background:#E9F9FD!important;border-color:#D0EAF4!important;
+ color:#1B667E!important;border-radius:15px!important;
+ transition:transform .25s var(--flow-ease)}
+.sekka-mobile .rf3__choices button[aria-pressed="true"]{
+ background:var(--flow-sun)!important;border-color:var(--flow-sun)!important;
+ color:var(--flow-ink)!important;transform:scale(1.035)}
+.sekka-mobile .rf3__price input{
+ background:#F5FCFF!important;border-color:var(--flow-line)!important;
+ color:var(--flow-ink)!important;border-radius:15px!important}
+.sekka-mobile .rf3__availability{border-color:var(--flow-line)!important}
+.sekka-mobile .rf3__availability input{accent-color:var(--flow-sky)!important}
+.sekka-mobile .rf3__availability small{color:var(--flow-muted)!important}
+.sekka-mobile .rf3__apply{
+ background:linear-gradient(108deg,#0CC6D5,#078DEB)!important;
+ color:#FFF!important;border-radius:19px!important;min-height:60px!important;
+ box-shadow:0 10px 24px #0B8EB338!important}
+.sekka-mobile .rf3__reset{color:#0582AE!important}
+/* Requests: status timeline, editable real rows, and clear action affordances. */
+.sekka-mobile .live-trip-requests{
+ background:var(--flow-paper)!important;border:1px solid var(--flow-line)!important;
+ border-radius:26px!important;box-shadow:var(--flow-shadow)!important;
+ color:var(--flow-ink)!important;max-width:520px;margin:8px auto!important;
+ padding:18px!important}
+.sekka-mobile .live-trip-requests>h2{
+ color:var(--flow-ink)!important;font-size:22px!important;line-height:1.3;
+ padding-bottom:13px;border-bottom:3px solid #D5F4FA}
+.sekka-mobile .live-trip-requests .sekka-request-list{
+ list-style:none!important;padding:0!important;margin:14px 0!important;
+ display:grid;gap:12px}
+.sekka-mobile .live-trip-requests .sekka-request-card{
+ position:relative;background:#F8FDFF!important;
+ border:1px solid var(--flow-line)!important;border-radius:22px!important;
+ padding:19px 15px!important;box-shadow:0 7px 15px #097AB50D!important;
+ animation:flow-ticket-in .46s var(--flow-ease) both}
+.sekka-mobile .sekka-request-card:before{content:"";position:absolute;
+ inset-inline-start:0;top:18px;bottom:18px;width:4px;background:var(--flow-aqua);
+ border-radius:6px}
+.sekka-mobile .sekka-request-card__route{color:var(--flow-ink)!important;
+ display:block;font-size:17px;margin-bottom:8px}
+.sekka-mobile .sekka-request-card__actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
+.sekka-mobile .sekka-request-card__actions button{
+ min-height:45px;border:1px solid var(--flow-line);padding:9px 14px;
+ border-radius:15px;background:#E5F9FD;color:#067FA6;font-weight:900}
+.sekka-mobile .sekka-request-card__actions .sekka-request-cancel{
+ background:#FFF2F1;color:#AE3850;border-color:#F1CDD3}
+.sekka-mobile .live-trip-requests .d-request-history summary{font-weight:900;
+ color:#097EAB!important;cursor:pointer;min-height:44px;padding:12px 0}
+.sekka-mobile .live-trip-requests>button,
+.sekka-mobile .live-trip-requests button:not(.sekka-request-cancel,.sekka-request-edit){
+ border-radius:14px;transition:transform .22s var(--flow-ease)}
+.sekka-mobile .live-trip-requests button:active{transform:scale(.97)}
+/* Profile and notifications get their own editable "passport" surfaces. */
+.sekka-mobile .live-profile{
+ background:var(--flow-paper)!important;color:var(--flow-ink)!important;
+ border:1px solid var(--flow-line)!important;border-radius:25px!important;
+ padding:19px!important;box-shadow:var(--flow-shadow)!important}
+.sekka-mobile .live-profile h2{color:var(--flow-ink)!important;
+ font-size:23px!important;margin-bottom:17px!important}
+.sekka-mobile .live-profile label{display:grid;gap:8px;margin:10px 0 14px;
+ font-size:13px;font-weight:900;color:var(--flow-ink)!important}
+.sekka-mobile .live-profile input{
+ min-height:54px;padding:11px 14px;border-radius:15px!important;
+ background:#F5FCFF!important;border:1px solid var(--flow-line)!important;
+ color:var(--flow-ink)!important;font:800 15px Tajawal,Tahoma,sans-serif!important}
+.sekka-mobile .live-profile .d-primary{min-height:54px;border:0!important;
+ border-radius:17px!important;background:linear-gradient(105deg,#04BDD0,#078CEB)!important;
+ color:white!important;font-size:16px;font-weight:900;box-shadow:0 8px 17px #078EEA30}
+.sekka-mobile .live-notifications .d-outline{background:#DDF8FC!important;
+ border-color:var(--flow-line)!important;color:#057FA6!important;border-radius:16px!important}
+/* Captain pages also use the same blue journey identity. No data changes. */
+.sekka-mobile .captain-routes-canvas{
+ --cj-accent:var(--flow-aqua)!important;--cj-accent-strong:var(--flow-ink)!important;
+ --cj-border:var(--flow-line)!important;--cj-surface:var(--flow-paper)!important;
+ --cj-muted:var(--flow-muted)!important;color:var(--flow-ink)!important}
+.sekka-mobile .captain-routes-canvas .cj-hero{
+ background:linear-gradient(119deg,#16CADB,#078DE9)!important;
+ color:#FFFFFF!important;border-color:transparent!important;
+ border-radius:28px!important;box-shadow:var(--flow-shadow)!important}
+.sekka-mobile .captain-routes-canvas .cj-hero :is(h2,p,small){
+ color:#FFFFFF!important}
+.sekka-mobile .captain-routes-canvas .cj-hero button{
+ background:var(--flow-sun)!important;color:#204559!important;
+ border-radius:17px!important;box-shadow:0 8px 18px #FFCC2836!important}
+.sekka-mobile .captain-routes-canvas .cj-home-welcome{
+ background:linear-gradient(118deg,#1AD5E3,#068CEA)!important;
+ border-radius:0 0 31px 31px!important;color:#FFFFFF!important;
+ box-shadow:0 12px 27px #078ECB24!important}
+.sekka-mobile .captain-routes-canvas .cj-home-welcome :is(h1,p,small,span,strong){
+ color:#FFFFFF!important}
+.sekka-mobile .captain-routes-canvas .cj-home-welcome::before{
+ background:#81F0EF!important;opacity:.6}
+.sekka-mobile .captain-routes-canvas .cj-home-welcome::after{
+ border-color:var(--flow-sun)!important}
+.sekka-mobile .captain-routes-canvas .cj-home{
+ --cj-home-yellow:var(--flow-sun)!important;
+ --cj-home-ink:var(--flow-ink)!important;--cj-home-card:var(--flow-paper)!important;
+ --cj-home-line:var(--flow-line)!important;--cj-home-muted:var(--flow-muted)!important}
+.sekka-mobile .captain-routes-canvas .cj-home-main-action{
+ background:linear-gradient(109deg,#10C7D6,#078EEB)!important;
+ color:#FFFFFF!important;border-color:transparent!important}
+.sekka-mobile .captain-routes-canvas :is(.cj-card,.cj-route-card,.cj-surface){
+ background:var(--flow-paper)!important;border-color:var(--flow-line)!important}
+html[data-theme="dark"] .sekka-mobile .sekka-rider-booking-v3,
+html[data-theme="dark"] .sekka-mobile .sekka-rider-booking-v3>.b-canvas,
+html[data-theme="dark"] .sekka-mobile .rf3{
+ background:var(--flow-soft)!important;color:var(--flow-ink)!important}
+html[data-theme="dark"] .sekka-mobile :is(.rf3__panel,.live-profile,.live-trip-requests,
+ .sekka-rider-booking-v3 .b-box){background:var(--flow-paper)!important;color:var(--flow-ink)!important;
+ border-color:var(--flow-line)!important}
+html[data-theme="dark"] .sekka-mobile :is(.rf3__panel h3,.rf3__categories strong,.live-profile h2,
+ .live-trip-requests>h2){color:var(--flow-ink)!important}
+html[data-theme="dark"] .sekka-mobile .rf3__categories button,
+html[data-theme="dark"] .sekka-mobile .rf3__choices button{
+ background:#21445A!important;color:#C9F1FA!important;border-color:#3B6677!important}
+html[data-theme="dark"] .sekka-mobile .rf3__choices button[aria-pressed="true"],
+html[data-theme="dark"] .sekka-mobile .rf3__categories button[aria-pressed="true"]{
+ background:var(--flow-sun)!important;color:#193853!important}
+html[data-theme="dark"] .sekka-mobile .sekka-rider-booking-v3 .b-payment-explainer{
+ background:#20485C!important;border-color:#3B6376!important}
+html[data-theme="dark"] .sekka-mobile .sekka-rider-booking-v3 .b-payment-explainer :is(h2,p){
+ color:#ECFAFF!important}
+html[data-theme="dark"] .sekka-mobile .sekka-rider-booking-v3 .b-primary{
+ background:linear-gradient(110deg,#0BC7D3,#078FEB)!important;color:#FFFFFF!important}
+@media(prefers-reduced-motion:reduce){
+ .sekka-mobile .rf3__panel,.sekka-mobile .live-trip-requests .sekka-request-card,
+ .sekka-mobile .sekka-rider-booking-v3 .b-seat-controls>button{animation:none!important;
+ transition:none!important}
+}

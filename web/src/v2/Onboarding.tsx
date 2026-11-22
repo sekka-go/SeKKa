@@ -3,6 +3,10 @@ import { translate } from "./translations";
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import "./onboarding.css";
+import { client } from "./api";
+import LiveProfile from "./LiveProfile";
+import GuestEntry from "./GuestEntry";
+import {entryCopy} from "./guestEntryCopy";
 export type Appearance = "dark" | "light";
 type Crop = [number, number, number, number];
 // Original paired references are preserved. CSS windows show ONLY illustration/logo regions.
@@ -20,6 +24,9 @@ function ReferenceArt({
   label?: string;
 }) {
   const [x, y, w, h] = crop;
+  const src = `/references/phase-1/${String(source).padStart(2, "0")}.png`;
+  const [imageState,setImageState]=useState<{src:string;status:'ready'|'error'}|null>(null);
+  const status=imageState?.src===src?imageState.status:'loading';
   const style: CSSProperties = {
     aspectRatio: `${w}/${h}`,
     "--source-width": `${(1536 / w) * 100}%`,
@@ -33,32 +40,29 @@ function ReferenceArt({
       role={label ? "img" : undefined}
       aria-label={label}
       aria-hidden={label ? undefined : true}
+      data-image-state={status}
     >
       <img
-        src={`/references/phase-1/${String(source).padStart(2, "0")}.png`}
+        src={src}
         alt=""
+        loading="lazy"
+        decoding="async"
         draggable={false}
+        onLoad={()=>setImageState({src,status:'ready'})}
+        onError={()=>setImageState({src,status:'error'})}
       />
     </span>
   );
 }
 export function Wordmark({ className = "" }: { className?: string }) {
-  return (
-    <span className={`phase-wordmark ${className}`} role="img" aria-label="سِكّة">
-      <ReferenceArt
-        source={1}
-        crop={[185, 280, 445, 225]}
-        theme="dark"
-        className="wordmark-dark"
-      />
-      <ReferenceArt
-        source={1}
-        crop={[185, 280, 445, 225]}
-        theme="light"
-        className="wordmark-light"
-      />
-    </span>
-  );
+  // Keep the original visual reference in the developer gallery only.
+  if (window.location.pathname.startsWith("/dev/screens")) {
+    return <span className={`phase-wordmark ${className}`} role="img" aria-label="PoNo">
+      <ReferenceArt source={1} crop={[185,280,445,225]} theme="dark" className="wordmark-dark"/>
+      <ReferenceArt source={1} crop={[185,280,445,225]} theme="light" className="wordmark-light"/>
+    </span>;
+  }
+  return <img className={`phase-wordmark sekka-live-wordmark ${className}`} src="/brand/pono-wordmark.svg" alt="PoNo"/>;
 }
 function SvgIcon({ name }: { name: string }) {
   const p = {
@@ -157,6 +161,7 @@ export default function Onboarding({
   role,
   onRole,
   onReturn,
+  production = false,
 }: {
   screen: number;
   theme: Appearance;
@@ -165,9 +170,10 @@ export default function Onboarding({
   role: string;
   onRole: (r: string) => void;
   onReturn?: () => void;
+  production?: boolean;
   children?: ReactNode;
 }) {
-  const {language} = usePreferences();
+  const {language,themePreference,languagePreference} = usePreferences();
   const t = (text:string) => translate(text,language);
   const id = screen === 37 ? 2 : screen;
   const [phone, setPhone] = useState(""),
@@ -176,6 +182,8 @@ export default function Onboarding({
   const [issuedAt, setIssuedAt] = useState(0);
   const [now, setNow] = useState(Date.now);
   const [wrongCode, setWrongCode] = useState(false);
+  const [googleBusy,setGoogleBusy]=useState(false);
+  const [googleError,setGoogleError]=useState('');
   const normalizedPhone = phone.replace(/[٠-٩]/g, c => String(c.charCodeAt(0)-1632)).replace(/[ -]/g, "");
   const validPhone = /^01[0125]\d{8}$/.test(normalizedPhone);
   const remaining = Math.max(0, 59 - Math.floor((now - issuedAt) / 1000));
@@ -184,6 +192,49 @@ export default function Onboarding({
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
   }, [id, issuedAt, remaining]);
+  useEffect(()=>{
+    const restore=()=>setGoogleBusy(false);
+    window.addEventListener('pageshow',restore);
+    return()=>window.removeEventListener('pageshow',restore);
+  },[]);
+  useEffect(()=>{
+    setGoogleBusy(false);
+    if(id!==4)return;
+    const url=new URL(location.href);
+    const hash=new URLSearchParams(url.hash.replace(/^#/,''));
+    if(!url.searchParams.has('error')&&!url.searchParams.has('error_code')&&
+       !hash.has('error')&&!hash.has('error_code'))return;
+    setGoogleError(language==='en'?'Google sign-in did not finish. You can try again.':'ما قدرناش نكمّل تسجيل الدخول. تقدر تحاول تاني.');
+    url.searchParams.delete('error');
+    url.searchParams.delete('error_code');
+    url.searchParams.delete('error_description');
+    if(hash.has('error')||hash.has('error_code')){
+      url.hash='';
+    }
+    history.replaceState(history.state,'',url.pathname+url.search+url.hash);
+  },[id,language]);
+  const startGoogleSignIn=async()=>{
+    if(!client||googleBusy)return;
+    setGoogleBusy(true);setGoogleError('');
+    try{
+      let returnPath=role==='captain'
+        ?'/?tab=captain-onboarding&view=35'
+        :'/?tab=login&view=6';
+      try{returnPath=sessionStorage.getItem('sekka.postAuthPath')||returnPath;}catch{/* Storage may be disabled. */}
+      const redirect=new URL(returnPath,location.origin);
+      if(redirect.origin!==location.origin)throw Error('INVALID_AUTH_RETURN_ORIGIN');
+      redirect.searchParams.set('oauth_theme',themePreference);
+      redirect.searchParams.set('oauth_language',languagePreference);
+      redirect.searchParams.set('oauth_role',role==='captain'?'captain':'rider');
+      const {error}=await client.auth.signInWithOAuth({provider:'google',options:{redirectTo:redirect.toString()}});
+      if(error)throw error;
+    }catch{
+      setGoogleBusy(false);
+      setGoogleError(language==='en'
+        ?'Could not start Google sign-in. Check your connection and try again.'
+        :'تعذّر بدء تسجيل الدخول بجوجل. افحص اتصالك وحاول تاني.');
+    }
+  };
   function issueDemoCode() {
     const time = Date.now();
     setIssuedAt(time);
@@ -217,17 +268,58 @@ export default function Onboarding({
   }
   const back = () => go(id === 6 ? 5 : id === 7 ? 6 : Math.max(1, id - 1));
   const heading = {
-    1: t("معاك في السِكّة"),
-    2: t("معاك في السِكّة"),
+    1: t("معاك في PoNo"),
+    2: t("معاك في PoNo"),
     3: t("اختر نوع حسابك"),
     4: t("أدخل رقم موبايلك"),
     5: t("أدخل كود التحقق"),
     6: t("استكمال الملف الشخصي"),
     7: t("الأذونات"),
   }[id];
+  if (production && (id === 2 || id === 3)) {
+    return <GuestEntry screen={id} language={language} role={role}
+      onRole={onRole} go={go} />;
+  }
+  if (production && (id === 4 || id === 6)) {
+    const copy=language==="en"?entryCopy.en:entryCopy.ar;
+    return <div className="phase-one-stage sekka-entry-stage">
+      <main className={"phase-canvas phase-screen-"+id+" sekka-entry-login"} dir={language==="en"?"ltr":"rtl"}>
+        <button type="button" className="phase-back" onClick={()=>go(id===4?3:8)}
+          aria-label={copy.back}>{language==="en"?"‹":"›"}</button>
+        <img className="sekka-entry-login__brand sekka-entry-login__wordmark"
+          src="/brand/pono-wordmark.svg" alt="PoNo"/>
+        {id===4
+          ? <div className="phase-google-auth sekka-entry-login__form">
+            <h1 className="phase-title">{copy.signInTitle}</h1>
+            <p className="phase-subtitle">{copy.signInDescription}</p>
+            <div className="sekka-entry-login__secure"><span aria-hidden="true">✓</span>{copy.signInSecure}</div>
+            <button type="button" className="phase-primary" disabled={!client||googleBusy}
+              aria-busy={googleBusy} onClick={()=>void startGoogleSignIn()}>
+              {googleBusy?copy.signInLoading:copy.signInGoogle}
+              {!googleBusy&&<Arrow/>}
+            </button>
+            {googleBusy&&<p role="status">{copy.signInWaiting}</p>}
+            {googleError&&<div className="phase-google-error" role="alert">
+              <p>{googleError}</p>
+              <button className="phase-google-retry" type="button" disabled={googleBusy}
+                onClick={()=>void startGoogleSignIn()}>{copy.signInRetry}</button>
+            </div>}
+            {!client&&<p role="alert">{copy.signInUnavailable}</p>}
+          </div>
+          : <div className="phase-flow-content phase-live-profile-flow sekka-entry-login__profile">
+            <h1 className="phase-title">{copy.setupTitle}</h1>
+            <p className="phase-subtitle">{copy.setupDescription}</p>
+            <LiveProfile/>
+            <button type="button" className="phase-primary" onClick={()=>go(8)}>
+              {copy.setupSkip}<Arrow/>
+            </button>
+          </div>}
+      </main>
+    </div>;
+  }
   return (
     <div className={`phase-one-stage ${theme}`}>
-      <nav className="phase-review-bar" aria-label={t("معاينة المرحلة الأولى")}>
+      {!production && <nav className="phase-review-bar" aria-label={t("معاينة المرحلة الأولى")}>
         <div className="review-screen-nav">
           <button
             onClick={() => go(Math.max(1, id - 1))}
@@ -266,15 +358,15 @@ export default function Onboarding({
           >
             {t("لايت")}</button>
         </div>
-      </nav>
-      <p className="phase-preview-note" id="phase-preview-note">
+      </nav>}
+      {!production && <p className="phase-preview-note" id="phase-preview-note">
         {id === 6
           ? t("معاينة استكمال الملف الشخصي — لم يتم حفظ حساب أو التحقق من رقم.")
           : id >= 4
             ? t("معاينة التصميم — إرسال الرسائل وإنشاء الحسابات غير مفعّلين.")
             : t("معاينة المرحلة الأولى · 7 شاشات")}
-      </p>
-      {onReturn && <button className="d-outline" onClick={onReturn}>{language==="en" ? "Return to previous step" : "ارجع للخطوة السابقة"}</button>}
+      </p>}
+      {onReturn && <button className="phase-return-prerequisite" onClick={onReturn}>{language==="en" ? "Return to previous step" : "ارجع للخطوة السابقة"}</button>}
       <main
         className={`phase-canvas phase-screen-${id}`}
         aria-label={`${t("المرحلة الأولى")} — ${t(names[id - 1])}`}
@@ -282,9 +374,7 @@ export default function Onboarding({
         {id !== 1 && (
           <>
             <div className="phase-top-wave" aria-hidden="true" />
-            <div className="phase-logo">
-              <Wordmark />
-            </div>
+            {!production&&<div className="phase-logo"><Wordmark /></div>}
             {id !== 2 && (
               <button className="phase-back" onClick={back} aria-label={t("رجوع")}>
                 <svg viewBox="0 0 20 30" aria-hidden="true">
@@ -306,9 +396,9 @@ export default function Onboarding({
             <button
               className="phase-splash-brand"
               onClick={() => go(2)}
-              aria-label={t("ابدأ مع سِكّة")}
+              aria-label={t("ابدأ مع PoNo")}
             >
-              <Wordmark />
+              {!production&&<Wordmark />}
               <h1>{heading}</h1>
             </button>
             <ReferenceArt
@@ -336,7 +426,7 @@ export default function Onboarding({
               theme={theme}
               crop={[54, 310, 662, 326]}
               className="phase-welcome-art"
-              label={t("راكب مستعد لمشواره اليومي بجوار خط سِكّة")}
+              label={t("راكب مستعد لمشواره اليومي بجوار خط PoNo")}
             />
             <div className="phase-benefits">
               {[
@@ -369,7 +459,7 @@ export default function Onboarding({
         ) : id === 3 ? (
           <>
             <h1 className="phase-title">{heading}</h1>
-            <p className="phase-subtitle">{t("قولنا هتستخدم سكة كراكب ولا كابتن؟")}</p>
+            <p className="phase-subtitle">{t("قولنا هتستخدم PoNo كراكب ولا كابتن؟")}</p>
             <div
               className="phase-roles"
               role="radiogroup"
@@ -467,6 +557,13 @@ export default function Onboarding({
             <button className="phase-primary phase-send" disabled={!validPhone} onClick={issueDemoCode}>
               {t("إنشاء كود تجريبي")}<Arrow />
             </button>
+            <div className="phase-auth-or" style={{position:"absolute",top:"84.3%",left:"9%",width:"82%",display:"flex",alignItems:"center",justifyContent:"center",gap:"3cqw",zIndex:4,fontSize:"3.5cqw",color:"var(--phase-muted)"}} aria-label={language === "en" ? "Or" : "أو"}><span>{language === "en" ? "Or" : "أو"}</span></div>
+            <button type="button" className="phase-google-secondary" style={{position:"absolute",top:"89%",left:"6.6%",width:"87.2%",height:"8%",zIndex:4,borderRadius:999,border:"1.5px solid var(--phase-line)",background:"var(--phase-card)",color:"var(--phase-text)",fontSize:"4.2cqw",fontWeight:800}} disabled={!client} onClick={async () => {
+              if (!client) return;
+              const {error}=await client.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin+location.pathname+"?screen=8&oauth_theme="+encodeURIComponent(themePreference)+"&oauth_language="+encodeURIComponent(languagePreference)}});
+              if (error) window.alert(error.message);
+            }}>{language === "en" ? "Continue with Google" : "المتابعة باستخدام جوجل"}</button>
+            {!client && <p className="phase-google-config-error" role="status">{language === "en" ? "Google login is temporarily unavailable." : "تسجيل الدخول بجوجل غير متاح مؤقتًا."}</p>}
           </>
         ) : id === 5 ? (
           <>
@@ -529,6 +626,16 @@ export default function Onboarding({
               }}
             >
               {t("تحقق")}<Arrow />
+            </button>
+            <button
+              type="button"
+              className="phase-skip-verification"
+              onClick={() => {
+                try {sessionStorage.setItem("sekka.phoneVerificationDeferred","true");} catch { /* Optional browser storage. */ }
+                go(6);
+              }}
+            >
+              {language === "en" ? "Skip for now" : "تخطي الآن"}
             </button>
           </>
         ) : id === 6 ? (

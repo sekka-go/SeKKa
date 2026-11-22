@@ -1,3 +1,6 @@
+import LiveTripRequests from './LiveTripRequests';
+import LiveVehicles from './LiveVehicles';
+import LiveBookings from './LiveBookings';
 import { useEffect, useState } from 'react';
 import { Wordmark, type Appearance } from './Onboarding';
 import { internalScreen, publicScreen, screenTitle } from './screenMap';
@@ -6,6 +9,10 @@ import type { Stop } from '../../../packages/domain/stops';
 import { usePreferences } from './preferences';
 import type { Line } from './Discovery';
 import './captain.css';
+import './captain-journey.css';
+import LiveCaptainDraft from './LiveCaptainDraft';
+import LiveCaptainRouteList from './LiveCaptainRouteList';
+import CaptainHome from './CaptainHome';
 export const captainRouteScreens = Array.from({length:8},(_,i)=>internalScreen(i+42));
 const areaNames: Record<string,string> = {'المعادي':'Maadi','التجمع':'New Cairo','مدينة نصر':'Nasr City','الدقي':'Dokki','المهندسين':'Mohandessin','الزمالك':'Zamalek','الشيخ زايد':'Sheikh Zayed','6 أكتوبر':'6th of October','مصر الجديدة':'Heliopolis'};
 const areas=['المعادي','التجمع','مدينة نصر','الدقي','المهندسين','الزمالك','الشيخ زايد','6 أكتوبر','مصر الجديدة'];
@@ -23,13 +30,14 @@ function readDraft(){
   return {...blankDraft,...saved} as typeof blankDraft;
  } catch {return blankDraft;}
 }
-export default function CaptainRoutes(p:{screen:number;theme:Appearance;onTheme:(t:Appearance)=>void;go:(n:number)=>void}) {
+export default function CaptainRoutes(p:{screen:number;theme:Appearance;onTheme:(t:Appearance)=>void;go:(n:number)=>void;production?:boolean}) {
  const {language}=usePreferences(),en=language==='en',t=(ar:string,english:string)=>en?english:ar;
- const n=publicScreen(p.screen),demo=new URLSearchParams(location.search).get('preview')==='phase6';
+ const n=publicScreen(p.screen),demo=!p.production&&new URLSearchParams(location.search).get('preview')==='phase6';
  const [offers,setOffers]=useState(readPublishedPreviews),[selected,setSelected]=useState('');
  const [draft,setDraft]=useState(()=>demo ? readDraft() : blankDraft);
  const {title,stops,stopName,area,outbound,returnTime,direction,period,category,capacity,price,returnSupported}=draft;
  const [approved,setApproved]=useState(false),[message,setMessage]=useState('');
+ const [savedRouteId,setSavedRouteId]=useState<string|null>(null);
  function change<K extends keyof typeof draft>(key:K,value:(typeof draft)[K]){
    setDraft(previous=>({...previous,[key]:value}));
  }
@@ -38,7 +46,7 @@ export default function CaptainRoutes(p:{screen:number;theme:Appearance;onTheme:
    try{sessionStorage.setItem(draftKey,JSON.stringify(draft));}
    catch{setMessage(language==='en'?'Draft can only be kept while this page is open.':'المسودة هتفضل محفوظة طول ما الصفحة مفتوحة بس.');}
  },[draft,demo,language]);
- const go=(id:number)=>{setMessage('');p.go(internalScreen(id));};
+ const go=(id:number)=>{setSavedRouteId(null);setMessage('');p.go(internalScreen(id));};
  const valid=title.trim().length>=3&&stops.length>=2&&stops[0].area!==stops[stops.length-1].area&&Number.isInteger(+capacity)&&+capacity>0&&+capacity<=categories[category]&&Number.isInteger(+price)&&+price>0&&(direction==='return'||!!outbound)&&(direction==='outbound'||!!returnTime)&&(direction!=='round_trip'||returnSupported);
  const save=(next:Line[])=>{
    try{
@@ -53,9 +61,19 @@ export default function CaptainRoutes(p:{screen:number;theme:Appearance;onTheme:
  const publish=()=>{if(!demo||!valid||!approved)return;const route:Line={id:'preview-created-'+crypto.randomUUID(),origin:stops[0].area,destination:stops[stops.length-1].area,stops:stops.map(s=>({...s})),returnStops:direction==='round_trip'?[...stops].reverse().map(s=>({...s,pickup:s.dropoff,dropoff:s.pickup})):undefined,category,available:+capacity,amount:+price,period,direction,outbound:direction==='return'?'':outbound,returnTime:direction==='outbound'?'':returnTime};if(!save([...offers,route]))return;setDraft(blankDraft);setApproved(false);setSelected(route.id);go(49);};
  const selectedOffer=offers.find(o=>o.id===selected);
  return <div className={`phase-one-stage discovery-stage ${p.theme}`}>
- <nav className="phase-review-bar"><select aria-label={t('شاشة خطوط الكابتن','Captain routes screen')} value={n} onChange={e=>go(+e.target.value)}>{captainRouteScreens.map(s=><option key={s} value={publicScreen(s)}>{publicScreen(s)} · {screenTitle(s,language)}</option>)}</select><button onClick={()=>p.onTheme(p.theme==='dark'?'light':'dark')}>{t('تبديل المظهر','Switch theme')}</button></nav>
- <main className="phase-canvas d-canvas captain-routes-canvas"><Wordmark/><h1>{screenTitle(p.screen,language)}</h1><p>{t('معاينة محلية فقط — لا يتم نشر عروض حقيقية.','Local preview only — no real offers are published.')}</p>{message&&<p role="status">{message}</p>}
- {!demo?<section className="d-box"><p>{t('إدارة العروض الحقيقية غير مفعّلة.','Live route management is not enabled.')}</p><button className="d-primary" onClick={()=>go(50)}>{t('ارجع لرئيسية الكابتن','Back to captain home')}</button></section>:<>
+ {!p.production&&<nav className="phase-review-bar"><select aria-label={t('شاشة خطوط الكابتن','Captain routes screen')} value={n} onChange={e=>go(+e.target.value)}>{captainRouteScreens.map(s=><option key={s} value={publicScreen(s)}>{publicScreen(s)} · {screenTitle(s,language)}</option>)}</select><button onClick={()=>p.onTheme(p.theme==='dark'?'light':'dark')}>{t('تبديل المظهر','Switch theme')}</button></nav>}
+ <main className="phase-canvas d-canvas captain-routes-canvas">{!p.production&&<Wordmark/>}{!p.production&&<h1>{screenTitle(p.screen,language)}</h1>}{!p.production&&<p>{t('معاينة محلية فقط — لا يتم نشر عروض حقيقية.','Local preview only — no real offers are published.')}</p>}{message&&<p role="status">{message}</p>}
+ {!demo?(p.production?<>
+ {n===42&&<CaptainHome onCreate={()=>go(43)} onRoutes={()=>go(44)} onBookings={()=>go(49)}/>}
+ {n===43&&<><LiveCaptainDraft onSaved={id=>{go(44);setSavedRouteId(id);}} onViewRoutes={()=>go(44)}/><button type="button" className="cj-back" onClick={()=>go(42)}>{t('رجوع إلى رحلاتي','Back to my routes')}</button></>}
+ {n===49&&<><h1>{t('الحجوزات والرحلات','Bookings & routes')}</h1><LiveBookings mode="captain"/><LiveCaptainRouteList/></>}
+ {[44,45,46,47,48].includes(n)&&<><h1>{t('إدارة خطوط الكابتن','Captain route management')}</h1>
+   {savedRouteId&&<p role="status" className="cj-feedback">{t('تم حفظ المسودة. راجع المحطات والميعاد قبل النشر.','Draft saved. Review the stops and schedule before publishing.')}</p>}
+   <LiveCaptainRouteList initialReviewId={savedRouteId}/>
+   {(n===47||n===48)&&<LiveBookings mode="captain"/>}
+   <button className="cj-back" type="button" onClick={()=>go(43)}>{t('إنشاء خط جديد','Create another route')}</button>
+  </>}
+ </>:<><LiveVehicles/><LiveCaptainRouteList/><LiveBookings mode="captain"/><LiveTripRequests mode="captain"/><LiveCaptainDraft/></>):<>
  {n===42&&<><button className="d-primary" onClick={()=>go(43)}>{t('إنشاء خط جديد','Create route')}</button>{offers.length===0&&<p>{t('لا توجد عروض منشورة في هذه المعاينة.','No offers published in this preview.')}</p>}{offers.map(o=><section className="d-box" key={o.id}><h2>{o.origin} ← {o.destination}</h2><p>{o.category} · {o.amount} EGP · {o.available}</p><button onClick={()=>{setSelected(o.id);go(49);}}>{t('إدارة العرض','Manage offer')}</button></section>)}</>}
  {n===43&&<section className="d-box"><label>{t('وصف الخط','Route description')}<input value={title} onChange={e=>change('title',e.target.value)} maxLength={120}/></label><p>{t('أكمل المسار والمواعيد والشروط قبل النشر.','Complete the stops, schedule and offer terms before publishing.')}</p></section>}
  {n===44&&<section className="d-box"><h2>{t('نقاط المسار بالترتيب','Ordered route stops')}</h2><label>{t('اسم النقطة','Stop name')}<input value={stopName} onChange={e=>change('stopName',e.target.value)} maxLength={80}/></label><label>{t('المنطقة','Area')}<select aria-label={t("المنطقة","Area")} value={area} onChange={e=>change('area',e.target.value)}>{areas.map(a=><option key={a} value={a}>{en ? areaNames[a] : a}</option>)}</select></label><button disabled={!stopName.trim()} onClick={()=>{change('stops',[...stops,{id:crypto.randomUUID(),name:stopName.trim(),area,pickup:true,dropoff:true}]);change('stopName','');}}>{t('أضف نقطة','Add stop')}</button><ol>{stops.map((s,i)=><li key={s.id}><strong>{s.name} — {s.area}</strong><label><input type="checkbox" checked={s.pickup} onChange={e=>change('stops',stops.map(x=>x.id===s.id?{...x,pickup:e.target.checked}:x))}/>{t('يسمح بالركوب','Pickup allowed')}</label><label><input type="checkbox" checked={s.dropoff} onChange={e=>change('stops',stops.map(x=>x.id===s.id?{...x,dropoff:e.target.checked}:x))}/>{t('يسمح بالنزول','Drop-off allowed')}</label><button disabled={i===0} onClick={()=>{const next=[...stops];[next[i-1],next[i]]=[next[i],next[i-1]];change('stops',next);}}>{t('لأعلى','Move up')}</button><button onClick={()=>change('stops',stops.filter(x=>x.id!==s.id))}>{t('إزالة','Remove')}</button></li>)}</ol></section>}

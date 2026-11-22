@@ -1,0 +1,108 @@
+/* One stable passenger wayfinding system; never shown in Google or Captain flows. */
+.sekka-mobile.sekka-rider-navigation{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
+.rh-tabs{position:fixed;bottom:0;inset-inline:0;z-index:36;
+ background:#FFF;box-shadow:0 -8px 26px rgba(47,12,78,.10);
+ border-top:1px solid #E8D77A;
+ padding:8px max(10px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));
+ color:#333333}
+.rh-tabs__inner{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;
+ max-width:480px;margin:0 auto}
+.rh-tabs button{appearance:none;min-width:0;min-height:60px;
+ border:0;background:transparent;border-radius:15px;
+ display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+ color:inherit;font:800 12px/1.2 Tajawal,Tahoma,sans-serif;cursor:pointer}
+.rh-tabs button[aria-current="page"]{color:#111111}
+.rh-tabs button[aria-current="page"] .rh-tabs__icon{background:#FFF9E9;color:#111111}
+.rh-tabs__icon{display:grid;place-items:center;width:45px;height:34px;border-radius:13px}
+.rh-tabs__name{white-space:nowrap;font-size:12px;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.rh-tabs button:focus-visible{outline:3px solid #FFBC36;outline-offset:-1px}
+html[data-theme="dark"] .rh-tabs{background:#193449;border-top-color:#E8D77A;box-shadow:0 -8px 26px rgba(0,0,0,.25);color:#FFFFFF}
+html[data-theme="dark"] .rh-tabs button[aria-current="page"]{color:#FFD875}
+html[data-theme="dark"] .rh-tabs button[aria-current="page"] .rh-tabs__icon{background:#193449;color:#FFD875}
+@media(max-width:349px){.rh-tabs__name{font-size:11px}.rh-tabs button{min-height:57px}}
+@media(prefers-reduced-motion:reduce){.rh-tabs *{animation:none!important;transition:none!important}}
+
+/* Friendly, calm home toolbar: menu retains advanced/settings access;
+   clear app-name text and a real notifications destination. */
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home > .sekka-mobile-header{
+ position:relative;top:auto;display:flex!important;
+ height:64px;min-height:64px;background:#FFF9F5;border:0;
+ padding:8px 68px;z-index:20
+}
+.sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header>.sekka-shell-menu{
+ position:absolute;inset-inline-start:12px;left:auto;right:auto;top:9px;
+ width:46px;height:46px;min-height:46px;min-width:46px;
+ border-radius:15px;border:1px solid #E8D77A;background:#FFF;
+ font-size:22px;color:#111111
+}
+.sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header>.rh-shell-title{
+ position:absolute;display:block!important;left:70px;right:70px;top:14px;
+ text-align:center;font:900 24px/1.55 Tajawal,Tahoma,sans-serif;
+ color:#111111;white-space:nowrap;max-width:none;overflow:visible
+}
+.sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header>.rh-shell-notifications{
+ position:absolute;top:9px;inset-inline-end:12px;
+ display:grid;place-items:center;width:46px;height:46px;min-height:46px;
+ border-radius:15px;border:1px solid #E8D77A;background:#FFF;
+ color:#111111;cursor:pointer
+}
+.sekka-rider-navigation.sekka-tab-home>.sekka-mobile-content{
+ padding-top:0;max-width:510px
+}
+.sekka-rider-navigation.sekka-tab-home .rh-home{padding-bottom:28px}
+html[data-theme="dark"] .sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header{background:#193449}
+html[data-theme="dark"] .sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header>
+:is(.sekka-shell-menu,.rh-shell-notifications){background:#193449;border-color:#E8D77A;color:#FFFFFF}
+html[data-theme="dark"] .sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header>.rh-shell-title{color:#FFDD80}
+@media(min-width:481px){
+ .rh-tabs{left:50%;right:auto;transform:translateX(-50%);width:480px;border-radius:24px 24px 0 0}
+}
+
+/* Legacy shell styling: final PoNo colors are sourced from urban-mobility-palette.css and pono-brand.css. */
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header{
+ background:#FFCC24!important;border:0!important;
+ height:83px!important;min-height:83px!important;
+ padding:10px 68px 18px!important;
+ overflow:hidden;
+}
+.sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header:after{
+ content:"";position:absolute;z-index:0;top:-38px;inset-inline-start:-54px;
+ width:150px;height:106px;transform:rotate(-18deg);
+ border-radius:50%;background:linear-gradient(125deg,#FFCC24,#FFCC24);
+ pointer-events:none;
+}
+.sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header>.rh-shell-title{
+ top:11px!important;left:70px!important;right:70px!important;
+ color:#FFF!important;z-index:2;font-size:34px!important;
+ font-style:italic;line-height:1.25!important;
+ text-shadow:0 2px 5px #46105E50;
+ pointer-events:none;
+}
+.sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header>.rh-shell-title:after{
+ content:"";display:block;position:absolute;
+ width:60px;height:7px;bottom:-2px;left:50%;transform:translateX(-50%) rotate(-6deg);
+ background:#FFCB29;border-radius:60% 8% 70% 12%;
+}
+.sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header>
+:is(.sekka-shell-menu,.rh-shell-notifications){
+ z-index:2;top:14px!important;width:45px;height:45px;
+ background:#FFFFFF16!important;border:1px solid #FFFFFF36!important;
+ color:#FFF!important;backdrop-filter:blur(5px);
+ border-radius:14px!important;
+}
+.sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header>.rh-shell-notifications{
+ top:14px!important;
+}
+.sekka-rider-navigation.sekka-tab-home>.sekka-mobile-content{
+ padding-inline:0!important;padding-top:0!important;
+ background:#FFF9F7;
+}
+html[data-theme="dark"] .sekka-rider-navigation.sekka-tab-home>.sekka-mobile-content{
+ background:#193449;
+}
+html[data-theme="dark"] .sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header{
+ background:#193449!important;
+}
+@media(max-width:340px){
+ .sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header>.rh-shell-title{font-size:29px!important;top:15px!important}
+}

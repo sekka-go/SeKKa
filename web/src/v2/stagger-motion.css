@@ -1,0 +1,41 @@
+/* Staggered real-data elements — based on the owner's supplied reference.
+   Delays run in 80ms steps within each visible batch (maximum 400ms).
+   Offscreen items never wait for every earlier item to finish. */
+.sekka-mobile [data-sekka-stagger="pending"]{
+ opacity:0!important;
+ transform:translate3d(0,18px,0) scale(.986)!important;
+ animation:none!important;
+}
+.sekka-mobile [data-sekka-stagger="shown"]{
+ animation:sekka-stagger-in 470ms cubic-bezier(.2,.82,.22,1)
+   var(--sekka-stagger-delay,0ms) both!important;
+}
+.sekka-mobile [data-sekka-stagger="done"]{
+ opacity:1;animation:none!important;
+}
+@keyframes sekka-stagger-in{
+ from{opacity:0;transform:translate3d(0,18px,0) scale(.986)}
+ to{opacity:1;transform:translate3d(0,0,0) scale(1)}
+}
+.sekka-mobile .sekka-menu-layer .sekka-side-drawer nav > :is(h2,button,.sekka-preference-controls){
+ animation:sekka-drawer-step-in 340ms cubic-bezier(.24,.85,.23,1) both;
+}
+.sekka-mobile .sekka-menu-layer .sekka-side-drawer nav > :is(h2,button,.sekka-preference-controls):nth-child(2){animation-delay:60ms}
+.sekka-mobile .sekka-menu-layer .sekka-side-drawer nav > :is(h2,button,.sekka-preference-controls):nth-child(3){animation-delay:110ms}
+.sekka-mobile .sekka-menu-layer .sekka-side-drawer nav > :is(h2,button,.sekka-preference-controls):nth-child(4){animation-delay:160ms}
+.sekka-mobile .sekka-menu-layer .sekka-side-drawer nav > :is(h2,button,.sekka-preference-controls):nth-child(5){animation-delay:210ms}
+.sekka-mobile .sekka-menu-layer .sekka-side-drawer nav > :is(h2,button,.sekka-preference-controls):nth-child(6){animation-delay:260ms}
+.sekka-mobile .sekka-menu-layer .sekka-side-drawer nav > :is(h2,button,.sekka-preference-controls):nth-child(n+7){animation-delay:290ms}
+@keyframes sekka-drawer-step-in{
+ from{opacity:0;transform:translateY(9px)}
+ to{opacity:1;transform:translateY(0)}
+}
+.sekka-mobile .rf3__categories button,.sekka-mobile .rf3__choices button,
+.sekka-mobile .rb3__filters button{
+ transition:transform 210ms cubic-bezier(.22,.8,.22,1),
+  background-color 210ms ease,border-color 210ms ease!important;
+}
+@media(prefers-reduced-motion:reduce){
+ .sekka-mobile [data-sekka-stagger]{opacity:1!important;transform:none!important;animation:none!important}
+ .sekka-mobile .sekka-menu-layer .sekka-side-drawer nav > *{animation:none!important;transition:none!important}
+}

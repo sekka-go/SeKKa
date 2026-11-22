@@ -1,0 +1,61 @@
+import {test,expect} from '@playwright/test';
+test('Passenger can open the real map with empty search and confirm a Cairo pin on mobile',async({page})=>{
+ await page.setViewportSize({width:360,height:800});
+ await page.addInitScript(()=>localStorage.setItem('language_preference','ar'));
+ await page.goto('/?tab=search&view=9');
+ const form=page.locator('.rs3');
+ await expect(form).toBeVisible();
+ const button=form.locator('.rs3__optional-map-toggle');
+ await expect(button).toBeEnabled();
+ await button.click();
+ await expect(page.getByRole('dialog',{name:'حدد نقطة على الخريطة'})).toHaveCount(0);
+ await form.locator('.rs3__optional-map-actions').getByRole('button',{name:'حدد الانطلاق على الخريطة'}).click();
+ const dialog=page.getByRole('dialog',{name:'حدد نقطة على الخريطة'});
+ await expect(dialog).toBeVisible();
+ await expect(dialog.locator('.sekka-map-picker__map')).toBeVisible();
+ await expect(dialog.getByRole('button',{name:'تأكيد النقطة'})).toBeDisabled();
+ await dialog.locator('.sekka-map-picker__map').click({position:{x:180,y:170}});
+ await expect(dialog.getByRole('button',{name:'تأكيد النقطة'})).toBeEnabled();
+ await dialog.getByRole('button',{name:'تأكيد النقطة'}).click();
+ await expect(dialog).toHaveCount(0);
+ await expect(form.getByRole('combobox',{name:'نقطة الانطلاق'})).toHaveValue('نقطة محددة على الخريطة');
+ await expect(form.getByText('✓ نقطة محددة على الخريطة')).toBeVisible();
+});
+test('A guest may close the map without replacing the current text',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.addInitScript(()=>localStorage.setItem('language_preference','ar'));
+ await page.goto('/?tab=search&view=9');
+ const form=page.locator('.rs3');
+ await expect(form).toBeVisible();
+ const from=form.getByRole('combobox',{name:'نقطة الانطلاق'});
+ await from.fill('الحي الأول');
+ // Dismiss typed suggestions before explicitly opting in to map mode.
+ await form.locator('.rs3__head').click();
+ await form.locator('.rs3__optional-map-toggle').click();
+ await form.locator('.rs3__optional-map-actions').getByRole('button',{name:'حدد الانطلاق على الخريطة'}).click();
+ const dialog=page.getByRole('dialog',{name:'حدد نقطة على الخريطة'});
+ await expect(dialog).toBeVisible();
+ await dialog.getByRole('button',{name:'إغلاق الخريطة'}).click();
+ await expect(dialog).toHaveCount(0);
+ await expect(from).toHaveValue('الحي الأول');
+});
+
+test('English map keeps keyboard navigation in the dialog and waits for a deliberate search choice',async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('language_preference','en'));
+ await page.goto('/?tab=search&view=9');
+ await page.locator('.rs3__optional-map-toggle').click();
+ await page.locator('.rs3__optional-map-actions button').first().click();
+ const dialog=page.getByRole('dialog',{name:'Choose point on map'});
+ await expect(dialog).toHaveAttribute('dir','ltr');
+ const input=dialog.getByRole('combobox');
+ await input.fill('First District 6 October');
+ const option=dialog.getByRole('option').first();
+ await expect(option).toContainText('1st District');
+ await input.press('Enter');
+ await expect(option).toBeVisible();
+ await input.press('ArrowDown');
+ await expect(option).toHaveAttribute('aria-selected','true');
+ await input.press('Enter');
+ await expect(dialog.getByRole('listbox')).toHaveCount(0);
+ await expect(dialog.getByRole('button',{name:'Confirm point'})).toBeDisabled();
+});

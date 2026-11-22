@@ -1,0 +1,81 @@
+.sekka-map-picker{position:fixed;inset:0;z-index:2147482000;display:flex;flex-direction:column;
+ background:#193449;color:#fff;max-height:100dvh;overflow:hidden;
+ padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.sekka-map-picker__header{display:flex;align-items:center;justify-content:space-between;gap:.75rem;
+ padding:.85rem 1rem;background:#193449;flex:none;font-size:1.15rem;}
+.sekka-map-picker__header button{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.32);
+ color:#fff;font-size:1.35rem;min-height:44px;min-width:44px;border-radius:12px}
+.sekka-map-picker__search{position:relative;z-index:5;flex:none;padding:.6rem 1rem .7rem;
+ background:#193449;display:grid;gap:.35rem;min-width:0}
+.sekka-map-picker__search label{font-size:.82rem;color:#FFFFFF;font-weight:700}
+.sekka-map-picker__search input{display:block;width:100%;min-height:46px;padding:.6rem .8rem;
+ border:2px solid #E8D77A;border-radius:12px;background:#fff;color:#111111;
+ font:inherit;font-size:1rem;text-align:start;direction:inherit;box-sizing:border-box}
+.sekka-map-picker__search input:focus-visible{outline:3px solid #ffd46e;outline-offset:2px}
+.sekka-map-picker__search-results{position:absolute;inset-inline:1rem;top:100%;z-index:15;
+ max-height:min(32dvh,245px);overflow:auto;overscroll-behavior:contain;
+ border:1px solid #E8D77A;border-radius:0 0 12px 12px;background:#fff;color:#111111;
+ box-shadow:0 10px 25px #0006;}
+.sekka-map-picker__search-results>div{display:grid}
+.sekka-map-picker__search-results button{min-height:52px;display:grid;gap:.15rem;
+ width:100%;padding:.58rem .8rem;text-align:start;direction:inherit;border:0;
+ border-bottom:1px solid #E8D77A;color:#111111;background:#fff;font:inherit}
+.sekka-map-picker__search-results button:focus-visible{outline:3px solid #E8D77A;outline-offset:-3px}
+.sekka-map-picker__search-results button small{font-size:.78rem;color:#111111}
+.sekka-map-picker__search-results p{margin:0;padding:.65rem .8rem;color:#111111;font-size:.85rem}
+.sekka-map-picker__controls .sekka-map-picker__locate{width:auto;min-width:125px;
+ font:inherit;font-size:.86rem;font-weight:800;padding:.35rem .65rem;white-space:nowrap;
+ border:2px solid #E8D77A;background:#fff;color:#111111;direction:inherit}
+.sekka-map-picker__controls .sekka-map-picker__locate:disabled{opacity:.7}
+.sekka-map-picker__instructions{font-size:.89rem;text-align:center;margin:0;padding:.6rem .8rem;
+ background:#193449;color:#FFFFFF;flex:none;}
+.sekka-map-picker__map{position:relative;flex:1;min-height:150px;overflow:hidden;touch-action:none;
+ cursor:crosshair;user-select:none;background:#e8e8e8;outline-offset:-4px;direction:ltr;}
+.sekka-map-picker__map:focus-visible{outline:3px solid #ffe499;}
+.sekka-map-picker__pin{position:absolute;transform:translate(-50%,-100%);font-size:2.25rem;
+ line-height:1;pointer-events:none;filter:drop-shadow(0 2px 3px #0008)}
+.sekka-map-picker__controls{position:absolute;inset-block-start:12px;inset-inline-end:12px;
+ display:flex;flex-direction:column;gap:7px;direction:ltr;z-index:2}
+.sekka-map-picker__controls button{min-height:44px;min-width:44px;border:1px solid #999;
+ border-radius:10px;background:#fff;color:#111111;font-size:1.45rem;box-shadow:0 1px 5px #0003}
+.sekka-map-picker__credit{position:absolute;bottom:5px;right:6px;color:#222;background:#fffe;
+ padding:2px 6px;border-radius:5px;font-size:10px;z-index:2;text-decoration:underline;}
+.sekka-map-picker__footer{padding:.8rem 1rem 1rem;background:#193449;flex:none;
+ display:grid;gap:.55rem;max-height:33dvh;overflow-y:auto}
+.sekka-map-picker__footer p{margin:0;font-size:.88rem;}
+.sekka-map-picker__footer small{display:block;font-size:.8rem;color:#FFFFFF;margin-top:.2rem}
+.sekka-map-picker__error{color:#ffc0b7}
+.sekka-map-picker__confirm{border:0;border-radius:12px;background:#ffd46e;color:#111111;
+ font-weight:800;font-size:1.05rem;min-height:52px;width:100%}
+.sekka-map-picker__confirm:disabled{opacity:.48}
+.sekka-mobile .sekka-place-lookup__map-search,.sekka-mobile .cj-easy-map-button{
+ display:flex;justify-content:center;align-items:center;gap:.4rem;min-height:44px;
+ width:100%;border:1px solid currentColor;background:transparent;color:inherit;
+ padding:.65rem .85rem;border-radius:.85rem;font-weight:800;font-size:.96rem;
+ line-height:1.45;margin-top:.6rem}
+.sekka-mobile .sekka-place-lookup__attribution,.sekka-mobile .cj-easy-attribution{display:none}
+@media (prefers-reduced-motion:reduce){.sekka-map-picker *{scroll-behavior:auto}}
+
+.sekka-map-picker[open]{display:flex;width:100%;height:100dvh;max-width:none;margin:0;border:0;box-sizing:border-box;padding-inline:0;}
+
+
+/* OpenStreetMap tiles use the provider's HTTP cache, not our service worker.
+ * Background skeleton is replaced in-place as each visible tile decodes. */
+.sekka-map-picker__tile:not([data-ready="true"]){
+ background:linear-gradient(110deg,#D5E7EB 15%,#ECF5F8 44%,#D5E7EB 70%);
+ background-size:210% 100%;
+ animation:sekka-map-tile-pulse 1.75s linear infinite;
+}
+.sekka-map-picker__tile[data-ready="failed"]{
+ visibility:hidden;
+ animation:none!important;
+}
+@keyframes sekka-map-tile-pulse{
+ from{background-position:155% 0}
+ to{background-position:-115% 0}
+}
+@media(prefers-reduced-motion:reduce){
+ .sekka-map-picker__tile:not([data-ready="true"]){
+  animation:none!important;background:#E2EEF2!important;
+ }
+}

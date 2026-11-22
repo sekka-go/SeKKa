@@ -1,5 +1,14 @@
 // Application-owned copy. User-entered names, messages and route data are never translated.
 export const english: Readonly<Record<string,string>> = {
+  "اختصارات المناطق المحفوظة": "Saved area shortcuts",
+  "✓ البيت محفوظ": "✓ Home saved",
+  "✓ الشغل محفوظ": "✓ Work saved",
+  "احفظ البداية كبيت": "Save origin as Home",
+  "احفظ الوصول كشغل": "Save destination as Work",
+  "البيت ← الشغل": "Home to Work",
+  "الشغل ← البيت": "Work to Home",
+  "آخر عمليات البحث": "Recent searches",
+  "إعادة البحث عن ": "Reuse route ",
   "معاك في السِكّة": "With you on your commute",
   "اختر نوع حسابك": "Choose your account type",
   "أدخل رقم موبايلك": "Enter your mobile number",
@@ -837,4 +846,11 @@ export const english: Readonly<Record<string,string>> = {
   "أهلًا بيك، أنا معاك لو محتاج تسأل عن الخط.": "Hi, feel free to ask me about the route.",
   "الحالة:": "Status:"
 };
-export function translate(text:string,language:"ar"|"en"){return language==="en" ? english[text] ?? text : text;}
+export function translate(text:string,language:"ar"|"en"){
+ const normalized=text.replaceAll("سِكّة","سِكَّة");
+ if(language!=="en")return normalized;
+ // Keep approved archive/gallery strings translatable while PoNo is the live brand.
+ const legacy=["سِكّة","سِكَّة","السِكّة","السِكَّة"];
+ const candidate=english[text] ?? legacy.map(name=>english[text.replaceAll("PoNo",name)]).find(Boolean);
+ return (candidate??text).replaceAll("seKKa","PoNo").replaceAll("Sekka Go","PoNo");
+}

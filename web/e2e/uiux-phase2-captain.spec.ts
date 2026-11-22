@@ -6,7 +6,7 @@ test('captain route wizard buttons and fields keep spacing on mobile',async({bro
   const context=await browser.newContext({locale,viewport:{width:390,height:844}});
   const page=await context.newPage();
   for(const id of [42,43,44,45,46,47,48,49]){
-   await page.goto('/?screen='+id+'&preview=phase6');
+   await page.goto('/dev/screens?screen='+id+'&preview=phase6');
    const canvas=page.locator('.captain-routes-canvas');
    await expect(canvas).toBeVisible();
    const dimensions=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,width:document.documentElement.clientWidth}));

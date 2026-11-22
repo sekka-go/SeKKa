@@ -1,0 +1,359 @@
+/* سِكَّة / Urban Mobility — 22 Nov 2026
+   A semantic palette for the REAL PWA; never imported by /dev/screens.
+   Existing functional layouts, map, and approved S geometry stay untouched.
+   Loaded after ui-quality-hardening.css so these overrides are intentional. */
+.sekka-mobile{
+ --urban-blue:#1753E8;
+ --urban-blue-deep:#1544C2;
+ --urban-navy:#17253A;
+ --urban-paper:#F5F3ED;
+ --urban-card:#FFFFFF;
+ --urban-yellow:#FFD02A;
+ --urban-ink:#17253A;
+ --urban-muted:#43627A;
+ --urban-line:#DBDEE3;
+ --urban-pale-blue:#E8EEFD;
+ --sekka-sky:var(--urban-blue);
+ --sekka-cyan:#6A86DD;
+ --sekka-teal:var(--urban-blue);
+ --sekka-sun:var(--urban-yellow);
+ --sekka-sun-ink:var(--urban-ink);
+ --sekka-paper:var(--urban-paper);
+ --sekka-navy:var(--urban-navy);
+ --sekka-hairline:var(--urban-line);
+ --flow-sky:var(--urban-blue);
+ --flow-blue:var(--urban-blue);
+ --flow-aqua:#4C6BBE;
+ --flow-mint:#B5C5EB;
+ --flow-sun:var(--urban-yellow);
+ --flow-ink:var(--urban-ink);
+ --flow-muted:var(--urban-muted);
+ --flow-soft:var(--urban-paper);
+ --flow-paper:var(--urban-card);
+ --flow-line:var(--urban-line);
+ --ui-ink:var(--urban-ink);
+ --ui-ink-muted:var(--urban-muted);
+ --ui-surface:var(--urban-paper);
+ --ui-raised:var(--urban-card);
+ --ui-hairline:var(--urban-line);
+ --ui-action:var(--urban-yellow);
+ --ui-action-ink:var(--urban-ink);
+ --ui-dark-blue:var(--urban-blue);
+ --brand-purple:var(--urban-blue);
+ --brand-coral:var(--urban-yellow);
+ --brand-sun:var(--urban-yellow);
+ --accent:var(--urban-blue);
+ --yellow:var(--urban-yellow);
+ --bg:var(--urban-paper);
+ --ink:var(--urban-ink);
+ --text:var(--urban-ink);
+ --muted:var(--urban-muted);
+ --card:var(--urban-card);
+ --secondary:#EEEDF0;
+ --elevated:#F0F0F3;
+ --line:var(--urban-line);
+ --border:var(--urban-line);
+ --rh-bg:var(--urban-paper);
+ --rh-card:var(--urban-card);
+ --rh-ink:var(--urban-ink);
+ --rh-muted:var(--urban-muted);
+ --rh-purple:var(--urban-blue);
+ --rs-bg:var(--urban-paper);
+ --rs-paper:var(--urban-card);
+ --rs-ink:var(--urban-ink);
+ --rs-muted:var(--urban-muted);
+ --rs-line:var(--urban-line);
+ --rs-purple:var(--urban-blue);
+ --rs-coral:var(--urban-blue);
+ --rs-yellow:var(--urban-yellow);
+ --sekka-menu-active:var(--urban-blue);
+ --sekka-menu-icon-surface:var(--urban-pale-blue);
+ --sekka-menu-icon-ink:var(--urban-blue);
+ --sekka-menu-row-surface:#FFFFFF;
+ --sekka-menu-row-border:#E4E5E9;
+ --sekka-menu-row-text:var(--urban-ink);
+ --sekka-menu-surface:var(--urban-paper);
+ --sekka-menu-active-surface:var(--urban-pale-blue);
+ --sekka-menu-muted:var(--urban-muted);
+ background:var(--urban-paper)!important;
+ color:var(--urban-ink);
+}
+.sekka-mobile > .sekka-mobile-content,
+.sekka-mobile .discovery-stage > .d-canvas,
+.sekka-mobile .discovery-stage.light > .d-canvas,
+.sekka-mobile .discovery-stage > .d-canvas > :is(.rs3,.rf3,.rd3,.rr3){
+ background:var(--urban-paper)!important;
+}
+/* A transport brand: structural gradients, no aqua-to-white sea horizon. */
+.sekka-mobile > .sekka-mobile-header,
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home > .sekka-mobile-header,
+.sekka-mobile :is(.rs3__head,.rf3__hero,.rr3-hero,.rd3__hero,.rb3__hero,.rbk3-hero,.np4__hero,.sekka-entry__header),
+.sekka-mobile .captain-routes-canvas :is(.cj-hero,.cj-home-welcome){
+ background:linear-gradient(124deg,#17253A 0%,#203C73 45%,#1753E8 100%)!important;
+ color:#FFFFFF!important;
+ border-color:transparent!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-hero.rh-showcase-hero,
+.sekka-mobile .rh-hero{
+ background:linear-gradient(122deg,#17253A 0%,#263F70 53%,#1753E8 100%)!important;
+ border-radius:0 0 28px 28px!important;
+}
+/* Abstract narrow road markings rather than curved sea waves. */
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-hero.rh-showcase-hero{
+ background-image:
+  repeating-linear-gradient(115deg,transparent 0 66px,rgba(255,255,255,.045) 66px 68px,transparent 68px 134px),
+  linear-gradient(122deg,#17253A 0%,#263F70 53%,#1753E8 100%)!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-hero .rh-hero__copy,
+.sekka-mobile[dir="ltr"].sekka-rider-navigation.sekka-tab-home .rh-showcase-hero .rh-hero__copy{
+ background:linear-gradient(90deg,rgba(12,26,49,.10),rgba(12,26,49,.42))!important;
+}
+.sekka-mobile :is(.rh-showcase-hero__top-wave,.rh-showcase-hero__bottom-wave,.rh-hero__wave,.rs3__head-orbit){
+ display:none!important;
+}
+.sekka-mobile .rs3__head::after,
+.sekka-mobile .rr3-hero::before{display:none!important}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home,
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home > .sekka-mobile-content,
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-home{
+ --showcase-electric-blue:var(--urban-blue);
+ --showcase-aqua:#5479CC;
+ --showcase-ice:var(--urban-paper);
+ --showcase-white:var(--urban-card);
+ --showcase-ink:var(--urban-ink);
+ --showcase-gold:var(--urban-yellow);
+ --rh-bg:var(--urban-paper)!important;
+ --rh-card:var(--urban-card)!important;
+ --rh-ink:var(--urban-ink)!important;
+ --rh-muted:var(--urban-muted)!important;
+ background:var(--urban-paper)!important;
+ color:var(--urban-ink)!important;
+}
+.sekka-mobile .rh-showcase-search__card,
+.sekka-mobile .rh-showcase-ride,
+.sekka-mobile .rh-showcase-routes__message,
+.sekka-mobile :is(.rh-journey,.rs3__form,.rd3__route,.rd3__facts>div,.rd3__stops,.rf3__panel,.rb3__card,.rb3__empty,.sekka-mobile-card,.live-profile,.live-trip-requests,.sekka-request-card),
+.sekka-mobile .sekka-rider-booking-v3 .b-box,
+.sekka-mobile .d-screen-11 .sekka-live-result{
+ background:#FFFFFF!important;
+ border-color:var(--urban-line)!important;
+ color:var(--urban-ink)!important;
+ box-shadow:0 8px 26px rgba(23,37,58,.08)!important;
+}
+.sekka-mobile .rh-showcase-search__icon,
+.sekka-mobile .rh-journey__field-icon,
+.sekka-mobile .rs3__marker,
+.sekka-mobile .rh-showcase-ride__vehicle{
+ background:var(--urban-pale-blue)!important;
+ color:var(--urban-blue)!important;
+}
+.sekka-mobile .rh-showcase-search__arrow,
+.sekka-mobile .rh-journey__ribbon,
+.sekka-mobile .rs3__progress .is-current b{
+ background:var(--urban-yellow)!important;
+ color:var(--urban-ink)!important;
+}
+/* Give the yellow CTA meaning and reserve blue for navigation/selection. */
+.sekka-mobile :is(.rh-button--primary,.rs3__submit,.rd3__primary,.rf3__apply,.phase-primary,.sekka-entry__primary,.sekka-action,.cj-primary,.cj-home-main-action,.rh-picker__confirm,.sekka-request-yellow-cta),
+.sekka-mobile .sekka-rider-booking-v3 .b-primary,
+.sekka-mobile .d-screen-11 .sekka-live-result .d-offer-select{
+ background:var(--urban-yellow)!important;
+ border-color:var(--urban-yellow)!important;
+ color:var(--urban-ink)!important;
+ box-shadow:0 6px 15px rgba(23,37,58,.13)!important;
+}
+.sekka-mobile :is(.rh-button--primary,.rs3__submit,.rd3__primary,.rf3__apply,.phase-primary,.sekka-entry__primary,.sekka-action,.cj-primary,.cj-home-main-action,.rh-picker__confirm,.sekka-request-yellow-cta) *,
+.sekka-mobile .sekka-rider-booking-v3 .b-primary *,
+.sekka-mobile .d-screen-11 .sekka-live-result .d-offer-select *{
+ color:var(--urban-ink)!important;
+}
+.sekka-mobile :is(.rh-tabs,.rh-tabbar,.sekka-bottom-nav){
+ background:rgba(250,249,246,.97)!important;
+ border-color:var(--urban-line)!important;
+ box-shadow:0 -6px 24px rgba(23,37,58,.1)!important;
+}
+.sekka-mobile.sekka-rider-navigation .rh-tabs button:not(.rh-tabs__primary)[aria-current="page"],
+.sekka-mobile.sekka-rider-navigation .rh-tabs button:not(.rh-tabs__primary)[aria-current="page"] .rh-tabs__name{
+ color:var(--urban-blue)!important;
+}
+.sekka-mobile.sekka-rider-navigation .rh-tabs button:not(.rh-tabs__primary)[aria-current="page"] .rh-tabs__icon{
+ background:var(--urban-pale-blue)!important;
+ border-color:#C5D4FA!important;
+ color:var(--urban-blue)!important;
+}
+.sekka-mobile.sekka-rider-navigation .rh-tabs .rh-tabs__primary .rh-tabs__icon{
+ background:var(--urban-yellow)!important;color:var(--urban-ink)!important;
+}
+.sekka-mobile.sekka-rider-navigation .rh-tabs .rh-tabs__primary .rh-tabs__name{
+ color:var(--urban-ink)!important;
+}
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-tabs::before{
+ background:linear-gradient(180deg,rgba(245,243,237,0),rgba(245,243,237,.88) 74%,#F5F3ED)!important;
+}
+/* Glass material stays, but is urban ivory/charcoal instead of ocean-blue. */
+.sekka-mobile .sekka-side-drawer.sekka-glass-panel{
+ background:
+  linear-gradient(175deg,rgba(255,255,255,.96) 0%,rgba(248,247,244,.95) 58%,rgba(237,238,243,.92) 100%)!important;
+ border-color:rgba(255,255,255,.83)!important;
+ color:var(--urban-ink)!important;
+ box-shadow:inset 0 1px 0 #FFFFFF,0 24px 60px rgba(23,37,58,.22)!important;
+}
+.sekka-mobile .sekka-glass-panel nav button.sekka-menu-row{
+ color:var(--urban-ink)!important;
+}
+.sekka-mobile .sekka-glass-panel nav button.sekka-menu-row[aria-current="page"]{
+ background:rgba(23,83,232,.10)!important;
+ border-color:rgba(23,83,232,.35)!important;
+ color:var(--urban-blue)!important;
+}
+.sekka-mobile .sekka-glass-panel .sekka-menu-row__icon,
+.sekka-mobile .sekka-glass-panel nav button.sekka-menu-row[aria-current="page"] .sekka-menu-row__icon,
+.sekka-mobile .sekka-side-drawer.sekka-glass-panel nav button.sekka-menu-row[aria-current="page"] .sekka-menu-row__icon,
+.sekka-mobile .sekka-side-drawer.sekka-glass-panel nav button.sekka-menu-row[aria-current="page"] .sekka-menu-row__icon svg{
+ color:var(--urban-blue)!important;
+ stroke:currentColor!important;
+}
+.sekka-mobile .sekka-glass-mark{
+ background:linear-gradient(140deg,#1753E8,#17253A)!important;
+ box-shadow:0 5px 14px rgba(23,37,58,.22)!important;
+}
+.sekka-mobile .sekka-glass-panel .sekka-side-drawer__wordmark,
+.sekka-mobile .sekka-side-drawer__wordmark{color:var(--urban-blue)!important}
+.sekka-mobile .sekka-glass-search{
+ background:rgba(23,83,232,.07)!important;
+ border-color:rgba(23,83,232,.13)!important;
+ color:var(--urban-ink)!important;
+}
+.sekka-mobile .sekka-glass-panel .sekka-theme-quick-switch[aria-checked="true"]{
+ background:var(--urban-blue)!important;border-color:var(--urban-blue)!important;
+}
+/* Dark mode is charcoal and gradual slate, never abrupt cyan -> black. */
+html[data-theme="dark"] .sekka-mobile{
+ --urban-blue:#8BA8FF;
+ --urban-blue-deep:#6189FF;
+ --urban-navy:#F3F3F6;
+ --urban-paper:#101827;
+ --urban-card:#1B2638;
+ --urban-ink:#F3F3F6;
+ --urban-muted:#C5CEDD;
+ --urban-line:#3A4760;
+ --urban-pale-blue:#263657;
+ --ui-ink:#F3F3F6;
+ --ui-ink-muted:#C5CEDD;
+ --ui-surface:#101827;
+ --ui-raised:#1B2638;
+ --ui-hairline:#3A4760;
+ --ui-action:#FFD02A;
+ --ui-action-ink:#17253A;
+ --ui-dark-blue:#8BA8FF;
+ --sekka-navy:#F3F3F6;
+ --flow-ink:#F3F3F6;
+ --flow-muted:#C5CEDD;
+ --flow-soft:#101827;
+ --flow-paper:#1B2638;
+ --flow-line:#3A4760;
+ --rh-ink:#F3F3F6;
+ --rh-bg:#101827;
+ --rh-card:#1B2638;
+ --rs-ink:#F3F3F6;
+ --rs-bg:#101827;
+ --rs-paper:#1B2638;
+ --sekka-menu-active:#8BA8FF;
+ --sekka-menu-icon-surface:#283653;
+ --sekka-menu-icon-ink:#BBCBFF;
+ --sekka-menu-row-surface:#1B2638;
+ --sekka-menu-row-border:#39475B;
+ --sekka-menu-row-text:#F3F3F6;
+ --sekka-menu-surface:#101827;
+ --sekka-menu-active-surface:#293957;
+ --sekka-menu-muted:#C5CEDD;
+ --bg:#101827;--text:#F3F3F6;--ink:#F3F3F6;
+ --card:#1B2638;--secondary:#172234;--elevated:#253348;
+ --muted:#C5CEDD;--border:#3A4760;--line:#3A4760;
+ background:#101827!important;color:#F3F3F6!important;
+}
+html[data-theme="dark"] .sekka-mobile > .sekka-mobile-content,
+html[data-theme="dark"] .sekka-mobile .discovery-stage > .d-canvas,
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation.sekka-tab-home,
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation.sekka-tab-home > .sekka-mobile-content,
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-home{
+ --showcase-ice:#101827;
+ --showcase-ink:#F3F3F6;
+ --rh-bg:#101827!important;
+ --rh-card:#1B2638!important;
+ --rh-ink:#F3F3F6!important;
+ background:#101827!important;color:#F3F3F6!important;
+}
+html[data-theme="dark"] .sekka-mobile .rh-showcase-search__card,
+html[data-theme="dark"] .sekka-mobile .rh-showcase-ride,
+html[data-theme="dark"] .sekka-mobile .rh-showcase-routes__message,
+html[data-theme="dark"] .sekka-mobile :is(.rh-journey,.rs3__form,.rd3__route,.rd3__facts>div,.rd3__stops,.rf3__panel,.rb3__card,.rb3__empty,.sekka-mobile-card,.live-profile,.live-trip-requests,.sekka-request-card),
+html[data-theme="dark"] .sekka-mobile .sekka-rider-booking-v3 .b-box,
+html[data-theme="dark"] .sekka-mobile .d-screen-11 .sekka-live-result{
+ background:#1B2638!important;border-color:#3A4760!important;
+ color:#F3F3F6!important;box-shadow:0 9px 26px rgba(0,0,0,.20)!important;
+}
+html[data-theme="dark"] .sekka-mobile .rh-showcase-search__label,
+html[data-theme="dark"] .sekka-mobile :is(.rh-showcase-ride__details strong,.rh-showcase-routes__heading h2,.rh-showcase-search h1){
+ color:#F3F3F6!important;
+}
+html[data-theme="dark"] .sekka-mobile .rh-showcase-ride__details small,
+html[data-theme="dark"] .sekka-mobile .rh-showcase-routes__message{
+ color:#C5CEDD!important;
+}
+html[data-theme="dark"] .sekka-mobile :is(.rh-tabs,.rh-tabbar,.sekka-bottom-nav){
+ background:#1B2638!important;border-color:#3A4760!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-tabs::before{
+ background:linear-gradient(180deg,rgba(16,24,39,0),rgba(16,24,39,.9) 74%,#101827)!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-side-drawer.sekka-glass-panel{
+ background:linear-gradient(165deg,rgba(16,24,39,.98) 0%,rgba(23,36,55,.97) 58%,rgba(31,47,70,.96) 100%)!important;
+ border-color:rgba(151,174,218,.23)!important;color:#F3F3F6!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-glass-panel nav button.sekka-menu-row{
+ color:#F3F3F6!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-glass-panel nav button.sekka-menu-row[aria-current="page"]{
+ background:rgba(139,168,255,.17)!important;
+ border-color:rgba(139,168,255,.38)!important;
+ color:#D6E1FF!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-glass-panel .sekka-menu-row__icon,
+html[data-theme="dark"] .sekka-mobile .sekka-glass-panel nav button.sekka-menu-row[aria-current="page"] .sekka-menu-row__icon,
+html[data-theme="dark"] .sekka-mobile .sekka-side-drawer.sekka-glass-panel nav button.sekka-menu-row[aria-current="page"] .sekka-menu-row__icon svg{
+ color:#CAD8FF!important;stroke:currentColor!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-glass-panel .sekka-side-drawer__wordmark{color:#CAD8FF!important;}
+html[data-theme="dark"] .sekka-mobile :is(.rs3__head,.rf3__hero,.rr3-hero,.rd3__hero,.rb3__hero,.rbk3-hero,.np4__hero,.sekka-entry__header),
+html[data-theme="dark"] .sekka-mobile .captain-routes-canvas :is(.cj-hero,.cj-home-welcome){
+ background:linear-gradient(121deg,#17253A 0%,#22385D 52%,#2B4D91 100%)!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-hero.rh-showcase-hero{
+ background-image:repeating-linear-gradient(115deg,transparent 0 65px,rgba(255,255,255,.036) 65px 67px,transparent 67px 130px),
+ linear-gradient(126deg,#111D30 0%,#203355 58%,#2B4D91 100%)!important;
+}
+/* The accent keeps dark ink in BOTH themes: yellow is not a text color. */
+.sekka-mobile :is(.rh-button--primary,.rs3__submit,.rd3__primary,.rf3__apply,.phase-primary,.sekka-entry__primary,.sekka-action,.cj-primary,.cj-home-main-action,.rh-picker__confirm,.sekka-request-yellow-cta),
+html[data-theme="dark"] .sekka-mobile :is(.rh-button--primary,.rs3__submit,.rd3__primary,.rf3__apply,.phase-primary,.sekka-entry__primary,.sekka-action,.cj-primary,.cj-home-main-action,.rh-picker__confirm,.sekka-request-yellow-cta),
+.sekka-mobile .rh-tabs .rh-tabs__primary .rh-tabs__name{
+ color:#17253A!important;
+}
+@media(prefers-reduced-motion:reduce){
+ .sekka-mobile .rh-hero,.sekka-mobile .rh-showcase-search__card{
+ transition:none!important;
+ }
+}
+
+/* Dark mode retains dark lettering on high-visibility yellow actions. */
+.sekka-mobile :is(.rh-button--primary,.rs3__submit,.rd3__primary,.rf3__apply,.phase-primary,.sekka-entry__primary,.sekka-action,.cj-primary,.cj-home-main-action,.rh-picker__confirm,.sekka-request-yellow-cta) *,
+html[data-theme="dark"] .sekka-mobile :is(.rh-button--primary,.rs3__submit,.rd3__primary,.rf3__apply,.phase-primary,.sekka-entry__primary,.sekka-action,.cj-primary,.cj-home-main-action,.rh-picker__confirm,.sekka-request-yellow-cta) *,
+html[data-theme="dark"] .sekka-mobile .sekka-rider-booking-v3 .b-primary *,
+html[data-theme="dark"] .sekka-mobile .d-screen-11 .sekka-live-result .d-offer-select *,
+html[data-theme="dark"] .sekka-mobile :is(.rh-journey__ribbon,.rh-journey__ribbon *,.rs3__progress .is-current b,.rh-showcase-search__arrow){
+ color:#17253A!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation .rh-tabs .rh-tabs__primary .rh-tabs__icon,
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation .rh-tabs .rh-tabs__primary .rh-tabs__name{
+ color:#17253A!important;
+}

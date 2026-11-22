@@ -1,0 +1,162 @@
+/* PoNo: approved white-on-blue wordmark in the real mobile app only.
+   Existing sekka-* internal selectors remain unchanged for compatibility. */
+.sekka-mobile .sekka-entry__brand--text,
+.sekka-mobile .sekka-entry-login__wordmark{
+ display:block!important;width:clamp(154px,47vw,248px)!important;
+ height:auto!important;max-height:100px!important;aspect-ratio:1250/455;
+ object-fit:contain!important;border-radius:10px;
+ background:#053FF6!important;box-shadow:none!important;
+}
+.sekka-mobile .sekka-entry-login__brand{margin-inline:auto!important;}
+.sekka-mobile .sekka-glass-mark{background:#0648F5!important;overflow:hidden!important;}
+.sekka-mobile .sekka-glass-mark img{display:block!important;width:100%!important;height:100%!important;object-fit:cover!important;}
+.sekka-mobile .sekka-side-drawer__wordmark{
+ display:block!important;width:115px!important;height:auto!important;
+ max-height:46px!important;aspect-ratio:1250/455;object-fit:contain;
+ background:#053FF6!important;border-radius:5px;
+}
+.sekka-mobile .sekka-live-wordmark{
+ display:block;max-width:250px;width:65vw;height:auto;aspect-ratio:1250/455;
+ object-fit:contain;border-radius:10px;background:#053FF6;
+}
+
+/* Force current urban semantics over older, more specific maritime CSS.
+   These rules repair visual regressions, not the auth/booking logic. */
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-hero__top-wave,
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-hero__bottom-wave,
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-hero__wave{
+ display:none!important;
+}
+html[data-theme="dark"] .sekka-mobile .rs3 .rs3__head{
+ background:linear-gradient(121deg,#17253A 0%,#22385D 52%,#2B4D91 100%)!important;
+ color:#FFFFFF!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-side-drawer.sekka-glass-panel nav button.sekka-menu-row[aria-current="page"]{
+ background:rgba(139,168,255,.17)!important;
+ border-color:rgba(139,168,255,.38)!important;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.08)!important;
+ color:#D6E1FF!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-side-drawer.sekka-glass-panel nav button.sekka-menu-row[aria-current="page"] .sekka-menu-row__label{
+ color:#D6E1FF!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-side-drawer.sekka-glass-panel nav button.sekka-menu-row[aria-current="page"] .sekka-menu-row__icon,
+html[data-theme="dark"] .sekka-mobile .sekka-side-drawer.sekka-glass-panel nav button.sekka-menu-row[aria-current="page"] .sekka-menu-row__icon svg{
+ color:#CAD8FF!important;stroke:currentColor!important;
+}
+
+
+/* PoNo visual QA: functional navigation and legible selections at 320–412px.
+   Scoped to the real mobile app; the legacy 73-screen gallery stays archival. */
+.sekka-mobile.sekka-rider-navigation .sekka-bookings-section-tabs{
+ display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:8px!important;min-width:0;padding:8px!important;
+ border:1px solid rgba(23,83,232,.16)!important;
+ border-radius:18px!important;background:var(--card)!important;
+}
+.sekka-mobile.sekka-rider-navigation .sekka-bookings-section-tabs button{
+ min-height:50px!important;min-width:0;white-space:normal!important;
+ overflow-wrap:anywhere;font-size:clamp(12px,3.45vw,14px)!important;
+ line-height:1.45!important;
+ color:var(--urban-ink,#17253A)!important;
+ background:var(--urban-paper,#F5F3ED)!important;
+ border:1px solid rgba(23,83,232,.18)!important;
+ border-radius:12px!important;
+}
+.sekka-mobile.sekka-rider-navigation .sekka-bookings-section-tabs button[aria-pressed="true"]{
+ background:#FFD02A!important;color:#17253A!important;
+ border-color:#DBAE12!important;box-shadow:inset 0 -2px rgba(23,37,58,.13)!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation .sekka-bookings-section-tabs{
+ background:#1B2638!important;border-color:#3A4760!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation .sekka-bookings-section-tabs button{
+ background:#24364C!important;color:#F3F3F6!important;border-color:#43556F!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation .sekka-bookings-section-tabs button[aria-pressed="true"]{
+ background:#FFD02A!important;color:#17253A!important;border-color:#FFD02A!important;
+}
+/* Old filter CSS rendered tiny charcoal seat counts on dark teal cards. */
+.sekka-mobile .rf3__categories button span{
+ color:#43566B!important;font-size:13px!important;line-height:1.5!important;
+}
+html[data-theme="dark"] .sekka-mobile .rf3__categories button:not([aria-pressed="true"]) span{
+ color:#E2EAF5!important;
+}
+.sekka-mobile .rf3__categories button[aria-pressed="true"],
+.sekka-mobile .rf3__choices button[aria-pressed="true"]{
+ background:#FFD02A!important;color:#17253A!important;border-color:#DBAE12!important;
+}
+/* Legacy dark selectors include html[data-theme] and otherwise beat the
+   shared rule above, leaving unreadable white lettering on yellow. */
+html[data-theme="dark"] .sekka-mobile .rf3__categories button[aria-pressed="true"],
+html[data-theme="dark"] .sekka-mobile .rf3__choices button[aria-pressed="true"]{
+ background:#FFD02A!important;color:#17253A!important;border-color:#DBAE12!important;
+}
+.sekka-mobile .rf3__categories button[aria-pressed="true"] span,
+html[data-theme="dark"] .sekka-mobile .rf3__categories button[aria-pressed="true"] span{
+ color:#17253A!important;
+}
+.sekka-mobile .rf3__apply,
+html[data-theme="dark"] .sekka-mobile .rf3__apply{
+ color:#17253A!important;background:#FFD02A!important;
+}
+.sekka-mobile .rf3__availability small{
+ font-size:12px!important;line-height:1.55!important;
+}
+html[data-theme="dark"] .sekka-mobile .rf3__availability small{color:#C5D1E1!important;}
+/* No empty button shapes in the collapsed icon-only rail. */
+.sekka-mobile .sekka-glass-panel--collapsed .sekka-menu-tour--text-only{
+ display:none!important;
+}
+.sekka-mobile .sekka-glass-panel .sekka-side-drawer__heading .sekka-side-drawer__wordmark{
+ min-width:100px!important;width:116px!important;
+}
+.sekka-mobile .sekka-bookings-section-tabs button:focus-visible,
+.sekka-mobile .rf3__panel :is(button,input):focus-visible{
+ outline:3px solid #1753E8!important;outline-offset:2px!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-bookings-section-tabs button:focus-visible,
+html[data-theme="dark"] .sekka-mobile .rf3__panel :is(button,input):focus-visible{
+ outline-color:#FFD02A!important;
+}
+@media(prefers-reduced-motion:reduce){
+ .sekka-mobile .rf3 :is(button,input),.sekka-mobile .sekka-bookings-section-tabs button,
+ .sekka-mobile .sekka-glass-panel{animation:none!important;transition:none!important;}
+}
+
+/* Restore logical LTR/RTL arrow direction on Google continuation. */
+.sekka-mobile .sekka-entry-login[dir="rtl"] .sekka-entry-login__form .phase-primary>svg{
+ transform:scaleX(-1)!important;
+}
+/* Strong legibility in both button states, including a still-explained disabled form. */
+.sekka-mobile .rs3__submit,
+.sekka-mobile .rs3__submit svg,
+.sekka-mobile .sekka-entry button.sekka-entry__primary{
+ color:#17253A!important;
+}
+.sekka-mobile .rs3__submit:disabled{opacity:.78!important;}
+/* Keep the sign-in wordmark and form as a deliberate single visual group. */
+.sekka-mobile .sekka-entry-login .sekka-entry-login__brand{
+ margin:clamp(22px,4vh,42px) auto clamp(60px,10vh,100px)!important;
+}
+.sekka-mobile .sekka-entry-login .phase-google-auth.sekka-entry-login__form{
+ margin:0 auto auto!important;
+}
+@media(max-height:680px){
+ .sekka-mobile .sekka-entry-login .sekka-entry-login__brand{
+  margin:8px auto 36px!important;
+ }
+}
+
+/* Real Rider toolbar uses the owner's typography artwork, not a generic PoNo font. */
+.sekka-mobile.sekka-rider-navigation.sekka-tab-home>.sekka-sliver-pin .sekka-sliver-wordmark{
+ display:block;width:min(108px,100%)!important;height:auto;max-height:40px;
+ aspect-ratio:1250/455;object-fit:contain;
+ border-radius:6px;background:#053FF6;
+}
+@media(max-width:340px){
+ .sekka-mobile.sekka-rider-navigation.sekka-tab-home>.sekka-sliver-pin .sekka-sliver-wordmark{
+  width:min(94px,100%)!important;
+ }
+}

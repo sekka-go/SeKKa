@@ -1,4 +1,5 @@
 import {usePreferences} from "./preferences";
+import {displayVehicleCategory} from './vehicleCategory';
 import {translate} from "./translations";
 import { readPublishedPreviews } from "./CaptainRoutes";
 import { selectStops, matchesStops, type Stop } from "../../../packages/domain/stops";
@@ -9,6 +10,18 @@ import { Wordmark } from "./Onboarding";
 import type { Appearance } from "./Onboarding";
 import type { Route, Booking } from "./api";
 import "./discovery.css";
+import LiveRouteSearch from "./LiveRouteSearch";
+import NearbyRides from "./NearbyRides";
+import RiderSearchV3 from "./RiderSearchV3";
+import RiderFiltersV3 from "./RiderFiltersV3";
+import RiderResultsHero from "./RiderResultsHero";
+import RiderTripDetailsV3 from "./RiderTripDetailsV3";
+import GeoPlaceInput from "./GeoPlaceInput";
+import {geoRequestAvailable,sameJourneyEndpoint,selectOperationalMapPlace,isSearchableMapPlace,outsideCoverageMessage} from "./geoPlace";
+import type {PlaceChoice} from "./geoPlace";
+import type {LiveSelection} from "./LiveRouteSearch";
+import {saveCommute,isWeekdays} from './riderCommute';
+import './rider-journey.css';
 
 export const discoveryScreens = [8, 9, 10, 11, 12, 14];
 const titles: Record<number, string> = {
@@ -37,6 +50,8 @@ const areas = [
 ];
 // Only Cairo and Giza districts are available in this launch region.
 const servedAreas = areas.filter((a) => !["العبور", "الشروق"].includes(a));
+// Server category codes remain stable; DAILY is the owner-approved public label.
+const publicCategoryName=displayVehicleCategory;
 const categoryList = [
   { name: "PRIME", seats: 3 },
   { name: "SAVER", seats: 4 },
@@ -352,7 +367,7 @@ function Action({
     </button>
   );
 }
-function Journey({ line, compact = false }: { line: Line; compact?: boolean }) {
+function Journey({ line, compact = false, activeLegsOnly=false }: { line: Line; compact?: boolean; activeLegsOnly?: boolean }) {
   const {language} = usePreferences();
   const tr=(text:string)=>translate(text,language);
   return (
@@ -369,18 +384,18 @@ function Journey({ line, compact = false }: { line: Line; compact?: boolean }) {
         </span>
       </div>
       <div className="d-times">
-        <span>
+        {(!activeLegsOnly||line.direction!=="return")&&<span>
           <DiscoveryIcon name="sun" />
           <span>
             {tr("الذهاب")}{compact ? ":" : ""} <b dir="auto">{time(line.outbound,language)}</b>
           </span>
-        </span>
-        <span>
+        </span>}
+        {(!activeLegsOnly||line.direction!=="outbound")&&<span>
           <DiscoveryIcon name="moon" />
           <span>
             {tr("العودة")}{compact ? ":" : ""} <b dir="auto">{time(line.returnTime,language)}</b>
           </span>
-        </span>
+        </span>}
       </div>
     </div>
   );
@@ -414,6 +429,13 @@ function Empty({ children }: { children: ReactNode }) {
 }
 export type DiscoveryProps = {
   screen: number;
+  production?: boolean;
+  riderId?: string | null;
+  serviceAreas?: {id:number;name_ar:string;name_en:string}[];
+  liveSelection?: LiveSelection | null;
+  onLiveSelect?: (selection:LiveSelection)=>void;
+  onDetailBack?:()=>void;
+  selectionLoading?:boolean;
   theme: Appearance;
   onTheme: (t: Appearance) => void;
   go: (id: number) => void;
@@ -445,28 +467,81 @@ export type DiscoveryProps = {
 // (such as sign-in) temporarily unmounts the discovery screen. Session only.
 const riderDraftKey = "sekka.rider.discoveryDraft.v31";
 type RiderDraft = {
-  origin?: string; destination?: string; outbound?: string; returnTime?: string;
+  origin?: string; destination?: string; originPlace?:PlaceChoice|null; destinationPlace?:PlaceChoice|null; outbound?: string; returnTime?: string;
   period?: string; categories?: string[]; selectedId?: string; favoriteDetail?: Line | null;
   searched?: boolean; pickup?: string; dropoff?: string; filterDirection?: string;
-  filterPrice?: string; onlyAvailable?: boolean; appliedFilters?: boolean;
+  filterPrice?: string; filterPeriod?: ""|"weekly"|"monthly"; onlyAvailable?: boolean; appliedFilters?: boolean;
+  weekdays?:number[];
 };
-function readRiderDraft(): RiderDraft {
+
+/* Per-Google-account local search shortcuts: no fake route inventory, and no
+ * sharing saved home/work areas between users of the same device. */
+type RiderSavedAreas = {
+  home?: string; work?: string; recent?: {origin:string;destination:string}[];
+};
+function readRiderSavedAreas(riderId?:string|null):RiderSavedAreas{
+ if(!riderId)return {};
+ try{
+  const stored:unknown=JSON.parse(localStorage.getItem('sekka.rider.savedAreas.v1.'+riderId)||'null');
+  if(!stored||typeof stored!=='object'||Array.isArray(stored))return {};
+  const saved=stored as RiderSavedAreas;
+  const valid=(value:unknown)=>typeof value==='string'&&value.length<=120;
+  return {
+   home:valid(saved.home)?saved.home:undefined,
+   work:valid(saved.work)?saved.work:undefined,
+   recent:Array.isArray(saved.recent)?saved.recent.filter((item):item is {origin:string;destination:string}=>
+    !!item&&valid(item.origin)&&valid(item.destination)).slice(0,3):[]
+  };
+ }catch{return {};}
+}
+
+function readRiderDraft(key:string): RiderDraft {
   try {
-    const value: unknown = JSON.parse(sessionStorage.getItem(riderDraftKey) || "null");
+    const value: unknown = JSON.parse(sessionStorage.getItem(key) || "null");
     if (!value || typeof value !== "object" || Array.isArray(value)) return {};
-    return value as RiderDraft;
+    const draft=value as RiderDraft;
+    if(draft.originPlace?.kind==='map'&&(!draft.originPlace.place||!selectOperationalMapPlace(draft.originPlace.place))){
+      delete draft.origin;delete draft.originPlace;draft.searched=false;
+    }
+    if(draft.destinationPlace?.kind==='map'&&(!draft.destinationPlace.place||!selectOperationalMapPlace(draft.destinationPlace.place))){
+      delete draft.destination;delete draft.destinationPlace;draft.searched=false;
+    }
+    if(draft.originPlace?.kind==='search'&&!isSearchableMapPlace(draft.originPlace.place)){
+      delete draft.origin;delete draft.originPlace;draft.searched=false;
+    }
+    if(draft.destinationPlace?.kind==='search'&&!isSearchableMapPlace(draft.destinationPlace.place)){
+      delete draft.destination;delete draft.destinationPlace;draft.searched=false;
+    }
+    return draft;
   } catch { return {}; }
 }
 export default function Discovery(p: DiscoveryProps) {
   const { screen, theme, onTheme, go } = p;
   const {language}=usePreferences();
   const tr=(text:string)=>translate(text,language);
-  const demo = new URLSearchParams(location.search).get("preview") === "phase2";
-  const restored = useMemo(readRiderDraft, []);
+  const demo = !p.production && new URLSearchParams(location.search).get("preview") === "phase2";
+  const storageKey=p.production?riderDraftKey:'sekka.preview.discoveryDraft.v31';
+  const restored = useMemo(()=>readRiderDraft(storageKey),[storageKey]);
+  const [nearbyOpen,setNearbyOpen]=useState(false);
+  const [savedAreas,setSavedAreas]=useState<RiderSavedAreas>(()=>readRiderSavedAreas(p.riderId));
+  useEffect(()=>{setSavedAreas(readRiderSavedAreas(p.riderId));},[p.riderId]);
+  const storedAreaNames=new Set(p.serviceAreas?.map(area=>area.name_ar)||[]);
+  const savedHome=savedAreas.home&&storedAreaNames.has(savedAreas.home)?savedAreas.home:undefined;
+  const savedWork=savedAreas.work&&storedAreaNames.has(savedAreas.work)?savedAreas.work:undefined;
+  const savedRecent=(savedAreas.recent||[]).filter(item=>storedAreaNames.has(item.origin)&&storedAreaNames.has(item.destination)&&item.origin!==item.destination);
+  const areaDisplay=(name:string)=>language==='en'?(p.serviceAreas?.find(area=>area.name_ar===name)?.name_en||name):name;
+  function persistSavedAreas(next:RiderSavedAreas){
+   if(!p.production||!p.signedIn||!p.riderId)return;
+   setSavedAreas(next);
+   try{localStorage.setItem('sekka.rider.savedAreas.v1.'+p.riderId,JSON.stringify(next));}
+   catch{/* The active search is still usable if browser storage is restricted. */}
+  }
   const [origin, setOrigin] = useState(restored.origin ?? (demo ? "المعادي" : "")),
     [destination, setDestination] = useState(restored.destination ?? (demo ? "التجمع" : ""));
-  const [outbound, setOutbound] = useState(restored.outbound ?? "07:30"),
-    [returnTime, setReturnTime] = useState(restored.returnTime ?? "17:00"),
+  const [originPlace,setOriginPlace]=useState<PlaceChoice|null>(restored.originPlace||null);
+  const [destinationPlace,setDestinationPlace]=useState<PlaceChoice|null>(restored.destinationPlace||null);
+  const [outbound, setOutbound] = useState(restored.outbound ?? (demo?"07:30":"")),
+    [returnTime, setReturnTime] = useState(restored.returnTime ?? (demo?"17:00":"")),
     [period, setPeriod] = useState(restored.period ?? "monthly");
   const [categories, setCategories] = useState<string[]>(Array.isArray(restored.categories) ? restored.categories.filter(v => typeof v === "string") : []),
     [selectedId, setSelectedId] = useState(restored.selectedId ?? examples[0].id),
@@ -478,7 +553,12 @@ export default function Discovery(p: DiscoveryProps) {
       return favoriteExamples.map(row => row.id);
     });
   const [favoriteDetail, setFavoriteDetail] = useState<Line | null>(restored.favoriteDetail ?? null);
-  const [searched, setSearched] = useState(() => new URLSearchParams(location.search).get("screen") === "11" && restored.searched === true);
+  const [searched, setSearched] = useState(() => {
+    const query = new URLSearchParams(location.search);
+    // The developer gallery uses screen=11; the live PWA uses view=11.
+    // Restore search intent after the Google sign-in return journey.
+    return (query.get("screen") === "11" || query.get("view") === "11") && restored.searched === true;
+  });
   const [favoriteSignInRequired, setFavoriteSignInRequired] = useState(false);
   const [favoriteRetryId, setFavoriteRetryId] = useState<string | null>(null);
   const [requestSent, setRequestSent] = useState(false);
@@ -489,7 +569,39 @@ export default function Discovery(p: DiscoveryProps) {
     [message, setMessage] = useState(""),
     [modal, setModal] = useState("");
   const lines = demo ? [...examples, ...readPublishedPreviews()].filter(l => l.available > 0) : p.routes.flatMap(toLines);
-  const selected = demo
+  const live=p.liveSelection;
+  const liveStopKey=p.production&&live?`${live.route.id}:${live.reverse}:${live.from.id}:${live.to.id}`:'';
+  const [editedLiveStops,setEditedLiveStops]=useState<{key:string;pickup:string;dropoff:string}|null>(null);
+  const liveStopOverrides=editedLiveStops?.key===liveStopKey?editedLiveStops:null;
+  const chosenPickup=liveStopKey?(liveStopOverrides?.pickup??live?.from.id??''):pickup;
+  const chosenDropoff=liveStopKey?(liveStopOverrides?.dropoff??live?.to.id??''):dropoff;
+  const changePickup=(id:string)=>{
+    if(liveStopKey)setEditedLiveStops({key:liveStopKey,pickup:id,dropoff:''});
+    else {setPickup(id);setDropoff('');}
+  };
+  const changeDropoff=(id:string)=>{
+    if(liveStopKey)setEditedLiveStops({key:liveStopKey,pickup:chosenPickup,dropoff:id});
+    else setDropoff(id);
+  };
+  const liveRouteLine:Line|null=p.production&&live?{
+    id:live.route.id+':'+(live.reverse?'return':'outbound'),routeId:live.route.id,
+    origin:p.serviceAreas?.find(a=>a.id===live.from.area_id)?.name_ar||live.from.name,
+    destination:p.serviceAreas?.find(a=>a.id===live.to.area_id)?.name_ar||live.to.name,
+    category:live.route.category,available:live.remaining,
+    outbound:live.route.outbound_time?.slice(0,5)||'',returnTime:live.route.return_time?.slice(0,5)||'',
+    period:live.route.period,direction:live.reverse?'return':live.route.direction==='round_trip'?'round_trip':'outbound',amount:live.route.seat_price_egp,
+    stops:(live.reverse?[...live.stops].reverse():live.stops).map(s=>({
+      id:s.id,name:s.name,area:p.serviceAreas?.find(a=>a.id===s.area_id)?.name_ar||s.name,
+      pickup:live.reverse?s.dropoff_allowed:s.pickup_allowed,
+      dropoff:live.reverse?s.pickup_allowed:s.dropoff_allowed,passingTime:live.reverse?s.return_stop_time:s.outbound_stop_time
+    })),
+    returnStops:live.route.direction==='round_trip'&&live.route.return_supported
+     ?[...live.stops].reverse().map(s=>({
+       id:s.id,name:s.name,area:p.serviceAreas?.find(a=>a.id===s.area_id)?.name_ar||s.name,
+       pickup:s.dropoff_allowed,dropoff:s.pickup_allowed,passingTime:s.return_stop_time
+     })):undefined
+  }:null;
+  const selected = p.production ? liveRouteLine : demo
     ? favoriteDetail || lines.find((l) => l.id === selectedId) || examples[0]
     : p.route
       ? toLines(p.route).find((l) => l.id === selectedId) ||
@@ -503,6 +615,10 @@ export default function Discovery(p: DiscoveryProps) {
     outbound,
     returnTime,
   };
+  const detailStops=current.stops||[];
+  const pickupPosition=detailStops.findIndex(stop=>stop.id===chosenPickup&&stop.pickup);
+  const lastDropoffPosition=detailStops.reduce((last,stop,index)=>stop.dropoff?index:last,-1);
+  const validDropoff=pickupPosition>=0&&detailStops.some((stop,index)=>stop.id===chosenDropoff&&stop.dropoff&&index>pickupPosition);
   const queryLine = {
     ...current,
     origin: origin || tr("منطقة الانطلاق"),
@@ -512,16 +628,20 @@ export default function Discovery(p: DiscoveryProps) {
   };
   const [filterDirection, setFilterDirection] = useState(restored.filterDirection ?? "");
   const [filterPrice, setFilterPrice] = useState(restored.filterPrice ?? "");
+  // Separate the request/commute period from the optional published-results filter.
+  const [filterPeriod,setFilterPeriod]=useState<''|'weekly'|'monthly'>(()=>
+    restored.filterPeriod==='weekly'||restored.filterPeriod==='monthly'?restored.filterPeriod:'');
+  const [preferredWeekdays,setPreferredWeekdays]=useState<number[]>(()=>isWeekdays(restored.weekdays)?restored.weekdays:[]);
   const [onlyAvailable, setOnlyAvailable] = useState(restored.onlyAvailable ?? false);
   const [appliedFilters, setAppliedFilters] = useState(restored.appliedFilters ?? false);
   useEffect(() => {
-    const draft: RiderDraft = {origin,destination,outbound,returnTime,period,categories,selectedId,
+    const draft: RiderDraft = {origin,destination,originPlace,destinationPlace,outbound,returnTime,period,categories,selectedId,
       favoriteDetail:demo ? favoriteDetail : null,searched,pickup,dropoff,filterDirection,
-      filterPrice,onlyAvailable,appliedFilters};
-    try { sessionStorage.setItem(riderDraftKey, JSON.stringify(draft)); }
+      filterPrice,filterPeriod,onlyAvailable,appliedFilters,weekdays:preferredWeekdays};
+    try { sessionStorage.setItem(storageKey, JSON.stringify(draft)); }
     catch { /* Keep the active screen usable when session storage is unavailable. */ }
-  }, [origin,destination,outbound,returnTime,period,categories,selectedId,favoriteDetail,
-      demo,searched,pickup,dropoff,filterDirection,filterPrice,onlyAvailable,appliedFilters]);
+  }, [origin,destination,originPlace,destinationPlace,outbound,returnTime,period,categories,selectedId,favoriteDetail,
+      storageKey,demo,searched,pickup,dropoff,filterDirection,filterPrice,filterPeriod,onlyAvailable,appliedFilters,preferredWeekdays]);
   const filtered = lines.filter(
     (l) =>
       (!searched || (matchesStops(l.stops || [], origin, destination) && (!outbound || l.outbound === outbound) && (!returnTime || l.returnTime === returnTime))) &&
@@ -570,9 +690,38 @@ export default function Discovery(p: DiscoveryProps) {
       setMessage(tr("اختار منطقة الانطلاق والوصول عشان نكمل."));
       return;
     }
-    if (origin === destination) {
+    if(p.production){
+      if([originPlace,destinationPlace].some(place=>
+        place?.kind==='map'&&!selectOperationalMapPlace(place.place))){
+        setMessage(language==='en'?outsideCoverageMessage.en:outsideCoverageMessage.ar);return;
+      }
+      const registered=(name:string)=>(p.serviceAreas||[]).some(a=>a.name_ar===name||a.name_en===name);
+      const chosen=(name:string,place:PlaceChoice|null)=>
+        place?.kind==='map'?selectOperationalMapPlace(place.place):
+        place?.kind==='search'?isSearchableMapPlace(place.place):
+        place?.kind==='service'?registered(name):registered(name);
+      if(!chosen(origin,originPlace)||!chosen(destination,destinationPlace)){
+        setMessage(language==='en'?'Select a location from the search results.':'اختار مكان الانطلاق والوصول من نتائج البحث.');
+        return;
+      }
+    }
+    if (sameJourneyEndpoint(origin,destination,originPlace,destinationPlace)) {
       setMessage(tr("اختار منطقتين مختلفتين."));
       return;
+    }
+    if(p.production&&p.riderId){
+      // Save only a rider-confirmed search, not tentative keystrokes or mock fixtures.
+      // Scoped to this Google account on the current device; server search still
+      // rechecks live publication and capacity for every real result.
+      saveCommute(p.riderId,{
+       origin,destination,originPlace,destinationPlace,
+       outbound,returnTime,period:period==='weekly'?'weekly':'monthly',
+       direction:filterDirection==='round_trip'||filterDirection==='return'?filterDirection:'outbound',
+       weekdays:preferredWeekdays
+      });
+      persistSavedAreas({...savedAreas,recent:[
+       {origin,destination},...savedRecent.filter(item=>item.origin!==origin||item.destination!==destination)
+      ].slice(0,3)});
     }
     setSearched(true); setRequestSent(false);
     if (demo) nav(11);
@@ -630,8 +779,8 @@ export default function Discovery(p: DiscoveryProps) {
       <option value="" disabled>
         {label}
       </option>
-      {servedAreas.map((a) => (
-        <option key={a} value={a}>{tr(a)}</option>
+      {(p.production ? (p.serviceAreas || []).map(a => ({value:a.name_ar,label:language==='en'?a.name_en||a.name_ar:a.name_ar})) : servedAreas.map(a=>({value:a,label:tr(a)}))).map((a) => (
+        <option key={a.value} value={a.value}>{a.label}</option>
       ))}
     </select>
   );
@@ -654,7 +803,7 @@ export default function Discovery(p: DiscoveryProps) {
   );
   return (
     <div className={`phase-one-stage discovery-stage ${theme}`}>
-      <nav
+      {!p.production && <nav
         className="phase-review-bar d-review"
         aria-label={tr("معاينة المرحلة الثانية")}
       >
@@ -710,28 +859,28 @@ export default function Discovery(p: DiscoveryProps) {
           >
             {tr("لايت")}</button>
         </div>
-      </nav>
-      <p className="phase-preview-note">
+      </nav>}
+      {!p.production && <p className="phase-preview-note">
         {demo
           ? tr("معاينة المرحلة الثانية · كل الأسماء والأسعار والحجوزات بيانات توضيحية فقط.")
-          : tr("سِكّة · القاهرة والجيزة")}
-      </p>
+          : tr("PoNo · القاهرة والجيزة")}
+      </p>}
       <main className={`phase-canvas d-canvas d-screen-${screen}`}>
         <header className="d-header">
           <button
             className="phase-back"
             aria-label={tr("رجوع")}
             onClick={() =>
-              nav(
-                screen === 8 ? 2 : screen === 13 ? 29 : screen === 12 ? 11 : 8,
+              p.production&&screen===12&&p.onDetailBack?p.onDetailBack():nav(
+                screen === 8 ? 2 : screen === 13 ? 29 : screen === 12 ? 11 : p.production&&screen === 10 ? 11 : p.production&&screen === 11 ? 9 : 8,
               )
             }
           >
             <DiscoveryIcon name="back" />
           </button>
-          <Wordmark />
+          {!p.production&&<Wordmark/>}
         </header>
-        <h1 className="d-title">
+        <h1 className={p.production?"sr-only":"d-title"}>
           <DiscoveryIcon name={titleIcon} />
           {heading}
         </h1>
@@ -741,7 +890,7 @@ export default function Discovery(p: DiscoveryProps) {
         )}
         {p.error && !demo && (
           <div className="d-feedback" role="alert">
-            <p>{tr("الخدمة مش متاحة دلوقتي. جرّب تاني بعد شوية.")}</p>
+            <p>{/OTP|verify|verification|تحقق|موبايل|بجوجل|Google/i.test(p.error) ? p.error : tr("الخدمة مش متاحة دلوقتي. جرّب تاني بعد شوية.")}</p>
             <button type="button" className="d-outline" onClick={() => nav(9)}>
               {tr("ارجع للبحث")}
             </button>
@@ -762,10 +911,10 @@ export default function Discovery(p: DiscoveryProps) {
             )}
           </div>
         )}
-        {[8, 9].includes(screen) && (
+        {[8, 9].includes(screen) && !p.production && (
           <>
-            <p className="d-subtitle">
-              {tr("حدد نقطة الانطلاق والوجهة، وابدأ رحلتك بسهولة")}</p>
+            {!p.production&&<p className="d-subtitle">
+              {tr("حدد نقطة الانطلاق والوجهة، وابدأ رحلتك بسهولة")}</p>}
             <form
               className="d-planner"
               onSubmit={(e) => {
@@ -774,11 +923,13 @@ export default function Discovery(p: DiscoveryProps) {
               }}
             >
               <div className="d-planner-places">
-                <label className="d-place">
+                <div className="d-place">
                   <span className="sr-only">{tr("من أين؟")}</span>
-                  {areaSelect(origin, setOrigin, tr("من أين؟"))}
+                  {p.production?<GeoPlaceInput label={language==='en'?'From where?':'منين هتتحرك؟'} value={origin} choice={originPlace}
+                   areas={p.serviceAreas||[]} onPick={(name,selection)=>{setOrigin(name);setOriginPlace(selection);}}/>
+                  :areaSelect(origin, setOrigin, tr("من أين؟"))}
                   <span className="d-origin-dot" />
-                </label>
+                </div>
                 <button
                   type="button"
                   className="d-swap"
@@ -786,16 +937,24 @@ export default function Discovery(p: DiscoveryProps) {
                   onClick={() => {
                     setOrigin(destination);
                     setDestination(origin);
+                    setOriginPlace(destinationPlace);setDestinationPlace(originPlace);
                   }}
                 >
                   <DiscoveryIcon name="swap" />
                 </button>
-                <label className="d-place">
+                <div className="d-place">
                   <span className="sr-only">{tr("إلى أين؟")}</span>
-                  {areaSelect(destination, setDestination, tr("إلى أين؟"))}
+                  {p.production?<GeoPlaceInput label={language==='en'?'Where to?':'رايح فين؟'} value={destination} choice={destinationPlace}
+                   areas={p.serviceAreas||[]} onPick={(name,selection)=>{setDestination(name);setDestinationPlace(selection);}}/>
+                  :areaSelect(destination, setDestination, tr("إلى أين؟"))}
                   <DiscoveryIcon name="pin" />
-                </label>
+                </div>
               </div>
+              {p.production&&<details className="sekka-gps-inline" open={nearbyOpen}
+               onToggle={event=>setNearbyOpen(event.currentTarget.open)}>
+               <summary><span aria-hidden="true">📍 </span>{language==='en'?'Find rides near my location':'اكتشف الرحلات القريبة من موقعي'}</summary>
+               {nearbyOpen&&<NearbyRides onSelect={p.onLiveSelect}/>}
+              </details>}
               <div className="d-box d-time-picker">
                 <label>
                   <DiscoveryIcon name="calendar" />
@@ -821,13 +980,68 @@ export default function Discovery(p: DiscoveryProps) {
                 </label>
               </div>
               <button className="d-primary" type="submit">
-                {tr("ابحث عن الرحلات")}<DiscoveryIcon name="arrow" />
+                {p.production?(language==='en'?'Show available rides':'شوف الرحلات المتاحة'):tr("ابحث عن الرحلات")}<DiscoveryIcon name="arrow" />
               </button>
             </form>
             <div className="d-road" aria-hidden="true" />
           </>
         )}
-        {screen === 10 && (
+        {screen===9&&p.production&&<RiderSearchV3
+          origin={origin} destination={destination} originPlace={originPlace}
+          destinationPlace={destinationPlace} areas={p.serviceAreas||[]}
+          outbound={outbound} returnTime={returnTime}
+          weekdays={preferredWeekdays}
+          onOrigin={(name,choice)=>{setOrigin(name);setOriginPlace(choice);}}
+          onDestination={(name,choice)=>{setDestination(name);setDestinationPlace(choice);}}
+          onSwap={()=>{setOrigin(destination);setDestination(origin);
+           setOriginPlace(destinationPlace);setDestinationPlace(originPlace);}}
+          onOutbound={setOutbound}
+          onReturn={value=>{setReturnTime(value);setFilterDirection(value?'round_trip':'');}}
+          shortcuts={p.signedIn&&p.riderId&&<details className="rs3__saved"><summary>{language==='en'?'Saved places & recent searches':'أماكنك وآخر مشاويرك'}</summary><div className="sekka-search-shortcuts" aria-label={tr("اختصارات المناطق المحفوظة")}>
+                <div className="sekka-search-shortcuts__actions">
+                  <button type="button" disabled={!origin||!storedAreaNames.has(origin)}
+                   onClick={()=>persistSavedAreas({...savedAreas,home:origin})}>
+                    {savedHome===origin?tr("✓ البيت محفوظ"):tr("احفظ البداية كبيت")}
+                  </button>
+                  <button type="button" disabled={!destination||!storedAreaNames.has(destination)}
+                   onClick={()=>persistSavedAreas({...savedAreas,work:destination})}>
+                    {savedWork===destination?tr("✓ الشغل محفوظ"):tr("احفظ الوصول كشغل")}
+                  </button>
+                </div>
+                {savedHome&&savedWork&&savedHome!==savedWork&&<div className="sekka-search-shortcuts__actions">
+                  <button type="button" onClick={()=>{setOrigin(savedHome);setDestination(savedWork);setOriginPlace(null);setDestinationPlace(null);}}>
+                   {tr("البيت ← الشغل")}
+                  </button>
+                  <button type="button" onClick={()=>{setOrigin(savedWork);setDestination(savedHome);setOriginPlace(null);setDestinationPlace(null);}}>
+                   {tr("الشغل ← البيت")}
+                  </button>
+                </div>}
+                {savedRecent.length>0&&<div className="sekka-search-shortcuts__recent">
+                  <span>{tr("آخر عمليات البحث")}</span>
+                  {savedRecent.map((item,index)=><button type="button" key={item.origin+':'+item.destination+':'+index}
+                   onClick={()=>{setOrigin(item.origin);setDestination(item.destination);setOriginPlace(null);setDestinationPlace(null);}}
+                   aria-label={tr("إعادة البحث عن ")+areaDisplay(item.origin)+' - '+areaDisplay(item.destination)}>
+                    {areaDisplay(item.origin)} ← {areaDisplay(item.destination)}
+                  </button>)}
+                </div>}
+              </div></details>}
+          onWeekdays={setPreferredWeekdays} onSearch={search}
+          onLiveSelect={p.onLiveSelect}
+        />}
+        {screen===10&&p.production&&<RiderFiltersV3
+          available={categoryList} categories={categories}
+          period={filterPeriod} direction={filterDirection}
+          maxPrice={filterPrice} onlyAvailable={onlyAvailable}
+          onCategories={setCategories}
+          onPeriod={value=>{setFilterPeriod(value);if(value)setPeriod(value);}}
+          onDirection={setFilterDirection}
+          onMaxPrice={setFilterPrice}
+          onOnlyAvailable={setOnlyAvailable}
+          onReset={()=>{setCategories([]);setFilterDirection('');setFilterPrice('');
+           setFilterPeriod('');setOnlyAvailable(false);setAppliedFilters(false);}}
+          onApply={()=>{setAppliedFilters(true);nav(11);}}
+        />}
+        {screen === 10 && !p.production && (
           <>
             <p className="d-subtitle">
               {tr("خصص بحثك للعثور على الاشتراك المناسب لك")}</p>
@@ -850,7 +1064,7 @@ export default function Discovery(p: DiscoveryProps) {
                     className={categories.includes(c.name) ? "selected" : ""}
                   >
                     <DiscoveryIcon name={c.seats > 4 ? "bus" : "car"} />
-                    <b dir="ltr">{c.name}</b>
+                    <b dir="ltr">{publicCategoryName(c.name)}</b>
                     <span>
                       {c.seats} {c.seats === 13 ? tr("مقعدًا") : tr("مقاعد")}
                     </span>
@@ -878,7 +1092,7 @@ export default function Discovery(p: DiscoveryProps) {
                 </select>
               </label>
               <label className="w-field">
-                <span>{tr("أقصى سعر للاشتراك")}</span>
+                <span>{p.production?(language==='en'?'Maximum price per seat (EGP)':'أقصى سعر للمقعد (جنيه)'):tr("أقصى سعر للاشتراك")}</span>
                 <input
                   type="number"
                   min="0"
@@ -937,19 +1151,38 @@ export default function Discovery(p: DiscoveryProps) {
               {tr("عرض النتائج")}</Action>
           </>
         )}
-        {screen === 8 && (
+        {screen === 8 && !p.production && (
           <section className="d-box">
-            <h2>{tr("أهلًا بيك في سِكّة")}</h2>
+            <h2>{tr("أهلًا بيك في PoNo")}</h2>
             <p>{tr("مشوارك المنتظم يبدأ من هنا.")}</p>
-            <div className="d-period-options d-home-quick-actions">
+            {!p.production&&<div className="d-period-options d-home-quick-actions">
               <button onClick={() => nav(29)}>{tr("اشتراكاتي")}</button>
               <button onClick={() => nav(14)}>{tr("المفضلة")}</button>
-              <button onClick={() => nav(24)}>{tr("المحفظة")}</button>
+              {!p.production && <button onClick={() => nav(24)}>{tr("المحفظة")}</button>}
               <button onClick={() => nav(33)}>{tr("الإشعارات")}</button>
-            </div>
+            </div>}
           </section>
         )}
-        {screen === 11 && (
+        {screen===11&&p.production&&<RiderResultsHero
+          origin={language==='en'?areaDisplay(origin):origin}
+          destination={language==='en'?areaDisplay(destination):destination}
+          outbound={outbound} returnTime={returnTime} onEdit={()=>nav(9)}/>}
+        {screen === 11 && p.production && preferredWeekdays.length>0 && <p className="sekka-weekdays-disclaimer" role="note">
+         {language==='en'
+          ?'Your '+preferredWeekdays.length+' preferred days are saved. Current search matches routes by place and time, not by weekdays yet; check the trip schedule before booking.'
+          :'حفظنا تفضيلك لـ'+new Intl.NumberFormat('ar-EG').format(preferredWeekdays.length)+' أيام. البحث الحالي بيطابق المكان والميعاد، مش أيام الأسبوع تلقائيًا؛ راجع أيام الرحلة قبل الحجز.'}
+        </p>}
+        {screen === 11 && !demo && <LiveRouteSearch origin={origin} destination={destination}
+         originPoint={originPlace?.kind==='map'||originPlace?.kind==='search'?originPlace.place:null}
+         destinationPoint={destinationPlace?.kind==='map'||destinationPlace?.kind==='search'?destinationPlace.place:null}
+         canCreateRequest={geoRequestAvailable(
+           originPlace||((p.serviceAreas||[]).find(a=>a.name_ar===origin||a.name_en===origin)?{kind:'service',area:(p.serviceAreas||[]).find(a=>a.name_ar===origin||a.name_en===origin)!}:null),
+           destinationPlace||((p.serviceAreas||[]).find(a=>a.name_ar===destination||a.name_en===destination)?{kind:'service',area:(p.serviceAreas||[]).find(a=>a.name_ar===destination||a.name_en===destination)!}:null)
+         )} outbound={outbound} returnTime={returnTime} weekdays={preferredWeekdays} period={appliedFilters?(p.production?filterPeriod:period):""} requestPeriod={period} direction={filterDirection} categories={categories}
+         maxSeatPrice={p.production&&appliedFilters&&filterPrice!==''&&Number.isFinite(Number(filterPrice))&&Number(filterPrice)>=0?Number(filterPrice):null}
+         onlyAvailable={Boolean(p.production&&appliedFilters&&onlyAvailable)}
+         onEditFilters={p.production?()=>nav(10):undefined} onSelect={p.production?p.onLiveSelect:undefined} onSignIn={()=>nav(4)} />}
+        {screen === 11 && demo && (
           <>
             <p className="d-subtitle">{tr("اختر عرض الاشتراك المناسب لك")}</p>
             <section className="d-box d-results-summary">
@@ -979,7 +1212,7 @@ export default function Discovery(p: DiscoveryProps) {
                   <button
                     className="d-offer-select"
                     onClick={() => openLine(l)}
-                    aria-label={`${language === "en" ? "View details" : "عرض تفاصيل"} ${l.category} ${tr(periodLabel(l.period))} ${tr(directionLabel(l.direction))}`}
+                    aria-label={`${language === "en" ? "View details" : "عرض تفاصيل"} ${publicCategoryName(l.category)} ${tr(periodLabel(l.period))} ${tr(directionLabel(l.direction))}`}
                   >
                     <span className="d-category-badge">
                       <DiscoveryIcon
@@ -989,7 +1222,7 @@ export default function Discovery(p: DiscoveryProps) {
                             : "car"
                         }
                       />
-                      <b>{l.category}</b>
+                      <b>{publicCategoryName(l.category)}</b>
                     </span>
                     <span className="d-offer-direction">
                       <DiscoveryIcon
@@ -1024,11 +1257,35 @@ export default function Discovery(p: DiscoveryProps) {
             {searched && !filtered.length && <button className="d-text-action" onClick={() => nav(15)}>{tr("اطلب رحلة")}</button>}
           </>
         )}
-        {screen === 12 &&
+        {screen===12&&p.production&&selected&&<RiderTripDetailsV3
+          line={selected} stops={detailStops} pickup={chosenPickup} dropoff={chosenDropoff}
+          pickupPosition={pickupPosition} lastDropoffPosition={lastDropoffPosition}
+          validDropoff={validDropoff} onPickupChange={changePickup}
+          onDropoffChange={changeDropoff} onBack={p.onDetailBack||(()=>nav(11))}
+          onProceed={()=>{
+           try{
+            const selectedStops=selectStops(detailStops,chosenPickup,chosenDropoff,
+              current.direction==="round_trip"?current.returnStops||[]:undefined);
+            p.onBook({...current,selectedStops});
+           }catch{
+            setMessage(language==='en'
+              ?'Select valid pickup and drop-off stops. Round trips require return-compatible stops.'
+              :'اختار نقطتي ركوب ونزول صالحتين، ولازم محطات العودة تدعم اتجاهها الصحيح.');
+           }
+          }}
+        />}
+        {screen===12&&p.production&&!selected&&p.selectionLoading&&<div className="d-empty" role="status"><p>{language==='en'?'Loading ride details…':'بنحمّل تفاصيل الرحلة…'}</p></div>}
+        {screen===12&&p.production&&!selected&&!p.selectionLoading&&<div className="d-empty" role="status">
+          <p>{language==='en'?'No published ride is selected. Return to search results.':'مفيش رحلة منشورة مختارة دلوقتي. ارجع للنتائج.'}</p>
+          <button type="button" className="d-primary" onClick={p.onDetailBack||(()=>nav(9))}>
+           {language==='en'?'Back':'رجوع'}
+          </button>
+        </div>}
+        {screen === 12 && !p.production &&
           (selected ? (
             <>
               <section className="d-box d-detail-journey">
-                <Journey line={current} compact />
+                <Journey line={current} compact activeLegsOnly={p.production} />
               </section>
               <section className="d-box d-offer-facts">
                 <Meta label={tr("اتجاه الاشتراك")} icon="swap">
@@ -1038,15 +1295,16 @@ export default function Discovery(p: DiscoveryProps) {
                   {tr(periodLabel(current.period))}
                 </Meta>
                 <Meta label={tr("الفئة")} icon="seat">
-                  {current.category}
+                  {publicCategoryName(current.category)}
                 </Meta>
-                <Meta label={tr("المقاعد المتاحة")} icon="user">
-                  {current.available} {tr("مقاعد")}</Meta>
+                <Meta label={p.production?(language==='en'?'Available seats now':'المقاعد المتاحة الآن'):tr("المقاعد المتاحة")} icon="user">
+                  {p.production?current.available.toLocaleString(language==='en'?'en-EG':'ar-EG'):`${current.available} ${tr("مقاعد")}`}
+                </Meta>
               </section>
               <div className="d-box d-fixed-price">
                 <span>
                   <DiscoveryIcon name="clipboard" />
-                  {tr("سعر الاشتراك")}</span>
+                  {p.production?(language==='en'?'Indicative seat price':'سعر المقعد الاسترشادي'):tr("سعر الاشتراك")}</span>
                 <strong dir="auto">{money(current.amount,language)}</strong>
               </div>
               <div className="d-box d-information">
@@ -1054,24 +1312,50 @@ export default function Discovery(p: DiscoveryProps) {
                   {tr("الاشتراك من الأحد للخميس، باستثناء الإجازات الرسمية المصرية، وفق مواعيد العرض طوال مدة الاشتراك.")}</p>
                 <DiscoveryIcon name="info" />
               </div>
-              <section className="d-box"><h2>{tr("نقاط المسار")}</h2>
-                <ol>{(current.stops || []).map(s => <li key={s.id}>{tr(s.name)}</li>)}</ol>
-                <label>{tr("نقطة الركوب")}<select aria-label={tr("نقطة الركوب")} value={pickup} onChange={e => {setPickup(e.target.value); setDropoff("");}}><option value="">{tr("اختر نقطة الركوب")}</option>{(current.stops || []).filter(s => s.pickup).map(s => <option key={s.id} value={s.id}>{tr(s.name)}</option>)}</select></label>
-                <label>{tr("نقطة النزول")}<select aria-label={tr("نقطة النزول")} value={dropoff} onChange={e => setDropoff(e.target.value)}><option value="">{tr("اختر نقطة النزول")}</option>{(current.stops || []).filter((s,i) => s.dropoff && i > (current.stops || []).findIndex(p => p.id === pickup)).map(s => <option key={s.id} value={s.id}>{tr(s.name)}</option>)}</select></label>
-                {current.direction === "round_trip" && pickup && dropoff && <p>{tr("العودة تلقائيًا:")}{current.stops?.find(s => s.id === dropoff)?.name} ← {current.stops?.find(s => s.id === pickup)?.name}</p>}
-                {!current.stops?.length && <p>{tr("نقاط العرض غير متاحة؛ الحجز غير متاح حتى نشر النقاط.")}</p>}
+              <section className={p.production?"d-box sekka-live-stop-picker":"d-box"}><h2>{tr("نقاط المسار")}</h2>
+                {p.production?<>
+                  <p>{language==='en'?'Review the matched stops or choose another pair along this route.':'راجع المحطتين اللي طابقناهم مع بحثك، أو اختار محطتين تانيين على نفس الخط.'}</p>
+                  {detailStops.length>0&&<details>
+                    <summary>{language==='en'?'See all route stops':'اعرض كل محطات الخط'} · {detailStops.length}</summary>
+                    <ol>{detailStops.map(stop=><li key={stop.id}><bdi>{stop.name}</bdi>
+                       {stop.passingTime&&<small> · {language==='en'?'Expected passing time':'وقت مرور متوقع'} <bdi dir="ltr">{stop.passingTime.slice(0,5)}</bdi></small>}
+                     </li>)}</ol>
+                  </details>}
+                </>:<ol>{detailStops.map(stop=><li key={stop.id}>{tr(stop.name)}</li>)}</ol>}
+                <label>{tr("نقطة الركوب")}
+                  <select aria-label={tr("نقطة الركوب")} value={chosenPickup} onChange={event=>changePickup(event.target.value)}>
+                    <option value="">{tr("اختر نقطة الركوب")}</option>
+                    {detailStops.filter((stop,index)=>stop.pickup&&(!p.production||index<lastDropoffPosition)).map(stop=><option key={stop.id} value={stop.id}>{tr(stop.name)}</option>)}
+                  </select>
+                </label>
+                <label>{tr("نقطة النزول")}
+                  <select aria-label={tr("نقطة النزول")} value={chosenDropoff} disabled={Boolean(p.production&&pickupPosition<0)} onChange={event=>changeDropoff(event.target.value)}>
+                    <option value="">{tr("اختر نقطة النزول")}</option>
+                    {detailStops.filter((stop,index)=>stop.dropoff&&index>pickupPosition).map(stop=><option key={stop.id} value={stop.id}>{tr(stop.name)}</option>)}
+                  </select>
+                </label>
+                {current.direction==="round_trip"&&validDropoff&&<p>{tr("العودة تلقائيًا:")} <bdi>{detailStops.find(stop=>stop.id===chosenDropoff)?.name}</bdi> · <bdi>{detailStops[pickupPosition]?.name}</bdi></p>}
+                {!detailStops.length&&<p>{tr("نقاط العرض غير متاحة؛ الحجز غير متاح حتى نشر النقاط.")}</p>}
               </section>
+              {p.production&&current.available<1&&<p role="status">
+                {language==='en'?'No seats are available right now. Go back to see other routes.':'المقاعد خلصت حاليًا. ارجع للنتائج عشان تشوف الخطوط التانية.'}
+              </p>}
               <Action
-                onClick={() => {try {const selectedStops = selectStops(current.stops || [], pickup, dropoff, current.direction === "round_trip" ? current.returnStops || [] : undefined); p.onBook({...current, selectedStops});} catch {setMessage(tr("اختار نقطتين صالحين؛ يجب أن يدعم مسار العودة عكس النقطتين."));}}}
-                disabled={current.amount === null || !pickup || !dropoff}
+                onClick={()=>{
+                  try{
+                    const selectedStops=selectStops(detailStops,chosenPickup,chosenDropoff,current.direction==="round_trip"?current.returnStops||[]:undefined);
+                    p.onBook({...current,selectedStops});
+                  }catch{setMessage(tr("اختار نقطتين صالحين؛ يجب أن يدعم مسار العودة عكس النقطتين."));}
+                }}
+                disabled={current.amount===null||current.available<1||!chosenPickup||!validDropoff}
               >
                 {tr("حجز الاشتراك")}</Action>
-              <button
+              {!p.production && <button
                 className="d-text-action"
                 onClick={() => void favorite(demo ? current.id : current.routeId || current.id)}
               >
                 <DiscoveryIcon name="heart" />
-                {demo && favorites.includes(current.id) ? (language==="en" ? "Remove from favorites" : "إزالة من المفضلة") : tr("حفظ في المفضلة")}</button>
+                {demo && favorites.includes(current.id) ? (language==="en" ? "Remove from favorites" : "إزالة من المفضلة") : tr("حفظ في المفضلة")}</button>}
             </>
           ) : (
             <><Empty>{tr("اختار خط من نتائج البحث عشان تشوف تفاصيله.")}</Empty><Action onClick={() => nav(9)}>{tr("البحث عن خط")}</Action></>
@@ -1096,7 +1380,7 @@ export default function Discovery(p: DiscoveryProps) {
                       label={tr("الفئة")}
                       icon={l.category === "SPACE" ? "bus" : "car"}
                     >
-                      {l.category}
+                      {publicCategoryName(l.category)}
                     </Meta>
                     <Meta label={tr("المقاعد المتاحة")} icon="seat">
                       {l.available} {tr("مقاعد")}</Meta>
@@ -1154,7 +1438,7 @@ export default function Discovery(p: DiscoveryProps) {
                       <Journey line={l} compact />
                       <div className="d-three-meta">
                         <Meta label={tr("الفئة")} icon={i ? "bus" : "car"}>
-                          {l.category}
+                          {publicCategoryName(l.category)}
                         </Meta>
                         <Meta label={tr("المقاعد")} icon="seat">
                           {i ? 6 : 3}
@@ -1225,7 +1509,7 @@ export default function Discovery(p: DiscoveryProps) {
             aria-modal="true"
             aria-labelledby="d-modal-title"
           >
-            <h2 id="d-modal-title">{tr("معاينة سِكّة")}</h2>
+            <h2 id="d-modal-title">{tr("معاينة PoNo")}</h2>
             <p>{modal}</p>
             <button
               autoFocus

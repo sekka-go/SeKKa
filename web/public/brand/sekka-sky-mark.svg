@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="سِكَّة">
+<defs><linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+<stop stop-color="#22E1E8"/><stop offset=".45" stop-color="#08B7F5"/>
+<stop offset="1" stop-color="#0879EC"/></linearGradient></defs>
+<rect width="512" height="512" rx="108" fill="url(#sky)"/>
+<path d="M-30 118C95 30 235 188 550 44V0H0V205C131 108 324 203 542 100"
+ fill="#69F1F0" opacity=".36"/>
+<path d="M-40 419C158 353 305 500 545 400V515H-40Z" fill="#19D3EA"/>
+<path d="M-30 449C141 381 319 526 540 430" fill="none" stroke="#FFCC24" stroke-width="15"/>
+<text x="256" y="307" text-anchor="middle" direction="rtl"
+ font-family="Tajawal,Noto Sans Arabic,Tahoma,sans-serif" font-size="160" font-weight="900"
+ fill="#FFFFFF">سِكَّة</text>
+</svg>

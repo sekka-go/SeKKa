@@ -1,3 +1,8 @@
+> **2026-11-21 OWNER AMENDMENT — vNext experience under implementation**
+> The owner authorized changing v3.1 UX/product assumptions to support the recurring-commute passenger/captain experience, real maps and a refreshed brand. Read [RECURRING_COMMUTE_VNEXT_20261121.md](product/RECURRING_COMMUTE_VNEXT_20261121.md) FIRST. Its explicit changes override conflicting v3.1 UX requirements; unresolved payment/subscription/privacy decisions remain blocked and must not be guessed. All material below is retained as legacy v3.1 reference until implementation and policy migration is approved. **No production release is implied.**
+
+---
+
 # Product Requirements Document (PRD)
 
 ## سِكّة | seKKa
@@ -583,6 +588,8 @@
 - إضافة شاشات مستقلة غير ضرورية للغة أو المظهر.
 
 ---
+
+> **Owner amendment — 15 November 2026 (Captain enrollment):** Vehicle registration no longer asks Private-car Captains to choose PRIME versus SAVER. Both categories are automatically enabled; their passenger capacities are fixed (PRIME 3, SAVER 4). Captain personal information and vehicle make/model/year/color/plate and required documents are mandatory for submission and approval; database-side validation is required. See [Captain Enrollment Owner Requirements](product/CAPTAIN_ENROLLMENT_OWNER_REQUIREMENTS_20261115.md). This newer owner decision takes precedence over older optional-field language and manual category/seat enrollment assumptions.
 
 ## 14. Product Rules — القواعد النهائية
 

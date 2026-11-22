@@ -97,6 +97,59 @@
 }
 .c-canvas .c-document,
 .c-canvas .c-check { min-width: 0; }
+.c-canvas .c-document-label { display:block; font-weight:800; margin-block-end:8px; }
+.c-canvas .c-file-picker {
+  position:relative; display:flex; align-items:center; gap:12px; min-width:0; min-height:48px;
+  padding:7px 10px; border:1px solid var(--d-line); border-radius:12px;
+  background:var(--phase-card); cursor:pointer;
+}
+.c-canvas .c-file-picker:focus-within { outline:3px solid #ffc400; outline-offset:2px; }
+.c-canvas .c-file-picker-button {
+  flex:0 0 auto; padding:8px 12px; border-radius:9px; background:#ffc400; color:#171c22;
+  font-weight:900;
+}
+.c-canvas .c-file-picker-name { min-width:0; overflow-wrap:anywhere; }
+/* Production Android/PWA documents: expose the native file selector so
+   system Files/Photos opens from the actual control, never a hidden proxy. */
+.captain-onboarding-canvas .c-registration-form input.c-file-native {
+  position:static!important;
+  inset:auto!important;
+  display:block!important;
+  z-index:auto!important;
+  box-sizing:border-box!important;
+  width:100%!important;
+  height:auto!important;
+  min-height:48px!important;
+  max-width:100%!important;
+  padding:4px!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:10px;
+  overflow:visible!important;
+  clip:auto!important;
+  clip-path:none!important;
+  opacity:1!important;
+  background:transparent!important;
+  color:var(--phase-text)!important;
+  cursor:pointer;
+  font-size:14px;
+}
+.captain-onboarding-canvas .c-file-native::file-selector-button {
+  min-height:44px;
+  margin-inline-end:12px;
+  padding:9px 14px;
+  border:0;
+  border-radius:10px;
+  background:#ffc400;
+  color:#171c22;
+  font:inherit;
+  font-weight:900;
+  cursor:pointer;
+}
+.captain-onboarding-canvas .c-file-picker:focus-within {outline:3px solid #ffc400;outline-offset:2px;}
+.captain-onboarding-canvas .c-file-picker--locked {cursor:not-allowed;opacity:.72;}
+.captain-onboarding-canvas .c-file-picker--locked .c-file-native::file-selector-button {background:#c9c9c9;color:#454545;}
+.captain-onboarding-canvas .c-file-native:disabled {cursor:not-allowed;}
 .captain-routes-canvas .d-box {
   display: flow-root;
   padding: clamp(14px, 3cqw, 24px);
@@ -137,5 +190,552 @@
     border-color: #ffc400;
     transform: translateY(-1px);
     transition: transform .16s ease, border-color .16s ease;
+  }
+}
+
+/* Real route draft: accessible form and clearly separated route actions. */
+.captain-routes-canvas .live-route-form { display:grid; gap:16px; }
+.captain-routes-canvas .live-route-form > label { display:grid; gap:8px; margin:0; }
+.captain-routes-canvas .live-route-form input,
+.captain-routes-canvas .live-route-form select {
+  min-height:44px; width:100%; min-width:0;
+  padding:10px 12px; border-radius:12px;
+  border:1px solid var(--d-line); background:var(--phase-card);
+  color:var(--phase-text); font:inherit;
+}
+.captain-routes-canvas .live-route-form .live-route-check { display:flex; align-items:center; gap:12px; }
+.captain-routes-canvas .live-route-form input[type="checkbox"] {width:22px;height:22px;min-height:22px;flex:none;}
+.captain-routes-canvas .live-route-stops { margin:0; padding-inline-start:24px; }
+.captain-routes-canvas .live-route-stops li { padding:12px 0; border-bottom:1px solid var(--d-line); }
+.captain-routes-canvas .live-route-controls {display:flex;flex-wrap:wrap;gap:12px;margin-block:12px 0;}
+.captain-routes-canvas .live-route-controls button { min-height:44px;margin:0; }
+.captain-routes-canvas .live-route-form button { white-space:normal; }
+.captain-routes-canvas .live-route-form [role="alert"] {overflow-wrap:anywhere; color:#C73535;}
+
+.captain-routes-canvas .live-route-list { display:grid; gap:12px; }
+.captain-routes-canvas .live-route-list ul { list-style:none; padding:0; margin:0; display:grid; gap:12px; }
+.captain-routes-canvas .live-route-list li { display:grid; gap:8px; border:1px solid var(--d-line); border-radius:14px; padding:16px; min-width:0; overflow-wrap:anywhere; }
+.captain-routes-canvas .live-route-list button { min-height:44px; margin:0; width:max-content; max-width:100%; }
+.captain-routes-canvas .live-route-list button:disabled { opacity:.55; cursor:not-allowed; }
+
+/* Integrated enrollment forms use document scrolling so the mobile keyboard never
+   covers the focused field or the next-step action. */
+.captain-onboarding-canvas {
+  height:auto;
+  min-height:100dvh;
+  overflow:visible;
+  padding-block-end:calc(28px + env(safe-area-inset-bottom,0px));
+}
+.captain-onboarding-canvas .c-approval-live,
+.captain-onboarding-canvas .c-registration-form { min-width:0; }
+.captain-onboarding-canvas .c-registration-form {
+  display:grid;
+  gap:14px;
+  width:100%;
+  padding:clamp(14px,4cqw,24px);
+  overflow-wrap:anywhere;
+}
+.captain-onboarding-canvas .c-registration-form > label {
+  display:grid;
+  gap:7px;
+  min-width:0;
+  line-height:1.55;
+}
+.captain-onboarding-canvas .c-registration-form input:not([type="checkbox"]),
+.captain-onboarding-canvas .c-registration-form select,
+.captain-onboarding-canvas .c-registration-form textarea {
+  box-sizing:border-box;
+  width:100%;
+  min-width:0;
+  min-height:46px;
+  padding:10px 12px;
+  border:1px solid var(--d-line);
+  border-radius:12px;
+  background:var(--phase-card);
+  color:var(--phase-text);
+  font:inherit;
+}
+.captain-onboarding-canvas .c-registration-form textarea {
+  min-height:110px;
+  resize:vertical;
+}
+.captain-onboarding-canvas .c-registration-actions {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));
+  gap:10px;
+}
+.captain-onboarding-canvas .c-registration-actions button,
+.captain-onboarding-canvas .c-registration-form > button {
+  min-height:46px;
+  max-width:100%;
+  white-space:normal;
+}
+.captain-onboarding-canvas .c-category-summary {
+  display:grid;
+  gap:8px;
+  padding:12px;
+  border:1px solid var(--d-line);
+  border-radius:12px;
+  background:var(--phase-card);
+}
+.captain-onboarding-canvas .c-category-summary span {
+  display:block;
+  font-weight:800;
+  overflow-wrap:anywhere;
+}
+.captain-onboarding-canvas .c-registration-form :is(input,select,textarea,button) {
+  scroll-margin-block:88px 24px;
+}
+.captain-onboarding-canvas .c-registration-form [role="alert"] {
+  color:#b83224;
+  overflow-wrap:anywhere;
+}
+.captain-onboarding-canvas .c-field-error {
+  color:#b42318;
+  font-size:.92em;
+  font-weight:700;
+  line-height:1.45;
+  overflow-wrap:anywhere;
+}
+.captain-onboarding-canvas .c-registration-form [aria-invalid="true"] {
+  border-color:#b42318;
+  outline-color:#b42318;
+}
+.captain-onboarding-canvas .c-form-hint {
+  margin:0;
+  color:var(--muted);
+  font-size:.95em;
+}
+.captain-enrollment-progress {
+  margin:8px 0 20px;
+}
+.captain-enrollment-progress ol {
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:6px;
+  margin:0;
+  padding:0;
+  list-style:none;
+}
+.captain-enrollment-progress li {
+  display:grid;
+  justify-items:center;
+  align-content:start;
+  gap:6px;
+  min-width:0;
+  color:var(--muted);
+  text-align:center;
+  font-size:clamp(9px,2.5vw,12px);
+  line-height:1.25;
+}
+.captain-enrollment-progress li[aria-current="step"] {
+  color:var(--phase-text);
+  font-weight:900;
+}
+.captain-enrollment-progress__number {
+  display:grid;
+  width:28px;
+  height:28px;
+  place-items:center;
+  border:1px solid var(--d-line);
+  border-radius:50%;
+  background:var(--phase-card);
+  font-size:12px;
+  font-weight:900;
+}
+.captain-enrollment-progress li[aria-current="step"] .captain-enrollment-progress__number {
+  border-color:#ffc400;
+  background:#ffc400;
+  color:#171c22;
+}
+html[data-theme="dark"] .captain-onboarding-canvas .c-field-error,
+html[data-theme="dark"] .captain-onboarding-canvas .c-registration-form [aria-invalid="true"] {
+  color:#ff9b8f;
+  border-color:#ff9b8f;
+}
+@media(max-width:360px) {
+  .captain-onboarding-canvas .c-registration-actions {
+    grid-template-columns:1fr;
+  }
+}
+
+
+/* Production upload layout: the visible native control owns the tap. */
+.captain-onboarding-canvas .c-file-picker {
+  position:relative;
+  display:grid;
+  gap:4px;
+  min-width:0;
+  padding:8px 10px;
+  border:1px solid var(--d-line);
+  border-radius:12px;
+  background:var(--phase-card);
+}
+.captain-onboarding-canvas .c-file-picker-name {
+  display:block;
+  min-width:0;
+  overflow-wrap:anywhere;
+  font-size:.88em;
+  line-height:1.5;
+  color:var(--phase-muted,var(--muted));
+}
+.captain-onboarding-canvas .c-file-picker:focus-within {
+  outline:3px solid #ffc400;
+  outline-offset:2px;
+}
+
+/* Android-friendly Egyptian plates: discrete editable boxes, avoiding merged
+ * Arabic letters, numerals and bidi direction ambiguity. Production only. */
+.captain-onboarding-canvas .c-plate-fields{
+ box-sizing:border-box;display:flex;flex-direction:column;gap:11px;min-width:0;
+ margin:0;padding:10px;border:1px solid var(--d-line);border-radius:12px;
+ background:var(--phase-card);
+}
+.captain-onboarding-canvas .c-plate-fields legend{font-weight:800;padding:0 6px}
+.captain-onboarding-canvas .c-plate-segments{
+ display:flex;flex-direction:column;align-items:stretch;
+ gap:14px;min-width:0;
+}
+.captain-onboarding-canvas .c-plate-segment{
+ display:flex;flex-direction:column;align-items:center;gap:8px;
+ min-width:0;width:100%;
+}
+.captain-onboarding-canvas .c-plate-segment>strong{font-size:12px}
+.captain-onboarding-canvas .c-plate-boxes{display:flex;gap:5px;min-width:0}
+.captain-onboarding-canvas .c-plate-boxes input{
+ box-sizing:border-box;width:44px;min-width:44px;height:48px;min-height:48px;
+ padding:0 1px;text-align:center;font-size:22px;font-weight:900;line-height:1.1;font-family:inherit;
+ border:2px solid var(--d-line);border-radius:10px;
+ background:var(--phase-card);color:var(--phase-text);outline-offset:2px;
+}
+.captain-onboarding-canvas .c-plate-boxes input:focus-visible{
+ border-color:#C73535;outline:2px solid #C73535;
+}
+.captain-onboarding-canvas .c-plate-boxes input[aria-invalid="true"]:not(:disabled){border-color:#b42318}
+.captain-onboarding-canvas .c-plate-boxes input:disabled{
+ opacity:.58;background:var(--phase-card);cursor:not-allowed;
+}
+.captain-onboarding-canvas .c-plate-boxes input:disabled:not(:placeholder-shown){opacity:1}
+.captain-onboarding-canvas .c-plate-fields>.c-form-hint{
+ font-size:13px;line-height:1.55;text-align:center;margin:2px 0 8px;
+}
+.captain-onboarding-canvas .c-vehicle-save-feedback{
+ color:#b42318;font-weight:800;line-height:1.5;margin:8px 0 2px;
+ padding:10px;border:1px solid #b42318;border-radius:10px;
+ overflow-wrap:anywhere;
+}
+html[data-theme="dark"] .captain-onboarding-canvas .c-vehicle-save-feedback{
+ color:#ff9b8f;border-color:#ff9b8f;
+}
+@media(max-width:359px){
+ .captain-onboarding-canvas .c-plate-fields{padding:8px}
+ .captain-onboarding-canvas .c-plate-segments{gap:9px}
+ .captain-onboarding-canvas .c-plate-boxes{gap:4px}
+ .captain-onboarding-canvas .c-plate-boxes input{
+  width:44px;min-width:44px;height:48px;
+ }
+}
+
+
+/* Captain route flow: self-explanatory steps, location search instead of raw GPS
+ * numbers, automatic route title, mobile-safe actions. Production only. */
+.sekka-mobile .captain-routes-canvas .sekka-captain-route-wizard{
+ display:flex;flex-direction:column;gap:18px;overflow:visible;
+ padding:14px;min-width:0;max-width:100%;margin:12px auto 18px
+}
+.sekka-mobile .sekka-route-intro{display:grid;gap:7px;text-align:start}
+.sekka-mobile .sekka-route-intro>h2{font-size:clamp(20px,5vw,25px);line-height:1.3;margin:0}
+.sekka-mobile .sekka-route-intro>p{margin:0;font-size:14px;line-height:1.55}
+.sekka-mobile .sekka-route-intro>.sekka-route-eyebrow{
+ display:inline-flex;width:max-content;max-width:100%;padding:5px 10px;
+ border-radius:999px;background:#ffc40024;color:var(--phase-text);font-size:12px;font-weight:800
+}
+.sekka-mobile .sekka-captain-route-wizard>.sekka-route-step{
+ display:grid;gap:12px;border:1px solid var(--d-line);border-radius:16px;
+ min-inline-size:0;margin:0;padding:14px 12px 16px;
+ background:var(--phase-card);box-sizing:border-box
+}
+.sekka-mobile .sekka-route-step>legend{
+ padding:0 6px;font-weight:900;font-size:16px;line-height:1.4
+}
+.sekka-mobile .sekka-route-step>legend span{
+ display:inline-flex;align-items:center;justify-content:center;
+ width:25px;height:25px;border-radius:50%;margin-inline-end:7px;
+ background:#ffc400;color:#161b22;font-weight:900;font-size:13px
+}
+.sekka-mobile .sekka-route-step>p{margin:0;font-size:13px;line-height:1.65}
+.sekka-mobile .sekka-route-step>.sekka-route-field{
+ display:grid;gap:8px;min-width:0;margin:0;
+ font-size:14px;font-weight:800;line-height:1.4
+}
+.sekka-mobile .sekka-route-field>select,
+.sekka-mobile .sekka-route-field>input{
+ box-sizing:border-box;display:block;width:100%;max-width:100%;
+ min-height:48px;margin:0;padding:9px 12px;
+ border:1px solid var(--d-line);border-radius:12px;
+ background:var(--phase-card);color:var(--phase-text);
+ font:inherit;font-size:16px;font-weight:500
+}
+.sekka-mobile .sekka-route-step .sekka-place-lookup{
+ width:100%;min-width:0;display:grid;gap:7px
+}
+.sekka-mobile .sekka-route-step .sekka-place-lookup input{
+ width:100%;max-width:100%;min-height:50px;margin:0;
+ padding:10px 12px;border-radius:12px;font-size:16px;
+ background:var(--phase-card);color:var(--phase-text);
+ border:1px solid var(--d-line);box-sizing:border-box
+}
+.sekka-mobile .sekka-route-step .sekka-place-lookup__suggestions{
+ min-width:0;max-height:250px;overflow:auto;display:grid;gap:4px;
+ padding:7px;border-radius:12px;border:1px solid var(--d-line)
+}
+.sekka-mobile .sekka-route-step .sekka-place-lookup__suggestions>button{
+ display:flex;flex-direction:column;align-items:flex-start;
+ gap:3px;text-align:start;min-height:44px;padding:9px 10px;
+ border-radius:10px;background:var(--phase-card);color:var(--phase-text);
+ border:1px solid var(--d-line);margin:0;overflow-wrap:anywhere;white-space:normal
+}
+.sekka-mobile .sekka-route-step .sekka-place-lookup__suggestions>button small{opacity:.72}
+.sekka-mobile .sekka-route-step .sekka-place-lookup__suggestions>.sekka-place-lookup__map-search{
+ background:#ffc400;color:#171b22;border-color:#ffc400;font-weight:800
+}
+.sekka-mobile .sekka-route-stop-tools{display:grid;gap:8px;min-width:0}
+.sekka-mobile .sekka-route-stop-tools .sekka-route-secondary,
+.sekka-mobile .sekka-route-step .sekka-route-add{
+ width:100%;min-height:46px;padding:10px;border-radius:12px;margin:0;
+ border:1px solid var(--d-line);background:transparent;color:var(--phase-text);
+ font-size:14px;font-weight:800
+}
+.sekka-mobile .sekka-route-stop-tools .sekka-route-secondary:disabled,
+.sekka-mobile .sekka-route-step .sekka-route-add:disabled,
+.sekka-mobile .sekka-route-step .sekka-route-save:disabled{opacity:.55}
+.sekka-mobile .sekka-route-step .sekka-route-add{
+ background:#ffc400;color:#171b22;border-color:#ffc400
+}
+.sekka-mobile .sekka-route-map-confirm{font-size:13px;line-height:1.55;overflow-wrap:anywhere}
+.sekka-mobile .sekka-route-map-confirm a{color:inherit;text-decoration:underline;font-weight:800}
+.sekka-mobile .sekka-route-stop-list{display:grid;gap:8px;list-style:none;margin:0;padding:0}
+.sekka-mobile .sekka-route-stop-list>li{
+ display:grid;gap:9px;padding:10px;border:1px solid var(--d-line);
+ border-radius:12px;min-width:0;margin:0
+}
+.sekka-mobile .sekka-route-stop-copy{display:flex;gap:9px;align-items:center;min-width:0}
+.sekka-mobile .sekka-route-stop-copy div{display:grid;gap:2px;min-width:0;overflow-wrap:anywhere}
+.sekka-mobile .sekka-route-stop-copy small{font-size:12px;opacity:.75}
+.sekka-mobile .sekka-route-stop-order{display:flex;justify-content:center;align-items:center;flex:none;
+ width:28px;height:28px;border-radius:50%;background:#ffc400;color:#171b22;font-weight:900}
+.sekka-mobile .sekka-route-stop-list .live-route-controls{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:0
+}
+.sekka-mobile .sekka-route-stop-list .live-route-controls button{
+ min-height:42px;min-width:0;margin:0;padding:7px 3px;
+ border:1px solid var(--d-line);border-radius:9px;font-size:12px;
+ background:transparent;color:var(--phase-text)
+}
+.sekka-mobile .sekka-route-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.sekka-mobile .sekka-route-step .sekka-route-check{display:flex;align-items:center;gap:10px;font-size:13px;line-height:1.5}
+.sekka-mobile .sekka-route-step .sekka-route-check input{width:22px;height:22px;min-height:22px;flex:none}
+.sekka-mobile .sekka-route-generated-title,.sekka-mobile .sekka-route-review{
+ display:grid;gap:5px;padding:12px;border-radius:12px;
+ background:#ffc40018;border:1px solid #ffc40066;overflow-wrap:anywhere
+}
+.sekka-mobile .sekka-route-review span{font-size:13px}
+.sekka-mobile .sekka-route-step .sekka-route-save{
+ width:100%;min-height:52px;margin:0;border-radius:13px;font-weight:900;font-size:16px
+}
+.sekka-mobile .sekka-route-step .sekka-route-guidance{opacity:.82;font-size:12px;line-height:1.6}
+.sekka-mobile .sekka-route-step .sekka-route-alert{color:#a82719;line-height:1.5}
+@media(max-width:359px){
+ .sekka-mobile .captain-routes-canvas .sekka-captain-route-wizard{padding:9px;gap:14px}
+ .sekka-mobile .sekka-route-step>.sekka-route-field{font-size:13px}
+ .sekka-mobile .sekka-route-pair{grid-template-columns:minmax(0,1fr)}
+}
+
+
+/* A real Captain screen grows with content; no 900px reference-canvas blank space. */
+.sekka-mobile .captain-routes-canvas{
+ height:auto;min-height:0;max-width:100%;overflow:visible;
+ box-sizing:border-box;padding-bottom:max(20px,env(safe-area-inset-bottom))
+}
+.sekka-mobile .captain-routes-canvas::before,
+.sekka-mobile .captain-routes-canvas::after{pointer-events:none}
+.sekka-mobile .captain-routes-canvas>.sekka-captain-route-wizard{width:100%}
+.sekka-mobile .captain-routes-canvas .sekka-route-step button:focus-visible,
+.sekka-mobile .captain-routes-canvas .sekka-route-step input:focus-visible,
+.sekka-mobile .captain-routes-canvas .sekka-route-step select:focus-visible{
+ outline:3px solid #d39c00;outline-offset:2px
+}
+
+
+/* Progressive Captain flow: show a single focused step at a time. */
+.sekka-mobile .sekka-route-step-navigation{display:grid;gap:14px;margin:0;min-width:0}
+.sekka-mobile .sekka-route-step-progress{display:grid;gap:10px;min-width:0;font-size:13px}
+.sekka-mobile .sekka-route-step-progress>div{
+ display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;
+}
+.sekka-mobile .sekka-route-step-progress>div>span{
+ height:5px;border-radius:999px;background:var(--d-line,#a9adb3);
+}
+.sekka-mobile .sekka-route-step-progress>div>span.is-current{background:#ffc400}
+.sekka-mobile .sekka-route-step-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.sekka-mobile .sekka-route-step-buttons button{
+ display:flex;align-items:center;justify-content:center;
+ width:100%;min-width:0;min-height:48px;padding:10px 12px;
+ border-radius:12px;font:inherit;font-weight:900;font-size:15px;line-height:1.35;
+ margin:0;white-space:normal;overflow-wrap:anywhere
+}
+.sekka-mobile .sekka-route-step-buttons button:only-child{grid-column:1/-1}
+.sekka-mobile .sekka-route-step-buttons .sekka-route-next{
+ border:1px solid #ffc400;background:#ffc400;color:#171b22
+}
+.sekka-mobile .sekka-route-step-buttons .sekka-route-secondary{
+ border:1px solid var(--d-line);background:transparent;color:var(--phase-text)
+}
+.sekka-mobile .sekka-route-step-buttons button:disabled{opacity:.5}
+
+
+/* 2026 captain experience refinement: one clear task per screen, verified identity,
+   readable mobile forms, and a genuinely useful map preview (no decorative logos). */
+.sekka-mobile .captain-onboarding-canvas,
+.sekka-mobile .captain-routes-canvas {max-width:660px;margin-inline:auto;}
+.sekka-mobile .captain-onboarding-canvas > h1 {
+  margin-block:8px 18px;
+  font-size:clamp(23px,6vw,31px);
+  letter-spacing:-.035em;
+  line-height:1.28;
+  text-wrap:balance;
+}
+.sekka-mobile .captain-onboarding-canvas .c-approval-live {display:grid;gap:16px;}
+.sekka-mobile .captain-onboarding-canvas .c-approval-live > .d-box {
+  border:1px solid var(--d-line);
+  border-radius:22px;
+  background:var(--phase-card);
+  box-shadow:0 8px 32px rgba(17,24,39,.055);
+}
+.sekka-mobile .captain-onboarding-canvas .c-registration-form {
+  gap:18px;
+  padding:clamp(18px,5vw,28px);
+}
+.sekka-mobile .captain-onboarding-canvas .c-enrollment-heading {
+  display:grid;gap:7px;margin-block-end:5px;min-width:0;
+}
+.sekka-mobile .captain-onboarding-canvas .c-enrollment-eyebrow {
+  color:var(--phase-text);opacity:.7;font-size:12px;font-weight:800;letter-spacing:.015em;
+}
+.sekka-mobile .captain-onboarding-canvas .c-enrollment-heading h2 {
+  font-size:clamp(21px,5vw,27px);font-weight:900;letter-spacing:-.025em;
+  line-height:1.35;margin:0;
+}
+.sekka-mobile .captain-onboarding-canvas .c-enrollment-heading p {
+  font-size:14px;line-height:1.65;margin:0;color:var(--muted);
+}
+.sekka-mobile .captain-onboarding-canvas .c-google-identity {
+  display:flex;gap:12px;align-items:center;min-width:0;padding:14px;
+  border:1px solid var(--d-line);border-radius:17px;
+  background:color-mix(in srgb,var(--phase-card) 93%,#ffc400);
+}
+.sekka-mobile .captain-onboarding-canvas .c-google-identity__icon {
+  display:grid;place-items:center;flex:none;width:43px;height:43px;
+  border-radius:13px;background:var(--phase-card);border:1px solid var(--d-line);
+  font:900 22px/1 Arial,sans-serif;color:var(--phase-text);
+}
+.sekka-mobile .captain-onboarding-canvas .c-google-identity__details {
+  display:grid;gap:3px;min-width:0;flex:1;line-height:1.35;
+}
+.sekka-mobile .captain-onboarding-canvas .c-google-identity__details strong {
+  font-size:14px;overflow-wrap:anywhere;
+}
+.sekka-mobile .captain-onboarding-canvas .c-google-identity__details span {
+  font-size:13px;text-align:start;unicode-bidi:plaintext;overflow-wrap:anywhere;
+}
+.sekka-mobile .captain-onboarding-canvas .c-google-identity__details small {
+  color:var(--muted);font-size:11px;
+}
+.sekka-mobile .captain-onboarding-canvas .c-google-identity__check {
+  display:grid;place-items:center;width:27px;height:27px;flex:none;
+  color:#176f4d;background:#d9f5e7;border-radius:50%;font-weight:900;
+}
+.sekka-mobile .captain-onboarding-canvas .c-registration-form > label {
+  font-size:14px;font-weight:800;line-height:1.5;gap:8px;
+}
+.sekka-mobile .captain-onboarding-canvas .c-registration-form :is(input:not([type="checkbox"]),select,textarea) {
+  min-height:52px;padding:13px 14px;border-radius:13px;
+  font-size:16px;font-weight:500;transition:border-color .15s,box-shadow .15s;
+}
+.sekka-mobile .captain-onboarding-canvas .c-registration-form :is(input,select,textarea):focus-visible {
+  outline:0;border-color:#b48d00;box-shadow:0 0 0 3px rgba(255,196,0,.21);
+}
+.sekka-mobile .captain-onboarding-canvas .c-registration-form textarea {
+  min-height:124px;line-height:1.65;
+}
+.sekka-mobile .captain-onboarding-canvas .c-inline-guidance {
+  font-size:12px;color:var(--muted);font-weight:500;line-height:1.55;
+}
+.sekka-mobile .captain-onboarding-canvas .c-registration-actions {
+  gap:10px;margin-block-start:12px;grid-template-columns:1fr;
+}
+.sekka-mobile .captain-onboarding-canvas .c-registration-actions button {
+  min-height:51px;border-radius:14px;font-size:15px;font-weight:900;
+}
+.sekka-mobile .captain-onboarding-canvas .c-registration-actions .d-primary {
+  grid-row:1;box-shadow:0 5px 16px rgba(170,130,0,.12);
+}
+.sekka-mobile .captain-onboarding-canvas .c-category-summary {
+  border-radius:16px;padding:16px;gap:10px;
+  background:color-mix(in srgb,var(--phase-card) 95%,#ffc400);
+}
+.sekka-mobile .captain-onboarding-canvas .c-category-summary p {margin:0;font-weight:800;}
+.sekka-mobile .captain-onboarding-canvas .c-category-summary span {
+  padding:9px 12px;border-radius:12px;border:1px solid var(--d-line);
+  background:var(--phase-card);font-size:13px;line-height:1.55;
+}
+.sekka-mobile .captain-onboarding-canvas .c-document {
+  border:1px solid var(--d-line);border-radius:16px;
+  padding:14px;background:var(--phase-card);
+}
+.sekka-mobile .captain-onboarding-canvas .c-document-label {font-size:14px;line-height:1.5;}
+.sekka-mobile .captain-enrollment-progress {margin-block:6px 21px;}
+.sekka-mobile .captain-enrollment-progress ol {gap:3px;}
+.sekka-mobile .captain-enrollment-progress li {gap:8px;opacity:.72;}
+.sekka-mobile .captain-enrollment-progress li[aria-current="step"] {opacity:1;}
+.sekka-mobile .captain-enrollment-progress__number {
+  width:32px;height:32px;font-size:13px;transition:transform .15s;
+}
+.sekka-mobile .captain-enrollment-progress li[aria-current="step"] .captain-enrollment-progress__number {
+  transform:scale(1.08);box-shadow:0 0 0 4px rgba(255,196,0,.16);
+}
+.sekka-mobile .sekka-route-map-card {
+  display:grid;gap:10px;border:1px solid var(--d-line);
+  border-radius:18px;overflow:hidden;padding:12px;
+  background:var(--phase-card);min-width:0;
+}
+.sekka-mobile .sekka-route-map-card__heading {
+  display:flex;align-items:center;gap:9px;justify-content:space-between;
+  flex-wrap:wrap;
+}
+.sekka-mobile .sekka-route-map-card__heading > div {display:grid;gap:4px;min-width:0;}
+.sekka-mobile .sekka-route-map-card__heading strong {font-size:14px;}
+.sekka-mobile .sekka-route-map-card__heading small {font-size:12px;color:var(--muted);}
+.sekka-mobile .sekka-route-map-card__heading button {
+  min-height:40px;margin:0;white-space:normal;border-radius:11px;padding:8px 12px;
+}
+.sekka-mobile .sekka-route-map-card__frame {
+  display:block;border:0;width:100%;height:280px;border-radius:12px;
+  background:#e9ecef;
+}
+.sekka-mobile .sekka-route-map-card__note {
+  font-size:12px;line-height:1.6;margin:0;color:var(--muted);
+}
+@media(max-width:360px) {
+  .sekka-mobile .captain-onboarding-canvas .c-registration-form {padding:16px;gap:15px;}
+  .sekka-mobile .captain-onboarding-canvas .c-google-identity {padding:11px;gap:9px;}
+  .sekka-mobile .captain-onboarding-canvas .c-google-identity__icon {width:35px;height:35px;}
+  .sekka-mobile .captain-enrollment-progress li {font-size:10px;}
+  .sekka-mobile .sekka-route-map-card__frame {height:240px;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .sekka-mobile .captain-enrollment-progress__number,
+  .sekka-mobile .captain-onboarding-canvas .c-registration-form :is(input,select,textarea) {
+    transition:none;
   }
 }

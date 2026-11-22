@@ -3,11 +3,41 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#0B0B0D" />
-    <meta name="description" content="خط ثابت واشتراك يناسبك. سِكّة — معاك في السِكّة." />
+    <meta name="theme-color" content="#0648F5" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <style>html,body{margin:0;background:#F5F3ED}html[data-theme="dark"],html[data-theme="dark"] body{background:#101827}</style>
+    <script>
+      // Apply the phone preference or a previously saved manual choice before React paints.
+      (() => {
+        const params = new URLSearchParams(window.location.search);
+        const valid = (value, allowed) => allowed.includes(value) ? value : 'system';
+        let appearance = 'system', languageChoice = 'system';
+        try {
+          appearance = valid(params.get('oauth_theme') || localStorage.getItem('theme_preference'),
+            ['system','light','dark']);
+          languageChoice = valid(params.get('oauth_language') || localStorage.getItem('language_preference'),
+            ['system','ar','en']);
+        } catch { /* Private mode: use the phone settings. */ }
+        const phoneLanguage = ((navigator.languages && navigator.languages[0]) || navigator.language || 'ar').toLowerCase();
+        const selectedLanguage = languageChoice === 'system'
+          ? (phoneLanguage.split('-')[0] === 'en' ? 'en' : 'ar') : languageChoice;
+        const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const selectedTheme = appearance === 'system' ? (dark ? 'dark' : 'light') : appearance;
+        const root = document.documentElement;
+        root.dataset.theme = selectedTheme;
+        root.lang = selectedLanguage;
+        root.dir = selectedLanguage === 'ar' ? 'rtl' : 'ltr';
+        root.style.colorScheme = selectedTheme;
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content',selectedTheme === 'dark' ? '#101827' : '#0648F5');
+      })();
+    </script>
+    <meta name="description" content="PoNo — ابحث عن رحلة مشتركة تناسب مشوارك." />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="icon" type="image/png" href="/brand/approved/app-icon-yellow.png" />
-    <title>سِكّة | معاك في السِكّة</title>
+    <link rel="icon" type="image/png" sizes="192x192" href="/brand/pono-icon-192.png" />
+    <link rel="apple-touch-icon" href="/brand/pono-icon-192.png" />
+    <title>PoNo</title>
   </head>
   <body>
     <div id="root"></div>

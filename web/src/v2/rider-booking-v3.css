@@ -1,0 +1,79 @@
+/* Actual Supabase-authorized final booking journey, never preview payment screens. */
+.sekka-mobile .sekka-rider-booking-v3{--bk-ink:#111111;--bk-purple:#FFCC24;
+ --bk-line:#FFF1B8;--bk-surface:#FFF;--bk-muted:#111111;min-height:0!important;background:#FFF9F5!important}
+.sekka-mobile .sekka-rider-booking-v3>.b-canvas{position:relative!important;display:flex!important;
+ flex-direction:column!important;gap:13px!important;
+ max-width:480px!important;width:100%!important;height:auto!important;min-height:0!important;
+ aspect-ratio:auto!important;overflow:visible!important;background:#FFF9F5!important;
+ box-shadow:none!important;border:0!important;padding:0 15px 27px!important;color:var(--bk-ink)}
+.sekka-mobile .sekka-rider-booking-v3 .d-header{display:flex;align-items:center;min-height:55px;margin:0}
+.sekka-mobile .sekka-rider-booking-v3 .d-header .phase-back{position:static!important;min-width:46px;height:46px;
+ color:#111111;border:1px solid #E8D77A;background:#FFF;border-radius:13px}
+.sekka-mobile .sekka-rider-booking-v3 .d-header .d-wordmark,
+.sekka-mobile .sekka-rider-booking-v3 .d-header .sekka-wordmark{max-width:130px}
+.sekka-mobile .sekka-rider-booking-v3 .rbk3-hero{background:linear-gradient(122deg,#FFCC24,#FFCC24);
+ border-radius:23px;padding:22px 19px;color:#FFF;margin:0}
+.sekka-mobile .sekka-rider-booking-v3 .rbk3-step{display:block;color:#FFDF8B;
+ font-size:12px;font-weight:900;margin-bottom:4px}
+.sekka-mobile .sekka-rider-booking-v3 .rbk3-hero .b-title{position:static!important;
+ color:#FFF!important;font:900 26px/1.35 Tajawal,Tahoma,sans-serif!important;
+ margin:0 0 9px!important;min-height:0!important;height:auto!important;display:flex;gap:8px;
+ align-items:center;white-space:normal!important;letter-spacing:0!important}
+.sekka-mobile .sekka-rider-booking-v3 .rbk3-hero p{font-size:13px;font-weight:700;color:#FFFFFF;line-height:1.6;margin:0}
+.sekka-mobile .sekka-rider-booking-v3 .b-subtitle{position:static!important;
+ color:var(--bk-muted)!important;line-height:1.55;margin:0!important;font-size:13px!important}
+.sekka-mobile .sekka-rider-booking-v3 .b-box{position:static!important;
+ width:100%!important;height:auto!important;min-height:0!important;max-width:none!important;
+ background:var(--bk-surface)!important;border:1px solid var(--bk-line)!important;
+ padding:17px 15px!important;margin:0!important;border-radius:20px!important;
+ color:var(--bk-ink)!important;box-shadow:0 9px 21px #33114D0A!important}
+.sekka-mobile .sekka-rider-booking-v3 .b-offer{display:grid;gap:10px}
+.sekka-mobile .sekka-rider-booking-v3 .b-offer .b-route{font-size:19px;font-weight:900;color:#111111}
+.sekka-mobile .sekka-rider-booking-v3 .b-stops{border-radius:14px;background:#FFF9E9;padding:13px;
+ font-size:13px;line-height:1.6}
+.sekka-mobile .sekka-rider-booking-v3 .b-summary{display:flex;flex-direction:column;gap:10px}
+.sekka-mobile .sekka-rider-booking-v3 .b-row{min-height:44px;display:flex;justify-content:space-between;
+ align-items:center;gap:12px;border-bottom:1px solid #E8D77A;padding-bottom:8px;font-size:13px}
+.sekka-mobile .sekka-rider-booking-v3 .b-row>strong{font-size:15px;font-weight:900;color:#111111}
+.sekka-mobile .sekka-rider-booking-v3 .b-seat-chooser{display:flex;justify-content:space-between;
+ gap:12px;align-items:center;min-height:68px;border-radius:15px;background:#FFF3D1;padding:11px 13px}
+.sekka-mobile .sekka-rider-booking-v3 .b-seat-chooser>span{font-weight:900;font-size:14px}
+.sekka-mobile .sekka-rider-booking-v3 .b-seat-controls{display:flex;align-items:center;gap:13px;direction:ltr}
+.sekka-mobile .sekka-rider-booking-v3 .b-seat-controls>button{width:45px;height:45px;min-height:45px;
+ background:#FFCC24;color:#FFF;border:0;border-radius:13px;font-size:23px}
+.sekka-mobile .sekka-rider-booking-v3 .b-seat-controls>button:disabled{opacity:.45}
+.sekka-mobile .sekka-rider-booking-v3 .b-seat-controls>strong{min-width:19px;text-align:center;font-size:19px}
+.sekka-mobile .sekka-rider-booking-v3 .b-payment-explainer{border:1px solid #E8D77A!important;
+ border-radius:18px!important;background:#FFF9E9!important}
+.sekka-mobile .sekka-rider-booking-v3 .b-payment-explainer h2{color:#111111;font-size:17px;font-weight:900}
+.sekka-mobile .sekka-rider-booking-v3 .b-payment-explainer p{font-size:12px;line-height:1.65;color:#111111}
+.sekka-mobile .sekka-rider-booking-v3 .b-hint{font-size:12px;line-height:1.6;margin:0!important;color:var(--bk-muted)}
+.sekka-mobile .sekka-rider-booking-v3 .b-primary{position:static!important;
+ width:100%!important;min-height:55px!important;border:0!important;border-radius:16px!important;
+ background:#FFCC24!important;color:#FFF!important;font-size:17px!important;font-weight:900!important;
+ margin:0!important;padding:12px 15px!important;display:flex;align-items:center;justify-content:center;gap:8px}
+.sekka-mobile .sekka-rider-booking-v3 .b-primary:disabled{opacity:.5}
+.sekka-mobile .sekka-rider-booking-v3 .d-outline{position:static!important;min-height:46px!important;
+ width:100%;padding:10px 13px;background:#FFF9E9!important;color:#111111!important;
+ border:1px solid #E8D77A!important;border-radius:13px;font-weight:900}
+.sekka-mobile .sekka-rider-booking-v3 .rbk3-cancel{width:100%}
+.sekka-mobile .sekka-rider-booking-v3 .rbk3-cancel-confirm{padding:13px;
+ border-radius:14px;background:#FFF0EB;border:1px solid #EBC6C5;color:#111111}
+.sekka-mobile .sekka-rider-booking-v3 .rbk3-cancel-confirm p{font-size:13px;font-weight:700;line-height:1.55}
+.sekka-mobile .sekka-rider-booking-v3 .rbk3-cancel-confirm>div{display:flex;gap:8px;margin-top:11px}
+.sekka-mobile .sekka-rider-booking-v3 .rbk3-cancel-confirm button{flex:1;min-height:47px;
+ border:0;background:#A44559;color:#FFF;border-radius:11px;font-weight:900;font-size:12px;padding:8px}
+.sekka-mobile .sekka-rider-booking-v3 .rbk3-cancel-confirm button+button{background:#FFF;
+ border:1px solid #E8D77A;color:#111111}
+.sekka-mobile .sekka-rider-booking-v3 :is(button,input):focus-visible{outline:3px solid #FFCD38;outline-offset:3px}
+html[data-theme="dark"] .sekka-mobile .sekka-rider-booking-v3{--bk-ink:#FFFFFF;--bk-surface:#193449;--bk-line:#193449;--bk-muted:#FFFFFF;background:#193449!important}
+html[data-theme="dark"] .sekka-mobile .sekka-rider-booking-v3>.b-canvas{background:#193449!important}
+html[data-theme="dark"] .sekka-mobile .sekka-rider-booking-v3 .b-payment-explainer{background:#193449!important}
+html[data-theme="dark"] .sekka-mobile .sekka-rider-booking-v3 .b-payment-explainer h2,
+html[data-theme="dark"] .sekka-mobile .sekka-rider-booking-v3 .b-payment-explainer p{color:#FFFFFF}
+html[data-theme="dark"] .sekka-mobile .sekka-rider-booking-v3 .b-seat-chooser{background:#193449}
+html[data-theme="dark"] .sekka-mobile .sekka-rider-booking-v3 .b-primary{background:#FFCD38!important;color:#F5FBFF!important}
+@media(max-width:350px){.sekka-mobile .sekka-rider-booking-v3>.b-canvas{padding-inline:10px!important}
+ .sekka-mobile .sekka-rider-booking-v3 .rbk3-hero{padding:17px}
+ .sekka-mobile .sekka-rider-booking-v3 .b-box{padding:12px!important}}
+@media(prefers-reduced-motion:reduce){.sekka-mobile .sekka-rider-booking-v3 *{animation:none!important;transition:none!important}}

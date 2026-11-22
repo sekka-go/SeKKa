@@ -1,0 +1,712 @@
+/* seKKa real Captain journey — scoped to authenticated mobile app.
+   No logos, fake metrics, desktop-fixed geometry, or preview-only operations. */
+.sekka-mobile .captain-routes-canvas{
+ --cj-accent:var(--yellow,#ffc400);--cj-accent-strong:var(--ink,var(--text));--cj-soft:var(--elevated,var(--bg));
+ --cj-border:var(--line,#dde8e3);--cj-surface:var(--card,#fff);
+ --cj-muted:var(--muted,#60716c);
+ max-width:650px!important;padding:6px 2px 30px!important;
+ background:transparent!important;color:var(--ink,#162825);
+}
+.sekka-mobile .captain-routes-canvas>h1{
+ font-size:clamp(23px,6vw,30px);font-weight:900;letter-spacing:-.035em;
+ line-height:1.3;margin:12px 4px 16px;text-align:start;
+}
+.sekka-mobile .captain-routes-canvas .cj-hero{
+ background:var(--cj-surface);border:1px solid var(--cj-border);
+ color:var(--ink);border-radius:24px;padding:23px 20px 22px;display:grid;
+ gap:11px;margin:2px 0 15px;position:relative;overflow:hidden;
+ box-shadow:0 8px 24px #0000000c;isolation:isolate;
+}
+.sekka-mobile .captain-routes-canvas .cj-hero:after{
+ content:"";position:absolute;width:170px;height:170px;border:1px solid var(--cj-border);
+ border-radius:50%;inset-inline-end:-67px;top:-70px;pointer-events:none;
+}
+.sekka-mobile .captain-routes-canvas .cj-hero small{color:var(--cj-muted);font-weight:700;font-size:12px}
+.sekka-mobile .captain-routes-canvas .cj-hero h2{
+ color:var(--ink);font-size:clamp(23px,6vw,29px);line-height:1.3;margin:0;font-weight:900;
+}
+.sekka-mobile .captain-routes-canvas .cj-hero p{color:var(--cj-muted);font-size:14px;line-height:1.6;margin:0;max-width:38ch}
+.sekka-mobile .captain-routes-canvas .cj-hero button{
+ margin:7px 0 0;min-height:52px;width:100%;border-radius:15px;
+ background:var(--cj-accent);color:var(--black,#0b0b0d);border:0;font-weight:900;font:inherit;
+ font-size:16px;cursor:pointer;position:relative;z-index:1;
+}
+.sekka-mobile .captain-routes-canvas .cj-hero button:focus-visible{
+ outline:3px solid #ffc400;outline-offset:2px;
+}
+.sekka-mobile .captain-routes-canvas .cj-dashboard-actions{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px;
+}
+.sekka-mobile .captain-routes-canvas .cj-dashboard-actions button{
+ min-width:0;min-height:54px;font:inherit;font-weight:800;font-size:14px;
+ border-radius:15px;border:1px solid var(--cj-border);
+ background:var(--cj-surface);color:inherit;padding:10px;
+}
+.sekka-mobile .captain-routes-canvas .cj-dashboard-actions button:disabled{opacity:.55}
+.sekka-mobile .captain-routes-canvas .live-route-list{
+ display:grid;gap:13px;border:0;box-shadow:none;background:transparent;
+ padding:0;margin:0;
+}
+.sekka-mobile .captain-routes-canvas .live-route-list h2{
+ font-size:19px;line-height:1.4;margin:7px 3px 0;font-weight:900;
+}
+.sekka-mobile .captain-routes-canvas .cj-subtitle{
+ font-size:13px;color:var(--cj-muted);margin:0 3px 3px;line-height:1.6;
+}
+.sekka-mobile .captain-routes-canvas .cj-filter-tabs{
+ display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:3px 0;
+}
+.sekka-mobile .captain-routes-canvas .cj-filter-tabs button{
+ border:1px solid var(--cj-border);min-height:43px;padding:8px 16px;
+ border-radius:999px;background:var(--cj-surface);font:inherit;font-size:13px;
+ font-weight:800;white-space:nowrap;color:inherit;margin:0;width:auto;
+}
+.sekka-mobile .captain-routes-canvas .cj-filter-tabs button[aria-pressed="true"]{
+ background:var(--cj-accent);border-color:var(--cj-accent);color:var(--black,#0b0b0d);
+}
+.sekka-mobile .captain-routes-canvas .live-route-list ul{display:grid;gap:11px}
+.sekka-mobile .captain-routes-canvas .live-route-list li{
+ border:1px solid var(--cj-border);border-radius:20px;
+ background:var(--cj-surface);padding:16px;display:grid;gap:11px;
+ box-shadow:0 4px 14px #071d1708;min-width:0;
+}
+.sekka-mobile .captain-routes-canvas .cj-card-head{
+ display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+}
+.sekka-mobile .captain-routes-canvas .cj-card-head strong{
+ font-size:17px;line-height:1.5;overflow-wrap:anywhere;letter-spacing:-.02em;
+}
+.sekka-mobile .captain-routes-canvas .cj-status{
+ padding:6px 10px;font-size:11px;font-weight:800;border-radius:999px;
+ background:var(--cj-soft);color:var(--cj-accent-strong);white-space:nowrap;
+ flex-shrink:0;max-width:46%;
+}
+.sekka-mobile .captain-routes-canvas .cj-status.is-draft{background:var(--cj-soft);color:var(--cj-accent-strong);border:1px solid var(--cj-accent)}
+.sekka-mobile .captain-routes-canvas .cj-status.is-paused{background:var(--cj-soft);color:var(--cj-accent-strong)}
+.sekka-mobile .captain-routes-canvas .cj-route-meta{
+ display:flex;flex-wrap:wrap;gap:7px;color:var(--cj-muted);font-size:12px;
+}
+.sekka-mobile .captain-routes-canvas .cj-route-meta span{
+ padding:7px 9px;background:var(--bg,#f6f7f8);border-radius:9px;
+}
+.sekka-mobile .captain-routes-canvas .cj-capacity-line{
+ display:flex;align-items:center;justify-content:space-between;
+ font-size:12px;font-weight:800;gap:10px;
+}
+.sekka-mobile .captain-routes-canvas .cj-capacity-track{
+ height:7px;width:100%;border-radius:99px;background:var(--cj-border);overflow:hidden;
+}
+.sekka-mobile .captain-routes-canvas .cj-capacity-fill{
+ display:block;height:100%;background:var(--cj-accent);border-radius:inherit;
+}
+.sekka-mobile .captain-routes-canvas .cj-card-actions{
+ display:flex;flex-wrap:wrap;gap:8px;margin:0;
+}
+.sekka-mobile .captain-routes-canvas .cj-card-actions button,
+.sekka-mobile .captain-routes-canvas .cj-details-actions button{
+ width:auto;min-width:0;max-width:100%;flex:1 1 125px;min-height:45px;
+ border-radius:12px;font:inherit;font-size:13px;font-weight:900;
+ padding:9px 12px;margin:0;background:var(--cj-surface);
+ color:inherit;border:1px solid var(--cj-border);
+}
+.sekka-mobile .captain-routes-canvas .cj-card-actions .cj-primary,
+.sekka-mobile .captain-routes-canvas .cj-details-actions .cj-primary{
+ background:var(--cj-accent);color:var(--black,#0b0b0d);border-color:var(--cj-accent);
+}
+.sekka-mobile .captain-routes-canvas .cj-card-actions button:disabled,
+.sekka-mobile .captain-routes-canvas .cj-details-actions button:disabled{opacity:.55}
+.sekka-mobile .captain-routes-canvas .cj-route-details{
+ background:var(--bg,#f6f7f8);border:1px solid var(--cj-border);
+ border-radius:15px;padding:14px;display:grid;gap:10px;min-width:0;
+}
+.sekka-mobile .captain-routes-canvas .cj-route-details h3{font-size:14px;margin:0}
+.sekka-mobile .captain-routes-canvas .cj-route-details ol{
+ margin:0;padding-inline-start:22px;display:grid;gap:8px;font-size:13px;
+}
+.sekka-mobile .captain-routes-canvas .cj-route-details li{
+ box-shadow:none;background:transparent;border:0;padding:0;margin:0;
+ display:list-item;font-size:13px;
+}
+.sekka-mobile .captain-routes-canvas .cj-details-actions{
+ display:flex;gap:8px;flex-wrap:wrap;
+}
+.sekka-mobile .captain-routes-canvas .cj-private-price{
+ font-size:12px;color:var(--cj-muted);line-height:1.6;
+}
+.sekka-mobile .captain-routes-canvas .cj-feedback{
+ margin:0;border-radius:12px;padding:12px 13px;
+ background:var(--cj-soft);color:var(--cj-accent-strong);font-size:13px;
+}
+.sekka-mobile .captain-routes-canvas .cj-feedback[role="alert"]{background:var(--cj-surface);color:var(--error,#dc3545);border:1px solid var(--error,#dc3545)}
+.sekka-mobile .captain-routes-canvas .cj-empty{
+ border:1px dashed var(--cj-border);border-radius:18px;padding:25px 16px;
+ text-align:center;font-size:14px;line-height:1.75;background:var(--cj-surface);
+ color:var(--cj-muted);
+}
+.sekka-mobile .captain-routes-canvas .sekka-captain-route-wizard{
+ border:0!important;background:transparent!important;box-shadow:none!important;
+ padding:0!important;margin:0 auto 12px!important;gap:17px;
+}
+.sekka-mobile .captain-routes-canvas .sekka-route-intro{
+ background:var(--cj-surface);border:1px solid var(--cj-border);border-radius:22px;
+ padding:22px 18px;color:var(--ink);gap:9px;
+}
+.sekka-mobile .captain-routes-canvas .sekka-route-intro>.sekka-route-eyebrow{
+ background:var(--cj-soft);color:var(--ink);width:fit-content;border-radius:99px;
+}
+.sekka-mobile .captain-routes-canvas .sekka-route-intro>h2{
+ color:var(--ink);font-size:clamp(22px,6vw,28px)
+}
+.sekka-mobile .captain-routes-canvas .sekka-route-intro>p{color:var(--cj-muted)}
+.sekka-mobile .captain-routes-canvas .sekka-captain-route-wizard>.sekka-route-step{
+ border:1px solid var(--cj-border)!important;background:var(--cj-surface)!important;
+ border-radius:22px!important;padding:20px 15px 19px!important;
+ box-shadow:0 4px 16px #041e1808;gap:16px!important;
+}
+.sekka-mobile .captain-routes-canvas .sekka-route-step>legend{
+ font-size:16px;color:inherit;padding-inline:6px;
+}
+.sekka-mobile .captain-routes-canvas .sekka-route-step>legend span{
+ background:var(--cj-accent);color:var(--black,#0b0b0d);
+}
+.sekka-mobile .captain-routes-canvas .sekka-route-step .sekka-route-field{
+ display:grid;gap:8px;font-weight:800;font-size:14px;min-width:0;
+}
+.sekka-mobile .captain-routes-canvas .sekka-route-field>input,
+.sekka-mobile .captain-routes-canvas .sekka-route-field>select,
+.sekka-mobile .captain-routes-canvas .sekka-place-lookup input{
+ border:1px solid var(--cj-border);background:var(--bg,#f6f7f8);
+ color:inherit;border-radius:14px;min-height:52px;
+}
+.sekka-mobile .captain-routes-canvas .sekka-route-field>input:focus,
+.sekka-mobile .captain-routes-canvas .sekka-route-field>select:focus{
+ outline:2px solid var(--cj-accent);
+}
+.sekka-mobile .captain-routes-canvas .sekka-route-step .sekka-route-add,
+.sekka-mobile .captain-routes-canvas .sekka-route-step .sekka-route-save,
+.sekka-mobile .captain-routes-canvas .sekka-route-step-navigation .sekka-route-next{
+ background:var(--cj-accent);color:var(--black,#0b0b0d);border:1px solid var(--cj-accent);
+ border-radius:14px;min-height:51px;
+}
+.sekka-mobile .captain-routes-canvas .sekka-route-step .sekka-route-guidance{
+ border-radius:12px;padding:11px;background:var(--cj-soft);
+ color:var(--cj-accent-strong);opacity:1;line-height:1.75;
+}
+.sekka-mobile .captain-routes-canvas .sekka-route-generated-title{
+ background:var(--cj-soft);border:1px solid var(--cj-border);
+}
+.sekka-mobile .captain-routes-canvas .sekka-route-review{
+ display:grid;gap:10px;border:1px solid var(--cj-border);
+ background:var(--bg,#f6f7f8);border-radius:15px;padding:16px;
+}
+.sekka-mobile .captain-routes-canvas .sekka-route-review strong{font-size:18px}
+.sekka-mobile .captain-routes-canvas .sekka-route-review span{font-size:13px}
+.sekka-mobile .captain-routes-canvas .sekka-route-step-progress>div>span.is-current{
+ background:var(--cj-accent);
+}
+.sekka-mobile .captain-routes-canvas .cj-category-options{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;
+}
+.sekka-mobile .captain-routes-canvas .cj-category-option{
+ min-width:0;min-height:108px;padding:14px 11px;display:grid;gap:4px;
+ text-align:start;border-radius:15px;border:1px solid var(--cj-border);
+ background:var(--cj-surface);color:inherit;font:inherit;margin:0;
+}
+.sekka-mobile .captain-routes-canvas .cj-category-option strong{font-size:16px}
+.sekka-mobile .captain-routes-canvas .cj-category-option small{font-size:12px;color:var(--cj-muted)}
+.sekka-mobile .captain-routes-canvas .cj-category-option[aria-pressed="true"]{
+ border:2px solid var(--cj-accent);background:var(--cj-soft);
+}
+.sekka-mobile .captain-routes-canvas .cj-category-option:disabled{opacity:.48}
+.sekka-mobile .captain-routes-canvas .cj-schedule-warning{
+ padding:12px;border:1px solid var(--cj-border);border-radius:12px;
+ background:var(--cj-soft);font-size:13px;line-height:1.65;
+}
+.sekka-mobile .captain-routes-canvas .cj-back{
+ width:100%;min-height:48px;border:1px solid var(--cj-border);border-radius:14px;
+ background:var(--cj-surface);color:inherit;font:inherit;font-weight:800;margin-top:7px;
+}
+.sekka-mobile .captain-routes-canvas .live-bookings{
+ border:1px solid var(--cj-border);border-radius:21px;
+ background:var(--cj-surface);padding:17px;margin-top:16px;
+}
+.sekka-mobile .captain-routes-canvas .live-bookings ul{
+ list-style:none;margin:12px 0;padding:0;display:grid;gap:10px;
+}
+.sekka-mobile .captain-routes-canvas .live-bookings li{
+ display:grid;gap:9px;padding:15px;border:1px solid var(--cj-border);
+ border-radius:14px;background:var(--bg,#f6f7f8);font-size:13px;
+}
+.sekka-mobile .captain-routes-canvas .live-bookings small{color:var(--cj-muted)}
+.sekka-mobile .captain-routes-canvas .live-bookings>button{
+ min-height:45px;width:100%;border:1px solid var(--cj-border);border-radius:12px;
+ font:inherit;background:var(--cj-surface);color:inherit;
+}
+@media(max-width:359px){
+ .sekka-mobile .captain-routes-canvas .cj-category-options{grid-template-columns:1fr;}
+ .sekka-mobile .captain-routes-canvas .cj-hero{padding:19px 15px}
+ .sekka-mobile .captain-routes-canvas .cj-card-head{flex-wrap:wrap}
+}
+@media(prefers-reduced-motion:reduce){
+ .sekka-mobile .captain-routes-canvas *{scroll-behavior:auto}
+}
+
+/* Two-stage neighborhood / landmark selection, following the original yellow
+   seKKa palette. Responsive, touch-first and fully scoped to Captain UI. */
+.sekka-mobile .captain-routes-canvas .cj-place-step-label{
+ display:flex;align-items:center;gap:12px;min-width:0;
+ padding-block:3px;margin-top:4px;
+}
+.sekka-mobile .captain-routes-canvas .cj-place-step-label>span{
+ display:grid;place-items:center;flex:0 0 37px;width:37px;height:37px;
+ background:var(--yellow,#ffc400);color:#0b0b0d;border-radius:12px;
+ font:900 13px/1 Tajawal,Arial,sans-serif;
+}
+.sekka-mobile .captain-routes-canvas .cj-place-step-label>div{
+ display:grid;gap:2px;min-width:0;
+}
+.sekka-mobile .captain-routes-canvas .cj-place-step-label strong{
+ font-size:15px;line-height:1.4;color:var(--ink);
+}
+.sekka-mobile .captain-routes-canvas .cj-place-step-label small{
+ font-size:12px;font-weight:500;color:var(--cj-muted);line-height:1.55;
+}
+.sekka-mobile .captain-routes-canvas .cj-area-grid{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;
+}
+.sekka-mobile .captain-routes-canvas .cj-area-grid>button{
+ position:relative;display:flex;gap:9px;align-items:center;
+ min-width:0;min-height:72px;padding:11px;
+ border-radius:15px;border:1px solid var(--cj-border);
+ background:var(--cj-surface);color:var(--ink);text-align:start;
+ font:inherit;font-size:13px;margin:0;
+}
+.sekka-mobile .captain-routes-canvas .cj-area-grid>button[aria-pressed="true"]{
+ border-color:var(--yellow,#ffc400);box-shadow:0 0 0 1px var(--yellow,#ffc400);
+ background:var(--cj-soft);
+}
+.sekka-mobile .captain-routes-canvas .cj-area-grid>button>span:nth-child(2){
+ display:grid;gap:3px;min-width:0;flex:1;
+}
+.sekka-mobile .captain-routes-canvas .cj-area-grid>button strong{
+ font-size:13px;line-height:1.4;overflow-wrap:anywhere;
+}
+.sekka-mobile .captain-routes-canvas .cj-area-grid>button small{
+ font-size:11px;color:var(--cj-muted);
+}
+.sekka-mobile .captain-routes-canvas .cj-area-icon{
+ border-radius:11px;width:34px;height:34px;min-width:34px;
+ display:grid;place-items:center;font-size:20px;font-weight:900;
+ color:var(--ink);background:var(--bg);border:1px solid var(--cj-border);
+}
+.sekka-mobile .captain-routes-canvas .cj-area-check{
+ position:absolute;top:4px;inset-inline-end:6px;font-weight:900;
+ color:var(--ink);font-size:14px;
+}
+.sekka-mobile .captain-routes-canvas .cj-area-more{
+ border:1px dashed var(--cj-border);color:var(--ink);background:var(--cj-surface);
+ font:inherit;font-weight:800;font-size:13px;border-radius:12px;
+ min-height:43px;width:100%;
+}
+.sekka-mobile .captain-routes-canvas .cj-selected-area{
+ display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+ background:var(--cj-soft);border:1px solid var(--cj-border);
+ padding:10px 12px;border-radius:12px;min-width:0;
+}
+.sekka-mobile .captain-routes-canvas .cj-selected-area>span{
+ background:var(--yellow,#ffc400);color:#0b0b0d;
+ width:22px;height:22px;border-radius:50%;display:grid;place-items:center;
+ font-size:12px;font-weight:900;
+}
+.sekka-mobile .captain-routes-canvas .cj-selected-area strong{font-size:13px}
+.sekka-mobile .captain-routes-canvas .cj-selected-area small{font-size:12px;color:var(--cj-muted)}
+.sekka-mobile .captain-routes-canvas .cj-place-picker{
+ display:grid;gap:12px;min-width:0;
+}
+.sekka-mobile .captain-routes-canvas .cj-popular{
+ display:grid;gap:10px;border:1px solid var(--cj-border);
+ background:var(--bg);border-radius:17px;padding:13px;min-width:0;
+}
+.sekka-mobile .captain-routes-canvas .cj-popular-heading{display:grid;gap:4px}
+.sekka-mobile .captain-routes-canvas .cj-popular-heading strong{
+ font-size:15px;line-height:1.5;
+}
+.sekka-mobile .captain-routes-canvas .cj-popular-heading small{
+ font-size:12px;color:var(--cj-muted);line-height:1.6;font-weight:500;
+}
+.sekka-mobile .captain-routes-canvas .cj-popular-types{
+ display:flex;gap:7px;overflow-x:auto;padding:2px 0 6px;scrollbar-width:thin;
+}
+.sekka-mobile .captain-routes-canvas .cj-popular-types button{
+ min-height:39px;flex:0 0 auto;padding:7px 11px;margin:0;
+ border:1px solid var(--cj-border);border-radius:999px;
+ background:var(--cj-surface);color:var(--ink);font:inherit;font-size:12px;font-weight:800;
+ white-space:nowrap;
+}
+.sekka-mobile .captain-routes-canvas .cj-popular-types button[aria-pressed="true"]{
+ background:var(--yellow,#ffc400);color:#0b0b0d;border-color:var(--yellow,#ffc400);
+}
+.sekka-mobile .captain-routes-canvas .cj-popular-grid{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
+}
+.sekka-mobile .captain-routes-canvas .cj-popular-place{
+ display:flex;align-items:center;gap:8px;min-width:0;min-height:72px;
+ padding:10px;border-radius:13px;
+ background:var(--cj-surface);color:var(--ink);
+ border:1px solid var(--cj-border);text-align:start;font:inherit;
+}
+.sekka-mobile .captain-routes-canvas .cj-popular-place:focus-visible,
+.sekka-mobile .captain-routes-canvas .cj-area-grid>button:focus-visible{
+ outline:3px solid var(--yellow,#ffc400);outline-offset:2px;
+}
+.sekka-mobile .captain-routes-canvas .cj-popular-place-icon{
+ width:31px;height:31px;flex:0 0 31px;border-radius:10px;
+ display:grid;place-items:center;font-size:18px;font-weight:900;
+ background:var(--cj-soft);color:var(--ink);
+}
+.sekka-mobile .captain-routes-canvas .cj-popular-place-copy{
+ display:grid;gap:4px;min-width:0;
+}
+.sekka-mobile .captain-routes-canvas .cj-popular-place-copy strong{
+ font-size:12px;line-height:1.5;overflow-wrap:anywhere;
+}
+.sekka-mobile .captain-routes-canvas .cj-popular-place-copy small{
+ color:var(--cj-muted);font-size:11px;
+}
+.sekka-mobile .captain-routes-canvas .cj-popular-more{
+ width:100%;min-height:42px;margin:0;
+ border-radius:11px;background:var(--cj-surface);
+ border:1px solid var(--cj-border);color:var(--ink);font:inherit;
+ font-size:12px;font-weight:800;
+}
+.sekka-mobile .captain-routes-canvas .cj-popular-note{
+ margin:0;color:var(--cj-muted);font-size:11px;line-height:1.7;font-weight:500;
+}
+.sekka-mobile .captain-routes-canvas .cj-place-picker input:disabled{
+ background:var(--bg);opacity:.5;cursor:not-allowed;
+}
+.sekka-mobile .captain-routes-canvas .cj-place-error{
+ border:1px solid var(--cj-border);border-radius:11px;
+ padding:10px;font-size:12px;color:var(--ink);background:var(--cj-soft);
+}
+.sekka-mobile .captain-routes-canvas .cj-place-loading{
+ color:var(--cj-muted);font-size:13px;
+}
+.sekka-mobile .captain-routes-canvas .cj-added-stops-head{
+ display:flex;align-items:center;justify-content:space-between;gap:8px;
+ font-size:14px;
+}
+.sekka-mobile .captain-routes-canvas .cj-added-stops-head>span{
+ font-size:12px;color:var(--cj-muted);font-variant-numeric:tabular-nums;
+}
+@media(max-width:355px){
+ .sekka-mobile .captain-routes-canvas .cj-popular-grid{
+  grid-template-columns:1fr;
+ }
+}
+
+/* Captain quick-route UX: no redundant prompts, no branding/colour override. */
+.sekka-mobile .captain-routes-canvas .cj-easy-route-top{
+ display:grid;gap:4px;padding:6px 0 4px;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-route-top strong{
+ font-size:22px;line-height:1.35;font-weight:900;color:var(--ink);
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-route-top small{
+ font-size:13px;color:var(--cj-muted);line-height:1.6;
+}
+.sekka-mobile .captain-routes-canvas .cj-route-hint{
+ color:var(--cj-muted);font-size:12px;line-height:1.7;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-areas{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-areas>button{
+ display:flex;align-items:center;justify-content:space-between;gap:8px;
+ min-height:58px;min-width:0;margin:0;padding:12px;
+ border:1px solid var(--cj-border);border-radius:14px;
+ background:var(--cj-surface);color:var(--ink);text-align:start;font:inherit;
+ font-size:14px;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-areas>button strong{
+ min-width:0;font-weight:800;line-height:1.45;overflow-wrap:anywhere;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-areas>button>span{
+ font-size:24px;color:var(--cj-muted);flex:none;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-change{
+ display:flex;justify-content:space-between;align-items:center;gap:12px;
+ min-height:53px;width:100%;margin:0;padding:11px 13px;
+ background:var(--cj-soft);color:var(--ink);font:inherit;
+ border:1px solid var(--cj-border);border-radius:13px;text-align:start;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-change span:last-child{
+ font-size:12px;text-decoration:underline;font-weight:800;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-place{
+ display:grid;gap:11px;min-width:0;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-place-head{
+ display:grid;gap:4px;margin-top:5px;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-place-head strong{
+ font-size:16px;line-height:1.5;color:var(--ink);
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-place-head small{
+ font-size:12px;line-height:1.6;color:var(--cj-muted);
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-places{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-choice{
+ display:flex;align-items:center;justify-content:space-between;gap:5px;
+ min-width:0;min-height:61px;padding:10px 12px;margin:0;
+ border:1px solid var(--cj-border);border-radius:13px;
+ background:var(--cj-surface);color:var(--ink);
+ font:inherit;text-align:start;font-size:13px;font-weight:800;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-choice span:first-child{
+ line-height:1.5;overflow-wrap:anywhere;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-choice span:last-child{
+ flex:none;color:var(--cj-muted);font-size:18px;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-areas>button:focus-visible,
+.sekka-mobile .captain-routes-canvas .cj-easy-choice:focus-visible,
+.sekka-mobile .captain-routes-canvas .cj-easy-change:focus-visible,
+.sekka-mobile .captain-routes-canvas .cj-easy-results button:focus-visible{
+ outline:3px solid var(--yellow,#ffc400);outline-offset:2px;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-choice:active{
+ background:var(--cj-soft);
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-more{
+ min-height:42px;margin:0;padding:8px 12px;border-radius:12px;
+ font:inherit;font-weight:800;font-size:13px;
+ background:var(--cj-soft);color:var(--ink);border:1px solid var(--cj-border);
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-search{display:grid;gap:8px}
+.sekka-mobile .captain-routes-canvas .cj-easy-search label{
+ font-size:13px;font-weight:800;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-search-row{
+ display:flex;gap:7px;min-width:0;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-search-row input{
+ display:block;flex:1;min-width:0;min-height:51px;padding:9px 12px;
+ border:1px solid var(--cj-border);border-radius:12px;
+ background:var(--cj-surface);color:var(--ink);font:inherit;font-size:14px;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-search-row button{
+ flex:0 0 auto;min-width:66px;min-height:51px;margin:0;padding:8px 12px;
+ background:var(--yellow,#ffc400);color:#0b0b0d;
+ border:0;border-radius:12px;font:inherit;font-weight:900;font-size:13px;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-search-row button:disabled{
+ opacity:.55;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-results{
+ display:grid;gap:8px;border:1px solid var(--cj-border);
+ border-radius:15px;background:var(--cj-soft);padding:12px;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-results>strong{
+ font-size:14px;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-results>button{
+ display:grid;gap:3px;min-width:0;min-height:50px;margin:0;
+ padding:10px;text-align:start;color:var(--ink);
+ background:var(--cj-surface);border:1px solid var(--cj-border);
+ border-radius:11px;font:inherit;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-results>button span{
+ font-size:13px;font-weight:800;overflow-wrap:anywhere;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-results>button small{
+ font-size:11px;color:var(--cj-muted);overflow-wrap:anywhere;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-attribution{
+ color:var(--cj-muted);font-size:10px;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-help{
+ padding:10px 12px;background:var(--cj-soft);
+ color:var(--ink);border-radius:12px;font-size:12px;line-height:1.7;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-feedback{
+ background:var(--cj-soft);padding:11px 12px;
+ color:var(--ink);border-radius:12px;font-size:13px;line-height:1.6;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-gps{
+ width:100%;min-height:46px;margin:0;
+ background:transparent;color:var(--ink);border:1px solid var(--cj-border);
+ border-radius:12px;font:inherit;font-weight:800;font-size:13px;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-selected-stops{
+ margin:0;padding:0;list-style:none;display:grid;gap:8px;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-selected-stops>li{
+ display:flex;align-items:center;gap:10px;min-width:0;
+ border:1px solid var(--cj-border);border-radius:13px;
+ padding:10px;background:var(--cj-surface);
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-stop-number{
+ flex:0 0 30px;width:30px;height:30px;
+ border-radius:50%;background:var(--yellow,#ffc400);
+ color:#0b0b0d;display:grid;place-items:center;font-weight:900;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-selected-stops>li>div{
+ display:grid;gap:3px;flex:1;min-width:0;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-selected-stops strong{
+ font-size:13px;line-height:1.45;overflow-wrap:anywhere;
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-selected-stops small{
+ font-size:11px;color:var(--cj-muted);
+}
+.sekka-mobile .captain-routes-canvas .cj-easy-selected-stops button{
+ flex:0 0 auto;border:0;color:var(--ink);background:var(--cj-soft);
+ min-height:36px;padding:7px 11px;border-radius:10px;font:inherit;font-size:12px;
+}
+@media(max-width:340px){
+ .sekka-mobile .captain-routes-canvas .cj-easy-areas,
+ .sekka-mobile .captain-routes-canvas .cj-easy-places{grid-template-columns:1fr}
+}
+
+/* P0 vehicle preflight; reuse the approved seKKa yellow/black tokens. */
+.sekka-mobile .captain-routes-canvas .cj-vehicle-preflight{
+ display:grid;gap:8px;min-width:0;
+ padding:12px 13px;margin:6px 0 14px;
+ border:1px solid var(--cj-border);border-radius:13px;
+ background:var(--cj-soft);color:var(--ink);
+ font-size:13px;line-height:1.6;
+}
+.sekka-mobile .captain-routes-canvas .cj-vehicle-preflight p{
+ margin:0;overflow-wrap:anywhere;
+}
+.sekka-mobile .captain-routes-canvas .cj-vehicle-preflight strong{
+ display:block;font-size:13px;overflow-wrap:anywhere;
+}
+.sekka-mobile .captain-routes-canvas .cj-vehicle-preflight button{
+ min-height:44px;max-width:100%;margin-top:9px;padding:9px 14px;
+ border:0;border-radius:11px;background:var(--yellow,#ffc400);
+ color:var(--black,#111);font:inherit;font-weight:800;
+}
+
+/* Captain price guidance is an estimate, not the private final price policy. */
+.sekka-mobile .captain-routes-canvas .cj-price-guidance{
+ display:grid;gap:8px;padding:12px 13px;
+ border:1px solid var(--cj-border);border-radius:13px;
+ background:var(--cj-soft);color:var(--ink);
+ font:inherit;font-size:13px;line-height:1.65;
+}
+.sekka-mobile .captain-routes-canvas .cj-price-guidance strong{font-weight:900}
+.sekka-mobile .captain-routes-canvas .cj-price-guidance p{margin:0}
+.sekka-mobile .captain-routes-canvas .cj-price-guidance small{
+ color:var(--cj-muted);font-size:12px;line-height:1.7;
+}
+.sekka-mobile .captain-routes-canvas .cj-price-guidance-warning{
+ padding:10px;border-inline-start:4px solid var(--yellow,#ffc400);
+ background:var(--cj-surface);border-radius:8px;font-weight:800;
+}
+
+.sekka-route-map-card{
+ display:grid;
+ gap:.625rem;
+ min-inline-size:0;
+ margin-block-end:1rem;
+}
+.sekka-route-map-card__frame{
+ display:block;
+ inline-size:100%;
+ block-size:clamp(13rem,34vh,20rem);
+ border:1px solid var(--cj-stroke,currentColor);
+ border-radius:1rem;
+ background:var(--cj-surface,#fff);
+}
+.sekka-route-map-card a{
+ color:inherit;
+ text-underline-offset:.2em;
+}
+.sekka-route-map-card__credit{
+ justify-self:end;
+ font-size:.8125rem;
+}
+.sekka-route-map-card__stops,.sekka-route-stop-actions{
+ display:flex;
+ flex-wrap:wrap;
+ gap:.375rem;
+}
+.sekka-route-map-card__stops button,.cj-easy-selected-stops .sekka-route-stop-actions button{
+ min-block-size:44px;
+ min-inline-size:44px;
+ padding:.375rem .625rem;
+ border:1px solid var(--cj-stroke,currentColor);
+ border-radius:.625rem;
+ color:inherit;
+ background:transparent;
+}
+.sekka-route-map-card__stops button[aria-pressed="true"]{
+ border-color:#ffc400;
+ box-shadow:inset 0 0 0 1px #ffc400;
+}
+.sekka-route-map-card summary,.sekka-route-map-card li a{
+ display:revert;
+ min-block-size:44px;
+ line-height:1.5;
+}
+.sekka-route-map-card summary{
+ padding-block:.55rem;
+ cursor:pointer;
+}
+.sekka-route-map-card li a{
+ display:inline-flex;
+ align-items:center;
+}
+.cj-easy-selected-stops .sekka-route-stop-actions{
+ grid-column:2/-1;
+}
+
+.sekka-mobile .captain-routes-canvas .cj-publish-facts {
+ display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:8px;margin:0;
+}
+.sekka-mobile .captain-routes-canvas .cj-publish-facts>div {
+ border:1px solid var(--cj-border);border-radius:10px;padding:9px;min-width:0;
+}
+.sekka-mobile .captain-routes-canvas .cj-publish-facts dt {font-size:12px;color:var(--cj-muted)}
+.sekka-mobile .captain-routes-canvas .cj-publish-facts dd {margin:3px 0 0;font-weight:800;overflow-wrap:anywhere}
+
+/* Captain: name-first search, optional area fallback and leg-specific stop times. */
+.sekka-mobile .captain-routes-canvas .cj-captain-stop-times{margin:16px 0;padding:14px;border:1px solid #E8D77A;border-radius:16px;min-width:0}
+.sekka-mobile .captain-routes-canvas .cj-captain-stop-times>strong{display:block;font-size:1rem;line-height:1.5}
+.sekka-mobile .captain-routes-canvas .cj-captain-stop-times>p{margin:8px 0 12px;font-size:.85rem;line-height:1.6}
+.sekka-mobile .captain-routes-canvas .cj-captain-stop-times ol{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.sekka-mobile .captain-routes-canvas .cj-captain-stop-times li{padding:12px;border:1px solid #E8D77A;border-radius:12px;min-width:0;display:grid;gap:10px;background:rgba(255,255,255,.04)}
+.sekka-mobile .captain-routes-canvas .cj-captain-stop-times li>bdi{font-weight:800;overflow-wrap:anywhere}
+.sekka-mobile .captain-routes-canvas .cj-captain-stop-time-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));gap:10px;min-width:0}
+.sekka-mobile .captain-routes-canvas .cj-captain-stop-time-fields label{display:grid;gap:6px;font-size:.86rem;font-weight:700;min-width:0}
+.sekka-mobile .captain-routes-canvas .cj-captain-stop-time-fields input{font:inherit;min-height:46px;min-width:0;width:100%;box-sizing:border-box;padding:8px;border:1px solid #E8D77A;border-radius:10px;color:#111111;background:#fff;direction:ltr}
+.sekka-mobile .captain-routes-canvas .cj-captain-stop-time-fields input:focus-visible{outline:3px solid #f7c74f;outline-offset:2px}
+
+.sekka-mobile .captain-routes-canvas .cj-captain-route-map-preview{margin:12px 0;max-width:100%;min-width:0}
+.sekka-mobile .captain-routes-canvas .cj-captain-route-map-preview>summary{min-height:44px;display:list-item;cursor:pointer;font-size:.83rem;font-weight:750;padding:10px;border:1px dashed #E8D77A;border-radius:12px}
+.sekka-mobile .captain-routes-canvas .cj-captain-route-map-preview[open]>summary{margin-bottom:10px}
+
+/* Safe Captain trip removal: secondary destructive action + inline confirmation. */
+.sekka-mobile .captain-routes-canvas .cj-remove-route-trigger{
+ min-height:44px;padding:9px 12px;border:1px solid currentColor;border-radius:12px;
+ background:transparent;color:inherit;font-weight:750;white-space:normal}
+.sekka-mobile .captain-routes-canvas .cj-remove-route-confirm{
+ margin:12px 0;padding:14px;border:1px solid #bb6e72;border-radius:14px;
+ background:rgba(172,65,78,.08);display:grid;gap:12px;min-width:0}
+.sekka-mobile .captain-routes-canvas .cj-remove-route-confirm p{
+ margin:0;line-height:1.65;font-size:.9rem;overflow-wrap:anywhere}
+.sekka-mobile .captain-routes-canvas .cj-remove-route-confirm-actions{
+ display:flex;flex-wrap:wrap;gap:8px;align-items:stretch}
+.sekka-mobile .captain-routes-canvas .cj-remove-route-confirm-actions button{
+ min-height:44px;min-width:min(100%,130px);flex:1 1 130px;padding:9px;border-radius:12px;
+ border:1px solid currentColor;font:inherit;font-weight:750}
+.sekka-mobile .captain-routes-canvas .cj-remove-route-danger{
+ background:#a32239;color:white;border-color:#a32239}
+.sekka-mobile .captain-routes-canvas .cj-remove-route-danger:disabled{opacity:.45;cursor:not-allowed}
+.sekka-mobile .captain-routes-canvas .cj-remove-route-confirm-actions button:focus-visible,
+.sekka-mobile .captain-routes-canvas .cj-remove-route-trigger:focus-visible{
+ outline:3px solid #f7be53;outline-offset:2px}
