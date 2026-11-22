@@ -32,9 +32,9 @@
  border-radius:31px!important;
  background:
   radial-gradient(ellipse 100% 64% at 7% 104%,rgba(60,174,227,.24),transparent 80%),
-  linear-gradient(180deg,rgba(255,255,255,.76) 0%,rgba(249,252,255,.79) 30%,rgba(241,248,255,.72) 66%,rgba(234,243,255,.72) 100%)!important;
- backdrop-filter:blur(28px) saturate(1.42)!important;
- -webkit-backdrop-filter:blur(28px) saturate(1.42)!important;
+  linear-gradient(180deg,rgba(255,255,255,.93) 0%,rgba(249,253,255,.91) 30%,rgba(241,248,255,.88) 66%,rgba(234,243,255,.90) 100%)!important;
+ backdrop-filter:blur(42px) saturate(1.1)!important;
+ -webkit-backdrop-filter:blur(42px) saturate(1.1)!important;
  color:#153850!important;
  box-shadow:inset 0 1px 0 rgba(255,255,255,.94),
    inset 1px 0 0 rgba(255,255,255,.52),
@@ -115,6 +115,7 @@ html[data-theme="dark"] .sekka-mobile .sekka-glass-panel .sekka-side-drawer__hea
  cursor:pointer;
 }
 .sekka-mobile .sekka-glass-panel .sekka-glass-rail-toggle svg{
+ transform:rotate(180deg); /* expanded: point right to return to the rail */
  transition:transform .42s cubic-bezier(.2,1.1,.3,1);
 }
 .sekka-mobile .sekka-glass-panel .sekka-side-drawer__close svg{
@@ -319,7 +320,8 @@ html[data-theme="dark"] .sekka-mobile .sekka-glass-footer__symbol{
 html[data-theme="dark"] .sekka-mobile .sekka-glass-footer__copy small{color:#A9CAD9}
 .sekka-mobile .sekka-glass-panel--collapsed{
  width:70px!important;padding-inline:10px!important;
- border-radius:26px!important;animation:none!important;
+ border-radius:26px!important;
+ animation:sekkaGlassRailAppear .32s ease-out both!important;
 }
 .sekka-mobile .sekka-glass-panel--collapsed .sekka-side-drawer__header{
  flex-direction:column!important;min-height:88px!important;
@@ -336,7 +338,7 @@ html[data-theme="dark"] .sekka-mobile .sekka-glass-footer__copy small{color:#A9C
  display:none!important;
 }
 .sekka-mobile .sekka-glass-panel--collapsed .sekka-glass-rail-toggle{flex:0 0 28px!important;width:28px!important;height:28px!important}
-.sekka-mobile .sekka-glass-panel--collapsed .sekka-glass-rail-toggle svg{transform:rotate(180deg)}
+.sekka-mobile .sekka-glass-panel--collapsed .sekka-glass-rail-toggle svg{transform:rotate(0deg)} /* compact: arrow points left to expand */
 .sekka-mobile .sekka-glass-panel--collapsed nav{gap:5px!important;align-items:center!important}
 .sekka-mobile .sekka-glass-panel--collapsed nav button.sekka-menu-row{
  width:47px!important;min-height:45px!important;padding:8px!important;
@@ -362,6 +364,10 @@ html[data-theme="dark"] .sekka-mobile .sekka-glass-footer__copy small{color:#A9C
 @keyframes sekkaGlassRowEnter{
  from{opacity:0;transform:translateY(7px)}
  to{opacity:1;transform:translateY(0)}
+}
+@keyframes sekkaGlassRailAppear{
+ from{opacity:0;transform:translateX(16px) scale(.97)}
+ to{opacity:1;transform:translateX(0) scale(1)}
 }
 @keyframes sekkaGlassBackdropIn{from{opacity:0}to{opacity:1}}
 @keyframes sekkaGlassUnfold{
