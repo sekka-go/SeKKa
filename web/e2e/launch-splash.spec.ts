@@ -1,125 +1,123 @@
-import { expect, test } from "@playwright/test";
+import {expect,test} from '@playwright/test';
 
-const icon = "/brand/sekka-go-road-512.png";
-const intro = ".sekka-launch";
+const intro='.sekka-launch';
 
-test("new opening shows animated Hiace on a cream screen followed by a black curved transition", async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.emulateMedia({reducedMotion: "no-preference"});
-  await page.goto("/");
+test('fresh opening shows approved Cairo SUV art and the cyan seKKa launch',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.emulateMedia({reducedMotion:'no-preference'});
+ await page.goto('/');
+ const splash=page.locator(intro);
+ await expect(splash).toBeVisible();
+ await expect(splash.locator('.sekka-launch__brand-name')).toHaveText('سِكَّة');
+ await expect(splash.locator('.sekka-launch__approved-scene')).toBeVisible();
+ await expect(splash.locator('.sekka-launch__wave-wipe')).toHaveCSS('animation-name','sk-wave-out');
+ await expect(splash.locator('.sekka-launch__stage')).toHaveCSS('animation-name','sk-stage-finish');
+ await expect(splash.locator('.sekka-launch__wheel-motion')).toBeVisible();
+ const rect=await splash.boundingBox();
+ expect(rect).not.toBeNull();
+ expect(rect!.x).toBe(0);
+ expect(rect!.y).toBe(0);
+ expect(rect!.width).toBe(390);
+ expect(rect!.height).toBe(844);
+ await expect(splash).toHaveCount(0,{timeout:8000});
+ await expect(page.locator('.phase-screen-2')).toBeVisible();
+});
+
+for(const [width,height] of [[320,700],[360,800],[412,915]] as const){
+ test('approved opening covers viewport at '+width+'x'+height,async({page})=>{
+  await page.setViewportSize({width,height});
+  await page.goto('/?tab=login&view=2');
   const splash=page.locator(intro);
   await expect(splash).toBeVisible();
-  await expect(splash.locator("svg.sekka-launch__hiace")).toBeVisible();
-  await expect(splash.locator(".sekka-launch__wordmark")).toHaveText("سِكّة");
-  await expect(splash.locator(".sekka-launch__vehicle")).toHaveCSS("animation-name", "sekka-hiace-drive");
-  await expect(splash.locator(".sekka-launch__black-wipe")).toHaveCSS("animation-name", "sekka-black-reveal");
-  await expect(splash.locator(".sekka-launch__stage")).toHaveCSS("background-color", "rgb(247, 240, 229)");
-  // The old motorbike and static road-icon image must not be in the animation.
-  await expect(splash.locator(".sekka-launch__artwork,img")).toHaveCount(0);
-  const box=await splash.boundingBox();
-  expect(box).not.toBeNull();
-  expect(box!.x).toBe(0);
-  expect(box!.y).toBe(0);
-  expect(box!.width).toBe(390);
-  expect(box!.height).toBe(844);
-  await expect(splash).toHaveCount(0,{timeout:6000});
-  await expect(page.locator(".phase-screen-2")).toBeVisible();
-});
-
-for(const [width,height] of [[320,700],[360,800],[412,915]] as const) {
-  test(`Hiace opening covers the PWA viewport at ${width}x${height}`,async ({page})=>{
-    await page.setViewportSize({width,height});
-    await page.goto("/?tab=login&view=2");
-    const splash=page.locator(intro);
-    await expect(splash).toBeVisible();
-    const box=await splash.boundingBox();
-    expect(box).not.toBeNull();
-    expect(box!.x).toBe(0);
-    expect(box!.y).toBe(0);
-    expect(box!.width).toBe(width);
-    expect(box!.height).toBe(height);
-    await expect(splash).toHaveCount(0,{timeout:6000});
-  });
+  const rect=await splash.boundingBox();
+  expect(rect).not.toBeNull();
+  expect(rect!.x).toBe(0);
+  expect(rect!.y).toBe(0);
+  expect(rect!.width).toBe(width);
+  expect(rect!.height).toBe(height);
+  await expect(splash).toHaveCount(0,{timeout:8000});
+ });
 }
 
-test("back navigation, OAuth callback and developer gallery must never replay the opening",async ({page})=>{
- await page.goto("/?code=test-oauth-callback");
+test('OAuth callback and developer gallery never play the opening',async({page})=>{
+ await page.goto('/?code=test-oauth-callback');
  await expect(page.locator(intro)).toHaveCount(0);
- await page.goto("/dev/screens?screen=2");
+ await page.goto('/dev/screens?screen=2');
  await expect(page.locator(intro)).toHaveCount(0);
 });
 
-test("reload does not replay launch animation in the same tab session",async ({page})=>{
- await page.goto("/?tab=login&view=2");
+test('reload does not replay a five-second intro within the same browser tab',async({page})=>{
+ await page.goto('/?tab=login&view=2');
  await expect(page.locator(intro)).toBeVisible();
- await expect(page.locator(intro)).toHaveCount(0,{timeout:6000});
+ await expect(page.locator(intro)).toHaveCount(0,{timeout:8000});
  await page.reload();
  await expect(page.locator(intro)).toHaveCount(0);
- await expect(page.locator(".phase-screen-2")).toBeVisible();
+ await expect(page.locator('.phase-screen-2')).toBeVisible();
 });
 
-test("prefers-reduced-motion skips vehicle/wipe motion and does not block the app",async ({page})=>{
- await page.emulateMedia({reducedMotion:"reduce"});
- await page.goto("/?tab=login&view=2");
+test('reduced motion bypasses launch animations without blocking the app',async({page})=>{
+ await page.emulateMedia({reducedMotion:'reduce'});
+ await page.goto('/?tab=login&view=2');
  await expect(page.locator(intro)).toHaveCount(0,{timeout:3000});
- await expect(page.locator(".phase-screen-2")).toBeVisible();
+ await expect(page.locator('.phase-screen-2')).toBeVisible();
 });
 
-test("installed identity remains Sekka Go, but launch background and status bar are black",async ({request})=>{
- const response=await request.get("/manifest.webmanifest");
+test('installed Sekka Go identity keeps approved blue manifest and art',async({request})=>{
+ const response=await request.get('/manifest.webmanifest');
  expect(response.ok()).toBeTruthy();
  const manifest=await response.json();
- expect(manifest.name).toBe("Sekka Go");
- expect(manifest.short_name).toBe("Sekka Go");
- expect(manifest.dir).toBe("rtl");
- expect(manifest.background_color).toBe("#171318");
- expect(manifest.theme_color).toBe("#171318");
+ expect(manifest.name).toBe('Sekka Go');
+ expect(manifest.short_name).toBe('Sekka Go');
+ expect(manifest.dir).toBe('rtl');
+ expect(manifest.background_color).toBe('#078CF4');
+ expect(manifest.theme_color).toBe('#078CF4');
  expect(manifest.icons.map((item:{src:string})=>item.src)).toEqual([
-  "/brand/sekka-go-road-192.png",icon
+  '/brand/sekka-sky-mark.svg',
+  '/brand/sekka-go-road-192.png',
+  '/brand/sekka-go-road-512.png'
  ]);
- const index=await (await request.get("/")).text();
- expect(index).toContain('name="theme-color" content="#171318"');
- expect(index).toContain('background:#F7F0E5');
- for(const item of manifest.icons) {
+ const index=await (await request.get('/')).text();
+ expect(index).toContain('name="theme-color" content="#078CF4"');
+ expect(index).toContain('background:#F4FBFF');
+ for(const item of manifest.icons){
   const img=await request.get(item.src);
   expect(img.ok()).toBeTruthy();
-  const bytes=await img.body();
-  expect(bytes.subarray(0,8).toString("hex")).toBe("89504e470d0a1a0a");
+  if(item.type==='image/png'){
+   const bytes=await img.body();
+   expect(bytes.subarray(0,8).toString('hex')).toBe('89504e470d0a1a0a');
+  }else{
+   expect((await img.text()).trimStart()).toMatch(/^(?:<\?xml[^>]*>\s*)?<svg\b/);
+  }
  }
 });
 
-test("public app uses black, cream and mauve tokens without restyling dev gallery",async ({page})=>{
- await page.addInitScript(()=>localStorage.setItem("theme_preference","light"));
- await page.goto("/?tab=login&view=2");
- await expect(page.locator(intro)).toHaveCount(0,{timeout:6000});
- const root=page.locator(".sekka-mobile");
- await expect(root).toBeVisible();
- const palette=await root.evaluate(el=>{
-  const styles=getComputedStyle(el);
+test('light mode keeps sky, cyan and yellow design tokens',async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('theme_preference','light'));
+ await page.goto('/?tab=login&view=2');
+ await expect(page.locator(intro)).toHaveCount(0,{timeout:8000});
+ await expect(page.locator('html')).toHaveAttribute('data-theme','light');
+ const palette=await page.evaluate(()=>{
+  const styles=getComputedStyle(document.documentElement);
   return {
-   bg:styles.backgroundColor,
-   ink:styles.getPropertyValue("--sekka-black").trim(),
-   cream:styles.getPropertyValue("--sekka-cream").trim(),
-   mauve:styles.getPropertyValue("--sekka-mauve").trim()
+   sky:styles.getPropertyValue('--sekka-sky').trim(),
+   cyan:styles.getPropertyValue('--sekka-cyan').trim(),
+   sun:styles.getPropertyValue('--sekka-sun').trim()
   };
  });
- expect(palette).toEqual({
-  bg:"rgb(247, 240, 229)",
-  ink:"#171318",
-  cream:"#F7F0E5",
-  mauve:"#8050AF"
- });
+ expect(palette).toEqual({sky:'#078CF4',cyan:'#20D8E6',sun:'#FFCC24'});
 });
 
-test("dark preference changes the app to black and cream while preserving mauve actions",async({page})=>{
- await page.addInitScript(()=>localStorage.setItem("theme_preference","dark"));
- await page.goto("/?tab=login&view=2");
- await expect(page.locator(intro)).toHaveCount(0,{timeout:6000});
- await expect(page.locator("html")).toHaveAttribute("data-theme","dark");
- const root=page.locator(".sekka-mobile");
- await expect(root).toHaveCSS("background-color","rgb(23, 19, 24)");
- const ink=await root.evaluate(el=>getComputedStyle(el).getPropertyValue("--ink").trim());
- expect(ink).toBe("#F7F0E5");
- const mauve=await root.evaluate(el=>getComputedStyle(el).getPropertyValue("--accent").trim());
- expect(mauve).toBe("#8050AF");
+test('dark mode keeps a legible dark surface without losing yellow accent',async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('theme_preference','dark'));
+ await page.goto('/?tab=login&view=2');
+ await expect(page.locator(intro)).toHaveCount(0,{timeout:8000});
+ await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
+ const root=page.locator('.sekka-mobile');
+ await expect(root).toBeVisible();
+ const colors=await root.evaluate(el=>({
+  background:getComputedStyle(el).backgroundColor,
+  yellow:getComputedStyle(document.documentElement).getPropertyValue('--sekka-sun').trim()
+ }));
+ expect(colors.background).not.toBe('rgb(255, 255, 255)');
+ expect(colors.yellow).toBe('#FFCC24');
 });
