@@ -7,6 +7,8 @@ for(const width of [360,390])for(const language of ['ar','en'] as const)for(cons
   await page.addInitScript(({language,theme})=>{
    localStorage.setItem('language_preference',language);
    localStorage.setItem('theme_preference',theme);
+      // These tests audit destination layout, not the 5-second launch animation.
+      sessionStorage.setItem('sekka.launch.seen.v1','1');
   },{language,theme});
   const routes=[
    {tab:'search',view:12,expected:'.d-screen-12',label:'route-details-empty'},
@@ -21,13 +23,16 @@ for(const width of [360,390])for(const language of ['ar','en'] as const)for(cons
    if(scene.tab==='captain-onboarding')
     await expect(page.locator('.sekka-mobile-header')).toBeHidden();
    else if(scene.tab==='search'||scene.tab==='booking'){
-    await expect(page.locator('.sekka-mobile-header')).toBeVisible();
-    await expect(page.locator('.sekka-mobile-header .sekka-approved-logo')).toHaveCount(0);
+    await expect(page.locator('.sekka-floating-actions')).toBeVisible();
+    await expect(page.locator('.sekka-mobile-header')).toHaveCount(0);
     const menu=page.getByRole('button',{name:language==='ar'?'فتح القائمة':'Open menu'});
     await expect(menu).toBeVisible();
     const bounds=await menu.boundingBox();
     expect(bounds).not.toBeNull();
-    expect(bounds!.x+bounds!.width/2,'Menu must be on the physical left').toBeLessThan(width/2);
+    if(language==='ar')expect(bounds!.x+bounds!.width/2,'RTL menu should be on the physical right').toBeGreaterThan(width/2);
+    else expect(bounds!.x+bounds!.width/2,'LTR menu should be on the physical left').toBeLessThan(width/2);
+    expect(bounds!.width).toBeGreaterThanOrEqual(44);
+    expect(bounds!.height).toBeGreaterThanOrEqual(44);
    }
    await expect(page.locator('.sekka-bottom-nav')).toHaveCount(0);
    if(scene.tab==='admin'){
