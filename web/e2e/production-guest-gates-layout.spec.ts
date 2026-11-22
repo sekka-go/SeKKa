@@ -36,13 +36,18 @@ for(const width of [360,390])for(const language of ['ar','en'] as const)for(cons
     expect(bounds!.width).toBeGreaterThanOrEqual(44);
     expect(bounds!.height).toBeGreaterThanOrEqual(44);
    }
+   if(scene.tab==='search'||scene.tab==='booking'){
+    // Guest header should share the approved Rider chrome, not the old pill.
+    const shell=page.locator('.sekka-floating-actions');
+    await expect(shell).toHaveCSS('background-color',theme==='dark'?'rgb(25, 52, 73)':'rgb(255, 255, 255)');
+    const title=page.locator('.sekka-sliver-pin');
+    await expect(title).toBeVisible();
+    await expect(title).toContainText(scene.tab==='booking'?(language==='ar'?'إكمال الحجز':'Booking'):(language==='ar'?'تفاصيل الرحلة':'Trip details'));
+   }
    if(scene.tab==='booking'){
     // The booking review must not paint a second decorative brand over
     // the central app title or stack its Back control on the menu.
     await expect(page.locator('.sekka-rider-booking-v3 .d-header .sekka-live-wordmark')).toHaveCount(0);
-    const title=page.locator('.sekka-sliver-pin');
-    await expect(title).toBeVisible();
-    await expect(title).toContainText(language==='ar'?'إكمال الحجز':'Booking');
     const back=page.locator('.sekka-rider-booking-v3 .d-header .phase-back');
     await expect(back).toBeVisible();
     const header=await page.locator('.sekka-floating-actions').boundingBox();
