@@ -159,3 +159,16 @@ html[data-theme="dark"] .sekka-mobile:not(.sekka-rider-navigation):is(.sekka-tab
   stroke:#102A3C!important;
   color:#102A3C!important;
 }
+
+/* The later lazy-loaded booking bundle has legacy dark yellow button rules.
+   This exact real-app state must keep the same accessible yellow at all themes. */
+html[data-theme="dark"] .sekka-mobile.sekka-tab-booking .sekka-rider-booking-v3 .b-unavailable button.b-primary,
+html:not([data-theme="dark"]) .sekka-mobile.sekka-tab-booking .sekka-rider-booking-v3 .b-unavailable button.b-primary{
+ background:#FFCC24!important;
+ color:#102A3C!important;
+ border-color:#FFCC24!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-tab-booking .sekka-rider-booking-v3 .b-unavailable button.b-primary svg,
+html:not([data-theme="dark"]) .sekka-mobile.sekka-tab-booking .sekka-rider-booking-v3 .b-unavailable button.b-primary svg{
+ color:#102A3C!important;stroke:#102A3C!important;
+}
