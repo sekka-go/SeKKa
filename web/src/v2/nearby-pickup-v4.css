@@ -26,7 +26,7 @@
  border-top:2px dashed #FFCD4D;top:8px}
 .sekka-mobile .np4__mini-route i{display:block;width:12px;height:12px;border-radius:50%;
  position:relative;z-index:1;background:#FFCF48;border:2px solid #E8D77A}
-.sekka-mobile .np4__mini-route i:last-child{background:#FF7150}
+.sekka-mobile .np4__mini-route i:last-child{background:#FFCC24}
 .sekka-mobile .np4__hero h2{font:900 clamp(24px,6vw,29px)/1.3 Tajawal,Tahoma,sans-serif;
  color:#FFF!important;margin:0 0 7px!important}
 .sekka-mobile .np4__hero>p{font-size:13px;font-weight:750;color:#FFFFFF;line-height:1.65;max-width:285px}
@@ -42,7 +42,7 @@
 .sekka-mobile .np4__live-dot{width:9px;height:9px;border-radius:100%;background:#6AF4AD;
  box-shadow:0 0 0 3px #6AF4AD33;flex:none}
 .sekka-mobile .np4__notice{display:grid!important;gap:9px;background:#FFF0E9;
- border:1px solid #FFD8BE;border-radius:15px!important;padding:14px!important;
+ border:1px solid #FFF1B8;border-radius:15px!important;padding:14px!important;
  color:#111111;font-size:13px;font-weight:750;line-height:1.6}
 .sekka-mobile .np4__notice strong{font-size:15px;color:#111111}
 .sekka-mobile .np4__notice button{background:#FFF;border:1px solid #E4B5B7;
@@ -52,7 +52,7 @@
  border:1px solid var(--np-line);border-radius:17px;padding:15px 13px}
 .sekka-mobile .np4__results-bar>div:first-child{display:flex;justify-content:space-between;
  gap:12px;align-items:center;flex-wrap:wrap}
-.sekka-mobile .np4__results-bar .np4__eyebrow{color:#A36F57}
+.sekka-mobile .np4__results-bar .np4__eyebrow{color:#111111}
 .sekka-mobile .np4__results-bar strong{font-size:14px;color:var(--np-ink);font-weight:900}
 .sekka-mobile .np4__radius{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
 .sekka-mobile .np4__radius button{min-width:0;min-height:45px!important;background:#FFF9E9;
@@ -95,7 +95,7 @@
  column-gap:10px;row-gap:2px;align-items:center;padding:6px 0}
 .sekka-mobile .np4__timeline>div+div{border-top:1px dashed #E8D77A}
 .sekka-mobile .np4__route-dot{width:12px;height:12px;border-radius:100%;
- background:#FF704B;box-shadow:0 0 0 3px #FFE7D8;grid-row:1/3}
+ background:#FFCC24;box-shadow:0 0 0 3px #FFE7D8;grid-row:1/3}
 .sekka-mobile .np4__route-dot--end{background:#FFCC24;box-shadow:0 0 0 3px #B39C55}
 .sekka-mobile .np4__timeline small{font-size:11px;color:#111111;font-weight:800}
 .sekka-mobile .np4__timeline strong{font-size:14px;color:var(--np-ink);font-weight:900;
