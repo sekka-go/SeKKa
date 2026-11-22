@@ -1,9 +1,12 @@
+import {useState} from 'react';
+import AppSkeleton from './AppSkeleton';
 import {usePreferences} from './preferences';
 import type {GeoPoint} from './nearbyRoutes';
 import {validCoordinates} from './nearbyRoutes';
 import './rider-stop-map.css';
 export default function RiderStopMap({pickup,name}:{pickup:GeoPoint;name:string}){
  const {language}=usePreferences();
+ const [loaded,setLoaded]=useState(false);
  if(!validCoordinates(pickup))return null;
  // The marker is a public Captain pickup stop, NOT the Rider's private GPS.
  const map=new URL('https://www.openstreetmap.org/export/embed.html');
@@ -15,8 +18,10 @@ export default function RiderStopMap({pickup,name}:{pickup:GeoPoint;name:string}
  map.searchParams.set('marker',pickup.latitude.toFixed(6)+','+pickup.longitude.toFixed(6));
  const title=language==='en'?'Pickup point map: '+name:'خريطة نقطة الركوب: '+name;
  return <div className="sekka-rider-stop-map">
-  <div className="sekka-rider-stop-map__frame">
-   <iframe src={map.toString()} title={title} loading="lazy"
+  <div className="sekka-rider-stop-map__frame" style={{position:'relative'}}>
+   {!loaded&&<div className="sekka-map-shimmer"><AppSkeleton kind="map" label={language==='en'?'Loading pickup map…':'بنحمّل خريطة نقطة الركوب…'}/></div>}
+   <iframe src={map.toString()} title={title} loading="lazy" onLoad={()=>setLoaded(true)}
+    style={{visibility:loaded?'visible':'hidden'}}
     referrerPolicy="strict-origin-when-cross-origin"
     sandbox="allow-scripts allow-same-origin"/>
   </div>
