@@ -1,5 +1,6 @@
 import {usePreferences} from './preferences';
 import './rider-filters-v3.css';
+import {useStaggeredReveal} from './staggerMotion';
 
 type VehicleCategory={name:string;seats:number};
 type Direction='outbound'|'return'|'round_trip'|'';
@@ -12,6 +13,7 @@ export default function RiderFiltersV3({available,categories,period,direction,ma
  onOnlyAvailable:(checked:boolean)=>void;onReset:()=>void;onApply:()=>void;
 }){
  const {language}=usePreferences(),en=language==='en',t=(ar:string,english:string)=>en?english:ar;
+ const revealPanel=useStaggeredReveal();
  const toggle=(name:string)=>onCategories(categories.includes(name)?
   categories.filter(category=>category!==name):[...categories,name]);
  return <section className="rf3" aria-labelledby="rf3-title">
@@ -19,7 +21,7 @@ export default function RiderFiltersV3({available,categories,period,direction,ma
    <h2 id="rf3-title">{t('اختار اللي يناسبك','Find your best fit')}</h2>
    <p>{t('فلتر الرحلات من غير ما تعيد بحثك من الأول.','Refine the published rides without starting over.')}</p>
   </header>
-  <section className="rf3__panel">
+  <section ref={revealPanel} className="rf3__panel">
    <h3>{t('فئة العربية','Vehicle class')}</h3>
    <div className="rf3__categories" role="group" aria-label={t('فئات العربيات','Vehicle categories')}>
     {available.map(item=><button type="button" key={item.name}
@@ -29,7 +31,7 @@ export default function RiderFiltersV3({available,categories,period,direction,ma
     </button>)}
    </div>
   </section>
-  <section className="rf3__panel">
+  <section ref={revealPanel} className="rf3__panel">
    <h3>{t('نظام الرحلة','Subscription period')}</h3>
    <div className="rf3__choices" role="group" aria-label={t('مدة الاشتراك','Subscription period')}>
     {([{value:'',ar:'كل المدد',en:'All'},{value:'weekly',ar:'أسبوعي',en:'Weekly'},
@@ -38,7 +40,7 @@ export default function RiderFiltersV3({available,categories,period,direction,ma
       onClick={()=>onPeriod(item.value)}>{en?item.en:item.ar}</button>)}
    </div>
   </section>
-  <section className="rf3__panel">
+  <section ref={revealPanel} className="rf3__panel">
    <h3>{t('اتجاه الرحلة','Journey direction')}</h3>
    <div className="rf3__choices" role="group" aria-label={t('اتجاه الرحلة','Journey direction')}>
     {([{value:'',ar:'الكل',en:'All'},{value:'outbound',ar:'ذهاب',en:'Outbound'},
@@ -48,7 +50,7 @@ export default function RiderFiltersV3({available,categories,period,direction,ma
       onClick={()=>onDirection(item.value)}>{en?item.en:item.ar}</button>)}
    </div>
   </section>
-  <section className="rf3__panel">
+  <section ref={revealPanel} className="rf3__panel">
    <label className="rf3__price">{t('أقصى سعر للمقعد بالجنيه','Max seat price (EGP)')}
     <input type="number" inputMode="numeric" min="0" step="1" max="1000000" value={maxPrice}
      placeholder={t('من غير حد أقصى','No maximum')} onChange={event=>onMaxPrice(event.target.value)}/>
