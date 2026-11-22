@@ -170,7 +170,9 @@ html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation .rh-tabs__primary .
   padding-bottom:calc(130px + env(safe-area-inset-bottom,0px))!important;
 }
 .sekka-mobile.sekka-rider-navigation:not(.sekka-search-filters) > .sekka-mobile-content{
-  padding-bottom:calc(150px + env(safe-area-inset-bottom,0px))!important;
+  /* The parent shell already reserves the fixed dock height. Avoid double
+     padding that produced a large blank area after short pages. */
+  padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))!important;
 }
 .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-hero{
   min-height:390px!important;
@@ -211,7 +213,8 @@ html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation .rh-tabs__primary .
 /* Compact the large booking-banner copy without hiding any status or data. */
 .sekka-mobile.sekka-rider-navigation .rb3__hero{
   min-height:0!important;
-  padding:calc(96px + env(safe-area-inset-top,0px)) 20px 20px!important;
+  /* Booking-section tabs already sit below the floating header. */
+  padding:19px 20px 20px!important;
   margin-block-start:0!important;
   margin-block-end:12px!important;
   border-radius:0 0 25px 25px!important;
