@@ -1,3 +1,4 @@
+import AppSkeleton from './AppSkeleton';
 import {useState} from 'react';
 import {usePreferences} from './preferences';
 
@@ -9,6 +10,7 @@ export default function CaptainRouteMap({stops}:{stops:MapStop[]}){
  const {language}=usePreferences();
  const t=(ar:string,en:string)=>language==='en'?en:ar;
  const [focused,setFocused]=useState<string|null>(null);
+ const [mapLoaded,setMapLoaded]=useState(false);
  const located=stops.filter((stop):stop is LocatedStop=>stop.latitude!==null&&stop.longitude!==null);
  const coordinateKey=(stop:LocatedStop)=>stop.latitude+':'+stop.longitude;
  const marker=located.find(stop=>coordinateKey(stop)===focused)??located.at(-1);
@@ -24,7 +26,10 @@ export default function CaptainRouteMap({stops}:{stops:MapStop[]}){
  if(marker)map.searchParams.set('marker',marker.latitude+','+marker.longitude);
 
  return <section className="sekka-route-map-card" aria-label={t('خريطة محطات الخط','Route stop map')}>
+  {!mapLoaded&&<div className="sekka-map-shimmer"><AppSkeleton kind="map" label={t('بنحمّل خريطة المحطات…','Loading route stops map…')}/>}</div>}
   <iframe className="sekka-route-map-card__frame" src={map.toString()} loading="lazy"
+   onLoad={()=>setMapLoaded(true)}
+   style={{visibility:mapLoaded?'visible':'hidden'}}
    title={t('خريطة OpenStreetMap لمحطات الخط','OpenStreetMap route stop map')}
    sandbox="allow-scripts allow-same-origin" referrerPolicy="strict-origin-when-cross-origin"/>
   <a className="sekka-route-map-card__credit" href={osm+'/copyright'} target="_blank" rel="noopener noreferrer">
