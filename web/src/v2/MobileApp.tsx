@@ -644,7 +644,7 @@ export default function MobileApp(){
       {menuLink(t('حجوزاتي','My bookings'),{tab:'bookings'})}
       {ready&&userId&&<button type="button" className="sekka-menu-row"
         aria-current={tab==='bookings'&&bookingsSection==='requests'?'page':undefined}
-        onClick={()=>{setBookingsSection('requests');navigate({tab:'bookings'});}}>
+        onClick={()=>{navigate({tab:'bookings'});setBookingsSection('requests');}}>
          <span className="sekka-menu-row__icon"><SekkaMenuIcon name="requests"/></span>
          <span className="sekka-menu-row__label">{t('طلبات رحلاتي','My trip requests')}</span>
         </button>}
