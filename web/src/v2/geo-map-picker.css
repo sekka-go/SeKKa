@@ -57,3 +57,25 @@
 @media (prefers-reduced-motion:reduce){.sekka-map-picker *{scroll-behavior:auto}}
 
 .sekka-map-picker[open]{display:flex;width:100%;height:100dvh;max-width:none;margin:0;border:0;box-sizing:border-box;padding-inline:0;}
+
+
+/* OpenStreetMap tiles use the provider's HTTP cache, not our service worker.
+ * Background skeleton is replaced in-place as each visible tile decodes. */
+.sekka-map-picker__tile:not([data-ready="true"]){
+ background:linear-gradient(110deg,#D5E7EB 15%,#ECF5F8 44%,#D5E7EB 70%);
+ background-size:210% 100%;
+ animation:sekka-map-tile-pulse 1.75s linear infinite;
+}
+.sekka-map-picker__tile[data-ready="failed"]{
+ visibility:hidden;
+ animation:none!important;
+}
+@keyframes sekka-map-tile-pulse{
+ from{background-position:155% 0}
+ to{background-position:-115% 0}
+}
+@media(prefers-reduced-motion:reduce){
+ .sekka-map-picker__tile:not([data-ready="true"]){
+  animation:none!important;background:#E2EEF2!important;
+ }
+}
