@@ -624,3 +624,64 @@ html[data-theme="dark"] .sekka-mobile .d-canvas:is(.d-screen-9,.d-screen-10,.d-s
 .sekka-mobile .discovery-stage > .d-canvas:after{
  display:none!important;
 }
+
+
+/* 2026-11-22 — owner's drawer refinements.
+   The visual square is smaller; an invisible extension preserves a >=44px hit
+   target. SVG shape is centered geometrically, unaffected by font metrics. */
+.sekka-mobile .sekka-side-drawer__header > .sekka-side-drawer__close{
+ appearance:none!important;
+ position:relative!important;
+ display:grid!important;
+ place-items:center!important;
+ align-items:center!important;
+ justify-items:center!important;
+ box-sizing:border-box!important;
+ width:38px!important;height:38px!important;
+ min-width:38px!important;min-height:38px!important;
+ max-width:38px!important;max-height:38px!important;
+ flex:0 0 38px!important;
+ margin:0!important;padding:0!important;
+ font-size:0!important;line-height:0!important;
+ border:1px solid #D4E7ED!important;
+ border-radius:11px!important;
+ background:#FFFFFF!important;
+ color:#111111!important;
+ box-shadow:0 2px 7px #01446618!important;
+ cursor:pointer;
+}
+.sekka-mobile .sekka-side-drawer__header > .sekka-side-drawer__close:before{
+ content:"";position:absolute;inset:-4px;pointer-events:auto;
+ border-radius:15px;
+}
+.sekka-mobile .sekka-side-drawer__header > .sekka-side-drawer__close > svg{
+ display:block!important;
+ box-sizing:border-box!important;
+ width:18px!important;height:18px!important;
+ min-width:18px!important;min-height:18px!important;
+ margin:0!important;padding:0!important;
+ flex:none!important;justify-self:center!important;align-self:center!important;
+ stroke:#111111!important;fill:none!important;transform:none!important;
+}
+.sekka-mobile .sekka-side-drawer__header > .sekka-side-drawer__close:active{
+ transform:scale(.96)!important;
+}
+.sekka-mobile .sekka-side-drawer nav > button[aria-current="page"]{
+ background:#FFCC24!important;
+ color:#111111!important;
+ border-color:#FFCC24!important;
+ box-shadow:0 2px 7px #DFAF1329!important;
+}
+.sekka-mobile .sekka-side-drawer nav > button[aria-current="page"] :is(span,svg){
+ color:#111111!important;stroke:currentColor!important;
+}
+/* The preferences card ends after the last select: no explanatory footer
+   and no blank strip reserved for it. */
+.sekka-mobile .sekka-side-drawer .sekka-preference-controls{
+ margin-bottom:10px!important;
+ padding-bottom:12px!important;
+ gap:12px!important;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-side-drawer__header > .sekka-side-drawer__close{
+ background:#FFFFFF!important;color:#111111!important;border-color:#C8E3ED!important;
+}
