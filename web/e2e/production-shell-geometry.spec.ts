@@ -10,6 +10,8 @@ for(const width of [360,390]){
     await page.addInitScript(({language,theme})=>{
      localStorage.setItem('language_preference',language);
      localStorage.setItem('theme_preference',theme);
+      // These tests audit destination layout, not the 5-second launch animation.
+      sessionStorage.setItem('sekka.launch.seen.v1','1');
     },{language,theme});
     for(const view of [9,10] as const){
      await page.goto('/?tab=search&view='+view);
