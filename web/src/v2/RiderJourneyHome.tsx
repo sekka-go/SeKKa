@@ -145,7 +145,7 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
     <path fill="#ECFBFF" d="M0 65C128 16 227 99 340 66S410 57 440 43V105H0Z"/>
    </svg>
   </section>
-  <section ref={revealHome} className="rh-journey" aria-label={tr.savedLabel}>
+  <section className="rh-journey" aria-label={tr.savedLabel}>
    <div className="rh-journey__ribbon"><RiderIcon name="star" size={18}/>{draft.origin&&draft.destination?tr.savedLabel:t('ظبّط مشوارك','Plan your ride')}</div>
    <div className="rh-journey__heading"><strong>{t('مشوارك… على مزاجك','Your route, your choice')}</strong>
     <small>{t('اضغط على أي خانة علشان تختار','Tap any field to change it')}</small></div>
