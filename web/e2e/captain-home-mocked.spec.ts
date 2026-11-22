@@ -56,13 +56,14 @@ for(const width of [360,390]){
   await expect(home.locator('.cj-home-metric').first()).toContainText('5.0');
   await expect(home.locator('.cj-home-metric').nth(1)).toContainText('٠');
   await expect(home.locator('.cj-home-metric').nth(2)).toContainText('٠');
-  await expect(page.locator('.sekka-captain-header')).toBeVisible();
+  await expect(home.locator('.cj-home-welcome')).toBeVisible();
   const menu=page.getByRole('button',{name:'فتح القائمة'});
   await expect(menu).toBeVisible();
   await menu.click();
   const drawer=page.getByRole('dialog',{name:'القائمة الرئيسية'});
+  await drawer.getByRole('button',{name:'توسيع القائمة'}).click();
   await expect(drawer.getByRole('button',{name:'خطوطي'})).toBeVisible();
-  await expect(drawer.getByRole('button',{name:'تغيير المظهر'})).toBeVisible();
+  await expect(drawer.getByRole('switch',{name:'تشغيل أو إيقاف الوضع الليلي'})).toBeVisible();
   await drawer.getByRole('button',{name:'إغلاق القائمة'}).click();
   await expect(menu).toBeFocused();
   await expect(page.locator('.sekka-bottom-nav')).toBeHidden();

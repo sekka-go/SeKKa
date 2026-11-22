@@ -162,7 +162,7 @@ test('MOCKED approved Captain creates geocoded route with automatic name and no 
  await expect(entry.locator('iframe.sekka-route-map-card__frame')).toHaveCount(0);
  await expect(entry.getByRole('combobox',{name:'Approved vehicle'})).toBeVisible();
  await expect(entry.getByRole('button',{name:/PRIME/})).toBeEnabled();
- await expect(entry.getByRole('button',{name:/SAVER/})).toBeDisabled();
+ await expect(entry.getByRole('button',{name:/DAILY/})).toBeDisabled();
  await entry.getByRole('button',{name:'Continue'}).click();
  await entry.getByRole('combobox',{name:'Journey direction'}).selectOption('return');
  await expect(entry.getByText('For return only, the first stop served is the last stop in your list.')).toBeVisible();

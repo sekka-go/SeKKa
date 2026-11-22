@@ -14,8 +14,9 @@ test('fresh opening shows approved Cairo SUV art and white PoNo wordmark',async(
  await expect(splash.locator('.sekka-launch__wave-wipe')).toHaveCSS('animation-name','sk-wave-out');
  await expect(splash.locator('.sekka-launch__approved-scene')).toHaveCSS('animation-name','sk-scene-depart');
  await expect(splash.locator('.sekka-launch__wheel-motion')).toHaveCSS('animation-name','sk-scene-depart');
- await expect(splash.locator('.sekka-launch__ribbon')).toBeVisible();
- await expect(splash.locator('.sekka-launch__sky-to-road-wave')).toBeVisible();
+ // Retired ocean waves must remain invisible in the cobalt PoNo splash.
+ await expect(splash.locator('.sekka-launch__ribbon')).toBeHidden();
+ await expect(splash.locator('.sekka-launch__sky-to-road-wave')).toBeHidden();
  await expect(splash.locator('.sekka-launch__stage')).toHaveCSS('animation-name','sk-stage-finish');
  await expect(splash.locator('.sekka-launch__wheel-motion')).toBeVisible();
  const rect=await splash.boundingBox();

@@ -105,7 +105,9 @@ test('MOCKED Android-width private document upload: denied, retry, verified pers
   await route.fulfill({status,contentType:'application/json',body:JSON.stringify(result)});
  });
  await page.goto('/?tab=captain-onboarding&view=38');
- await expect(page.getByRole('button',{name:'Open menu'})).toBeVisible();
+ // Document onboarding is intentionally a focused full-screen flow without a floating menu.
+ await expect(page.getByRole('button',{name:'Open menu'})).toHaveCount(0);
+ await expect(page.locator('.sekka-captain-logged-in')).toBeVisible();
  await expect(page.locator('.sekka-bottom-nav')).toHaveCount(0);
  const picker=page.locator('.c-file-picker').first();
  await expect(picker.locator('input[type=file]')).toBeEnabled();

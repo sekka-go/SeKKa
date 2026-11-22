@@ -15,7 +15,10 @@ test('PWA manifest installs at mobile root and worker never caches user data',as
  const worker=await request.get('/sw.js');
  expect(worker.ok()).toBe(true);
  const code=await worker.text();
- expect(code).toContain("req.mode==='navigate'");
+ expect(code).toContain("request.mode==='navigate'");
+ expect(code).toContain("request.method!=='GET'");
+ expect(code).toContain("!isStatic(url)");
+ expect(code).toContain("response.type==='basic'");
  expect(code).toContain("url.pathname.startsWith('/assets/')");
  await page.goto('/');
  await expect(page.locator('.sekka-mobile')).toBeVisible();

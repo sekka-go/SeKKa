@@ -27,7 +27,8 @@ test('real guest search shell saves appearance and survives refresh',async({page
  // not an extra toggle on the original full-screen onboarding or profile.
  await page.getByRole('button',{name:'Open menu'}).click();
  const drawer=page.getByRole('dialog',{name:'Main menu'});
- await drawer.getByRole('button',{name:'Switch appearance'}).click();
+ await drawer.getByRole('button',{name:'Expand menu'}).click();
+ await drawer.getByRole('switch',{name:'Toggle dark mode'}).click();
  await expect(drawer).toBeVisible();
  await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
  await page.reload();
