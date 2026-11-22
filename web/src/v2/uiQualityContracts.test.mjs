@@ -28,17 +28,18 @@ test('new header and contextual yellow action pass body-text contrast on declare
  assert.match(css,/sekka-no-match-action.*sekka-request-yellow-cta/s);
 });
 
-test('the installed icon, favicon and Apple icon use the same sky-road family',()=>{
+test('the installed icon, favicon and Apple icon use the same S monogram family',()=>{
  const pngs=manifest.icons.map(icon=>icon.src);
  assert.deepEqual(pngs,[
-  '/brand/sekka-go-sky-road-192.png',
-  '/brand/sekka-go-sky-road-512.png'
+  '/brand/sekka-s-icon-192.png',
+  '/brand/sekka-s-icon-512.png',
+  '/brand/sekka-s-icon.svg'
  ]);
  for(const src of pngs){
   assert.ok(existsSync(new URL('../../public'+src,import.meta.url)));
  }
- assert.match(html,/rel="icon" type="image\/png" sizes="192x192" href="\/brand\/sekka-go-sky-road-192\.png"/);
- assert.match(html,/apple-touch-icon" href="\/brand\/sekka-go-sky-road-192\.png"/);
+ assert.match(html,/rel="icon" type="image\/png" sizes="192x192" href="\/brand\/sekka-s-icon-192\.png"/);
+ assert.match(html,/apple-touch-icon" href="\/brand\/sekka-s-icon-192\.png"/);
 });
 
 test('no-match request never invents time, and discloses unsupported weekday details',()=>{

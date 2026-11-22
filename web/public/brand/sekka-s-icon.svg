@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Sekka S">
+<defs><linearGradient id="sky" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0869EE"/><stop offset=".52" stop-color="#029FEC"/><stop offset="1" stop-color="#03DCD7"/></linearGradient><linearGradient id="ribbon" x1="0" x2=".8" y1="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".65" stop-color="#F9FCFF"/><stop offset="1" stop-color="#D6F5FD"/></linearGradient></defs>
+<rect width="512" height="512" rx="112" fill="url(#sky)"/>
+<path d="M406 108 Q401 100 392 100 L230 101 Q178 106 143 136 Q104 174 113 224 Q115 245 145 259 Q202 286 247 299 Q263 310 257 319 Q251 332 234 332 L126 335 Q102 346 90 379 Q82 399 87 402 Q97 417 125 403 Q159 389 185 382 Q237 359 261 327 Q272 305 243 284 Q208 268 160 254 Q243 255 268 261 Q310 271 332 284 Q365 305 361 341 Q352 379 320 408 Q372 384 389 355 Q404 330 399 323 Q398 281 367 250 Q300 209 204 189 Q207 196 201 196 L128 202 Q151 176 189 164 L375 162 Q402 152 406 108 Z" fill="url(#ribbon)"/>
+<path d="M245 270 Q264 273 274 281 L262 280 Z" fill="#FFFFFF"/>
+<path d="M275 284 Q300 288 310 300 L297 300 Q288 288 275 284Z" fill="#FFFFFF"/>
+<path d="M304 311 Q324 328 315 338 L300 338 Q311 327 304 311Z" fill="#FFFFFF"/>
+<path d="M290 351 L308 351 Q294 369 284 382 L256 382 Q275 369 290 351Z" fill="#FFFFFF"/>
+</svg>

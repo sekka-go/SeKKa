@@ -26,16 +26,18 @@ Source-controlled semantic fixes: `web/src/v2/ui-quality-hardening.css`.
 The earlier stylesheets remain temporarily for integration compatibility
 until screenshot QA allows deleting redundant rules.
 
-## Icons
-The 192px and 512px installed icons preserve the original seKKa/yellow-road
-geometry and apply the currently approved sky-blue palette only.
+## Installed app icon — S monogram
+The app icon installed on the phone is the standalone Latin **S** symbol:
+a continuous white roadway ribbon over a sky-blue/cyan rounded square.
+It contains **no wordmark** or Arabic logotype and does not change the
+in-app «سِكَّة» identity or the existing animated Splash.
 
-- `web/public/brand/sekka-go-sky-road-192.png`
-- `web/public/brand/sekka-go-sky-road-512.png`
+- `web/public/brand/sekka-s-icon.svg`
+- `web/public/brand/sekka-s-icon-192.png`
+- `web/public/brand/sekka-s-icon-512.png`
 
-Manifest, favicon and Apple touch icon must use those matching assets.
-The prior purple versions are kept only as archived originals.
-Splash remains the previously approved SUV/city scene.
+The manifest, browser favicon, and Apple touch icon use the same S family.
+Previous seKKa-road install icons are historical assets only.
 
 ## Typography and accessibility
 Arabic: locally bundled Tajawal. Use title 800–900, section 700–800,
