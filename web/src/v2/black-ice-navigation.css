@@ -362,6 +362,21 @@ html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation .rh-tabs .rh-tabs__
  background:#FFCC24!important;border-color:#131B25!important;color:#111111!important;
 }
 html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation .rh-tabs__primary .rh-tabs__name{color:#F2F9FF!important}
+/* Guest search/profile/booking use the same black-and-ice floating masthead
+ * as authenticated Riders; do not alter Captain/Admin destinations. */
+html[data-theme="dark"] .sekka-mobile:is(.sekka-tab-search,.sekka-tab-booking,.sekka-tab-profile,.sekka-tab-notifications) > .sekka-floating-actions{
+ background:#0C111A!important;
+ background-image:linear-gradient(115deg,#0C111A,#19374C)!important;
+ border-color:#365269!important;
+ box-shadow:0 9px 30px #0008!important;
+}
+html[data-theme="dark"] .sekka-mobile:is(.sekka-tab-search,.sekka-tab-booking,.sekka-tab-profile,.sekka-tab-notifications) > .sekka-floating-actions > :is(.sekka-fab-menu,.sekka-fab-bell){
+ background:#142435!important;border-color:#39566C!important;color:#D5F5FF!important;
+}
+html[data-theme="dark"] .sekka-mobile:is(.sekka-tab-search,.sekka-tab-booking,.sekka-tab-profile,.sekka-tab-notifications) > .sekka-floating-actions > :is(.sekka-fab-menu,.sekka-fab-bell) svg,
+html[data-theme="dark"] .sekka-mobile:is(.sekka-tab-search,.sekka-tab-booking,.sekka-tab-profile,.sekka-tab-notifications) > .sekka-sliver-pin > span{
+ stroke:#D5F5FF!important;color:#D5F5FF!important;
+}
 html[data-theme="dark"] .sekka-mobile .sekka-screen-back button{
  background:#141F2C!important;border-color:#35495C!important;color:#E1F8FF!important;
 }
