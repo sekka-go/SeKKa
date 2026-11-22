@@ -106,3 +106,21 @@ html[data-theme="dark"] .sekka-mobile .sk-shimmer__page-head{
   .sk-shimmer__map-pin,.sk-shimmer__point
  ){animation:none!important;background:var(--sk-base)!important;}
 }
+
+
+/* Loading OpenStreetMap frames: preserve the real map's dimensions and avoid
+ * any placeholder pretending to be a mapped pickup location. */
+.sekka-mobile .sekka-route-map-card{position:relative}
+.sekka-mobile .sekka-map-shimmer{
+ position:absolute;top:0;left:0;right:0;
+ z-index:2;min-height:190px;pointer-events:none;
+ border-radius:16px;overflow:hidden;
+ background:var(--flow-paper,#FFFFFF);
+}
+.sekka-mobile .sekka-map-shimmer .sk-shimmer{padding:0}
+.sekka-mobile .sekka-map-shimmer .sk-shimmer__map{
+ min-height:190px;border-radius:16px;box-shadow:none;
+}
+html[data-theme="dark"] .sekka-mobile .sekka-map-shimmer{
+ background:#183449;
+}
