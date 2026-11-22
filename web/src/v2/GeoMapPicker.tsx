@@ -1,3 +1,4 @@
+import AppSkeleton from './AppSkeleton';
 import {useEffect,useRef,useState} from 'react';
 import {createPortal} from 'react-dom';
 import type {PointerEvent,WheelEvent,KeyboardEvent} from 'react';
@@ -192,7 +193,7 @@ export default function GeoMapPicker({initial,focus,focusLabel,area,onCancel,onC
      focusPlace(search.places[i]);options.reset();
     },()=>setSearchOpen(false),()=>setSearchOpen(true))}/>
    {searchOpen&&<div className="sekka-map-picker__search-results">
-    {search.busy&&<p role="status">{t('بنبحث عن المكان…','Searching…')}</p>}
+    {search.busy&&<AppSkeleton kind="stops" compact label={t('بنبحث عن المكان…','Searching…')}/>}
     {search.places.length>0&&<div id={options.id} role="listbox" aria-label={t('نتائج البحث داخل الخريطة','Map search results')}>
      {search.places.slice(0,6).map((place,i)=><button key={place.id} id={options.optionId(i)} type="button" role="option"
       aria-selected={options.highlight===i} onMouseDown={e=>e.preventDefault()} onClick={()=>focusPlace(place)}>
