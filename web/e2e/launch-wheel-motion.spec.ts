@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 
-test('approved splash rotates its actual rim pixels while the SUV image stays fixed',async({page})=>{
+test('approved splash rotates its actual rim pixels and keeps all departing scene layers aligned',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/?tab=home',{waitUntil:'domcontentloaded'});
  const image=page.locator('.sekka-launch__approved-scene');
@@ -33,10 +33,16 @@ test('approved splash rotates its actual rim pixels while the SUV image stays fi
  await page.waitForTimeout(250);
  const b=await wheel.evaluate(el=>(el as HTMLCanvasElement).toDataURL());
  expect(a).not.toBe(b);
- // The photographed car never translates, flips, or stretches.
- const after=await image.boundingBox();
- expect(Math.abs(after!.x-boxes[0]!.x)).toBeLessThan(1);
- expect(Math.abs(after!.y-boxes[0]!.y)).toBeLessThan(1);
+ // The scene may gently depart near the black reveal; wheel and road layers
+ // must follow the painted SUV at every animation phase.
+ const after=await Promise.all([image,wheel,road].map(item=>item.boundingBox()));
+ expect(after.every(Boolean)).toBe(true);
+ for(const box of after.slice(1)){
+  expect(Math.abs(box!.x-after[0]!.x)).toBeLessThan(2);
+  expect(Math.abs(box!.y-after[0]!.y)).toBeLessThan(2);
+  expect(Math.abs(box!.width-after[0]!.width)).toBeLessThan(2);
+  expect(Math.abs(box!.height-after[0]!.height)).toBeLessThan(2);
+ }
 });
 test('reduced motion keeps the approved art without wheel or lane animation',async({page})=>{
  await page.emulateMedia({reducedMotion:'reduce'});
