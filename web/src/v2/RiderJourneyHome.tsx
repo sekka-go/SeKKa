@@ -9,6 +9,7 @@ import PickupExplorerSheet from './PickupExplorerSheet';
 import type {LiveSelection} from './LiveRouteSearch';
 import {usePreferences} from './preferences';
 import './rider-home.css';
+import {useStaggeredReveal} from './staggerMotion';
 
 type Area={id:number;name_ar:string;name_en:string};
 type Editor='from'|'to'|'time'|'days';
@@ -53,6 +54,7 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
 }){
  const {language}=usePreferences(),en=language==='en',tr=en?riderHomeCopy.en:riderHomeCopy.ar;
  const t=(ar:string,english:string)=>en?english:ar;
+ const revealHome=useStaggeredReveal();
  const [stored,setStored]=useState<{owner:string;values:Draft}>(()=>({
   owner:riderId,values:readHomeDraft(riderId)??initialDraft(readSavedCommute(riderId))
  }));
@@ -143,14 +145,14 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
     <path fill="#ECFBFF" d="M0 65C128 16 227 99 340 66S410 57 440 43V105H0Z"/>
    </svg>
   </section>
-  <section className="rh-journey" aria-label={tr.savedLabel}>
+  <section ref={revealHome} className="rh-journey" aria-label={tr.savedLabel}>
    <div className="rh-journey__ribbon"><RiderIcon name="star" size={18}/>{draft.origin&&draft.destination?tr.savedLabel:t('ظبّط مشوارك','Plan your ride')}</div>
    <div className="rh-journey__heading"><strong>{t('مشوارك… على مزاجك','Your route, your choice')}</strong>
     <small>{t('اضغط على أي خانة علشان تختار','Tap any field to change it')}</small></div>
    {!areasLoaded&&!areasFailed&&draft.origin&&<p className="rh-journey__area-loading" role="status">{tr.loadingAreas}</p>}
    {areasFailed&&<p className="rh-journey__notice" role="status">{tr.noBackend}</p>}
    <div className="rh-journey__fields">
-    {fields.map(field=><button type="button" key={field.id}
+    {fields.map(field=><button ref={revealHome} type="button" key={field.id}
      className="rh-journey__field" onClick={()=>setEditor(field.id)}
      aria-label={field.label+': '+field.value+'. '+tr.changeShort}>
      <span className={'rh-journey__field-icon rh-journey__field-icon--'+field.id}>
@@ -174,7 +176,7 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
   {error&&<p className="rh-home__alert" role="alert">{error}</p>}
   <div className="rh-home__actions-title"><h2>{t('استكشف سِكّتك','Explore more')}</h2><span>{t('حاجات تانية تهمك','More ways to go')}</span></div>
   <section className="rh-pickup-actions" aria-label={tr.quickActions}>
-   <button type="button" className="rh-pickup-actions__explore" onClick={()=>setNearbyOpen(true)}
+   <button ref={revealHome} type="button" className="rh-pickup-actions__explore" onClick={()=>setNearbyOpen(true)}
     aria-haspopup="dialog" aria-expanded={nearbyOpen}>
     <span className="rh-pickup-actions__symbol" aria-hidden="true"><RiderIcon name="nearby" size={26}/></span>
     <span className="rh-pickup-actions__copy">
@@ -183,7 +185,7 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
     </span>
     <span className="rh-pickup-actions__arrow" aria-hidden="true"><RiderIcon name="chevron" size={19}/></span>
    </button>
-   <button type="button" className="rh-pickup-actions__bookings" onClick={()=>onNavigate(29)}>
+   <button ref={revealHome} type="button" className="rh-pickup-actions__bookings" onClick={()=>onNavigate(29)}>
     <span className="rh-pickup-actions__ticket" aria-hidden="true"><RiderIcon name="ticket" size={25}/></span>
     <span>{tr.bookingsShortTitle}</span>
    </button>
