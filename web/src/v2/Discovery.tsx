@@ -1175,7 +1175,7 @@ export default function Discovery(p: DiscoveryProps) {
          canCreateRequest={geoRequestAvailable(
            originPlace||((p.serviceAreas||[]).find(a=>a.name_ar===origin||a.name_en===origin)?{kind:'service',area:(p.serviceAreas||[]).find(a=>a.name_ar===origin||a.name_en===origin)!}:null),
            destinationPlace||((p.serviceAreas||[]).find(a=>a.name_ar===destination||a.name_en===destination)?{kind:'service',area:(p.serviceAreas||[]).find(a=>a.name_ar===destination||a.name_en===destination)!}:null)
-         )} outbound={outbound} returnTime={returnTime} period={appliedFilters?(p.production?filterPeriod:period):""} requestPeriod={period} direction={filterDirection} categories={categories}
+         )} outbound={outbound} returnTime={returnTime} weekdays={preferredWeekdays} period={appliedFilters?(p.production?filterPeriod:period):""} requestPeriod={period} direction={filterDirection} categories={categories}
          maxSeatPrice={p.production&&appliedFilters&&filterPrice!==''&&Number.isFinite(Number(filterPrice))&&Number(filterPrice)>=0?Number(filterPrice):null}
          onlyAvailable={Boolean(p.production&&appliedFilters&&onlyAvailable)}
          onEditFilters={p.production?()=>nav(10):undefined} onSelect={p.production?p.onLiveSelect:undefined} onSignIn={()=>nav(4)} />}
