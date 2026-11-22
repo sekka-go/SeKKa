@@ -1,4 +1,5 @@
 import AppSkeleton from './AppSkeleton';
+import RiderHomePublishedRoutes from './RiderHomePublishedRoutes';
 import {useEffect,useRef,useState} from 'react';
 import {readSavedCommute,restoreCommuteDraft,saveCommute,readHomeDraft,saveHomeDraft,clearHomeDraft,WEEKDAY_IDS} from './riderCommute';
 import type {SavedCommute} from './riderCommute';
@@ -126,26 +127,34 @@ export default function RiderJourneyHome({riderId,serviceAreas,areasLoaded,areas
  const title=editor==='from'?tr.originEditor:editor==='to'?tr.destinationEditor:
   editor==='time'?tr.timeEditor:tr.daysEditor;
  return <div className="rh-home sekka-rider-home" dir={en?'ltr':'rtl'}>
-  <section className="rh-hero" aria-labelledby="rh-home-title">
-   <div className="rh-hero__map-lines" aria-hidden="true"/>
-   <div className="rh-hero__orb rh-hero__orb--a" aria-hidden="true"/>
-   <div className="rh-hero__orb rh-hero__orb--b" aria-hidden="true"/>
+  <section className="rh-hero rh-showcase-hero" aria-label={t('أهلاً بيك في سِكَّة','Welcome to seKKa')}>
+   <svg className="rh-showcase-hero__top-wave" viewBox="0 0 430 178" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 0H430V15C342 128 240 35 128 128C79 171 28 161 0 160Z" fill="#087FE9"/>
+    <path d="M0 0H430V2C338 103 244 26 128 98C74 139 28 131 0 139Z" fill="#18E1EA" opacity=".82"/>
+    <path d="M0 0H430V0C347 85 242 13 140 76C78 112 32 109 0 119Z" fill="#70F7F3" opacity=".45"/>
+   </svg>
    <div className="rh-hero__copy">
     <span className="rh-hero__eyebrow">{t('سِكَّة · معاك في السِكَّة','seKKa · Along your way')}</span>
-    <h1 id="rh-home-title">{tr.title}</h1>
-    <span className="rh-hero__underline" aria-hidden="true"/>
-    <p>{tr.subtitle}</p>
+    <h2>{t('أهلاً بيك','Welcome')}</h2>
+    <p>{t('جاهز لمشوار جديد؟','Ready for your next ride?')}</p>
    </div>
-   <div className="rh-hero__route" aria-hidden="true">
-    <span><i/>{draft.origin?display(draft.origin):t('مكانك','Your start')}</span>
-    <b className="rh-hero__route-track"><i/></b>
-    <span><i/>{draft.destination?display(draft.destination):t('وجهتك','Your stop')}</span>
-   </div>
-   <svg className="rh-hero__wave" viewBox="0 0 440 105" preserveAspectRatio="none" aria-hidden="true">
-    <path fill="#83EDF6" d="M0 33C105-2 166 2 260 41S375 68 440 14V105H0Z"/>
-    <path fill="#ECFBFF" d="M0 65C128 16 227 99 340 66S410 57 440 43V105H0Z"/>
+   <svg className="rh-hero__wave rh-showcase-hero__bottom-wave" viewBox="0 0 440 125" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 39C89 0 180 48 266 67S390 89 440 45V125H0Z" fill="#17D8E9"/>
+    <path d="M0 57C91 11 183 62 266 78S385 107 440 64V125H0Z" fill="#A5F2FC"/>
+    <path d="M0 78C102 32 180 81 271 96S390 115 440 85V125H0Z" fill="#F4FBFF"/>
    </svg>
   </section>
+  <section className="rh-showcase-search" aria-labelledby="rh-home-title">
+   <h1 id="rh-home-title">{tr.title}</h1>
+   <button type="button" className="rh-showcase-search__card" onClick={()=>onNavigate(9)}>
+    <span className="rh-showcase-search__icon" aria-hidden="true">
+     <svg viewBox="0 0 66 66" fill="none"><circle cx="27" cy="27" r="19" stroke="currentColor" strokeWidth="6"/><path d="m42 42 16 16" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/></svg>
+     <span className="rh-showcase-search__arrow"><RiderIcon name="arrow" size={18}/></span>
+    </span>
+    <span className="rh-showcase-search__label">{t('دور على رحلة','Find a ride')}</span>
+   </button>
+  </section>
+  <RiderHomePublishedRoutes onSelect={onSelect} onSearch={()=>onNavigate(9)}/>
   <section className="rh-journey" aria-label={tr.savedLabel}>
    <div className="rh-journey__ribbon"><RiderIcon name="star" size={18}/>{draft.origin&&draft.destination?tr.savedLabel:t('ظبّط مشوارك','Plan your ride')}</div>
    <div className="rh-journey__heading"><strong>{t('مشوارك… على مزاجك','Your route, your choice')}</strong>
