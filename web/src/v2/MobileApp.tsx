@@ -49,7 +49,7 @@ export default function MobileApp(){
  const [route,setRoute]=useState<MobileRoute>(()=>readMobileRoute());
  const [tourReplayToken,setTourReplayToken]=useState(0);
  const [menuOpen,setMenuOpen]=useState(false);
- const [menuCollapsed,setMenuCollapsed]=useState(false);
+ const [menuCollapsed,setMenuCollapsed]=useState(true);
  const [menuQuery,setMenuQuery]=useState('');
  const [bookingsSection,setBookingsSection]=useState<'bookings'|'requests'>(()=>{try{return sessionStorage.getItem('sekka.bookingsSection')==='requests'?'requests':'bookings';}catch{return 'bookings';}});
  useEffect(()=>{try{sessionStorage.setItem('sekka.bookingsSection',bookingsSection);}catch{/* Private browsing still works. */}},[bookingsSection]);
@@ -530,7 +530,7 @@ export default function MobileApp(){
   tab==='captain-onboarding'?t('انضم ككابتن','Become a Captain'):t('سِكَّة','seKKa');
  const menuButton=<button type="button" ref={menuTrigger} className="sekka-fab-menu"
   aria-label={t('فتح القائمة','Open menu')} aria-expanded={menuOpen}
-  aria-controls="sekka-side-menu" onClick={()=>{setMenuQuery('');setMenuCollapsed(false);setMenuOpen(true);}}>
+  aria-controls="sekka-side-menu" onClick={()=>{setMenuQuery('');setMenuCollapsed(true);setMenuOpen(true);}}>
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
    strokeLinecap="round" aria-hidden="true" focusable="false">
    <path d="M5 6h14M5 12h14M5 18h14"/>
@@ -637,7 +637,9 @@ export default function MobileApp(){
      </div>
      <button type="button" className="sekka-glass-rail-toggle"
       aria-label={menuCollapsed?t('توسيع القائمة','Expand menu'):t('تصغير القائمة','Collapse menu')}
-      aria-expanded={!menuCollapsed} onClick={()=>setMenuCollapsed(value=>!value)}>
+      title={menuCollapsed?t('توسيع القائمة','Expand menu'):t('تصغير القائمة','Collapse menu')}
+      aria-expanded={!menuCollapsed} aria-controls="sekka-glass-menu-content"
+      onClick={()=>{setMenuCollapsed(value=>!value);setMenuQuery('');}}>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
        strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
        <path d="m15 6-6 6 6 6"/>
@@ -656,7 +658,7 @@ export default function MobileApp(){
       placeholder={t('ابحث في القائمة','Search pages')}
       aria-label={t('ابحث في القائمة','Search pages')}/>
     </label>
-    <nav aria-label={t('الأقسام','Sections')}>
+    <nav id="sekka-glass-menu-content" aria-label={t('الأقسام','Sections')}>
      <h2>{t('التنقل','Navigation')}</h2>
      {!isCaptainAccount&&<>
       {menuLink(t('الرئيسية','Home'),{tab:'home'})}
