@@ -9,7 +9,7 @@ type RequestRow={id:string;rider_id:string;origin_area_id:number;destination_are
 type OfferRow={id:string;request_id:string;captain_id:string;route_id:string;status:string};
 type RouteRow={id:string;title:string};
 type Area={id:number;name_ar:string;name_en:string};
-type Search={origin:string;destination:string;outbound:string;returnTime:string;period:string;direction?:RequestDirection};
+type Search={origin:string;destination:string;outbound:string;returnTime:string;period:string;direction?:RequestDirection;weekdays?:number[]};
 type RequestEdit={id:string;direction:RequestDirection;outbound:string;returnTime:string;period:'weekly'|'monthly';seats:number};
 const validClock=(value:string)=>/^([01]\d|2[0-3]):[0-5]\d$/.test(value);
 const validSeats=(count:number)=>Number.isInteger(count)&&count>=1&&count<=MAX_SEATS_PER_RIDER;
@@ -65,7 +65,8 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
    setError(message.includes('RIDER_MAX_TWO_SEATS')?t('الحد الأقصى شخصين فقط لكل طلب.','Maximum two people per request.'):
     message.includes('DUPLICATE_OPEN_TRIP_REQUEST')?t('عندك بالفعل طلب نشط بنفس تفاصيل الرحلة. عدّله بدل تكراره.','A matching active request already exists. Edit it instead.'):
     message.includes('REQUEST_HAS_OFFERS')?t('وصلت عروض كباتن للطلب ده، ومش ممكن نغيّر تفاصيله بعد وصول العروض.','Captain offers have already been received, so this request can no longer be edited.'):
-    message.includes('REQUEST_NOT_EDITABLE')?t('الطلب ده ما بقاش مفتوح للتعديل.','This request is no longer open for editing.'):message);
+    message.includes('REQUEST_NOT_EDITABLE')?t('الطلب ده ما بقاش مفتوح للتعديل.','This request is no longer open for editing.'):
+    t('حصلت مشكلة في حفظ التغييرات. راجع اتصالك وحاول تاني.','We could not save your changes. Check your connection and try again.'));
   }finally{setBusy(false);}
  };
  const create=async()=>{
@@ -76,8 +77,9 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
   if(!validSeats(seats)){
    setError(t('الحد الأقصى لطلب الرحلة شخصين فقط.','You can request a trip for at most two people.'));return;
   }
-  const outbound=requestDirection==='return'?null:requestTime;
-  const inbound=requestDirection==='outbound'?null:requestReturnTime;
+  // A broad search does not require a clock. Preserve empty optional times as SQL NULL.
+  const outbound=requestDirection==='return'?null:(requestTime.trim()||null);
+  const inbound=requestDirection==='outbound'?null:(requestReturnTime.trim()||null);
   if(!from||!to||from.id===to.id||(outbound!==null&&!validClock(outbound))||
     (inbound!==null&&!validClock(inbound))||
     !['weekly','monthly'].includes(requestPeriod)||
@@ -232,7 +234,7 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
   :notice==='REQUEST_EXISTS'
   ?compact?t('الطلب موجود بالفعل في حجوزاتي ← طلبات رحلاتي.','This request already exists in My bookings → My trip requests.'):t('الطلب ده مفتوح بالفعل. تابعه في القائمة بدل تكراره.','This trip is already requested. Follow it below.')
   :notice==='REQUEST_SAVED'
-  ?compact?t('طلبك اتحفظ بنفس بيانات البحث. تابعه من حجوزاتي ← طلبات رحلاتي.','Your request was saved using your search details. Follow it in My bookings → My trip requests.'):t('اتحفظ طلبك بكامل تفاصيل الذهاب والعودة. تقدر تتابعه هنا.','Your request and journey schedule are saved. Follow it here.')
+  ?compact?t('طلبك اتحفظ بالمناطق والمواعيد المتاحة في نظام الطلبات. تابعه من طلباتي؛ تفضيلات أيام الأسبوع مش جزء من الطلب حاليًا.','Your request was saved with the supported places and times. Follow it in Requests; preferred weekdays are not yet included.'):t('اتحفظ طلبك بكامل تفاصيل الذهاب والعودة. تقدر تتابعه هنا.','Your request and journey schedule are saved. Follow it here.')
   :notice==='REQUEST_UPDATED'?t('تم تعديل الطلب والتحقق من حفظه.','Request updated and verified.'):notice;
  const loadError=loadFailed&&<div role="alert" className="d-feedback">
   <p>{t('مش قادرين نراجع حسابك أو الطلبات دلوقتي.','We couldn’t verify your account or load requests.')}</p>
@@ -254,10 +256,11 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
    {!loading&&!loadFailed&&!notice&&uid&&<div className="sekka-request-summary">
     <p><strong><bdi>{areaLabel(search.origin)}</bdi> <span aria-hidden="true">·</span> <bdi>{areaLabel(search.destination)}</bdi></strong></p>
     <p>
-     {requestDirection!=='return'&&<span>{t('ذهاب','Outbound')} <bdi>{requestTime}</bdi> · </span>}
-     {requestDirection!=='outbound'&&<span>{t('عودة','Return')} <bdi>{requestReturnTime}</bdi> · </span>}
+     {requestDirection!=='return'&&<span>{t('ذهاب','Outbound')} <bdi>{requestTime||t('أي ميعاد','Any time')}</bdi> · </span>}
+     {requestDirection!=='outbound'&&<span>{t('عودة','Return')} <bdi>{requestReturnTime||t('أي ميعاد','Any time')}</bdi> · </span>}
      {requestPeriod==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')}
     </p>
+    {Boolean(search.weekdays?.length)&&<p className="sekka-request-days-disclaimer" role="note">{t('أيامك المفضلة محفوظة للبحث فقط، ومش هتتسجل ضمن طلب المشوار ده حاليًا.','Your preferred weekdays are saved for search only and will not be included in this ride request yet.')}</p>}
    </div>}
    {!loading&&!loadFailed&&!notice&&<button type="button" className="d-primary sekka-request-yellow-cta"
     disabled={busy||!search.origin||!search.destination}
