@@ -1,3 +1,4 @@
+import AppSkeleton from './AppSkeleton';
 import {useEffect,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
@@ -246,7 +247,7 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
  // prevention remain enforced by Supabase and verified after insertion.
  if(compact&&mode==='rider'&&search){
   return <div className="sekka-no-match-action" aria-label={t('طلب رحلة بالبحث الحالي','Trip request from current search')}>
-   {loading&&<p role="status">{t('بنجهّز طلبك…','Getting your request ready…')}</p>}
+   {loading&&<AppSkeleton kind="requests" count={1} compact label={t('بنجهّز طلبك…','Getting your request ready…')}/>}
    {loadError}
    {error&&!loadFailed&&<p role="alert">{error}</p>}
    {notice&&<p role="status">{noticeText}</p>}
@@ -268,7 +269,7 @@ export default function LiveTripRequests({mode,search,onSignIn,compact=false}:{m
  }
  return <section className="d-box live-trip-requests">
   <h2>{mode==='captain'?t('طلبات الركاب المفتوحة','Open passenger requests'):t('طلبات رحلاتي','My trip requests')}</h2>
-  {loading&&<p role="status">{t('جارٍ التحميل…','Loading…')}</p>}
+  {loading&&<AppSkeleton kind="requests" count={3} label={t('جارٍ التحميل…','Loading…')}/>}
   {loadError}
   {error&&!loadFailed&&<div role="alert"><p>{error}</p><button type="button" onClick={retryLoad}>{t('إعادة المحاولة','Retry')}</button></div>}
   {notice&&<p role="status">{noticeText}</p>}
