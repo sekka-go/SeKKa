@@ -379,8 +379,16 @@ html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-
 html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-hero__top-wave path:nth-child(3){
  fill:#DAF7FF!important;opacity:.22!important;
 }
+/* The old 172px wave started ABOVE the welcome subtitle on mobile.
+ * Keep the smooth three-layer fade, but anchor it within the bottom ~100px,
+ * giving the greeting its own unobstructed reading space. */
 html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-hero__bottom-wave{
- height:172px!important;
+ height:100px!important;
+ z-index:2!important;
+}
+html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-hero .rh-hero__copy{
+ z-index:4!important;
+ padding-block-end:112px!important;
 }
 html[data-theme="dark"] .sekka-mobile.sekka-rider-navigation.sekka-tab-home .rh-showcase-hero__bottom-wave > path:nth-of-type(1){
  fill:url(#sekka-dark-wave-upper)!important;
