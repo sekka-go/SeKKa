@@ -1148,7 +1148,7 @@ export function V31BookingJourney({offer,routeId,pickupId,dropoffId,reverse,book
        <Primary disabled={busy||!Number.isInteger(seats)||seats<1||seats>MAX_SEATS_PER_RIDER||seats>offer.available} onClick={()=>void reserve()}>{busy?t('جارٍ إرسال الطلب…','Submitting…'):t('تقديم طلب الحجز','Submit booking request')}</Primary>
      </>}
      {!bookingId&&!offer&&selectionLoading&&<AppSkeleton kind="page" count={1} label={t('بنحمّل تفاصيل الرحلة…','Loading ride details…')}/>}
-     {!bookingId&&!offer&&!selectionLoading&&<Box><p role="status">{t('بيانات الخط مش متاحة. ارجع للبحث واختار خط منشور.','Route unavailable. Return to search and choose a published route.')}</p><Primary onClick={onBack}>{t('الرجوع للبحث','Back to search')}</Primary></Box>}
+     {!bookingId&&!offer&&!selectionLoading&&<Box className="b-unavailable"><p role="status">{t('بيانات الخط مش متاحة. ارجع للبحث واختار خط منشور.','Route unavailable. Return to search and choose a published route.')}</p><Primary onClick={onBack}>{t('الرجوع للبحث','Back to search')}</Primary></Box>}
      {stored&&<><Illustration kind="waiting"/><Box className="b-summary">
        <Row label={t('رقم الحجز','Booking ID')}>{stored.id}</Row>
        <Row label={t('حالة الحجز من الخادم','Server booking status')}>{stored.status==='pending'?t('قيد الانتظار','Pending'):stored.status==='cancelled'?t('ملغي','Cancelled'):stored.status==='confirmed'?t('مؤكد من الخادم','Confirmed by server'):stored.status}</Row>
