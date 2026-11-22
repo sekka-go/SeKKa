@@ -100,15 +100,15 @@ test('MOCKED Rider no-match journey saves the selected period and re-reads the o
  const result=page.getByRole('group',{name:'Search result'});
  await expect(result.getByText('No matching trip available right now.')).toBeVisible();
  const request=result.locator('.sekka-no-match-action');
- await expect(request.getByRole('button',{name:'Request a trip using this search'})).toBeVisible();
+ await expect(request.getByRole('button',{name:'Request a ride'})).toBeVisible();
  await expect(request.locator('input,select,textarea')).toHaveCount(0);
  await expect(request.locator('.sekka-request-summary')).toContainText('Maadi');
  await expect(request.locator('.sekka-request-summary')).toContainText('08:15');
  await expect(request.locator('.sekka-request-summary')).toContainText('18:45');
  await expect(request.locator('.sekka-request-summary')).toContainText('Weekly');
  await expect(result.locator('.live-trip-requests')).toHaveCount(0);
- await request.getByRole('button',{name:'Request a trip using this search'}).click();
- await expect(request.getByText('Your request was saved using your search details. Follow it in My bookings → My trip requests.')).toBeVisible();
+ await request.getByRole('button',{name:'Request a ride'}).click();
+ await expect(request.getByText('Your request was saved with the supported places and times. Follow it in Requests; preferred weekdays are not yet included.')).toBeVisible();
  expect(insertCount).toBe(1);
  expect(saved).toMatchObject({
   rider_id:userId,origin_area_id:11,destination_area_id:22,
@@ -119,7 +119,7 @@ test('MOCKED Rider no-match journey saves the selected period and re-reads the o
  await expect(page).toHaveURL(/tab=search&view=11/);
  const again=page.locator('.sekka-no-match-action');
  await expect(again.locator('input,select,textarea')).toHaveCount(0);
- await again.getByRole('button',{name:'Request a trip using this search'}).click();
+ await again.getByRole('button',{name:'Request a ride'}).click();
  await expect(again.getByText('You already have this trip request. Find it in My bookings → My trip requests.')).toBeVisible();
  expect(insertCount).toBe(1);
  // Existing requests are managed from My bookings, not duplicated under no-match.
@@ -168,7 +168,8 @@ test('MOCKED guest can review empty search and return with the same areas',async
  await to.fill('Nasr City');
  await page.getByRole('option',{name:'Nasr City Search the whole service area'}).click();
  await page.getByRole('button',{name:'See available rides'}).click();
- await expect(page.getByRole('button',{name:'Sign in to request this trip'})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Request a ride'})).toBeVisible();
+  await expect(page.getByText('Google sign-in is required to save a request. Your search is retained.')).toBeVisible();
  await expect(page.getByText('Auth session missing!')).toHaveCount(0);
  await page.getByRole('button',{name:'Back',exact:true}).click();
  await expect(from).toHaveValue('Maadi');
