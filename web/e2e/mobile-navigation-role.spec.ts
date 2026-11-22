@@ -182,6 +182,15 @@ test(`pending Captain profile stays in Passenger journey until explicit entry at
  await page.goto('/');
  await expect(page.locator('.sekka-rider-home')).toBeVisible();
  await expect(page).not.toHaveURL(/tab=captain-onboarding|tab=routes/);
+ // Approved design uses real CSS/SVG waves and a working discovery action.
+ await expect(page.locator('.rh-showcase-hero__top-wave')).toBeVisible();
+ await expect(page.locator('.rh-showcase-hero__bottom-wave')).toBeVisible();
+ await expect(page.locator('.rh-showcase-search__card')).toBeVisible();
+ await expect(page.locator('.rh-showcase-search__card')).toContainText('Find a ride');
+ await expect(page.locator('.rh-showcase-routes')).toBeVisible();
+ // Mocked backend returns no offers; never insert visual placeholder trips.
+ await expect(page.locator('.rh-showcase-routes__list .rh-showcase-ride')).toHaveCount(0);
+ await expect(page.locator('.sekka-sliver-pin')).toContainText('سِكَّة');
  // Rider shell regression at each supported small width (synthetic auth only).
  const dock=page.locator('.rh-tabs');
  await expect(dock).toBeVisible();
