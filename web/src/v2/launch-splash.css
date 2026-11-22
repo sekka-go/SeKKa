@@ -39,22 +39,25 @@
  mask-image:linear-gradient(to bottom,transparent 0%,#000 13%);
 }
 .sekka-launch__lane-cue{
- opacity:.39;animation:sk-lane-retreat 1600ms linear infinite;
+ opacity:.28;animation:sk-lane-retreat 1600ms linear infinite;
  vector-effect:none;
 }
 .sekka-launch__lane-cue--far{
- opacity:.26;animation:sk-far-lane-retreat 2240ms linear infinite;
+ opacity:.18;animation:sk-far-lane-retreat 2240ms linear infinite;
 }
 /* The dash cycle exactly equals the dasharray total, making looping
    seamless. Positive offsets move paint back along both forward paths. */
 @keyframes sk-lane-retreat{to{stroke-dashoffset:100}}
 @keyframes sk-far-lane-retreat{to{stroke-dashoffset:70}}
-.sekka-launch__wheel{pointer-events:none}
-.sekka-launch__wheel-spinner{
- transform-box:fill-box;transform-origin:center;
- animation:sk-wheel-roll 1600ms linear infinite;
+/* The wheel canvas samples the original photo's rim pixels, keeping
+   the same crop/projection as the illustration at every viewport size. */
+.sekka-launch__wheel-motion{
+ position:absolute;left:0;bottom:0;z-index:6;
+ display:block;width:100%;height:50%;
+ pointer-events:none;user-select:none;
+ -webkit-mask-image:linear-gradient(to bottom,transparent 0%,#000 13%);
+ mask-image:linear-gradient(to bottom,transparent 0%,#000 13%);
 }
-@keyframes sk-wheel-roll{to{transform:rotate(360deg)}}
 .sekka-launch__wave-wipe{position:absolute;inset:0;z-index:10;
  background:linear-gradient(155deg,#26DBF0,#0999EB);
  clip-path:ellipse(0% 0% at 100% 100%);
@@ -68,10 +71,11 @@
 @keyframes sk-stage-finish{0%,85%{opacity:1}100%{opacity:0}}
 @media(max-height:680px){.sekka-launch__brand{top:9%}
  .sekka-launch__brand-name{font-size:clamp(64px,18vh,115px)}
- .sekka-launch__approved-scene,.sekka-launch__motion{height:54%}}
+ .sekka-launch__approved-scene,.sekka-launch__motion,.sekka-launch__wheel-motion{height:54%}}
 @media(min-width:620px){.sekka-launch__stage{max-width:540px;left:50%;
  transform:translateX(-50%)}}
 @media(prefers-reduced-motion:reduce){
- .sekka-launch__stage,.sekka-launch__lane-cue,.sekka-launch__wheel-spinner,.sekka-launch__wave-wipe{animation:none!important}
+ .sekka-launch__stage,.sekka-launch__lane-cue,.sekka-launch__wave-wipe{animation:none!important}
+ .sekka-launch__wheel-motion{display:none!important}
  .sekka-launch__wave-wipe{display:none}
 }
