@@ -4,18 +4,18 @@
 .sekka-launch{position:fixed;inset:0;z-index:100000;overflow:hidden;
  width:100%;height:100vh;height:100dvh;isolation:isolate;
  font-family:Tajawal,'Noto Sans Arabic',Tahoma,Arial,sans-serif;
- background:#078FF0;pointer-events:auto}
+ background:#018CF5;pointer-events:auto}
 .sekka-launch__stage{position:absolute;inset:0;overflow:hidden;
- background:linear-gradient(145deg,#21E1E8 0%,#06B6F5 27%,#078AF1 72%,#057DE0 100%);
+ background:radial-gradient(ellipse at 7% 9%,#41F0F2 0%,#15D7F9 29%,transparent 59%),linear-gradient(140deg,#05C3FC 0%,#0195F7 61%,#0180ED 100%);
  animation:sk-stage-finish 5.15s linear both}
 .sekka-launch__wave{position:absolute;pointer-events:none;z-index:2}
 .sekka-launch__wave--top{width:150%;height:21%;top:-10%;left:-23%;
- border-radius:0 0 50% 61%;background:linear-gradient(110deg,#52EFF0,#12C9F1);
+ border-radius:0 0 50% 61%;background:linear-gradient(110deg,#6BF8F2,#2BDAF7);
  transform:rotate(-9deg)}
 .sekka-launch__wave--bottom{bottom:-7%;left:-28%;width:165%;height:16%;
  border-radius:54% 44% 0 0;transform:rotate(-5deg);
- background:linear-gradient(90deg,#1AF0E6 8%,#06C6E8 67%,#01A9E8 95%);
- border-top:6px solid #FFCC24;z-index:8}
+ background:linear-gradient(90deg,#61F5EE 8%,#05DAF6 63%,#02BEF4 100%);
+ border-top:5px solid #9CF7FA;z-index:8}
 .sekka-launch__ribbon{
  position:absolute;top:0;left:0;width:100%;height:30%;z-index:3;
  pointer-events:none;transform:scaleX(1.04);
@@ -32,7 +32,7 @@
  font-family:Tajawal,'Noto Sans Arabic',Tahoma,sans-serif}
 .sekka-launch__tagline{font-weight:900!important;margin:0;
  font-size:clamp(25px,7vw,40px);line-height:1.6!important}
-.sekka-launch__tagline b{color:#FFCC24}
+.sekka-launch__tagline b{color:#FFFFFF}
 .sekka-launch__approved-scene{display:block;position:absolute;z-index:4;left:0;bottom:0;
  width:100%;height:50%;object-fit:cover;object-position:center bottom;
  -webkit-mask-image:linear-gradient(to bottom,transparent 0%,rgba(0,0,0,.35) 4%,#000 13%);
