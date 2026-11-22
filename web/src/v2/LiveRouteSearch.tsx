@@ -1,4 +1,5 @@
 import AppSkeleton from './AppSkeleton';
+import {displayVehicleCategory} from './vehicleCategory';
 import {inLaunchRegion,outsideCoverageMessage} from './geoPlace';
 import {isInsideCairoDiscovery} from './discoveryCairo';
 import LiveTripRequests from './LiveTripRequests';
@@ -154,7 +155,7 @@ export default function LiveRouteSearch({origin,destination,originPoint=null,des
      {index===0&&sortBy==='recommended'&&selection.pickupDistanceKm!==null&&
       <span className="sekka-rider-recommended">{t('الأنسب حسب قرب الركوب','Closest pickup match')}</span>}
      <h2 dir="auto">{route.title}</h2>
-     <p className="sekka-live-meta">{route.category} · {route.period==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')}</p>
+     <p className="sekka-live-meta">{displayVehicleCategory(route.category)} · {route.period==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')}</p>
     </div>
     <p className="sekka-live-price">
      <strong><bdi>{numberFormat.format(route.seat_price_egp)} {t('جنيه','EGP')}</bdi></strong>

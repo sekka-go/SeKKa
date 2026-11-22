@@ -1,4 +1,5 @@
 import {usePreferences} from "./preferences";
+import {displayVehicleCategory} from './vehicleCategory';
 import {translate} from "./translations";
 import { readPublishedPreviews } from "./CaptainRoutes";
 import { selectStops, matchesStops, type Stop } from "../../../packages/domain/stops";
@@ -50,7 +51,7 @@ const areas = [
 // Only Cairo and Giza districts are available in this launch region.
 const servedAreas = areas.filter((a) => !["العبور", "الشروق"].includes(a));
 // Server category codes remain stable; DAILY is the owner-approved public label.
-const publicCategoryName=(name:string)=>name==='SAVER'?'DAILY':name;
+const publicCategoryName=displayVehicleCategory;
 const categoryList = [
   { name: "PRIME", seats: 3 },
   { name: "SAVER", seats: 4 },

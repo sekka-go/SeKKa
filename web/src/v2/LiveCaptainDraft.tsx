@@ -13,6 +13,7 @@ import type {PlaceChoice} from './geoPlace';
 import {straightLineKm} from './nearbyRoutes';
 import {clearReservationAttempt,reservationIdempotencyKey} from './reservationAttempt';
 import {usePreferences} from './preferences';
+import {displayVehicleCategory} from './vehicleCategory';
 import type {Category} from '../../../packages/domain/subscriptions';
 
 type Area={id:number;name_ar:string;name_en:string;region?:string};
@@ -365,7 +366,7 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
      {(Object.keys(categorySeats) as Category[]).map(value=><button key={value} type="button"
       className="cj-category-option" aria-pressed={category===value}
       disabled={!eligibleCategories.includes(value)} onClick={()=>setCategory(value)}>
-      <strong>{value}</strong>
+      <strong>{displayVehicleCategory(value)}</strong>
       <small>{categorySeats[value]} {t('مقاعد للركاب','passenger seats')}</small>
       <small>{eligibleCategories.includes(value)?t('متاح لعربيتك','Eligible vehicle'):t('غير متاح للمركبة','Not eligible')}</small>
      </button>)}
@@ -453,7 +454,7 @@ export default function LiveCaptainDraft({onSaved,onViewRoutes}:{onSaved?:(id:st
     <span>{t('نقاط الرحلة','Trip stops')}: {stops.map(stop=>stop.name).join(' ← ')}</span>
     {stops.some(s=>s.outboundStopTime||s.returnStopTime)&&<span>{t('مواعيد المرور المقترحة','Proposed stop times')}: {stops.map(s=>s.name+' ('+[s.outboundStopTime,s.returnStopTime].filter(Boolean).join(' / ')+')').join(' · ')}</span>}
     <span>{t('المركبة','Vehicle')}: {vehicles.find(v=>v.id===vehicleId)?.model||'—'}</span>
-    <span>{t('الفئة','Category')}: {category} · {categorySeats[category]} {t('مقاعد','seats')}</span>
+    <span>{t('الفئة','Category')}: {displayVehicleCategory(category)} · {categorySeats[category]} {t('مقاعد','seats')}</span>
     <span>{t('تفضيلات الخط','Route preferences')}: {period==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')}</span>
     <span>{t('سعر المركبة الخاص بالكابتن','Private whole-vehicle price')}: {Number(price).toLocaleString(en?'en':'ar-EG')} {t('جنيه','EGP')}</span>
     <small>{t('دي مسودة فقط؛ النشر بيتم بعد المراجعة والتحقق من السيرفر.','This saves only a draft. Publication requires server-verified approval.')}</small>

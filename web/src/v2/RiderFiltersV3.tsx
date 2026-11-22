@@ -1,4 +1,5 @@
 import {usePreferences} from './preferences';
+import {displayVehicleCategory} from './vehicleCategory';
 import './rider-filters-v3.css';
 import {useStaggeredReveal} from './staggerMotion';
 
@@ -26,7 +27,7 @@ export default function RiderFiltersV3({available,categories,period,direction,ma
    <div className="rf3__categories" role="group" aria-label={t('فئات العربيات','Vehicle categories')}>
     {available.map(item=><button type="button" key={item.name}
       aria-pressed={categories.includes(item.name)} onClick={()=>toggle(item.name)}>
-      <strong>{item.name==='SAVER'?'DAILY':item.name}</strong>
+      <strong>{displayVehicleCategory(item.name)}</strong>
       <span>{new Intl.NumberFormat(en?'en-EG':'ar-EG').format(item.seats)} {t('مقاعد','seats')}</span>
     </button>)}
    </div>

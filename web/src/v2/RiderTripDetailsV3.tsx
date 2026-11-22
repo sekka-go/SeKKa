@@ -1,4 +1,5 @@
 import type {Line} from './Discovery';
+import {displayVehicleCategory} from './vehicleCategory';
 import type {Stop} from '../../../packages/domain/stops';
 import {usePreferences} from './preferences';
 import './rider-details-v3.css';
@@ -36,7 +37,7 @@ export default function RiderTripDetailsV3({line,stops,pickup,dropoff,pickupPosi
    </div>
   </section>
   <div className="rd3__facts">
-   <div><span>{t('الفئة','Vehicle class')}</span><strong dir="auto">{line.category}</strong></div>
+   <div><span>{t('الفئة','Vehicle class')}</span><strong dir="auto">{displayVehicleCategory(line.category)}</strong></div>
    <div><span>{t('المقاعد المتاحة الآن','Seats available now')}</span><strong>{numeric.format(line.available)}</strong></div>
    <div><span>{t('نظام الرحلة','Plan')}</span><strong>{line.period==='weekly'?t('أسبوعي','Weekly'):t('شهري','Monthly')}</strong></div>
    <div><span>{t('ميعاد الرحلة','Time')}</span><strong dir="ltr">{reverse?returned||'—':outbound||'—'}</strong></div>
