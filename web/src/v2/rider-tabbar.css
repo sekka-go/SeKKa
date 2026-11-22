@@ -69,7 +69,7 @@ html[data-theme="dark"] .sekka-rider-navigation.sekka-tab-home>.sekka-mobile-hea
 .sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header:after{
  content:"";position:absolute;z-index:0;top:-38px;inset-inline-start:-54px;
  width:150px;height:106px;transform:rotate(-18deg);
- border-radius:50%;background:linear-gradient(125deg,#FF7342,#FFAC64);
+ border-radius:50%;background:linear-gradient(125deg,#FFCC24,#FFCC24);
  pointer-events:none;
 }
 .sekka-rider-navigation.sekka-tab-home>.sekka-mobile-header>.rh-shell-title{
