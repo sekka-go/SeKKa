@@ -220,6 +220,9 @@ test(`pending Captain profile stays in Passenger journey until explicit entry at
   };
  });
  expect(dockMotion.surface).not.toBe('none');
+ // Glass must be painted ABOVE the tab container, not hidden behind it.
+ const glassZ=await dock.locator('.rh-tabs__inner').evaluate(el=>getComputedStyle(el,'::before').zIndex);
+ expect(glassZ).toBe('0');
  expect(dockMotion.bg).toContain('linear-gradient');
  if(!dockMotion.reduced){
   expect(dockMotion.glassAnimation).toContain('sekkaDockBloom');
