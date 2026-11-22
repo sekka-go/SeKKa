@@ -51,9 +51,6 @@
 .sekka-mobile [data-sekka-scroll-hero] .cj-home-driver{
  transform:translate3d(0,var(--sekka-scroll-shift),0) scale(var(--sekka-stretch-scale));
 }
-.sekka-mobile [data-sekka-scroll-hero]{
- contain:layout style;
-}
 /* Pinned SliverAppBar counterpart: just a tiny title between the two
  * floating yellow action controls. Never restore the previous logo bar. */
 .sekka-mobile > .sekka-sliver-pin{
