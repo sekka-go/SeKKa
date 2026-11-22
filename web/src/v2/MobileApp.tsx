@@ -37,6 +37,7 @@ import './stagger-motion.css';
 import {useSekkaSliverScroll} from './sliverScroll';
 import './sliver-scroll.css';
 import './navigation-reference-refresh.css';
+import './auth-contrast.css';
 
 export default function MobileApp(){
  const p=usePreferences(),en=p.language==='en',t=(ar:string,english:string)=>en?english:ar;
