@@ -204,6 +204,31 @@ test(`pending Captain profile stays in Passenger journey until explicit entry at
  const dock=page.locator('.rh-tabs');
  await expect(dock).toBeVisible();
  await expect(dock.locator('button')).toHaveCount(5);
+ // The center Search action blooms the navigation dock without changing its
+ // five real buttons or role-gated destinations. This tests actual CSS.
+ const dockMotion=await dock.locator('.rh-tabs__inner').evaluate(element=>{
+  const glass=getComputedStyle(element,'::before');
+  const seed=element.querySelector('.rh-tabs__primary');
+  const halo=getComputedStyle(seed!.querySelector('.rh-tabs__icon')!,'::after');
+  return {
+   surface:glass.content,
+   glassAnimation:glass.animationName,
+   seedAnimation:getComputedStyle(seed!).animationName,
+   haloAnimation:halo.animationName,
+   bg:glass.backgroundImage,
+   reduced:matchMedia('(prefers-reduced-motion: reduce)').matches
+  };
+ });
+ expect(dockMotion.surface).not.toBe('none');
+ expect(dockMotion.bg).toContain('linear-gradient');
+ if(!dockMotion.reduced){
+  expect(dockMotion.glassAnimation).toContain('sekkaDockBloom');
+  expect(dockMotion.seedAnimation).toContain('sekkaDockSeedRise');
+  expect(dockMotion.haloAnimation).toContain('sekkaDockHalo');
+ }
+ await page.waitForTimeout(950);
+ await dock.screenshot({path:`test-results/dock-bloom-expanded-${width}.png`,animations:'disabled'});
+
  await expect(dock.getByRole('button',{name:'Requests'})).toBeVisible();
  await expect(dock.getByRole('button',{name:'Alerts'})).toHaveCount(0);
  await expect(dock.locator('.rh-tabs__primary svg path[d="M8 11h6"]')).toHaveCount(0);
