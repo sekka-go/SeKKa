@@ -61,3 +61,20 @@ test('dark black theme can be changed to light without losing language or naviga
  await expect(drawer.getByRole('button',{name:'My profile'})).toBeVisible();
  await expect(page.locator('.sekka-mobile .sekka-side-drawer .sekka-menu-row__icon').first()).toBeVisible();
 });
+
+test('dark search has a black canvas with an icy-blue hero',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.addInitScript(()=>{
+  localStorage.setItem('language_preference','ar');
+  localStorage.setItem('theme_preference','dark');
+  sessionStorage.setItem('sekka.launch.seen.v1','1');
+ });
+ await page.goto('/?tab=search&view=9');
+ const search=page.locator('.rs3');
+ await expect(search).toBeVisible();
+ await expect(search).toHaveCSS('background-color','rgb(5, 7, 11)');
+ const hero=await search.locator('.rs3__head').evaluate(element=>getComputedStyle(element).backgroundImage);
+ expect(hero).toContain('linear-gradient');
+ expect(hero).toContain('rgb(8, 11, 18)');
+ await expect(page.locator('.sekka-mobile')).toHaveCSS('background-color','rgb(5, 7, 11)');
+});
