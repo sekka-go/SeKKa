@@ -1,0 +1,219 @@
+/* سِكَّة — motion from Advanced Scrolling reference
+ * Web equivalents of CustomScrollView, pinned/stretching SliverAppBar,
+ * FlexibleSpaceBar, SliverList/SliverGrid and coordinated NestedScrollView.
+ * Use native browser scrolling (iOS bounce / Android clamping) without
+ * fake scrollers or interfering with forms, maps, or bottom navigation.
+ */
+.sekka-mobile{
+ --sekka-scroll-progress:0;
+ --sekka-scroll-scale:1;
+ --sekka-scroll-shift:0px;
+ --sekka-stretch-scale:1;
+ --sekka-sticky-offset:calc(62px + env(safe-area-inset-top,0px));
+ scroll-padding-block-start:var(--sekka-sticky-offset);
+ overscroll-behavior-x:none;
+}
+/* The application keeps one real document scroll, not nested competing
+ * 100dvh scrollers. Inertial scrolling is delegated to the OS. */
+.sekka-mobile .sekka-mobile-content{
+ scroll-margin-top:0;
+ -webkit-overflow-scrolling:touch;
+}
+.sekka-mobile :is(
+ .d-live-search,.rb3__list,.sekka-request-list,
+ .cj-home-how-items,.cj-home-metrics,.live-route-list,
+ .ad-content,.ad-table-wrap
+){
+ overscroll-behavior-y:auto;
+}
+/* FlexibleSpaceBar: title becomes gently smaller while user scrolls.
+ * Layout geometry does not move, so inputs and buttons never jump. */
+.sekka-mobile [data-sekka-scroll-hero] :is(
+ h1,h2,.rh-hero__eyebrow,.cj-home-welcome-kicker
+){
+ transform:translate3d(0,var(--sekka-scroll-shift),0) scale(var(--sekka-scroll-scale));
+ transform-origin:top right;
+ will-change:transform;
+}
+.sekka-mobile[dir="ltr"] [data-sekka-scroll-hero] :is(
+ h1,h2,.rh-hero__eyebrow,.cj-home-welcome-kicker
+){transform-origin:top left;}
+/* Restrained artwork parallax, clipped within the existing colored hero.
+ * The independent stretch applies only to decorative imagery, not text. */
+.sekka-mobile [data-sekka-scroll-hero] :is(
+ .rh-hero__orb,.rh-hero__map-lines,.rs3__head-orbit,
+ .rb3__hero-route,.cj-home-driver
+){
+ transform:translate3d(0,var(--sekka-scroll-shift),0) scale(var(--sekka-stretch-scale));
+ transform-origin:center top;
+ transition:transform 250ms cubic-bezier(.22,.8,.24,1);
+ pointer-events:none;
+}
+.sekka-mobile [data-sekka-scroll-hero] .cj-home-driver{
+ transform:translate3d(0,var(--sekka-scroll-shift),0) scale(var(--sekka-stretch-scale));
+}
+.sekka-mobile [data-sekka-scroll-hero]{
+ contain:layout style;
+}
+/* Pinned SliverAppBar counterpart: just a tiny title between the two
+ * floating yellow action controls. Never restore the previous logo bar. */
+.sekka-mobile > .sekka-sliver-pin{
+ position:fixed;
+ z-index:78;
+ top:calc(13px + env(safe-area-inset-top,0px));
+ left:50%;
+ box-sizing:border-box;
+ transform:translate3d(-50%,-8px,0) scale(.96);
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ width:max-content;
+ max-width:min(47vw,290px);
+ min-height:36px;
+ padding:7px 13px 6px;
+ border:1px solid rgba(151,237,247,.48);
+ border-radius:99px;
+ background:rgba(15,62,87,.92);
+ box-shadow:0 7px 20px rgba(4,45,71,.15);
+ backdrop-filter:blur(12px);
+ -webkit-backdrop-filter:blur(12px);
+ opacity:0;
+ visibility:hidden;
+ pointer-events:none;
+ transition:opacity .18s ease,transform .22s cubic-bezier(.18,.82,.2,1),
+  visibility .18s;
+}
+.sekka-mobile > .sekka-sliver-pin > span{
+ display:block;
+ white-space:nowrap;
+ overflow:hidden;
+ text-overflow:ellipsis;
+ direction:inherit;
+ text-align:center;
+ color:#FFFFFF!important;
+ font:850 13px/1.2 Tajawal,Tahoma,sans-serif;
+}
+.sekka-mobile[data-sekka-scrolled="true"] > .sekka-sliver-pin{
+ opacity:1;
+ visibility:visible;
+ transform:translate3d(-50%,0,0) scale(1);
+}
+html[data-theme="dark"] .sekka-mobile > .sekka-sliver-pin{
+ background:rgba(20,49,70,.96);
+ border-color:#527487;
+}
+@media(max-width:340px){
+ .sekka-mobile > .sekka-sliver-pin{
+  max-width:calc(100vw - 147px);
+  min-height:33px;
+  padding:5px 7px;
+ }
+ .sekka-mobile > .sekka-sliver-pin > span{font-size:11px}
+}
+/* NestedScrollView equivalent: list segment selection stays available as
+ * content scrolls, and remains bounded by its own actual workspace. */
+.sekka-mobile .sekka-bookings-section-tabs{
+ position:sticky;
+ top:var(--sekka-sticky-offset);
+ z-index:17;
+ background:var(--flow-soft,#F5FBFF);
+ backdrop-filter:blur(10px);
+ -webkit-backdrop-filter:blur(10px);
+ border-radius:15px;
+}
+.sekka-mobile .rb3__filters{
+ position:sticky;
+ top:calc(var(--sekka-sticky-offset) + 63px);
+ z-index:16;
+ background:var(--flow-paper,#FFFFFF);
+ backdrop-filter:blur(10px);
+ -webkit-backdrop-filter:blur(10px);
+}
+.sekka-mobile .captain-enrollment-progress{
+ position:sticky;
+ top:var(--sekka-sticky-offset);
+ z-index:15;
+ background:var(--flow-paper,#FFFFFF);
+ border-radius:15px;
+}
+.sekka-mobile .admin-stage .ad-top{
+ position:sticky;
+ top:0;
+ z-index:21;
+ backdrop-filter:blur(12px);
+ -webkit-backdrop-filter:blur(12px);
+}
+.sekka-mobile .admin-stage .ad-tools{
+ position:sticky;
+ top:var(--sekka-sticky-offset);
+ z-index:16;
+ background:var(--ad-bg,#FFFFFF);
+ border-radius:12px;
+}
+/* SliverGrid only where real list cards benefit from multiple columns.
+ * Keep one column on phones, never display fake content, never reorder rows. */
+@media(min-width:820px){
+ .sekka-mobile .rb3{max-width:980px!important}
+ .sekka-mobile .sekka-bookings-section-tabs{max-width:980px!important}
+ .sekka-mobile .rb3__list{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+  align-items:stretch;
+ }
+ .sekka-mobile .rb3__card{min-width:0;max-width:none}
+ .sekka-mobile .sekka-request-list{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+ }
+ .sekka-mobile .sekka-request-card{min-width:0}
+ .sekka-mobile .d-screen-11{max-width:1060px!important}
+ .sekka-mobile .d-screen-11 .d-live-search{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:13px;
+  align-items:start;
+ }
+ .sekka-mobile .d-screen-11 .d-live-search > :not(.sekka-live-result){
+  grid-column:1/-1;
+ }
+ .sekka-mobile .d-screen-11 .sekka-live-result{
+  min-width:0;
+  margin:0!important;
+ }
+}
+@media(min-width:1220px){
+ .sekka-mobile .d-screen-11 .d-live-search{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+ }
+}
+/* SliverList: existing IntersectionObserver-based 80ms stagger stays active.
+ * Layout should not move when each real backend card is revealed. */
+.sekka-mobile :is(
+ .sekka-live-result,.rb3__card,.sekka-request-card,.ad-card,
+ .cj-home-metric,.cj-home-how-step,.live-route-list>ul>li
+){min-width:0;backface-visibility:hidden;}
+html[data-theme="dark"] .sekka-mobile .sekka-bookings-section-tabs,
+html[data-theme="dark"] .sekka-mobile .rb3__filters{
+ background:var(--flow-paper,#193449);
+}
+/* Don't add blur or smooth transforms for reduced-motion users; keep the
+ * sticky information available but reveal it immediately. */
+@media(prefers-reduced-motion:reduce){
+ .sekka-mobile [data-sekka-scroll-hero] :is(
+  h1,h2,.rh-hero__eyebrow,.cj-home-welcome-kicker,
+  .rh-hero__orb,.rh-hero__map-lines,.rs3__head-orbit,
+  .rb3__hero-route,.cj-home-driver
+ ){transform:none!important;transition:none!important;}
+ .sekka-mobile > .sekka-sliver-pin{
+  transition:none!important;
+  backdrop-filter:none;
+ }
+ .sekka-mobile .sekka-bookings-section-tabs,
+ .sekka-mobile .rb3__filters,
+ .sekka-mobile .admin-stage .ad-top,
+ .sekka-mobile .admin-stage .ad-tools{
+  backdrop-filter:none!important;
+ }
+}
