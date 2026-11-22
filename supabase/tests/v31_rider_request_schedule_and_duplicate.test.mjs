@@ -12,11 +12,14 @@ test('request schema captures each supported direction without fabricating a tim
  assert.match(migration,/outbound_time drop not null/);
  assert.match(migration,/direction='return' and outbound_time is null and return_time is not null/);
  assert.match(migration,/direction='round_trip' and outbound_time is not null and return_time is not null/);
- assert.match(frontend,/outbound=requestDirection==='return'\?null:requestTime/);
- assert.match(frontend,/inbound=requestDirection==='outbound'\?null:requestReturnTime/);
+ assert.match(frontend,/outbound=requestDirection==='return'\?null:requestTime\.trim\(\)/);
+ assert.match(frontend,/inbound=requestDirection==='outbound'\?null:requestReturnTime\.trim\(\)/);
+ assert.match(frontend,/!validClock\(requestTime\)/);
+ assert.match(frontend,/!validClock\(requestReturnTime\)/);
+ assert.match(frontend,/sekka-request-missing-time/);
  assert.match(frontend,/saved\.direction!==requestDirection/);
  assert.match(frontend,/saved\.return_time\?\.slice\(0,5\)/);
- assert.match(search,/returnTime,period:requestPeriod/);
+ assert.match(search,/returnTime,period:requestPeriod,weekdays/);
 });
 
 test('server serializes open-request duplicates independently of client-side checks',()=>{
