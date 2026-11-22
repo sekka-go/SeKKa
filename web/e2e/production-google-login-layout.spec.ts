@@ -10,6 +10,8 @@ for(const width of [360,390]){
     await page.addInitScript(({language,theme})=>{
       localStorage.setItem('language_preference',language);
       localStorage.setItem('theme_preference',theme);
+      // These tests audit destination layout, not the 5-second launch animation.
+      sessionStorage.setItem('sekka.launch.seen.v1','1');
     },{language,theme});
     await page.goto('/?tab=profile');
     await page.getByRole('button',{name:language==='ar'?'تسجيل الدخول بجوجل':'Sign in with Google'}).click();
@@ -43,3 +45,20 @@ for(const width of [360,390]){
   }
  }
 }
+
+// An initial deep-link to profile must never display an unsolicited tour over login.
+test('guest profile sign-in is not blocked by automatic guidance',async({page})=>{
+ await page.setViewportSize({width:360,height:800});
+ await page.addInitScript(()=>{
+  localStorage.setItem('language_preference','ar');
+  localStorage.setItem('theme_preference','light');
+  sessionStorage.setItem('sekka.launch.seen.v1','1');
+ });
+ await page.goto('/?tab=profile');
+ const google=page.getByRole('button',{name:'تسجيل الدخول بجوجل'});
+ await expect(google).toBeVisible();
+ await page.waitForTimeout(850);
+ await expect(page.locator('.sekka-app-tour')).toHaveCount(0);
+ await google.click();
+ await expect(page.locator('.phase-screen-4')).toBeVisible();
+});
