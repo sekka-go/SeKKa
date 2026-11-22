@@ -1,12 +1,14 @@
 import {useEffect,useState} from 'react';
 import {client} from './api';
 import {usePreferences} from './preferences';
+import {useStaggeredReveal} from './staggerMotion';
 
 type Notification={id:string;kind:string;message_ar:string;message_en:string;read_at:string|null;created_at:string};
 export default function LiveNotifications({mode='rider',onOpenRides}:{
  mode?:'rider'|'captain';onOpenRides?:()=>void;
 }){
  const {language}=usePreferences(),en=language==='en',t=(ar:string,english:string)=>en?english:ar;
+ const revealNotification=useStaggeredReveal();
  const [items,setItems]=useState<Notification[]>([]);
  const [busy,setBusy]=useState(''),[error,setError]=useState(''),[loading,setLoading]=useState(true),[revision,setRevision]=useState(0);
  const refresh=()=>{setError('');setLoading(true);setRevision(v=>v+1);};
@@ -50,7 +52,7 @@ export default function LiveNotifications({mode='rider',onOpenRides}:{
   {error&&<div role="alert"><p>{error}</p><button type="button" onClick={refresh}>
    {t('إعادة المحاولة','Retry')}</button></div>}
   {!loading&&!error&&items.length===0&&<p>{t('مفيش إشعارات حاليًا.','No notifications yet.')}</p>}
-  <ul>{items.map(n=><li key={n.id}>
+  <ul>{items.map(n=><li ref={revealNotification} key={n.id}>
    <p>{en?n.message_en:n.message_ar}</p>
    <small>{new Date(n.created_at).toLocaleString(en?'en-GB':'ar-EG')}</small>
    {(n.kind==='route_capacity_full'||n.kind==='route_seat_reopened')&&onOpenRides&&
